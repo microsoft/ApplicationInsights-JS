@@ -1,0 +1,9 @@
+﻿{
+	"Framework": "qunit",
+    "References": [
+        { "Path": "External/Sinon-1.7.3.js" },
+        { "Path": "Selenium/JSLitmus.js" },
+        { "Path": "E2ETests/testSnippet.js" }
+    ],
+    "CodeCoverageExcludes": ["*Tests*"]
+}

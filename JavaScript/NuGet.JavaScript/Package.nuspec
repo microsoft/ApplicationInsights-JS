@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Microsoft.ApplicationInsights.JavaScript</id>
+    <version>$version$</version>
+    <title>Application Insights API for JavaScript Applications</title>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <language>en-us</language>
+    <licenseUrl>http://go.microsoft.com/fwlink/?LinkId=323613</licenseUrl>
+    <projectUrl>http://go.microsoft.com/fwlink/?LinkId=323612</projectUrl>
+    <iconUrl>$image$</iconUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>Application Insights API enables you to get insights into user behavior and monitor usage patterns for your Web and Multi-Device Hybrid Apps. Application Insights service collects the data, analyzes it and presents the results in the forms of graphs and reports in Application Insights portal in Microsoft Azure.</description>
+    <tags>Analytics Insights Telemetry JavaScript MDD Multi-Device ApplicationInsights Cordova Web</tags>
+    <copyright>Copyright © 2013-2022, Microsoft. All rights reserved.</copyright>
+  </metadata>
+  <files>
+    <file src="$configuration$\Javascript\Nuget.JavaScript\snippet.html" target="tools\prefix.html" />
+    <file src="$configuration$\Javascript\Nuget.JavaScript\ai.js" target="content\scripts\ai.$version$.js" />
+    <file src="$configuration$\Javascript\Nuget.JavaScript\ai.min.js" target="content\scripts\ai.$version$.min.js" />
+  </files>
+</package>

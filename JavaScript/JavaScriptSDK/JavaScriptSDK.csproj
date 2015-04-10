@@ -31,7 +31,7 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
-  <Import Project="..\packages\AjaxMin.5.5.5091.22839\tools\net40\AjaxMin.targets" Condition="Exists('..\packages\AjaxMin.5.5.5091.22839\tools\net40\AjaxMin.targets')" />
+  <Import Project="..\..\..\packages\AjaxMin.5.5.5091.22839\tools\net40\AjaxMin.targets" Condition="Exists('..\..\..\packages\AjaxMin.5.5.5091.22839\tools\net40\AjaxMin.targets')" />
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
@@ -168,8 +168,8 @@
   <ItemGroup />
   <Import Project="$(VSToolsPath)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(VSToolsPath)\TypeScript\Microsoft.TypeScript.targets')" />
   <Target Name="EnsureAjaxMinBuildImported" BeforeTargets="BeforeBuild" Condition="'$(AjaxMinOutputFolder)' == ''">
-    <Error Condition="!Exists('..\packages\AjaxMin.5.5.5091.22839\tools\net40\AjaxMin.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." />
-    <Error Condition="Exists('..\packages\AjaxMin.5.5.5091.22839\tools\net40\AjaxMin.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." />
+    <Error Condition="!Exists('..\..\..\packages\AjaxMin.5.5.5091.22839\tools\net40\AjaxMin.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." />
+    <Error Condition="Exists('..\..\..\packages\AjaxMin.5.5.5091.22839\tools\net40\AjaxMin.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." />
   </Target>
   <Target Name="AfterBuild" DependsOnTargets="BuildAjaxMinManifests">
     <Message Text="Build snippet.html" />
