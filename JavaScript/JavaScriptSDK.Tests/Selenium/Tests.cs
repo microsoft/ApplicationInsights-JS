@@ -21,7 +21,7 @@ namespace ApplicationInsights.Javascript.Tests
         private static IISExpress iisExpress;
         private const string PATH_TO_TESTS = "/Selenium/Tests.html";
         private const string PATH_TO_PERF_TESTS = "/Selenium/PerfTests.html";
-        private const string PERF_RESULTS_PATH = @"\\smfiles\Privates\scsouthw\perfResults.txt";
+        private const string PERF_RESULTS_PATH = @"perfResults.txt";
 
         [ClassInitialize]
         public static void Setup(TestContext context)
