@@ -113,7 +113,7 @@
             if (isNaN(totalms) || totalms < 0) {
                 totalms = 0;
             }
-
+            totalms = Math.floor(totalms);
             var ms = "" + totalms % 1000;
             var sec = "" + Math.floor(totalms / 1000) % 60;
             var min = "" + Math.floor(totalms / (1000 * 60)) % 60;
