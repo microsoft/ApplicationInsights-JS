@@ -141,13 +141,13 @@ module Microsoft.ApplicationInsights {
             var durationMs = 0;
             // check if timing data is available
             if (timings) {
+                durationMs = timings.duration;
+                var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements, timings);
+                var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
+                    Telemetry.PageViewPerformance.dataType, pageViewPerformance);
+                var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
+                this.context.track(pageViewPerformanceEnvelope);
                 setTimeout(() => {
-                    durationMs = timings.duration;
-                    var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements, timings);
-                    var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
-                        Telemetry.PageViewPerformance.dataType, pageViewPerformance);
-                    var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
-                    this.context.track(pageViewPerformanceEnvelope);
                     this.context._sender.triggerSend();
                 }, 100);
 
