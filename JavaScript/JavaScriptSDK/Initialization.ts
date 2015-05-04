@@ -122,10 +122,13 @@ module Microsoft.ApplicationInsights {
             config.sessionExpirationMs = 24 * 60 * 60 * 1000;
             config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 1000000;
             config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
-            config.enableDebug = !!config.enableDebug;
-            config.autoCollectErrors = typeof config.autoCollectErrors === "boolean" ? config.autoCollectErrors : true;
-            config.disableTelemetry = !!config.disableTelemetry;
-            config.verboseLogging = !!config.verboseLogging;
+            config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
+            config.autoCollectErrors = (config.autoCollectErrors !== undefined && config.autoCollectErrors !== null) ?
+                Util.stringToBoolOrDefault(config.autoCollectErrors) :
+                true;
+            config.disableTelemetry = Util.stringToBoolOrDefault(config.disableTelemetry);
+            config.verboseLogging = Util.stringToBoolOrDefault(config.verboseLogging);
+            config.emitLineDelimitedJson = Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
             config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
 
             return config;

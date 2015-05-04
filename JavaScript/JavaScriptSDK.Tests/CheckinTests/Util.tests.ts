@@ -155,6 +155,22 @@ class UtilTests extends TestClass {
                 test(-1, "00:00:00.000", "invalid input");
             }
         });
+
+        this.testCase({
+            name: "Tests stringToBoolOrDefault() returns true only for 'true' string (ignoring case)",
+            test: () => {
+                Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault(undefined) === false);
+                Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault(null) === false);
+                Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault("") === false);
+                Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault("asdf") === false);
+                Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault(0) === false);                
+                Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault({ asfd: "sdf" }) === false);
+                Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault(new Object()) === false);
+
+                Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault("true") === true);
+                Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault("TrUe") === true);
+            }
+        });
     }
 }
 new UtilTests().registerTests(); 

@@ -21,6 +21,11 @@ module Microsoft.ApplicationInsights {
         endpointUrl: () => string;
 
         /**
+        * The JSON format (normal vs line delimited). True means line delimited JSON.
+        */
+        emitLineDelimitedJson: () => boolean;
+
+        /**
          * The maximum size of a batch in bytes
          */
         maxBatchSizeInBytes: () => number;
@@ -136,7 +141,9 @@ module Microsoft.ApplicationInsights {
 
                 if (this._buffer.length) {
                     // compose an array of payloads
-                    var batch = "[" + this._buffer.join(",") + "]";
+                    var batch = this._config.emitLineDelimitedJson() ?
+                        this._buffer.join("\n"):
+                        "[" + this._buffer.join(",") + "]";
 
                     // invoke send
                     this._sender(batch);

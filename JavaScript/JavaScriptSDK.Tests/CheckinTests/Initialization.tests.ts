@@ -13,6 +13,7 @@ class InitializationTests extends TestClass {
         var snippet: Microsoft.ApplicationInsights.IConfig = {
             instrumentationKey: "ffffffff-ffff-ffff-ffff-ffffffffffff",
             endpointUrl: "//dc-int.services.visualstudio.com/v2/track",
+            emitLineDelimitedJson: false,
             accountId: undefined,
             appUserId: undefined,
             sessionRenewalMs: 10,
@@ -146,6 +147,51 @@ class InitializationTests extends TestClass {
 
                 trackTraceSpy.restore();
                 
+            }
+        });
+
+
+        this.testCase({
+            name: "InitializationTests: in config - 'false' string is treated as a boolean false",
+            test: () => {
+
+                var userConfig = {
+                    enableDebug: "false",
+                    autoCollectErrors: "false",
+                    disableTelemetry: "false",
+                    verboseLogging: "false",
+                    emitLineDelimitedJson: "false",
+                };
+
+                var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>userConfig);
+
+                Assert.ok(!config.enableDebug);
+                Assert.ok(!config.autoCollectErrors);
+                Assert.ok(!config.disableTelemetry);
+                Assert.ok(!config.verboseLogging);
+                Assert.ok(!config.emitLineDelimitedJson);
+            }
+        });
+
+        this.testCase({
+            name: "InitializationTests: in config - 'true' string is treated as a boolean true",
+            test: () => {
+
+                var userConfig = {
+                    enableDebug: "true",
+                    autoCollectErrors: "true",
+                    disableTelemetry: "true",
+                    verboseLogging: "true",
+                    emitLineDelimitedJson: "true",
+                };
+
+                var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>userConfig);
+
+                Assert.ok(config.enableDebug);
+                Assert.ok(config.autoCollectErrors);
+                Assert.ok(config.disableTelemetry);
+                Assert.ok(config.verboseLogging);
+                Assert.ok(config.emitLineDelimitedJson);
             }
         });
     }

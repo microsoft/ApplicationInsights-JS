@@ -105,8 +105,6 @@ class SessionContextTests extends TestClass {
                 Assert.equal(2, cookieValueParts.length, "Cookie value should have actual value and expiration");
                 Assert.equal(3, cookieValueParts[0].split('|').length, "Cookie value before expiration should include user id, acq date and renew date");
                 Assert.equal("newGuid", cookieValueParts[0].split('|')[0], "First part of cookie value should be new user id guid");
-                Assert.equal(new Date().toString(), (new Date(cookieValueParts[0].split('|')[1])).toString(), "Second part of cookie should be parsable as date");
-                Assert.equal(new Date().toString(), (new Date(cookieValueParts[0].split('|')[2])).toString(), "Third part of cookie should be parsable as date");
                 
                 // Having expiration 1 year allows to set sesion.IsFirst only when we generated cookie for the first time for a given browser
                 var expiration = cookieValueParts[1];

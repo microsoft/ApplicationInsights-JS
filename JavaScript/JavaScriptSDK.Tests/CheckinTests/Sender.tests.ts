@@ -13,6 +13,7 @@ class SenderTests extends TestClass {
     private loggingSpy;
     private testTelemetry;
     private endpointUrl: string;
+    private emitLineDelimitedJson: boolean;
     private maxBatchSizeInBytes: number;
     private maxBatchInterval: number;
     private disableTelemetry: boolean;
@@ -28,6 +29,7 @@ class SenderTests extends TestClass {
 
         var config: Microsoft.ApplicationInsights.ISenderConfig = {
             endpointUrl: () => this.endpointUrl,
+            emitLineDelimitedJson: () => this.emitLineDelimitedJson,
             maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
             maxBatchInterval: () => this.maxBatchInterval,
             disableTelemetry: () => this.disableTelemetry

@@ -23,6 +23,9 @@
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
+    <!-- In gated, ..\Javascript does not resolve, so grab the files that were copied to output instead. -->
+    <JavascriptSourceLocation Condition="'$(TF_Build_BINARIESDIRECTORY)' == ''">..\JavaScriptSDK</JavascriptSourceLocation>
+    <JavascriptSourceLocation Condition="'$(TF_Build_BINARIESDIRECTORY)' != ''">$(TF_Build_BINARIESDIRECTORY)</JavascriptSourceLocation>
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
     <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
     <EnableTypeScript>true</EnableTypeScript>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuGet.JavaScript", "NuGet.JavaScript\NuGet.JavaScript.csproj", "{7C2662E9-96D3-473A-B0DD-55A80343A237}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -25,6 +25,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JavaScriptSDK.Tests", "Java
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{6437E05C-5120-4E44-B696-61F19B0FD73A}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\packages.config = .nuget\packages.config
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuGet.TypeScript", "NuGet.TypeScript\NuGet.TypeScript.csproj", "{314B90F5-0E04-456A-AF38-914F520C3BF3}"
 	ProjectSection(ProjectDependencies) = postProject

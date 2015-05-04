@@ -10,6 +10,14 @@
             Util.document.cookie = name + "=" + value + ";path=/";
         }
 
+        public static stringToBoolOrDefault(str: any): boolean {
+            if (!str) {
+                return false;
+            }
+            
+            return str.toString().toLowerCase() === "true";
+        }
+
         /**
          * helper method to access userId and sessionId cookie
          */
@@ -34,7 +42,8 @@
         /**
          * helper method to trim strings (IE8 does not implement String.prototype.trim)
          */
-        public static trim(str: string): string {
+        public static trim(str: any): string {
+            if (typeof str !== "string") return str;
             return str.replace(/^\s+|\s+$/g, "");
         }
 

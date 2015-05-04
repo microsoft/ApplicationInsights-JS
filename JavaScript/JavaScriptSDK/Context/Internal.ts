@@ -17,7 +17,7 @@
          * Constructs a new instance of the internal telemetry data class.
          */
         constructor() {
-            this.sdkVersion = Version;
+            this.sdkVersion = "JavaScript:" + Version;
         }
     }
 }
