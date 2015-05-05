@@ -264,20 +264,32 @@ module Microsoft.ApplicationInsights {
             this.context._sender.triggerSend();
         }
 
+        /**
+         * The custom error handler for Application Insights
+         * @param {string} message - The error message
+         * @param {string} url - The url where the error was raised
+         * @param {number} lineNumber - The line number where the error was raised
+         * @param {number} columnNumber - The column number for the line where the error was raised
+         * @param {Error}  error - The Error object
+         */
         public _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
-            if (!Util.isError(error)) {
-                // ensure that we have an error object (browser may not pass an error i.e safari)
-                try {
-                    throw new Error(message);
-                } catch (exception) {
-                    error = exception;
-                    if (!error["stack"]) {
-                        error["stack"] = "@" + url + ":" + lineNumber + ":" + (columnNumber || 0);
+            try {
+                if (!Util.isError(error)) {
+                    // ensure that we have an error object (browser may not pass an error i.e safari)
+                    try {
+                        throw new Error(message);
+                    } catch (exception) {
+                        error = exception;
+                        if (!error["stack"]) {
+                            error["stack"] = "@" + url + ":" + lineNumber + ":" + (columnNumber || 0);
+                        }
                     }
                 }
-            }
 
-            this.trackException(error);
+                this.trackException(error);
+            } catch (exception) {
+                _InternalLogging.warn("_onerror threw an exception: " + JSON.stringify(exception) + " while logging error: " + error.name + ", " + error.message);
+            }
         }
     }
 
