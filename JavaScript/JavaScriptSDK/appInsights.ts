@@ -11,6 +11,7 @@ module Microsoft.ApplicationInsights {
     export interface IConfig {
         instrumentationKey: string;
         endpointUrl: string;
+        emitLineDelimitedJson: boolean;
         accountId: string;
         appUserId: string;
         sessionRenewalMs: number;
@@ -61,9 +62,10 @@ module Microsoft.ApplicationInsights {
                 sessionRenewalMs: () => this.config.sessionRenewalMs,
                 sessionExpirationMs: () => this.config.sessionExpirationMs,
                 endpointUrl: () => this.config.endpointUrl,
+                emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
                 maxBatchSizeInBytes: () => this.config.maxBatchSizeInBytes,
                 maxBatchInterval: () => this.config.maxBatchInterval,
-                disableTelemetry: () => this.config.disableTelemetry
+                disableTelemetry: () => this.config.disableTelemetry                
             }
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);

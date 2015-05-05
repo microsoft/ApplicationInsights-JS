@@ -19,7 +19,7 @@ class SerializerTests extends TestClass {
     }
 
     public registerTests() {
-
+        
         this.testCase({
             name: "SerializerTests: empty input",
             test: () => {
