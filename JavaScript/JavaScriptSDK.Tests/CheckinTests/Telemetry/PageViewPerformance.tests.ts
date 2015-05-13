@@ -17,6 +17,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
             test: () => {
 
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
+                Assert.equal(true, telemetry.isValid);
 
                 var isAvailable = window.performance && window.performance.timing; // safari doesn't support this
                 if (isAvailable) {
@@ -36,6 +37,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
             name: name + "PageViewPerformanceTelemetry has correct serialization contract",
             test: () => {
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
+                Assert.equal(true, telemetry.isValid);
 
                 Assert.equal("boolean", typeof telemetry.aiDataContract.perfTotal, "perfTotal is set in data contract");
                 Assert.equal("boolean", typeof telemetry.aiDataContract.networkConnect, "networkConnect is set in data contract");
@@ -65,6 +67,8 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
 
 
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
+                Assert.equal(true, telemetry.isValid);
+
                 var data = telemetry;
 
                 Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(59), data.perfTotal);
@@ -99,6 +103,8 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
 
 
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
+                Assert.equal(false, telemetry.isValid);
+
                 var data = telemetry;
 
                 Assert.equal(undefined, data.perfTotal);
@@ -106,6 +112,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 Assert.equal(undefined, data.sentRequest);
                 Assert.equal(undefined, data.receivedResponse);
                 Assert.equal(undefined, data.domProcessing);
+
                 Assert.equal("client performance math error:59 < 39 + 19 + 12 + 8", actualLoggedMessage);
 
                 timingSpy.restore();

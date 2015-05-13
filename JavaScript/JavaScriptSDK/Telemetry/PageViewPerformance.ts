@@ -22,7 +22,12 @@ module Microsoft.ApplicationInsights.Telemetry {
             domProcessing: false,
             properties: false,
             measurement: false
-        }
+        };
+
+        /**
+         * Field indicating whether this instance of PageViewPerformance is valid and should be sent
+         */
+        public isValid: boolean;
 
         /**
          * Constructs a new instance of the PageEventTelemetry object
@@ -30,19 +35,20 @@ module Microsoft.ApplicationInsights.Telemetry {
         constructor(name: string, url: string, durationMs: number, properties?: any, measurements?: any) {
             super();
 
+            this.isValid = true;
 
-                /*
-                 * http://www.w3.org/TR/navigation-timing/#processing-model
-                 *  |-navigationStart
-                 *  |             |-connectEnd
-                 *  |             ||-requestStart
-                 *  |             ||             |-responseStart
-                 *  |             ||             |              |-responseEnd
-                 *  |             ||             |              ||-domLoading
-                 *  |             ||             |              ||         |-loadEventEnd
-                 *  |---network---||---request---|---response---||---dom---|
-                 *  |--------------------------total-----------------------|
-                 */
+            /*
+             * http://www.w3.org/TR/navigation-timing/#processing-model
+             *  |-navigationStart
+             *  |             |-connectEnd
+             *  |             ||-requestStart
+             *  |             ||             |-responseStart
+             *  |             ||             |              |-responseEnd
+             *  |             ||             |              ||-domLoading
+             *  |             ||             |              ||         |-loadEventEnd
+             *  |---network---||---request---|---response---||---dom---|
+             *  |--------------------------total-----------------------|
+             */
             var timing = PageViewPerformance.getPerformanceTiming();
             if (timing) {
                 var total = PageViewPerformance.getDuration(timing.navigationStart, timing.loadEventEnd);
@@ -55,31 +61,34 @@ module Microsoft.ApplicationInsights.Telemetry {
                 if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
                     // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
                     // in this case, don't report client performance from this page
+                    this.isValid = false;
                     _InternalLogging.throwInternalNonUserActionable(
                         LoggingSeverity.WARNING,
                         "client performance math error:" + total + " < " + network + " + " + request + " + " + response + " + " + dom);
 
                 } else {
 
-                // use timing data for duration if possible
-                durationMs = total;
+                    // use timing data for duration if possible
+                    durationMs = total;
 
-                // convert to timespans
-                this.perfTotal = Util.msToTimeSpan(total);
-                this.networkConnect = Util.msToTimeSpan(network);
-                this.sentRequest = Util.msToTimeSpan(request);
-                this.receivedResponse = Util.msToTimeSpan(response);
-                this.domProcessing = Util.msToTimeSpan(dom);
+                    // convert to timespans
+                    this.perfTotal = Util.msToTimeSpan(total);
+                    this.networkConnect = Util.msToTimeSpan(network);
+                    this.sentRequest = Util.msToTimeSpan(request);
+                    this.receivedResponse = Util.msToTimeSpan(response);
+                    this.domProcessing = Util.msToTimeSpan(dom);
+                }
             }
-            }
-
             this.url = Common.DataSanitizer.sanitizeUrl(url);
             this.name = Common.DataSanitizer.sanitizeString(name);
+
             if (!isNaN(durationMs)) {
                 this.duration = Util.msToTimeSpan(durationMs);
             }
+
             this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
             this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);
+
         }
 
         public static getPerformanceTiming(): PerformanceTiming {
