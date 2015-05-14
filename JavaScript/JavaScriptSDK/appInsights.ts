@@ -158,11 +158,13 @@ module Microsoft.ApplicationInsights {
                         durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
 
                         var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements);
-                        var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
-                            Telemetry.PageViewPerformance.dataType, pageViewPerformance);
-                        var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
-                        this.context.track(pageViewPerformanceEnvelope);
-                        this.context._sender.triggerSend();
+                        if (pageViewPerformance.isValid) {
+                            var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
+                                Telemetry.PageViewPerformance.dataType, pageViewPerformance);
+                            var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
+                            this.context.track(pageViewPerformanceEnvelope);
+                            this.context._sender.triggerSend();
+                        }
                     }
                 }, 100);
             }

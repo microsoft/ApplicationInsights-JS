@@ -65,6 +65,8 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
 
 
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
+                Assert.equal(true, telemetry.isValid);
+
                 var data = telemetry;
 
                 Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(59), data.perfTotal);
@@ -99,6 +101,8 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
 
 
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
+                Assert.equal(false, telemetry.isValid);
+
                 var data = telemetry;
 
                 Assert.equal(undefined, data.perfTotal);
@@ -106,6 +110,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 Assert.equal(undefined, data.sentRequest);
                 Assert.equal(undefined, data.receivedResponse);
                 Assert.equal(undefined, data.domProcessing);
+
                 Assert.equal("client performance math error:59 < 39 + 19 + 12 + 8", actualLoggedMessage);
 
                 timingSpy.restore();
