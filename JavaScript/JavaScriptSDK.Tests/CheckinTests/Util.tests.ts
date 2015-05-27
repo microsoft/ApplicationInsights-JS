@@ -171,6 +171,16 @@ class UtilTests extends TestClass {
                 Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault("TrUe") === true);
             }
         });
+
+        this.testCase({
+            name: "UtilTests: isMeaninglessError",
+            test: () => {
+                Assert.ok(Microsoft.ApplicationInsights.Util.isMeaninglessError("Script error.", "", 0, 0, null) === true);
+
+                Assert.ok(Microsoft.ApplicationInsights.Util.isMeaninglessError("Script error.", "http://microsoft.com", 0, 0, null)
+                    === false);
+            }
+        });
     }
 }
 new UtilTests().registerTests(); 
