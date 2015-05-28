@@ -87,13 +87,13 @@ module Microsoft.ApplicationInsights {
         
                 // validate input
                 if (!envelope) {
-                    _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Cannot send empty telemetry");
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Cannot send empty telemetry");
                     return;
                 }
 
                 // ensure a sender was constructed
                 if (!this._sender) {
-                    _InternalLogging.warn("No sender could be constructed for this environment, payload will be added to buffer." + Serializer.serialize(envelope));
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Sender was not initialized");
                     return;
                 }
             

@@ -83,7 +83,7 @@
         * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error
         * happens in a script from other domain (cross origin, CORS).
         */
-        public static isMeaninglessError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
+        public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
             return message == "Script error."
                 && url == ""
                 && lineNumber == 0

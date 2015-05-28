@@ -322,7 +322,7 @@ module Microsoft.ApplicationInsights {
         public _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
             try {
                 // filtering out "Script error." errors with no details - CORS case. 
-                if (Util.isMeaninglessError(message, url, lineNumber, columnNumber, error)) return;
+                if (Util.isCrossOriginError(message, url, lineNumber, columnNumber, error)) return;
 
                 if (!Util.isError(error)) {
                     // ensure that we have an error object (browser may not pass an error i.e safari)
