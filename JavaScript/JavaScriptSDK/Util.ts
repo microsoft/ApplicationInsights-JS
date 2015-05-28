@@ -78,19 +78,7 @@
         public static isError(obj: any): boolean {
             return Object.prototype.toString.call(obj) === "[object Error]";
         }
-
-        /**
-        * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error
-        * happens in a script from other domain (cross origin, CORS).
-        */
-        public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
-            return message == "Script error."
-                && url == ""
-                && lineNumber == 0
-                && columnNumber == 0
-                && error == null;
-        }
-
+        
         /**
          * Check if an object is of type Date
          */

@@ -171,16 +171,6 @@ class UtilTests extends TestClass {
                 Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault("TrUe") === true);
             }
         });
-
-        this.testCase({
-            name: "UtilTests: isCrossOriginError",
-            test: () => {
-                Assert.ok(Microsoft.ApplicationInsights.Util.isCrossOriginError("Script error.", "", 0, 0, null) === true);
-
-                Assert.ok(Microsoft.ApplicationInsights.Util.isCrossOriginError("Script error.", "http://microsoft.com", 0, 0, null)
-                    === false);
-            }
-        });
     }
 }
 new UtilTests().registerTests(); 
