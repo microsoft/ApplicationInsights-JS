@@ -35,7 +35,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         constructor(name: string, url: string, durationMs: number, properties?: any, measurements?: any) {
             super();
 
-            this.isValid = true;
+            this.isValid = false;
 
             /*
              * http://www.w3.org/TR/navigation-timing/#processing-model
@@ -58,10 +58,15 @@ module Microsoft.ApplicationInsights.Telemetry {
                 var dom = PageViewPerformance.getDuration(timing.domLoading, timing.loadEventEnd);
 
 
-                if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
+                if (total == 0) {
+                    _InternalLogging.throwInternalNonUserActionable(
+                        LoggingSeverity.WARNING,
+                        "error calculating page view performance: total='" +
+                        total + "', network='" + network + "', request='" + request + "', response='" +
+                        response + "', dom='" + dom + "'");
+                } else if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
                     // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
-                    // in this case, don't report client performance from this page
-                    this.isValid = false;
+                    // in this case, don't report client performance from this page                    
                     _InternalLogging.throwInternalNonUserActionable(
                         LoggingSeverity.WARNING,
                         "client performance math error:" + total + " < " + network + " + " + request + " + " + response + " + " + dom);
@@ -77,6 +82,8 @@ module Microsoft.ApplicationInsights.Telemetry {
                     this.sentRequest = Util.msToTimeSpan(request);
                     this.receivedResponse = Util.msToTimeSpan(response);
                     this.domProcessing = Util.msToTimeSpan(dom);
+
+                    this.isValid = true;
                 }
             }
             this.url = Common.DataSanitizer.sanitizeUrl(url);
