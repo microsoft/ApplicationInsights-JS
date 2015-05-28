@@ -97,11 +97,15 @@ module Microsoft.ApplicationInsights {
          * @param   name  A string that idenfities this item, unique within this HTML document. Defaults to the document title.
          */
         public startTrackPage(name?: string) {
-            if (typeof name !== "string") {
-                name = window.document && window.document.title || "";
-            }
+            try {
+                if (typeof name !== "string") {
+                    name = window.document && window.document.title || "";
+                }
 
-            this._pageTracking.start(name);
+                this._pageTracking.start(name);
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "startTrackPage failed: " + JSON.stringify(e));
+            }
         }
 
         /**
@@ -112,15 +116,19 @@ module Microsoft.ApplicationInsights {
          * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
          */
         public stopTrackPage(name?: string, url?: string, properties?: Object, measurements?: Object) {
-            if (typeof name !== "string") {
-                name = window.document && window.document.title || "";
-            }
+            try {
+                if (typeof name !== "string") {
+                    name = window.document && window.document.title || "";
+                }
 
-            if (typeof url !== "string") {
-                url = window.location && window.location.href || "";
-            }
+                if (typeof url !== "string") {
+                    url = window.location && window.location.href || "";
+                }
 
-            this._pageTracking.stop(name, url, properties, measurements);
+                this._pageTracking.stop(name, url, properties, measurements);
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "stopTrackPage failed: " + JSON.stringify(e));
+            }
         }
 
         /**
@@ -131,54 +139,62 @@ module Microsoft.ApplicationInsights {
          * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
          */
         public trackPageView(name?: string, url?: string, properties?: Object, measurements?: Object) {
-            // ensure we have valid values for the required fields
-            if (typeof name !== "string") {
-                name = window.document && window.document.title || "";
-            }
+            try {
+                // ensure we have valid values for the required fields
+                if (typeof name !== "string") {
+                    name = window.document && window.document.title || "";
+                }
 
-            if (typeof url !== "string") {
-                url = window.location && window.location.href || "";
-            }
+                if (typeof url !== "string") {
+                    url = window.location && window.location.href || "";
+                }
 
-            var durationMs = 0;
-            // check if timing data is available
-            if (Telemetry.PageViewPerformance.checkPageLoad() !== undefined) {
-                // compute current duration (navigation start to now) for the pageViewTelemetry
-                var startTime = window.performance.timing.navigationStart;
-                durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-
-                // poll for page load completion and send page view performance data when ready
-                var handle = setInterval(() => {
-                    // abort this check if we have not finished loading after 1 minute
+                var durationMs = 0;
+                // check if timing data is available
+                if (Telemetry.PageViewPerformance.checkPageLoad() !== undefined) {
+                    // compute current duration (navigation start to now) for the pageViewTelemetry
+                    var startTime = window.performance.timing.navigationStart;
                     durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-                    var timingDataReady = Telemetry.PageViewPerformance.checkPageLoad();
-                    var timeoutReached = durationMs > 60000;
-                    if (timeoutReached || timingDataReady) {
-                        clearInterval(handle);
-                        durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
 
-                        var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements);
-                        if (pageViewPerformance.isValid) {
-                            var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
-                                Telemetry.PageViewPerformance.dataType, pageViewPerformance);
-                            var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
-                            this.context.track(pageViewPerformanceEnvelope);
-                            this.context._sender.triggerSend();
+                    // poll for page load completion and send page view performance data when ready
+                    var handle = setInterval(() => {
+                        try {
+                            // abort this check if we have not finished loading after 1 minute
+                            durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
+                            var timingDataReady = Telemetry.PageViewPerformance.checkPageLoad();
+                            var timeoutReached = durationMs > 60000;
+                            if (timeoutReached || timingDataReady) {
+                                clearInterval(handle);
+                                durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
+
+                                var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements);
+                                if (pageViewPerformance.isValid) {
+                                    var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
+                                        Telemetry.PageViewPerformance.dataType, pageViewPerformance);
+                                    var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
+                                    this.context.track(pageViewPerformanceEnvelope);
+                                    this.context._sender.triggerSend();
+                                }
+                            }
+                        } catch (e) {
+                            _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed on page load calculation: " + JSON.stringify(e));
                         }
-                    }
+                    }, 100);
+                }
+
+                // track the initial page view
+                var pageView = new Telemetry.PageView(name, url, durationMs, properties, measurements);
+                var pageViewData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageView>(Telemetry.PageView.dataType, pageView);
+                var pageViewEnvelope = new Telemetry.Common.Envelope(pageViewData, Telemetry.PageView.envelopeType);
+
+                this.context.track(pageViewEnvelope);
+                setTimeout(() => {
+                    // fire this event as soon as initial code execution completes in case the user navigates away
+                    this.context._sender.triggerSend();
                 }, 100);
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed: " + JSON.stringify(e));
             }
-
-            // track the initial page view
-            var pageView = new Telemetry.PageView(name, url, durationMs, properties, measurements);
-            var pageViewData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageView>(Telemetry.PageView.dataType, pageView);
-            var pageViewEnvelope = new Telemetry.Common.Envelope(pageViewData, Telemetry.PageView.envelopeType);
-
-            this.context.track(pageViewEnvelope);
-            setTimeout(() => {
-                // fire this event as soon as initial code execution completes in case the user navigates away
-                this.context._sender.triggerSend();
-            }, 100);
         }
 
         /**
@@ -186,7 +202,11 @@ module Microsoft.ApplicationInsights {
          * @param   name    A string that identifies this event uniquely within the document.
          */
         public startTrackEvent(name: string) {
-            this._eventTracking.start(name);
+            try {
+                this._eventTracking.start(name);
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "startTrackEvent failed: " + JSON.stringify(e));
+            }
         }
 
         /** 
@@ -196,7 +216,11 @@ module Microsoft.ApplicationInsights {
          * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
          */
         public stopTrackEvent(name: string, properties?: Object, measurements?: Object) {
-            this._eventTracking.stop(name, undefined, properties, measurements);
+            try {
+                this._eventTracking.stop(name, undefined, properties, measurements);
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "stopTrackEvent failed: " + JSON.stringify(e));
+            }
         }
 
         /** 
@@ -206,10 +230,14 @@ module Microsoft.ApplicationInsights {
          * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
          */
         public trackEvent(name: string, properties?: Object, measurements?: Object) {
-            var eventTelemetry = new Telemetry.Event(name, properties, measurements);
-            var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Event>(Telemetry.Event.dataType, eventTelemetry);
-            var envelope = new Telemetry.Common.Envelope(data, Telemetry.Event.envelopeType);
-            this.context.track(envelope);
+            try {
+                var eventTelemetry = new Telemetry.Event(name, properties, measurements);
+                var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Event>(Telemetry.Event.dataType, eventTelemetry);
+                var envelope = new Telemetry.Common.Envelope(data, Telemetry.Event.envelopeType);
+                this.context.track(envelope);
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackEvent failed: " + JSON.stringify(e));
+            }
         }
 
         /**
@@ -219,19 +247,23 @@ module Microsoft.ApplicationInsights {
          * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
          */
         public trackException(exception: Error, handledAt?: string, properties?: Object, measurements?: Object) {
-            if (!Util.isError(exception)) {
-                // ensure that we have an error object (user could pass a string/message)
-                try {
-                    throw new Error(<any>exception);
-                } catch (error) {
-                    exception = error;
+            try {
+                if (!Util.isError(exception)) {
+                    // ensure that we have an error object (user could pass a string/message)
+                    try {
+                        throw new Error(<any>exception);
+                    } catch (error) {
+                        exception = error;
+                    }
                 }
-            }
 
-            var exceptionTelemetry = new Telemetry.Exception(exception, handledAt, properties, measurements);
-            var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Exception>(Telemetry.Exception.dataType, exceptionTelemetry);
-            var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
-            this.context.track(envelope);
+                var exceptionTelemetry = new Telemetry.Exception(exception, handledAt, properties, measurements);
+                var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Exception>(Telemetry.Exception.dataType, exceptionTelemetry);
+                var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
+                this.context.track(envelope);
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackException failed: " + JSON.stringify(e));
+            }
         }
 
         /**
@@ -245,27 +277,38 @@ module Microsoft.ApplicationInsights {
          * @param   max The largest measurement in the sample. Defaults to the average.
          */
         public trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number) {
+            try {
+                var telemetry = new Telemetry.Metric(name, average, sampleCount, min, max);
+                var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Metric>(Telemetry.Metric.dataType, telemetry);
+                var envelope = new Telemetry.Common.Envelope(data, Telemetry.Metric.envelopeType);
 
-            var telemetry = new Telemetry.Metric(name, average, sampleCount, min, max);
-            var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Metric>(Telemetry.Metric.dataType, telemetry);
-            var envelope = new Telemetry.Common.Envelope(data, Telemetry.Metric.envelopeType);
-
-            this.context.track(envelope);
+                this.context.track(envelope);
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackMetric failed: " + JSON.stringify(e));
+            }
         }
 
         public trackTrace(message: string, properties?: Object) {
-            var telemetry = new Telemetry.Trace(message, properties);
-            var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Trace>(Telemetry.Trace.dataType, telemetry);
-            var envelope = new Telemetry.Common.Envelope(data, Telemetry.Trace.envelopeType);
+            try {
+                var telemetry = new Telemetry.Trace(message, properties);
+                var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Trace>(Telemetry.Trace.dataType, telemetry);
+                var envelope = new Telemetry.Common.Envelope(data, Telemetry.Trace.envelopeType);
 
-            this.context.track(envelope);
+                this.context.track(envelope);
+            } catch (e) {
+                _InternalLogging.warn("trackTrace failed: " + JSON.stringify(e));
+            }
         }
 
         /**
          * Immediately send all queued telemetry.
          */
         public flush() {
-            this.context._sender.triggerSend();
+            try {
+                this.context._sender.triggerSend();
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "flush failed: " + JSON.stringify(e));
+            }
         }
 
         /**
@@ -278,6 +321,9 @@ module Microsoft.ApplicationInsights {
          */
         public _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
             try {
+                // filtering out "Script error." errors with no details - CORS case. 
+                if (Util.isCrossOriginError(message, url, lineNumber, columnNumber, error)) return;
+
                 if (!Util.isError(error)) {
                     // ensure that we have an error object (browser may not pass an error i.e safari)
                     try {
@@ -292,7 +338,7 @@ module Microsoft.ApplicationInsights {
 
                 this.trackException(error);
             } catch (exception) {
-                _InternalLogging.warn("_onerror threw an exception: " + JSON.stringify(exception) + " while logging error: " + error.name + ", " + error.message);
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "_onerror threw an exception: " + JSON.stringify(exception) + " while logging error: " + error.name + ", " + error.message);
             }
         }
     }

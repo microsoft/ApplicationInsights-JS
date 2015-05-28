@@ -78,42 +78,45 @@ module Microsoft.ApplicationInsights {
          * Add a telemetry item to the send buffer
          */
         public send(envelope: Telemetry.Common.Envelope) {
-            
-            // if master off switch is set, don't send any data
-            if (this._config.disableTelemetry()) {
-                // Do not send/save data
-                return;
-            }
+            try {
+                // if master off switch is set, don't send any data
+                if (this._config.disableTelemetry()) {
+                    // Do not send/save data
+                    return;
+                }
         
-            // validate input
-            if (!envelope) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Cannot send empty telemetry");
-                return;
-            }
+                // validate input
+                if (!envelope) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Cannot send empty telemetry");
+                    return;
+                }
 
-            // ensure a sender was constructed
-            if (!this._sender) {
-                _InternalLogging.warn("No sender could be constructed for this environment, payload will be added to buffer." + Serializer.serialize(envelope));
-                return;
-            }
+                // ensure a sender was constructed
+                if (!this._sender) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Sender was not initialized");
+                    return;
+                }
             
-            // check if the incoming payload is too large, truncate if necessary
-            var payload: string = Serializer.serialize(envelope);
+                // check if the incoming payload is too large, truncate if necessary
+                var payload: string = Serializer.serialize(envelope);
             
-            // flush if we would exceet the max-size limit by adding this item
-            if (this._getSizeInBytes(this._buffer) + payload.length > this._config.maxBatchSizeInBytes()) {
-                this.triggerSend();
-            }
-
-            // enqueue the payload
-            this._buffer.push(payload);
-
-            // ensure an invocation timeout is set
-            if (!this._timeoutHandle) {
-                this._timeoutHandle = setTimeout(() => {
-                    this._timeoutHandle = null;
+                // flush if we would exceet the max-size limit by adding this item
+                if (this._getSizeInBytes(this._buffer) + payload.length > this._config.maxBatchSizeInBytes()) {
                     this.triggerSend();
-                }, this._config.maxBatchInterval());
+                }
+
+                // enqueue the payload
+                this._buffer.push(payload);
+
+                // ensure an invocation timeout is set
+                if (!this._timeoutHandle) {
+                    this._timeoutHandle = setTimeout(() => {
+                        this._timeoutHandle = null;
+                        this.triggerSend();
+                    }, this._config.maxBatchInterval());
+                }
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed: " + JSON.stringify(e));
             }
         }
 
@@ -135,28 +138,31 @@ module Microsoft.ApplicationInsights {
          * Immediately sennd buffered data
          */
         public triggerSend() {
+            try {
+                // Send data only if disableTelemetry is false
+                if (!this._config.disableTelemetry()) {
 
-            // Send data only if disableTelemetry is false
-            if (!this._config.disableTelemetry()) {
+                    if (this._buffer.length) {
+                        // compose an array of payloads
+                        var batch = this._config.emitLineDelimitedJson() ?
+                            this._buffer.join("\n") :
+                            "[" + this._buffer.join(",") + "]";
 
-                if (this._buffer.length) {
-                    // compose an array of payloads
-                    var batch = this._config.emitLineDelimitedJson() ?
-                        this._buffer.join("\n"):
-                        "[" + this._buffer.join(",") + "]";
+                        // invoke send
+                        this._sender(batch);
+                    }
 
-                    // invoke send
-                    this._sender(batch);
+                    // update lastSend time to enable throttling
+                    this._lastSend = +new Date;
                 }
 
-                // update lastSend time to enable throttling
-                this._lastSend = +new Date;
+                // clear buffer
+                this._buffer.length = 0;
+                clearTimeout(this._timeoutHandle);
+                this._timeoutHandle = null;
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed: " + JSON.stringify(e));
             }
-
-            // clear buffer
-            this._buffer.length = 0;
-            clearTimeout(this._timeoutHandle);
-            this._timeoutHandle = null;
         }
 
         /**
