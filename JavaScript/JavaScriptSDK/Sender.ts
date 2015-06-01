@@ -170,6 +170,7 @@ module Microsoft.ApplicationInsights {
          */
         private _xhrSender(payload: string) {
             var xhr = new XMLHttpRequest();
+            xhr["__csm_disabled"] = true;
             xhr.open("POST", this._config.endpointUrl(), true);
             xhr.setRequestHeader("Content-type", "application/json");
             xhr.onreadystatechange = () => Sender._xhrReadyStateChange(xhr, payload);

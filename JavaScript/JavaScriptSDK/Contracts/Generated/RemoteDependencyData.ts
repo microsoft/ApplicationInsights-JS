@@ -27,10 +27,10 @@ module AI
         constructor()
         {
             this.ver = 2;
-            this.kind = AI.DataPointType.Measurement;
+            this.kind = AI.DataPointType.Aggregation;
             this.dependencyKind = AI.DependencyKind.Other;
             this.success = true;
-            this.dependencySource = AI.DependencySourceType.Undefined;
+            this.dependencySource = AI.DependencySourceType.Apmc;
             this.properties = {};
             
             super();

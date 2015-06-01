@@ -2,6 +2,7 @@
 /// <reference path="./Telemetry/Common/Data.ts"/>
 /// <reference path="./Util.ts"/>
 /// <reference path="./Contracts/Generated/SessionState.ts"/>
+/// <reference path="./Telemetry/RemoteDependencyData.ts"/>
 
 module Microsoft.ApplicationInsights {
     "use strict";
@@ -65,7 +66,7 @@ module Microsoft.ApplicationInsights {
                 emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
                 maxBatchSizeInBytes: () => this.config.maxBatchSizeInBytes,
                 maxBatchInterval: () => this.config.maxBatchInterval,
-                disableTelemetry: () => this.config.disableTelemetry                
+                disableTelemetry: () => this.config.disableTelemetry
             }
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
@@ -238,6 +239,14 @@ module Microsoft.ApplicationInsights {
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackEvent failed: " + JSON.stringify(e));
             }
+        }
+
+        public trackAjax(absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) {
+            var dependency = new Telemetry.RemoteDependencyData(absoluteUrl, isAsync, totalTime, success);
+            var dependencyData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.RemoteDependencyData>(
+                Telemetry.RemoteDependencyData.dataType, dependency);
+            var envelope = new Telemetry.Common.Envelope(dependencyData, "Microsoft.ApplicationInsights." + this.config.instrumentationKey.replace(/-/g, "") + ".RemoteDependency");
+            this.context.track(envelope);
         }
 
         /**

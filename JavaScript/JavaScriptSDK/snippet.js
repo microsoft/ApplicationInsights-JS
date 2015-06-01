@@ -30,7 +30,7 @@
         }
     };
 
-    var method = ["Event", "Exception", "Metric", "PageView", "Trace"];
+    var method = ["Event", "Exception", "Metric", "PageView", "Trace", "Ajax"];
     while (method.length) {
         createLazyMethod("track" + method.pop());
     }
