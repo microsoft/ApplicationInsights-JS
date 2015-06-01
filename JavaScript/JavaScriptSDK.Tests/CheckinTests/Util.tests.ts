@@ -34,14 +34,14 @@ class UtilTests extends TestClass {
                 // mock cookies
                 ((document) => {
                     var cookies = {};
-                    document.__defineGetter__('cookie', () => {
+                    document.__defineGetter__('cookie',() => {
                         var output = [];
                         for (var cookieName in cookies) {
                             output.push(cookieName + "=" + cookies[cookieName]);
                         }
                         return output.join(";");
                     });
-                    document.__defineSetter__('cookie', (s) => {
+                    document.__defineSetter__('cookie',(s) => {
                         var indexOfSeparator = s.indexOf("=");
                         var key = s.substr(0, indexOfSeparator);
                         var value = s.substring(indexOfSeparator + 1);
@@ -93,7 +93,7 @@ class UtilTests extends TestClass {
         this.testCase({
             name: "UtilTests: new GUID",
             test: () => {
-                sinon.stub(Math, "random", () => 0);
+                sinon.stub(Math, "random",() => 0);
                 var expected = "00000000-0000-4000-8000-000000000000";
                 var actual = Microsoft.ApplicationInsights.Util.newGuid();
                 Assert.equal(expected, actual, "expected guid was generated");
@@ -163,12 +163,22 @@ class UtilTests extends TestClass {
                 Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault(null) === false);
                 Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault("") === false);
                 Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault("asdf") === false);
-                Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault(0) === false);                
+                Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault(0) === false);
                 Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault({ asfd: "sdf" }) === false);
                 Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault(new Object()) === false);
 
                 Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault("true") === true);
                 Assert.ok(Microsoft.ApplicationInsights.Util.stringToBoolOrDefault("TrUe") === true);
+            }
+        });
+
+        this.testCase({
+            name: "UtilTests: isCrossOriginError",
+            test: () => {
+                Assert.ok(Microsoft.ApplicationInsights.Util.isCrossOriginError("Script error.", "", 0, 0, null) === true);
+
+                Assert.ok(Microsoft.ApplicationInsights.Util.isCrossOriginError("Script error.", "http://microsoft.com", 0, 0, null)
+                    === false);
             }
         });
     }
