@@ -135,5 +135,17 @@
 
             return hour + ":" + min + ":" + sec + "." + ms;
         }
+   
+        /**		
+        * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error		
+        * happens in a script from other domain (cross origin, CORS).		
+        */
+        public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {		
+            return (message == "Script error." || message == "Script error")
+                    && url == ""
+                    && lineNumber == 0
+                    && columnNumber == 0
+                    && error == null;
+        }		
     }
 }

@@ -65,7 +65,7 @@ module Microsoft.ApplicationInsights {
                 emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
                 maxBatchSizeInBytes: () => this.config.maxBatchSizeInBytes,
                 maxBatchInterval: () => this.config.maxBatchInterval,
-                disableTelemetry: () => this.config.disableTelemetry                
+                disableTelemetry: () => this.config.disableTelemetry
             }
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
@@ -312,6 +312,21 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
+        * In case of CORS exceptions - construct an exception manually.
+        * See this for more info: http://stackoverflow.com/questions/5913978/cryptic-script-error-reported-in-javascript-in-chrome-and-firefox
+        */
+        private SendCORSException() {
+            var exceptionData = Microsoft.ApplicationInsights.Telemetry.Exception.CreateSimpleException(
+                "Script error.", "Error", "unknown", "unknown",
+                "The browser’s same-origin policy prevents us from getting the details of this exception. The exception occurred in a script loaded from an origin different than the web page. For cross-domain error reporting you can use crossorigin attribute together with appropriate CORS HTTP headers. For more information please see http://www.w3.org/TR/cors/.",
+                0, null);
+
+            var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Exception>(Telemetry.Exception.dataType, exceptionData);
+            var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
+            this.context.track(envelope);
+        }
+
+        /**
          * The custom error handler for Application Insights
          * @param {string} message - The error message
          * @param {string} url - The url where the error was raised
@@ -321,21 +336,28 @@ module Microsoft.ApplicationInsights {
          */
         public _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
             try {
-                if (!Util.isError(error)) {
-                    // ensure that we have an error object (browser may not pass an error i.e safari)
-                    try {
-                        throw new Error(message);
-                    } catch (exception) {
-                        error = exception;
-                        if (!error["stack"]) {
-                            error["stack"] = "@" + url + ":" + lineNumber + ":" + (columnNumber || 0);
+                if (Util.isCrossOriginError(message, url, lineNumber, columnNumber, error)) {
+                    this.SendCORSException();
+                } else {
+                    if (!Util.isError(error)) {
+                        // ensure that we have an error object (browser may not pass an error i.e safari)
+                        try {
+                            throw new Error(message);
+                        } catch (exception) {
+                            error = exception;
+                            if (!error["stack"]) {
+                                error["stack"] = "@" + url + ":" + lineNumber + ":" + (columnNumber || 0);
+                            }
                         }
+
+                        this.trackException(error);
                     }
                 }
-
-                this.trackException(error);
             } catch (exception) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "_onerror threw an exception: " + JSON.stringify(exception) + " while logging error: " + error.name + ", " + error.message);
+                var errorString =
+                    error ? (error.name + ", " + error.message) : "null";
+
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "_onerror threw an exception: " + JSON.stringify(exception) + " while logging error: " + errorString);
             }
         }
     }

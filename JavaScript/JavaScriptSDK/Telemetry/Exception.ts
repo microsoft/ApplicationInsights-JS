@@ -32,6 +32,39 @@ module Microsoft.ApplicationInsights.Telemetry {
             this.handledAt = handledAt || "unhandled";
             this.exceptions = [new _ExceptionDetails(exception)];
         }
+        
+
+        /**
+        * Creates a simple exception with 1 stack frame. Useful for manual constracting of exception.
+        */
+        public static CreateSimpleException(message: string, typeName: string, assembly: string, fileName: string,
+            details: string, line: number, handledAt?: string): Telemetry.Exception {
+
+            // We can't override constructors, so throwing a fake error to use existing constructor and override all fields after that.
+            var exceptionTelemetry;
+            try {
+                throw new Error();
+            } catch (e) {
+                exceptionTelemetry = new Telemetry.Exception(e);
+            }
+            
+            var stack = exceptionTelemetry.exceptions[0].parsedStack[0];
+            stack.assembly = assembly;
+            stack.fileName = fileName;
+            stack.level = 0;
+            stack.line = line;
+            stack.method = "unknown";
+
+            var exception = exceptionTelemetry.exceptions[0];
+            exception.hasFullStack = true;
+            exception.message = message;
+            exception.parsedStack = null;
+            exception.stack = details;
+            exception.typeName = typeName;
+            exceptionTelemetry.handledAt = handledAt || "unhandled";            
+
+            return exceptionTelemetry;
+        }
     }
 
     class _ExceptionDetails extends AI.ExceptionDetails implements ISerializable {
@@ -45,7 +78,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             stack: false,
             parsedStack: []
         };
-
+        
         constructor(exception: Error) {
             super();
             this.typeName = Common.DataSanitizer.sanitizeString(exception.name);
