@@ -35,53 +35,7 @@ var $$CsmSt = function () {
             return result;
         }
     };
-
-    /*#region [Diagnostics]*/
-    var diagnostics = {
-
-        // determines if message that DOM storage is disabled is traced already
-        isDomStorageDisabledMessageTraced: false,
-        
-        /**
-        *  Logs uX code Error, tries to extract stack information (at the moment the functionality is available for Mozilla Firefox only)
-        * @param {String} errorID String-Identified of error
-        * @param {Array} params - Additional parameters to trace
-        * @param {Exception} exceptionObject Generated Exception object
-        */
-        TraceException: function (errorId, exception, params) {
-            var traceMessage = errorId;
-            // Add extended (only in non-obfuscated mode, only for full log):
-            ///#DEBUG
-            // Client Time
-            traceMessage += "\nDateTime on client: ";
-            traceMessage += new Date().toString();
-            // browser information:
-            if (!extensions.IsNullOrUndefined(navigator) && !extensions.IsNullOrUndefined(navigator.userAgent)) {
-                traceMessage += "\nUserAgent: ";
-                traceMessage += navigator.userAgent;
-            }
-            ///#ENDDEBUG
-
-            commands.TryCatchSwallowWrapper(function () {
-                if (!extensions.IsNullOrUndefined(exception)) {
-                    if (!extensions.IsNullOrUndefined(exception.stack) && exception.stack.length > 0) {
-                        // Add stack information if supported (currently in Firefox only) only for full log:
-                        traceMessage += "\nStack: " + exception.stack;
-                    }
-                    traceMessage += ";\nType:" + exception.name; // exception type - one of [EvalError, RangeError, ReferenceError, SyntaxError, TypeError, URIError]
-                    traceMessage += ";\nMessage:" + exception.message; // message/description of the exception
-                }
-
-                if (!extensions.IsNullOrUndefined(params)) {
-                    traceMessage += ";\nParams:\n";
-                    for (var i = 0; i < params.length; i++) {
-                        traceMessage += i + ": " + params[i] + "\n";
-                    }
-                }
-            });
-        }
-    };
-
+    
     /*#endregion*/
 
     /*#region [Commands]*/
@@ -98,26 +52,7 @@ var $$CsmSt = function () {
                 return funcPointer.call(this);
             }
             catch (ex) {
-                commands.TryCatchSwallowWrapper(function () { diagnostics.TraceException(functionName, ex, params); });
-            }
-        },
-
-        /// <summary>
-        /// Wrappes function call in try..catch with empty catch block
-        /// </summary>
-        TryCatchSwallowWrapper: function (funcPointer) {
-            try {
-                funcPointer.call(this);
-            }
-            catch (iex) {
-                // the block catches unexpected exceptions, must be empty
-                ///#DEBUG
-                if (typeof (iex) !== csmConstants.udf) {
-                    if (window.confirm("CSM Smart Error Logging: " + iex.message + "\nDo you want to debug an unhandled exception?")) {
-                        debugger;
-                    }
-                }
-                ///#ENDDEBUG
+                window.appInsights.trackException(iex);
             }
         },
 
@@ -488,8 +423,6 @@ var $$CsmSt = function () {
 
                 } finally {
                     if (!extensions.IsNullOrUndefined(this.ajaxData.originalOnreadystatechage)) {
-                        diagnostics.TraceEvent("Original 'onreadystatechange' handler of Ajax object was called by XhrInterceptor");
-
                         commands.TryCatchTraceWrapper.call(this, "callbackFinishedTime", function () {
                             if (this.readyState === 4) {
                                 this.ajaxData.callbackFinishedTime = dateTime.Now();
@@ -525,7 +458,6 @@ var $$CsmSt = function () {
             commands.TryCatchTraceWrapper.call(this, "publishData", function () {
                 this.ajaxData.CalculateMetrics();
                 
-                //this.ajaxData.Send();
                 window.appInsights.trackAjax(
                     this.ajaxData.getAbsoluteUrl(),
                     this.ajaxData.async,
@@ -554,25 +486,18 @@ var $$CsmSt = function () {
             // FF throws exception on accessing properties of xhr when network error occured during ajax call
             // http://helpful.knobs-dials.com/index.php/Component_returned_failure_code:_0x80040111_(NS_ERROR_NOT_AVAILABLE)
 
-            commands.TryCatchSwallowWrapper.call(this, function () {
+            try {
                 this.ajaxData.status = this.status;
-            });
-
-            commands.TryCatchSwallowWrapper.call(this, function () {
                 this.ajaxData.contentType = this.getResponseHeader("Content-Type");
-            });
-
-            commands.TryCatchSwallowWrapper.call(this, function () {
                 this.ajaxData.contentEncoding = this.getResponseHeader("Content-Encoding");
-            });
-
-            commands.TryCatchSwallowWrapper.call(this, function () {
                 this.ajaxData.responseSize = this.responseText.length;
                 this.ajaxData.responseSize += this.getAllResponseHeaders().length;
 
                 //add 'HTTP/1.1 200 OK' length
                 this.ajaxData.responseSize += 17;
-            });
+            } catch (e) {
+                window.appInsights.trackException(e);
+            }
         }
 
         function interceptSetRequestHeader() {
