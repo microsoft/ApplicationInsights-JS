@@ -1,23 +1,5 @@
 ﻿;
 var $$CsmSt = function () {
-    var traceModes = {
-        Off: 0,
-        Error: 1,
-        Warning: 2,
-        Information: 3,
-        Alert: 4
-    };
-
-    var traceEventTypes = {
-        Error: 1,
-        Warning: 2,
-        Information: 3
-    };
-
-    var configuration = {
-        traceMode: traceModes.Error
-    };
-
     var csmConstants = {
         attachEvent: "attachEvent",
         de: "detachEvent",
@@ -25,45 +7,7 @@ var $$CsmSt = function () {
         re: "removeEventListener",
         udf: "undefined"
     };
-
-    ///<summary>Factory object that contains web application specific logic</summary>
-    var webApplication = {
-        GetApplicationInstrumentKey: function () {
-            return __csm_pa.InstrumentationData.instrumentationKey;
-        },
-
-        GetCollectorSite: function () {
-            return __csm_pa.InstrumentationData.collectorSite;
-        }
-    };
-
-
-    ///<summary>Factory object that contains Windows Store application specific logic</summary>
-    var winStoreApplication = {
-        applicationId: null,
-        GetApplicationInstrumentKey: function () {
-            if (winStoreApplication.applicationId === null) {
-                winStoreApplication.applicationId = Windows.ApplicationModel.Package.current.id.name;
-            }
-
-            return winStoreApplication.applicationId;
-        },
-
-        GetCollectorSite: function () {
-            return "https://csm.cloudapp.net";
-        }
-    };
-
-    ///<summary>The object that represents visitors and visits</summary>
-    var storageInfo = function (id, isReturning) {
-
-        /// <summary>The unique identifier of the entity</summary>
-        this.id = id;
-
-        ///<summary>True, if visit or visitor is returning, false if it is new</summary>
-        this.isReturning = isReturning;
-    };
-    
+        
     ///<summary>Represents an instant in time</summary>
     var dateTime = {
 
@@ -92,141 +36,12 @@ var $$CsmSt = function () {
         }
     };
 
-    ///<summary>Represents a set of string functions</summary>
-    var strings = {
-
-        ///<summary>Retrieves a substring from this instance</summary>
-        ///<param name="startString">The start of the substring</param>
-        ///<param name="endString">The substring where to stop including</param>
-        ///<param name="includeStartString">True if startString must be included in result, otherwise false</param>
-        ///<returns>Substring, if found, otherwise empty string</returns>
-        Substring: function (str, startString, endString, includeStartString) {
-            var result = "";
-            if (!extensions.IsNullOrUndefined(str) && str.length > 0) {
-                var start = str.indexOf(startString);
-                if (start !== -1) {
-                    if (!includeStartString) {
-                        start = start + startString.length;
-                    }
-                    var end = str.indexOf(endString, start);
-                    if (end === -1) {
-                        end = document.cookie.length;
-                    }
-
-                    result = str.substring(start, end);
-                }
-            }
-
-            return result;
-        },
-
-        ///<summary>Returns a new string in which a specified number of characters from the current string are deleted</summary>
-        ///<param name="from">Required. The index where to start the removing. First character is at index 0</param>
-        ///<param name="to">Optional. The index where to stop the removing. If omitted or < 0, it extracts the rest of the string</param>
-        ///<returns>A new string that is equivalent to this instance except for the removed characters.</returns>
-        Remove: function (str, from, to) {
-            var result = '';
-            if (!extensions.IsNullOrUndefined(str)) {
-                if (from > 0) {
-                    result = str.substring(0, from);
-                }
-                if (typeof (to) !== csmConstants.udf && to >= 0) {
-                    if (to < str.length) {
-                        result += str.substring(to);
-                    }
-                }
-            }
-
-            return result;
-        }
-    };
-
-    var urlBuilder = {
-        Serialize: function (params, methodName) {
-            var result = monitoredApplication.GetCollectorSite() + "/DataCollection.svc/" + methodName + "?ID=" + dateTime.Now();
-            for (key in params) {
-                var value = params[key];
-                if (value !== 0 && value !== null) {
-                    result += key + value;
-                }
-            }
-
-            return result;
-        },
-
-        SerializeAjaxStatistics: function (params) {
-            return urlBuilder.Serialize(params, "SendAjaxStatistics");
-        },
-
-        SerializePageStatistics: function (params) {
-            return urlBuilder.Serialize(params, "SendAnalytics");
-        }
-    };
-
-    var infrastructure = {
-        GetRequest: function (url) {
-            var img = new Image(0, 0);
-            img.src = url;
-        }
-    };
-
     /*#region [Diagnostics]*/
     var diagnostics = {
 
         // determines if message that DOM storage is disabled is traced already
         isDomStorageDisabledMessageTraced: false,
-
-        /**
-        * Logs Trace message
-        * @param {String} message - Message to trace.
-        * @param {int} traceEventType - Event trace type.
-        */
-        TraceEvent: function (message, traceEventType) {
-            if (extensions.IsNullOrUndefined(traceEventType)) {
-                traceEventType = traceEventTypes.Information;
-            }
-            try {
-                if (configuration.traceMode >= traceEventType) {
-                    message = message.toString();
-
-                    // Try to write to console (supported in Firefox):
-                    try {
-                        if (!extensions.IsNullOrUndefined(console)) {
-                            if (!extensions.IsNullOrUndefined(console.debug)) {
-                                // FF 
-                                console.debug("CSM Trace (%s) : %s.", new Date().toString(), message);
-                            }
-
-                            if (!extensions.IsNullOrUndefined(console.log)) {
-                                // safari                                    
-                                console.log("CSM Trace " + new Date().toString() + ": " + message);
-                            }
-                        }
-                    }
-                    catch (ex) {
-                        // Ignore the error, because we can do nothing here.
-                    }
-
-                    if (configuration.traceMode === traceModes.Alert) {
-                        alert("CSM Trace:\n" + message + ".");
-                    }
-
-                    var url = monitoredApplication.GetCollectorSite() + "/DataCollection.svc/TraceEvent?msg=" + encodeURIComponent(message) + "&tet=" + encodeURIComponent(traceEventType) + "&ID=" + encodeURIComponent(new Date().getTime());
-                    infrastructure.GetRequest(url);
-                }
-            }
-            catch (iex) {
-                // the block catches unexpected exceptions, must be empty
-                ///#DEBUG
-                if (typeof (iex) !== csmConstants.udf) {
-                    if (window.confirm("CSM Error Logging: " + iex.message + "\nDo you want to debug an unhandled exception?")) {
-                        debugger;
-                    }
-                }
-                ///#ENDDEBUG
-            }
-        },
-
+        
         /**
         *  Logs uX code Error, tries to extract stack information (at the moment the functionality is available for Mozilla Firefox only)
         * @param {String} errorID String-Identified of error
@@ -264,8 +79,6 @@ var $$CsmSt = function () {
                     }
                 }
             });
-
-            diagnostics.TraceEvent(traceMessage, traceEventTypes.Error);
         }
     };
 
@@ -366,111 +179,17 @@ var $$CsmSt = function () {
                     }
                 }
             }
-        },
-
-        ///<summary>
-        /// Creates XmlHttpRequest object which will not be monitored by client side monitoring
-        /// <returns>XmlHttpRequest instance which will not be monitored by client side monitoring</returns>
-        ///</summary>
-        CreateXmlHttpRequest: function () {
-            var result = new XMLHttpRequest();
-            commands.TryCatchTraceWrapper("Disabling_XmlHttpRequest_monitoring", function () {
-                result[ajaxMonitoringObject.GetDisabledPropertyName()] = true;
-            });
-
-            return result;
         }
     };
     this.Commands = commands;
     /*#endregion*/
-
-    var guid = {
-        chars: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'],
-
-        ///<summary>
-        /// Initializes a new instance of the Guid structure without machine specific information.
-        ///<summary>
-        New: function () {
-            var chars = guid.chars, uuid = [];
-            var randIndex;
-
-            uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';
-            uuid[14] = '4'; // reserved by rfc4122
-
-            for (var i = 0; i < 36; i++) {
-                if (!uuid[i]) {
-                    // random index: 0 <= randIndex < chars.length
-                    randIndex = 0 | Math.random() * chars.length;
-                    uuid[i] = chars[randIndex];
-                }
-            }
-
-            return uuid.join('');
-        }
-    };
-
-    this.Guid = guid;
-
-    var bool = {
-        toInt: function (boolVal) {
-            return boolVal ? 1 : 0;
-        }
-    };
-
+    
     ///<summary>Extension methods for object type</summary>
     var extensions = {
         IsNullOrUndefined: function (obj) {
             return typeof (obj) === csmConstants.udf || obj === null;
         },
-        GetWindowLocalStorage: function () {
-            var result = null;
-            try {
-                result = window.localStorage;
-            }
-            catch (ex) {
-                // On FF 3.6 Security exception is expected here because of FF 3.6 issue https://bugzilla.mozilla.org/show_bug.cgi?id=616202
-            }
 
-            return result;
-        },
-
-        Clone: function (obj) {
-            var result;
-            if (typeof (obj) === "undefined") {
-                result = undefined;
-            } else if (obj === null) {
-                result = null;
-            } else {
-                result = {};
-            }
-
-            if (!extensions.IsNullOrUndefined(obj)) {
-                for (var i in obj) {
-                    if (typeof (obj[i]) === "object") {
-                        result[i] = extensions.Clone(obj[i]);
-                    } else {
-                        result[i] = obj[i];
-                    }
-                }
-            }
-
-            return result;
-        }
-    };
-
-    var factory = {
-        GetMonitoredApplication: function () {
-            var result;
-
-            // Do not determine web application based on presense of __csm_pa object - it can be not initiated at this moment on Safari.
-            if (typeof (Windows) !== "undefined" && typeof (Windows.ApplicationModel) !== "undefined") {
-                result = winStoreApplication;
-            }
-            else {
-                result = webApplication;
-            }
-            return result;
-        }     
     };
 
     var stringUtils = {
@@ -489,30 +208,7 @@ var $$CsmSt = function () {
             }
 
             return res;
-        },
-
-        ///<summary>Truncate the string</summary>
-        ///<param name="str">String to truncate</param>
-        ///<param name="len">Max number of characters in truncated string</param>
-        TruncateString: function (str, len) {
-            /*Result*/
-            var res = {
-                string: null, /*Truncated String*/
-                truncated: false /*Flag, was string truncated or not*/
-            };
-            if (!extensions.IsNullOrUndefined(str)) {
-                if (str.length > len) { // truncate only if required
-                    res.string = str.substring(0, len);
-                    res.truncated = true; // the string was truncated
-                }
-                else {
-                    res.string = str; /*The string was not truncated*/
-                }
-            }
-            return res;
-        }
-
-
+        }        
     };
 
     ///<summary>Monitoring information about individual Ajax request</summary>
@@ -893,12 +589,7 @@ var $$CsmSt = function () {
             };
         }
     };
-  
-    // initialization
-    var monitoredApplication = factory.GetMonitoredApplication();
-    this.MonitoredApplication = monitoredApplication;
-    
-    this.Factory = factory;
+
     this.Extensions = extensions;
     var ajaxMonitoringObject = new ajaxMonitoring();
     ajaxMonitoringObject.Init();
