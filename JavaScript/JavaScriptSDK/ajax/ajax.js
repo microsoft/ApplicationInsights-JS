@@ -515,7 +515,6 @@ var $$CsmSt = function () {
         }
     };
 
-    this.Extensions = extensions;
     var ajaxMonitoringObject = new ajaxMonitoring();
     ajaxMonitoringObject.Init();
 };
