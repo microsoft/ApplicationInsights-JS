@@ -349,9 +349,9 @@ module Microsoft.ApplicationInsights {
                                 error["stack"] = "@" + url + ":" + lineNumber + ":" + (columnNumber || 0);
                             }
                         }
-
-                        this.trackException(error);
                     }
+
+                    this.trackException(error);
                 }
             } catch (exception) {
                 var errorString =
