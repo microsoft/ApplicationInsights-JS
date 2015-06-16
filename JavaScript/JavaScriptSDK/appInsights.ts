@@ -127,7 +127,7 @@ module Microsoft.ApplicationInsights {
 
                 this._pageTracking.stop(name, url, properties, measurements);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "stopTrackPage failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "stopTrackPage failed, page view will not be collected: " + JSON.stringify(e));
             }
         }
 
@@ -193,7 +193,7 @@ module Microsoft.ApplicationInsights {
                     this.context._sender.triggerSend();
                 }, 100);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed, page view will not be collected: " + JSON.stringify(e));
             }
         }
 
@@ -205,7 +205,7 @@ module Microsoft.ApplicationInsights {
             try {
                 this._eventTracking.start(name);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "startTrackEvent failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "startTrackEvent failed, event will not be collected: " + JSON.stringify(e));
             }
         }
 
@@ -219,7 +219,7 @@ module Microsoft.ApplicationInsights {
             try {
                 this._eventTracking.stop(name, undefined, properties, measurements);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "stopTrackEvent failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "stopTrackEvent failed, event will not be collected: " + JSON.stringify(e));
             }
         }
 
@@ -236,7 +236,7 @@ module Microsoft.ApplicationInsights {
                 var envelope = new Telemetry.Common.Envelope(data, Telemetry.Event.envelopeType);
                 this.context.track(envelope);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackEvent failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackEvent failed, event will not be collected: " + JSON.stringify(e));
             }
         }
 
@@ -262,7 +262,7 @@ module Microsoft.ApplicationInsights {
                 var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
                 this.context.track(envelope);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackException failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackException failed, exception will not be collected: " + JSON.stringify(e));
             }
         }
 
@@ -284,7 +284,7 @@ module Microsoft.ApplicationInsights {
 
                 this.context.track(envelope);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackMetric failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackMetric failed, metric will not be collected: " + JSON.stringify(e));
             }
         }
 
@@ -296,7 +296,7 @@ module Microsoft.ApplicationInsights {
 
                 this.context.track(envelope);
             } catch (e) {
-                _InternalLogging.warn("trackTrace failed: " + JSON.stringify(e));
+                _InternalLogging.warn("trackTrace failed, trace will not be collected: " + JSON.stringify(e));
             }
         }
 
@@ -307,7 +307,7 @@ module Microsoft.ApplicationInsights {
             try {
                 this.context._sender.triggerSend();
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "flush failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "flush failed, telemetry will not be collected: " + JSON.stringify(e));
             }
         }
 
@@ -357,7 +357,7 @@ module Microsoft.ApplicationInsights {
                 var errorString =
                     error ? (error.name + ", " + error.message) : "null";
 
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "_onerror threw an exception: " + JSON.stringify(exception) + " while logging error: " + errorString);
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "_onerror threw an exception: " + JSON.stringify(exception) + " while logging error, error will not be collected: " + errorString);
             }
         }
     }

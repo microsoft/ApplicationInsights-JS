@@ -71,7 +71,7 @@ module Microsoft.ApplicationInsights {
                 var isObject = typeof source[field] === "object" && source[field] !== null;
 
                 if (isRequired && !isPresent && !isArray) {
-                    _InternalLogging.throwInternalUserActionable(
+                    _InternalLogging.throwInternalNonUserActionable(
                         LoggingSeverity.CRITICAL,
                         "Missing required field specification: The field '" + field + "' is required but not present on source");
 
