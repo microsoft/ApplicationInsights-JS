@@ -11,7 +11,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
         public aiDataContract = {
             ver: true,
-            message: false,
+            message: true,
             severityLevel: false,
             measurements: false,
             properties: false
@@ -22,7 +22,7 @@ module Microsoft.ApplicationInsights.Telemetry {
          */
         constructor(message: string, properties?: Object) {
             super();
-            message = message || "";
+            message = message || Util.NotSpecified;
             this.message = Common.DataSanitizer.sanitizeMessage(message);
             this.properties = Common.DataSanitizer.sanitizeProperties(properties);
         }

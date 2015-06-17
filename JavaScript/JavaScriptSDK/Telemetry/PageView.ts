@@ -25,7 +25,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             super();
 
             this.url = Common.DataSanitizer.sanitizeUrl(url);
-            this.name = Common.DataSanitizer.sanitizeString(name);
+            this.name = Common.DataSanitizer.sanitizeString(name || Util.NotSpecified);
             if (!isNaN(durationMs)) {
                 this.duration = Util.msToTimeSpan(durationMs);
             }
