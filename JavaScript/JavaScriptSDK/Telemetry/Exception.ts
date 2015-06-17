@@ -72,8 +72,8 @@ module Microsoft.ApplicationInsights.Telemetry {
         public aiDataContract = {
             id: false,
             outerId: false,
-            typeName: true,
-            message: true,
+            typeName: false,
+            message: false,
             hasFullStack: false,
             stack: false,
             parsedStack: []

@@ -11,7 +11,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
         public aiDataContract = {
             ver: true,
-            message: true,
+            message: false,
             severityLevel: false,
             measurements: false,
             properties: false
