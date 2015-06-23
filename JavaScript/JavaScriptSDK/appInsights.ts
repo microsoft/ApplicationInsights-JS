@@ -357,7 +357,9 @@ module Microsoft.ApplicationInsights {
                 var errorString =
                     error ? (error.name + ", " + error.message) : "null";
 
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "_onerror threw an exception: " + JSON.stringify(exception) + " while logging error, error will not be collected: " + errorString);
+                var exceptionDump: string = Util.dump(exception);
+
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "_onerror threw " + exceptionDump + " while logging error, error will not be collected: " + errorString);
             }
         }
     }

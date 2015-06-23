@@ -655,6 +655,48 @@ class AppInsightsTests extends TestClass {
             }
         });
 
+        this.testCase({
+            name: "AppInsights._onerror creates a dump of unexpected error thrown by trackException for logging",
+            test: () => {
+                var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var dumpSpy = sinon.spy(Microsoft.ApplicationInsights.Util, "dump")
+                try {
+                    var unexpectedError = new Error();
+                    sinon.stub(sut, "trackException").throws(unexpectedError);               
+
+                    sut._onerror("any message", "any://url", 420, 42, new Error());
+
+                    Assert.ok(dumpSpy.calledWith(unexpectedError));
+                }
+                finally {
+                    dumpSpy.restore();
+                }
+            }
+        });
+
+        this.testCase({
+            name: "AppInsights._onerror logs dump of unexpected error thrown by trackException for diagnostics",
+            test: () => {
+                var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var throwInternalNonUserActionableSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
+                var dumpStub = sinon.stub(Microsoft.ApplicationInsights.Util, "dump");
+                try {
+                    sinon.stub(sut, "trackException").throws(new Error());
+                    var expectedErrorDump: string = "test error";
+                    dumpStub.returns(expectedErrorDump);
+
+                    sut._onerror("any message", "any://url", 420, 42, new Error());
+
+                    var logMessage: string = throwInternalNonUserActionableSpy.getCall(0).args[1];
+                    Assert.notEqual(-1, logMessage.indexOf(expectedErrorDump));
+                }
+                finally {
+                    dumpStub.restore();
+                    throwInternalNonUserActionableSpy.restore();
+                }
+            }
+        });
+
         this.addPageViewSignatureTests();
         this.addStartStopTests();
     }
