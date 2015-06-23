@@ -148,5 +148,14 @@
                 && columnNumber == 0
                 && error == null;
         }
+
+        /**
+        * Returns string representation of an object suitable for diagnostics logging.
+        */
+        public static dump(object: any): string {
+            var objectTypeDump: string = Object.prototype.toString.call(object);
+            var propertyValueDump: string = JSON.stringify(object);
+            return objectTypeDump + propertyValueDump;
+        }
     }
 }
