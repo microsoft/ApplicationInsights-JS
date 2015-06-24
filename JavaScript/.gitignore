@@ -26,5 +26,6 @@ _Chutzpah.*
 /*/E2ETests/ai.js
 /*/E2ETests/sprint*Snippet.js
 /*/E2ETests/testSnippet.js
-/*/E2ETests/*.html
+/*/E2ETests/sprint*.html
+/*/E2ETests/test.html
 /*/Selenium/testPageWithAppInsights.html
