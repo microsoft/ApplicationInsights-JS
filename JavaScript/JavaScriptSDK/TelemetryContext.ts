@@ -95,7 +95,11 @@ module Microsoft.ApplicationInsights {
             if (!envelope) {
                 _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, "cannot call .track() with a null or undefined argument");
             } else {
-
+                // If the envelope is PageView, reset the internal event throttle.
+                if (envelope.name === Telemetry.PageView.envelopeType) {
+                    _InternalLogging.resetInternalEventsThrottle();
+                }
+                
                 if (this.session) {
                     // If customer did not provide custom session id update sessionmanager
                     if (typeof this.session.id !== "string") {
