@@ -1184,62 +1184,6 @@ class AppInsightsTests extends TestClass {
                 senderSpy.restore();
             }
         });
-
-        this.testCase({
-            name: "PageView should cause internal event throttle to be reset",
-            test: () => {
-                // setup
-                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
-                appInsights.context._sender._sender = () => null;
-                var senderStub = sinon.stub(appInsights.context._sender, "_sender");
-                var resetInternalEventsStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "resetInternalEventsThrottle");
-
-                // setup a page view envelope
-                var pageView = new Microsoft.ApplicationInsights.Telemetry.PageView();
-                var pageViewData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.PageView>(Microsoft.ApplicationInsights.Telemetry.PageView.dataType, pageView);
-                var pageViewEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(pageViewData, Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType);
-
-                // act
-                appInsights.context.track(pageViewEnvelope);
-
-                // verify
-                Assert.ok(resetInternalEventsStub.calledOnce, "Internal throttle was not reset even though Page View was tracked");
-
-                // restore
-                senderStub.restore();
-                resetInternalEventsStub.restore();
-            }
-        });
-
-        this.testCase({
-            name: "No other event than PageView should cause internal event throttle to be reset",
-            test: () => {
-                // setup
-                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
-                appInsights.context._sender._sender = () => null;
-                var senderStub = sinon.stub(appInsights.context._sender, "_sender");
-                var resetInternalEventsStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "resetInternalEventsThrottle");
-
-                // setup a some other envelope
-                var event = new Microsoft.ApplicationInsights.Telemetry.Event('Test Event');
-                var eventData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.Event>(Microsoft.ApplicationInsights.Telemetry.Event.dataType, event);
-                var eventEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(eventData, Microsoft.ApplicationInsights.Telemetry.Event.envelopeType);
-
-                // act
-                appInsights.context.track(eventEnvelope);
-
-                // verify
-                Assert.ok(resetInternalEventsStub.notCalled, "Internal throttle was reset even though Page View was not tracked");
-
-                // restore
-                senderStub.restore();
-                resetInternalEventsStub.restore();
-            }
-        });
     }
 
     private getFirstResult(action: string, trackStub: SinonStub, skipSessionState?: boolean) {
