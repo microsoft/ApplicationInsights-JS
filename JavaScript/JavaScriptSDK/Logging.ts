@@ -38,43 +38,48 @@
         public static queue = [];
         
         /**
-         * The maximum number of internal events allowed to be sent per page view
+         * The maximum number of internal messages allowed to be sent per page view
          */
-        private static MAX_ALLOWED_EVENT_LIMIT = 2;
+        private static MAX_INTERNAL_MESSAGE_LIMIT = 2;
         
         /**
-         * Count of events sent
+         * Count of internal messages sent
          */
-        private static _eventCount = 0;
+        private static _messageCount = 0;
         
         /**
          * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
+         * @param severity {LoggingSeverity} - The severity of the log message
+         * @param message {string} - The log message.
          */
         public static throwInternalNonUserActionable(severity: LoggingSeverity, message: string) {
-            if (_InternalLogging.enableDebugExceptions()) {
+            if (this.enableDebugExceptions()) {
                 throw message;
             } else {
-                _InternalLogging.warn(message);
-                this._throttle(severity, this.AiNonUserActionablePrefix + message, this.MAX_ALLOWED_EVENT_LIMIT);
+                this.warnToConsole(message);
+                this.logInternalMessage(severity, this.AiNonUserActionablePrefix + message);
             }
         }
 
         /**
          * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
+         * @param severity {LoggingSeverity} - The severity of the log message
+         * @param message {string} - The log message.
          */
         public static throwInternalUserActionable(severity: LoggingSeverity, message: string) {
-            if (_InternalLogging.enableDebugExceptions()) {
+            if (this.enableDebugExceptions()) {
                 throw message;
             } else {
-                _InternalLogging.warn(message);
-                this._throttle(severity, this.AiUserActionablePrefix + message, this.MAX_ALLOWED_EVENT_LIMIT);
+                this.warnToConsole(message);
+                this.logInternalMessage(severity, this.AiUserActionablePrefix + message);
             }
         }
 
         /**
          * This will write a warning to the console if possible
+         * @param message {string} - The warning message
          */
-        public static warn(message: string) {
+        public static warnToConsole(message: string) {
             if (typeof console !== "undefined" && !!console) {
                 if (typeof console.warn === "function") {
                 console.warn(message);
@@ -85,46 +90,55 @@
         }
         
         /**
-         * Resetting the throttle limits for Internal events
+         * Resets the internal message count
          */
-        public static resetInternalEventsThrottle(): void {
-            this._eventCount = 0;
+        public static resetInternalMessageCount(): void {
+            this._messageCount = 0;
         }
 
         /**
          * Sets the limit for the number of internal events before they are throttled
+         * @param limit {number} - The throttle limit to set for internal events
          */
-        public static setMaxAllowedInternalThrottleLimit(limit: number): void {
+        public static setMaxInternalMessageLimit(limit: number): void {
             if (!limit) {
-                return;
+                throw new Error('limit cannot be undefined.');
             }
             
-            this.MAX_ALLOWED_EVENT_LIMIT = limit;
+            this.MAX_INTERNAL_MESSAGE_LIMIT = limit;
         }
         
         /**
-         * Throttles the internal logs based on the SDK configurations
+         * Logs a message to the internal queue.
+         * @param severity {LoggingSeverity} - The severity of the log message
+         * @param message {string} - The message to log.
          */
-        private static _throttle(severity: LoggingSeverity, message: string, throttleLimit: number): void {
-            // If the event count exceeds the throttle limit, do nothing.
-            if (this._eventCount >= this.MAX_ALLOWED_EVENT_LIMIT) {
+        public static logInternalMessage(severity: LoggingSeverity, message: string): void {
+            if (this._areInternalMessagesThrottled()) {
                 return;
             }
 
             // Push the event in the internal queue
-            if (_InternalLogging.verboseLogging() || severity === LoggingSeverity.CRITICAL) {
+            if (this.verboseLogging() || severity === LoggingSeverity.CRITICAL) {
                 if (this.queue.length < this.MAX_QUEUE_SIZE) {
                     this.queue.push(message);
-                    this._eventCount++;
+                    this._messageCount++;
                 }
             }
 
             // When throttle limit reached, send a special event
-            if (this._eventCount == this.MAX_ALLOWED_EVENT_LIMIT) {
-                var throttleLimitMessage = this.AiNonUserActionablePrefix + "Internal events throttled for this app";
+            if (this._messageCount == this.MAX_INTERNAL_MESSAGE_LIMIT) {
+                var throttleLimitMessage = this.AiNonUserActionablePrefix + "Internal events throttle limit per PageView reached for this app.";
                 this.queue.push(throttleLimitMessage);
-                this.warn(throttleLimitMessage);
+                this.warnToConsole(throttleLimitMessage);
             }
+        }
+
+        /**
+         * Indicates whether the internal events are throttled
+         */
+        private static _areInternalMessagesThrottled(): boolean {
+            return this._messageCount >= this.MAX_INTERNAL_MESSAGE_LIMIT;
         }
     }
 }

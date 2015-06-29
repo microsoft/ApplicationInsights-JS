@@ -95,9 +95,9 @@ module Microsoft.ApplicationInsights {
             if (!envelope) {
                 _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, "cannot call .track() with a null or undefined argument");
             } else {
-                // If the envelope is PageView, reset the internal event throttle.
+                // If the envelope is PageView, reset the internal message count so that we can send internal telemetry for the new page.
                 if (envelope.name === Telemetry.PageView.envelopeType) {
-                    _InternalLogging.resetInternalEventsThrottle();
+                    _InternalLogging.resetInternalMessageCount();
                 }
                 
                 if (this.session) {

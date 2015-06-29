@@ -1194,7 +1194,7 @@ class AppInsightsTests extends TestClass {
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
                 appInsights.context._sender._sender = () => null;
                 var senderStub = sinon.stub(appInsights.context._sender, "_sender");
-                var resetInternalEventsStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "resetInternalEventsThrottle");
+                var resetInternalMessageCountStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "resetInternalMessageCount");
 
                 // setup a page view envelope
                 var pageView = new Microsoft.ApplicationInsights.Telemetry.PageView();
@@ -1205,11 +1205,11 @@ class AppInsightsTests extends TestClass {
                 appInsights.context.track(pageViewEnvelope);
 
                 // verify
-                Assert.ok(resetInternalEventsStub.calledOnce, "Internal throttle was not reset even though Page View was tracked");
+                Assert.ok(resetInternalMessageCountStub.calledOnce, "Internal throttle was not reset even though Page View was tracked");
 
                 // restore
                 senderStub.restore();
-                resetInternalEventsStub.restore();
+                resetInternalMessageCountStub.restore();
             }
         });
 
@@ -1222,7 +1222,7 @@ class AppInsightsTests extends TestClass {
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
                 appInsights.context._sender._sender = () => null;
                 var senderStub = sinon.stub(appInsights.context._sender, "_sender");
-                var resetInternalEventsStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "resetInternalEventsThrottle");
+                var resetInternalMessageCountStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "resetInternalMessageCount");
 
                 // setup a some other envelope
                 var event = new Microsoft.ApplicationInsights.Telemetry.Event('Test Event');
@@ -1233,11 +1233,11 @@ class AppInsightsTests extends TestClass {
                 appInsights.context.track(eventEnvelope);
 
                 // verify
-                Assert.ok(resetInternalEventsStub.notCalled, "Internal throttle was reset even though Page View was not tracked");
+                Assert.ok(resetInternalMessageCountStub.notCalled, "Internal throttle was reset even though Page View was not tracked");
 
                 // restore
                 senderStub.restore();
-                resetInternalEventsStub.restore();
+                resetInternalMessageCountStub.restore();
             }
         });
     }

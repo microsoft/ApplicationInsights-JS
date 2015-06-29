@@ -10,10 +10,10 @@ class LoggingTests extends TestClass {
         this.clearInternalLoggingQueue();
 
         // Reset the internal event throttle
-        Microsoft.ApplicationInsights._InternalLogging.resetInternalEventsThrottle();
+        Microsoft.ApplicationInsights._InternalLogging.resetInternalMessageCount();
 
         // Reset the internal throttle max limit
-        Microsoft.ApplicationInsights._InternalLogging.setMaxAllowedInternalThrottleLimit(Number.MAX_VALUE);
+        Microsoft.ApplicationInsights._InternalLogging.setMaxInternalMessageLimit(Number.MAX_VALUE);
     }
 
     /**
@@ -28,7 +28,7 @@ class LoggingTests extends TestClass {
 
     public registerTests() {
         var InternalLogging = Microsoft.ApplicationInsights._InternalLogging;
-        InternalLogging.setMaxAllowedInternalThrottleLimit(Number.MAX_VALUE);
+        InternalLogging.setMaxInternalMessageLimit(Number.MAX_VALUE);
 
         this.testCase({
             name: "LoggingTests: enableDebugExceptions enables exceptions",
@@ -168,7 +168,7 @@ class LoggingTests extends TestClass {
         });
 
         this.testCase({
-            name: "LoggingTests: warn does not add to the queue ",
+            name: "LoggingTests: warnToConsole does not add to the queue ",
             test: () => {
                 // setup
                 var throwSpy = null;
@@ -177,7 +177,7 @@ class LoggingTests extends TestClass {
 
                     // act
                     var message = "error!";
-                    InternalLogging.warn(message);
+                    InternalLogging.warnToConsole(message);
 
                     // verify
                     Assert.ok(throwSpy.calledOnce, "console.warn was called once");
@@ -219,43 +219,84 @@ class LoggingTests extends TestClass {
         });
 
         this.testCase({
-            name: "LoggingTests: Internal events are throttled when the limit is reached",
+            name: "LoggingTests: logInternalMessage throttles messages when the throttle limit is reached",
             test: () => {
-                var maxAllowedInternalEvents = 2;
+                var maxAllowedInternalMessages = 2;
                 var message = "Internal Test Event";
 
                 // setup
                 InternalLogging.enableDebugExceptions = () => false;
-                InternalLogging.setMaxAllowedInternalThrottleLimit(maxAllowedInternalEvents);
-                InternalLogging.resetInternalEventsThrottle();
+                InternalLogging.setMaxInternalMessageLimit(maxAllowedInternalMessages);
+                InternalLogging.resetInternalMessageCount();
 
                 // act
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.logInternalMessage(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.logInternalMessage(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.logInternalMessage(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.logInternalMessage(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
 
                 // verify
-                Assert.equal(InternalLogging.queue.length, maxAllowedInternalEvents + 1); // Since we always send one "extra" event to denote that limit was reached
-                Assert.equal(InternalLogging.queue[0], "AI (Internal): " + message);
-                Assert.equal(InternalLogging.queue[1], "AI: " + message);
-                Assert.equal(InternalLogging.queue[2], "AI (Internal): Internal events throttled for this app");
+                Assert.equal(maxAllowedInternalMessages + 1, InternalLogging.queue.length); // Since we always send one "extra" event to denote that limit was reached
+                Assert.equal(InternalLogging.queue[0], message);
+                Assert.equal(InternalLogging.queue[1], message);
+                Assert.equal(InternalLogging.queue[2], "AI (Internal): Internal events throttle limit per PageView reached for this app.");
             }
         });
 
         this.testCase({
-            name: "LoggingTests: Internal events are not throttled once the throttle is reset",
+            name: "LoggingTests: throwInternalNonUserActionable should call logInternalMessage",
             test: () => {
-                var maxAllowedInternalEvents = 2;
+                var maxAllowedInternalMessages = 2;
+                var message = "Internal Test Event";
+                var logInternalMessageStub = sinon.stub(InternalLogging, 'logInternalMessage');
+
+                // setup
+                InternalLogging.enableDebugExceptions = () => false;
+                InternalLogging.resetInternalMessageCount();
+
+                // act
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+
+                // verify
+                Assert.ok(logInternalMessageStub.calledOnce, 'logInternalMessage was not called by throwInternalNonUserActionable');
+
+                // clean
+                logInternalMessageStub.restore();
+            }
+        });
+        
+        this.testCase({
+            name: "LoggingTests: throwInternalUserActionable should call logInternalMessage",
+            test: () => {
+                var maxAllowedInternalMessages = 2;
+                var message = "Internal Test Event";
+                var logInternalMessageStub = sinon.stub(InternalLogging, 'logInternalMessage');
+
+                // setup
+                InternalLogging.enableDebugExceptions = () => false;
+                InternalLogging.resetInternalMessageCount();
+
+                // act
+                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+
+                // verify
+                Assert.ok(logInternalMessageStub.calledOnce, 'logInternalMessage was not called by throwInternalUserActionable');
+
+                // clean
+                logInternalMessageStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "LoggingTests: logInternalMessage will log events when the throttle is reset",
+            test: () => {
+                var maxAllowedInternalMessages = 2;
                 var message = "Internal Test Event";
 
                 // setup
                 InternalLogging.enableDebugExceptions = () => false;
-                InternalLogging.setMaxAllowedInternalThrottleLimit(maxAllowedInternalEvents);
-                InternalLogging.resetInternalEventsThrottle();
+                InternalLogging.setMaxInternalMessageLimit(maxAllowedInternalMessages);
+                InternalLogging.resetInternalMessageCount();
 
                 // act
                 InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
@@ -263,24 +304,21 @@ class LoggingTests extends TestClass {
                 InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
                 InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
 
-                // verify
-                Assert.equal(InternalLogging.queue.length, maxAllowedInternalEvents + 1); // Since we always send one "extra" event to denote that limit was reached
-                Assert.equal(InternalLogging.queue[0], "AI (Internal): " + message);
-                Assert.equal(InternalLogging.queue[1], "AI: " + message);
-                Assert.equal(InternalLogging.queue[2], "AI (Internal): Internal events throttled for this app");
+                // verify that internal events are throttled
+                Assert.equal(InternalLogging.queue.length, maxAllowedInternalMessages + 1); // Since we always send one "extra" event to denote that limit was reached
 
                 // act again
                 this.clearInternalLoggingQueue();
-                // reset the throttle
-                InternalLogging.resetInternalEventsThrottle();
-                // Send some internal events
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                // reset the message count
+                InternalLogging.resetInternalMessageCount();
+                // Send some internal eventstoo c
+                InternalLogging.logInternalMessage(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.logInternalMessage(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
 
                 // verify again
-                Assert.equal(InternalLogging.queue.length, maxAllowedInternalEvents + 1); // Since we always send one "extra" event to denote that limit was reached
-                Assert.equal(InternalLogging.queue[0], "AI (Internal): " + message);
-                Assert.equal(InternalLogging.queue[1], "AI: " + message);
+                Assert.equal(InternalLogging.queue.length, maxAllowedInternalMessages + 1); // Since we always send one "extra" event to denote that limit was reached
+                Assert.equal(InternalLogging.queue[0], message);
+                Assert.equal(InternalLogging.queue[1], message);
             }
         });
     }
