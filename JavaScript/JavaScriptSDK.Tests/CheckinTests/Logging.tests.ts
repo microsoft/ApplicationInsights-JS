@@ -311,7 +311,7 @@ class LoggingTests extends TestClass {
                 this.clearInternalLoggingQueue();
                 // reset the message count
                 InternalLogging.resetInternalMessageCount();
-                // Send some internal eventstoo c
+                // Send some internal messages
                 InternalLogging.logInternalMessage(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
                 InternalLogging.logInternalMessage(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
 
