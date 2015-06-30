@@ -73,11 +73,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="E2ETests\PostBuild.ps1" />
-    <Content Include="E2ETests\snippetTests.html" />
-    <Content Include="E2ETests\DisableTelemetryTests.html" />
-    <Content Include="E2ETests\SanitizerE2ETests.html" />
-    <Content Include="E2ETests\PublicApiTests.html" />
-    <Content Include="E2ETests\autoCollection.tests.html" />
+    <Content Include="E2ETests\E2E.snippetTests.htm" />
+    <Content Include="E2ETests\E2E.DisableTelemetryTests.htm" />
+    <Content Include="E2ETests\E2E.SanitizerE2ETests.htm" />
+    <Content Include="E2ETests\E2E.PublicApiTests.htm" />
+    <Content Include="E2ETests\E2E.autoCollection.tests.htm" />
     <Content Include="E2ETests\autoCollectionTemplates\instrumentation.js" />
     <Content Include="E2ETests\standalone\legacySnippet.js" />
     <Content Include="E2ETests\ai.js">
