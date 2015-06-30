@@ -16,11 +16,6 @@
          * For user non actionable traces use AI Internal prefix.
          */
         private static AiNonUserActionablePrefix = "AI (Internal): ";
-    
-        /**
-         * Maximum queue size.
-         */
-        private static MAX_QUEUE_SIZE = 100;
 
         /**
          * When this is true the SDK will throw exceptions to aid in debugging.
@@ -40,7 +35,7 @@
         /**
          * The maximum number of internal messages allowed to be sent per page view
          */
-        private static MAX_INTERNAL_MESSAGE_LIMIT = 2;
+        private static MAX_INTERNAL_MESSAGE_LIMIT = 25;
         
         /**
          * Count of internal messages sent
@@ -120,10 +115,8 @@
 
             // Push the event in the internal queue
             if (this.verboseLogging() || severity === LoggingSeverity.CRITICAL) {
-                if (this.queue.length < this.MAX_QUEUE_SIZE) {
-                    this.queue.push(message);
-                    this._messageCount++;
-                }
+                this.queue.push(message);
+                this._messageCount++;
             }
 
             // When throttle limit reached, send a special event
