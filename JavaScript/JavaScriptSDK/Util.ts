@@ -1,8 +1,9 @@
 ﻿module Microsoft.ApplicationInsights {
-    
+
     export class Util {
         private static document: any = typeof document !== "undefined" ? document : {};
 
+        public static NotSpecified = "not_specified";
         /**
          * helper method to set userId and sessionId cookie
          */
@@ -14,7 +15,7 @@
             if (!str) {
                 return false;
             }
-            
+
             return str.toString().toLowerCase() === "true";
         }
 
@@ -140,12 +141,21 @@
         * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error		
         * happens in a script from other domain (cross origin, CORS).		
         */
-        public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {		
+        public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
             return (message == "Script error." || message == "Script error")
-                    && url == ""
-                    && lineNumber == 0
-                    && columnNumber == 0
-                    && error == null;
-        }		
+                && url == ""
+                && lineNumber == 0
+                && columnNumber == 0
+                && error == null;
+        }
+
+        /**
+        * Returns string representation of an object suitable for diagnostics logging.
+        */
+        public static dump(object: any): string {
+            var objectTypeDump: string = Object.prototype.toString.call(object);
+            var propertyValueDump: string = JSON.stringify(object);
+            return objectTypeDump + propertyValueDump;
+        }
     }
 }

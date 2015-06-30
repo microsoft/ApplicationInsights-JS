@@ -38,7 +38,7 @@ class SenderTests extends TestClass {
         this.getSender = () => new Microsoft.ApplicationInsights.Sender(config);
         this.errorSpy = sinon.spy(Microsoft.ApplicationInsights.Sender, "_onError");
         this.successSpy = sinon.stub(Microsoft.ApplicationInsights.Sender, "_onSuccess");
-        this.loggingSpy = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "warn");
+        this.loggingSpy = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole");
         this.testTelemetry = { aiDataContract: true };
     }
 

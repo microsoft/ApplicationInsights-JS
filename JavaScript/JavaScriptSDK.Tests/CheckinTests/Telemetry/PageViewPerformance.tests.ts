@@ -97,7 +97,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 });
 
                 var actualLoggedMessage = null;
-                var loggingSpy = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "warn",(m) => actualLoggedMessage = m);
+                var loggingSpy = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole",(m) => actualLoggedMessage = m);
 
 
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);

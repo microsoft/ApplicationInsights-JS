@@ -181,6 +181,30 @@ class UtilTests extends TestClass {
                     === false);
             }
         });
+
+        this.testCase({
+            name: "Util.dump returns string that includes information about object type",
+            test: () => {
+                var object: any = new Error();
+
+                var result: string = Microsoft.ApplicationInsights.Util.dump(object);
+
+                var toStringRepresentation = Object.prototype.toString.call(object);
+                Assert.notEqual(-1, result.indexOf(toStringRepresentation));
+            }
+        });
+
+        this.testCase({
+            name: "Util.dump returns string that includes information about object property values",
+            test: () => {
+                var object: any = { "property": "value" };
+
+                var result: string = Microsoft.ApplicationInsights.Util.dump(object);
+
+                var jsonRepresentation: string = JSON.stringify(object);
+                Assert.notEqual(-1, result.indexOf(jsonRepresentation));
+            }
+        });
     }
 }
 new UtilTests().registerTests(); 

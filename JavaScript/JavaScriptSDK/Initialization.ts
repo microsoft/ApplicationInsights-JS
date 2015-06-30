@@ -100,7 +100,7 @@ module Microsoft.ApplicationInsights {
 
         public pollInteralLogs(appInsightsInstance: AppInsights) {
             return setInterval(() => {
-                var queue: Array<string> = Microsoft.ApplicationInsights._InternalLogging["queue"];
+                var queue: Array<string> = Microsoft.ApplicationInsights._InternalLogging.queue;
                 var length = queue.length;
                 for (var i = 0; i < length; i++) {
                     appInsightsInstance.trackTrace(queue[i]);
