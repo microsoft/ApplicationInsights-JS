@@ -70,8 +70,8 @@ class TestClass {
                         }, testInfo.stepDelay);
 
                     } else {
-                        done();
                         this._testCompleted();
+                        done();
                     }
                 };
 
@@ -80,6 +80,7 @@ class TestClass {
             } catch (ex) {
                 Assert.ok(false, "Unexpected Exception: " + ex);
                 this._testCompleted(true);
+                done();
             }
         };
 
