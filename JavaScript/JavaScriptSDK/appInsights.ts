@@ -296,7 +296,7 @@ module Microsoft.ApplicationInsights {
 
                 this.context.track(envelope);
             } catch (e) {
-                _InternalLogging.warn("trackTrace failed, trace will not be collected: " + JSON.stringify(e));
+                _InternalLogging.warnToConsole("trackTrace failed, trace will not be collected: " + JSON.stringify(e));
             }
         }
 
