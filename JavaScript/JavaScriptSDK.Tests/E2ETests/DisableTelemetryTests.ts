@@ -35,11 +35,6 @@ class DisableTelemetryTests extends TestClass {
         config.maxBatchInterval = 1000;
         config.endpointUrl = "https://dc.services.visualstudio.com/v2/track";
         config.instrumentationKey = "89330895-7c53-4315-a242-85d136ad9c16";
-        /*
-        // uncomment this to target prod instead of int
-        snippet.endpointUrl = "http://dc.services.visualstudio.com/v2/track";
-        snippet.instrumentationKey = "89330895-7c53-4315-a242-85d136ad9c16";
-        */
 
         var delay = config.maxBatchInterval + 10;
 
