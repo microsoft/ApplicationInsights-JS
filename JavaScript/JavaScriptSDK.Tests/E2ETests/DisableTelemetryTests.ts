@@ -1,4 +1,5 @@
 ﻿/// <reference path="..\TestFramework\Common.ts" />
+/// <reference path="../../javascriptsdk/initialization.ts" />
 /// <reference path="../../javascriptsdk/appinsights.ts" />
 
 class DisableTelemetryTests extends TestClass {
@@ -9,6 +10,7 @@ class DisableTelemetryTests extends TestClass {
 
     /** Method called before the start of each test method */
     public testInitialize() {
+        console.log("initialize");
         this.useFakeServer = false;
         sinon.fakeServer["restore"]();
         this.useFakeTimers = false;
@@ -20,6 +22,7 @@ class DisableTelemetryTests extends TestClass {
 
     /** Method called after each test method has completed */
     public testCleanup() {
+        console.log("cleanup");
         this.useFakeServer = true;
         this.useFakeTimers = true;
         this.errorSpy.restore();
@@ -28,15 +31,17 @@ class DisableTelemetryTests extends TestClass {
     }
 
     public registerTests() {
-        var snippet = window["appInsights"];
-
+        var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
+        config.maxBatchInterval = 1000;
+        config.endpointUrl = "https://dc.services.visualstudio.com/v2/track";
+        config.instrumentationKey = "89330895-7c53-4315-a242-85d136ad9c16";
         /*
         // uncomment this to target prod instead of int
         snippet.endpointUrl = "http://dc.services.visualstudio.com/v2/track";
         snippet.instrumentationKey = "89330895-7c53-4315-a242-85d136ad9c16";
         */
 
-        var delay = snippet.config.maxBatchInterval + 10;
+        var delay = config.maxBatchInterval + 10;
 
         var boilerPlateAsserts = () => {
             Assert.ok(this.successSpy.called, "success");
@@ -50,45 +55,31 @@ class DisableTelemetryTests extends TestClass {
             }
         }
 
-        var asserts = [];
-        var pollingCount = 100;
-        for (var i = 0; i < pollingCount; i++) {
-            asserts.push(() => {
-                var message = "polling: " + new Date().toISOString();
-                Assert.ok(true, message);
-                console.log(message);
+        var asserts = () => {
+            var message = "polling: " + new Date().toISOString();
+            Assert.ok(true, message);
+            console.log(message);
 
-                // calling start() causes sinon to resume and ends the async test
-                if (this.successSpy.called) {
-                    boilerPlateAsserts();
-                    this.testCleanup();
-                    start();
-                } else if (this.errorSpy.called || this.loggingSpy.called) {
-                    boilerPlateAsserts();
-                    start();
-                }
-            });
+            if (this.successSpy.called) {
+                boilerPlateAsserts();
+                this.testCleanup();
+            } else if (this.errorSpy.called || this.loggingSpy.called) {
+                boilerPlateAsserts();
+            }
         }
+        
+        var assertNoMessages = () => {
+            var message = "polling for no messages: " + new Date().toISOString();
+            Assert.ok(true, message);
+            console.log(message);
 
-        asserts.push(() => Assert.ok(this.successSpy.called, "success"));
-
-        var assertNoMessages = [];
-        var pollingCountForNoMessages = 50; // I don't think we need polling for this
-        for (var j = 0; j < pollingCountForNoMessages; j++) {
-            assertNoMessages.push(() => {
-                var message = "polling for no messages: " + new Date().toISOString();
-                Assert.ok(true, message);
-                console.log(message);
-
-                // calling start() causes sinon to resume and ends the async test
-                if (this.successSpy.called) {
-                    Assert.ok(false, "should not have received a success");
-                    this.testCleanup();
-                    start();
-                } else if (this.errorSpy.called || this.loggingSpy.called) {
-                    Assert.ok(false, "should not have received an error or logging");
-                }
-            });
+            // calling start() causes sinon to resume and ends the async test
+            if (this.successSpy.called) {
+                Assert.ok(false, "should not have received a success");
+                this.testCleanup();
+            } else if (this.errorSpy.called || this.loggingSpy.called) {
+                Assert.ok(false, "should not have received an error or logging");
+            }
         }
 
         this.testCaseAsync({
@@ -96,7 +87,7 @@ class DisableTelemetryTests extends TestClass {
             stepDelay: delay,
             steps: [
                 () => {
-                    var testAiNoMessages = new Microsoft.ApplicationInsights.AppInsights(snippet.config);
+                    var testAiNoMessages = new Microsoft.ApplicationInsights.AppInsights(config);
                     testAiNoMessages.config.disableTelemetry = true;
 
                     var exception = null;
@@ -122,7 +113,7 @@ class DisableTelemetryTests extends TestClass {
             stepDelay: delay,
             steps: [
                 () => {
-                    var testAiNoMessages = new Microsoft.ApplicationInsights.AppInsights(snippet.config);
+                    var testAiNoMessages = new Microsoft.ApplicationInsights.AppInsights(config);
                     testAiNoMessages.config.disableTelemetry = true;
 
                     var exception = null;
@@ -142,7 +133,7 @@ class DisableTelemetryTests extends TestClass {
                 }
             ].concat(assertNoMessages).concat([
                 () => {
-                    var testAi = new Microsoft.ApplicationInsights.AppInsights(snippet.config);
+                    var testAi = new Microsoft.ApplicationInsights.AppInsights(config);
                     testAi.config.disableTelemetry = false;
 
                     var exception = null;

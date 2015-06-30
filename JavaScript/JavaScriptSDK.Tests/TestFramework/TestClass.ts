@@ -41,7 +41,9 @@ class TestClass {
         }
 
         // Create a wrapper around the test method so we can do test initilization and cleanup.
-        var testMethod = () => {
+        var testMethod = (assert) => {
+            var done = assert.async();
+
             // Save off the instance of the currently running suite.
             TestClass.currentTestClass = this;
 
@@ -57,20 +59,18 @@ class TestClass {
                         try {
                             step.call(this);
                         } catch (e) {
-                            start();
                             this._testCompleted();
                             Assert.ok(false, e.toString());
+                            done();
                             return;
                         }
-                        
+
                         setTimeout(() => {
-                            if (QUnit.config["semaphore"] > 0) {
-                                trigger();
-                            }
+                            trigger();
                         }, testInfo.stepDelay);
 
                     } else {
-                        start();
+                        done();
                         this._testCompleted();
                     }
                 };
@@ -84,7 +84,7 @@ class TestClass {
         };
 
         // Register the test with QUnit
-        QUnit.asyncTest(testInfo.name, testMethod);
+        QUnit.test(testInfo.name, testMethod);
     }
 
     /** Register a Javascript unit testcase. */
