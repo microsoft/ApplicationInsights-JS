@@ -57,7 +57,6 @@ class PublicApiTests extends TestClass {
             Assert.ok(true, message);
             console.log(message);
 
-            // calling start() causes sinon to resume and ends the async test
             if (this.successSpy.called) {
                 boilerPlateAsserts();
                 this.testCleanup();
