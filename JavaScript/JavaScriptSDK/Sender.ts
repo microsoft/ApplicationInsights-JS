@@ -224,7 +224,6 @@ module Microsoft.ApplicationInsights {
          */
         public static _onSuccess(payload: string) {
             // no-op, used in tests
-            console.log("_onSuccess called");
         }
     }
 
