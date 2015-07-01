@@ -17,6 +17,7 @@
     <NoWarn>2008</NoWarn>
     <PackageSpecFile>$(MSBuildProjectDirectory)\Package.nuspec</PackageSpecFile>
     <PackageVersionFile>$(BinRoot)\$(Configuration)\JavaScript\NuGet.TypeScript\Microsoft.ApplicationInsights.TypeScript.NuGet.dll</PackageVersionFile>
+    <PackageOutputDir>$(BinRoot)\$(Configuration)\NuGet\TypeScript</PackageOutputDir>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
