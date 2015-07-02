@@ -22,7 +22,7 @@ Param(
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="The uri for integration environment CDN content.")]
-    [string]$intCDNPath="//az639152.vo.msecnd.net/sdk/a/ai.js",
+    [string]$intCDNPath="//az416426.vo.msecnd.net/scripts/a/ai.0.js",
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="The number of extra tabs (per bug: 1591487).")]

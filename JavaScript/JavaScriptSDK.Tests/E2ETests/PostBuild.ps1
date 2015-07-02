@@ -6,15 +6,15 @@ Param(
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="The instrumentation key.")]
-    [string]$iKey = "0011cf0f-6d64-4a0e-a19f-4eb82a36f134", #"1b9aa9ee-cf04-42de-8060-9e2fa87803e5",
+    [string]$iKey = "89330895-7c53-4315-a242-85d136ad9c16", 
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="The endpoinoint URL. (dev: datacollection-devred.cloudapp.net, int: dc-int.services.visualstudio.com, prod: dc.services.visualstudio.com")]
-    [string]$endpointUrl = "http://dc-int.services.visualstudio.com/v2/track",
+    [string]$endpointUrl = "http://dc.services.visualstudio.com/v2/track",
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="CDN URL -- NOTE this is only used to as a replacement index")]
-    [string]$cdnUrl = "//az639152.vo.msecnd.net/sdk/a/ai.0.10.js"
+    [string]$cdnUrl = "//az416426.vo.msecnd.net/scripts/a/ai.0.js"
 )
 
 # copy ai full
