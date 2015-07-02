@@ -22,9 +22,9 @@
             // TODO: extract to SamplingScoreGenerator
             var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
             var score: number = 0;
-            if (envelope.tags[tagKeys.userId] != "") {
+            if (envelope.tags[tagKeys.userId]) {
                 score = Sample.GetSamplingHashCode(envelope.tags[tagKeys.userId]) / this.INT_MAX_VALUE;
-            } else if (envelope.tags[tagKeys.operationId] != "") {
+            } else if (envelope.tags[tagKeys.operationId]) {
                 score = Sample.GetSamplingHashCode(envelope.tags[tagKeys.operationId]) / this.INT_MAX_VALUE;
             } else {
                 score = Math.random()

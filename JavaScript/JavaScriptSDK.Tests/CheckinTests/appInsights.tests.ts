@@ -415,18 +415,18 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.context.sample.sampleRate = 33;
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackSpy = sinon.spy(appInsights.context, "_track");
 
                 // verify
                 var test = (action) => {
                     action();
                     this.clock.tick(1);
-                    var envelope = this.getFirstResult(action, trackStub);
+                    //var envelope = this.getFirstResult(action, trackStub);
+                    var envelope = trackSpy.returnValues[0];
                     var contextKeys = new AI.ContextTagKeys();
                     Assert.equal(33, envelope.tags[contextKeys.sampleRate], "sample.sampleRate");
-                    trackStub.reset();
+                    trackSpy.reset();
                 };
 
                 // act
@@ -437,7 +437,40 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackTrace("testTrace"));
 
                 // teardown
-                trackStub.restore();
+                trackSpy.restore();
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: appInsights.context.sample.IsSampledIn() receives an envelope with sampling-related contexts applied (sample, user)",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                appInsights.context.sample.sampleRate = 33;
+                appInsights.context.user.id = "asdf";
+                var trackSpy = sinon.spy(appInsights.context.sample, "IsSampledIn");
+
+                // verify
+                var test = (action) => {
+                    action();
+                    this.clock.tick(1);
+                    //var envelope = this.getFirstResult(action, trackStub);
+                    var envelope = trackSpy.args[0][0];
+                    var contextKeys = new AI.ContextTagKeys();
+                    Assert.equal(33, envelope.tags[contextKeys.sampleRate], "sample.sampleRate");
+                    Assert.equal("asdf", envelope.tags[contextKeys.userId], "user.id");
+                    trackSpy.reset();
+                };
+
+                // act
+                test(() => appInsights.trackEvent("testEvent"));
+                test(() => appInsights.trackPageView());
+                test(() => appInsights.trackMetric("testMetric", 0));
+                test(() => appInsights.trackException(new Error()));
+                test(() => appInsights.trackTrace("testTrace"));
+
+                // teardown
+                trackSpy.restore();
             }
         });
 

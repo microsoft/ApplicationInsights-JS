@@ -142,6 +142,8 @@ module Microsoft.ApplicationInsights {
             else {
                 _InternalLogging.logInternalMessage(LoggingSeverity.WARNING, "Telemetry is sampled and not sent to the AI service. SampleRate is " + this.sample.sampleRate);
             }
+
+            return envelope;
         }
 
         private static _sessionHandler(tc: TelemetryContext, sessionState: AI.SessionState, timestamp: number) {

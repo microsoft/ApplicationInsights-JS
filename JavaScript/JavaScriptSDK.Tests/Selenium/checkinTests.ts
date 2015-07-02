@@ -1,4 +1,5 @@
-﻿/// <reference path="../checkintests/context/user.tests.ts" />
+﻿/// <reference path="../checkintests/context/sample.tests.ts" />
+/// <reference path="../checkintests/context/user.tests.ts" />
 /// <reference path="../checkintests/context/session.tests.ts" />
 
 /// <reference path="../checkintests/telemetry/event.tests.ts" />
