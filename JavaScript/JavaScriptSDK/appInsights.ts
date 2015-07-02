@@ -23,6 +23,7 @@ module Microsoft.ApplicationInsights {
         disableTelemetry: boolean;
         verboseLogging: boolean;
         diagnosticLogInterval: number;
+        samplingPercentage: number;
     }
 
     /**
@@ -65,7 +66,8 @@ module Microsoft.ApplicationInsights {
                 emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
                 maxBatchSizeInBytes: () => this.config.maxBatchSizeInBytes,
                 maxBatchInterval: () => this.config.maxBatchInterval,
-                disableTelemetry: () => this.config.disableTelemetry
+                disableTelemetry: () => this.config.disableTelemetry,
+                sampleRate: () => this.config.samplingPercentage
             }
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);

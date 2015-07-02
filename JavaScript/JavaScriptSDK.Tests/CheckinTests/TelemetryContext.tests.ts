@@ -20,7 +20,8 @@ class TelemetryContextTests extends TestClass {
             emitLineDelimitedJson: () => false,
             maxBatchSizeInBytes: () => 1000000,
             maxBatchInterval: () => 1,
-            disableTelemetry: () => false
+            disableTelemetry: () => false,
+            sampleRate: () => 100
         }
 
         this._telemetryContext = new Microsoft.ApplicationInsights.TelemetryContext(this._config);

@@ -19,7 +19,8 @@ class AppInsightsTests extends TestClass {
             autoCollectErrors: false,
             disableTelemetry: false,
             verboseLogging: false,
-            diagnosticLogInterval: 1000
+            diagnosticLogInterval: 1000,
+            samplingPercentage: 100
         };
 
         // set default values
@@ -415,7 +416,7 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 appInsights.context._sessionManager._sessionHandler = null;
-                appInsights.context.sample.sampleRate = "101";
+                appInsights.context.sample.sampleRate = 33;
                 var trackStub = sinon.stub(appInsights.context._sender, "send");
 
                 // verify
@@ -424,7 +425,7 @@ class AppInsightsTests extends TestClass {
                     this.clock.tick(1);
                     var envelope = this.getFirstResult(action, trackStub);
                     var contextKeys = new AI.ContextTagKeys();
-                    Assert.equal("101", envelope.tags[contextKeys.sampleRate], "sample.sampleRate");
+                    Assert.equal(33, envelope.tags[contextKeys.sampleRate], "sample.sampleRate");
                     trackStub.reset();
                 };
 

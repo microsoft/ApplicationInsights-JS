@@ -253,7 +253,7 @@ module Microsoft.ApplicationInsights {
         private _applySampleContext(envelope: Microsoft.Telemetry.Envelope, sampleContext: Microsoft.ApplicationInsights.Context.Sample) {
             if (sampleContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
-                if (typeof sampleContext.sampleRate === "string") {
+                if (typeof sampleContext.sampleRate === "number") {
                     envelope.tags[tagKeys.sampleRate] = sampleContext.sampleRate;
                 }
             }
