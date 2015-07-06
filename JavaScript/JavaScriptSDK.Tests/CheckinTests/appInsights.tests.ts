@@ -422,7 +422,6 @@ class AppInsightsTests extends TestClass {
                 var test = (action) => {
                     action();
                     this.clock.tick(1);
-                    //var envelope = this.getFirstResult(action, trackStub);
                     var envelope = trackSpy.returnValues[0];
                     var contextKeys = new AI.ContextTagKeys();
                     Assert.equal(33, envelope.tags[contextKeys.sampleRate], "sample.sampleRate");

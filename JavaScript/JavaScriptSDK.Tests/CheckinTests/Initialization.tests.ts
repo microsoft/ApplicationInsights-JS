@@ -25,7 +25,7 @@ class InitializationTests extends TestClass {
             disableTelemetry: false,
             verboseLogging: true,
             diagnosticLogInterval: 1,
-            samplingPercentage: 100
+            samplingPercentage: 33
         };
 
         // set default values
@@ -65,7 +65,8 @@ class InitializationTests extends TestClass {
                     autoCollectErrors: undefined,
                     disableTelemetry: undefined,
                     verboseLogging: undefined,
-                    diagnosticLogInterval: undefined
+                    diagnosticLogInterval: undefined,
+                    samplingPercentage: undefined
                 };
 
                 var snippet = <Microsoft.ApplicationInsights.Snippet> {
@@ -85,6 +86,7 @@ class InitializationTests extends TestClass {
                 Assert.equal(15000, init.config.maxBatchInterval);
                 Assert.ok(!init.config.verboseLogging);
                 Assert.equal(10000, init.config.diagnosticLogInterval);
+                Assert.equal(100, init.config.samplingPercentage);
             }
         });
 
@@ -110,6 +112,7 @@ class InitializationTests extends TestClass {
                 Assert.equal(1, init.config.maxBatchInterval);
                 Assert.ok(init.config.verboseLogging);
                 Assert.equal(1, init.config.diagnosticLogInterval);
+                Assert.equal(33, init.config.samplingPercentage);
             }
         });
 
