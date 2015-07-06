@@ -27,15 +27,15 @@ class SampleContextTests extends TestClass {
                 // setup
                 var sample = new Microsoft.ApplicationInsights.Context.Sample(100);
 
-                var envelope1 = this.GetEnvelope();
-                envelope1.tags[contextKeys.userId] = null;
-                envelope1.tags[contextKeys.operationId] = null;
+                var envelope = this.getEnvelope();
+                envelope.tags[contextKeys.userId] = null;
+                envelope.tags[contextKeys.operationId] = null;
                                 
                 // act
-                var isSampledIn1 = sample.IsSampledIn(envelope1);
+                var isSampledIn = sample.isSampledIn(envelope);
 
                 // assert
-                Assert.ok(isSampledIn1);
+                Assert.ok(isSampledIn);
             }
         });
 
@@ -47,17 +47,17 @@ class SampleContextTests extends TestClass {
 
                 var userid = "asdf";
 
-                var envelope1 = this.GetEnvelope();
+                var envelope1 = this.getEnvelope();
                 envelope1.tags[contextKeys.userId] = userid;
                 envelope1.tags[contextKeys.operationId] = "operation 1";
 
-                var envelope2 = this.GetEnvelope();
+                var envelope2 = this.getEnvelope();
                 envelope2.tags[contextKeys.userId] = userid;
                 envelope2.tags[contextKeys.operationId] = "operation 2";
 
                 // act
-                var isSampledIn1 = sample.IsSampledIn(envelope1);
-                var isSampledIn2 = sample.IsSampledIn(envelope2);
+                var isSampledIn1 = sample.isSampledIn(envelope1);
+                var isSampledIn2 = sample.isSampledIn(envelope2);
                 
                 // assert
                 Assert.equal(isSampledIn1, isSampledIn2);
@@ -72,27 +72,27 @@ class SampleContextTests extends TestClass {
 
                 var operationid = "operation id";
 
-                var envelope1 = this.GetEnvelope();
+                var envelope1 = this.getEnvelope();
                 envelope1.tags[contextKeys.userId] = null;
                 envelope1.tags[contextKeys.operationId] = operationid;
 
-                var envelope2 = this.GetEnvelope();
+                var envelope2 = this.getEnvelope();
                 envelope2.tags[contextKeys.userId] = null;
                 envelope2.tags[contextKeys.operationId] = operationid;
 
-                var envelope3 = this.GetEnvelope();
+                var envelope3 = this.getEnvelope();
                 envelope3.tags[contextKeys.userId] = undefined;
                 envelope3.tags[contextKeys.operationId] = operationid;
 
-                var envelope4 = this.GetEnvelope();
+                var envelope4 = this.getEnvelope();
                 envelope4.tags[contextKeys.userId] = "";
                 envelope4.tags[contextKeys.operationId] = operationid;
                 
                 // act
-                var isSampledIn1 = sample.IsSampledIn(envelope1);
-                var isSampledIn2 = sample.IsSampledIn(envelope2);
-                var isSampledIn3 = sample.IsSampledIn(envelope3);
-                var isSampledIn4 = sample.IsSampledIn(envelope4);
+                var isSampledIn1 = sample.isSampledIn(envelope1);
+                var isSampledIn2 = sample.isSampledIn(envelope2);
+                var isSampledIn3 = sample.isSampledIn(envelope3);
+                var isSampledIn4 = sample.isSampledIn(envelope4);
 
                 // assert
                 Assert.equal(isSampledIn1, isSampledIn2);
@@ -107,14 +107,14 @@ class SampleContextTests extends TestClass {
                 // setup
                 var sample = new Microsoft.ApplicationInsights.Context.Sample(33);
 
-                var envelope1 = this.GetEnvelope();
+                var envelope1 = this.getEnvelope();
                 envelope1.tags[contextKeys.userId] = null;
                 envelope1.tags[contextKeys.operationId] = null;
 
                 var mathRandomSpy = sinon.spy(Math, "random");
 
                 // act
-                sample.IsSampledIn(envelope1);
+                sample.isSampledIn(envelope1);
 
                 // assert
                 Assert.ok(mathRandomSpy.calledOnce);
@@ -123,7 +123,7 @@ class SampleContextTests extends TestClass {
         });
     }
 
-    private GetEnvelope(): Microsoft.ApplicationInsights.Telemetry.Common.Envelope {
+    private getEnvelope(): Microsoft.ApplicationInsights.Telemetry.Common.Envelope {
         var pageView = new Microsoft.ApplicationInsights.Telemetry.PageView();
         var data = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.PageView>(Microsoft.ApplicationInsights.Telemetry.PageView.dataType, pageView);
         return new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(data, Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType);

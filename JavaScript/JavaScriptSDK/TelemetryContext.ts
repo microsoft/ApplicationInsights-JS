@@ -136,11 +136,12 @@ module Microsoft.ApplicationInsights {
 
             envelope.iKey = this._config.instrumentationKey();
 
-            if (this.sample.IsSampledIn(envelope)) {
+            if (this.sample.isSampledIn(envelope)) {
                 this._sender.send(envelope);
             }
             else {
-                _InternalLogging.logInternalMessage(LoggingSeverity.WARNING, "Telemetry is sampled and not sent to the AI service. SampleRate is " + this.sample.sampleRate);
+                _InternalLogging.logInternalMessage(LoggingSeverity.WARNING,
+                    "Telemetry is sampled and not sent to the AI service. SampleRate is " + this.sample.sampleRate);
             }
 
             return envelope;
@@ -255,9 +256,7 @@ module Microsoft.ApplicationInsights {
         private _applySampleContext(envelope: Microsoft.Telemetry.Envelope, sampleContext: Microsoft.ApplicationInsights.Context.Sample) {
             if (sampleContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
-                if (typeof sampleContext.sampleRate === "number") {
-                    envelope.tags[tagKeys.sampleRate] = sampleContext.sampleRate;
-                }
+                envelope.tags[tagKeys.sampleRate] = sampleContext.sampleRate;
             }
         }
 

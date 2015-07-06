@@ -448,7 +448,7 @@ class AppInsightsTests extends TestClass {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 appInsights.context.sample.sampleRate = 33;
                 appInsights.context.user.id = "asdf";
-                var trackSpy = sinon.spy(appInsights.context.sample, "IsSampledIn");
+                var trackSpy = sinon.spy(appInsights.context.sample, "isSampledIn");
 
                 // verify
                 var test = (action) => {

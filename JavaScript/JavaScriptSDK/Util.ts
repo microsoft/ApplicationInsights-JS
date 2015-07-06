@@ -8,7 +8,9 @@
          * helper method to set userId and sessionId cookie
          */
         public static setCookie(name, value) {
-            Util.document.cookie = name + "=" + value + ";path=/";
+            var aiCookie = name + "=" + value + ";path=/";
+            console.log("Setting cookie: " + aiCookie);
+            Util.document.cookie = aiCookie;
         }
 
         public static stringToBoolOrDefault(str: any): boolean {

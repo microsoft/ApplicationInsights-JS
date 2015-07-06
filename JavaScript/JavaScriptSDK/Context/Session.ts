@@ -112,7 +112,7 @@ module Microsoft.ApplicationInsights.Context {
                 }            
 
                 if (this.automaticSession.renewalDate == 0) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "AI sessoin renewal date is 0, session will be reset.");
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "AI session renewal date is 0, session will be reset.");
                 }
             }
 
