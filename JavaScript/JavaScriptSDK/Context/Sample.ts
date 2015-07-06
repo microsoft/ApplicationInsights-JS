@@ -4,7 +4,7 @@
     export class Sample {
         public sampleRate: number;
 
-        public INT_MAX_VALUE: number = Math.pow(2, 32) - 1;
+        public INT_MAX_VALUE: number = 2147483647;
 
         constructor(sampleRate: number) {
             if (sampleRate > 100 || sampleRate < 0) {
@@ -23,6 +23,12 @@
             if (this.sampleRate == 100) return true;
                         
             // TODO: extract to SamplingScoreGenerator
+            var score = this.getScore(envelope);
+            
+            return score * 100 < this.sampleRate;
+        }
+
+        public getScore(envelope: Telemetry.Common.Envelope): number {            
             var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
             var score: number = 0;
             if (envelope.tags[tagKeys.userId]) {
@@ -32,8 +38,8 @@
             } else {
                 score = Math.random()
             }
-            
-            return score * 100 < this.sampleRate;
+
+            return score;
         }
 
         public static getSamplingHashCode(input: string): number {
