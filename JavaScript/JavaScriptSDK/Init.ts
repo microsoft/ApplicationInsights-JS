@@ -25,6 +25,25 @@ function initializeAppInsights() {
             init.emptyQueue();
 
             init.pollInteralLogs(appInsightsLocal);
+
+            // Add callback to push events when the user navigates away
+            // Note: This will not work for browsers < Opera 12 && IE 10
+            if ('onbeforeunload' in window) {
+                console.log('Adding onbeforeunload');
+                
+                // Callback to flush all events
+                var flushAllEvents = function() {
+                    appInsightsLocal.trackEvent('AI onbeforeunload: Flushing all events');
+                    appInsightsLocal.context._sender.triggerSend(false /* async */);
+                };
+                
+                // check if the browser is from IE family, if yes use addEventListener
+                if (Microsoft.ApplicationInsights.Util.isBrowserIE(window.navigator.userAgent)) {
+                    window.addEventListener("beforeunload", flushAllEvents);
+                } else {
+                    window.onbeforeunload = flushAllEvents;
+                }
+            }
         }
     }
 }
