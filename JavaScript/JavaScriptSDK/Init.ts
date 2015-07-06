@@ -28,9 +28,7 @@ function initializeAppInsights() {
 
             // Add callback to push events when the user navigates away
             // Note: This will not work for browsers < Opera 12 && IE 10
-            if ('onbeforeunload' in window) {
-                console.log('Adding onbeforeunload');
-                
+            if ('onbeforeunload' in window) {                
                 // Callback to flush all events
                 var flushAllEvents = function() {
                     appInsightsLocal.trackEvent('AI onbeforeunload: Flushing all events');

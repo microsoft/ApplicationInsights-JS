@@ -143,7 +143,7 @@ module Microsoft.ApplicationInsights {
             var isAsync = true;
             
             // Respect the parameter passed to the func
-            if (async !== undefined && async !== null) {
+            if (typeof async === 'boolean') {
                 isAsync = async;
             }
             
