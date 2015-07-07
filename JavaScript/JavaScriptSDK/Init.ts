@@ -26,23 +26,7 @@ function initializeAppInsights() {
 
             init.pollInteralLogs(appInsightsLocal);
 
-            // Add callback to push events when the user navigates away
-            // Note: This approach tries to push an async request with all the pending events onbeforeunload.
-            //       Firefox does not respect this. Other browsers DO push out the call with < 100% hit rate.
-            //       Telemetry here will help us analyze how effective this approach is.
-            //       Another approach would be to make this call sync with a acceptable timeout to reduce the 
-            //       impact on user experience.
-            if ('onbeforeunload' in window) {                
-                // Callback to flush all events
-                var flushAllEvents = function() {
-                    appInsightsLocal.trackEvent('AI (Internal): Flushing all events onbeforeunload');
-                    appInsightsLocal.context._sender.triggerSend();
-                };
-                
-                if (!Microsoft.ApplicationInsights.Util.addEventHandler('beforeunload', flushAllEvents)) {
-                    Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 'Could not add handler for beforeunload');
-                }
-            }
+            init.addFlushBeforeUnload(appInsightsLocal);
         }
     }
 }
