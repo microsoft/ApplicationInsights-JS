@@ -39,11 +39,8 @@ function initializeAppInsights() {
                     appInsightsLocal.context._sender.triggerSend();
                 };
                 
-                // check if addEventListener is available
-                if (window.addEventListener) {
-                    window.addEventListener("beforeunload", flushAllEvents, false);
-                } else if (window.attachEvent) {
-                    window.addEventListener("onbeforeunload", flushAllEvents);
+                if (!Microsoft.ApplicationInsights.Util.addEventHandler('beforeunload', flushAllEvents)) {
+                    Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 'Could not add handler for beforeunload');
                 }
             }
         }
