@@ -157,19 +157,5 @@
             var propertyValueDump: string = JSON.stringify(object);
             return objectTypeDump + propertyValueDump;
         }
-
-        /**
-         * Returns a boolean indicating whether the browser is IE or not.
-         * @param {string} userAgent - The user agent string for the browser
-         */
-        public static isBrowserIE(userAgent: string): boolean {
-            if (!userAgent) {
-                throw new Error('No user agent provided');
-            }
-            
-            return userAgent.indexOf("MSIE") > 0 
-                    || userAgent.indexOf("Trident") > 0 
-                    || userAgent.indexOf("Edge") > 0;
-        }
     }
 }

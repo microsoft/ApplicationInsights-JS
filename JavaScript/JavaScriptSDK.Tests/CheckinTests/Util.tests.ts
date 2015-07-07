@@ -205,34 +205,6 @@ class UtilTests extends TestClass {
                 Assert.notEqual(-1, result.indexOf(jsonRepresentation));
             }
         });
-
-        this.testCase({
-            name: "Util.isBrowserIE should correctly detect IE family browsers",
-            test: () => {
-                var ie11 = "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; .NET4.0E; .NET4.0C; .NET CLR 3.5.30729; .NET CLR 2.0.50727; .NET CLR 3.0.30729; InfoPath.3; rv:11.0) like Gecko";
-                var ie10 = "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)";
-                var ie9 = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 7.1; Trident/5.0)";
-
-                Assert.ok(Microsoft.ApplicationInsights.Util.isBrowserIE(ie11), "Browser was IE but the method failed to detect it");
-                Assert.ok(Microsoft.ApplicationInsights.Util.isBrowserIE(ie10), "Browser was IE but the method failed to detect it");
-                Assert.ok(Microsoft.ApplicationInsights.Util.isBrowserIE(ie9), "Browser was IE but the method failed to detect it");
-            }
-        });
-
-        this.testCase({
-            name: "Util.isBrowserIE should correctly detect if the browser is not from the IE family",
-            test: () => {
-                var chrome = "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36";
-                var firefox = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:39.0) Gecko/20100101 Firefox/39.0";
-                var safari = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A";
-                var opera = "Opera/9.80 (X11; Linux i686; Ubuntu/14.10) Presto/2.12.388 Version/12.16";
-
-                Assert.equal(false, Microsoft.ApplicationInsights.Util.isBrowserIE(chrome));
-                Assert.equal(false, Microsoft.ApplicationInsights.Util.isBrowserIE(firefox));
-                Assert.equal(false, Microsoft.ApplicationInsights.Util.isBrowserIE(safari));
-                Assert.equal(false, Microsoft.ApplicationInsights.Util.isBrowserIE(opera));
-            }
-        });
     }
 }
 new UtilTests().registerTests(); 
