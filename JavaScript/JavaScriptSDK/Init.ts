@@ -27,19 +27,23 @@ function initializeAppInsights() {
             init.pollInteralLogs(appInsightsLocal);
 
             // Add callback to push events when the user navigates away
-            // Note: This will not work for browsers < Opera 12 && IE 10
+            // Note: This approach tries to push an async request with all the pending events onbeforeunload.
+            //       Firefox does not respect this. Other browsers DO push out the call with < 100% hit rate.
+            //       Telemetry here will help us analyze how effective this approach is.
+            //       Another approach would be to make this call sync with a acceptable timeout to reduce the 
+            //       impact on user experience.
             if ('onbeforeunload' in window) {                
                 // Callback to flush all events
                 var flushAllEvents = function() {
-                    appInsightsLocal.trackEvent('AI onbeforeunload: Flushing all events');
-                    appInsightsLocal.context._sender.triggerSend(false /* async */);
+                    appInsightsLocal.trackEvent('AI (Internal): Flushing all events onbeforeunload');
+                    appInsightsLocal.context._sender.triggerSend();
                 };
                 
-                // check if the browser is from IE family, if yes use addEventListener
-                if (Microsoft.ApplicationInsights.Util.isBrowserIE(window.navigator.userAgent)) {
-                    window.addEventListener("beforeunload", flushAllEvents);
-                } else {
-                    window.onbeforeunload = flushAllEvents;
+                // check if addEventListener is available
+                if (window.addEventListener) {
+                    window.addEventListener("beforeunload", flushAllEvents, false);
+                } else if (window.attachEvent) {
+                    window.addEventListener("onbeforeunload", flushAllEvents);
                 }
             }
         }
