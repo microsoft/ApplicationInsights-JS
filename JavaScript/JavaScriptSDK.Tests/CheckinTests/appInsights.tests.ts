@@ -599,6 +599,37 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
+            name: "AppInsightsTests: trackException accepts non error arguent and creates a new error itself",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                appInsights.context._sessionManager._sessionHandler = null;
+                var trackSpy = sinon.spy(appInsights.context, "track");
+                var senderStub = sinon.stub(appInsights.context._sender, "send");
+                var message : string = "my own error";
+
+                // act
+                appInsights.trackException(<any>message);
+                
+                // assert
+                var envelope = <Microsoft.ApplicationInsights.Telemetry.Common.Envelope>trackSpy.args[0][0]
+                var data = <Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.Exception>>envelope.data;
+                var telemetryItem = <Microsoft.ApplicationInsights.Telemetry.Exception>data.baseData;
+                var exception = telemetryItem.exceptions[0];
+
+                Assert.equal(message, exception.message);
+                Assert.equal("Error", exception.stack);
+                Assert.equal("Error", exception.typeName);
+                Assert.equal("Error", exception.stack);
+                Assert.equal("Error", exception.stack);
+                Assert.equal(null, exception.stack);
+                
+                Assert.ok(senderStub.calledOnce, "single exception is tracked");
+
+            }
+        });
+
+        this.testCase({
             name: "AppInsightsTests: trackMetric batches metrics sent in a hot loop",
             test: () => {
                 // setup
