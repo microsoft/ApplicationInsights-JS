@@ -4,6 +4,7 @@
     export class Sample {
         public sampleRate: number;
 
+        // We're using 32 bit math, hence max value is (2^31 - 1)
         public INT_MAX_VALUE: number = 2147483647;
 
         constructor(sampleRate: number) {
@@ -45,10 +46,13 @@
         public static getSamplingHashCode(input: string): number {
             if (input == "") { return 0; }
 
+            // 5358 is a magic number: http://stackoverflow.com/questions/10696223/reason-for-5381-number-in-djb-hash-function
             var hash: number = 5381;
-
+                        
             for (var i: number = 0; i < input.length; ++i) {
                 hash = ((hash << 5) + hash) + input.charCodeAt(i);
+                // 'hash' is of number type which means 53 bit integer (http://www.ecma-international.org/ecma-262/6.0/#sec-ecmascript-language-types-number-type)
+                // 'hash & hash' will keep it 32 bit integer - just to make it clearer what the result is.
                 hash = hash & hash;
             }
 

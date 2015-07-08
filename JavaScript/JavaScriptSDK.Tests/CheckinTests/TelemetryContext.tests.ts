@@ -34,7 +34,7 @@ class TelemetryContextTests extends TestClass {
     public registerTests() {
 
         this.testCase({
-            name: "TelemtetryContect: constructor initializers sender and ikey",
+            name: "TelemtetryContext: constructor initializers sender and ikey",
             test: () => {
                 var tc = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
                 Assert.ok(tc._sender, "sender is initialized");
@@ -43,7 +43,7 @@ class TelemetryContextTests extends TestClass {
         });
 
         this.testCase({
-            name: "TelemtetryContect: calling track with null or undefined fails",
+            name: "TelemtetryContext: calling track with null or undefined fails",
             test: () => {
                 var tc = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
                 var logSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
@@ -56,17 +56,28 @@ class TelemetryContextTests extends TestClass {
         });
 
         this.testCase({
-            name: "TelemtetryContect: does not overwrite user sessioncontext with defaults",
+            name: "TelemtetryContext: does not overwrite user sessioncontext with defaults",
             test: () => {
                 this._telemetryContext.session.id = "101";
                 this._telemetryContext.session.isFirst = true;
-                
+
                 var env = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(null, "");
                 this._telemetryContext.track(env);
 
                 var contextKeys = new AI.ContextTagKeys();
                 Assert.equal("101", env.tags[contextKeys.sessionId], "session.id");
                 Assert.equal(true, env.tags[contextKeys.sessionIsFirst], "session.isFirst");
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: page views get sampled",
+            test: () => {
+                this._telemetryContext.user.id = "asdfasdf";
+
+                var pageView = new Microsoft.ApplicationInsights.Telemetry.PageView(name, url, durationMs, properties, measurements);
+                var pageViewData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.PageView>(Microsoft.ApplicationInsights.Telemetry.PageView.dataType, pageView);
+                var pageViewEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(pageViewData, Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType);
             }
         });
     }
