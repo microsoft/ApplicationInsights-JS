@@ -409,6 +409,66 @@ class SenderTests extends TestClass {
                 senderSpy.restore();
             }
         });
+
+        this.testCase({
+            name: "SenderTests: triggerSend should send event data asynchronously by default",
+            test: () => {
+                // setup
+                var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
+                sender._sender = () => null;
+                var senderSpy = sinon.spy(sender, "_sender");
+                this.maxBatchInterval = 100;
+
+                // act
+                sender.send(this.testTelemetry);
+                sender.triggerSend();
+                
+                // verify
+                Assert.equal(true, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = true");
+
+                senderSpy.restore();
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: triggerSend should send event data synchronously when asked to.",
+            test: () => {
+                // setup
+                var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
+                sender._sender = () => null;
+                var senderSpy = sinon.spy(sender, "_sender");
+                this.maxBatchInterval = 100;
+
+                // act
+                sender.send(this.testTelemetry);
+                sender.triggerSend(false /* async */);
+                
+                // verify
+                Assert.equal(false, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = false");
+
+                senderSpy.restore();
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: triggerSend should send event data asynchronously when asked to `explicitly`",
+            test: () => {
+                // setup
+                var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
+                sender._sender = () => null;
+                var senderSpy = sinon.spy(sender, "_sender");
+                this.maxBatchInterval = 100;
+
+                // act
+                sender.send(this.testTelemetry);
+                sender.triggerSend(true /* async */);
+                
+                // verify
+                Assert.equal(true, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = true");
+
+                senderSpy.restore();
+            }
+        });
     }
 }
 
