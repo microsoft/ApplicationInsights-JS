@@ -35,6 +35,9 @@
         createLazyMethod("track" + method.pop());
     }
 
+    createLazyMethod("setAuthId");
+    createLazyMethod("clearAuthId");
+
     // collect global errors
     if (!aiConfig.disableExceptionTracking) {
         method = "onerror";

@@ -12,6 +12,7 @@
 /// <reference path="../../../JavaScriptSDK/Contracts/Generated/PageViewData.ts" />
 /// <reference path="../../../JavaScriptSDK/Contracts/Generated/PageViewPerfData.ts" />
 /// <reference path="../../../JavaScriptSDK/Contracts/Generated/AjaxCallData.ts" />
+/// <reference path="../../../JavaScriptSDK/Contracts/Generated/AvailabilityData.ts" />
 QUnit.test("Test property RemoteDependencyData.ver was created and default is set", function () {
     var temp = new AI.RemoteDependencyData();
     QUnit.ok(temp.ver !== null, "RemoteDependencyData.ver == null");

@@ -6,12 +6,14 @@ module AI
     {
         public applicationVersion: string;
         public applicationBuild: string;
+        public applicationTypeId: string;
         public deviceId: string;
         public deviceIp: string;
         public deviceLanguage: string;
         public deviceLocale: string;
         public deviceModel: string;
         public deviceNetwork: string;
+        public deviceNetworkName: string;
         public deviceOEMName: string;
         public deviceOS: string;
         public deviceOSVersion: string;
@@ -20,6 +22,7 @@ module AI
         public deviceScreenResolution: string;
         public deviceType: string;
         public deviceMachineName: string;
+        public deviceVMName: string;
         public locationIp: string;
         public operationId: string;
         public operationName: string;
@@ -35,20 +38,38 @@ module AI
         public userAgent: string;
         public userId: string;
         public userStoreRegion: string;
+        public userAuthUserId: string;
+        public userAnonymousUserAcquisitionDate: string;
+        public userAuthenticatedUserAcquisitionDate: string;
         public sampleRate: string;
         public internalSdkVersion: string;
         public internalAgentVersion: string;
+        public internalDataCollectorReceivedTime: string;
+        public internalProfileId: string;
+        public internalProfileClassId: string;
+        public internalAccountId: string;
+        public internalApplicationName: string;
+        public internalInstrumentationKey: string;
+        public internalTelemetryItemId: string;
+        public internalApplicationType: string;
+        public internalRequestSource: string;
+        public internalFlowType: string;
+        public internalIsAudit: string;
+        public internalTrackingSourceId: string;
+        public internalTrackingType: string;
         
         constructor()
         {
             this.applicationVersion = "ai.application.ver";
             this.applicationBuild = "ai.application.build";
+            this.applicationTypeId = "ai.application.typeId";
             this.deviceId = "ai.device.id";
             this.deviceIp = "ai.device.ip";
             this.deviceLanguage = "ai.device.language";
             this.deviceLocale = "ai.device.locale";
             this.deviceModel = "ai.device.model";
             this.deviceNetwork = "ai.device.network";
+            this.deviceNetworkName = "ai.device.networkName";
             this.deviceOEMName = "ai.device.oemName";
             this.deviceOS = "ai.device.os";
             this.deviceOSVersion = "ai.device.osVersion";
@@ -57,6 +78,7 @@ module AI
             this.deviceScreenResolution = "ai.device.screenResolution";
             this.deviceType = "ai.device.type";
             this.deviceMachineName = "ai.device.machineName";
+            this.deviceVMName = "ai.device.vmName";
             this.locationIp = "ai.location.ip";
             this.operationId = "ai.operation.id";
             this.operationName = "ai.operation.name";
@@ -72,9 +94,25 @@ module AI
             this.userAgent = "ai.user.userAgent";
             this.userId = "ai.user.id";
             this.userStoreRegion = "ai.user.storeRegion";
+            this.userAuthUserId = "ai.user.authUserId";
+            this.userAnonymousUserAcquisitionDate = "ai.user.anonUserAcquisitionDate";
+            this.userAuthenticatedUserAcquisitionDate = "ai.user.authUserAcquisitionDate";
             this.sampleRate = "ai.sample.sampleRate";
             this.internalSdkVersion = "ai.internal.sdkVersion";
             this.internalAgentVersion = "ai.internal.agentVersion";
+            this.internalDataCollectorReceivedTime = "ai.internal.dataCollectorReceivedTime";
+            this.internalProfileId = "ai.internal.profileId";
+            this.internalProfileClassId = "ai.internal.profileClassId";
+            this.internalAccountId = "ai.internal.accountId";
+            this.internalApplicationName = "ai.internal.applicationName";
+            this.internalInstrumentationKey = "ai.internal.instrumentationKey";
+            this.internalTelemetryItemId = "ai.internal.telemetryItemId";
+            this.internalApplicationType = "ai.internal.applicationType";
+            this.internalRequestSource = "ai.internal.requestSource";
+            this.internalFlowType = "ai.internal.flowType";
+            this.internalIsAudit = "ai.internal.isAudit";
+            this.internalTrackingSourceId = "ai.internal.trackingSourceId";
+            this.internalTrackingType = "ai.internal.trackingType";
         }
     }
 }

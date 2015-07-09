@@ -311,6 +311,14 @@ module Microsoft.ApplicationInsights {
             }
         }
 
+        public setAuthId(authId: string, accountId?: string) {
+            this.context.user.setAuthId(authId, accountId);
+        }
+
+        public clearAuthId() {
+            this.context.user.clearAuthId();
+        }
+
         /**
         * In case of CORS exceptions - construct an exception manually.
         * See this for more info: http://stackoverflow.com/questions/5913978/cryptic-script-error-reported-in-javascript-in-chrome-and-firefox

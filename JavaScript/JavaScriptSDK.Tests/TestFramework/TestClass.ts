@@ -5,6 +5,10 @@
 
 class TestClass {
 
+    constructor(name? : string) {
+        QUnit.module(name);
+    }
+
     /** The instance of the currently running suite. */
     public static currentTestClass: TestClass;
 

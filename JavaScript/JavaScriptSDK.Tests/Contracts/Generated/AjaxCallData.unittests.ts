@@ -12,6 +12,7 @@
 /// <reference path="../../../JavaScriptSDK/Contracts/Generated/PageViewData.ts" />
 /// <reference path="../../../JavaScriptSDK/Contracts/Generated/PageViewPerfData.ts" />
 /// <reference path="../../../JavaScriptSDK/Contracts/Generated/AjaxCallData.ts" />
+/// <reference path="../../../JavaScriptSDK/Contracts/Generated/AvailabilityData.ts" />
 QUnit.test("Test property AjaxCallData.ver was created and default is set", function () {
     var temp = new AI.AjaxCallData();
     QUnit.ok(temp.ver !== null, "AjaxCallData.ver == null");
@@ -43,9 +44,19 @@ QUnit.test("Test property AjaxCallData.requestSize was created and default is se
     QUnit.ok(temp.requestSize !== null, "AjaxCallData.requestSize == null");
 });
 
+QUnit.test("Test property AjaxCallData.referrer was created and default is set", function () {
+    var temp = new AI.AjaxCallData();
+    QUnit.ok(temp.referrer !== null, "AjaxCallData.referrer == null");
+});
+
 QUnit.test("Test property AjaxCallData.responseSize was created and default is set", function () {
     var temp = new AI.AjaxCallData();
     QUnit.ok(temp.responseSize !== null, "AjaxCallData.responseSize == null");
+});
+
+QUnit.test("Test property AjaxCallData.referrerData was created and default is set", function () {
+    var temp = new AI.AjaxCallData();
+    QUnit.ok(temp.referrerData !== null, "AjaxCallData.referrerData == null");
 });
 
 QUnit.test("Test property AjaxCallData.timeToFirstByte was created and default is set", function () {
