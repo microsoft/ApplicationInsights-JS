@@ -8,7 +8,6 @@
 /// <reference path="telemetry/SessionTelemetry.ts" />
 /// <reference path="./Util.ts"/>
 /// <reference path="./Contracts/Generated/SessionState.ts"/>
-/// <reference path="./Sampling.ts"/>
 
 module Microsoft.ApplicationInsights {
     "use strict";

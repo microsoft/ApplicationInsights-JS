@@ -147,7 +147,7 @@
     <TypeScriptCompile Include="Contracts\Generated\StackFrame.ts" />
     <TypeScriptCompile Include="Init.ts" />
     <TypeScriptCompile Include="Initialization.ts" />
-    <TypeScriptCompile Include="Sampling.ts" />
+    <TypeScriptCompile Include="SamplingScoreGenerator.ts" />
     <TypeScriptCompile Include="TelemetryContext.ts" />
     <TypeScriptCompile Include="Telemetry\Common\Base.ts" />
     <TypeScriptCompile Include="Telemetry\Common\Data.ts" />
