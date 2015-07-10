@@ -464,7 +464,6 @@ class AppInsightsTests extends TestClass {
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
                 test(() => appInsights.trackPageView());
-                test(() => appInsights.trackMetric("testMetric", 0));
                 test(() => appInsights.trackException(new Error()));
                 test(() => appInsights.trackTrace("testTrace"));
 

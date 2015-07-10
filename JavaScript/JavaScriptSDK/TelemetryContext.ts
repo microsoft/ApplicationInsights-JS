@@ -136,7 +136,9 @@ module Microsoft.ApplicationInsights {
 
             envelope.iKey = this._config.instrumentationKey();
 
-            if (this.sample.isSampledIn(envelope)) {
+            if (envelope.name === Telemetry.SessionTelemetry.envelopeType ||
+                envelope.name === Telemetry.Metric.envelopeType ||
+                this.sample.isSampledIn(envelope)) {
                 this._sender.send(envelope);
             }
             else {
