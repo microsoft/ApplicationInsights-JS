@@ -125,7 +125,7 @@ module Microsoft.ApplicationInsights {
 
             if ('onbeforeunload' in window) {             
                 var flushAllEvents = function() {
-                    appInsightsInstance.trackEvent('AI (Internal): Flushing all events onbeforeunload');
+                    appInsightsInstance.trackTrace('AI (Internal): Flushing all events onbeforeunload');
                     appInsightsInstance.context._sender.triggerSend();
                 };
                 
