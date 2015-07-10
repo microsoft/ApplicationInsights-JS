@@ -72,7 +72,7 @@ class InitializationTests extends TestClass {
                 var snippet = <Microsoft.ApplicationInsights.Snippet> {
                     config: emptyConfig,
                     queue: []
-                    }
+                }
 
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
 
@@ -117,6 +117,36 @@ class InitializationTests extends TestClass {
         });
 
         this.testCase({
+            name: "InitializationTests: invalid sampling values are treated as sampling OFF (sampling percentage gets set to 100)",
+            test: () => {                
+                var res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: 0 });
+                Assert.equal(100, res.samplingPercentage);
+
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: "" });
+                Assert.equal(100, res.samplingPercentage);
+
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: null });
+                Assert.equal(100, res.samplingPercentage);
+
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: undefined });
+                Assert.equal(100, res.samplingPercentage);
+
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: false });
+                Assert.equal(100, res.samplingPercentage);
+
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: -123 });
+                Assert.equal(100, res.samplingPercentage);
+
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: 123 });
+                Assert.equal(100, res.samplingPercentage);
+
+                // "50" is treated as correct number and doesn't reset sampling percentage to 100.
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: "50" });
+                Assert.equal(50, res.samplingPercentage);
+            }
+        });
+
+        this.testCase({
             name: "InitializationTests: polling for log messages",
             test: () => {
                 var userConfig = this.getAppInsightsSnippet();
@@ -150,7 +180,7 @@ class InitializationTests extends TestClass {
                 clearInterval(poller);
 
                 trackTraceSpy.restore();
-                
+
             }
         });
 

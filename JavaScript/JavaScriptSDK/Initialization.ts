@@ -130,7 +130,10 @@ module Microsoft.ApplicationInsights {
             config.verboseLogging = Util.stringToBoolOrDefault(config.verboseLogging);
             config.emitLineDelimitedJson = Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
             config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
-            config.samplingPercentage = config.samplingPercentage || 100;
+            
+            if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
+                config.samplingPercentage = 100;
+            }
 
             return config;
         }
