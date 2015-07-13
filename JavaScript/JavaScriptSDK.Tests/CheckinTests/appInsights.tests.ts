@@ -518,7 +518,7 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
 
-                appInsights.setAuthId("10001");
+                appInsights.setAuthUserContext("10001");
 
                 var trackStub = sinon.stub(appInsights.context._sender, "send");
 
@@ -545,16 +545,84 @@ class AppInsightsTests extends TestClass {
             }
         });
 
+        this.testCase({
+            name: "AppInsightsTests: set authId and accountId context is applied",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+
+                appInsights.setAuthUserContext("10001", "account33");
+
+                var trackStub = sinon.stub(appInsights.context._sender, "send");
+
+                // verify
+                var test = (action) => {
+                    action();
+                    this.clock.tick(1);
+                    var envelope = this.getFirstResult(action, trackStub);
+                    var contextKeys = new AI.ContextTagKeys();
+                    Assert.equal("10001", envelope.tags[contextKeys.userAuthUserId], "user.authId");
+                    Assert.equal("account33", envelope.tags[contextKeys.userAccountId], "user.accountId");
+
+                    trackStub.reset();
+                };
+
+                // act
+                test(() => appInsights.trackEvent("testEvent"));
+                test(() => appInsights.trackPageView());
+                test(() => appInsights.trackMetric("testMetric", 0));
+                test(() => appInsights.trackException(new Error()));
+                test(() => appInsights.trackTrace("testTrace"));
+
+                // teardown
+                trackStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: set authId and accountId context is applied with non-ascii languages",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+
+                appInsights.setAuthUserContext("myuser中国话", "اللغةالعربيةهيجميلةעבריתזהנחמד");
+
+                var trackStub = sinon.stub(appInsights.context._sender, "send");
+
+                // verify
+                var test = (action) => {
+                    action();
+                    this.clock.tick(1);
+                    var envelope = this.getFirstResult(action, trackStub);
+                    var contextKeys = new AI.ContextTagKeys();
+                    Assert.equal("myuser中国话", envelope.tags[contextKeys.userAuthUserId], "user.authId is correct, special characters removed");
+                    Assert.equal("اللغةالعربيةهيجميلةעבריתזהנחמד", envelope.tags[contextKeys.userAccountId], "user.accountIdis correct, special characters removed");
+
+                    trackStub.reset();
+                };
+
+                // act
+                test(() => appInsights.trackEvent("testEvent"));
+                test(() => appInsights.trackPageView());
+                test(() => appInsights.trackMetric("testMetric", 0));
+                test(() => appInsights.trackException(new Error()));
+                test(() => appInsights.trackTrace("testTrace"));
+
+                // teardown
+                trackStub.restore();
+            }
+        });
+
          this.testCase({
             name: "AppInsightsTests: clear authID context is applied",
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var trackStub = sinon.stub(appInsights.context._sender, "send");
-                appInsights.setAuthId("1234", "abcd");
+                appInsights.setAuthUserContext("1234", "abcd");
 
                 // Clear authId
-                appInsights.clearAuthId();
+                appInsights.clearAuthUserContext();
 
                 // verify
                 var test = (action) => {
@@ -563,7 +631,7 @@ class AppInsightsTests extends TestClass {
                     var envelope = this.getFirstResult(action, trackStub);
                     var contextKeys = new AI.ContextTagKeys();
                     Assert.equal(undefined, envelope.tags[contextKeys.userAuthUserId], "user.authId");
-                    Assert.equal(undefined, envelope.tags[contextKeys.userAuthUserId], "user.accountId");
+                    Assert.equal(undefined, envelope.tags[contextKeys.userAccountId], "user.accountId");
                    
                     trackStub.reset();
                 };

@@ -35,8 +35,8 @@
         createLazyMethod("track" + method.pop());
     }
 
-    createLazyMethod("setAuthId");
-    createLazyMethod("clearAuthId");
+    createLazyMethod("setAuthUserContext");
+    createLazyMethod("clearAuthUserContext");
 
     // collect global errors
     if (!aiConfig.disableExceptionTracking) {

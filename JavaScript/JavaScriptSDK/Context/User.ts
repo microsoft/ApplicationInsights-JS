@@ -36,30 +36,50 @@ module Microsoft.ApplicationInsights.Context {
         public storeRegion: string;
 
         static cookieSeparator: string = '|';
+        static userCookieName: string = 'ai_user'; 
+        static authUserCookieName: string = 'ai_authUser'; 
 
-        public setAuthId(id: string, accountId? : string) {
+        /**
+         * Sets the autheticated user id and the account id in this session.
+         * @param id {string} - The autheticated user id
+         * @param accountId {string} - The account id.
+         * @returns {} 
+         */
+        public setAuthUserContext(id: string, accountId?: string) {
+
+            // Validate inputs to ensure no cookie control characters.
+            this.validateUserInput(id);
+            if (accountId) {
+                this.validateUserInput(accountId);
+            }
+
+            // Create cookie string.
             this.authId = id;
             var authCookie = this.authId;
-
             if (accountId) {
                 this.accountId = accountId;
                 authCookie = [this.authId, this.accountId].join(User.cookieSeparator);
             }
             
-            // Set the suth id cookie. No expiration date because this is a session cookie (expires when browser closed).
-            Util.setCookie('ai_authUser', authCookie);
+            // Set the cookie. No expiration date because this is a session cookie (expires when browser closed).
+            // Encoding the cookie to handle unexpected unicode characters.
+            Util.setCookie(User.authUserCookieName, encodeURI(authCookie));
         }
 
-        public clearAuthId() {
+        /**
+         * Clears the authenticated user id and the account id from the user context.
+         * @returns {} 
+         */
+        public clearAuthUserContext() {
             this.authId = null;
             this.accountId = null;
-            Util.deleteCookie('ai_authUser');
+            Util.deleteCookie(User.authUserCookieName);
         }
 
         constructor(accountId: string) {
             
            //get userId or create new one if none exists
-            var cookie = Util.getCookie('ai_user');
+            var cookie = Util.getCookie(User.userCookieName);
             if (cookie) {
                 var params = cookie.split(User.cookieSeparator);
                 if (params.length > 0) {
@@ -77,22 +97,38 @@ module Microsoft.ApplicationInsights.Context {
                 // 365 * 24 * 60 * 60 * 1000 = 31536000000 
                 date.setTime(date.getTime() + 31536000000);
                 var newCookie = [this.id, acqStr];
-                Util.setCookie('ai_user', newCookie.join(User.cookieSeparator) + ';expires=' + date.toUTCString());
+                Util.setCookie(User.userCookieName, newCookie.join(User.cookieSeparator) + ';expires=' + date.toUTCString());
             }
 
+            // We still take the account id from the ctor param for backward compatibility. 
+            // But if the the customer set the accountId through the newer setAuthUserContext API, we will override it.
             this.accountId = accountId;
 
-            // get authId and accountId from cookie
-            var authCookie = Util.getCookie('ai_authUser');
+            // Get the auth user id and account id from the cookie if exists
+            // Cookie is in the pattern: <authId>|<accountId>
+            var authCookie = Util.getCookie(User.authUserCookieName);
             if (authCookie) {
-                var kvps = authCookie.split(User.cookieSeparator);
-                if (kvps.length > 0) {
-                    this.authId = kvps[0];
+                authCookie = decodeURI(authCookie);
+                var authCookieString = authCookie.split(User.cookieSeparator);
+                if (authCookieString[0]) {
+                    this.authId = authCookieString[0];
                 }
-                if (kvps.length > 1) {
-                    this.accountId = kvps[1];
+                if (authCookieString.length > 1 && authCookieString[1]) {
+                    this.accountId = authCookieString[1];
                 }
             }
         }
+
+        private validateUserInput(id: string) {
+            // Validate:
+            // 1. Id is a non-empty string.
+            // 2. It does not contain special characters for cookies.
+            if (typeof id !== 'string' ||
+                !id ||
+                id.match(/,|;|=| |\|/)) {
+                throw new Error("User auth id and account id should be of type string. They should not contain commas, semi-colons, equal signs, spaces, or vertical-bars.");
+            }
+        }
     }
+       
 }

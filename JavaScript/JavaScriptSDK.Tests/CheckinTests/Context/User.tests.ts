@@ -146,23 +146,39 @@ class UserContextTests extends TestClass {
         });
 
         this.testCase({
-            name: "Ctor: auth user context initializes from cookie when possible, even when account id not present",
+            name: "Ctor: auth user context handles empty cookie",
             test: () => {
                 // setup
-                var authId = "bla@bla.com";
-                var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",() => authId);
+                var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",() => "");
 
                 // act
                 var user = new Microsoft.ApplicationInsights.Context.User(undefined);
 
                 // verify
-                Assert.equal(authId, user.authId, "user auth id was set from cookie");
+                Assert.equal(undefined, user.authId, "user auth id was not set");
+                Assert.equal(undefined, user.accountId, "user account id was not set");
                 cookieStub.restore();
             }
         });
 
         this.testCase({
-            name: "setAuthId: auth user set in cookie without account id",
+            name: "Ctor: auth user context handles empty cookie with accountId backward compatibility",
+            test: () => {
+                // setup
+                var accountIdBackCompat = "account17";
+                var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",() => null);
+
+                // act
+                var user = new Microsoft.ApplicationInsights.Context.User(accountIdBackCompat);
+
+                // verify
+                Assert.equal(accountIdBackCompat, user.accountId, "user account id was set from back compat");
+                cookieStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "setAuthUserContext: auth user set in cookie without account id",
             test: () => {
                 // setup
                 var authAndAccountId = ["bla@bla.com"];
@@ -170,17 +186,17 @@ class UserContextTests extends TestClass {
                 var user = new Microsoft.ApplicationInsights.Context.User(undefined);
 
                 // act
-                user.setAuthId(authAndAccountId[0]);
+                user.setAuthUserContext(authAndAccountId[0]);
 
                 // verify
                 Assert.equal(authAndAccountId[0], user.authId, "user auth id was set");
-                Assert.equal(cookieStub.calledWithExactly('ai_authUser', authAndAccountId.join('|')), true, "user auth id cookie was set");
+                Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId.join('|'))), true, "user auth id nad account id cookie was set");
                 cookieStub.restore();
             }
         });
 
         this.testCase({
-            name: "setAuthId: auth user and account id set in cookie ",
+            name: "setAuthUserContext: auth user and account id set in cookie ",
             test: () => {
                 // setup
                 var authAndAccountId = ['bla@bla.com', 'contoso'];
@@ -188,25 +204,120 @@ class UserContextTests extends TestClass {
                 var user = new Microsoft.ApplicationInsights.Context.User(undefined);
 
                 // act
-                user.setAuthId(authAndAccountId[0], authAndAccountId[1]);
+                user.setAuthUserContext(authAndAccountId[0], authAndAccountId[1]);
 
                 // verify
                 Assert.equal(authAndAccountId[0], user.authId, "user auth id was set");
-                Assert.equal(cookieStub.calledWithExactly('ai_authUser', authAndAccountId.join('|')), true, "user auth id cookie was set");
+                Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId.join('|'))), true, "user auth id cookie was set");
                 cookieStub.restore();
             }
         });
 
         this.testCase({
-            name: "clearAuthId: auth user and account cleared in context and cookie ",
+            name: "setAuthUserContext: handles empty account id correctly",
+            test: () => {
+                // setup
+                var authAndAccountId = ['bla@bla.com'];
+                var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie");
+                var user = new Microsoft.ApplicationInsights.Context.User(undefined);
+
+                // act
+                user.setAuthUserContext(authAndAccountId[0]);
+
+                // verify
+                Assert.equal(authAndAccountId[0], user.authId, "user auth id was set");
+                Assert.equal(null, user.accountId, "user account id was not set");
+                Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId[0])), true, "user auth id cookie was set");
+                cookieStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "setAuthUserContext: handles nulls correctly",
+            test: () => {
+                // setup
+                var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie");
+                var user = new Microsoft.ApplicationInsights.Context.User(undefined);
+
+                // act
+                Assert.throws(() => user.setAuthUserContext(null));
+
+                // verify
+                Assert.equal(undefined, user.authId, "user auth id was not set");
+                Assert.equal(undefined, user.accountId, "user account id was not set");
+                Assert.equal(cookieStub.notCalled, true, "cookie was not set");
+                cookieStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "setAuthUserContext: handles authId special characters correctly",
+            test: () => {
+                // setup
+                var authAndAccountId = ['my|||special;id', '1234'];
+                var user = new Microsoft.ApplicationInsights.Context.User(undefined);
+                var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie");
+
+                // act
+                Assert.throws(() => user.setAuthUserContext(authAndAccountId[0], authAndAccountId[1]));
+
+                // verify
+                Assert.equal(undefined, user.authId, "user auth id was not set");
+                Assert.equal(undefined, user.accountId, "user account id was not set");
+                Assert.equal(cookieStub.notCalled, true, "cookie was not set");
+                cookieStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "setAuthUserContext: handles accountId special characters correctly",
+            test: () => {
+                // setup
+                var authAndAccountId = ['myid', '1234 5678'];
+                var user = new Microsoft.ApplicationInsights.Context.User(undefined);
+                user.clearAuthUserContext();
+                var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie");
+
+                // act
+                Assert.throws(() => user.setAuthUserContext(authAndAccountId[0], authAndAccountId[1]));
+
+                // verify
+                Assert.equal(undefined, user.authId, "user auth id was not set");
+                Assert.equal(undefined, user.accountId, "user account id was not set");
+                Assert.equal(cookieStub.notCalled, true, "cookie was not set");
+                cookieStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "setAuthUserContext: handles unicode characters correctly",
+            test: () => {
+                // setup
+                var authAndAccountId = ['שלום', 'להתראות'];
+                var user = new Microsoft.ApplicationInsights.Context.User(undefined);
+                var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie");
+
+                // act
+                user.setAuthUserContext(authAndAccountId[0], authAndAccountId[1]);
+
+                // verify
+                Assert.equal(authAndAccountId[0], user.authId, "user auth id was set");
+                Assert.equal(authAndAccountId[1], user.accountId, "user account id was set");
+                Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId.join('|'))), true, "user auth id cookie was set");
+                cookieStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "clearAuthUserContext: auth user and account cleared in context and cookie ",
             test: () => {
                 // setup
                 var user = new Microsoft.ApplicationInsights.Context.User(undefined);
-                user.setAuthId("bla", "123");
+                user.setAuthUserContext("bla", "123");
                 var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "deleteCookie");
 
                 // act
-                user.clearAuthId();
+                user.clearAuthUserContext();
 
                 // verify
                 Assert.equal(undefined, user.authId, "user auth id was cleared");
