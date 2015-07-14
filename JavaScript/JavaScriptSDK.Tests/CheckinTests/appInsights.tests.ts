@@ -675,6 +675,27 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
+            name: "AppInsights._onerror stringifies error object",
+            test: () => {
+                var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var dumpSpy = sinon.spy(Microsoft.ApplicationInsights.Util, "dump")
+                try {
+                    var unexpectedError = new Error("my cool message");
+                    sinon.stub(sut, "trackException").throws(unexpectedError);
+
+                    sut._onerror("any message", "any://url", 420, 42, new Error());
+
+                    Assert.ok(dumpSpy.returnValues[0].indexOf("stack: ") != -1);
+                    Assert.ok(dumpSpy.returnValues[0].indexOf("message: 'my cool message'") != -1);
+                    Assert.ok(dumpSpy.returnValues[0].indexOf("name: 'Error'") != -1);
+                }
+                finally {
+                    dumpSpy.restore();
+                }
+            }
+        });
+
+        this.testCase({
             name: "AppInsights._onerror logs dump of unexpected error thrown by trackException for diagnostics",
             test: () => {
                 var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
