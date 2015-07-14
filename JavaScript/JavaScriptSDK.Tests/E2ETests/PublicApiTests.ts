@@ -67,7 +67,7 @@ class PublicApiTests extends TestClass {
 
 
         asserts.push(() => Assert.ok(this.successSpy.called, "success"));
-        
+
         this.testCaseAsync({
             name: "TelemetryContext: track event",
             stepDelay: delay,
@@ -77,7 +77,7 @@ class PublicApiTests extends TestClass {
                 }
             ].concat(asserts)
         });
-        
+
         this.testCaseAsync({
             name: "TelemetryContext: track exception",
             stepDelay: delay,
@@ -95,7 +95,17 @@ class PublicApiTests extends TestClass {
                 }
             ].concat(asserts)
         });
-               
+
+        this.testCaseAsync({
+            name: "TelemetryContext: track exception no error object",
+            stepDelay: delay,
+            steps: [
+                () => {
+                    testAi.trackException(<any>"my error");
+                }
+            ].concat(asserts)
+        });
+
         this.testCaseAsync({
             name: "TelemetryContext: track metric",
             stepDelay: delay,
@@ -117,7 +127,7 @@ class PublicApiTests extends TestClass {
                 }
             ].concat(asserts)
         });
-        
+
         this.testCaseAsync({
             name: "TelemetryContext: track page view",
             stepDelay: delay,
@@ -127,7 +137,7 @@ class PublicApiTests extends TestClass {
                 }
             ].concat(asserts)
         });
-        
+
         this.testCaseAsync({
             name: "TelemetryContext: track all types in batch",
             stepDelay: delay,
