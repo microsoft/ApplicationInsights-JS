@@ -97,16 +97,6 @@ class PublicApiTests extends TestClass {
         });
 
         this.testCaseAsync({
-            name: "TelemetryContext: track exception no error object",
-            stepDelay: delay,
-            steps: [
-                () => {
-                    testAi.trackException(<any>"my error");
-                }
-            ].concat(asserts)
-        });
-
-        this.testCaseAsync({
             name: "TelemetryContext: track metric",
             stepDelay: delay,
             steps: [
