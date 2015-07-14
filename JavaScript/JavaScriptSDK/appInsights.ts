@@ -340,18 +340,16 @@ module Microsoft.ApplicationInsights {
                     this.SendCORSException();
                 } else {
                     if (!Util.isError(error)) {
-                        // ensure that we have an error object (browser may not pass an error i.e safari)
-                        try {
-                            throw new Error(message);
-                        } catch (exception) {
-                            error = exception;
-                            if (!error["stack"]) {
-                                error["stack"] = "@" + url + ":" + lineNumber + ":" + (columnNumber || 0);
-                            }
+                        if (!url) {
+                            url = document.URL;
                         }
+
+                        var stack = "window.onerror@" + url + ":" + lineNumber + ":" + (columnNumber || 0);
+                        error = new Error(message);
+                        error["stack"] = stack;
                     }
 
-                    this.trackException(error);
+                    this.trackException(error, null, { message: message, url: url, lineNumber: lineNumber, columnNumber: columnNumber });                    
                 }
             } catch (exception) {
                 var errorString =
