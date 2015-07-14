@@ -90,35 +90,45 @@ module Microsoft.ApplicationInsights.Context {
         private initializeAutomaticSession() {
             var cookie = Util.getCookie('ai_session');
             if (cookie && typeof cookie.split === "function") {
-                var params = cookie.split("|");
-                if (params.length > 0) {
-                    this.automaticSession.id = params[0];
-                }
-
-                try {
-                    if (params.length > 1) {
-                        var acq = +params[1];
-                        this.automaticSession.acquisitionDate = +new Date(acq);
-                        this.automaticSession.acquisitionDate = this.automaticSession.acquisitionDate > 0 ? this.automaticSession.acquisitionDate : 0;
-                    }
-
-                    if (params.length > 2) {
-                        var renewal = +params[2];
-                        this.automaticSession.renewalDate = +new Date(renewal);
-                        this.automaticSession.renewalDate = this.automaticSession.renewalDate > 0 ? this.automaticSession.renewalDate : 0;
-                    }
-                } catch (e) {                    
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Error parsing ai_session cookie, session will be reset: " + JSON.stringify(e));
-                }            
-
-                if (this.automaticSession.renewalDate == 0) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "AI sessoin renewal date is 0, session will be reset.");
+                this.initializeAutomaticSessionWithData(cookie.split("|"));
+            } else {
+                // We might have session data in local storage
+                // This would only occur when the cookie is missing if the session expired or the user actively deleted the cookie
+                // In either case, this data is useful
+                if (window.localStorage && localStorage['ai_session']) {
+                    this.initializeAutomaticSessionWithData(localStorage['ai_session']);
                 }
             }
 
             if (!this.automaticSession.id) {
                 this.automaticSession.isFirst = true;
                 this.renew();
+            }
+        }
+
+        private initializeAutomaticSessionWithData(params) {
+            if (params.length > 0) {
+                this.automaticSession.id = params[0];
+            }
+
+            try {
+                if (params.length > 1) {
+                    var acq = +params[1];
+                    this.automaticSession.acquisitionDate = +new Date(acq);
+                    this.automaticSession.acquisitionDate = this.automaticSession.acquisitionDate > 0 ? this.automaticSession.acquisitionDate : 0;
+                }
+
+                if (params.length > 2) {
+                    var renewal = +params[2];
+                    this.automaticSession.renewalDate = +new Date(renewal);
+                    this.automaticSession.renewalDate = this.automaticSession.renewalDate > 0 ? this.automaticSession.renewalDate : 0;
+                }
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Error parsing ai_session cookie, session will be reset: " + JSON.stringify(e));
+            }
+
+            if (this.automaticSession.renewalDate == 0) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "AI session renewal date is 0, session will be reset.");
             }
         }
 
@@ -134,15 +144,38 @@ module Microsoft.ApplicationInsights.Context {
             if (typeof this._sessionHandler === "function") {
                 this._sessionHandler(AI.SessionState.Start, now);
             }
+
+            // If this browser does not support local storage, fire an internal log to keep track of it at this point
+            if (!window.localStorage) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser does not support local storage. Session durations will be inaccurate.");
+            }
         }
 
         private setCookie(guid: string, acq: number, renewal: number) {
-            var date = new Date(acq);
+            // Set cookie to expire after the session expiry time passes or the session renewal deadline, whichever is sooner
+            // Expiring the cookie will cause the session to expire even if the user isn't on the page
+            var acquisitionExpiry = acq + this.config.sessionExpirationMs();
+            var renewalExpiry = renewal + this.config.sessionRenewalMs();
+            var cookieExpiry = new Date();
             var cookie = [guid, acq, renewal];
-            // Set cookie to never expire so we can set Session.IsFirst only when cookie is generated for the first time
-            // 365 * 24 * 60 * 60 * 1000 = 31536000000 
-            date.setTime(date.getTime() + 31536000000);
-            Util.setCookie('ai_session', cookie.join('|') + ';expires=' + date.toUTCString());
+
+            if (acquisitionExpiry < renewalExpiry) {
+                cookieExpiry.setTime(acquisitionExpiry);
+            } else {
+                cookieExpiry.setTime(renewalExpiry);
+            }
+            
+            this.setStorage(guid, acq, renewal);
+            Util.setCookie('ai_session', cookie.join('|') + ';expires=' + cookieExpiry.toUTCString());
+        }
+
+        private setStorage(guid: string, acq: number, renewal: number) {
+            // Keep data in local storage to retain the last session id, allowing us to cleanly end the session when it expires
+            // Browsers that don't support local storage won't be able to end sessions cleanly from the client
+            // The server will notice this and end the sessions itself, with loss of accurate session duration
+            if (window.localStorage) {
+                localStorage['ai_session'] = [guid, acq, renewal];
+            }
         }
     }
 } 
