@@ -1,4 +1,5 @@
-﻿/// <reference path="../checkintests/context/sample.tests.ts" />
+﻿/// <reference path="../checkintests/context/SamplingScoreGenerator.tests.ts" />
+/// <reference path="../checkintests/context/sample.tests.ts" />
 /// <reference path="../checkintests/context/user.tests.ts" />
 /// <reference path="../checkintests/context/session.tests.ts" />
 

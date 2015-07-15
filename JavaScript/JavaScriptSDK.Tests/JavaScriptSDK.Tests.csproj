@@ -164,6 +164,7 @@
     <Content Include="TestFramework\TestClass.ts" />
     <TypeScriptCompile Include="CheckinTests\appInsights.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Context\Sample.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Context\SamplingScoreGenerator.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Initialization.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Telemetry\DataSanitizer.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Telemetry\PageViewPerformance.tests.ts" />
