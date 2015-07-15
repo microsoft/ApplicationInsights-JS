@@ -94,9 +94,9 @@ module Microsoft.ApplicationInsights.Context {
             } else {
                 // We might have session data in local storage
                 // This would only occur when the cookie is missing if the session expired or the user actively deleted the cookie
-                // In either case, this data is useful
+                // In either case, the local storage copy can be used to recover the lost data
                 if (window.localStorage && localStorage['ai_session']) {
-                    this.initializeAutomaticSessionWithData(localStorage['ai_session']);
+                    this.initializeAutomaticSessionWithData(localStorage['ai_session'].split("|"));
                 }
             }
 
@@ -174,7 +174,7 @@ module Microsoft.ApplicationInsights.Context {
             // Browsers that don't support local storage won't be able to end sessions cleanly from the client
             // The server will notice this and end the sessions itself, with loss of accurate session duration
             if (window.localStorage) {
-                localStorage['ai_session'] = [guid, acq, renewal];
+                localStorage['ai_session'] = [guid, acq, renewal].join('|');
             }
         }
     }

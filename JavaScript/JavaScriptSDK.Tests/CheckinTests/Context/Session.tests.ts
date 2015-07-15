@@ -10,11 +10,19 @@ class SessionContextTests extends TestClass {
     /** Method called before the start of each test method */
     public testInitialize() {
         this.results = [];
+
+        if (window.localStorage) {
+            window.localStorage.clear();
+        }
     }
 
     /** Method called after each test method has completed */
     public testCleanup() {
         this.results = [];
+        
+        if (window.localStorage) {
+            window.localStorage.clear();
+        }
     }
 
     public registerTests() {
@@ -41,7 +49,7 @@ class SessionContextTests extends TestClass {
                 // no cookie, isNew should be true
                 Microsoft.ApplicationInsights.Util["document"] = <any>{
                     cookie: ""
-                };
+                };                
 
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null, () => { });
                 
@@ -106,16 +114,79 @@ class SessionContextTests extends TestClass {
                 Assert.equal(3, cookieValueParts[0].split('|').length, "Cookie value before expiration should include user id, acq date and renew date");
                 Assert.equal("newGuid", cookieValueParts[0].split('|')[0], "First part of cookie value should be new user id guid");
                 
-                // Having expiration 1 year allows to set sesion.IsFirst only when we generated cookie for the first time for a given browser
+                // The cookie should expire 30 minutes after activity by default
                 var expiration = cookieValueParts[1];
                 Assert.equal(true, expiration.substr(0, "expires=".length) === "expires=", "Cookie expiration part should start with expires=");
                 var expirationDate = new Date(expiration.substr("expires=".length));
-                Assert.equal(365, expirationDate.getTime() / 1000 / 60 / 60 / 24, "cookie expiration should be in the 1 year");
+                Assert.equal(30, expirationDate.getTime() / 1000 / 60, "cookie expiration should be in 30 minutes");
 
                 // cleanup
                 getCookieStub.restore();
                 setCookieStub.restore();
                 newGuidStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "ai_session local storage has correct structure",
+            test: () => {
+                if (window.localStorage) {
+                    // setup
+                    var actualCookieName: string;
+                    var actualCookieValue: string;
+                    var newGuidStub = sinon.stub(Microsoft.ApplicationInsights.Util, "newGuid",() => "newGuid");
+                    var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",() => "");
+                    var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(cookieName, cookieValue) => { });
+
+                    // act
+                    var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                    sessionManager.update();
+
+                    // verify
+                    Assert.ok(localStorage["ai_session"], "ai_session storage is set");
+
+                    Assert.equal(3, localStorage["ai_session"].split('|').length, "Cookie value before expiration should include user id, acq date and renew date");
+                    Assert.equal("newGuid", localStorage["ai_session"].split('|')[0], "First part of cookie value should be new user id guid");
+
+                    // cleanup
+                    getCookieStub.restore();
+                    setCookieStub.restore();
+                    newGuidStub.restore();
+                } else {
+                    // this might happen on IE when using a file:// url
+                    Assert.ok(true, "browser does not support local storage in current environment");
+                }
+            }
+        });
+
+        this.testCase({
+            name: "SessionContext: session manager can recover old session id and isFirst state from lost cookies when localStorage is available",
+            test: () => {
+                Microsoft.ApplicationInsights.Util["document"] = <any>{
+                    cookie: ""
+                };
+
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                sessionManager.update();
+                var sessionId = sessionManager.automaticSession.id;
+
+                // Lose the cookie
+                Microsoft.ApplicationInsights.Util["document"] = <any>{
+                    cookie: ""
+                };
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                sessionManager.update();
+
+                if (window.localStorage) {
+                    // The lost cookie should be recovered from using localstorage data
+                    Assert.equal(sessionId, sessionManager.automaticSession.id, "session id should be consistent with value before losing cookie");
+                    Assert.ok(!sessionManager.automaticSession.isFirst, "the isFirst state should be conserved after losing the cookie");
+                } else {
+                    // The lost cookie should not be recovered from
+                    Assert.notEqual(sessionId, sessionManager.automaticSession.id, "a new session id should be given after losing the cookie");
+                    Assert.ok(sessionManager.automaticSession.isFirst, "the isFirst state should be reset after losing the cookie");
+                }
+
             }
         });
 
