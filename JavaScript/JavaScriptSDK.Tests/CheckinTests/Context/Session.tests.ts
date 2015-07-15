@@ -141,6 +141,7 @@ class SessionContextTests extends TestClass {
                     // act
                     var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
                     sessionManager.update();
+                    sessionManager.backup();
 
                     // verify
                     Assert.ok(localStorage["ai_session"], "ai_session storage is set");
@@ -162,31 +163,46 @@ class SessionContextTests extends TestClass {
         this.testCase({
             name: "SessionContext: session manager can recover old session id and isFirst state from lost cookies when localStorage is available",
             test: () => {
-                Microsoft.ApplicationInsights.Util["document"] = <any>{
-                    cookie: ""
-                };
+                // A more sophisticated approach of emulating document.cookie is needed to support multiple cookies
+                Microsoft.ApplicationInsights.Util["document"] = this.generateEmulatedCookieStore();
 
+                var user = new Microsoft.ApplicationInsights.Context.User(undefined);
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
                 sessionManager.update();
+                sessionManager.backup();
                 var sessionId = sessionManager.automaticSession.id;
 
-                // Lose the cookie
-                Microsoft.ApplicationInsights.Util["document"] = <any>{
-                    cookie: ""
-                };
+                // Lose the session cookie but not the user cookie
+                Microsoft.ApplicationInsights.Util["document"].cookie = "ai_session=; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
                 sessionManager.update();
+                sessionManager.backup();
 
                 if (window.localStorage) {
                     // The lost cookie should be recovered from using localstorage data
-                    Assert.equal(sessionId, sessionManager.automaticSession.id, "session id should be consistent with value before losing cookie");
-                    Assert.ok(!sessionManager.automaticSession.isFirst, "the isFirst state should be conserved after losing the cookie");
+                    Assert.equal(sessionId, sessionManager.automaticSession.id, "session id should be consistent with value before losing session cookie");
+                    Assert.ok(!sessionManager.automaticSession.isFirst, "the isFirst state should be conserved after losing the session cookie");
                 } else {
                     // The lost cookie should not be recovered from
-                    Assert.notEqual(sessionId, sessionManager.automaticSession.id, "a new session id should be given after losing the cookie");
-                    Assert.ok(sessionManager.automaticSession.isFirst, "the isFirst state should be reset after losing the cookie");
+                    Assert.notEqual(sessionId, sessionManager.automaticSession.id, "a new session id should be given after losing the session cookie");
+                    Assert.ok(sessionManager.automaticSession.isFirst, "the isFirst state should be reset after losing the session cookie");
                 }
 
+                // Lose all cookies
+                // Local storage and non-local storage should act the same
+                Microsoft.ApplicationInsights.Util["document"].cookie = "ai_session=; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                Microsoft.ApplicationInsights.Util["document"].cookie = "ai_user=; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                sessionManager.update();
+                sessionManager.backup();
+
+                Assert.notEqual(sessionId, sessionManager.automaticSession.id, "a new session id should be given after losing all ai cookies");
+                Assert.ok(sessionManager.automaticSession.isFirst, "the isFirst state should be reset after losing all ai cookies");
+
+                // Restore old cookie emulation
+                Microsoft.ApplicationInsights.Util["document"] = <any>{
+                    cookie: ""
+                };
             }
         });
 
@@ -446,6 +462,54 @@ class SessionContextTests extends TestClass {
 
     private restoreFakeCookie() {
         Microsoft.ApplicationInsights.Util["document"] = this.originalDocument;
+    }
+
+    private generateEmulatedCookieStore() {
+        var cookieStore = {
+            _cookies: <string[]>[]
+        };
+        Object.defineProperty(cookieStore, "cookie", {
+            set: function (cookie:string) {
+                // Does this cookie exist already?
+                var cookieName = cookie.split(";")[0].split("=")[0];
+                var found = false;
+                cookieStore._cookies.forEach((existingCookie,index) => {
+                    var existingCookieName = existingCookie.split(";")[0].split("=")[0];
+                    if (cookieName === existingCookieName) {
+                        cookieStore._cookies[index] = cookie;
+                        found = true;
+                        return true;
+                    }
+                });
+                if (!found) {
+                    cookieStore._cookies.push(cookie);
+                }
+            },
+            get: function () {
+                var cookies = "";
+                cookieStore._cookies.forEach((cookie) => {
+                    var keys = cookie.split(";");
+                    // Is this cookie expired?
+                    var expired = false;
+                    keys.forEach((key) => {
+                        if (key.trim().indexOf("expires=") === 0) {
+                            var expiryString = key.trim().replace("expires=", "");
+                            if (new Date() > new Date(expiryString)) {
+                                expired = true;
+                                return true;
+                            }
+                        }
+                    });
+                    // Note: path compliance is not emulated
+                    if (!expired) {
+                        cookies += cookie;
+                    }
+                });
+                return cookies;
+            }
+        });
+
+        return cookieStore;
     }
 }
 new SessionContextTests().registerTests();

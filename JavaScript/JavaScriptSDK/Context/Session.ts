@@ -87,16 +87,26 @@ module Microsoft.ApplicationInsights.Context {
             }
         }
 
+        public backup() {
+            this.setStorage(this.automaticSession.id, this.automaticSession.acquisitionDate, this.automaticSession.renewalDate);
+        }
+
         private initializeAutomaticSession() {
             var cookie = Util.getCookie('ai_session');
             if (cookie && typeof cookie.split === "function") {
                 this.initializeAutomaticSessionWithData(cookie.split("|"));
             } else {
-                // We might have session data in local storage
-                // This would only occur when the cookie is missing if the session expired or the user actively deleted the cookie
-                // In either case, the local storage copy can be used to recover the lost data
-                if (window.localStorage && localStorage['ai_session']) {
+                // There's no cookie, but we might have session data in local storage
+                // This can happen if the session expired or the user actively deleted the cookie
+                // We only want to recover data if the cookie is missing from expiry. We should respect the user's wishes if the cookie was deleted actively.
+                // We can verify which was the case by looking for the persistent user cookie.
+                var userCookie = Util.getCookie('ai_user');
+                var hasUserCookie = (userCookie && typeof userCookie.split === "function");
+                if (window.localStorage && localStorage['ai_session'] && hasUserCookie) {
                     this.initializeAutomaticSessionWithData(localStorage['ai_session'].split("|"));
+                } else if (window.localStorage && localStorage['ai_session'] && !hasUserCookie) {
+                    // The user actively removed our cookies. We should clear ourselves from local storage
+                    localStorage.removeItem('ai_session');
                 }
             }
 
@@ -165,7 +175,6 @@ module Microsoft.ApplicationInsights.Context {
                 cookieExpiry.setTime(renewalExpiry);
             }
             
-            this.setStorage(guid, acq, renewal);
             Util.setCookie('ai_session', cookie.join('|') + ';expires=' + cookieExpiry.toUTCString());
         }
 
@@ -174,7 +183,11 @@ module Microsoft.ApplicationInsights.Context {
             // Browsers that don't support local storage won't be able to end sessions cleanly from the client
             // The server will notice this and end the sessions itself, with loss of accurate session duration
             if (window.localStorage) {
-                localStorage['ai_session'] = [guid, acq, renewal].join('|');
+                try {
+                    localStorage['ai_session'] = [guid, acq, renewal].join('|');
+                } catch(e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed backup of ai_session to local storage.");
+                }
             }
         }
     }
