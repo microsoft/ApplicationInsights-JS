@@ -5,15 +5,14 @@ module Microsoft.ApplicationInsights.Context {
 
     export class User {
 
+        static cookieSeparator: string = '|';
+        static userCookieName: string = 'ai_user';
+        static authUserCookieName: string = 'ai_authUser'; 
+
         /**
          * The user ID.
          */
         public id: string;
-
-        /**
-         * Authorized user id
-         */
-        public authId: string;
 
         /**
          * The account ID.
@@ -35,9 +34,13 @@ module Microsoft.ApplicationInsights.Context {
          */
         public storeRegion: string;
 
-        static cookieSeparator: string = '|';
-        static userCookieName: string = 'ai_user'; 
-        static authUserCookieName: string = 'ai_authUser'; 
+        /**
+         * Authorized user id
+         */
+        private authId: string;
+        public getAuthId() {
+            return this.authId;
+        }
 
         /**
          * Sets the autheticated user id and the account id in this session.
@@ -48,9 +51,11 @@ module Microsoft.ApplicationInsights.Context {
         public setAuthUserContext(id: string, accountId?: string) {
 
             // Validate inputs to ensure no cookie control characters.
-            this.validateUserInput(id);
-            if (accountId) {
-                this.validateUserInput(accountId);
+            var isInvalidInput = !this.validateUserInput(id) || (accountId && !this.validateUserInput(accountId));
+            if (isInvalidInput) {
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Setting auth user context failed. " +
+                    "User auth/account id should be of type string, and not contain commas, semi-colons, equal signs, spaces, or vertical-bars.");
+                return;
             }
 
             // Create cookie string.
@@ -119,15 +124,17 @@ module Microsoft.ApplicationInsights.Context {
             }
         }
 
-        private validateUserInput(id: string) {
+        private validateUserInput(id: string): boolean {
             // Validate:
             // 1. Id is a non-empty string.
             // 2. It does not contain special characters for cookies.
             if (typeof id !== 'string' ||
                 !id ||
                 id.match(/,|;|=| |\|/)) {
-                throw new Error("User auth id and account id should be of type string. They should not contain commas, semi-colons, equal signs, spaces, or vertical-bars.");
+                return false;
             }
+
+            return true;
         }
     }
        

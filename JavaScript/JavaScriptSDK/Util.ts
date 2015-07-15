@@ -40,6 +40,10 @@
             return value;
         }
 
+        /**
+         * Deletes a cookie by setting it's expiration time in the past.
+         * @param name - The name of the cookie to delete.
+         */
         public static deleteCookie(name: string) {
             // Setting the expiration date in the past immediately removes the cookie
             Util.document.cookie = name + "=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT;";
