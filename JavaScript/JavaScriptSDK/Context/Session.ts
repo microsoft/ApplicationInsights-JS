@@ -99,14 +99,10 @@ module Microsoft.ApplicationInsights.Context {
                 // There's no cookie, but we might have session data in local storage
                 // This can happen if the session expired or the user actively deleted the cookie
                 // We only want to recover data if the cookie is missing from expiry. We should respect the user's wishes if the cookie was deleted actively.
-                // We can verify which was the case by looking for the persistent user cookie.
+                // The User class handles this for us and deletes our local storage object if the persistent user cookie was removed.
                 var userCookie = Util.getCookie('ai_user');
-                var hasUserCookie = (userCookie && typeof userCookie.split === "function");
-                if (window.localStorage && localStorage['ai_session'] && hasUserCookie) {
+                if (window.localStorage && localStorage['ai_session']) {
                     this.initializeAutomaticSessionWithData(localStorage['ai_session'].split("|"));
-                } else if (window.localStorage && localStorage['ai_session'] && !hasUserCookie) {
-                    // The user actively removed our cookies. We should clear ourselves from local storage
-                    localStorage.removeItem('ai_session');
                 }
             }
 

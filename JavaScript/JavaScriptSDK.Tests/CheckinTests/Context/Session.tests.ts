@@ -166,7 +166,8 @@ class SessionContextTests extends TestClass {
                 // A more sophisticated approach of emulating document.cookie is needed to support multiple cookies
                 Microsoft.ApplicationInsights.Util["document"] = this.generateEmulatedCookieStore();
 
-                var user = new Microsoft.ApplicationInsights.Context.User(undefined);
+                // Initialize our user and session cookies, as well as local storage
+                new Microsoft.ApplicationInsights.Context.User(undefined);
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
                 sessionManager.update();
                 sessionManager.backup();
@@ -174,6 +175,7 @@ class SessionContextTests extends TestClass {
 
                 // Lose the session cookie but not the user cookie
                 Microsoft.ApplicationInsights.Util["document"].cookie = "ai_session=; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                new Microsoft.ApplicationInsights.Context.User(undefined);
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
                 sessionManager.update();
                 sessionManager.backup();
@@ -192,6 +194,7 @@ class SessionContextTests extends TestClass {
                 // Local storage and non-local storage should act the same
                 Microsoft.ApplicationInsights.Util["document"].cookie = "ai_session=; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
                 Microsoft.ApplicationInsights.Util["document"].cookie = "ai_user=; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                new Microsoft.ApplicationInsights.Context.User(undefined);
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
                 sessionManager.update();
                 sessionManager.backup();
