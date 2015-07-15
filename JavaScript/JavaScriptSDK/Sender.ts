@@ -116,7 +116,7 @@ module Microsoft.ApplicationInsights {
                     }, this._config.maxBatchInterval());
                 }
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed: " + Util.dump(e));
             }
         }
 
@@ -170,7 +170,7 @@ module Microsoft.ApplicationInsights {
                 clearTimeout(this._timeoutHandle);
                 this._timeoutHandle = null;
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed: " + Util.dump(e));
             }
         }
 
