@@ -125,7 +125,6 @@ module Microsoft.ApplicationInsights {
 
             if ('onbeforeunload' in window) {             
                 var flushAllEvents = function() {
-                    appInsightsInstance.trackTrace('AI (Internal): Flushing all events onbeforeunload');
                     appInsightsInstance.context._sender.triggerSend();
                 };
                 
@@ -156,7 +155,7 @@ module Microsoft.ApplicationInsights {
             config.verboseLogging = Util.stringToBoolOrDefault(config.verboseLogging);
             config.emitLineDelimitedJson = Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
             config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
-            
+
             if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
                 config.samplingPercentage = 100;
             }
