@@ -2,8 +2,11 @@
 /// <reference path="./Telemetry/Common/Data.ts"/>
 /// <reference path="./Util.ts"/>
 /// <reference path="./Contracts/Generated/SessionState.ts"/>
+/// <reference path="./Context/PageVisitData.ts"/>
+
 
 module Microsoft.ApplicationInsights {
+    
     "use strict";
 
     export var Version = "0.15.20150709.2";
@@ -23,6 +26,7 @@ module Microsoft.ApplicationInsights {
         disableTelemetry: boolean;
         verboseLogging: boolean;
         diagnosticLogInterval: number;
+        autoTrackPageVisitDuration: boolean;
     }
 
     /**
@@ -33,6 +37,7 @@ module Microsoft.ApplicationInsights {
 
         private _eventTracking: Timing;
         private _pageTracking: Timing;
+        private _pageVisitDurationManager: Microsoft.ApplicationInsights.Context.PageVisitDurationManager;
 
         public config: IConfig;
         public context: TelemetryContext;
@@ -89,6 +94,8 @@ module Microsoft.ApplicationInsights {
 
                 this.context.track(envelope);
             }
+
+            this._pageVisitDurationManager = new Microsoft.ApplicationInsights.Context.PageVisitDurationManager();
         }
 
         /**
@@ -101,7 +108,7 @@ module Microsoft.ApplicationInsights {
                 if (typeof name !== "string") {
                     name = window.document && window.document.title || "";
                 }
-
+                
                 this._pageTracking.start(name);
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "startTrackPage failed: " + JSON.stringify(e));
@@ -188,6 +195,14 @@ module Microsoft.ApplicationInsights {
                 var pageViewEnvelope = new Telemetry.Common.Envelope(pageViewData, Telemetry.PageView.envelopeType);
 
                 this.context.track(pageViewEnvelope);
+
+                if (this.config.autoTrackPageVisitDuration) {
+                    var prevPageVisitDurationData = this._pageVisitDurationManager.restartPageVisitDurationTimer(name);
+                    if (prevPageVisitDurationData !== null) {
+                        this.trackPageVisitDuration(prevPageVisitDurationData.pageName, prevPageVisitDurationData.pageVisitDuration);
+                    }
+                }
+
                 setTimeout(() => {
                     // fire this event as soon as initial code execution completes in case the user navigates away
                     this.context._sender.triggerSend();
@@ -287,7 +302,7 @@ module Microsoft.ApplicationInsights {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackMetric failed, metric will not be collected: " + JSON.stringify(e));
             }
         }
-
+        
         public trackTrace(message: string, properties?: Object) {
             try {
                 var telemetry = new Telemetry.Trace(message, properties);
@@ -298,6 +313,15 @@ module Microsoft.ApplicationInsights {
             } catch (e) {
                 _InternalLogging.warnToConsole("trackTrace failed, trace will not be collected: " + JSON.stringify(e));
             }
+        }
+
+        /**
+        * Log a page visit time
+        * @param    pageName    Name of page
+        * @param    pageVisitDuration Duration of visit to the page in milleseconds
+        */
+        public trackPageVisitDuration(pageName: string, pageVisitDuration: number) {
+            this.trackMetric(pageName + "PageVisitDuration", pageVisitDuration, 1, pageVisitDuration, pageVisitDuration);
         }
 
         /**
@@ -407,4 +431,4 @@ module Microsoft.ApplicationInsights {
 
         public action: (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => void;
     }
-}
+} 
