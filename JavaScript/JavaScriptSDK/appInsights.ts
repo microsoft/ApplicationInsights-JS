@@ -315,12 +315,12 @@ module Microsoft.ApplicationInsights {
          * Sets the autheticated user id and the account id in this session.
          * User auth id and account id should be of type string. They should not contain commas, semi-colons, equal signs, spaces, or vertical-bars.
          *   
-         * @param authId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
+         * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
          * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
          */
-        public setAuthUserContext(authId: string, accountId?: string) {
+        public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string) {
             try {
-                this.context.user.setAuthUserContext(authId, accountId);
+                this.context.user.setAuthenticatedUserContext(authenticatedUserId, accountId);
             } catch (e) {
                 _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Setting auth user context failed. " + JSON.stringify(e));
             }
@@ -329,9 +329,9 @@ module Microsoft.ApplicationInsights {
         /**
          * Clears the authenticated user id and the account id from the user context.
          */
-        public clearAuthUserContext() {
+        public clearAuthenticatedUserContext() {
             try {
-                this.context.user.clearAuthUserContext();
+                this.context.user.clearAuthenticatedUserContext();
             } catch (e) {
                 _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Clearing auth user context failed. " + JSON.stringify(e));
             }

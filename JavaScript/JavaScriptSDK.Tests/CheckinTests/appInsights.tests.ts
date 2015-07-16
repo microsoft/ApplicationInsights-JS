@@ -518,7 +518,7 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
 
-                appInsights.setAuthUserContext("10001");
+                appInsights.setAuthenticatedUserContext("10001");
 
                 var trackStub = sinon.stub(appInsights.context._sender, "send");
 
@@ -551,7 +551,7 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
 
-                appInsights.setAuthUserContext("10001", "account33");
+                appInsights.setAuthenticatedUserContext("10001", "account33");
 
                 var trackStub = sinon.stub(appInsights.context._sender, "send");
 
@@ -585,7 +585,7 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
 
-                appInsights.setAuthUserContext("myuser中国话", "اللغةالعربيةهيجميلةעבריתזהנחמד");
+                appInsights.setAuthenticatedUserContext("myuser中国话", "اللغةالعربيةهيجميلةעבריתזהנחמד");
 
                 var trackStub = sinon.stub(appInsights.context._sender, "send");
 
@@ -619,10 +619,10 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var trackStub = sinon.stub(appInsights.context._sender, "send");
-                appInsights.setAuthUserContext("1234", "abcd");
+                appInsights.setAuthenticatedUserContext("1234", "abcd");
 
                 // Clear authId
-                appInsights.clearAuthUserContext();
+                appInsights.clearAuthenticatedUserContext();
 
                 // verify
                 var test = (action) => {

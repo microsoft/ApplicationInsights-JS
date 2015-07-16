@@ -42,16 +42,16 @@ module Microsoft.ApplicationInsights.Context {
             return this.authId;
         }
 
-        /**
+         /**
          * Sets the autheticated user id and the account id in this session.
-         * @param id {string} - The autheticated user id
-         * @param accountId {string} - The account id.
-         * @returns {} 
+         *   
+         * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
+         * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
          */
-        public setAuthUserContext(id: string, accountId?: string) {
+        public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string) {
 
             // Validate inputs to ensure no cookie control characters.
-            var isInvalidInput = !this.validateUserInput(id) || (accountId && !this.validateUserInput(accountId));
+            var isInvalidInput = !this.validateUserInput(authenticatedUserId) || (accountId && !this.validateUserInput(accountId));
             if (isInvalidInput) {
                 _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Setting auth user context failed. " +
                     "User auth/account id should be of type string, and not contain commas, semi-colons, equal signs, spaces, or vertical-bars.");
@@ -59,7 +59,7 @@ module Microsoft.ApplicationInsights.Context {
             }
 
             // Create cookie string.
-            this.authId = id;
+            this.authId = authenticatedUserId;
             var authCookie = this.authId;
             if (accountId) {
                 this.accountId = accountId;
@@ -75,7 +75,7 @@ module Microsoft.ApplicationInsights.Context {
          * Clears the authenticated user id and the account id from the user context.
          * @returns {} 
          */
-        public clearAuthUserContext() {
+        public clearAuthenticatedUserContext() {
             this.authId = null;
             this.accountId = null;
             Util.deleteCookie(User.authUserCookieName);
@@ -106,7 +106,7 @@ module Microsoft.ApplicationInsights.Context {
             }
 
             // We still take the account id from the ctor param for backward compatibility. 
-            // But if the the customer set the accountId through the newer setAuthUserContext API, we will override it.
+            // But if the the customer set the accountId through the newer setAuthenticatedUserContext API, we will override it.
             this.accountId = accountId;
 
             // Get the auth user id and account id from the cookie if exists
