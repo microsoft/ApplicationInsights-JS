@@ -4,9 +4,9 @@
 
 class PublicApiTests extends TestClass {
 
-    private errorSpy;
-    private successSpy;
-    private loggingSpy;
+    public errorSpy;
+    public successSpy;
+    public loggingSpy;
 
     /** Method called before the start of each test method */
     public testInitialize() {
@@ -64,9 +64,13 @@ class PublicApiTests extends TestClass {
                 boilerPlateAsserts();
             }
         });
-
-
-        asserts.push(() => Assert.ok(this.successSpy.called, "success"));
+        
+        asserts.push(() => {
+            PollingAssert.startPollingAssert(() => {
+                console.log("* checking success spy " + new Date().toISOString());
+                return this.successSpy.called;
+            }, "sender succeeded");
+        });
 
         this.testCaseAsync({
             name: "TelemetryContext: track event",
@@ -101,9 +105,11 @@ class PublicApiTests extends TestClass {
             stepDelay: delay,
             steps: [
                 () => {
+                    console.log("* calling trackMetric " + new Date().toISOString());
                     for (var i = 0; i < 100; i++) {
                         testAi.trackMetric("test" + i, Math.round(100 * Math.random()));
                     }
+                    console.log("* done calling trackMetric " + new Date().toISOString());
                 }
             ].concat(asserts)
         });
