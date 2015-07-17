@@ -30,7 +30,7 @@ class PublicApiTests extends TestClass {
 
     public registerTests() {
         var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
-        config.maxBatchInterval = 1000;
+        config.maxBatchInterval = 100;
         config.endpointUrl = "https://dc.services.visualstudio.com/v2/track";
         config.instrumentationKey = "89330895-7c53-4315-a242-85d136ad9c16";
 
@@ -65,12 +65,11 @@ class PublicApiTests extends TestClass {
             }
         });
         
-        asserts.push(() => {
-            PollingAssert.startPollingAssert(() => {
-                console.log("* checking success spy " + new Date().toISOString());
+        asserts.push(PollingAssert.createPollingAssert(() => {
+                Assert.ok(true, "* checking success spy " + new Date().toISOString());
                 return this.successSpy.called;
-            }, "sender succeeded");
-        });
+            }, "sender succeeded")
+        );
 
         this.testCaseAsync({
             name: "TelemetryContext: track event",
