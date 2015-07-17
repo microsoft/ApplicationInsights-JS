@@ -65,7 +65,7 @@ class PublicApiTests extends TestClass {
             }
         });
         
-        asserts.push(PollingAssert.startPollingAssert(() => {
+        asserts.push(PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "* checking success spy " + new Date().toISOString());
                 return this.successSpy.called;
             }, "sender succeeded")
