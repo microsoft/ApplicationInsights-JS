@@ -155,6 +155,10 @@
         public static dump(object: any): string {
             var objectTypeDump: string = Object.prototype.toString.call(object);
             var propertyValueDump: string = JSON.stringify(object);
+            if (objectTypeDump === "[object Error]") {
+                propertyValueDump = "{ stack: '" + object.stack + "', message: '" + object.message + "', name: '" + object.name + "'";
+            }
+
             return objectTypeDump + propertyValueDump;
         }
         
