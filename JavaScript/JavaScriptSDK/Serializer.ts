@@ -62,7 +62,7 @@ module Microsoft.ApplicationInsights {
 
                 return output;
             }
-
+            
             source[circularReferenceCheck] = true;
             for (var field in source.aiDataContract) {
                 var isRequired = source.aiDataContract[field];
@@ -71,9 +71,9 @@ module Microsoft.ApplicationInsights {
                 var isObject = typeof source[field] === "object" && source[field] !== null;
 
                 if (isRequired && !isPresent && !isArray) {
-                    _InternalLogging.throwInternalUserActionable(
+                    _InternalLogging.throwInternalNonUserActionable(
                         LoggingSeverity.CRITICAL,
-                        "Missing required field specification: The field '" + field + "' is required but not present on source");
+                        "Missing required field specification: The field '" + field + "' on '"+ name + "' is required but not present on source");
 
                     // If not in debug mode, continue and hope the error is permissible
                     continue;

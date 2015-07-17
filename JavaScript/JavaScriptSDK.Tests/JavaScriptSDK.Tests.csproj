@@ -23,6 +23,9 @@
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
+    <!-- In gated, ..\Javascript does not resolve, so grab the files that were copied to output instead. -->
+    <JavascriptSourceLocation Condition="'$(TF_Build_BINARIESDIRECTORY)' == ''">..\JavaScriptSDK</JavascriptSourceLocation>
+    <JavascriptSourceLocation Condition="'$(TF_Build_BINARIESDIRECTORY)' != ''">$(TF_Build_BINARIESDIRECTORY)</JavascriptSourceLocation>
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
     <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
     <EnableTypeScript>true</EnableTypeScript>
@@ -41,6 +44,9 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IsPublicBuild)' == 'true'">
+    <DefineConstants>$(DefineConstants);IsPublicBuild</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
@@ -67,6 +73,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="E2ETests\PostBuild.ps1" />
+    <Content Include="E2ETests\E2E.snippetTests.htm" />
+    <Content Include="E2ETests\E2E.DisableTelemetryTests.htm" />
+    <Content Include="E2ETests\E2E.SanitizerE2ETests.htm" />
+    <Content Include="E2ETests\E2E.PublicApiTests.htm" />
+    <Content Include="E2ETests\E2E.autoCollection.tests.htm" />
     <Content Include="E2ETests\autoCollectionTemplates\instrumentation.js" />
     <Content Include="E2ETests\standalone\legacySnippet.js" />
     <Content Include="E2ETests\ai.js">
@@ -169,16 +180,12 @@
     <TypeScriptCompile Include="Contracts\Generated\PageViewPerfData.unittests.ts" />
     <TypeScriptCompile Include="Contracts\Generated\SessionStateData.unittests.ts" />
     <TypeScriptCompile Include="Contracts\Generated\StackFrame.unittests.ts" />
-    <TypeScriptCompile Include="E2ETests\autoCollection.tests.ts" />
-    <TypeScriptCompile Include="E2ETests\DisableTelemetryTests.ts" />
-    <TypeScriptCompile Include="E2ETests\SanitizerE2E.tests.ts" />
-    <TypeScriptCompile Include="E2ETests\snippet.tests.ts" />
     <TypeScriptCompile Include="External\jquery.d.ts" />
     <TypeScriptCompile Include="Performance\api.perftests.ts" />
     <TypeScriptCompile Include="Performance\pageLoad.perftests.ts" />
     <TypeScriptCompile Include="Performance\serializer.perftests.ts" />
+    <Content Include="TestFramework\PollingAssert.ts" />
     <TypeScriptCompile Include="TestFramework\ContractTestHelper.ts" />
-    <TypeScriptCompile Include="E2ETests\PublicApiTests.ts" />
     <TypeScriptCompile Include="CheckinTests\Logging.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Sender.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Serializer.tests.ts" />
@@ -194,6 +201,31 @@
     <TypeScriptCompile Include="TestFramework\PerformanceTestHelper.ts" />
   </ItemGroup>
   <ItemGroup>
+    <AutoCollectionTests Include="E2ETests\autoCollection.tests.ts" />
+    <Content Include="E2ETests\autoCollection.tests.js">
+      <DependentUpon>autoCollection.tests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <PublicApiTests Include="E2ETests\PublicApiTests.ts" />
+    <Content Include="E2ETests\PublicApiTests.js">
+      <DependentUpon>PublicApiTests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <SanitizerE2ETests Include="E2ETests\SanitizerE2E.tests.ts" />
+    <Content Include="E2ETests\SanitizerE2E.tests.js">
+      <DependentUpon>SanitizerE2E.tests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <SnippetTests Include="E2ETests\snippet.tests.ts" />
+    <Content Include="E2ETests\snippet.tests.js">
+      <DependentUpon>snippet.tests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <DisableTelemetryTests Include="E2ETests\DisableTelemetryTests.ts" />
+    <Content Include="E2ETests\DisableTelemetryTests.js">
+      <DependentUpon>DisableTelemetryTests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <SeleniumCheckinTests Include="Selenium\checkinTests.ts" />
     <SeleniumPerformance Include="Selenium\performanceTests.ts" />
     <Content Include="Selenium\checkinTests.js">
@@ -214,6 +246,11 @@
     <Message Text="Compiling TypeScript files" />
     <Exec Command="tsc --module CommonJS @(SeleniumCheckinTests ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\checkinTests.js" />
     <Exec Command="tsc --module CommonJS @(SeleniumPerformance ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\performanceTests.js" />
+    <Exec Command="tsc --module CommonJS @(AutoCollectionTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\autoCollection.tests.js" />
+    <Exec Command="tsc --module CommonJS @(PublicApiTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\PublicApiTests.js" />
+    <Exec Command="tsc --module CommonJS @(SanitizerE2ETests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\SanitizerE2E.tests.js" />
+    <Exec Command="tsc --module CommonJS @(SnippetTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\snippet.tests.js" />
+    <Exec Command="tsc --module CommonJS @(DisableTelemetryTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\DisableTelemetryTests.js" />
     <Exec Command="Powershell.exe -ExecutionPolicy ByPass -File &quot;$(ProjectDir)E2ETests\PostBuild.ps1&quot; -projectDir $(ProjectDir)" />
   </Target>
   <PropertyGroup>

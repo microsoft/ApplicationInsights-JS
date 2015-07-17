@@ -185,7 +185,6 @@ class PerformanceTestHelper extends TestClass {
         JSLitmus._tests.length = 0;
         this.isDone = true;
         this.testCleanup();
-        start();
     }
 
     public onTimeout() {

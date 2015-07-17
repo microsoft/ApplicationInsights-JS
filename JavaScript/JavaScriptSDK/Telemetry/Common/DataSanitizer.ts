@@ -37,8 +37,8 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
 
             // validation truncated the length.  We need to add uniqueness
             if (field.length !== origLength) {
-                var i = 0;
-                var uniqueField = field.substring(0, DataSanitizer.MAX_NAME_LENGTH - 3) + DataSanitizer.padNumber(i);
+                var i = 0;                
+                var uniqueField = field;
                 while (map[uniqueField] !== undefined) {
                     i++;
                     uniqueField = field.substring(0, DataSanitizer.MAX_NAME_LENGTH - 3) + DataSanitizer.padNumber(i);
@@ -75,6 +75,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
 
         public static sanitizeString(value) {
             if (value) {
+                value = Util.trim(value);
                 if (value.toString().length > DataSanitizer.MAX_STRING_LENGTH) {
                     value = value.substring(0, DataSanitizer.MAX_STRING_LENGTH);
                     _InternalLogging.throwInternalUserActionable(
@@ -129,8 +130,8 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
             if (properties) {
                 var tempProps = {};
                 for (var prop in properties) {
-                    prop = DataSanitizer.sanitizeKeyAndAddUniqueness(prop, tempProps);
                     var value = DataSanitizer.sanitizeString(properties[prop]);
+                    prop = DataSanitizer.sanitizeKeyAndAddUniqueness(prop, tempProps);
                     tempProps[prop] = value;
                 }
                 properties = tempProps;
