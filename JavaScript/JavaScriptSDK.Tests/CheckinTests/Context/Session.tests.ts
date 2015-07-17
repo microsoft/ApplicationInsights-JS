@@ -467,13 +467,24 @@ class SessionContextTests extends TestClass {
         Microsoft.ApplicationInsights.Util["document"] = this.originalDocument;
     }
 
+    // Make a fake document.cookie property that correctly handles its unique getter/setter functionality.
+    // Document.cookie lets you read the entire set of cookies, but on set acts essentially as +=, with
+    // some logic to overwrite existing cookies with the same name.
+    // Document.cookie also silently removes expired cookies.
     private generateEmulatedCookieStore() {
         var cookieStore = {
             _cookies: <string[]>[]
         };
         Object.defineProperty(cookieStore, "cookie", {
-            set: function (cookie:string) {
+            set: function (cookie: string) {
+                // Does this cookie end in a delimiter?
+                // If not, add one
+                if (cookie.slice(-1) !== ";") {
+                    cookie += ";";
+                }
+
                 // Does this cookie exist already?
+                // If so, overwrite it
                 var cookieName = cookie.split(";")[0].split("=")[0];
                 var found = false;
                 cookieStore._cookies.forEach((existingCookie,index) => {
@@ -484,6 +495,8 @@ class SessionContextTests extends TestClass {
                         return true;
                     }
                 });
+
+                // Add this new cookie to the list, since it didn't already exist
                 if (!found) {
                     cookieStore._cookies.push(cookie);
                 }
@@ -493,6 +506,7 @@ class SessionContextTests extends TestClass {
                 cookieStore._cookies.forEach((cookie) => {
                     var keys = cookie.split(";");
                     // Is this cookie expired?
+                    // If so, don't show it
                     var expired = false;
                     keys.forEach((key) => {
                         if (key.trim().indexOf("expires=") === 0) {

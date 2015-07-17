@@ -130,7 +130,7 @@ module Microsoft.ApplicationInsights.Context {
                     this.automaticSession.renewalDate = this.automaticSession.renewalDate > 0 ? this.automaticSession.renewalDate : 0;
                 }
             } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Error parsing ai_session cookie, session will be reset: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Error parsing ai_session cookie, session will be reset: " + Util.dump(e));
             }
 
             if (this.automaticSession.renewalDate == 0) {
