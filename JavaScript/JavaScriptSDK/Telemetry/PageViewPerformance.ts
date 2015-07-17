@@ -49,7 +49,7 @@ module Microsoft.ApplicationInsights.Telemetry {
              *  |---network---||---request---|---response---|---dom---|
              *  |--------------------------total----------------------|
              */
-            var total: number;
+            var total: number = 0;
             var network: number;
             var request: number;
             var response: number;
