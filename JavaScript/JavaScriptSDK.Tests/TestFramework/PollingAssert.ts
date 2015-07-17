@@ -1,4 +1,5 @@
 /// <reference path="..\External\qunit.d.ts" />
+/// <reference path="testclass.ts" />
 
 class PollingAssert {
     /*
@@ -10,15 +11,23 @@ class PollingAssert {
     */
     public static startPollingAssert(assertionFunctionReturnsBoolean, assertDescription: string, timeoutSeconds: number = 30, pollIntervalMs: number = 500) {
         var timeout = new Date(new Date().getTime() + timeoutSeconds * 1000);
-        var polling = () => {
-            if (assertionFunctionReturnsBoolean.apply()) {
-                Assert.ok(true, assertDescription);
-            } else if (timeout < new Date()) {
-                Assert.ok(false, "assert didn't succeed for " + timeout + " seconds: " + assertDescription);
-            } else {
-                setTimeout(polling, pollIntervalMs);
+        var pollingAssert = (nextTestStep) => {
+            var polling = () => {
+                if (assertionFunctionReturnsBoolean.apply()) {
+                    Assert.ok(true, assertDescription);
+                    nextTestStep();
+                } else if (timeout < new Date()) {
+                    Assert.ok(false, "assert didn't succeed for " + timeout + " seconds: " + assertDescription);
+                    nextTestStep();
+                } else {
+                    setTimeout(polling, pollIntervalMs);
+                }
             }
+            setTimeout(polling, pollIntervalMs);
         }
-        setTimeout(polling, pollIntervalMs);
+
+        pollingAssert[TestClass.isPollingStepFlag] = true;
+
+        return pollingAssert;
     }
 }

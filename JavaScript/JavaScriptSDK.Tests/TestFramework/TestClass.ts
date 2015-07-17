@@ -5,6 +5,8 @@
 
 class TestClass {
 
+    public static isPollingStepFlag = "isPollingStep";
+
     /** The instance of the currently running suite. */
     public static currentTestClass: TestClass;
 
@@ -55,20 +57,26 @@ class TestClass {
                 var trigger = () => {
                     if (steps.length) {
                         var step = steps.shift();
+                        
+                        var nextTestStepTrigger = () => {
+                            setTimeout(() => {
+                                trigger();
+                            }, testInfo.stepDelay);
+                        };
 
                         try {
-                            step.call(this);
+                            if (step[TestClass.isPollingStepFlag]) {
+                                step.call(this, nextTestStepTrigger);
+                            } else {
+                                step.call(this);
+                                nextTestStepTrigger.call(this);
+                            }
                         } catch (e) {
                             this._testCompleted();
                             Assert.ok(false, e.toString());
                             done();
                             return;
                         }
-
-                        setTimeout(() => {
-                            trigger();
-                        }, testInfo.stepDelay);
-
                     } else {
                         this._testCompleted();
                         done();
@@ -76,7 +84,6 @@ class TestClass {
                 };
 
                 trigger();
-                //this._testCompleted();
             } catch (ex) {
                 Assert.ok(false, "Unexpected Exception: " + ex);
                 this._testCompleted(true);
