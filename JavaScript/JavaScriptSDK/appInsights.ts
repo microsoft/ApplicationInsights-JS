@@ -349,7 +349,7 @@ module Microsoft.ApplicationInsights {
          */
         public _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
             try {
-                var properties = { url: url ? url : document.URL };
+                var properties = { url : url ? url : document.URL };
 
                 if (Util.isCrossOriginError(message, url, lineNumber, columnNumber, error)) {
                     this.SendCORSException(properties);
