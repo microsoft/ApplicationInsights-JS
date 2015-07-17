@@ -105,8 +105,6 @@ class SessionContextTests extends TestClass {
                 Assert.equal(2, cookieValueParts.length, "Cookie value should have actual value and expiration");
                 Assert.equal(3, cookieValueParts[0].split('|').length, "Cookie value before expiration should include user id, acq date and renew date");
                 Assert.equal("newGuid", cookieValueParts[0].split('|')[0], "First part of cookie value should be new user id guid");
-                Assert.equal(new Date().toString(), (new Date(cookieValueParts[0].split('|')[1])).toString(), "Second part of cookie should be parsable as date");
-                Assert.equal(new Date().toString(), (new Date(cookieValueParts[0].split('|')[2])).toString(), "Third part of cookie should be parsable as date");
                 
                 // Having expiration 1 year allows to set sesion.IsFirst only when we generated cookie for the first time for a given browser
                 var expiration = cookieValueParts[1];
@@ -130,8 +128,8 @@ class SessionContextTests extends TestClass {
                 };
 
                 var testGuid = "00000000-0000-0000-0000-000000000000";
-                var acquisitionDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date());
-                var renewalDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date());
+                var acquisitionDate = +new Date();
+                var renewalDate = +new Date();
 
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
@@ -166,8 +164,8 @@ class SessionContextTests extends TestClass {
                 var delta = (Microsoft.ApplicationInsights.Context._SessionManager.renewalSpan + 1);
                 this.clock.tick(delta); // safari crashes without this
                 var cookieTime = +new Date - delta;
-                var acquisitionDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date(cookieTime));
-                var renewalDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date(cookieTime));
+                var acquisitionDate = +new Date(cookieTime);
+                var renewalDate = +new Date(cookieTime);
 
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
@@ -192,8 +190,8 @@ class SessionContextTests extends TestClass {
                 var delta = (Microsoft.ApplicationInsights.Context._SessionManager.acquisitionSpan + 1);
                 this.clock.tick(delta); // safari crashes without this
                 var cookieTime = +new Date - delta;
-                var acquisitionDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date(cookieTime));
-                var renewalDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date());
+                var acquisitionDate = +new Date(cookieTime);
+                var renewalDate = +new Date();
 
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
@@ -215,8 +213,8 @@ class SessionContextTests extends TestClass {
             test: () => {
                 // setup
                 var testGuid = "00000000-0000-0000-0000-000000000000";
-                var acquisitionDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date());
-                var renewalDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date());
+                var acquisitionDate = +new Date();
+                var renewalDate = +new Date();
 
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
@@ -241,8 +239,8 @@ class SessionContextTests extends TestClass {
                 var delta = (Microsoft.ApplicationInsights.Context._SessionManager.renewalSpan + 1);
                 this.clock.tick(delta); // safari crashes without this
                 var cookieTime = +new Date - delta;
-                var acquisitionDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date(cookieTime));
-                var renewalDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date(cookieTime));
+                var acquisitionDate = +new Date(cookieTime);
+                var renewalDate = +new Date(cookieTime);
 
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
@@ -270,8 +268,8 @@ class SessionContextTests extends TestClass {
                 var delta = (Microsoft.ApplicationInsights.Context._SessionManager.acquisitionSpan + 1);
                 this.clock.tick(delta); // safari crashes without this
                 var cookieTime = +new Date - delta;
-                var acquisitionDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date(cookieTime));
-                var renewalDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date());
+                var acquisitionDate = +new Date(cookieTime);
+                var renewalDate = +new Date();
 
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
@@ -293,8 +291,8 @@ class SessionContextTests extends TestClass {
             test: () => {
                 // setup
                 var testGuid = "00000000-0000-0000-0000-000000000000";
-                var acquisitionDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date());
-                var renewalDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date());
+                var acquisitionDate = +new Date();
+                var renewalDate = +new Date();
 
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
@@ -339,6 +337,33 @@ class SessionContextTests extends TestClass {
                 Assert.equal(sessionExpirationMs, sessionManager.config.sessionExpirationMs(), "config sessionExpirationMs is updated correctly");
             }
         });
+
+        /* Temporarily disabled until we figure out sinon js behavior with Date.
+        * Problems:
+        *   - new Date normally gives the current date, with sinon - 1970
+        *   - new Date(NaN) normally throws an exception, with sinon - return undefined
+
+
+        this.testCase({
+            name: "SessionContext: renewal and aquisition dates from cookie are treated as numbers",
+            test: () => {
+                // setup
+                var testGuid = "00000000-0000-0000-0000-000000000000";                
+                var acquisitionDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date());
+                var renewalDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date());
+
+                this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
+
+                // act
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,(t) => { this.results.push(t); });
+                sessionManager.update();
+
+                // TODO: CHECK THAT A PARSING ERROR OCCURRED AND WE SENT A DIAGNOSTIC TRACE
+
+                this.restoreFakeCookie();
+            }
+        });
+        */
     }
 
     private setFakeCookie(id, acqDate, renewalDate) {

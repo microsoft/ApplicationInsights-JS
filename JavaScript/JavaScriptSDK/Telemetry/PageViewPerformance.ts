@@ -22,7 +22,12 @@ module Microsoft.ApplicationInsights.Telemetry {
             domProcessing: false,
             properties: false,
             measurement: false
-        }
+        };
+
+        /**
+         * Field indicating whether this instance of PageViewPerformance is valid and should be sent
+         */
+        public isValid: boolean;
 
         /**
          * Constructs a new instance of the PageEventTelemetry object
@@ -30,19 +35,21 @@ module Microsoft.ApplicationInsights.Telemetry {
         constructor(name: string, url: string, durationMs: number, properties?: any, measurements?: any, timings?: Timings) {
             super();
 
+            this.isValid = false;
 
-                /*
-                 * http://www.w3.org/TR/navigation-timing/#processing-model
-                 *  |-navigationStart
-                 *  |             |-connectEnd
-                 *  |             ||-requestStart
-                 *  |             ||             |-responseStart
-                 *  |             ||             |              |-responseEnd
-                 *  |             ||             |              ||-domLoading
-                 *  |             ||             |              ||         |-loadEventEnd
-                 *  |---network---||---request---|---response---||---dom---|
-                 *  |--------------------------total-----------------------|
-                 */
+            /*
+             * http://www.w3.org/TR/navigation-timing/#processing-model
+             *  |-navigationStart
+             *  |             |-connectEnd
+             *  |             ||-requestStart
+             *  |             ||             |-responseStart
+             *  |             ||             |              |-responseEnd
+             *  |             ||             |              |
+             *  |             ||             |              |         |-loadEventEnd
+             *  |---network---||---request---|---response---|---dom---|
+             *  |--------------------------total----------------------|
+             */
+
             if (timings) {
                 durationMs = timings.duration;
                 if (timings.perfTotal) {
@@ -53,18 +60,25 @@ module Microsoft.ApplicationInsights.Telemetry {
                     this.domProcessing = timings.domProcessing;
                 }
             } else {
+
                 var timing = PageViewPerformance.getPerformanceTiming();
                 if (timing) {
                     var total = PageViewPerformance.getDuration(timing.navigationStart, timing.loadEventEnd);
                     var network = PageViewPerformance.getDuration(timing.navigationStart, timing.connectEnd);
                     var request = PageViewPerformance.getDuration(timing.requestStart, timing.responseStart);
                     var response = PageViewPerformance.getDuration(timing.responseStart, timing.responseEnd);
-                    var dom = PageViewPerformance.getDuration(timing.domLoading, timing.loadEventEnd);
+                    var dom = PageViewPerformance.getDuration(timing.responseEnd, timing.loadEventEnd);
 
 
-                    if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
+                    if (total == 0) {
+                        _InternalLogging.throwInternalNonUserActionable(
+                            LoggingSeverity.WARNING,
+                            "error calculating page view performance: total='" +
+                            total + "', network='" + network + "', request='" + request + "', response='" +
+                            response + "', dom='" + dom + "'");
+                    } else if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
                         // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
-                        // in this case, don't report client performance from this page
+                        // in this case, don't report client performance from this page                    
                         _InternalLogging.throwInternalNonUserActionable(
                             LoggingSeverity.WARNING,
                             "client performance math error:" + total + " < " + network + " + " + request + " + " + response + " + " + dom);
@@ -80,16 +94,22 @@ module Microsoft.ApplicationInsights.Telemetry {
                         this.sentRequest = Util.msToTimeSpan(request);
                         this.receivedResponse = Util.msToTimeSpan(response);
                         this.domProcessing = Util.msToTimeSpan(dom);
+
+                        this.isValid = true;
                     }
                 }
             }
+
             this.url = Common.DataSanitizer.sanitizeUrl(url);
-            this.name = Common.DataSanitizer.sanitizeString(name);
+            this.name = Common.DataSanitizer.sanitizeString(name || Util.NotSpecified);
+
             if (!isNaN(durationMs)) {
                 this.duration = Util.msToTimeSpan(durationMs);
             }
+
             this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
             this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);
+
         }
 
         public static getPerformanceTiming(): PerformanceTiming {

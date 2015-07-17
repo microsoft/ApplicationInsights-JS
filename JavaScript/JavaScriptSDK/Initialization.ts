@@ -100,13 +100,38 @@ module Microsoft.ApplicationInsights {
 
         public pollInteralLogs(appInsightsInstance: AppInsights) {
             return setInterval(() => {
-                var queue: Array<string> = Microsoft.ApplicationInsights._InternalLogging["queue"];
+                var queue: Array<string> = Microsoft.ApplicationInsights._InternalLogging.queue;
                 var length = queue.length;
                 for (var i = 0; i < length; i++) {
                     appInsightsInstance.trackTrace(queue[i]);
                 }
                 queue.length = 0;
             }, this.config.diagnosticLogInterval);
+        }
+        
+        /**
+         * Adds the ability to flush all data before the page unloads.
+         * 
+         * Note: This approach tries to push an async request with all the pending events onbeforeunload.
+         * Firefox does not respect this. Other browsers DO push out the call with < 100% hit rate.
+         * Telemetry here will help us analyze how effective this approach is.
+         * Another approach would be to make this call sync with a acceptable timeout to reduce the 
+         * impact on user experience.
+         * 
+         * @param {AppInsights} appInsightsInstance - The instance of ApplicationInsights
+         */
+        public addFlushBeforeUnload(appInsightsInstance: AppInsights): void {
+            // Add callback to push events when the user navigates away
+
+            if ('onbeforeunload' in window) {             
+                var flushAllEvents = function() {
+                    appInsightsInstance.context._sender.triggerSend();
+                };
+                
+                if (!Microsoft.ApplicationInsights.Util.addEventHandler('beforeunload', flushAllEvents)) {
+                    Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 'Could not add handler for beforeunload');
+                }
+            }
         }
 
         public static getDefaultConfig(config?: IConfig): IConfig {
@@ -122,10 +147,13 @@ module Microsoft.ApplicationInsights {
             config.sessionExpirationMs = 24 * 60 * 60 * 1000;
             config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 1000000;
             config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
-            config.enableDebug = !!config.enableDebug;
-            config.autoCollectErrors = typeof config.autoCollectErrors === "boolean" ? config.autoCollectErrors : true;
-            config.disableTelemetry = !!config.disableTelemetry;
-            config.verboseLogging = !!config.verboseLogging;
+            config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
+            config.autoCollectErrors = (config.autoCollectErrors !== undefined && config.autoCollectErrors !== null) ?
+                Util.stringToBoolOrDefault(config.autoCollectErrors) :
+                true;
+            config.disableTelemetry = Util.stringToBoolOrDefault(config.disableTelemetry);
+            config.verboseLogging = Util.stringToBoolOrDefault(config.verboseLogging);
+            config.emitLineDelimitedJson = Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
             config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
 
             return config;

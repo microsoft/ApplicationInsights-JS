@@ -4,7 +4,7 @@
 
 class SnippetTests extends TestClass {
     private name = "appInsights";
-    private instrumentationKey = window["appInsights"].instrumentationKey;
+    private instrumentationKey = "89330895-7c53-4315-a242-85d136ad9c16";
     private originalAppInsights;
     private timingOffset = 0;
     private queueSpy;
@@ -214,7 +214,7 @@ class SnippetTests extends TestClass {
     }
 
     private setAppInsights() {
-        window["appInsights"].endpointUrl = "http://dc-int.services.visualstudio.com/v2/track";
+        window["appInsights"].endpointUrl = "https://dc.services.visualstudio.com/v2/track";
         window["appInsights"].maxBatchInterval = 1;
         var appIn = <Microsoft.ApplicationInsights.AppInsights>window[this.name];
         var sender = sinon.spy(appIn.context._sender, "send");

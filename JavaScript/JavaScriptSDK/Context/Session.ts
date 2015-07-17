@@ -95,16 +95,24 @@ module Microsoft.ApplicationInsights.Context {
                     this.automaticSession.id = params[0];
                 }
 
-                if (params.length > 1) {
-                    var acq = params[1];
-                    this.automaticSession.acquisitionDate = +new Date(acq);
-                    this.automaticSession.acquisitionDate = this.automaticSession.acquisitionDate > 0 ? this.automaticSession.acquisitionDate : 0;
-                }
+                try {
+                    if (params.length > 1) {
+                        var acq = +params[1];
+                        this.automaticSession.acquisitionDate = +new Date(acq);
+                        this.automaticSession.acquisitionDate = this.automaticSession.acquisitionDate > 0 ? this.automaticSession.acquisitionDate : 0;
+                    }
 
-                if (params.length > 2) {
-                    var renewal = params[2];
-                    this.automaticSession.renewalDate = +new Date(renewal);
-                    this.automaticSession.renewalDate = this.automaticSession.renewalDate > 0 ? this.automaticSession.renewalDate : 0;
+                    if (params.length > 2) {
+                        var renewal = +params[2];
+                        this.automaticSession.renewalDate = +new Date(renewal);
+                        this.automaticSession.renewalDate = this.automaticSession.renewalDate > 0 ? this.automaticSession.renewalDate : 0;
+                    }
+                } catch (e) {                    
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Error parsing ai_session cookie, session will be reset: " + Util.dump(e));
+                }            
+
+                if (this.automaticSession.renewalDate == 0) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "AI sessoin renewal date is 0, session will be reset.");
                 }
             }
 
@@ -130,9 +138,7 @@ module Microsoft.ApplicationInsights.Context {
 
         private setCookie(guid: string, acq: number, renewal: number) {
             var date = new Date(acq);
-            var acqStr = Util.toISOStringForIE8(date);
-            var renewalStr = Util.toISOStringForIE8(new Date(renewal));
-            var cookie = [guid, acqStr, renewalStr];
+            var cookie = [guid, acq, renewal];
             // Set cookie to never expire so we can set Session.IsFirst only when cookie is generated for the first time
             // 365 * 24 * 60 * 60 * 1000 = 31536000000 
             date.setTime(date.getTime() + 31536000000);

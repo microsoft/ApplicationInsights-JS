@@ -37,6 +37,8 @@
       <PackageCommand Condition="'$(PackageSymbols)' == 'True'">$(PackageCommand) -Symbols</PackageCommand>
     </PropertyGroup>
 
+    <RemoveDir Directories="$(PackageOutputDir)"/>
+    
     <!-- Make sure package output directory exists (expected by NuGet). -->
     <MakeDir Directories="$(PackageOutputDir)"/>
     

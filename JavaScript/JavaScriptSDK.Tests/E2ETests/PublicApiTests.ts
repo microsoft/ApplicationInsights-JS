@@ -1,11 +1,12 @@
 ﻿/// <reference path="..\TestFramework\Common.ts" />
 /// <reference path="../../javascriptsdk/appinsights.ts" />
+/// <reference path="../../javascriptsdk/initialization.ts" />
 
 class PublicApiTests extends TestClass {
 
-    private errorSpy;
-    private successSpy;
-    private loggingSpy;
+    public errorSpy;
+    public successSpy;
+    public loggingSpy;
 
     /** Method called before the start of each test method */
     public testInitialize() {
@@ -28,16 +29,13 @@ class PublicApiTests extends TestClass {
     }
 
     public registerTests() {
-        var snippet = window["appInsights"];
+        var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
+        config.maxBatchInterval = 100;
+        config.endpointUrl = "https://dc.services.visualstudio.com/v2/track";
+        config.instrumentationKey = "89330895-7c53-4315-a242-85d136ad9c16";
 
-        /*
-        // uncomment this to target prod instead of int
-        snippet.endpointUrl = "http://dc.services.visualstudio.com/v2/track";
-        snippet.instrumentationKey = "89330895-7c53-4315-a242-85d136ad9c16";
-        */
-
-        var delay = snippet.config.maxBatchInterval + 100;
-        var testAi = new Microsoft.ApplicationInsights.AppInsights(snippet.config);
+        var delay = config.maxBatchInterval + 100;
+        var testAi = new Microsoft.ApplicationInsights.AppInsights(config);
         // disable session state event:
         testAi.context._sessionManager._sessionHandler = null;
 
@@ -54,26 +52,24 @@ class PublicApiTests extends TestClass {
         }
 
         var asserts = [];
-        var pollingCount = 100;
-        for (var i = 0; i < pollingCount; i++) {
-            asserts.push(() => {
-                var message = "polling: " + new Date().toISOString();
-                Assert.ok(true, message);
-                console.log(message);
+        asserts.push(() => {
+            var message = "polling: " + new Date().toISOString();
+            Assert.ok(true, message);
+            console.log(message);
 
-                // calling start() causes sinon to resume and ends the async test
-                if (this.successSpy.called) {
-                    boilerPlateAsserts();
-                    this.testCleanup();
-                    start();
-                } else if (this.errorSpy.called || this.loggingSpy.called) {
-                    boilerPlateAsserts();
-                    start();
-                }
-            });
-        }
-
-        asserts.push(() => Assert.ok(this.successSpy.called, "success"));
+            if (this.successSpy.called) {
+                boilerPlateAsserts();
+                this.testCleanup();
+            } else if (this.errorSpy.called || this.loggingSpy.called) {
+                boilerPlateAsserts();
+            }
+        });
+        
+        asserts.push(PollingAssert.createPollingAssert(() => {
+                Assert.ok(true, "* checking success spy " + new Date().toISOString());
+                return this.successSpy.called;
+            }, "sender succeeded")
+        );
 
         this.testCaseAsync({
             name: "TelemetryContext: track event",
@@ -108,9 +104,11 @@ class PublicApiTests extends TestClass {
             stepDelay: delay,
             steps: [
                 () => {
+                    console.log("* calling trackMetric " + new Date().toISOString());
                     for (var i = 0; i < 100; i++) {
                         testAi.trackMetric("test" + i, Math.round(100 * Math.random()));
                     }
+                    console.log("* done calling trackMetric " + new Date().toISOString());
                 }
             ].concat(asserts)
         });

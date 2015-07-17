@@ -1,13 +1,22 @@
 ﻿module Microsoft.ApplicationInsights {
-    
+
     export class Util {
         private static document: any = typeof document !== "undefined" ? document : {};
 
+        public static NotSpecified = "not_specified";
         /**
          * helper method to set userId and sessionId cookie
          */
         public static setCookie(name, value) {
             Util.document.cookie = name + "=" + value + ";path=/";
+        }
+
+        public static stringToBoolOrDefault(str: any): boolean {
+            if (!str) {
+                return false;
+            }
+
+            return str.toString().toLowerCase() === "true";
         }
 
         /**
@@ -34,7 +43,8 @@
         /**
          * helper method to trim strings (IE8 does not implement String.prototype.trim)
          */
-        public static trim(str: string): string {
+        public static trim(str: any): string {
+            if (typeof str !== "string") return str;
             return str.replace(/^\s+|\s+$/g, "");
         }
 
@@ -69,7 +79,7 @@
         public static isError(obj: any): boolean {
             return Object.prototype.toString.call(obj) === "[object Error]";
         }
-
+        
         /**
          * Check if an object is of type Date
          */
@@ -125,6 +135,57 @@
             hour = hour.length < 2 ? "0" + hour : hour;
 
             return hour + ":" + min + ":" + sec + "." + ms;
+        }
+   
+        /**		
+        * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error		
+        * happens in a script from other domain (cross origin, CORS).		
+        */
+        public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
+            return (message == "Script error." || message == "Script error")
+                && url == ""
+                && lineNumber == 0
+                && columnNumber == 0
+                && error == null;
+        }
+
+        /**
+        * Returns string representation of an object suitable for diagnostics logging.
+        */
+        public static dump(object: any): string {
+            var objectTypeDump: string = Object.prototype.toString.call(object);
+            var propertyValueDump: string = JSON.stringify(object);
+            if (objectTypeDump === "[object Error]") {
+                propertyValueDump = "{ stack: '" + object.stack + "', message: '" + object.message + "', name: '" + object.name + "'";
+            }
+
+            return objectTypeDump + propertyValueDump;
+        }
+        
+        /**
+         * Adds an event handler for the specified event
+         * @param eventName {string} - The name of the event
+         * @param callback {any} - The callback function that needs to be executed for the given event 
+         * @return {boolean} - true if the handler was successfully added
+         */
+        public static addEventHandler(eventName: string, callback: any): boolean {
+            if (!window || typeof eventName !== 'string' || typeof callback !== 'function') {
+                return false;
+            }
+            
+            // Create verb for the event
+            var verbEventName = 'on' + eventName;
+            
+            // check if addEventListener is available
+            if (window.addEventListener) {
+                window.addEventListener(eventName, callback, false);
+            } else if (window.attachEvent) { // For older browsers
+                window.attachEvent(verbEventName, callback);
+            } else { // if all else fails
+                return false;
+            }
+            
+            return true;
         }
     }
 }

@@ -21,7 +21,18 @@ namespace ApplicationInsights.Javascript.Tests
         private static IISExpress iisExpress;
         private const string PATH_TO_TESTS = "/Selenium/Tests.html";
         private const string PATH_TO_PERF_TESTS = "/Selenium/PerfTests.html";
-        private const string PERF_RESULTS_PATH = @"perfResults.txt";
+        
+        // We run tests with IsPublicBuild on our build server to maintain public history of perf results (to be shared for each release).
+        // For anything but master perf results are supposed to be written locally enabling people to compare
+        // perf impact of their commits.
+        // To do that - take the latest public perf results, run test locally, apply your changes, run test again.
+        // Then compare numbers (or build pivot charts to visualize the perf changes).
+        private const string PERF_RESULTS_PATH = 
+#if IsPublicBuild
+@"\\smfiles\Privates\scsouthw\perfResults.txt";
+#else
+ @".\perfResults.txt";
+#endif
 
         [ClassInitialize]
         public static void Setup(TestContext context)
@@ -63,7 +74,7 @@ namespace ApplicationInsights.Javascript.Tests
         //    RunPerfTest(new OpenQA.Selenium.IE.InternetExplorerDriver());
         //}
 
-        [TestMethod]
+        //[TestMethod]
         public void Safari()
         {
             RunTest(new OpenQA.Selenium.Safari.SafariDriver());
@@ -75,19 +86,19 @@ namespace ApplicationInsights.Javascript.Tests
             RunTest(new OpenQA.Selenium.Chrome.ChromeDriver());
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void FirefoxPerf()
         {
             RunPerfTest(new OpenQA.Selenium.Firefox.FirefoxDriver());
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void SafariPerf()
         {
             RunPerfTest(new OpenQA.Selenium.Safari.SafariDriver());
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void ChromePerf()
         {
             RunPerfTest(new OpenQA.Selenium.Chrome.ChromeDriver());

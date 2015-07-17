@@ -1,5 +1,6 @@
 ﻿/// <reference path="../../testframework/common.ts" />
 /// <reference path="../../../JavaScriptSDK/telemetry/Common/DataSanitizer.ts" />
+/// <reference path="../../../JavaScriptSDK/Util.ts"/>
 
 class DataSanitizerTests extends TestClass {
 
@@ -121,7 +122,7 @@ class DataSanitizerTests extends TestClass {
                 }
 
                 var expectedMap = {
-                    "he000": 1,
+                    "hello": 1,
                     "he001": 2,
                     "he002": 3,
                     "he003": 4,
@@ -130,6 +131,31 @@ class DataSanitizerTests extends TestClass {
 
                 var validatedMap = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(map);
                 Assert.deepEqual(expectedMap, validatedMap);
+            }
+        });
+
+        this.testCase({
+            name: "DataSanitizerTests: Validate sanitizeString trims whitespaces",
+            test: () => {
+                var expected = "NoWhiteSpaces";
+                var input = "   NoWhiteSpaces  ";
+
+                var actual = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(input);
+                Assert.equal(expected, actual);
+            }
+        });
+
+        this.testCase({
+            name: "DataSanitizerTests: Validate sanitizeProperties trims whitespaces in properties names and values",
+            test: () => {
+                var expected = "NoWhiteSpaces";
+                var input = "   NoWhiteSpaces  ";
+
+                var testProps = { "  prop1  ": "   val  ", "   prop2 ": " val     " };                
+
+                var actual = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(testProps);
+                Assert.equal("val", actual["prop1"]);
+                Assert.equal("val", actual["prop2"]);
             }
         });
     }
