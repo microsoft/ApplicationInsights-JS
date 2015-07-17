@@ -49,55 +49,55 @@ module Microsoft.ApplicationInsights.Telemetry {
              *  |---network---||---request---|---response---|---dom---|
              *  |--------------------------total----------------------|
              */
+            var total: number;
+            var network: number;
+            var request: number;
+            var response: number;
+            var dom: number;
 
             if (timings) {
-                durationMs = timings.duration;
-                if (timings.perfTotal) {
-                    this.perfTotal = timings.perfTotal;
-                    this.networkConnect = timings.networkConnect;
-                    this.sentRequest = timings.sentRequest;
-                    this.receivedResponse = timings.receivedResponse;
-                    this.domProcessing = timings.domProcessing;
-                }
+                total = timings.total;
+                network = timings.network;
+                request = timings.request;
+                response = timings.response;
+                dom = timings.dom;
             } else {
-
                 var timing = PageViewPerformance.getPerformanceTiming();
                 if (timing) {
-                    var total = PageViewPerformance.getDuration(timing.navigationStart, timing.loadEventEnd);
-                    var network = PageViewPerformance.getDuration(timing.navigationStart, timing.connectEnd);
-                    var request = PageViewPerformance.getDuration(timing.requestStart, timing.responseStart);
-                    var response = PageViewPerformance.getDuration(timing.responseStart, timing.responseEnd);
-                    var dom = PageViewPerformance.getDuration(timing.responseEnd, timing.loadEventEnd);
-
-
-                    if (total == 0) {
-                        _InternalLogging.throwInternalNonUserActionable(
-                            LoggingSeverity.WARNING,
-                            "error calculating page view performance: total='" +
-                            total + "', network='" + network + "', request='" + request + "', response='" +
-                            response + "', dom='" + dom + "'");
-                    } else if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
-                        // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
-                        // in this case, don't report client performance from this page                    
-                        _InternalLogging.throwInternalNonUserActionable(
-                            LoggingSeverity.WARNING,
-                            "client performance math error:" + total + " < " + network + " + " + request + " + " + response + " + " + dom);
-
-                    } else {
-
-                        // use timing data for duration if possible
-                        durationMs = total;
-
-                        // convert to timespans
-                        this.perfTotal = Util.msToTimeSpan(total);
-                        this.networkConnect = Util.msToTimeSpan(network);
-                        this.sentRequest = Util.msToTimeSpan(request);
-                        this.receivedResponse = Util.msToTimeSpan(response);
-                        this.domProcessing = Util.msToTimeSpan(dom);
-
-                        this.isValid = true;
-                    }
+                    total = PageViewPerformance.getDuration(timing.navigationStart, timing.loadEventEnd);
+                    network = PageViewPerformance.getDuration(timing.navigationStart, timing.connectEnd);
+                    request = PageViewPerformance.getDuration(timing.requestStart, timing.responseStart);
+                    response = PageViewPerformance.getDuration(timing.responseStart, timing.responseEnd);
+                    dom = PageViewPerformance.getDuration(timing.responseEnd, timing.loadEventEnd);
                 }
+            }
+
+            if (total == 0) {
+                _InternalLogging.throwInternalNonUserActionable(
+                    LoggingSeverity.WARNING,
+                    "error calculating page view performance: total='" +
+                    total + "', network='" + network + "', request='" + request + "', response='" +
+                    response + "', dom='" + dom + "'");
+            } else if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
+                // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
+                // in this case, don't report client performance from this page                    
+                _InternalLogging.throwInternalNonUserActionable(
+                    LoggingSeverity.WARNING,
+                    "client performance math error:" + total + " < " + network + " + " + request + " + " + response + " + " + dom);
+
+            } else {
+
+                // use timing data for duration if possible
+                durationMs = total;
+
+                // convert to timespans
+                this.perfTotal = Util.msToTimeSpan(total);
+                this.networkConnect = Util.msToTimeSpan(network);
+                this.sentRequest = Util.msToTimeSpan(request);
+                this.receivedResponse = Util.msToTimeSpan(response);
+                this.domProcessing = Util.msToTimeSpan(dom);
+
+                this.isValid = true;
             }
 
             this.url = Common.DataSanitizer.sanitizeUrl(url);

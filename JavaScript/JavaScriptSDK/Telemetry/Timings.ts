@@ -5,37 +5,18 @@ module Microsoft.ApplicationInsights.Telemetry {
 
     export class Timings {
 
-        public duration: number;
-        public perfTotal: string;
-        public networkConnect: string;
-        public sentRequest: string;
-        public receivedResponse: string;
-        public domProcessing: string;
+        public total: number;
+        public network: number;
+        public request: number;
+        public response: number;
+        public dom: number;
 
         constructor(durationMs: number, networkMs: number, sendMs: number, receiveMs: number, domProcessingMs: number) {
-            this.duration = 0;
-            var total = Timings.getDuration(durationMs);
-            var network = Timings.getDuration(networkMs);
-            var request = Timings.getDuration(sendMs);
-            var response = Timings.getDuration(receiveMs);
-            var dom = Timings.getDuration(domProcessingMs);
-            
-            if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
-                // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
-                // in this case, don't report client performance from this page
-                _InternalLogging.throwInternalNonUserActionable(
-                    LoggingSeverity.WARNING,
-                    "client performance math error:" + total + " < " + network + " + " + request + " + " + response + " + " + dom);
-
-            } else {
-                this.duration = total;
-                // convert to timespans
-                this.perfTotal = Util.msToTimeSpan(total);
-                this.networkConnect = Util.msToTimeSpan(network);
-                this.sentRequest = Util.msToTimeSpan(request);
-                this.receivedResponse = Util.msToTimeSpan(response);
-                this.domProcessing = Util.msToTimeSpan(dom);
-            }
+            this.total = Timings.getDuration(durationMs);
+            this.network = Timings.getDuration(networkMs);
+            this.request = Timings.getDuration(sendMs);
+            this.response = Timings.getDuration(receiveMs);
+            this.dom = Timings.getDuration(domProcessingMs);
         }
         
         private static getDuration(end: any): number {
