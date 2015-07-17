@@ -9,11 +9,11 @@ class PollingAssert {
     * @timeoutSeconds - timeout in seconds after which assert is considered failed
     * @pollIntervalMs - polling interval in milliseconds
     */
-    public static createPollingAssert(assertionFunctionReturnsBoolean, assertDescription: string, timeoutSeconds: number = 30, pollIntervalMs: number = 500) {
+    public static createPollingAssert(assertionFunctionReturnsBoolean: () => boolean, assertDescription: string, timeoutSeconds: number = 30, pollIntervalMs: number = 500) {
         var timeout = new Date(new Date().getTime() + timeoutSeconds * 1000);
         var pollingAssert = (nextTestStep) => {
             var polling = () => {
-                if (assertionFunctionReturnsBoolean.apply()) {
+                if (assertionFunctionReturnsBoolean.apply(this)) {
                     Assert.ok(true, assertDescription);
                     nextTestStep();
                 } else if (timeout < new Date()) {
