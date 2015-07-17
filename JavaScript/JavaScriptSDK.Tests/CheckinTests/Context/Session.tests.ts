@@ -49,7 +49,7 @@ class SessionContextTests extends TestClass {
                 // no cookie, isNew should be true
                 Microsoft.ApplicationInsights.Util["document"] = <any>{
                     cookie: ""
-                };                
+                };
 
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null, () => { });
                 
