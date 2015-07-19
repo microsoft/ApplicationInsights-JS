@@ -123,7 +123,7 @@ class UserContextTests extends TestClass {
                 var user = new Microsoft.ApplicationInsights.Context.User(undefined);
 
                 // verify
-                Assert.equal(authId, user.getAuthId(), "user auth id was set from cookie");
+                Assert.equal(authId, user.authenticatedId, "user auth id was set from cookie");
                 Assert.equal(accountId, user.accountId, "user account id was not set from cookie");
                 cookieStub.restore();
             }
@@ -140,7 +140,7 @@ class UserContextTests extends TestClass {
                 var user = new Microsoft.ApplicationInsights.Context.User(undefined);
 
                 // verify
-                Assert.equal(authId, user.getAuthId(), "user auth id was set from cookie");
+                Assert.equal(authId, user.authenticatedId, "user auth id was set from cookie");
                 cookieStub.restore();
             }
         });
@@ -155,7 +155,7 @@ class UserContextTests extends TestClass {
                 var user = new Microsoft.ApplicationInsights.Context.User(undefined);
 
                 // verify
-                Assert.equal(undefined, user.getAuthId(), "user auth id was not set");
+                Assert.equal(undefined, user.authenticatedId, "user auth id was not set");
                 Assert.equal(undefined, user.accountId, "user account id was not set");
                 cookieStub.restore();
             }
@@ -189,7 +189,7 @@ class UserContextTests extends TestClass {
                 user.setAuthenticatedUserContext(authAndAccountId[0]);
 
                 // verify
-                Assert.equal(authAndAccountId[0], user.getAuthId(), "user auth id was set");
+                Assert.equal(authAndAccountId[0], user.authenticatedId, "user auth id was set");
                 Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId.join('|'))), true, "user auth id nad account id cookie was set");
                 cookieStub.restore();
             }
@@ -207,14 +207,14 @@ class UserContextTests extends TestClass {
                 user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
 
                 // verify
-                Assert.equal(authAndAccountId[0], user.getAuthId(), "user auth id was set");
+                Assert.equal(authAndAccountId[0], user.authenticatedId, "user auth id was set");
                 Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId.join('|'))), true, "user auth id cookie was set");
                 cookieStub.restore();
             }
         });
 
         this.testCase({
-            name: "setAuthenticatedUserContext: handles empty account id correctly",
+            name: "setAuthenticatedUserContext: handles only auth user id correctly",
             test: () => {
                 // setup
                 var authAndAccountId = ['bla@bla.com'];
@@ -225,7 +225,7 @@ class UserContextTests extends TestClass {
                 user.setAuthenticatedUserContext(authAndAccountId[0]);
 
                 // verify
-                Assert.equal(authAndAccountId[0], user.getAuthId(), "user auth id was set");
+                Assert.equal(authAndAccountId[0], user.authenticatedId, "user auth id was set");
                 Assert.equal(null, user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId[0])), true, "user auth id cookie was set");
                 cookieStub.restore();
@@ -233,20 +233,65 @@ class UserContextTests extends TestClass {
         });
 
         this.testCase({
-            name: "setAuthenticatedUserContext: handles nulls correctly",
+            name: "setAuthenticatedUserContext: handles null correctly",
             test: () => {
                 // setup
                 var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie");
                 var user = new Microsoft.ApplicationInsights.Context.User(undefined);
+                var loggingStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
 
                 // act
                 user.setAuthenticatedUserContext(null);
 
                 // verify
-                Assert.equal(undefined, user.getAuthId(), "user auth id was not set");
+                Assert.equal(undefined, user.authenticatedId, "user auth id was not set");
                 Assert.equal(undefined, user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.notCalled, true, "cookie was not set");
+                Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
                 cookieStub.restore();
+                loggingStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "setAuthenticatedUserContext: handles undefined correctly",
+            test: () => {
+                // setup
+                var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie");
+                var user = new Microsoft.ApplicationInsights.Context.User(undefined);
+                var loggingStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+
+                // act
+                user.setAuthenticatedUserContext(undefined, undefined);
+
+                // verify
+                Assert.equal(undefined, user.authenticatedId, "user auth id was not set");
+                Assert.equal(undefined, user.accountId, "user account id was not set");
+                Assert.equal(cookieStub.notCalled, true, "cookie was not set");
+                Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
+                cookieStub.restore();
+                loggingStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "setAuthenticatedUserContext: handles only accountID correctly",
+            test: () => {
+                // setup
+                var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie");
+                var user = new Microsoft.ApplicationInsights.Context.User(undefined);
+                var loggingStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+
+                // act
+                user.setAuthenticatedUserContext(undefined, '1234');
+
+                // verify
+                Assert.equal(undefined, user.authenticatedId, "user auth id was not set");
+                Assert.equal(undefined, user.accountId, "user account id was not set");
+                Assert.equal(cookieStub.notCalled, true, "cookie was not set");
+                Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
+                cookieStub.restore();
+                loggingStub.restore();
             }
         });
 
@@ -257,15 +302,18 @@ class UserContextTests extends TestClass {
                 var authAndAccountId = ['my|||special;id', '1234'];
                 var user = new Microsoft.ApplicationInsights.Context.User(undefined);
                 var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie");
+                var loggingStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
 
                 // act
                 user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
 
                 // verify
-                Assert.equal(undefined, user.getAuthId(), "user auth id was not set");
+                Assert.equal(undefined, user.authenticatedId, "user auth id was not set");
                 Assert.equal(undefined, user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.notCalled, true, "cookie was not set");
+                Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
                 cookieStub.restore();
+                loggingStub.restore();
             }
         });
 
@@ -277,15 +325,18 @@ class UserContextTests extends TestClass {
                 var user = new Microsoft.ApplicationInsights.Context.User(undefined);
                 user.clearAuthenticatedUserContext();
                 var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie");
+                var loggingStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
 
                 // act
                 user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
 
                 // verify
-                Assert.equal(undefined, user.getAuthId(), "user auth id was not set");
+                Assert.equal(undefined, user.authenticatedId, "user auth id was not set");
                 Assert.equal(undefined, user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.notCalled, true, "cookie was not set");
+                Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
                 cookieStub.restore();
+                loggingStub.restore();
             }
         });
 
@@ -296,15 +347,18 @@ class UserContextTests extends TestClass {
                 var authAndAccountId = ['שלום', 'להתראות'];
                 var user = new Microsoft.ApplicationInsights.Context.User(undefined);
                 var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie");
+                var loggingStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
 
                 // act
                 user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
 
                 // verify
-                Assert.equal(authAndAccountId[0], user.getAuthId(), "user auth id was set");
+                Assert.equal(authAndAccountId[0], user.authenticatedId, "user auth id was set");
                 Assert.equal(authAndAccountId[1], user.accountId, "user account id was set");
                 Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId.join('|'))), true, "user auth id cookie was set");
+                Assert.equal(loggingStub.notCalled, true, "No warnings");
                 cookieStub.restore();
+                loggingStub.restore();
             }
         });
 
@@ -320,7 +374,25 @@ class UserContextTests extends TestClass {
                 user.clearAuthenticatedUserContext();
 
                 // verify
-                Assert.equal(undefined, user.getAuthId(), "user auth id was cleared");
+                Assert.equal(undefined, user.authenticatedId, "user auth id was cleared");
+                Assert.equal(undefined, user.accountId, "user account id was cleared");
+                Assert.equal(cookieStub.calledWithExactly('ai_authUser'), true, "cookie was deleted");
+                cookieStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "clearAuthenticatedUserContext: works correctly when auth id and account id were never set",
+            test: () => {
+                // setup
+                var user = new Microsoft.ApplicationInsights.Context.User(undefined);
+                var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "deleteCookie");
+
+                // act
+                user.clearAuthenticatedUserContext();
+
+                // verify
+                Assert.equal(undefined, user.authenticatedId, "user auth id was cleared");
                 Assert.equal(undefined, user.accountId, "user account id was cleared");
                 Assert.equal(cookieStub.calledWithExactly('ai_authUser'), true, "cookie was deleted");
                 cookieStub.restore();

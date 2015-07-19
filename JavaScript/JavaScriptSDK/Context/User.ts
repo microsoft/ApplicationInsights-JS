@@ -15,6 +15,11 @@ module Microsoft.ApplicationInsights.Context {
         public id: string;
 
         /**
+         * Authenticated user id
+         */
+        public authenticatedId: string;
+
+        /**
          * The account ID.
          */
         public accountId: string;
@@ -34,14 +39,6 @@ module Microsoft.ApplicationInsights.Context {
          */
         public storeRegion: string;
 
-        /**
-         * Authorized user id
-         */
-        private authId: string;
-        public getAuthId() {
-            return this.authId;
-        }
-
          /**
          * Sets the autheticated user id and the account id in this session.
          *   
@@ -59,11 +56,11 @@ module Microsoft.ApplicationInsights.Context {
             }
 
             // Create cookie string.
-            this.authId = authenticatedUserId;
-            var authCookie = this.authId;
+            this.authenticatedId = authenticatedUserId;
+            var authCookie = this.authenticatedId;
             if (accountId) {
                 this.accountId = accountId;
-                authCookie = [this.authId, this.accountId].join(User.cookieSeparator);
+                authCookie = [this.authenticatedId, this.accountId].join(User.cookieSeparator);
             }
             
             // Set the cookie. No expiration date because this is a session cookie (expires when browser closed).
@@ -76,7 +73,7 @@ module Microsoft.ApplicationInsights.Context {
          * @returns {} 
          */
         public clearAuthenticatedUserContext() {
-            this.authId = null;
+            this.authenticatedId = null;
             this.accountId = null;
             Util.deleteCookie(User.authUserCookieName);
         }
@@ -110,13 +107,13 @@ module Microsoft.ApplicationInsights.Context {
             this.accountId = accountId;
 
             // Get the auth user id and account id from the cookie if exists
-            // Cookie is in the pattern: <authId>|<accountId>
+            // Cookie is in the pattern: <authenticatedId>|<accountId>
             var authCookie = Util.getCookie(User.authUserCookieName);
             if (authCookie) {
                 authCookie = decodeURI(authCookie);
                 var authCookieString = authCookie.split(User.cookieSeparator);
                 if (authCookieString[0]) {
-                    this.authId = authCookieString[0];
+                    this.authenticatedId = authCookieString[0];
                 }
                 if (authCookieString.length > 1 && authCookieString[1]) {
                     this.accountId = authCookieString[1];

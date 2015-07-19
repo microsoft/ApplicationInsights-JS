@@ -280,8 +280,8 @@ module Microsoft.ApplicationInsights {
                 if (typeof userContext.id === "string") {
                     envelope.tags[tagKeys.userId] = userContext.id;
                 }
-                if (typeof userContext.getAuthId() === "string") {
-                    envelope.tags[tagKeys.userAuthUserId] = userContext.getAuthId();
+                if (typeof userContext.authenticatedId === "string") {
+                    envelope.tags[tagKeys.userAuthUserId] = userContext.authenticatedId;
                 }
                 if (typeof userContext.storeRegion === "string") {
                     envelope.tags[tagKeys.userStoreRegion] = userContext.storeRegion;

@@ -513,7 +513,7 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "AppInsightsTests: set authID context is applied",
+            name: "AppInsightsTests: set authenticatedId context is applied",
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
@@ -528,7 +528,7 @@ class AppInsightsTests extends TestClass {
                     this.clock.tick(1);
                     var envelope = this.getFirstResult(action, trackStub);
                     var contextKeys = new AI.ContextTagKeys();
-                    Assert.equal("10001", envelope.tags[contextKeys.userAuthUserId], "user.authId");
+                    Assert.equal("10001", envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId");
                    
                     trackStub.reset();
                 };
@@ -546,7 +546,7 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "AppInsightsTests: set authId and accountId context is applied",
+            name: "AppInsightsTests: set authenticatedId and accountId context is applied",
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
@@ -561,7 +561,7 @@ class AppInsightsTests extends TestClass {
                     this.clock.tick(1);
                     var envelope = this.getFirstResult(action, trackStub);
                     var contextKeys = new AI.ContextTagKeys();
-                    Assert.equal("10001", envelope.tags[contextKeys.userAuthUserId], "user.authId");
+                    Assert.equal("10001", envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId");
                     Assert.equal("account33", envelope.tags[contextKeys.userAccountId], "user.accountId");
 
                     trackStub.reset();
@@ -580,7 +580,7 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "AppInsightsTests: set authId and accountId context is applied with non-ascii languages",
+            name: "AppInsightsTests: set authenticatedId and accountId context is applied with non-ascii languages",
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
@@ -595,7 +595,7 @@ class AppInsightsTests extends TestClass {
                     this.clock.tick(1);
                     var envelope = this.getFirstResult(action, trackStub);
                     var contextKeys = new AI.ContextTagKeys();
-                    Assert.equal("myuser中国话", envelope.tags[contextKeys.userAuthUserId], "user.authId is correct, special characters removed");
+                    Assert.equal("myuser中国话", envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId is correct, special characters removed");
                     Assert.equal("اللغةالعربيةهيجميلةעבריתזהנחמד", envelope.tags[contextKeys.userAccountId], "user.accountIdis correct, special characters removed");
 
                     trackStub.reset();
@@ -621,7 +621,7 @@ class AppInsightsTests extends TestClass {
                 var trackStub = sinon.stub(appInsights.context._sender, "send");
                 appInsights.setAuthenticatedUserContext("1234", "abcd");
 
-                // Clear authId
+                // Clear authenticatedId
                 appInsights.clearAuthenticatedUserContext();
 
                 // verify
@@ -630,7 +630,7 @@ class AppInsightsTests extends TestClass {
                     this.clock.tick(1);
                     var envelope = this.getFirstResult(action, trackStub);
                     var contextKeys = new AI.ContextTagKeys();
-                    Assert.equal(undefined, envelope.tags[contextKeys.userAuthUserId], "user.authId");
+                    Assert.equal(undefined, envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId");
                     Assert.equal(undefined, envelope.tags[contextKeys.userAccountId], "user.accountId");
                    
                     trackStub.reset();
