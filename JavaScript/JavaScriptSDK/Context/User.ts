@@ -54,9 +54,7 @@ module Microsoft.ApplicationInsights.Context {
 
                 // If we have an ai_session in local storage this means the user actively removed our cookies.
                 // We should respect their wishes and clear ourselves from local storage
-                if (window.localStorage && localStorage['ai_session']) {
-                    localStorage.removeItem('ai_session');
-                }
+                Util.removeStorage('ai_session');
             }
 
             this.accountId = accountId;

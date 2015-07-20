@@ -100,9 +100,9 @@ module Microsoft.ApplicationInsights.Context {
                 // This can happen if the session expired or the user actively deleted the cookie
                 // We only want to recover data if the cookie is missing from expiry. We should respect the user's wishes if the cookie was deleted actively.
                 // The User class handles this for us and deletes our local storage object if the persistent user cookie was removed.
-                var userCookie = Util.getCookie('ai_user');
-                if (window.localStorage && localStorage['ai_session']) {
-                    this.initializeAutomaticSessionWithData(localStorage['ai_session'].split("|"));
+                var storage = Util.getStorage('ai_session');
+                if (storage) {
+                    this.initializeAutomaticSessionWithData(storage.split("|"));
                 }
             }
 
@@ -152,8 +152,8 @@ module Microsoft.ApplicationInsights.Context {
             }
 
             // If this browser does not support local storage, fire an internal log to keep track of it at this point
-            if (!window.localStorage) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser does not support local storage. Session durations will be inaccurate.");
+            if (!Util._getStorageObject()) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser does not support local storage. Session durations will be inaccurate.");
             }
         }
 
@@ -178,13 +178,7 @@ module Microsoft.ApplicationInsights.Context {
             // Keep data in local storage to retain the last session id, allowing us to cleanly end the session when it expires
             // Browsers that don't support local storage won't be able to end sessions cleanly from the client
             // The server will notice this and end the sessions itself, with loss of accurate session duration
-            if (window.localStorage) {
-                try {
-                    localStorage['ai_session'] = [guid, acq, renewal].join('|');
-                } catch(e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed backup of ai_session to local storage.");
-                }
-            }
+            Util.setStorage('ai_session', [guid, acq, renewal].join('|'));
         }
     }
 } 

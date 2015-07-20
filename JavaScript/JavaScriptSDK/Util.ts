@@ -1,9 +1,59 @@
-﻿module Microsoft.ApplicationInsights {
+﻿/// <reference path="./logging.ts" />
+module Microsoft.ApplicationInsights {
 
     export class Util {
         private static document: any = typeof document !== "undefined" ? document : {};
-
         public static NotSpecified = "not_specified";
+
+        /*
+         * helper methods to access local storage
+         */
+        public static _getStorageObject():Storage {
+            if (window.localStorage) {
+                return window.localStorage;
+            } else {
+                return null;
+            }
+        }
+
+        public static getStorage(name:string):string {
+            var storage = Util._getStorageObject();
+            if (storage !== null) {
+                try {
+                    return storage.getItem(name);
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed read of local storage.");
+                }
+            }
+            return null;
+        }
+
+        public static setStorage(name:string, data:string):boolean {
+            var storage = Util._getStorageObject();
+            if (storage !== null) {
+                try {
+                    storage.setItem(name, data);
+                    return true;
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed write to local storage.");
+                }
+            }
+            return false;
+        }
+
+        public static removeStorage(name: string):boolean {
+            var storage = Util._getStorageObject();
+            if (storage !== null) {
+                try {
+                    storage.removeItem(name);
+                    return true;
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed removal of local storage item.");
+                }
+            }
+            return false;
+        }
+
         /**
          * helper method to set userId and sessionId cookie
          */
