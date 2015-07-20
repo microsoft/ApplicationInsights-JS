@@ -322,7 +322,7 @@ module Microsoft.ApplicationInsights {
             try {
                 this.context.user.setAuthenticatedUserContext(authenticatedUserId, accountId);
             } catch (e) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Setting auth user context failed. " + JSON.stringify(e));
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Setting auth user context failed. " + Util.dump(e));
             }
         }
 
@@ -333,7 +333,7 @@ module Microsoft.ApplicationInsights {
             try {
                 this.context.user.clearAuthenticatedUserContext();
             } catch (e) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Clearing auth user context failed. " + JSON.stringify(e));
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Clearing auth user context failed. " + Util.dump(e));
             }
         }
 
