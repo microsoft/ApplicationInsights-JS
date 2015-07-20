@@ -87,14 +87,23 @@ module Microsoft.ApplicationInsights.Context {
             }
         }
 
+        /**
+         *  Record the current state of the automatic session and store it in our cookie string format
+         *  into the browser's local storage. This is used to restore the session data when the cookie
+         *  expires.
+         */
         public backup() {
             this.setStorage(this.automaticSession.id, this.automaticSession.acquisitionDate, this.automaticSession.renewalDate);
         }
 
+        /**
+         *  Use ai_session cookie data or local storage data (when the cookie is unavailable) to
+         *  initialize the automatic session.
+         */
         private initializeAutomaticSession() {
             var cookie = Util.getCookie('ai_session');
             if (cookie && typeof cookie.split === "function") {
-                this.initializeAutomaticSessionWithData(cookie.split("|"));
+                this.initializeAutomaticSessionWithData(cookie);
             } else {
                 // There's no cookie, but we might have session data in local storage
                 // This can happen if the session expired or the user actively deleted the cookie
@@ -102,7 +111,7 @@ module Microsoft.ApplicationInsights.Context {
                 // The User class handles this for us and deletes our local storage object if the persistent user cookie was removed.
                 var storage = Util.getStorage('ai_session');
                 if (storage) {
-                    this.initializeAutomaticSessionWithData(storage.split("|"));
+                    this.initializeAutomaticSessionWithData(storage);
                 }
             }
 
@@ -112,7 +121,15 @@ module Microsoft.ApplicationInsights.Context {
             }
         }
 
-        private initializeAutomaticSessionWithData(params) {
+        /**
+         *  Extract id, aquisitionDate, and renewalDate from an ai_session payload string and
+         *  use this data to initialize automaticSession.
+         *
+         *  @param {string} sessionData - The string stored in an ai_session cookie or local storage backup
+         */
+        private initializeAutomaticSessionWithData(sessionData: string) {
+            var params = sessionData.split("|");
+
             if (params.length > 0) {
                 this.automaticSession.id = params[0];
             }
@@ -130,7 +147,7 @@ module Microsoft.ApplicationInsights.Context {
                     this.automaticSession.renewalDate = this.automaticSession.renewalDate > 0 ? this.automaticSession.renewalDate : 0;
                 }
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Error parsing ai_session cookie, session will be reset: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Error parsing ai_session cookie, session will be reset: " + Util.dump(e));
             }
 
             if (this.automaticSession.renewalDate == 0) {
