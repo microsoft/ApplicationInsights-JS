@@ -184,6 +184,7 @@
     <TypeScriptCompile Include="Performance\api.perftests.ts" />
     <TypeScriptCompile Include="Performance\pageLoad.perftests.ts" />
     <TypeScriptCompile Include="Performance\serializer.perftests.ts" />
+    <Content Include="TestFramework\PollingAssert.ts" />
     <TypeScriptCompile Include="TestFramework\ContractTestHelper.ts" />
     <TypeScriptCompile Include="CheckinTests\Logging.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Sender.tests.ts" />

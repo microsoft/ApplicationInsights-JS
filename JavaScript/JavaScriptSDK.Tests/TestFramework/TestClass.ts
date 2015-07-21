@@ -9,6 +9,8 @@ class TestClass {
         QUnit.module(name);
     }
 
+    public static isPollingStepFlag = "isPollingStep";
+
     /** The instance of the currently running suite. */
     public static currentTestClass: TestClass;
 
@@ -60,30 +62,47 @@ class TestClass {
                     if (steps.length) {
                         var step = steps.shift();
 
+                        // The callback which activates the next test step. 
+                        var nextTestStepTrigger = () => {
+                            setTimeout(() => {
+                                trigger();
+                            }, testInfo.stepDelay);
+                        };
+
+                        // There 2 types of test steps - simple and polling.
+                        // Upon completion of the simple test step the next test step will be called.
+                        // In case of polling test step the next test step is passed to the polling test step, and
+                        // it is responsibility of the polling test step to call the next test step.
                         try {
+                            if (step[TestClass.isPollingStepFlag]) {
+                                step.call(this, nextTestStepTrigger);
+                            } else {
                             step.call(this);
+                                nextTestStepTrigger.call(this);
+                            }
                         } catch (e) {
                             this._testCompleted();
                             Assert.ok(false, e.toString());
+
+                            // done is QUnit callback indicating the end of the test
                             done();
+
                             return;
                         }
-
-                        setTimeout(() => {
-                            trigger();
-                        }, testInfo.stepDelay);
-
                     } else {
                         this._testCompleted();
+
+                        // done is QUnit callback indicating the end of the test
                         done();
                     }
                 };
 
                 trigger();
-                //this._testCompleted();
             } catch (ex) {
                 Assert.ok(false, "Unexpected Exception: " + ex);
                 this._testCompleted(true);
+
+                // done is QUnit callback indicating the end of the test
                 done();
             }
         };

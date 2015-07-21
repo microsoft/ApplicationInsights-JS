@@ -164,7 +164,37 @@
         public static dump(object: any): string {
             var objectTypeDump: string = Object.prototype.toString.call(object);
             var propertyValueDump: string = JSON.stringify(object);
+            if (objectTypeDump === "[object Error]") {
+                propertyValueDump = "{ stack: '" + object.stack + "', message: '" + object.message + "', name: '" + object.name + "'";
+            }
+
             return objectTypeDump + propertyValueDump;
+        }
+        
+        /**
+         * Adds an event handler for the specified event
+         * @param eventName {string} - The name of the event
+         * @param callback {any} - The callback function that needs to be executed for the given event 
+         * @return {boolean} - true if the handler was successfully added
+         */
+        public static addEventHandler(eventName: string, callback: any): boolean {
+            if (!window || typeof eventName !== 'string' || typeof callback !== 'function') {
+                return false;
+            }
+            
+            // Create verb for the event
+            var verbEventName = 'on' + eventName;
+            
+            // check if addEventListener is available
+            if (window.addEventListener) {
+                window.addEventListener(eventName, callback, false);
+            } else if (window.attachEvent) { // For older browsers
+                window.attachEvent(verbEventName, callback);
+            } else { // if all else fails
+                return false;
+            }
+            
+            return true;
         }
     }
 }
