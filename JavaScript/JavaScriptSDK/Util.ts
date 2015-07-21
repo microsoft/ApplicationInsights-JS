@@ -1,9 +1,84 @@
-﻿module Microsoft.ApplicationInsights {
+﻿/// <reference path="./logging.ts" />
+module Microsoft.ApplicationInsights {
 
     export class Util {
         private static document: any = typeof document !== "undefined" ? document : {};
-
         public static NotSpecified = "not_specified";
+
+        private static _getStorageObject(): Storage {
+            if (window.localStorage) {
+                return window.localStorage;
+            } else {
+                return null;
+            }
+        }
+
+        /**
+         *  Check if the browser supports local storage.
+         *
+         *  @returns {boolean} True if local storage is supported.
+         */
+        public static canUseLocalStorage(): boolean {
+            return !!Util._getStorageObject();
+        }
+
+        /**
+         *  Get an object from the browser's local storage
+         *
+         *  @param {string} name - the name of the object to get from storage
+         *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
+         */
+        public static getStorage(name:string):string {
+            var storage = Util._getStorageObject();
+            if (storage !== null) {
+                try {
+                    return storage.getItem(name);
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed read of local storage.");
+                }
+            }
+            return null;
+        }
+
+        /**
+         *  Set the contents of an object in the browser's local storage
+         *
+         *  @param {string} name - the name of the object to set in storage
+         *  @param {string} data - the contents of the object to set in storage
+         *  @returns {boolean} True if the storage object could be written.
+         */
+        public static setStorage(name:string, data:string):boolean {
+            var storage = Util._getStorageObject();
+            if (storage !== null) {
+                try {
+                    storage.setItem(name, data);
+                    return true;
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed write to local storage.");
+                }
+            }
+            return false;
+        }
+
+        /**
+         *  Remove an object from the browser's local storage
+         *
+         *  @param {string} name - the name of the object to remove from storage
+         *  @returns {boolean} True if the storage object could be removed.
+         */
+        public static removeStorage(name: string):boolean {
+            var storage = Util._getStorageObject();
+            if (storage !== null) {
+                try {
+                    storage.removeItem(name);
+                    return true;
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed removal of local storage item.");
+                }
+            }
+            return false;
+        }
+
         /**
          * helper method to set userId and sessionId cookie
          */

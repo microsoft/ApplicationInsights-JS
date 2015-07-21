@@ -209,7 +209,7 @@ class InitializationTests extends TestClass {
                 var appInsightsLocal = init.loadAppInsights();
                 
                 // Act
-                init.addFlushBeforeUnload(appInsightsLocal);
+                init.addHousekeepingBeforeUnload(appInsightsLocal);
                 
                 // Assert
                 Assert.ok(addEventHandlerStub.calledOnce);
