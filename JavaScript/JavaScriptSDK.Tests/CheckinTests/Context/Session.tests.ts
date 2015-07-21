@@ -156,7 +156,7 @@ class SessionContextTests extends TestClass {
         });
 
         this.testCase({
-            name: "SessionContext: session manager can recover old session id and isFirst state from lost cookies when localStorage is available",
+            name: "SessionContext: session manager can back up session when localStorage is available",
             test: () => {
                 var cookies = {};
                 var storage = {};
@@ -183,8 +183,37 @@ class SessionContextTests extends TestClass {
                 sessionManager.backup();
                 Assert.ok(storage['ai_session'], "session cookie should be backed up in local storage");
 
-                // Lose the session cookie but not the user cookie
-                cookies['ai_session'] = undefined;
+                // cleanup
+                getCookieStub.restore();
+                setCookieStub.restore();
+                getStorageStub.restore();
+                setStorageStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "SessionContext: session manager can recover old session id and isFirst state from lost cookies when localStorage is available",
+            test: () => {
+                var cookies = {};
+                var storage = {};
+                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
+                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
+                    cookies[name] = value;
+                });
+                var getStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
+                var setStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
+                    storage[name] = value;
+                });
+
+
+                // Initialize our user cookie and local storage
+                // Note there is no session cookie
+                var sessionId = "SESSID";
+                var curDate = +new Date();
+                cookies['ai_user'] = 'foo';
+                storage['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
+
+                // Initalize the session manager
                 new Microsoft.ApplicationInsights.Context.User(undefined);
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
                 sessionManager.update();
@@ -219,21 +248,13 @@ class SessionContextTests extends TestClass {
                     storage[name] = undefined;
                 });
 
-                // Initialize our user and session cookies
+                // Initialize our local storage
+                // Note no cookies are available
                 var sessionId = "SESSID";
                 var curDate = +new Date();
-                cookies['ai_user'] = 'foo';
-                cookies['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
+                storage['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
-                // Back up the session
-                new Microsoft.ApplicationInsights.Context.User(undefined);
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
-                sessionManager.update();
-                sessionManager.backup();
-                Assert.ok(storage['ai_session'], "session cookie should be backed up in local storage");
-
-                // Lose all cookies
-                cookies = {};
+                // Initialize the session manager
                 new Microsoft.ApplicationInsights.Context.User(undefined);
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
                 sessionManager.update();
