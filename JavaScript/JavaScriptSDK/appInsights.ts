@@ -288,6 +288,11 @@ module Microsoft.ApplicationInsights {
             }
         }
 
+        /**
+        * Log a diagnostic message. 
+        * @param    message A message string 
+        * @param   properties  map[string, string] - additional data used to filter traces in the portal. Defaults to empty.
+        */
         public trackTrace(message: string, properties?: Object) {
             try {
                 var telemetry = new Telemetry.Trace(message, properties);
@@ -309,22 +314,6 @@ module Microsoft.ApplicationInsights {
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "flush failed, telemetry will not be collected: " + Util.dump(e));
             }
-        }
-
-        /**
-        * In case of CORS exceptions - construct an exception manually.
-        * See this for more info: http://stackoverflow.com/questions/5913978/cryptic-script-error-reported-in-javascript-in-chrome-and-firefox
-        */
-        private SendCORSException(properties: any) {
-            var exceptionData = Microsoft.ApplicationInsights.Telemetry.Exception.CreateSimpleException(
-                "Script error.", "Error", "unknown", "unknown",
-                "The browser’s same-origin policy prevents us from getting the details of this exception.The exception occurred in a script loaded from an origin different than the web page.For cross- domain error reporting you can use crossorigin attribute together with appropriate CORS HTTP headers.For more information please see http://www.w3.org/TR/cors/.",
-                0, null);
-            exceptionData.properties = properties;
-
-            var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Exception>(Telemetry.Exception.dataType, exceptionData);
-            var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
-            this.context.track(envelope);
         }
 
         /**
@@ -357,6 +346,20 @@ module Microsoft.ApplicationInsights {
 
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "_onerror threw " + exceptionDump + " while logging error, error will not be collected: " + errorString);
             }
+        }
+        
+        // In case of CORS exceptions - construct an exception manually.
+        // See this for more info: http://stackoverflow.com/questions/5913978/cryptic-script-error-reported-in-javascript-in-chrome-and-firefox        
+        private SendCORSException(properties: any) {
+            var exceptionData = Microsoft.ApplicationInsights.Telemetry.Exception.CreateSimpleException(
+                "Script error.", "Error", "unknown", "unknown",
+                "The browser’s same-origin policy prevents us from getting the details of this exception.The exception occurred in a script loaded from an origin different than the web page.For cross- domain error reporting you can use crossorigin attribute together with appropriate CORS HTTP headers.For more information please see http://www.w3.org/TR/cors/.",
+                0, null);
+            exceptionData.properties = properties;
+
+            var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Exception>(Telemetry.Exception.dataType, exceptionData);
+            var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
+            this.context.track(envelope);
         }
     }
 
