@@ -1,5 +1,8 @@
 ﻿# Microsoft Application Insights JavaScript SDK
 
+## API reference
+* Check out https://github.com/Microsoft/ApplicationInsights-JS/blob/apiRef/API.md
+
 ## To build:
 
 * Visual Studio 2013 Ultimate with Update 4
