@@ -91,8 +91,7 @@ module Microsoft.ApplicationInsights {
                     this.context.track(envelope);
                 }
             } catch (e) {
-                console.error('Failed to initialize JS SDK: ' + e.message);
-                //_InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, 'Failed to initialize AppInsights JS SDK: ' + e.message);
+                console.error('Failed to initialize AppInsights JS SDK: ' + e.message);
             }
         }
 
