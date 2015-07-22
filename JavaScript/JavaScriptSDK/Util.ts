@@ -5,12 +5,21 @@ module Microsoft.ApplicationInsights {
         private static document: any = typeof document !== "undefined" ? document : {};
         public static NotSpecified = "not_specified";
 
+        /**
+         * Gets the localStorage if available
+         * @return {Storage} - Returns the storage object if available else returns null
+         */
         private static _getStorageObject(): Storage {
-            if (window.localStorage) {
-                return window.localStorage;
-            } else {
-                return null;
-            }
+           try {
+                if (window.localStorage) {
+                    return window.localStorage;
+                } else {
+                    return null;
+                }
+           } catch (e) {
+               console.warn('Failed to get client\'s localStorage: ' + e.message);
+               return null;
+           }
         }
 
         /**
@@ -86,6 +95,11 @@ module Microsoft.ApplicationInsights {
             Util.document.cookie = name + "=" + value + ";path=/";
         }
 
+        /**
+         * Returns a boolean representation of a string.
+         * @param {string} str - The string
+         * @return {boolean} - Returns true if the string is "true", false otherwise.
+         */
         public static stringToBoolOrDefault(str: any): boolean {
             if (!str) {
                 return false;
