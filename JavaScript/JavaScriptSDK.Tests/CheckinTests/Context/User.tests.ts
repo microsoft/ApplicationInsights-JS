@@ -341,10 +341,10 @@ class UserContextTests extends TestClass {
         });
 
         this.testCase({
-            name: "setAuthenticatedUserContext: handles unicode characters correctly",
+            name: "setAuthenticatedUserContext: handles non-ascii unicode characters correctly",
             test: () => {
                 // setup
-                var authAndAccountId = ['שלום', 'להתראות'];
+                var authAndAccountId = ["\u05D0", "\u05D1"]; // Hebrew characters
                 var user = new Microsoft.ApplicationInsights.Context.User(undefined);
                 var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie");
                 var loggingStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");

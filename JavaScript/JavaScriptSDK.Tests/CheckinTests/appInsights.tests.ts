@@ -585,8 +585,7 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
 
-                appInsights.setAuthenticatedUserContext("myuser中国话", "اللغةالعربيةهيجميلةעבריתזהנחמד");
-
+                appInsights.setAuthenticatedUserContext("\u0428", "\u0429"); // Cyrillic characters
                 var trackStub = sinon.stub(appInsights.context._sender, "send");
 
                 // verify
@@ -595,8 +594,8 @@ class AppInsightsTests extends TestClass {
                     this.clock.tick(1);
                     var envelope = this.getFirstResult(action, trackStub);
                     var contextKeys = new AI.ContextTagKeys();
-                    Assert.equal("myuser中国话", envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId is correct, special characters removed");
-                    Assert.equal("اللغةالعربيةهيجميلةעבריתזהנחמד", envelope.tags[contextKeys.userAccountId], "user.accountIdis correct, special characters removed");
+                    Assert.equal("\u0428", envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId is correct");
+                    Assert.equal("\u0429", envelope.tags[contextKeys.userAccountId], "user.accountId is correct");
 
                     trackStub.reset();
                 };
