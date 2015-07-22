@@ -198,51 +198,97 @@ Information that the SDK attempts to extract from the environment about the devi
 ## class TelemetryContext
 
 
+### context.application
 
-        /**
-         * Details of the app you're monitoring.
-         */
-        public application: Context.Application;
+    application: Context.Application
 
-        /**
-         * The device the app is running on.
-         */
-        public device: Context.Device;
+Details of the app you're monitoring.
 
-        /**
-         * The user currently signed in.
-         */
-        public user: Context.User;
+     context.application.ver: string
+     context.application.build : string
 
-        /**
-         * The user session. A session represents a series
-         * of user actions. A session starts with a user action.
-         * It ends at the last user activity when there is 
-         * no more activity for sessionRenewalMs, 
-         * or if it lasts longer than sessionExpirationMs.
-         */
-        public session: Context.Session;
+        
+### context.device
 
-        /**
-         * The geographical location of the user's device,
-         * if available.
-         */
-        public location: Context.Location;
+    device : Context.Device
+    
+ The device the app is running on.
+ 
+    |   |
+---|---|---
+    device.type  | Type of device
+    device.id	| unique ID
+    device.oemName |
+    device.model |
+    device.network | number  - IANA interface type
+    device.resolution  | screen res
+    device.locale | display language of the OS
+    device.ip |
+    device.language |
+    device.os |  OS running on the device
+    device.osversion | 
 
-        /**
-         * Represents the user request. Operation id is used
-         * to tie together related events in diagnostic search.
-         */
-        public operation: Context.Operation;
+### context.user
+
+    user: Context.User
+
+Data about the current user. Users are identified by cookie, so one person can look like 
+more than one user if they use different machines or browsers, or delete cookies.
+
+   |   |
+---|---|---
+`user.id` | Unique, cookie-based user id, automatically assigned.
+`user.accountId` | 
+`user.accountAcquisitionDate` |
+`user.agent` | 
+`user.storeRegion` | 
 
 
+### context.session
 
-        /**
-         * Send telemetry object to the endpoint.
-         * Returns telemetryObject.
-         */
+    session: Context.Session
+    
+The user session. A session represents a series of user actions. A session starts with a user action.
+It ends at the last user activity when there is no more activity for sessionRenewalMs, or if it lasts longer than sessionExpirationMs.
+
+   |   | 
+---|---|---
+`session.id` | Automatically assigned id
+`session.isFirst` | Boolean. True if this is the first session for this user.
+`session.acquisitionDate` | Number. The dateTime when this session was created.
+`session.renewalDate` | Number. DateTime when telemetry was last sent with this session.
+
+
+### context.location
+
+   location: Context.Location
+
+Data from which the geographical location of the user's device can be guessed.
+
+   |   | 
+---|---|---
+`location.ip` | IP address
+
+### context.operation
+
+        operation: Context.Operation;
+        
+Represents the user request. Operation id is used to tie together related events in diagnostic search.
+
+   |   | 
+---|---|---
+`id` | Unique id
+`name` | 
+`parentId` |
+`rootId` |
+`syntheticSource` | String identifying the bot or test agent.
+
+
+### track
+
         public track(envelope: Telemetry.Common.Envelope) ;
 
+Sends telemetry to the endpoint.
 
 ## Links
 
