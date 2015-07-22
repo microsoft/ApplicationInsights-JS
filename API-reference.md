@@ -44,8 +44,8 @@ Logs that a page or similar container was displayed to the user.
 ---|---|---
 `name` | The name used to identify the page in the portal. Defaults to the document title.
 `url` |  A relative or absolute URL that identifies the page or similar item. Defaults to the window location.
-`properties` | Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
-`measurements` | Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+`properties` | Map of string to string: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
+`measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
 
 The standard snippet that you get from the portal includes a call to trackPageView. If you insert your own calls, consider
 removing this default. An example where you might write your own calls is where your app is a single HTML page that has multiple
@@ -53,15 +53,15 @@ tabs, and you want to log a page view when each tab opens.
 
 ### trackEvent
 
-    trackEvent(name: string, properties?: {[string]:string}, measurements?: {[string]:string})
+    trackEvent(name: string, properties?: {[string]:string}, measurements?: {[string]:number})
 
 Log a user action or other occurrence.
 
  | | 
 ---|---|---
  `name` | Identifies the event. Events with the same name are counted and can be charted in [Metric Explorer](https://azure.microsoft.com/documentation/articles/app-insights-metrics-explorer/).
-`properties` | Additional data used to [filter events](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
-`measurements` | Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+`properties` | Map of string to string: Additional data used to [filter events](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
+`measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
 
 In the portal, you can select events by name, and [display charts that count them or display associated measurements](https://azure.microsoft.com/documentation/articles/app-insights-metrics-explorer/).
 
@@ -89,7 +89,7 @@ To send a single measurement, use just the first two parameters. If you take mea
 
 ### trackException
 
-    trackException(exception: Error, handledAt?: string, properties?: Object, measurements?: Object)
+    trackException(exception: Error, handledAt?: string, properties?: {[string]:string}, measurements?: {[string]:number})
 
 Log an exception you have caught. (Exceptions caught by the browser are also logged.)
 
@@ -97,21 +97,24 @@ Log an exception you have caught. (Exceptions caught by the browser are also log
 ---|---|---
 `exception` | An Error from a catch clause.  
 `handledAt` | Defaults to "unhandled".
-`properties` | Additional data used to [filter exceptions](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
-`measurements` | Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+`properties` | Map of string to string: Additional data used to [filter exceptions](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
+`measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
 
 In the portal, you can [search on exception type and view](https://azure.microsoft.com/documentation/articles/app-insights-diagnostic-search/) the type, message, and stack trace of individual instances. 
 
 
 ### trackTrace
 
-    trackTrace(message: string, properties?: Object, measurements?: Object)
+    trackTrace(message: string, properties?: {[string]:string}, measurements?: {[string]:number})
 
 Log a diagnostic event such as entering or leaving a method.
 
  | | 
 ---|---|---
 `message` | Diagnostic data. Can be much longer than a name.
+`properties` | Map of string to string: Additional data used to [filter exceptions](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
+`measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+
 
 In the portal, you can search on message content and [display individual trackTrace events](https://azure.microsoft.com/documentation/articles/app-insights-diagnostic-search/).
 (Unlike `trackEvent`, you can't filter on the message content in the portal.)
@@ -123,7 +126,7 @@ In the portal, you can search on message content and [display individual trackTr
 
 Immediately send all queued telemetry. Synchronous.
 
-Use this on window closing.
+You don't usually have to use this, as it happens automatically on window closing.
 
 
 ### config
@@ -188,11 +191,7 @@ You can also read or write them dynamically:
     context: TelemetryContext
 
 Information that the SDK attempts to extract from the environment about the device, location, and user. 
-Also default properties and measurements sent along with all telemetry.
 
-For example, to attach a custom property that you can use to filter all pageviews and events:
-
-    appInsights.config.properties["variant"] = "B";
 
 
 
@@ -236,17 +235,7 @@ For example, to attach a custom property that you can use to filter all pageview
          */
         public operation: Context.Operation;
 
-        /**
-         * Default measurements to be attached by default to
-         * all events.
-         */
-        public measurements: any;
 
-        /**
-         * Default properties to be attached by default to
-         * all events. 
-         */
-        public properties: any;
 
         /**
          * Send telemetry object to the endpoint.
