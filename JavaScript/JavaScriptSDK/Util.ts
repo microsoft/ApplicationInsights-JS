@@ -5,10 +5,19 @@ module Microsoft.ApplicationInsights {
         private static document: any = typeof document !== "undefined" ? document : {};
         public static NotSpecified = "not_specified";
 
+        /**
+         * Gets the localStorage object if available
+         * @return {Storage} - Returns the storage object if available else returns null
+         */
         private static _getStorageObject(): Storage {
-            if (window.localStorage) {
-                return window.localStorage;
-            } else {
+            try {
+                if (window.localStorage) {
+                    return window.localStorage;
+                } else {
+                    return null;
+                }   
+            } catch (e) {
+                console.warn('Failed to get client localStorage: ' + e.message);
                 return null;
             }
         }
