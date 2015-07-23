@@ -100,13 +100,37 @@ module Microsoft.ApplicationInsights {
 
         public pollInteralLogs(appInsightsInstance: AppInsights) {
             return setInterval(() => {
-                var queue: Array<string> = Microsoft.ApplicationInsights._InternalLogging["queue"];
+                var queue: Array<string> = Microsoft.ApplicationInsights._InternalLogging.queue;
                 var length = queue.length;
                 for (var i = 0; i < length; i++) {
                     appInsightsInstance.trackTrace(queue[i]);
                 }
                 queue.length = 0;
             }, this.config.diagnosticLogInterval);
+        }
+        
+        public addHousekeepingBeforeUnload(appInsightsInstance: AppInsights): void {
+            // Add callback to push events when the user navigates away
+
+            if ('onbeforeunload' in window) {             
+                var performHousekeeping = function () {
+                    // Adds the ability to flush all data before the page unloads.
+                    // Note: This approach tries to push an async request with all the pending events onbeforeunload.
+                    // Firefox does not respect this.Other browsers DO push out the call with < 100% hit rate.
+                    // Telemetry here will help us analyze how effective this approach is.
+                    // Another approach would be to make this call sync with a acceptable timeout to reduce the 
+                    // impact on user experience.
+                    appInsightsInstance.context._sender.triggerSend();
+
+                    // Back up the current session to local storage
+                    // This lets us close expired sessions after the cookies themselves expire
+                    appInsightsInstance.context._sessionManager.backup();
+                };
+                
+                if (!Microsoft.ApplicationInsights.Util.addEventHandler('beforeunload', performHousekeeping)) {
+                    Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 'Could not add handler for beforeunload');
+                }
+            }
         }
 
         public static getDefaultConfig(config?: IConfig): IConfig {

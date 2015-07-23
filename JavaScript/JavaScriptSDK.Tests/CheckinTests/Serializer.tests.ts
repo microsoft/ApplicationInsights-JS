@@ -73,7 +73,7 @@ class SerializerTests extends TestClass {
 
                 // verify
                 Assert.equal(expected, actual, "Object is serialized correctly");
-                Assert.ok(this.throwInternalUserActionableSpy.calledOnce, "broken contracts throw");
+                Assert.ok(this.throwInternalNonUserActionableSpy.calledOnce, "broken contracts throw");
             }
         });
 

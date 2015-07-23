@@ -38,7 +38,7 @@ class SenderTests extends TestClass {
         this.getSender = () => new Microsoft.ApplicationInsights.Sender(config);
         this.errorSpy = sinon.spy(Microsoft.ApplicationInsights.Sender, "_onError");
         this.successSpy = sinon.stub(Microsoft.ApplicationInsights.Sender, "_onSuccess");
-        this.loggingSpy = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "warn");
+        this.loggingSpy = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole");
         this.testTelemetry = { aiDataContract: true };
     }
 
@@ -405,6 +405,66 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.ok(senderSpy.notCalled, "sender was not called");
                 logAsserts(0);
+
+                senderSpy.restore();
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: triggerSend should send event data asynchronously by default",
+            test: () => {
+                // setup
+                var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
+                sender._sender = () => null;
+                var senderSpy = sinon.spy(sender, "_sender");
+                this.maxBatchInterval = 100;
+
+                // act
+                sender.send(this.testTelemetry);
+                sender.triggerSend();
+                
+                // verify
+                Assert.equal(true, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = true");
+
+                senderSpy.restore();
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: triggerSend should send event data synchronously when asked to.",
+            test: () => {
+                // setup
+                var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
+                sender._sender = () => null;
+                var senderSpy = sinon.spy(sender, "_sender");
+                this.maxBatchInterval = 100;
+
+                // act
+                sender.send(this.testTelemetry);
+                sender.triggerSend(false /* async */);
+                
+                // verify
+                Assert.equal(false, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = false");
+
+                senderSpy.restore();
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: triggerSend should send event data asynchronously when asked to `explicitly`",
+            test: () => {
+                // setup
+                var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
+                sender._sender = () => null;
+                var senderSpy = sinon.spy(sender, "_sender");
+                this.maxBatchInterval = 100;
+
+                // act
+                sender.send(this.testTelemetry);
+                sender.triggerSend(true /* async */);
+                
+                // verify
+                Assert.equal(true, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = true");
 
                 senderSpy.restore();
             }

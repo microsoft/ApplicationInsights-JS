@@ -194,6 +194,29 @@ class InitializationTests extends TestClass {
                 Assert.ok(config.emitLineDelimitedJson);
             }
         });
+        
+        this.testCase({
+            name: "InitializationTests: beforeunload handler is appropriately added",
+            test: () => {
+                // Assemble
+                var userConfig = this.getAppInsightsSnippet();
+                var snippet = <Microsoft.ApplicationInsights.Snippet> {
+                    config: userConfig,
+                    queue: []
+                };
+                var addEventHandlerStub = sinon.stub(Microsoft.ApplicationInsights.Util, 'addEventHandler').returns(true);
+                var init = new Microsoft.ApplicationInsights.Initialization(snippet);
+                var appInsightsLocal = init.loadAppInsights();
+                
+                // Act
+                init.addHousekeepingBeforeUnload(appInsightsLocal);
+                
+                // Assert
+                Assert.ok(addEventHandlerStub.calledOnce);
+                Assert.equal(addEventHandlerStub.getCall(0).args[0], 'beforeunload');
+                Assert.ok(addEventHandlerStub.getCall(0).args[1] !== undefined, 'addEventHandler was called with undefined callback');
+            }
+        });
     }
 }
 

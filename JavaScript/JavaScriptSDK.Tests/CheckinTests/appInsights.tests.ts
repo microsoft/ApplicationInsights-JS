@@ -29,11 +29,17 @@ class AppInsightsTests extends TestClass {
     public testInitialize() {
         Microsoft.ApplicationInsights.Util.setCookie('ai_session', "");
         Microsoft.ApplicationInsights.Util.setCookie('ai_user', "");
+        if (window.localStorage) {
+            window.localStorage.clear();
+        }
     }
 
     public testCleanup() {
         Microsoft.ApplicationInsights.Util.setCookie('ai_session', "");
         Microsoft.ApplicationInsights.Util.setCookie('ai_user', "");
+        if (window.localStorage) {
+            window.localStorage.clear();
+        }
     }
 
     public registerTests() {
@@ -77,7 +83,7 @@ class AppInsightsTests extends TestClass {
                 config.disableTelemetry = true;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(config);
                 appInsights.context._sender._sender = () => null;
-                var senderStub = sinon.stub(appInsights.context._sender, "_sender", () => {
+                var senderStub = sinon.stub(appInsights.context._sender, "_sender",() => {
                     console.log("GOT HERE");
                 });
                 
@@ -270,7 +276,7 @@ class AppInsightsTests extends TestClass {
                 appInsights.context.device.osversion = "101";
                 appInsights.context.device.resolution = "101";
                 appInsights.context.device.type = "101";
-                
+
                 var trackStub = sinon.stub(appInsights.context._sender, "send");
 
                 // verify
@@ -527,7 +533,7 @@ class AppInsightsTests extends TestClass {
                 }
 
                 var pageLoaded = false;
-                var pageLoadStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "checkPageLoad", () => isAvailable ? pageLoaded : undefined);
+                var pageLoadStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "checkPageLoad",() => isAvailable ? pageLoaded : undefined);
 
                 // act 
                 appInsights.trackPageView("pagePath");
@@ -655,6 +661,101 @@ class AppInsightsTests extends TestClass {
             }
         });
 
+        this.testCase({
+            name: "AppInsights._onerror creates a dump of unexpected error thrown by trackException for logging",
+            test: () => {
+                var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var dumpSpy = sinon.spy(Microsoft.ApplicationInsights.Util, "dump")
+                try {
+                    var unexpectedError = new Error();
+                    sinon.stub(sut, "trackException").throws(unexpectedError);
+
+                    sut._onerror("any message", "any://url", 420, 42, new Error());
+
+                    Assert.ok(dumpSpy.calledWith(unexpectedError));
+                }
+                finally {
+                    dumpSpy.restore();
+                }
+            }
+        });
+
+        this.testCase({
+            name: "AppInsights._onerror stringifies error object",
+            test: () => {
+                var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var dumpSpy = sinon.spy(Microsoft.ApplicationInsights.Util, "dump")
+                try {
+                    var unexpectedError = new Error("my cool message");
+                    sinon.stub(sut, "trackException").throws(unexpectedError);
+
+                    sut._onerror("any message", "any://url", 420, 42, new Error());
+
+                    Assert.ok(dumpSpy.returnValues[0].indexOf("stack: ") != -1);
+                    Assert.ok(dumpSpy.returnValues[0].indexOf("message: 'my cool message'") != -1);
+                    Assert.ok(dumpSpy.returnValues[0].indexOf("name: 'Error'") != -1);
+                }
+                finally {
+                    dumpSpy.restore();
+                }
+            }
+        });
+
+        this.testCase({
+            name: "AppInsights._onerror logs dump of unexpected error thrown by trackException for diagnostics",
+            test: () => {
+                var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var throwInternalNonUserActionableSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
+                var dumpStub = sinon.stub(Microsoft.ApplicationInsights.Util, "dump");
+                try {
+                    sinon.stub(sut, "trackException").throws(new Error());
+                    var expectedErrorDump: string = "test error";
+                    dumpStub.returns(expectedErrorDump);
+
+                    sut._onerror("any message", "any://url", 420, 42, new Error());
+
+                    var logMessage: string = throwInternalNonUserActionableSpy.getCall(0).args[1];
+                    Assert.notEqual(-1, logMessage.indexOf(expectedErrorDump));
+                }
+                finally {
+                    dumpStub.restore();
+                    throwInternalNonUserActionableSpy.restore();
+                }
+            }
+        });
+
+        this.testCase({
+            name: "AppInsights._onerror add document URL in case of CORS error",
+            test: () => {
+                // prepare
+                var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var trackExceptionSpy = sinon.spy(sut.context, "track");                
+
+                // act
+                sut._onerror("Script error.", "", 0, 0, null);
+
+                // assert
+                Assert.equal(document.URL,(<any>trackExceptionSpy.args[0][0]).data.baseData.properties.url);
+            }
+        });
+        
+        this.testCase({
+            name: "AppInsights._onerror adds document URL in case of no CORS error",
+            test: () => {
+                // prepare
+                var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var trackExceptionSpy = sinon.spy(sut, "trackException");                
+
+                // act
+                // Last arg is not an error\null which will be treated as not CORS issue
+                sut._onerror("Script error.", "", 0, 0, <any>new Object());
+
+                // assert
+                // properties are passed as a 3rd parameter
+                Assert.equal(document.URL,(<any>trackExceptionSpy.args[0][2]).url);
+            }
+        });
+
         this.addPageViewSignatureTests();
         this.addStartStopTests();
     }
@@ -683,7 +784,7 @@ class AppInsightsTests extends TestClass {
             trackAction(appInsights);
             
             // verify
-            Assert.ok(trackStub.calledOnce, "track was called"); 
+            Assert.ok(trackStub.calledOnce, "track was called");
             Assert.ok(trackStub.args.length > 0, "args > 0");
             var data = <Microsoft.ApplicationInsights.Telemetry.Common.Envelope>trackStub.args[0][0].data.baseData;
             validateAction(data);
@@ -794,7 +895,7 @@ class AppInsightsTests extends TestClass {
             }
         });
 
-        
+
         this.testCase({
             name: name + "PageviewData is initialized in constructor with name, url, properties, and measurements and valid",
             test: () => {
@@ -1140,6 +1241,62 @@ class AppInsightsTests extends TestClass {
 
                 // teardown
                 senderSpy.restore();
+            }
+        });
+
+        this.testCase({
+            name: "PageView should cause internal event throttle to be reset",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                appInsights.context._sessionManager._sessionHandler = null;
+                Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
+                appInsights.context._sender._sender = () => null;
+                var senderStub = sinon.stub(appInsights.context._sender, "_sender");
+                var resetInternalMessageCountStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "resetInternalMessageCount");
+
+                // setup a page view envelope
+                var pageView = new Microsoft.ApplicationInsights.Telemetry.PageView();
+                var pageViewData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.PageView>(Microsoft.ApplicationInsights.Telemetry.PageView.dataType, pageView);
+                var pageViewEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(pageViewData, Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType);
+
+                // act
+                appInsights.context.track(pageViewEnvelope);
+
+                // verify
+                Assert.ok(resetInternalMessageCountStub.calledOnce, "Internal throttle was not reset even though Page View was tracked");
+
+                // restore
+                senderStub.restore();
+                resetInternalMessageCountStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "No other event than PageView should cause internal event throttle to be reset",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                appInsights.context._sessionManager._sessionHandler = null;
+                Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
+                appInsights.context._sender._sender = () => null;
+                var senderStub = sinon.stub(appInsights.context._sender, "_sender");
+                var resetInternalMessageCountStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "resetInternalMessageCount");
+
+                // setup a some other envelope
+                var event = new Microsoft.ApplicationInsights.Telemetry.Event('Test Event');
+                var eventData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.Event>(Microsoft.ApplicationInsights.Telemetry.Event.dataType, event);
+                var eventEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(eventData, Microsoft.ApplicationInsights.Telemetry.Event.envelopeType);
+
+                // act
+                appInsights.context.track(eventEnvelope);
+
+                // verify
+                Assert.ok(resetInternalMessageCountStub.notCalled, "Internal throttle was reset even though Page View was not tracked");
+
+                // restore
+                senderStub.restore();
+                resetInternalMessageCountStub.restore();
             }
         });
     }

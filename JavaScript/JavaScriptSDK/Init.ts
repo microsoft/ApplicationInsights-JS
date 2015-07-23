@@ -25,6 +25,8 @@ function initializeAppInsights() {
             init.emptyQueue();
 
             init.pollInteralLogs(appInsightsLocal);
+
+            init.addHousekeepingBeforeUnload(appInsightsLocal);
         }
     }
 }

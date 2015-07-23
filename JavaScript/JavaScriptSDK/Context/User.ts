@@ -51,6 +51,10 @@ module Microsoft.ApplicationInsights.Context {
                 date.setTime(date.getTime() + 31536000000);
                 var newCookie = [this.id, acqStr];
                 Util.setCookie('ai_user', newCookie.join('|') + ';expires=' + date.toUTCString());
+
+                // If we have an ai_session in local storage this means the user actively removed our cookies.
+                // We should respect their wishes and clear ourselves from local storage
+                Util.removeStorage('ai_session');
             }
 
             this.accountId = accountId;

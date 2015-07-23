@@ -87,7 +87,6 @@ class PageLoadPerfTests extends PerformanceTestHelper {
                     });
 
                     this.errorSpy.reset();
-                    Assert.ok(true, "collected page load time");
                     secondDone = true;
                     if (firstDone && secondDone) {
                         JSLitmus._tests = results;
@@ -109,15 +108,9 @@ class PageLoadPerfTests extends PerformanceTestHelper {
                 polling.push(() => {
                     if (func()) {
                         Assert.ok(true, "validated, stopping poll cycle");
-                        start();
                     }
                 });
             }
-
-            polling.push(() => {
-                Assert.ok(false, "timeout reached");
-                this.onTestsComplete();
-            });
         } else {
             polling.push(() => {
                 Assert.ok(true, "this browser does not support page timing (window.performance.timing)");

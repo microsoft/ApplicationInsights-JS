@@ -23,8 +23,6 @@ _Chutzpah.*
 /*/min/*.html
 
 # Ignore standalone test output
-/*/E2ETests/ai.js
-/*/E2ETests/sprint*Snippet.js
-/*/E2ETests/testSnippet.js
+/*/E2ETests/*.js
 /*/E2ETests/*.html
 /*/Selenium/testPageWithAppInsights.html

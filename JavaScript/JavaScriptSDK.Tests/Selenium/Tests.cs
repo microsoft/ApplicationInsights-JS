@@ -86,7 +86,7 @@ namespace ApplicationInsights.Javascript.Tests
             RunTest(new OpenQA.Selenium.Chrome.ChromeDriver());
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void FirefoxPerf()
         {
             RunPerfTest(new OpenQA.Selenium.Firefox.FirefoxDriver());
@@ -98,7 +98,7 @@ namespace ApplicationInsights.Javascript.Tests
             RunPerfTest(new OpenQA.Selenium.Safari.SafariDriver());
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void ChromePerf()
         {
             RunPerfTest(new OpenQA.Selenium.Chrome.ChromeDriver());

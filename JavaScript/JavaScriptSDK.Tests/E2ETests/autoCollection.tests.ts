@@ -21,7 +21,7 @@ class AutoCollectionTests extends TestClass {
     }
 
     public registerTests() {
-        var delay = 100;
+        var delay = 5000;
 
         //var errorDomSpy = this.getListener("errorDom");
         this.testCaseAsync({
@@ -41,7 +41,7 @@ class AutoCollectionTests extends TestClass {
                 ], 1);
             }))
         });
-
+        
         //var errorScriptGlobalSpy = this.getListener("errorScriptGlobal");
         this.testCaseAsync({
             name: "AutoCollection: errorScriptGlobal",
@@ -153,6 +153,7 @@ class AutoCollectionTests extends TestClass {
                 ], 5);
             }))
         });
+        
     }
 
     private getListener(address): SinonSpy {
@@ -179,23 +180,16 @@ class AutoCollectionTests extends TestClass {
         return iframe;
     }
 
-    private poll(func: () => boolean, count: number = 25) {
+    private poll(func: () => boolean, count: number = 1) {
         var polling = [];
         for (var i = 0; i < count; i++) {
             polling.push(() => {
                 if (func()) {
                     Assert.ok(true, "validated, stopping poll cycle");
-                    start();
                     this.testCleanup();
                 }
             });
-        }
-
-        polling.push(() => {
-            Assert.ok(false, "timeout reached");
-            start();
-            this.testCleanup();
-        });
+        }     
 
         return polling;
     }

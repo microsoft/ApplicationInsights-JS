@@ -56,7 +56,6 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 timing.requestStart = 11;
                 timing.responseStart = 30;
                 timing.responseEnd = 42;
-                timing.domLoading = 52;
                 timing.loadEventEnd = 60;
 
                 var timingSpy = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",() => {
@@ -73,7 +72,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(9), data.networkConnect);
                 Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(19), data.sentRequest);
                 Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(12), data.receivedResponse);
-                Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(8), data.domProcessing);
+                Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(18), data.domProcessing);
 
                 timingSpy.restore();
             }
@@ -89,7 +88,6 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 timing.requestStart = 11;
                 timing.responseStart = 30;
                 timing.responseEnd = 42;
-                timing.domLoading = 52;
                 timing.loadEventEnd = 60;
 
                 var timingSpy = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",() => {
@@ -97,7 +95,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 });
 
                 var actualLoggedMessage = null;
-                var loggingSpy = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "warn",(m) => actualLoggedMessage = m);
+                var loggingSpy = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole",(m) => actualLoggedMessage = m);
 
 
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
@@ -111,7 +109,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 Assert.equal(undefined, data.receivedResponse);
                 Assert.equal(undefined, data.domProcessing);
 
-                Assert.equal("client performance math error:59 < 39 + 19 + 12 + 8", actualLoggedMessage);
+                Assert.equal("client performance math error:59 < 39 + 19 + 12 + 18", actualLoggedMessage);
 
                 timingSpy.restore();
                 loggingSpy.restore();

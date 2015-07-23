@@ -1,7 +1,83 @@
-﻿module Microsoft.ApplicationInsights {
-    
+﻿/// <reference path="./logging.ts" />
+module Microsoft.ApplicationInsights {
+
     export class Util {
         private static document: any = typeof document !== "undefined" ? document : {};
+        public static NotSpecified = "not_specified";
+
+        private static _getStorageObject(): Storage {
+            if (window.localStorage) {
+                return window.localStorage;
+            } else {
+                return null;
+            }
+        }
+
+        /**
+         *  Check if the browser supports local storage.
+         *
+         *  @returns {boolean} True if local storage is supported.
+         */
+        public static canUseLocalStorage(): boolean {
+            return !!Util._getStorageObject();
+        }
+
+        /**
+         *  Get an object from the browser's local storage
+         *
+         *  @param {string} name - the name of the object to get from storage
+         *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
+         */
+        public static getStorage(name:string):string {
+            var storage = Util._getStorageObject();
+            if (storage !== null) {
+                try {
+                    return storage.getItem(name);
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed read of local storage.");
+                }
+            }
+            return null;
+        }
+
+        /**
+         *  Set the contents of an object in the browser's local storage
+         *
+         *  @param {string} name - the name of the object to set in storage
+         *  @param {string} data - the contents of the object to set in storage
+         *  @returns {boolean} True if the storage object could be written.
+         */
+        public static setStorage(name:string, data:string):boolean {
+            var storage = Util._getStorageObject();
+            if (storage !== null) {
+                try {
+                    storage.setItem(name, data);
+                    return true;
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed write to local storage.");
+                }
+            }
+            return false;
+        }
+
+        /**
+         *  Remove an object from the browser's local storage
+         *
+         *  @param {string} name - the name of the object to remove from storage
+         *  @returns {boolean} True if the storage object could be removed.
+         */
+        public static removeStorage(name: string):boolean {
+            var storage = Util._getStorageObject();
+            if (storage !== null) {
+                try {
+                    storage.removeItem(name);
+                    return true;
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed removal of local storage item.");
+                }
+            }
+            return false;
+        }
 
         /**
          * helper method to set userId and sessionId cookie
@@ -14,7 +90,7 @@
             if (!str) {
                 return false;
             }
-            
+
             return str.toString().toLowerCase() === "true";
         }
 
@@ -140,12 +216,51 @@
         * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error		
         * happens in a script from other domain (cross origin, CORS).		
         */
-        public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {		
+        public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
             return (message == "Script error." || message == "Script error")
-                    && url == ""
-                    && lineNumber == 0
-                    && columnNumber == 0
-                    && error == null;
-        }		
+                && url == ""
+                && lineNumber == 0
+                && columnNumber == 0
+                && error == null;
+        }
+
+        /**
+        * Returns string representation of an object suitable for diagnostics logging.
+        */
+        public static dump(object: any): string {
+            var objectTypeDump: string = Object.prototype.toString.call(object);
+            var propertyValueDump: string = JSON.stringify(object);
+            if (objectTypeDump === "[object Error]") {
+                propertyValueDump = "{ stack: '" + object.stack + "', message: '" + object.message + "', name: '" + object.name + "'";
+            }
+
+            return objectTypeDump + propertyValueDump;
+        }
+        
+        /**
+         * Adds an event handler for the specified event
+         * @param eventName {string} - The name of the event
+         * @param callback {any} - The callback function that needs to be executed for the given event 
+         * @return {boolean} - true if the handler was successfully added
+         */
+        public static addEventHandler(eventName: string, callback: any): boolean {
+            if (!window || typeof eventName !== 'string' || typeof callback !== 'function') {
+                return false;
+            }
+            
+            // Create verb for the event
+            var verbEventName = 'on' + eventName;
+            
+            // check if addEventListener is available
+            if (window.addEventListener) {
+                window.addEventListener(eventName, callback, false);
+            } else if (window.attachEvent) { // For older browsers
+                window.attachEvent(verbEventName, callback);
+            } else { // if all else fails
+                return false;
+            }
+            
+            return true;
+        }
     }
 }

@@ -10,7 +10,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static envelopeType = "Microsoft.ApplicationInsights.Exception";
         public static dataType = "ExceptionData";
 
-        
+
         public aiDataContract = {
             ver: true,
             handledAt: true,
@@ -28,7 +28,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
             this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
             this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);
-            
+
             this.handledAt = handledAt || "unhandled";
             this.exceptions = [new _ExceptionDetails(exception)];
         }
@@ -47,7 +47,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             } catch (e) {
                 exceptionTelemetry = new Telemetry.Exception(e);
             }
-            
+
             var stack = exceptionTelemetry.exceptions[0].parsedStack[0];
             stack.assembly = assembly;
             stack.fileName = fileName;
@@ -61,14 +61,14 @@ module Microsoft.ApplicationInsights.Telemetry {
             exception.parsedStack = null;
             exception.stack = details;
             exception.typeName = typeName;
-            exceptionTelemetry.handledAt = handledAt || "unhandled";            
+            exceptionTelemetry.handledAt = handledAt || "unhandled";
 
             return exceptionTelemetry;
         }
     }
 
     class _ExceptionDetails extends AI.ExceptionDetails implements ISerializable {
-        
+
         public aiDataContract = {
             id: false,
             outerId: false,
@@ -78,11 +78,11 @@ module Microsoft.ApplicationInsights.Telemetry {
             stack: false,
             parsedStack: []
         };
-        
+
         constructor(exception: Error) {
             super();
-            this.typeName = Common.DataSanitizer.sanitizeString(exception.name);
-            this.message = Common.DataSanitizer.sanitizeMessage(exception.message);
+            this.typeName = Common.DataSanitizer.sanitizeString(exception.name || Util.NotSpecified);
+            this.message = Common.DataSanitizer.sanitizeMessage(exception.message || Util.NotSpecified);
             var stack = exception["stack"];
             this.parsedStack = this.parseStack(stack);
             this.stack = Common.DataSanitizer.sanitizeException(stack);

@@ -44,10 +44,10 @@ module Microsoft.ApplicationInsights.Telemetry {
              *  |             ||-requestStart
              *  |             ||             |-responseStart
              *  |             ||             |              |-responseEnd
-             *  |             ||             |              ||-domLoading
-             *  |             ||             |              ||         |-loadEventEnd
-             *  |---network---||---request---|---response---||---dom---|
-             *  |--------------------------total-----------------------|
+             *  |             ||             |              |
+             *  |             ||             |              |         |-loadEventEnd
+             *  |---network---||---request---|---response---|---dom---|
+             *  |--------------------------total----------------------|
              */
             var timing = PageViewPerformance.getPerformanceTiming();
             if (timing) {
@@ -55,7 +55,7 @@ module Microsoft.ApplicationInsights.Telemetry {
                 var network = PageViewPerformance.getDuration(timing.navigationStart, timing.connectEnd);
                 var request = PageViewPerformance.getDuration(timing.requestStart, timing.responseStart);
                 var response = PageViewPerformance.getDuration(timing.responseStart, timing.responseEnd);
-                var dom = PageViewPerformance.getDuration(timing.domLoading, timing.loadEventEnd);
+                var dom = PageViewPerformance.getDuration(timing.responseEnd, timing.loadEventEnd);
 
 
                 if (total == 0) {
@@ -87,7 +87,7 @@ module Microsoft.ApplicationInsights.Telemetry {
                 }
             }
             this.url = Common.DataSanitizer.sanitizeUrl(url);
-            this.name = Common.DataSanitizer.sanitizeString(name);
+            this.name = Common.DataSanitizer.sanitizeString(name || Util.NotSpecified);
 
             if (!isNaN(durationMs)) {
                 this.duration = Util.msToTimeSpan(durationMs);

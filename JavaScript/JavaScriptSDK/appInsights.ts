@@ -7,7 +7,7 @@
 module Microsoft.ApplicationInsights {
     "use strict";
 
-    export var Version = "0.15.20150602.8";
+    export var Version = "0.15.20150721.4";
 
     export interface IConfig {
         instrumentationKey: string;
@@ -105,7 +105,7 @@ module Microsoft.ApplicationInsights {
 
                 this._pageTracking.start(name);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "startTrackPage failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "startTrackPage failed, page view may not be collected: " + Util.dump(e));
             }
         }
 
@@ -128,7 +128,7 @@ module Microsoft.ApplicationInsights {
 
                 this._pageTracking.stop(name, url, properties, measurements);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "stopTrackPage failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "stopTrackPage failed, page view will not be collected: " + Util.dump(e));
             }
         }
 
@@ -178,7 +178,7 @@ module Microsoft.ApplicationInsights {
                                 }
                             }
                         } catch (e) {
-                            _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed on page load calculation: " + JSON.stringify(e));
+                            _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed on page load calculation: " + Util.dump(e));
                         }
                     }, 100);
                 }
@@ -194,7 +194,7 @@ module Microsoft.ApplicationInsights {
                     this.context._sender.triggerSend();
                 }, 100);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed, page view will not be collected: " + Util.dump(e));
             }
         }
 
@@ -206,7 +206,7 @@ module Microsoft.ApplicationInsights {
             try {
                 this._eventTracking.start(name);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "startTrackEvent failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "startTrackEvent failed, event will not be collected: " + Util.dump(e));
             }
         }
 
@@ -220,7 +220,7 @@ module Microsoft.ApplicationInsights {
             try {
                 this._eventTracking.stop(name, undefined, properties, measurements);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "stopTrackEvent failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "stopTrackEvent failed, event will not be collected: " + Util.dump(e));
             }
         }
 
@@ -237,7 +237,7 @@ module Microsoft.ApplicationInsights {
                 var envelope = new Telemetry.Common.Envelope(data, Telemetry.Event.envelopeType);
                 this.context.track(envelope);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackEvent failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackEvent failed, event will not be collected: " + Util.dump(e));
             }
         }
 
@@ -271,7 +271,7 @@ module Microsoft.ApplicationInsights {
                 var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
                 this.context.track(envelope);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackException failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackException failed, exception will not be collected: " + Util.dump(e));
             }
         }
 
@@ -293,10 +293,15 @@ module Microsoft.ApplicationInsights {
 
                 this.context.track(envelope);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackMetric failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackMetric failed, metric will not be collected: " + Util.dump(e));
             }
         }
 
+        /**
+        * Log a diagnostic message. 
+        * @param    message A message string 
+        * @param   properties  map[string, string] - additional data used to filter traces in the portal. Defaults to empty.
+        */
         public trackTrace(message: string, properties?: Object) {
             try {
                 var telemetry = new Telemetry.Trace(message, properties);
@@ -305,7 +310,7 @@ module Microsoft.ApplicationInsights {
 
                 this.context.track(envelope);
             } catch (e) {
-                _InternalLogging.warn("trackTrace failed: " + JSON.stringify(e));
+                _InternalLogging.warnToConsole("trackTrace failed, trace will not be collected: " + Util.dump(e));
             }
         }
 
@@ -316,23 +321,8 @@ module Microsoft.ApplicationInsights {
             try {
                 this.context._sender.triggerSend();
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "flush failed: " + JSON.stringify(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "flush failed, telemetry will not be collected: " + Util.dump(e));
             }
-        }
-
-        /**
-        * In case of CORS exceptions - construct an exception manually.
-        * See this for more info: http://stackoverflow.com/questions/5913978/cryptic-script-error-reported-in-javascript-in-chrome-and-firefox
-        */
-        private SendCORSException() {
-            var exceptionData = Microsoft.ApplicationInsights.Telemetry.Exception.CreateSimpleException(
-                "Script error.", "Error", "unknown", "unknown",
-                "The browser’s same-origin policy prevents us from getting the details of this exception. The exception occurred in a script loaded from an origin different than the web page. For cross-domain error reporting you can use crossorigin attribute together with appropriate CORS HTTP headers. For more information please see http://www.w3.org/TR/cors/.",
-                0, null);
-
-            var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Exception>(Telemetry.Exception.dataType, exceptionData);
-            var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
-            this.context.track(envelope);
         }
 
         /**
@@ -345,29 +335,40 @@ module Microsoft.ApplicationInsights {
          */
         public _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
             try {
+                var properties = { url : url ? url : document.URL };
+
                 if (Util.isCrossOriginError(message, url, lineNumber, columnNumber, error)) {
-                    this.SendCORSException();
+                    this.SendCORSException(properties);
                 } else {
                     if (!Util.isError(error)) {
-                        // ensure that we have an error object (browser may not pass an error i.e safari)
-                        try {
-                            throw new Error(message);
-                        } catch (exception) {
-                            error = exception;
-                            if (!error["stack"]) {
-                                error["stack"] = "@" + url + ":" + lineNumber + ":" + (columnNumber || 0);
-                            }
-                        }
-
-                        this.trackException(error);
+                        var stack = "window.onerror@" + properties.url + ":" + lineNumber + ":" + (columnNumber || 0);
+                        error = new Error(message);
+                        error["stack"] = stack;
                     }
+                    this.trackException(error, null, properties);
                 }
             } catch (exception) {
                 var errorString =
                     error ? (error.name + ", " + error.message) : "null";
 
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "_onerror threw an exception: " + JSON.stringify(exception) + " while logging error: " + errorString);
+                var exceptionDump: string = Util.dump(exception);
+
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "_onerror threw " + exceptionDump + " while logging error, error will not be collected: " + errorString);
             }
+        }
+        
+        // In case of CORS exceptions - construct an exception manually.
+        // See this for more info: http://stackoverflow.com/questions/5913978/cryptic-script-error-reported-in-javascript-in-chrome-and-firefox        
+        private SendCORSException(properties: any) {
+            var exceptionData = Microsoft.ApplicationInsights.Telemetry.Exception.CreateSimpleException(
+                "Script error.", "Error", "unknown", "unknown",
+                "The browser’s same-origin policy prevents us from getting the details of this exception.The exception occurred in a script loaded from an origin different than the web page.For cross- domain error reporting you can use crossorigin attribute together with appropriate CORS HTTP headers.For more information please see http://www.w3.org/TR/cors/.",
+                0, null);
+            exceptionData.properties = properties;
+
+            var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Exception>(Telemetry.Exception.dataType, exceptionData);
+            var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
+            this.context.track(envelope);
         }
     }
 
