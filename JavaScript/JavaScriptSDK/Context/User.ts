@@ -38,7 +38,7 @@ module Microsoft.ApplicationInsights.Context {
          * The store region.
          */
         public storeRegion: string;
-
+        
          /**
          * Sets the autheticated user id and the account id in this session.
          *   
@@ -80,7 +80,7 @@ module Microsoft.ApplicationInsights.Context {
 
         constructor(accountId: string) {
             
-           //get userId or create new one if none exists
+            //get userId or create new one if none exists
             var cookie = Util.getCookie(User.userCookieName);
             if (cookie) {
                 var params = cookie.split(User.cookieSeparator);
@@ -100,6 +100,10 @@ module Microsoft.ApplicationInsights.Context {
                 date.setTime(date.getTime() + 31536000000);
                 var newCookie = [this.id, acqStr];
                 Util.setCookie(User.userCookieName, newCookie.join(User.cookieSeparator) + ';expires=' + date.toUTCString());
+
+                // If we have an ai_session in local storage this means the user actively removed our cookies.
+                // We should respect their wishes and clear ourselves from local storage
+                Util.removeStorage('ai_session');
             }
 
             // We still take the account id from the ctor param for backward compatibility. 

@@ -1,4 +1,5 @@
 ﻿/// <reference path="../../../JavaScriptSDK/context/session.ts" />
+/// <reference path="../../../JavaScriptSDK/context/user.ts" />
 /// <reference path="../../testframework/common.ts" />
 /// <reference path="../Util.tests.ts"/>
 
@@ -10,11 +11,13 @@ class SessionContextTests extends TestClass {
     /** Method called before the start of each test method */
     public testInitialize() {
         this.results = [];
+        this.resetStorage();
     }
 
     /** Method called after each test method has completed */
     public testCleanup() {
         this.results = [];
+        this.resetStorage();
     }
 
     public registerTests() {
@@ -106,16 +109,212 @@ class SessionContextTests extends TestClass {
                 Assert.equal(3, cookieValueParts[0].split('|').length, "Cookie value before expiration should include user id, acq date and renew date");
                 Assert.equal("newGuid", cookieValueParts[0].split('|')[0], "First part of cookie value should be new user id guid");
                 
-                // Having expiration 1 year allows to set sesion.IsFirst only when we generated cookie for the first time for a given browser
+                // The cookie should expire 30 minutes after activity by default
                 var expiration = cookieValueParts[1];
                 Assert.equal(true, expiration.substr(0, "expires=".length) === "expires=", "Cookie expiration part should start with expires=");
                 var expirationDate = new Date(expiration.substr("expires=".length));
-                Assert.equal(365, expirationDate.getTime() / 1000 / 60 / 60 / 24, "cookie expiration should be in the 1 year");
+                Assert.equal(30, expirationDate.getTime() / 1000 / 60, "cookie expiration should be in 30 minutes");
 
                 // cleanup
                 getCookieStub.restore();
                 setCookieStub.restore();
                 newGuidStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "ai_session local storage has correct structure",
+            test: () => {
+                if (window.localStorage) {
+                    // setup
+                    var actualCookieName: string;
+                    var actualCookieValue: string;
+                    var newGuidStub = sinon.stub(Microsoft.ApplicationInsights.Util, "newGuid",() => "newGuid");
+                    var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",() => "");
+                    var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(cookieName, cookieValue) => { });
+
+                    // act
+                    var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                    sessionManager.update();
+                    sessionManager.backup();
+
+                    // verify
+                    Assert.ok(localStorage["ai_session"], "ai_session storage is set");
+
+                    Assert.equal(3, localStorage["ai_session"].split('|').length, "Cookie value before expiration should include user id, acq date and renew date");
+                    Assert.equal("newGuid", localStorage["ai_session"].split('|')[0], "First part of cookie value should be new user id guid");
+
+                    // cleanup
+                    getCookieStub.restore();
+                    setCookieStub.restore();
+                    newGuidStub.restore();
+                } else {
+                    // this might happen on IE when using a file:// url
+                    Assert.ok(true, "browser does not support local storage in current environment");
+                }
+            }
+        });
+
+        this.testCase({
+            name: "SessionContext: session manager can back up session when localStorage is available",
+            test: () => {
+                var cookies = {};
+                var storage = {};
+                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
+                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
+                    cookies[name] = value;
+                });
+                var getStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
+                var setStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
+                    storage[name] = value;
+                });
+
+
+                // Initialize our user and session cookies
+                var sessionId = "SESSID";
+                var curDate = +new Date();
+                cookies['ai_user'] = 'foo';
+                cookies['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
+
+                // Ensure session manager backs up properly
+                new Microsoft.ApplicationInsights.Context.User(undefined);
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                sessionManager.update();
+                sessionManager.backup();
+                Assert.ok(storage['ai_session'], "session cookie should be backed up in local storage");
+
+                // cleanup
+                getCookieStub.restore();
+                setCookieStub.restore();
+                getStorageStub.restore();
+                setStorageStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "SessionContext: session manager can recover old session id and isFirst state from lost cookies when localStorage is available",
+            test: () => {
+                var cookies = {};
+                var storage = {};
+                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
+                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
+                    cookies[name] = value;
+                });
+                var getStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
+                var setStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
+                    storage[name] = value;
+                });
+
+
+                // Initialize our user cookie and local storage
+                // Note there is no session cookie
+                var sessionId = "SESSID";
+                var curDate = +new Date();
+                cookies['ai_user'] = 'foo';
+                storage['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
+
+                // Initalize the session manager
+                new Microsoft.ApplicationInsights.Context.User(undefined);
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                sessionManager.update();
+                sessionManager.backup();
+
+                // We should recover
+                Assert.equal(sessionId, sessionManager.automaticSession.id, "session id should be consistent with value before losing session cookie");
+                Assert.ok(!sessionManager.automaticSession.isFirst, "the isFirst state should be conserved after losing the session cookie");
+
+                // cleanup
+                getCookieStub.restore();
+                setCookieStub.restore();
+                getStorageStub.restore();
+                setStorageStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "SessionContext: session manager uses a new session when user cookie is deleted despite local storage being available",
+            test: () => {
+                var cookies = {};
+                var storage = {};
+                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
+                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
+                    cookies[name] = value;
+                });
+                var getStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
+                var setStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
+                    storage[name] = value;
+                });
+                var removeStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "removeStorage",(name, value) => {
+                    storage[name] = undefined;
+                });
+
+                // Initialize our local storage
+                // Note no cookies are available
+                var sessionId = "SESSID";
+                var curDate = +new Date();
+                storage['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
+
+                // Initialize the session manager
+                new Microsoft.ApplicationInsights.Context.User(undefined);
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                sessionManager.update();
+
+                // Verify the backup was lost
+                Assert.ok(!storage['ai_session'], "the local storage backup should be removed");
+
+                // Everything should be reset with the backup removed
+                Assert.notEqual(sessionId, sessionManager.automaticSession.id, "a new session id should be given after losing all ai cookies");
+                Assert.ok(sessionManager.automaticSession.isFirst, "the isFirst state should be reset after losing all ai cookies");
+
+                // cleanup
+                getCookieStub.restore();
+                setCookieStub.restore();
+                getStorageStub.restore();
+                setStorageStub.restore();
+                removeStorageStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "SessionContext: session manager cannot recover old session id and isFirst state from lost cookies when localStorage is unavailable",
+            test: () => {
+                var cookies = {};
+                var storage = {};
+                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
+                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
+                    cookies[name] = value;
+                });
+                var getStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => null);
+                var setStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => false);
+
+                // Initialize our user and session cookies
+                var sessionId = "SESSID";
+                var curDate = +new Date();
+                cookies['ai_user'] = 'foo';
+                cookies['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
+
+                // Back up the session
+                new Microsoft.ApplicationInsights.Context.User(undefined);
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                sessionManager.update();
+                sessionManager.backup();
+
+                // Lose the session cookie but not the user cookie
+                cookies['ai_session'] = undefined;
+                new Microsoft.ApplicationInsights.Context.User(undefined);
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                sessionManager.update();
+                sessionManager.backup();
+
+                // The lost cookie should not be recovered from
+                Assert.notEqual(sessionId, sessionManager.automaticSession.id, "a new session id should be given after losing the session cookie");
+                Assert.ok(sessionManager.automaticSession.isFirst, "the isFirst state should be reset after losing the session cookie");
+
+                // cleanup
+                getCookieStub.restore();
+                setCookieStub.restore();
+                getStorageStub.restore();
+                setStorageStub.restore();
             }
         });
 
@@ -369,12 +568,22 @@ class SessionContextTests extends TestClass {
     private setFakeCookie(id, acqDate, renewalDate) {
         this.originalDocument = Microsoft.ApplicationInsights.Util["document"];
         Microsoft.ApplicationInsights.Util["document"] = <any>{
-            cookie: "ai_user=foo; ai_session=" + [id, acqDate, renewalDate].join("|")
+            cookie: "ai_user=foo; ai_session="+this.generateFakeSessionCookieData(id, acqDate, renewalDate)
         };
+    }
+
+    private generateFakeSessionCookieData(id, acqDate, renewalDate) {
+        return [id, acqDate, renewalDate].join("|");
     }
 
     private restoreFakeCookie() {
         Microsoft.ApplicationInsights.Util["document"] = this.originalDocument;
+    }
+
+    private resetStorage() {
+        if (window.localStorage) {
+            window.localStorage.clear();
+        }
     }
 }
 new SessionContextTests().registerTests();

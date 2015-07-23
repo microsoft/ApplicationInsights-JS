@@ -5,6 +5,84 @@ class UtilTests extends TestClass {
 
     public registerTests() {
         var Util = Microsoft.ApplicationInsights.Util;
+
+        this.testCase({
+            name: "UtilTests: getStorage with available storage",
+            test: () => {
+                var storage = this.getMockStorage();
+                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+
+                storage["test"] = "A";
+
+                Assert.equal("A", Util.getStorage("test"), "getStorage should return value of getItem for known keys");
+                Assert.equal(undefined, Util.getStorage("another"), "getStorage should return value of getItem for unknown keys");
+
+                getStorageObjectStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "UtilTests: getStorage with no storage support",
+            test: () => {
+                var storage = undefined;
+                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+
+                Assert.equal(null, Util.getStorage("test"), "getStorage should return null when storage is unavailable");
+
+                getStorageObjectStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "UtilTests: setStorage with available storage",
+            test: () => {
+                var storage = this.getMockStorage();
+                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+
+                Assert.ok(Util.setStorage("test","A"), "setStorage should return true if storage is available for writes");
+
+                getStorageObjectStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "UtilTests: setStorage with no storage support",
+            test: () => {
+                var storage = undefined;
+                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+
+                Assert.ok(!Util.setStorage("test", "A"), "setStorage should return false if storage is unavailable for writes");
+
+                getStorageObjectStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "UtilTests: removeStorage with available storage",
+            test: () => {
+                var storage = this.getMockStorage();
+                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+
+                storage["test"] = "A";
+
+                Assert.ok(Util.removeStorage("test"), "removeStorage should return true if storage is available for writes");
+                Assert.deepEqual(undefined, storage["test"], "removeStorage should remove items from storage");
+
+                getStorageObjectStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "UtilTests: removeStorage with no storage support",
+            test: () => {
+                var storage = undefined;
+                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+
+                Assert.ok(!Util.removeStorage("test"), "removeStorage should return false if storage is unavailable for writes");
+
+                getStorageObjectStub.restore();
+            }
+        });
         
         this.testCase({
             name: "UtilTests: isArray",
@@ -94,10 +172,11 @@ class UtilTests extends TestClass {
         this.testCase({
             name: "UtilTests: new GUID",
             test: () => {
-                sinon.stub(Math, "random",() => 0);
+                var randomStub = sinon.stub(Math, "random",() => 0);
                 var expected = "00000000-0000-4000-8000-000000000000";
                 var actual = Util.newGuid();
                 Assert.equal(expected, actual, "expected guid was generated");
+                randomStub.restore();
             }
         });
 
@@ -272,6 +351,14 @@ class UtilTests extends TestClass {
                 Assert.equal(false, returnValue, 'Event handler was attached for illegal callback');
             }
         });
+    }
+
+    private getMockStorage() {
+        var storage = <any>{};
+        storage.getItem = (name) => storage[name];
+        storage.setItem = (name, value) => (storage[name] = value);
+        storage.removeItem = (name, value) => (storage[name] = undefined);
+        return storage;
     }
 }
 new UtilTests().registerTests(); 

@@ -6,7 +6,7 @@
 module Microsoft.ApplicationInsights {
     "use strict";
 
-    export var Version = "0.15.20150709.2";
+    export var Version = "0.15.20150721.4";
 
     export interface IConfig {
         instrumentationKey: string;
@@ -288,6 +288,11 @@ module Microsoft.ApplicationInsights {
             }
         }
 
+        /**
+        * Log a diagnostic message. 
+        * @param    message A message string 
+        * @param   properties  map[string, string] - additional data used to filter traces in the portal. Defaults to empty.
+        */
         public trackTrace(message: string, properties?: Object) {
             try {
                 var telemetry = new Telemetry.Trace(message, properties);
@@ -384,6 +389,7 @@ module Microsoft.ApplicationInsights {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "_onerror threw " + exceptionDump + " while logging error, error will not be collected: " + errorString);
             }
         }
+ 
     }
 
     /**
