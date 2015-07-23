@@ -40,58 +40,54 @@ module Microsoft.ApplicationInsights {
         public static defaultConfig: IConfig;
 
         constructor(config: IConfig) {
-            try {
-                this.config = config || <IConfig>{};
+            this.config = config || <IConfig>{};
     
-                // load default values if specified
-                var defaults: IConfig = AppInsights.defaultConfig;
-                if (defaults !== undefined) {
-                    for (var field in defaults) {
-                        // for each unspecified field, set the default value
-                        if (this.config[field] === undefined) {
-                            this.config[field] = defaults[field];
-                        }
+            // load default values if specified
+            var defaults: IConfig = AppInsights.defaultConfig;
+            if (defaults !== undefined) {
+                for (var field in defaults) {
+                    // for each unspecified field, set the default value
+                    if (this.config[field] === undefined) {
+                        this.config[field] = defaults[field];
                     }
                 }
+            }
     
-                _InternalLogging.verboseLogging = () => this.config.verboseLogging;
-                _InternalLogging.enableDebugExceptions = () => this.config.enableDebug;
-                var configGetters: ApplicationInsights.ITelemetryConfig = {
-                    instrumentationKey: () => this.config.instrumentationKey,
-                    accountId: () => this.config.accountId,
-                    appUserId: () => this.config.appUserId,
-                    sessionRenewalMs: () => this.config.sessionRenewalMs,
-                    sessionExpirationMs: () => this.config.sessionExpirationMs,
-                    endpointUrl: () => this.config.endpointUrl,
-                    emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
-                    maxBatchSizeInBytes: () => this.config.maxBatchSizeInBytes,
-                    maxBatchInterval: () => this.config.maxBatchInterval,
-                    disableTelemetry: () => this.config.disableTelemetry
-                }
+            _InternalLogging.verboseLogging = () => this.config.verboseLogging;
+            _InternalLogging.enableDebugExceptions = () => this.config.enableDebug;
+            var configGetters: ApplicationInsights.ITelemetryConfig = {
+                instrumentationKey: () => this.config.instrumentationKey,
+                accountId: () => this.config.accountId,
+                appUserId: () => this.config.appUserId,
+                sessionRenewalMs: () => this.config.sessionRenewalMs,
+                sessionExpirationMs: () => this.config.sessionExpirationMs,
+                endpointUrl: () => this.config.endpointUrl,
+                emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
+                maxBatchSizeInBytes: () => this.config.maxBatchSizeInBytes,
+                maxBatchInterval: () => this.config.maxBatchInterval,
+                disableTelemetry: () => this.config.disableTelemetry
+            }
     
-                this.context = new ApplicationInsights.TelemetryContext(configGetters);
+            this.context = new ApplicationInsights.TelemetryContext(configGetters);
                 
-                // initialize event timing
-                this._eventTracking = new Timing("trackEvent");
-                this._eventTracking.action = (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
-                    var event = new Telemetry.Event(name, properties, measurements);
-                    var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Event>(Telemetry.Event.dataType, event);
-                    var envelope = new Telemetry.Common.Envelope(data, Telemetry.Event.envelopeType);
+            // initialize event timing
+            this._eventTracking = new Timing("trackEvent");
+            this._eventTracking.action = (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
+                var event = new Telemetry.Event(name, properties, measurements);
+                var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Event>(Telemetry.Event.dataType, event);
+                var envelope = new Telemetry.Common.Envelope(data, Telemetry.Event.envelopeType);
     
-                    this.context.track(envelope);
-                }
+                this.context.track(envelope);
+            }
     
-                // initialize page view timing
-                this._pageTracking = new Timing("trackPageView");
-                this._pageTracking.action = (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
-                    var pageView = new Telemetry.PageView(name, url, duration, properties, measurements);
-                    var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageView>(Telemetry.PageView.dataType, pageView);
-                    var envelope = new Telemetry.Common.Envelope(data, Telemetry.PageView.envelopeType);
+            // initialize page view timing
+            this._pageTracking = new Timing("trackPageView");
+            this._pageTracking.action = (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
+                var pageView = new Telemetry.PageView(name, url, duration, properties, measurements);
+                var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageView>(Telemetry.PageView.dataType, pageView);
+                var envelope = new Telemetry.Common.Envelope(data, Telemetry.PageView.envelopeType);
     
-                    this.context.track(envelope);
-                }
-            } catch (e) {
-                console.error('Failed to initialize AppInsights JS SDK: ' + e.message);
+                this.context.track(envelope);
             }
         }
 
