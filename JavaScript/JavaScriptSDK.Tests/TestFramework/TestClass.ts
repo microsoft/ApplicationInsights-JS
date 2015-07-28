@@ -5,6 +5,10 @@
 
 class TestClass {
 
+    constructor(name? : string) {
+        QUnit.module(name);
+    }
+
     public static isPollingStepFlag = "isPollingStep";
 
     /** The instance of the currently running suite. */
@@ -57,7 +61,7 @@ class TestClass {
                 var trigger = () => {
                     if (steps.length) {
                         var step = steps.shift();
-                        
+
                         // The callback which activates the next test step. 
                         var nextTestStepTrigger = () => {
                             setTimeout(() => {
@@ -73,7 +77,7 @@ class TestClass {
                             if (step[TestClass.isPollingStepFlag]) {
                                 step.call(this, nextTestStepTrigger);
                             } else {
-                                step.call(this);
+                            step.call(this);
                                 nextTestStepTrigger.call(this);
                             }
                         } catch (e) {

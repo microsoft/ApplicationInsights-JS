@@ -519,6 +519,141 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
+            name: "AppInsightsTests: set authenticatedId context is applied",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+
+                appInsights.setAuthenticatedUserContext("10001");
+
+                var trackStub = sinon.stub(appInsights.context._sender, "send");
+
+                // verify
+                var test = (action) => {
+                    action();
+                    this.clock.tick(1);
+                    var envelope = this.getFirstResult(action, trackStub);
+                    var contextKeys = new AI.ContextTagKeys();
+                    Assert.equal("10001", envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId");
+                   
+                    trackStub.reset();
+                };
+
+                // act
+                test(() => appInsights.trackEvent("testEvent"));
+                test(() => appInsights.trackPageView());
+                test(() => appInsights.trackMetric("testMetric", 0));
+                test(() => appInsights.trackException(new Error()));
+                test(() => appInsights.trackTrace("testTrace"));
+
+                // teardown
+                trackStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: set authenticatedId and accountId context is applied",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+
+                appInsights.setAuthenticatedUserContext("10001", "account33");
+
+                var trackStub = sinon.stub(appInsights.context._sender, "send");
+
+                // verify
+                var test = (action) => {
+                    action();
+                    this.clock.tick(1);
+                    var envelope = this.getFirstResult(action, trackStub);
+                    var contextKeys = new AI.ContextTagKeys();
+                    Assert.equal("10001", envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId");
+                    Assert.equal("account33", envelope.tags[contextKeys.userAccountId], "user.accountId");
+
+                    trackStub.reset();
+                };
+
+                // act
+                test(() => appInsights.trackEvent("testEvent"));
+                test(() => appInsights.trackPageView());
+                test(() => appInsights.trackMetric("testMetric", 0));
+                test(() => appInsights.trackException(new Error()));
+                test(() => appInsights.trackTrace("testTrace"));
+
+                // teardown
+                trackStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: set authenticatedId and accountId context is applied with non-ascii languages",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+
+                appInsights.setAuthenticatedUserContext("\u0428", "\u0429"); // Cyrillic characters
+                var trackStub = sinon.stub(appInsights.context._sender, "send");
+
+                // verify
+                var test = (action) => {
+                    action();
+                    this.clock.tick(1);
+                    var envelope = this.getFirstResult(action, trackStub);
+                    var contextKeys = new AI.ContextTagKeys();
+                    Assert.equal("\u0428", envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId is correct");
+                    Assert.equal("\u0429", envelope.tags[contextKeys.userAccountId], "user.accountId is correct");
+
+                    trackStub.reset();
+                };
+
+                // act
+                test(() => appInsights.trackEvent("testEvent"));
+                test(() => appInsights.trackPageView());
+                test(() => appInsights.trackMetric("testMetric", 0));
+                test(() => appInsights.trackException(new Error()));
+                test(() => appInsights.trackTrace("testTrace"));
+
+                // teardown
+                trackStub.restore();
+            }
+        });
+
+         this.testCase({
+            name: "AppInsightsTests: clear authID context is applied",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                appInsights.setAuthenticatedUserContext("1234", "abcd");
+
+                // Clear authenticatedId
+                appInsights.clearAuthenticatedUserContext();
+
+                // verify
+                var test = (action) => {
+                    action();
+                    this.clock.tick(1);
+                    var envelope = this.getFirstResult(action, trackStub);
+                    var contextKeys = new AI.ContextTagKeys();
+                    Assert.equal(undefined, envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId");
+                    Assert.equal(undefined, envelope.tags[contextKeys.userAccountId], "user.accountId");
+                   
+                    trackStub.reset();
+                };
+
+                // act
+                test(() => appInsights.trackEvent("testEvent"));
+                test(() => appInsights.trackPageView());
+                test(() => appInsights.trackMetric("testMetric", 0));
+                test(() => appInsights.trackException(new Error()));
+                test(() => appInsights.trackTrace("testTrace"));
+
+                // teardown
+                trackStub.restore();
+            }
+        });
+
+        this.testCase({
             name: "AppInsightsTests: trackPageView sends base data 'immediately' and performance data when available",
             test: () => {
                 // setup

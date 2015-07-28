@@ -317,6 +317,48 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
+         * Sets the autheticated user id and the account id in this session.
+         * User auth id and account id should be of type string. They should not contain commas, semi-colons, equal signs, spaces, or vertical-bars.
+         *   
+         * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
+         * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
+         */
+        public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string) {
+            try {
+                this.context.user.setAuthenticatedUserContext(authenticatedUserId, accountId);
+            } catch (e) {
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Setting auth user context failed. " + Util.dump(e));
+            }
+        }
+
+        /**
+         * Clears the authenticated user id and the account id from the user context.
+         */
+        public clearAuthenticatedUserContext() {
+            try {
+                this.context.user.clearAuthenticatedUserContext();
+            } catch (e) {
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Clearing auth user context failed. " + Util.dump(e));
+            }
+        }
+
+        /**
+        * In case of CORS exceptions - construct an exception manually.
+        * See this for more info: http://stackoverflow.com/questions/5913978/cryptic-script-error-reported-in-javascript-in-chrome-and-firefox
+        */
+        private SendCORSException(properties: any) {
+            var exceptionData = Microsoft.ApplicationInsights.Telemetry.Exception.CreateSimpleException(
+                "Script error.", "Error", "unknown", "unknown",
+                "The browser’s same-origin policy prevents us from getting the details of this exception.The exception occurred in a script loaded from an origin different than the web page.For cross- domain error reporting you can use crossorigin attribute together with appropriate CORS HTTP headers.For more information please see http://www.w3.org/TR/cors/.",
+                0, null);
+            exceptionData.properties = properties;
+
+            var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Exception>(Telemetry.Exception.dataType, exceptionData);
+            var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
+            this.context.track(envelope);
+        }
+
+        /**
          * The custom error handler for Application Insights
          * @param {string} message - The error message
          * @param {string} url - The url where the error was raised
@@ -347,20 +389,7 @@ module Microsoft.ApplicationInsights {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "_onerror threw " + exceptionDump + " while logging error, error will not be collected: " + errorString);
             }
         }
-        
-        // In case of CORS exceptions - construct an exception manually.
-        // See this for more info: http://stackoverflow.com/questions/5913978/cryptic-script-error-reported-in-javascript-in-chrome-and-firefox        
-        private SendCORSException(properties: any) {
-            var exceptionData = Microsoft.ApplicationInsights.Telemetry.Exception.CreateSimpleException(
-                "Script error.", "Error", "unknown", "unknown",
-                "The browser’s same-origin policy prevents us from getting the details of this exception.The exception occurred in a script loaded from an origin different than the web page.For cross- domain error reporting you can use crossorigin attribute together with appropriate CORS HTTP headers.For more information please see http://www.w3.org/TR/cors/.",
-                0, null);
-            exceptionData.properties = properties;
-
-            var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Exception>(Telemetry.Exception.dataType, exceptionData);
-            var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
-            this.context.track(envelope);
-        }
+ 
     }
 
     /**
