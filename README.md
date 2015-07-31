@@ -1,4 +1,6 @@
 ﻿# Microsoft Application Insights JavaScript SDK
+## Try Application Insights with JavaScript SDK - no Azure subscription required
+If you don't have an Azure subscription and would like to try Application Insights with JavaScript SDK, visit this website to get a preview of Application Insights: http://aka.ms/ainow. 
 
 ## API reference
 * Check out https://github.com/Microsoft/ApplicationInsights-JS/blob/master/API-reference.md
