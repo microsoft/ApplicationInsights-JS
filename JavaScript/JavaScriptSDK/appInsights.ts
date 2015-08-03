@@ -135,7 +135,7 @@ module Microsoft.ApplicationInsights {
                 this._pageTracking.stop(name, url, properties, measurements);
 
                 if (this.config.autoTrackPageVisitTime) {
-                    this.TestCategoryFilter(name, url);
+                    this.autoTrackPageVisitTime(name, url);
                 }
 
             } catch (e) {
@@ -202,7 +202,7 @@ module Microsoft.ApplicationInsights {
                 this.context.track(pageViewEnvelope);
 
                 if (this.config.autoTrackPageVisitTime) {
-                    this.TestCategoryFilter(name, url);
+                    this.autoTrackPageVisitTime(name, url);
                 }
 
                 setTimeout(() => {
@@ -332,7 +332,7 @@ module Microsoft.ApplicationInsights {
             this.trackMetric("PageVisitTime", pageVisitTime, 1, pageVisitTime, pageVisitTime, properties);
         }
 
-        private TestCategoryFilter(pageName: string, pageUrl: string) {
+        private autoTrackPageVisitTime(pageName: string, pageUrl: string) {
             try {
                 // Restart timer for new page view
                 var prevPageVisitTimeData = this._pageVisitTimeManager.restartPageVisitTimer(pageName, pageUrl);
