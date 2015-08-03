@@ -19,7 +19,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         /**
          * Constructs a new instance of the MetricTelemetry object
          */
-        constructor(name: string, value: number, count?: number, min?: number, max?: number) {
+        constructor(name: string, value: number, count?: number, min?: number, max?: number, properties?: Object) {
             super();
 
             var dataPoint = new Microsoft.ApplicationInsights.Telemetry.Common.DataPoint();
@@ -30,6 +30,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             dataPoint.value = value;
 
             this.metrics = [dataPoint];
+            this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
         }
     }
 }

@@ -154,9 +154,9 @@ module Microsoft.ApplicationInsights {
             config.verboseLogging = Util.stringToBoolOrDefault(config.verboseLogging);
             config.emitLineDelimitedJson = Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
             config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
-            config.autoTrackPageVisitDuration = (config.autoTrackPageVisitDuration !== undefined && config.autoTrackPageVisitDuration !== null) ?
-                Util.stringToBoolOrDefault(config.autoTrackPageVisitDuration) :
-                true;
+            config.autoTrackPageVisitTime = (config.autoTrackPageVisitTime !== undefined && config.autoTrackPageVisitTime !== null) ?
+                Util.stringToBoolOrDefault(config.autoTrackPageVisitTime) :
+                false;
 
             return config;
         }

@@ -121,7 +121,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="AppInsights.ts" />
-    <TypeScriptCompile Include="Context\PageVisitData.ts" />
+    <TypeScriptCompile Include="Context\PageVisitTimeManager.ts" />
     <TypeScriptCompile Include="Context\Sample.ts" />
     <TypeScriptCompile Include="Contracts\Generated\AjaxCallData.ts" />
     <TypeScriptCompile Include="Contracts\Generated\Base.ts" />
