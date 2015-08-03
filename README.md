@@ -1,5 +1,8 @@
 ﻿# Microsoft Application Insights JavaScript SDK
 
+## API reference
+* Check out https://github.com/Microsoft/ApplicationInsights-JS/blob/master/API-reference.md
+
 ## To build:
 
 * Visual Studio 2013 Ultimate with Update 4
@@ -8,12 +11,10 @@
 * Build solution in Visual Studio
 
 ## To run check-in tests
-* `powershell "& .\RunTestsInBrowser.ps1"` to run `Tests.html` in a browser
+* `powershell "& .\RunTestsInBrowser.ps1"` to run `Tests.html` in a browser (you might need to call Set-ExecutionPolicy to be able to execute the script)
 * Don't forget to build the solution after changing TypeScript files
 * Refresh Tests.html in the browser to re-run tests
 
-## Performance testing results
+## Check out the Wiki for other useful info
 
-For this release, we added a perfResults.txt.csv file that documents the history of performance measurements of the code in the master branch to share with the community the performance of the JavaScript SDK.
-
-When running the performance tests locally, a similar file will be produced that could be used to measure the impact your new code would have on the project.
+https://github.com/Microsoft/ApplicationInsights-JS/wiki

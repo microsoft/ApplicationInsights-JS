@@ -12,6 +12,7 @@
 /// <reference path="../../../JavaScriptSDK/Contracts/Generated/PageViewData.ts" />
 /// <reference path="../../../JavaScriptSDK/Contracts/Generated/PageViewPerfData.ts" />
 /// <reference path="../../../JavaScriptSDK/Contracts/Generated/AjaxCallData.ts" />
+/// <reference path="../../../JavaScriptSDK/Contracts/Generated/AvailabilityData.ts" />
 QUnit.test("Test property ExceptionDetails.id was created and default is set", function () {
     var temp = new AI.ExceptionDetails();
     QUnit.ok(temp.id !== null, "ExceptionDetails.id == null");

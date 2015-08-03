@@ -11,7 +11,9 @@ module AI
         public name: string;
         public duration: string;
         public requestSize: number;
+        public referrer: string;
         public responseSize: number;
+        public referrerData: string;
         public timeToFirstByte: string;
         public timeToLastByte: string;
         public callbackDuration: string;

@@ -4,9 +4,9 @@
 
 class PublicApiTests extends TestClass {
 
-    private errorSpy;
-    private successSpy;
-    private loggingSpy;
+    public errorSpy;
+    public successSpy;
+    public loggingSpy;
 
     /** Method called before the start of each test method */
     public testInitialize() {
@@ -30,7 +30,7 @@ class PublicApiTests extends TestClass {
 
     public registerTests() {
         var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
-        config.maxBatchInterval = 1000;
+        config.maxBatchInterval = 100;
         config.endpointUrl = "https://dc.services.visualstudio.com/v2/track";
         config.instrumentationKey = "89330895-7c53-4315-a242-85d136ad9c16";
 
@@ -64,10 +64,13 @@ class PublicApiTests extends TestClass {
                 boilerPlateAsserts();
             }
         });
-
-
-        asserts.push(() => Assert.ok(this.successSpy.called, "success"));
         
+        asserts.push(PollingAssert.createPollingAssert(() => {
+                Assert.ok(true, "* checking success spy " + new Date().toISOString());
+                return this.successSpy.called;
+            }, "sender succeeded")
+        );
+
         this.testCaseAsync({
             name: "TelemetryContext: track event",
             stepDelay: delay,
@@ -77,7 +80,7 @@ class PublicApiTests extends TestClass {
                 }
             ].concat(asserts)
         });
-        
+
         this.testCaseAsync({
             name: "TelemetryContext: track exception",
             stepDelay: delay,
@@ -95,15 +98,17 @@ class PublicApiTests extends TestClass {
                 }
             ].concat(asserts)
         });
-               
+
         this.testCaseAsync({
             name: "TelemetryContext: track metric",
             stepDelay: delay,
             steps: [
                 () => {
+                    console.log("* calling trackMetric " + new Date().toISOString());
                     for (var i = 0; i < 100; i++) {
                         testAi.trackMetric("test" + i, Math.round(100 * Math.random()));
                     }
+                    console.log("* done calling trackMetric " + new Date().toISOString());
                 }
             ].concat(asserts)
         });
@@ -117,7 +122,7 @@ class PublicApiTests extends TestClass {
                 }
             ].concat(asserts)
         });
-        
+
         this.testCaseAsync({
             name: "TelemetryContext: track page view",
             stepDelay: delay,
@@ -127,7 +132,7 @@ class PublicApiTests extends TestClass {
                 }
             ].concat(asserts)
         });
-        
+
         this.testCaseAsync({
             name: "TelemetryContext: track all types in batch",
             stepDelay: delay,
