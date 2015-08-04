@@ -2,6 +2,7 @@
 /// <reference path="./Telemetry/Common/Data.ts"/>
 /// <reference path="./Util.ts"/>
 /// <reference path="./Contracts/Generated/SessionState.ts"/>
+/// <reference path="./Telemetry/Timings.ts"/>
 
 module Microsoft.ApplicationInsights {
     "use strict";
@@ -138,7 +139,7 @@ module Microsoft.ApplicationInsights {
          * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
          */
-        public trackPageView(name?: string, url?: string, properties?: Object, measurements?: Object) {
+        public trackPageView(name?: string, url?: string, properties?: Object, measurements?: Object, timings?: Microsoft.ApplicationInsights.Telemetry.Timings) {
             try {
                 // ensure we have valid values for the required fields
                 if (typeof name !== "string") {
@@ -150,8 +151,19 @@ module Microsoft.ApplicationInsights {
                 }
 
                 var durationMs = 0;
+                
                 // check if timing data is available
-                if (Telemetry.PageViewPerformance.checkPageLoad() !== undefined) {
+                if (timings) {
+                    durationMs = timings.duration;
+                    var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements, timings);
+                    var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
+                        Telemetry.PageViewPerformance.dataType, pageViewPerformance);
+                    var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
+                    this.context.track(pageViewPerformanceEnvelope);
+                    setTimeout(() => {
+                        this.context._sender.triggerSend();
+                    }, 100);
+                } else if (Telemetry.PageViewPerformance.checkPageLoad() !== undefined) {
                     // compute current duration (navigation start to now) for the pageViewTelemetry
                     var startTime = window.performance.timing.navigationStart;
                     durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);

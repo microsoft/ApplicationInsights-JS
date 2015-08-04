@@ -156,6 +156,7 @@
     <TypeScriptCompile Include="Context\Internal.ts" />
     <TypeScriptCompile Include="Telemetry\PageViewPerformance.ts" />
     <TypeScriptCompile Include="Telemetry\SessionTelemetry.ts" />
+    <TypeScriptCompile Include="Telemetry\Timings.ts" />
     <TypeScriptCompile Include="Util.ts" />
     <TypeScriptCompile Include="Logging.ts" />
     <TypeScriptCompile Include="Sender.ts" />
