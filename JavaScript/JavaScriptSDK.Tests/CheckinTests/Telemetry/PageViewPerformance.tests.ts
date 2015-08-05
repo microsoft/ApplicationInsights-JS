@@ -26,8 +26,8 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                     Assert.equal(typeof telemetry.sentRequest, "string");
                     Assert.equal(typeof telemetry.domProcessing, "string");
                 } else {
-                    var check = Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.checkPageLoad();
-                    Assert.equal(undefined, check, "checkPageLoad returns undefined when not available");
+                    var check = Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.isPerformanceTimingSupported();
+                    Assert.equal(false, check, "isPerformanceTimingSupported returns false when not performance timing is not supported");
             }
             }
         });
