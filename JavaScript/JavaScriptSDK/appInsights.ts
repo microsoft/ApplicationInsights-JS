@@ -177,20 +177,25 @@ module Microsoft.ApplicationInsights {
                         if (timeoutReached || timingDataReady) {
                             clearInterval(handle);
                             durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
+                            var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements);
 
                             // Sending page view when navigation timing (i.e. client perf data) is ready.
                             // We used to report page view duration separtely and it caused confusion - 
                             // how is that different from client perf duration?
                             // So we made these 2 metrics to have the same value (by reporting it at the same time).
-                            this.sendPageViewInternal(name, url, durationMs, properties, measurements);
-
-                            var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements);
+                            this.sendPageViewInternal(
+                                name,
+                                url,
+                                pageViewPerformance.isValid ? +pageViewPerformance.perfTotal : durationMs,
+                                properties,
+                                measurements);
+                            
                             if (pageViewPerformance.isValid) {
                                 var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
                                     Telemetry.PageViewPerformance.dataType, pageViewPerformance);
                                 var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
                                 this.context.track(pageViewPerformanceEnvelope);
-                            }
+                            } 
 
                             this.context._sender.triggerSend();
                         }
@@ -425,12 +430,12 @@ module Microsoft.ApplicationInsights {
             var start = this._events[name];
             if (isNaN(start)) {
                 _InternalLogging.throwInternalUserActionable(
-                LoggingSeverity.WARNING,
-                "stop" + this._name + " was called without a corresponding start" + this._name + " . Event name is '" + name + "'");
+                    LoggingSeverity.WARNING,
+                    "stop" + this._name + " was called without a corresponding start" + this._name + " . Event name is '" + name + "'");
             } else {
                 var end = +new Date;
                 var duration = Telemetry.PageViewPerformance.getDuration(start, end);
-                this.action(name, url, duration, properties, measurements);                
+                this.action(name, url, duration, properties, measurements);
             }
 
             delete this._events[name];
