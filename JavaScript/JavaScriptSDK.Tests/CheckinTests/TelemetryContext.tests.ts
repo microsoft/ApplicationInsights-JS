@@ -59,7 +59,7 @@ class TelemetryContextTests extends TestClass {
             test: () => {
                 this._telemetryContext.session.id = "101";
                 this._telemetryContext.session.isFirst = true;
-                
+
                 var env = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(null, "");
                 this._telemetryContext.track(env);
 
@@ -68,6 +68,72 @@ class TelemetryContextTests extends TestClass {
                 Assert.equal(true, env.tags[contextKeys.sessionIsFirst], "session.isFirst");
             }
         });
+
+        this.testCase(
+            {
+                name: "TelemetryContext: custom properties applied if telemetry item's properties are undefined",
+                test: () => {
+                    // setup
+                    this._telemetryContext.properties = { prop1: "val1" };
+                    var eventEnvelope = this.getTestEventEnvelope(undefined);
+                    // act
+                    (<any>this._telemetryContext)._applyCustomProperties(eventEnvelope);
+
+                    // verify
+                    var resEvent = (<any>eventEnvelope.data).baseData;
+                    Assert.equal("val1", resEvent.properties.prop1);
+
+                    // teardown
+                    this._telemetryContext.properties = null;
+                }
+            });
+
+
+        this.testCase(
+            {
+                name: "TelemetryContext: existing custom properties are not touched",
+                test: () => {
+                    // setup
+                    this._telemetryContext.properties = { prop1: "val1" };
+                    var eventEnvelope = this.getTestEventEnvelope({ testProp: "testVal" });
+                    // act
+                    (<any>this._telemetryContext)._applyCustomProperties(eventEnvelope);
+
+                    // verify
+                    var resEvent = (<any>eventEnvelope.data).baseData;
+                    Assert.equal("testVal", resEvent.properties.testProp);
+
+                    // teardown
+                    this._telemetryContext.properties = null;
+                }
+            });
+
+        this.testCase(
+            {
+                name: "TelemetryContext: existing custom properties are not overriden",
+                test: () => {
+                    // setup
+                    this._telemetryContext.properties = { prop1: "context wide value" };
+                    var eventEnvelope = this.getTestEventEnvelope({ prop1: "item specific value" });
+                    
+                    // act
+                    (<any>this._telemetryContext)._applyCustomProperties(eventEnvelope);
+
+                    // verify
+                    var resEvent = (<any>eventEnvelope.data).baseData;
+                    Assert.equal("item specific value", resEvent.properties.prop1);
+
+                    // teardown
+                    this._telemetryContext.properties = null;
+                }
+            });        
+    }
+
+    private getTestEventEnvelope(properties?:Object) {
+        var event = new Microsoft.ApplicationInsights.Telemetry.Event('Test Event', properties);
+        var eventData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.Event>(Microsoft.ApplicationInsights.Telemetry.Event.dataType, event);
+        var eventEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(eventData, Microsoft.ApplicationInsights.Telemetry.Event.envelopeType);
+        return eventEnvelope;
     }
 }
 new TelemetryContextTests().registerTests();

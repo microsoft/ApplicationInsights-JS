@@ -1374,7 +1374,7 @@ class AppInsightsTests extends TestClass {
                     var senderStub = sinon.stub(appInsights.context._sender, "send");
 
                     // act
-                    appInsights.context.properties = [{ prop1: "val1" }];
+                    appInsights.context.properties = { prop1: "val1" };
                     appInsights.trackEvent("my event");
 
                     // validate

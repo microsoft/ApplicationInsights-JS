@@ -136,7 +136,7 @@ module Microsoft.ApplicationInsights {
             this._applyOperationContext(envelope, this.operation);
             this._applySampleContext(envelope, this.sample);
             this._applyUserContext(envelope, this.user);
-            this._applyCustomProperties(envelope, this.properties);
+            this._applyCustomProperties(envelope);
 
             envelope.iKey = this._config.instrumentationKey();
 
@@ -154,11 +154,13 @@ module Microsoft.ApplicationInsights {
             tc._track(sessionStateEnvelope);
         }
 
-        private static _applyCustomProperties(envelope: Microsoft.Telemetry.Envelope, properties) {
-            if (properties) {
-                Object.getOwnPropertyNames(properties).forEach((val, index, array) => {
-                    if (envelope.data.baseData.properties[val] === undefined) {
-
+        private _applyCustomProperties(envelope: Microsoft.Telemetry.Envelope) {
+            if (this.properties) {
+                var telemetryItem = (<any>envelope.data).baseData;
+                telemetryItem.properties = telemetryItem.properties || {};
+                Object.getOwnPropertyNames(this.properties).forEach((val, index, array) => {
+                    if (telemetryItem.properties[val] === undefined) {
+                        telemetryItem.properties[val] = this.properties[val];
                     }
                 });
             }
