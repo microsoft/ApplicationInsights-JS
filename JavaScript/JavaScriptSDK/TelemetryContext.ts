@@ -65,10 +65,15 @@ module Microsoft.ApplicationInsights {
         public session: Context.Session;
 
         /**
+        * Custom properties added to all telemetry items (implementation of the TelemetryInitializer concept).
+        */
+        public properties;
+
+        /**
          * The session manager that manages session on the base of cookies.
          */
         public _sessionManager: Microsoft.ApplicationInsights.Context._SessionManager;
-        
+
         constructor(config: ITelemetryConfig) {
             this._config = config;
             this._sender = new Sender(config);
@@ -99,7 +104,7 @@ module Microsoft.ApplicationInsights {
                 if (envelope.name === Telemetry.PageView.envelopeType) {
                     _InternalLogging.resetInternalMessageCount();
                 }
-                
+
                 if (this.session) {
                     // If customer did not provide custom session id update sessionmanager
                     if (typeof this.session.id !== "string") {
@@ -131,6 +136,7 @@ module Microsoft.ApplicationInsights {
             this._applyOperationContext(envelope, this.operation);
             this._applySampleContext(envelope, this.sample);
             this._applyUserContext(envelope, this.user);
+            this._applyCustomProperties(envelope, this.properties);
 
             envelope.iKey = this._config.instrumentationKey();
 
@@ -145,12 +151,22 @@ module Microsoft.ApplicationInsights {
 
             sessionStateEnvelope.time = Util.toISOStringForIE8(new Date(timestamp));
 
-            tc._track(sessionStateEnvelope); 
+            tc._track(sessionStateEnvelope);
         }
 
+        private static _applyCustomProperties(envelope: Microsoft.Telemetry.Envelope, properties) {
+            if (properties) {
+                Object.getOwnPropertyNames(properties).forEach((val, index, array) => {
+                    if (envelope.data.baseData.properties[val] === undefined) {
+
+                    }
+                });
+            }
+        }
+
+
         private _applyApplicationContext(envelope: Microsoft.Telemetry.Envelope, appContext: Microsoft.ApplicationInsights.Context.Application) {
-            if (appContext)
-            {
+            if (appContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
 
                 if (typeof appContext.ver === "string") {

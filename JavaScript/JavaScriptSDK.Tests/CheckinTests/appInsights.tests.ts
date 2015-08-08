@@ -1363,6 +1363,28 @@ class AppInsightsTests extends TestClass {
                 resetInternalMessageCountStub.restore();
             }
         });
+
+        this.testCase(
+            {
+                name: "TelemetryInitializer: properties added to telemetry",
+                test: () => {
+                    // setup
+                    var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                    appInsights.context._sessionManager._sessionHandler = null;
+                    var senderStub = sinon.stub(appInsights.context._sender, "send");
+
+                    // act
+                    appInsights.context.properties = [{ prop1: "val1" }];
+                    appInsights.trackEvent("my event");
+
+                    // validate
+                    var telemetry = <Microsoft.ApplicationInsights.Telemetry.Event>senderStub.args[0][0].data.baseData;
+                    Assert.equal(telemetry.properties["prop1"], "val1");
+
+                    // teardown
+                    senderStub.restore();
+                }
+            });
     }
 
     private getFirstResult(action: string, trackStub: SinonStub, skipSessionState?: boolean) {
