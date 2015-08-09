@@ -18,7 +18,8 @@ class AppInsightsTests extends TestClass {
             autoCollectErrors: false,
             disableTelemetry: false,
             verboseLogging: false,
-            diagnosticLogInterval: 1000
+            diagnosticLogInterval: 1000,
+            properties: null
         };
 
         // set default values

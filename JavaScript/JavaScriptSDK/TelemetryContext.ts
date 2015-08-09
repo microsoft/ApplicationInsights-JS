@@ -17,6 +17,7 @@ module Microsoft.ApplicationInsights {
         accountId: () => string;
         sessionRenewalMs: () => number;
         sessionExpirationMs: () => number;
+        properties: () => Object;
     }
 
     export class TelemetryContext {
@@ -90,6 +91,7 @@ module Microsoft.ApplicationInsights {
                 this.operation = new Context.Operation();
                 this.session = new Context.Session();
                 this.sample = new Context.Sample();
+                this.properties = config.properties();
             }
         }
 
@@ -155,7 +157,7 @@ module Microsoft.ApplicationInsights {
         }
 
         private _applyCustomProperties(envelope: Microsoft.Telemetry.Envelope) {
-            if (this.properties) {
+            if (this.properties && envelope && envelope.data && (<any>envelope.data).baseData) {
                 var telemetryItem = (<any>envelope.data).baseData;
                 telemetryItem.properties = telemetryItem.properties || {};
                 Object.getOwnPropertyNames(this.properties).forEach((val, index, array) => {
@@ -165,7 +167,6 @@ module Microsoft.ApplicationInsights {
                 });
             }
         }
-
 
         private _applyApplicationContext(envelope: Microsoft.Telemetry.Envelope, appContext: Microsoft.ApplicationInsights.Context.Application) {
             if (appContext) {

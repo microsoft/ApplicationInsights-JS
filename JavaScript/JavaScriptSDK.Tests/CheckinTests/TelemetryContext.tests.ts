@@ -20,7 +20,8 @@ class TelemetryContextTests extends TestClass {
             emitLineDelimitedJson: () => false,
             maxBatchSizeInBytes: () => 1000000,
             maxBatchInterval: () => 1,
-            disableTelemetry: () => false
+            disableTelemetry: () => false,
+            properties: () => { return { prop1: "val1", prop2: "val2" }; }
         }
 
         this._telemetryContext = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
@@ -66,6 +67,17 @@ class TelemetryContextTests extends TestClass {
                 var contextKeys = new AI.ContextTagKeys();
                 Assert.equal("101", env.tags[contextKeys.sessionId], "session.id");
                 Assert.equal(true, env.tags[contextKeys.sessionIsFirst], "session.isFirst");
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: properties initialized correctly",
+            test: () => {
+                // act
+                var telemetryContext = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
+
+                // verify
+                Assert.deepEqual(this._config.properties(), telemetryContext.properties);
             }
         });
 
@@ -126,10 +138,10 @@ class TelemetryContextTests extends TestClass {
                     // teardown
                     this._telemetryContext.properties = null;
                 }
-            });        
+            });
     }
 
-    private getTestEventEnvelope(properties?:Object) {
+    private getTestEventEnvelope(properties?: Object) {
         var event = new Microsoft.ApplicationInsights.Telemetry.Event('Test Event', properties);
         var eventData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.Event>(Microsoft.ApplicationInsights.Telemetry.Event.dataType, event);
         var eventEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(eventData, Microsoft.ApplicationInsights.Telemetry.Event.envelopeType);
