@@ -25,7 +25,8 @@ class InitializationTests extends TestClass {
             disableTelemetry: false,
             verboseLogging: true,
             diagnosticLogInterval: 1,
-            properties: null
+            properties: null,
+            measurements: null
         };
 
         // set default values

@@ -21,7 +21,12 @@ class TelemetryContextTests extends TestClass {
             maxBatchSizeInBytes: () => 1000000,
             maxBatchInterval: () => 1,
             disableTelemetry: () => false,
-            properties: () => { return { prop1: "val1", prop2: "val2" }; }
+            properties: () => {
+                return { prop1: "val1", prop2: "val2" };
+            },
+            measurements: () => {
+                return { m1: 100, m2: 200 };
+            }
         }
 
         this._telemetryContext = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
@@ -103,7 +108,7 @@ class TelemetryContextTests extends TestClass {
 
         this.testCase(
             {
-                name: "TelemetryContext: existing custom properties are not touched",
+                name: "TelemetryContext: telemetry item-specific custom properties are not touched",
                 test: () => {
                     // setup
                     this._telemetryContext.properties = { prop1: "val1" };
@@ -122,7 +127,7 @@ class TelemetryContextTests extends TestClass {
 
         this.testCase(
             {
-                name: "TelemetryContext: existing custom properties are not overriden",
+                name: "TelemetryContext: telemetry item-specific properties are not overriden",
                 test: () => {
                     // setup
                     this._telemetryContext.properties = { prop1: "context wide value" };
@@ -139,10 +144,82 @@ class TelemetryContextTests extends TestClass {
                     this._telemetryContext.properties = null;
                 }
             });
+
+        this.testCase({
+            name: "TelemetryContext: measurements initialized correctly",
+            test: () => {
+                // act
+                var telemetryContext = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
+
+                // verify
+                Assert.deepEqual(this._config.measurements(), telemetryContext.measurements);
+            }
+        });
+
+        this.testCase(
+            {
+                name: "TelemetryContext: custom measurements applied if telemetry item's measurements are undefined",
+                test: () => {
+                    // setup
+                    this._telemetryContext.measurements = { m1: 100 };
+                    var eventEnvelope = this.getTestEventEnvelope(undefined, undefined);
+                    // act
+                    (<any>this._telemetryContext)._applyCustomMeasurements(eventEnvelope);
+
+                    // verify
+                    var resEvent = (<any>eventEnvelope.data).baseData;
+                    Assert.equal(100, resEvent.measurements.m1);
+
+                    // teardown
+                    this._telemetryContext.measurements = null;
+                }
+            });
+
+
+        this.testCase(
+            {
+                name: "TelemetryContext: telemetry item-specific measurements are not touched",
+                test: () => {
+                    // setup
+                    this._telemetryContext.measurements = { m1: 100 };
+                    var eventEnvelope = this.getTestEventEnvelope(undefined, { m2: 200 });
+                    // act
+                    (<any>this._telemetryContext)._applyCustomMeasurements(eventEnvelope);
+
+                    // verify
+                    var resEvent = (<any>eventEnvelope.data).baseData;
+                    Assert.equal(200, resEvent.measurements.m2);
+
+                    // teardown
+                    this._telemetryContext.measurements = null;
+                }
+            });
+
+        this.testCase(
+            {
+                name: "TelemetryContext: telemetry item-specific custom measurements are not overriden",
+                test: () => {
+                    // setup
+                    this._telemetryContext.measurements = { m1: 100 };
+                    var eventEnvelope = this.getTestEventEnvelope(undefined, { m1: 200 });
+                    
+                    // act
+                    (<any>this._telemetryContext)._applyCustomMeasurements(eventEnvelope);
+
+                    // verify
+                    var resEvent = (<any>eventEnvelope.data).baseData;
+                    Assert.equal(200, resEvent.measurements.m1);
+
+                    // teardown
+                    this._telemetryContext.measurements = null;
+                }
+            });
+
     }
 
-    private getTestEventEnvelope(properties?: Object) {
-        var event = new Microsoft.ApplicationInsights.Telemetry.Event('Test Event', properties);
+
+    private getTestEventEnvelope(properties?: Object, measurements?: Object) {
+        var event = new Microsoft.ApplicationInsights.Telemetry.Event('Test Event', properties, measurements);
         var eventData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.Event>(Microsoft.ApplicationInsights.Telemetry.Event.dataType, event);
         var eventEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(eventData, Microsoft.ApplicationInsights.Telemetry.Event.envelopeType);
         return eventEnvelope;

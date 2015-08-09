@@ -21,7 +21,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             receivedResponse: false,
             domProcessing: false,
             properties: false,
-            measurement: false
+            measurements: false
         };
 
         /**

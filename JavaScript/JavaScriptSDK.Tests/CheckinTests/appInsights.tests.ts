@@ -19,7 +19,8 @@ class AppInsightsTests extends TestClass {
             disableTelemetry: false,
             verboseLogging: false,
             diagnosticLogInterval: 1000,
-            properties: null
+            properties: null,
+            measurements: null
         };
 
         // set default values

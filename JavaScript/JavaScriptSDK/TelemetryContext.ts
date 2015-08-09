@@ -18,6 +18,7 @@ module Microsoft.ApplicationInsights {
         sessionRenewalMs: () => number;
         sessionExpirationMs: () => number;
         properties: () => Object;
+        measurements: () => Object;
     }
 
     export class TelemetryContext {
@@ -71,6 +72,11 @@ module Microsoft.ApplicationInsights {
         public properties;
 
         /**
+        * Custom measurements added to all telemetry items (implementation of the TelemetryInitializer concept).
+        */
+        public measurements;
+
+        /**
          * The session manager that manages session on the base of cookies.
          */
         public _sessionManager: Microsoft.ApplicationInsights.Context._SessionManager;
@@ -92,6 +98,7 @@ module Microsoft.ApplicationInsights {
                 this.session = new Context.Session();
                 this.sample = new Context.Sample();
                 this.properties = config.properties();
+                this.measurements = config.measurements();
             }
         }
 
@@ -139,6 +146,7 @@ module Microsoft.ApplicationInsights {
             this._applySampleContext(envelope, this.sample);
             this._applyUserContext(envelope, this.user);
             this._applyCustomProperties(envelope);
+            this._applyCustomMeasurements(envelope);
 
             envelope.iKey = this._config.instrumentationKey();
 
@@ -163,6 +171,18 @@ module Microsoft.ApplicationInsights {
                 Object.getOwnPropertyNames(this.properties).forEach((val, index, array) => {
                     if (telemetryItem.properties[val] === undefined) {
                         telemetryItem.properties[val] = this.properties[val];
+                    }
+                });
+            }
+        }
+
+        private _applyCustomMeasurements(envelope: Microsoft.Telemetry.Envelope) {
+            if (this.measurements && envelope && envelope.data && (<any>envelope.data).baseData) {
+                var telemetryItem = (<any>envelope.data).baseData;
+                telemetryItem.measurements = telemetryItem.measurements || {};
+                Object.getOwnPropertyNames(this.measurements).forEach((val, index, array) => {
+                    if (telemetryItem.measurements[val] === undefined) {
+                        telemetryItem.measurements[val] = this.measurements[val];
                     }
                 });
             }

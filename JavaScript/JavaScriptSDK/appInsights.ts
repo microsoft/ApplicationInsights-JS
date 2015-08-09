@@ -24,6 +24,7 @@ module Microsoft.ApplicationInsights {
         verboseLogging: boolean;
         diagnosticLogInterval: number;
         properties: Object;
+        measurements: Object;
     }
 
     /**
@@ -68,6 +69,7 @@ module Microsoft.ApplicationInsights {
                 maxBatchInterval: () => this.config.maxBatchInterval,
                 disableTelemetry: () => this.config.disableTelemetry,
                 properties: () => this.config.properties,
+                measurements: () => this.config.measurements
             }
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
