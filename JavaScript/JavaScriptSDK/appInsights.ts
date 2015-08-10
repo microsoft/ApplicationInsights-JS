@@ -186,7 +186,9 @@ module Microsoft.ApplicationInsights {
                             this.sendPageViewInternal(
                                 name,
                                 url,
-                                pageViewPerformance.isValid ? +pageViewPerformance.perfTotal : durationMs,
+                                pageViewPerformance.isValid && !isNaN(<any>pageViewPerformance.duration) ?
+                                    +pageViewPerformance.duration :
+                                    durationMs,
                                 properties,
                                 measurements);
                             
