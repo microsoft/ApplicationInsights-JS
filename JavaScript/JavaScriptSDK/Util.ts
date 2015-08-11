@@ -89,6 +89,89 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
+         * Gets the localStorage object if available
+         * @return {Storage} - Returns the storage object if available else returns null
+         */
+        private static _getSessionStorageObject(): Storage {
+            try {
+                if (window.sessionStorage) {
+                    return window.sessionStorage;
+                } else {
+                    return null;
+                }
+            } catch (e) {
+                console.warn('Failed to get client session storage: ' + e.message);
+                return null;
+            }
+        }
+
+        /**
+         *  Check if the browser supports local storage.
+         *
+         *  @returns {boolean} True if local storage is supported.
+         */
+        public static canUseSessionStorage(): boolean {
+            return !!Util._getSessionStorageObject();
+        }
+
+        /**
+         *  Get an object from the browser's local storage
+         *
+         *  @param {string} name - the name of the object to get from storage
+         *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
+         */
+        public static getSessionStorage(name: string): string {
+            var storage = Util._getSessionStorageObject();
+            if (storage !== null) {
+                try {
+                    return storage.getItem(name);
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed read of local storage.");
+                }
+            }
+            return null;
+        }
+
+        /**
+         *  Set the contents of an object in the browser's local storage
+         *
+         *  @param {string} name - the name of the object to set in storage
+         *  @param {string} data - the contents of the object to set in storage
+         *  @returns {boolean} True if the storage object could be written.
+         */
+        public static setSessionStorage(name: string, data: string): boolean {
+            var storage = Util._getSessionStorageObject();
+            if (storage !== null) {
+                try {
+                    storage.setItem(name, data);
+                    return true;
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed write to local storage.");
+                }
+            }
+            return false;
+        }
+
+        /**
+         *  Remove an object from the browser's local storage
+         *
+         *  @param {string} name - the name of the object to remove from storage
+         *  @returns {boolean} True if the storage object could be removed.
+         */
+        public static removeSessionStorage(name: string): boolean {
+            var storage = Util._getSessionStorageObject();
+            if (storage !== null) {
+                try {
+                    storage.removeItem(name);
+                    return true;
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed removal of local storage item.");
+                }
+            }
+            return false;
+        }
+
+        /**
          * helper method to set userId and sessionId cookie
          */
         public static setCookie(name, value) {

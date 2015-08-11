@@ -2,7 +2,7 @@
 /// <reference path="./Telemetry/Common/Data.ts"/>
 /// <reference path="./Util.ts"/>
 /// <reference path="./Contracts/Generated/SessionState.ts"/>
-/// <reference path="./Context/PageVisitTimeManager.ts"/>
+/// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
 
 
 module Microsoft.ApplicationInsights {
@@ -37,7 +37,7 @@ module Microsoft.ApplicationInsights {
 
         private _eventTracking: Timing;
         private _pageTracking: Timing;
-        private _pageVisitTimeManager: Microsoft.ApplicationInsights.Context.PageVisitTimeManager;
+        private _pageVisitTimeManager: Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager;
 
         public config: IConfig;
         public context: TelemetryContext;
@@ -95,7 +95,8 @@ module Microsoft.ApplicationInsights {
                 this.context.track(envelope);
             }
 
-            this._pageVisitTimeManager = new Microsoft.ApplicationInsights.Context.PageVisitTimeManager();
+            this._pageVisitTimeManager = new ApplicationInsights.Telemetry.PageVisitTimeManager(
+                (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
         }
 
         /**
@@ -135,7 +136,7 @@ module Microsoft.ApplicationInsights {
                 this._pageTracking.stop(name, url, properties, measurements);
 
                 if (this.config.autoTrackPageVisitTime) {
-                    this.autoTrackPageVisitTime(name, url);
+                    this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
                 }
 
             } catch (e) {
@@ -202,7 +203,7 @@ module Microsoft.ApplicationInsights {
                 this.context.track(pageViewEnvelope);
 
                 if (this.config.autoTrackPageVisitTime) {
-                    this.autoTrackPageVisitTime(name, url);
+                    this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
                 }
 
                 setTimeout(() => {
@@ -323,27 +324,13 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
-        * Log a page visit time
-        * @param    pageName    Name of page
-        * @param    pageVisitDuration Duration of visit to the page in milleseconds
-        */
-        public trackPageVisitTime(pageName: string, pageUrl: string, pageVisitTime: number) {
+       * Log a page visit time
+       * @param    pageName    Name of page
+       * @param    pageVisitDuration Duration of visit to the page in milleseconds
+       */
+        private trackPageVisitTime(pageName: string, pageUrl: string, pageVisitTime: number) {
             var properties = { PageName: pageName, PageUrl: pageUrl };
             this.trackMetric("PageVisitTime", pageVisitTime, 1, pageVisitTime, pageVisitTime, properties);
-        }
-
-        private autoTrackPageVisitTime(pageName: string, pageUrl: string) {
-            try {
-                // Restart timer for new page view
-                var prevPageVisitTimeData = this._pageVisitTimeManager.restartPageVisitTimer(pageName, pageUrl);
-
-                // If there was a page already being timed, track the visit time for it now.
-                if (prevPageVisitTimeData !== null && prevPageVisitTimeData !== undefined) {
-                    this.trackPageVisitTime(prevPageVisitTimeData.pageName, prevPageVisitTimeData.pageUrl, prevPageVisitTimeData.pageVisitTime);
-                }
-            } catch (e) {
-                _InternalLogging.warnToConsole("TestCategoryFilter failed, metric will not be collected: " + Util.dump(e));
-            }
         }
 
         /**
