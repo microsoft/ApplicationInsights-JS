@@ -18,8 +18,10 @@ class AppInsightsTests extends TestClass {
             autoCollectErrors: false,
             disableTelemetry: false,
             verboseLogging: false,
-            diagnosticLogInterval: 1000
-        };
+            diagnosticLogInterval: 1000,
+            autoTrackPageVisitTime: false
+
+    };
 
         // set default values
         return snippet;
