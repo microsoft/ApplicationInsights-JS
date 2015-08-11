@@ -4,15 +4,20 @@ class PageVisitTimeManagerTests extends TestClass {
 
     private throwInternalNonUserActionableSpy;
     private throwInternalUserActionableSpy;
+    private getStorageObjectStub;
 
     /** Method called before the start of each test method */
     public testInitialize() {
+        var storage = this.getMockStorage();
+        this.getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getSessionStorageObject",() => storage);
+
         this.throwInternalNonUserActionableSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
         this.throwInternalUserActionableSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
     }
 
     /** Method called after each test method has completed */
     public testCleanup() {
+        this.getStorageObjectStub.restore();
         this.throwInternalNonUserActionableSpy.restore();
         this.throwInternalUserActionableSpy.restore();
     }
@@ -34,14 +39,30 @@ class PageVisitTimeManagerTests extends TestClass {
         };
 
         this.testCase({
-            name: "PageVisitTimeManager: When trackPreviousPageVisit is called multiple times, the tracking delegate is called with correct details",
+            name: "PageVisitTimeManager: When trackPreviousPageVisit is called once, the tracking delegate is not called since there are no previous pages",
             test: () => {
 
                 //setup
-                // Mock storage so this will work in all browsers for tests
-                var storage = this.getMockStorage();
-                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getSessionStorageObject",() => storage);
+                var object = { method: function () { } };
+                var spy = sinon.spy(object, "method");
+                var pageVisitTimeManager = new Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager(spy);
 
+
+                //act
+                pageVisitTimeManager.trackPreviousPageVisit(testValues.page1Name, testValues.page1Url);
+                this.clock.tick(testValues.page1ViewTime);
+
+                // verify
+                Assert.ok(spy.notCalled, "telemetry wasn't sent");
+            }
+        });
+
+
+        this.testCase({
+            name: "PageVisitTimeManager: When trackPreviousPageVisit is called twice, the tracking delegate is called once with correct details",
+            test: () => {
+
+                //setup
                 var object = { method: function () { } };
                 var spy = sinon.spy(object, "method");
                 var pageVisitTimeManager = new Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager(spy);
@@ -52,19 +73,11 @@ class PageVisitTimeManagerTests extends TestClass {
                 this.clock.tick(testValues.page1ViewTime);
 
                 pageVisitTimeManager.trackPreviousPageVisit(testValues.page2Name, testValues.page2Url);
-                this.clock.tick(testValues.page2ViewTime);
-
-                pageVisitTimeManager.trackPreviousPageVisit(testValues.page3Name, testValues.page3Url);
-                this.clock.tick(testValues.page3ViewTime);
-
+               
                 // verify
-                Assert.ok(spy.calledTwice, "telemetry sent only twice");
+                Assert.ok(spy.calledOnce, "telemetry sent once");
                 Assert.ok(spy.calledWith(testValues.page1Name, testValues.page1Url, testValues.page1ViewTime));
-                Assert.ok(spy.calledWith(testValues.page2Name, testValues.page2Url, testValues.page2ViewTime));
                 
-                getStorageObjectStub.restore();
-
-
             }
         });
 
@@ -73,33 +86,33 @@ class PageVisitTimeManagerTests extends TestClass {
             test: () => {
 
                 //setup
-                // Mock storage so this will work in all browsers for tests
-                var storage = this.getMockStorage();
-                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getSessionStorageObject",() => storage);
-
-                var object = { method: function () { } };
-                var spy = sinon.spy(object, "method");
-                var pageVisitTimeManager = new Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager(spy);
+                var pageVisitTimeManager = new Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager(() => {});
 
                 //act
                 pageVisitTimeManager.startPageVisitTimer(testValues.page1Name, testValues.page1Url);
                 this.clock.tick(testValues.page1ViewTime);
                 var page1VisitData = pageVisitTimeManager.stopPageVisitTimer();
 
-                pageVisitTimeManager.startPageVisitTimer(testValues.page2Name, testValues.page2Url);
-                this.clock.tick(testValues.page2ViewTime);
-                var page2VisitData = pageVisitTimeManager.stopPageVisitTimer();
-
-               //verify
+                //verify
                 Assert.equal(testValues.page1Name, page1VisitData.pageName);
                 Assert.equal(testValues.page1Url, page1VisitData.pageUrl);
                 Assert.equal(testValues.page1ViewTime, page1VisitData.pageVisitTime);
+            }
+        });
 
-                Assert.equal(testValues.page2Name, page2VisitData.pageName);
-                Assert.equal(testValues.page2Url, page2VisitData.pageUrl);
-                Assert.equal(testValues.page2ViewTime, page2VisitData.pageVisitTime);
+        this.testCase({
+            name: "PageVisitTimeManager: first call to restart returns null",
+            test: () => {
 
-                getStorageObjectStub.restore();
+                //setup
+                var pageVisitTimeManager = new Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager(() => { });
+
+                //act
+                var nullPageData = pageVisitTimeManager.restartPageVisitTimer(testValues.page1Name, testValues.page1Url);
+                
+                //verify
+                Assert.equal(null, nullPageData);
+                
             }
         });
 
@@ -108,34 +121,18 @@ class PageVisitTimeManagerTests extends TestClass {
             test: () => {
 
                 //setup
-                // Mock storage so this will work in all browsers for tests
-                var storage = this.getMockStorage();
-                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getSessionStorageObject",() => storage);
-
-                var object = { method: function () { } };
-                var spy = sinon.spy(object, "method");
-                var pageVisitTimeManager = new Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager(spy);
+                var pageVisitTimeManager = new Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager(() => { });
 
                 //act
-                var nullPageData = pageVisitTimeManager.restartPageVisitTimer(testValues.page1Name, testValues.page1Url);
+                pageVisitTimeManager.restartPageVisitTimer(testValues.page1Name, testValues.page1Url);
                 this.clock.tick(testValues.page1ViewTime);
                 
                 var page1VisitData = pageVisitTimeManager.restartPageVisitTimer(testValues.page2Name, testValues.page2Url);
-                this.clock.tick(testValues.page2ViewTime);
-                var page2VisitData = pageVisitTimeManager.restartPageVisitTimer(testValues.page3Name, testValues.page3Url);
-
+               
                 //verify
-                Assert.equal(null, nullPageData);
-
                 Assert.equal(testValues.page1Name, page1VisitData.pageName);
                 Assert.equal(testValues.page1Url, page1VisitData.pageUrl);
                 Assert.equal(testValues.page1ViewTime, page1VisitData.pageVisitTime);
-
-                Assert.equal(testValues.page2Name, page2VisitData.pageName);
-                Assert.equal(testValues.page2Url, page2VisitData.pageUrl);
-                Assert.equal(testValues.page2ViewTime, page2VisitData.pageVisitTime);
-
-                getStorageObjectStub.restore();
             }
         });
 
@@ -146,45 +143,32 @@ class PageVisitTimeManagerTests extends TestClass {
 
                 //setup
                 // Mock storage so this will work in all browsers for tests
-                var storage = this.getMockStorage();
-                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getSessionStorageObject",() => storage);
-
-                var object = { method: function () { } };
-                var spy = sinon.spy(object, "method");
-                var pageVisitTimeManager = new Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager(spy);
+                var pageVisitTimeManager = new Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager(() => { });
 
                 //act
                 var retval = pageVisitTimeManager.stopPageVisitTimer();
                 Assert.equal(null, retval);
                
-                getStorageObjectStub.restore();
             }
         });
 
         this.testCase({
-            name: "PageVisitTimeManager: startPageVisitTime fails if called twice without a call to stop",
+            name: "PageVisitTimeManager: startPageVisitTime fails silently if called twice without a call to stop",
             test: () => {
-
+                
                 //setup
-                // Mock storage so this will work in all browsers for tests
-                var storage = this.getMockStorage();
-                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getSessionStorageObject",() => storage);
-
-                var object = { method: function () { } };
-                var spy = sinon.spy(object, "method");
-                var pageVisitTimeManager = new Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager(spy);
+                var pageVisitTimeManager = new Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager(() => {});
 
                 //act
                 try {
                     pageVisitTimeManager.startPageVisitTimer(testValues.page1Name, testValues.page1Url);
                     pageVisitTimeManager.startPageVisitTimer(testValues.page1Name, testValues.page1Url);
-                    Assert.ok(false);
+                    Assert.ok(true);
 
                 } catch (e) {
-                    Assert.ok(true);
+                    Assert.ok(false);
                 }
                
-                getStorageObjectStub.restore();
             }
         });
     }

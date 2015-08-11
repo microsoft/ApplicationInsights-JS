@@ -46,11 +46,15 @@ module Microsoft.ApplicationInsights.Telemetry {
          * @returns {PageVisitData} Page visit data (including duration) of pageName from last call to start or restart, if exists. Null if not. 
          */
         public restartPageVisitTimer(pageName: string, pageUrl: string) {
+            try {
+                var prevPageVisitData = this.stopPageVisitTimer();
+                this.startPageVisitTimer(pageName, pageUrl);
 
-            var prevPageVisitData = this.stopPageVisitTimer();
-            this.startPageVisitTimer(pageName, pageUrl);
-
-            return prevPageVisitData;
+                return prevPageVisitData;
+            } catch (e) {
+                _InternalLogging.warnToConsole("Call to restart failed: " + Util.dump(e));
+                return null;
+            }
         }
 
         /**
@@ -59,14 +63,19 @@ module Microsoft.ApplicationInsights.Telemetry {
          * @returns {} 
          */
         public startPageVisitTimer(pageName: string, pageUrl: string) {
-            if (Util.canUseSessionStorage()) {
-                if (Util.getSessionStorage(this.prevPageVisitDataKeyName) != null) {
-                    throw new Error("Cannot call startPageVisit consecutively without first calling stopPageVisit");
-                }
+            try {
+                if (Util.canUseSessionStorage()) {
+                    if (Util.getSessionStorage(this.prevPageVisitDataKeyName) != null) {
+                        throw new Error("Cannot call startPageVisit consecutively without first calling stopPageVisit");
+                    }
 
-                var currPageVisitData = new PageVisitData(pageName, pageUrl);
-                var currPageVisitDataStr = JSON.stringify(currPageVisitData);
-                Util.setSessionStorage(this.prevPageVisitDataKeyName, currPageVisitDataStr);
+                    var currPageVisitData = new PageVisitData(pageName, pageUrl);
+                    var currPageVisitDataStr = JSON.stringify(currPageVisitData);
+                    Util.setSessionStorage(this.prevPageVisitDataKeyName, currPageVisitDataStr);
+                }
+            } catch (e) {
+                //TODO: Remove this catch in next phase, since if start is called twice in a row the exception needs to be propagated out
+                _InternalLogging.warnToConsole("Call to start failed: " + Util.dump(e));
             }
         }
 
@@ -75,30 +84,35 @@ module Microsoft.ApplicationInsights.Telemetry {
          * @returns {PageVisitData} Page visit data (including duration) of pageName from call to start, if exists. Null if not.  
          */
         public stopPageVisitTimer() {
-            if (Util.canUseSessionStorage()) {
+            try {
+                if (Util.canUseSessionStorage()) {
 
-                // Define end time of page's visit
-                var pageVisitEndTime = Date.now();
+                    // Define end time of page's visit
+                    var pageVisitEndTime = Date.now();
 
-                // Try to retrieve  page name and start time from session storage
-                var pageVisitDataJsonStr = Util.getSessionStorage(this.prevPageVisitDataKeyName);
-                if (pageVisitDataJsonStr) {
+                    // Try to retrieve  page name and start time from session storage
+                    var pageVisitDataJsonStr = Util.getSessionStorage(this.prevPageVisitDataKeyName);
+                    if (pageVisitDataJsonStr) {
 
-                    // if previous page data exists, set end time of visit
-                    var prevPageVisitData: PageVisitData = JSON.parse(pageVisitDataJsonStr);
-                    prevPageVisitData.pageVisitTime = pageVisitEndTime - prevPageVisitData.pageVisitStartTime;
+                        // if previous page data exists, set end time of visit
+                        var prevPageVisitData: PageVisitData = JSON.parse(pageVisitDataJsonStr);
+                        prevPageVisitData.pageVisitTime = pageVisitEndTime - prevPageVisitData.pageVisitStartTime;
 
-                    // Remove data from storage since we already used it
-                    Util.removeSessionStorage(this.prevPageVisitDataKeyName);
+                        // Remove data from storage since we already used it
+                        Util.removeSessionStorage(this.prevPageVisitDataKeyName);
 
-                    // Return page visit data
-                    return prevPageVisitData;
-                } else {
-                    return null;
+                        // Return page visit data
+                        return prevPageVisitData;
+                    } else {
+                        return null;
+                    }
+
                 }
-
+                return null;
+            } catch (e) {
+                _InternalLogging.warnToConsole("Stop page visit timer failed: " + Util.dump(e));
+                return null
             }
-            return null;
         }
     }
 
