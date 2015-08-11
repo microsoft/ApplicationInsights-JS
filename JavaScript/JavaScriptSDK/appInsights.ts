@@ -9,7 +9,7 @@ module Microsoft.ApplicationInsights {
     
     "use strict";
 
-    export var Version = "0.15.20150721.4";
+    export var Version = "0.16.20150810.0";
 
     export interface IConfig {
         instrumentationKey: string;
@@ -87,17 +87,22 @@ module Microsoft.ApplicationInsights {
 
             // initialize page view timing
             this._pageTracking = new Timing("trackPageView");
-            this._pageTracking.action = (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
-                var pageView = new Telemetry.PageView(name, url, duration, properties, measurements);
-                var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageView>(Telemetry.PageView.dataType, pageView);
-                var envelope = new Telemetry.Common.Envelope(data, Telemetry.PageView.envelopeType);
-
-                this.context.track(envelope);
+            this._pageTracking.action = (name, url, duration, properties, measurements) => {
+                this.sendPageViewInternal(name, url, duration, properties, measurements);
             }
 
             this._pageVisitTimeManager = new ApplicationInsights.Telemetry.PageVisitTimeManager(
                 (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
         }
+
+        private sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
+            var pageView = new Telemetry.PageView(name, url, duration, properties, measurements);
+            var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageView>(Telemetry.PageView.dataType, pageView);
+            var envelope = new Telemetry.Common.Envelope(data, Telemetry.PageView.envelopeType);
+
+            this.context.track(envelope);
+        }
+
 
         /**
          * Starts timing how long the user views a page or other item. Call this when the page opens. 
@@ -162,58 +167,66 @@ module Microsoft.ApplicationInsights {
                     url = window.location && window.location.href || "";
                 }
 
-                var durationMs = 0;
-                // check if timing data is available
-                if (Telemetry.PageViewPerformance.checkPageLoad() !== undefined) {
-                    // compute current duration (navigation start to now) for the pageViewTelemetry
-                    var startTime = window.performance.timing.navigationStart;
-                    durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-
-                    // poll for page load completion and send page view performance data when ready
-                    var handle = setInterval(() => {
-                        try {
-                            // abort this check if we have not finished loading after 1 minute
-                            durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-                            var timingDataReady = Telemetry.PageViewPerformance.checkPageLoad();
-                            var timeoutReached = durationMs > 60000;
-                            if (timeoutReached || timingDataReady) {
-                                clearInterval(handle);
-                                durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-
-                                var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements);
-                                if (pageViewPerformance.isValid) {
-                                    var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
-                                        Telemetry.PageViewPerformance.dataType, pageViewPerformance);
-                                    var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
-                                    this.context.track(pageViewPerformanceEnvelope);
-                                    this.context._sender.triggerSend();
-                                }
-                            }
-                        } catch (e) {
-                            _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed on page load calculation: " + Util.dump(e));
-                        }
-                    }, 100);
-                }
-
-                // track the initial page view
-                var pageView = new Telemetry.PageView(name, url, durationMs, properties, measurements);
-                var pageViewData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageView>(Telemetry.PageView.dataType, pageView);
-                var pageViewEnvelope = new Telemetry.Common.Envelope(pageViewData, Telemetry.PageView.envelopeType);
-
-                this.context.track(pageViewEnvelope);
+                this.trackPageViewInternal(name, url, properties, measurements);
 
                 if (this.config.autoTrackPageVisitTime) {
                     this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
                 }
 
-                setTimeout(() => {
-                    // fire this event as soon as initial code execution completes in case the user navigates away
-                    this.context._sender.triggerSend();
-                }, 100);
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed, page view will not be collected: " + Util.dump(e));
             }
         }
+
+        private trackPageViewInternal(name?: string, url?: string, properties?: Object, measurements?: Object) {
+            var durationMs = 0;
+            // check if timing data is available
+            if (Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
+                // compute current duration (navigation start to now) for the pageViewTelemetry
+                var startTime = window.performance.timing.navigationStart;
+                durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
+
+                // poll for page load completion and send page view performance data when ready
+                var handle = setInterval(() => {
+                    try {
+                        // abort this check if we have not finished loading after 1 minute
+                        durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
+                        var timingDataReady = Telemetry.PageViewPerformance.isPerformanceTimingDataReady();
+                        var timeoutReached = durationMs > 60000;
+                        if (timeoutReached || timingDataReady) {
+                            clearInterval(handle);
+                            durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
+                            var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements);
+
+                            // Sending page view when navigation timing (i.e. client perf data) is ready.
+                            // We used to report page view duration separtely and it caused confusion - 
+                            // how is that different from client perf duration?
+                            // So we made these 2 metrics to have the same value (by reporting it at the same time).
+                            this.sendPageViewInternal(
+                                name,
+                                url,
+                                pageViewPerformance.isValid && !isNaN(<any>pageViewPerformance.duration) ?
+                                +pageViewPerformance.duration :
+                                durationMs,
+                                properties,
+                                measurements);
+
+                            if (pageViewPerformance.isValid) {
+                                var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
+                                    Telemetry.PageViewPerformance.dataType, pageViewPerformance);
+                                var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
+                                this.context.track(pageViewPerformanceEnvelope);
+                            }
+
+                            this.context._sender.triggerSend();
+                        }
+                    } catch (e) {
+                        _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed on page load calculation: " + Util.dump(e));
+                    }
+                }, 100);
+            }
+        }
+
 
         /**
          * Start timing an extended event. Call {@link stopTrackEvent} to log the event when it ends.
@@ -321,7 +334,7 @@ module Microsoft.ApplicationInsights {
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "trackTrace failed, trace will not be collected: " + Util.dump(e));
             }
-        }
+            }
 
         /**
        * Log a page visit time
@@ -396,7 +409,7 @@ module Microsoft.ApplicationInsights {
          */
         public _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
             try {
-                var properties = { url : url ? url : document.URL };
+                var properties = { url: url ? url : document.URL };
 
                 if (Util.isCrossOriginError(message, url, lineNumber, columnNumber, error)) {
                     this.SendCORSException(properties);
@@ -447,14 +460,14 @@ module Microsoft.ApplicationInsights {
 
         public stop(name: string, url: string, properties?: Object, measurements?: Object) {
             var start = this._events[name];
-            if (start) {
-                var end = +new Date;
-                var duration = Telemetry.PageViewPerformance.getDuration(start, end);
-                this.action(name, url, duration, properties, measurements);
-            } else {
+            if (isNaN(start)) {
                 _InternalLogging.throwInternalUserActionable(
                     LoggingSeverity.WARNING,
                     "stop" + this._name + " was called without a corresponding start" + this._name + " . Event name is '" + name + "'");
+            } else {
+                var end = +new Date;
+                var duration = Telemetry.PageViewPerformance.getDuration(start, end);
+                this.action(name, url, duration, properties, measurements);
             }
 
             delete this._events[name];

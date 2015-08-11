@@ -23,6 +23,7 @@ You add a short snippet of code to the page, which pulls in the rest of the SDK.
 
 * [How to set up web page tracking](https://azure.microsoft.com/documentation/articles/app-insights-javascript/)
 * [Overview of the API and examples](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/)
+* Non-minified built code: [ai.js](http://az416426.vo.msecnd.net/scripts/a/ai.js)
 
 ## class AppInsights
 
