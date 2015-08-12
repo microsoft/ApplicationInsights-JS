@@ -215,6 +215,105 @@ class TelemetryContextTests extends TestClass {
                 }
             });
 
+        this.testCase({
+            name: "TelemetryContext: onInitializeTelemetry is called within track() and gets the envelope as an argument",
+            test: () => {
+                var eventEnvelope = this.getTestEventEnvelope();
+
+                var telemetryInitializer = {
+                    onInitializeTelemetry: (envelope) => { }
+                }
+
+                this._telemetryContext.onInitializeTelemetry = <any>telemetryInitializer.onInitializeTelemetry;
+                var spy = sinon.spy(telemetryInitializer, "onInitializeTelemetry");
+                    
+                // act
+                this._telemetryContext.track(eventEnvelope);
+
+                // verify
+                Assert.ok(spy.calledOnce, "telemetryInitializer was called");
+                Assert.ok(eventEnvelope === spy.args[0][0]);
+
+                // teardown
+                spy.restore();
+                this._telemetryContext.onInitializeTelemetry = undefined;
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: onInitializeTelemetry changes the envelope props and sender gets them",
+            test: () => {
+                var nameOverride = "my unique name";
+                var eventEnvelope = this.getTestEventEnvelope();
+                Assert.notEqual(eventEnvelope.name, nameOverride);
+                var telemetryInitializer = {
+                    onInitializeTelemetry: (envelope: Microsoft.ApplicationInsights.Telemetry.Common.Envelope) => {
+                        envelope.name = nameOverride;
+                        return true;
+                    }
+                }
+
+                this._telemetryContext.onInitializeTelemetry = <any>telemetryInitializer.onInitializeTelemetry;
+                var spy = sinon.spy(this._telemetryContext._sender, "send");
+                    
+                // act
+                this._telemetryContext.track(eventEnvelope);
+
+                // verify
+                Assert.ok(spy.calledOnce, "sender was called");
+                Assert.ok(eventEnvelope === spy.args[0][0]);
+                Assert.equal(nameOverride,
+                    (<Microsoft.ApplicationInsights.Telemetry.Common.Envelope>spy.args[0][0]).name);
+
+                // teardown
+                spy.restore();
+                this._telemetryContext.onInitializeTelemetry = undefined;
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: onInitializeTelemetry is null means envelope goes straight to the sender",
+            test: () => {
+                var eventEnvelope = this.getTestEventEnvelope();
+                var spy = sinon.spy(this._telemetryContext._sender, "send");
+                    
+                // act
+                this._telemetryContext.track(eventEnvelope);
+
+                // verify
+                Assert.ok(spy.calledOnce, "sender was called");
+                Assert.ok(eventEnvelope === spy.args[0][0]);
+
+                // teardown
+                spy.restore();
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: onInitializeTelemetry returns false means item is not sent",
+            test: () => {
+                var eventEnvelope = this.getTestEventEnvelope();
+                var telemetryInitializer = {
+                    onInitializeTelemetry: (envelope) => {
+                        return false;
+                    }
+                }
+
+                this._telemetryContext.onInitializeTelemetry = <any>telemetryInitializer.onInitializeTelemetry;
+                var spy = sinon.spy(this._telemetryContext._sender, "send");
+                    
+                // act
+                this._telemetryContext.track(eventEnvelope);
+
+                // verify
+                Assert.ok(spy.notCalled, "sender should not be called");
+                
+                // teardown
+                spy.restore();
+                this._telemetryContext.onInitializeTelemetry = undefined;
+            }
+        });
+
     }
 
 

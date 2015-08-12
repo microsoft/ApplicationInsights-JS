@@ -75,6 +75,8 @@ module Microsoft.ApplicationInsights {
         * Custom measurements added to all telemetry items (implementation of the TelemetryInitializer concept).
         */
         public measurements;
+        
+        public onInitializeTelemetry: (envelope: Telemetry.Common.Envelope) => boolean;
 
         /**
          * The session manager that manages session on the base of cookies.
@@ -150,7 +152,18 @@ module Microsoft.ApplicationInsights {
 
             envelope.iKey = this._config.instrumentationKey();
 
-            this._sender.send(envelope);
+            if (this.onInitializeTelemetry) {
+                var sendItem = true;
+                try {
+                    sendItem = this.onInitializeTelemetry(envelope) === true;
+                } catch (e) {
+                    _InternalLogging.throwInternalUserActionable(
+                        LoggingSeverity.CRITICAL,
+                        "onInitializeTelemetry() failed with error, an attempt will be made to send the telemetry item but the data may be corrupted: " + Util.dump(e));
+                }
+
+                this._sender.send(envelope);
+            }
         }
 
         private static _sessionHandler(tc: TelemetryContext, sessionState: AI.SessionState, timestamp: number) {
