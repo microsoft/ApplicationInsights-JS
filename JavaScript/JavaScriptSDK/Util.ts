@@ -43,7 +43,7 @@ module Microsoft.ApplicationInsights {
                 try {
                     return storage.getItem(name);
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed read of local storage." + Util.dump(e));
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed read of local storage." + Util.dump(e));
                 }
             }
             return null;
@@ -63,7 +63,7 @@ module Microsoft.ApplicationInsights {
                     storage.setItem(name, data);
                     return true;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed write to local storage." + Util.dump(e));
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed write to local storage." + Util.dump(e));
                 }
             }
             return false;
@@ -82,7 +82,7 @@ module Microsoft.ApplicationInsights {
                     storage.removeItem(name);
                     return true;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed removal of local storage item." + Util.dump(e));
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed removal of local storage item." + Util.dump(e));
                 }
             }
             return false;
@@ -106,16 +106,16 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
-         *  Check if the browser supports local storage.
+         *  Check if the browser supports session storage.
          *
-         *  @returns {boolean} True if local storage is supported.
+         *  @returns {boolean} True if session storage is supported.
          */
         public static canUseSessionStorage(): boolean {
             return !!Util._getSessionStorageObject();
         }
 
         /**
-         *  Get an object from the browser's local storage
+         *  Get an object from the browser's session storage
          *
          *  @param {string} name - the name of the object to get from storage
          *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
@@ -126,14 +126,14 @@ module Microsoft.ApplicationInsights {
                 try {
                     return storage.getItem(name);
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed read of local storage." + Util.dump(e));
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed read of session storage." + Util.dump(e));
                 }
             }
             return null;
         }
 
         /**
-         *  Set the contents of an object in the browser's local storage
+         *  Set the contents of an object in the browser's session storage
          *
          *  @param {string} name - the name of the object to set in storage
          *  @param {string} data - the contents of the object to set in storage
@@ -146,14 +146,14 @@ module Microsoft.ApplicationInsights {
                     storage.setItem(name, data);
                     return true;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed write to local storage." + Util.dump(e));
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed write to session storage." + Util.dump(e));
                 }
             }
             return false;
         }
 
         /**
-         *  Remove an object from the browser's local storage
+         *  Remove an object from the browser's session storage
          *
          *  @param {string} name - the name of the object to remove from storage
          *  @returns {boolean} True if the storage object could be removed.
@@ -165,7 +165,7 @@ module Microsoft.ApplicationInsights {
                     storage.removeItem(name);
                     return true;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed removal of local storage item." + Util.dump(e));
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed removal of session storage item." + Util.dump(e));
                 }
             }
             return false;

@@ -170,7 +170,7 @@ module Microsoft.ApplicationInsights.Context {
 
             // If this browser does not support local storage, fire an internal log to keep track of it at this point
             if (!Util.canUseLocalStorage()) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser does not support local storage. Session durations will be inaccurate.");
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser does not support local storage. Session durations will be inaccurate.");
             }
         }
 
