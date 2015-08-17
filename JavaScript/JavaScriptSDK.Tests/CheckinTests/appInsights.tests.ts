@@ -19,6 +19,7 @@ class AppInsightsTests extends TestClass {
             disableTelemetry: false,
             verboseLogging: false,
             diagnosticLogInterval: 1000,
+            autoTrackPageVisitTime: false,
             properties: null,
             measurements: null
         };

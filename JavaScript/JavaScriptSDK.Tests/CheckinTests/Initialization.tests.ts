@@ -25,6 +25,7 @@ class InitializationTests extends TestClass {
             disableTelemetry: false,
             verboseLogging: true,
             diagnosticLogInterval: 1,
+            autoTrackPageVisitTime: false,
             properties: null,
             measurements: null
         };
@@ -125,7 +126,7 @@ class InitializationTests extends TestClass {
 
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
                 var appInsightsLocal = init.loadAppInsights();
-                var trackTraceSpy = sinon.spy(appInsightsLocal, "trackTrace");
+                var trackTraceSpy = sinon.stub(appInsightsLocal, "trackTrace");
 
                 var queue: Array<string> = Microsoft.ApplicationInsights._InternalLogging["queue"];
                 var length = queue.length;

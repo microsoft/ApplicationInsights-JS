@@ -2,11 +2,14 @@
 /// <reference path="./Telemetry/Common/Data.ts"/>
 /// <reference path="./Util.ts"/>
 /// <reference path="./Contracts/Generated/SessionState.ts"/>
+/// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
+
 
 module Microsoft.ApplicationInsights {
+    
     "use strict";
 
-    export var Version = "0.16.20150806.0";
+    export var Version = "0.16.20150810.0";
 
     export interface IConfig {
         instrumentationKey: string;
@@ -23,6 +26,7 @@ module Microsoft.ApplicationInsights {
         disableTelemetry: boolean;
         verboseLogging: boolean;
         diagnosticLogInterval: number;
+        autoTrackPageVisitTime: boolean;
         properties: Object;
         measurements: Object;
     }
@@ -35,6 +39,7 @@ module Microsoft.ApplicationInsights {
 
         private _eventTracking: Timing;
         private _pageTracking: Timing;
+        private _pageVisitTimeManager: Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager;
 
         public config: IConfig;
         public context: TelemetryContext;
@@ -89,6 +94,9 @@ module Microsoft.ApplicationInsights {
             this._pageTracking.action = (name, url, duration, properties, measurements) => {
                 this.sendPageViewInternal(name, url, duration, properties, measurements);
             }
+
+            this._pageVisitTimeManager = new ApplicationInsights.Telemetry.PageVisitTimeManager(
+                (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
         }
 
         private sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
@@ -98,6 +106,7 @@ module Microsoft.ApplicationInsights {
 
             this.context.track(envelope);
         }
+
 
         /**
          * Starts timing how long the user views a page or other item. Call this when the page opens. 
@@ -134,6 +143,11 @@ module Microsoft.ApplicationInsights {
                 }
 
                 this._pageTracking.stop(name, url, properties, measurements);
+
+                if (this.config.autoTrackPageVisitTime) {
+                    this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
+                }
+
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "stopTrackPage failed, page view will not be collected: " + Util.dump(e));
             }
@@ -158,6 +172,11 @@ module Microsoft.ApplicationInsights {
                 }
 
                 this.trackPageViewInternal(name, url, properties, measurements);
+
+                if (this.config.autoTrackPageVisitTime) {
+                    this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
+                }
+
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed, page view will not be collected: " + Util.dump(e));
             }
@@ -190,7 +209,9 @@ module Microsoft.ApplicationInsights {
                             this.sendPageViewInternal(
                                 name,
                                 url,
-                                pageViewPerformance.isValid ? +pageViewPerformance.perfTotal : durationMs,
+                                pageViewPerformance.isValid && !isNaN(<any>pageViewPerformance.duration) ?
+                                +pageViewPerformance.duration :
+                                durationMs,
                                 properties,
                                 measurements);
                             
@@ -209,6 +230,7 @@ module Microsoft.ApplicationInsights {
                 }, 100);
             }
         }
+
 
         /**
          * Start timing an extended event. Call {@link stopTrackEvent} to log the event when it ends.
@@ -289,9 +311,9 @@ module Microsoft.ApplicationInsights {
          * @param   min The smallest measurement in the sample. Defaults to the average.
          * @param   max The largest measurement in the sample. Defaults to the average.
          */
-        public trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number) {
+        public trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?:Object) {
             try {
-                var telemetry = new Telemetry.Metric(name, average, sampleCount, min, max);
+                var telemetry = new Telemetry.Metric(name, average, sampleCount, min, max, properties);
                 var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Metric>(Telemetry.Metric.dataType, telemetry);
                 var envelope = new Telemetry.Common.Envelope(data, Telemetry.Metric.envelopeType);
 
@@ -314,8 +336,18 @@ module Microsoft.ApplicationInsights {
 
                 this.context.track(envelope);
             } catch (e) {
-                _InternalLogging.warnToConsole("trackTrace failed, trace will not be collected: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "trackTrace failed, trace will not be collected: " + Util.dump(e));
             }
+            }
+
+        /**
+       * Log a page visit time
+       * @param    pageName    Name of page
+       * @param    pageVisitDuration Duration of visit to the page in milleseconds
+       */
+        private trackPageVisitTime(pageName: string, pageUrl: string, pageVisitTime: number) {
+            var properties = { PageName: pageName, PageUrl: pageUrl };
+            this.trackMetric("PageVisitTime", pageVisitTime, 1, pageVisitTime, pageVisitTime, properties);
         }
 
         /**
