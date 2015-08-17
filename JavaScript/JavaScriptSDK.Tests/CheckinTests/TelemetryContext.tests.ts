@@ -223,12 +223,11 @@ class TelemetryContextTests extends TestClass {
                 var telemetryInitializer = {
                     onInitializeTelemetry: (envelope) => { }
                 }
-
-                this._telemetryContext.onInitializeTelemetry = <any>telemetryInitializer.onInitializeTelemetry;
                 var spy = sinon.spy(telemetryInitializer, "onInitializeTelemetry");
+                this._telemetryContext.onInitializeTelemetry = <any>telemetryInitializer.onInitializeTelemetry;
                     
                 // act
-                this._telemetryContext.track(eventEnvelope);
+                (<any>this._telemetryContext)._track(eventEnvelope);
 
                 // verify
                 Assert.ok(spy.calledOnce, "telemetryInitializer was called");
@@ -254,19 +253,19 @@ class TelemetryContextTests extends TestClass {
                 }
 
                 this._telemetryContext.onInitializeTelemetry = <any>telemetryInitializer.onInitializeTelemetry;
-                var spy = sinon.spy(this._telemetryContext._sender, "send");
+                var stub = sinon.stub(this._telemetryContext._sender, "send");
                     
                 // act
-                this._telemetryContext.track(eventEnvelope);
+                (<any>this._telemetryContext)._track(eventEnvelope);
 
                 // verify
-                Assert.ok(spy.calledOnce, "sender was called");
-                Assert.ok(eventEnvelope === spy.args[0][0]);
+                Assert.ok(stub.calledOnce, "sender was called");
+                Assert.ok(eventEnvelope === stub.args[0][0]);
                 Assert.equal(nameOverride,
-                    (<Microsoft.ApplicationInsights.Telemetry.Common.Envelope>spy.args[0][0]).name);
+                    (<Microsoft.ApplicationInsights.Telemetry.Common.Envelope>stub.args[0][0]).name);
 
                 // teardown
-                spy.restore();
+                stub.restore();
                 this._telemetryContext.onInitializeTelemetry = undefined;
             }
         });
@@ -275,17 +274,17 @@ class TelemetryContextTests extends TestClass {
             name: "TelemetryContext: onInitializeTelemetry is null means envelope goes straight to the sender",
             test: () => {
                 var eventEnvelope = this.getTestEventEnvelope();
-                var spy = sinon.spy(this._telemetryContext._sender, "send");
+                var stub = sinon.stub(this._telemetryContext._sender, "send");
                     
                 // act
-                this._telemetryContext.track(eventEnvelope);
+                (<any>this._telemetryContext)._track(eventEnvelope);
 
                 // verify
-                Assert.ok(spy.calledOnce, "sender was called");
-                Assert.ok(eventEnvelope === spy.args[0][0]);
+                Assert.ok(stub.calledOnce, "sender was called");
+                Assert.ok(eventEnvelope === stub.args[0][0]);
 
                 // teardown
-                spy.restore();
+                stub.restore();
             }
         });
 
@@ -300,16 +299,16 @@ class TelemetryContextTests extends TestClass {
                 }
 
                 this._telemetryContext.onInitializeTelemetry = <any>telemetryInitializer.onInitializeTelemetry;
-                var spy = sinon.spy(this._telemetryContext._sender, "send");
+                var stub = sinon.stub(this._telemetryContext._sender, "send");
                     
                 // act
-                this._telemetryContext.track(eventEnvelope);
+                (<any>this._telemetryContext)._track(eventEnvelope);
 
                 // verify
-                Assert.ok(spy.notCalled, "sender should not be called");
+                Assert.ok(stub.notCalled, "sender should not be called");
                 
                 // teardown
-                spy.restore();
+                stub.restore();
                 this._telemetryContext.onInitializeTelemetry = undefined;
             }
         });

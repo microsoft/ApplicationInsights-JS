@@ -151,9 +151,9 @@ module Microsoft.ApplicationInsights {
             this._applyCustomMeasurements(envelope);
 
             envelope.iKey = this._config.instrumentationKey();
-
+            
+            var sendItem = true;
             if (this.onInitializeTelemetry) {
-                var sendItem = true;
                 try {
                     sendItem = this.onInitializeTelemetry(envelope) === true;
                 } catch (e) {
@@ -161,7 +161,9 @@ module Microsoft.ApplicationInsights {
                         LoggingSeverity.CRITICAL,
                         "onInitializeTelemetry() failed with error, an attempt will be made to send the telemetry item but the data may be corrupted: " + Util.dump(e));
                 }
+            }
 
+            if (sendItem) {
                 this._sender.send(envelope);
             }
         }
