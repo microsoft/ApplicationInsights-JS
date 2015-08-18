@@ -26,8 +26,6 @@ class InitializationTests extends TestClass {
             verboseLogging: true,
             diagnosticLogInterval: 1,
             autoTrackPageVisitTime: false,
-            properties: null,
-            measurements: null
         };
 
         // set default values
