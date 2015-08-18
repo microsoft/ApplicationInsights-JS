@@ -17,8 +17,6 @@ module Microsoft.ApplicationInsights {
         accountId: () => string;
         sessionRenewalMs: () => number;
         sessionExpirationMs: () => number;
-        properties: () => Object;
-        measurements: () => Object;
     }
 
     export class TelemetryContext {
@@ -65,18 +63,11 @@ module Microsoft.ApplicationInsights {
          * The object describing a session tracked by this object.
          */
         public session: Context.Session;
-
-        /**
-        * Custom properties added to all telemetry items (implementation of the TelemetryInitializer concept).
-        */
-        public properties;
-
-        /**
-        * Custom measurements added to all telemetry items (implementation of the TelemetryInitializer concept).
-        */
-        public measurements;
         
-        public onInitializeTelemetry: (envelope: Telemetry.Common.Envelope) => boolean;
+        /**
+        * The array of telemetry initializers to call before sending each telemetry item.
+        */
+        private telemetryInitializers: ((envelope: Telemetry.Common.Envelope) => void)[];
 
         /**
          * The session manager that manages session on the base of cookies.
@@ -99,9 +90,16 @@ module Microsoft.ApplicationInsights {
                 this.operation = new Context.Operation();
                 this.session = new Context.Session();
                 this.sample = new Context.Sample();
-                this.properties = config.properties();
-                this.measurements = config.measurements();
             }
+        }
+
+        /**
+        * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
+        * before telemetry item is pushed for sending and in the order they were added.
+        */
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => void) {
+            this.telemetryInitializers = this.telemetryInitializers || [];
+            this.telemetryInitializers.push(telemetryInitializer);
         }
 
         /**
@@ -147,23 +145,27 @@ module Microsoft.ApplicationInsights {
             this._applyOperationContext(envelope, this.operation);
             this._applySampleContext(envelope, this.sample);
             this._applyUserContext(envelope, this.user);
-            this._applyCustomProperties(envelope);
-            this._applyCustomMeasurements(envelope);
 
             envelope.iKey = this._config.instrumentationKey();
-            
-            var sendItem = true;
-            if (this.onInitializeTelemetry) {
-                try {
-                    sendItem = this.onInitializeTelemetry(envelope) === true;
-                } catch (e) {
-                    _InternalLogging.throwInternalUserActionable(
-                        LoggingSeverity.CRITICAL,
-                        "onInitializeTelemetry() failed with error, an attempt will be made to send the telemetry item but the data may be corrupted: " + Util.dump(e));
-                }
+
+            var telemetryInitializersFailed = false;
+            try {
+                this.telemetryInitializers = this.telemetryInitializers || [];
+                var telemetryInitializersCount = this.telemetryInitializers.length;
+                for (var i = 0; i < telemetryInitializersCount; ++i) {
+                    var telemetryInitializer = this.telemetryInitializers[i];
+                    if (telemetryInitializer) {
+                        telemetryInitializer.apply(null, [envelope]);
+                    }
+                }                
+            } catch (e) {
+                telemetryInitializersFailed = true;
+                _InternalLogging.throwInternalUserActionable(
+                    LoggingSeverity.CRITICAL,
+                    "One of telemetry initializers failed, telemetry item will not be sent: " + Util.dump(e));
             }
 
-            if (sendItem) {
+            if (!telemetryInitializersFailed) {
                 this._sender.send(envelope);
             }
         }
@@ -177,30 +179,6 @@ module Microsoft.ApplicationInsights {
             sessionStateEnvelope.time = Util.toISOStringForIE8(new Date(timestamp));
 
             tc._track(sessionStateEnvelope);
-        }
-
-        private _applyCustomProperties(envelope: Microsoft.Telemetry.Envelope) {
-            if (this.properties && envelope && envelope.data && (<any>envelope.data).baseData) {
-                var telemetryItem = (<any>envelope.data).baseData;
-                telemetryItem.properties = telemetryItem.properties || {};
-                Object.getOwnPropertyNames(this.properties).forEach((val, index, array) => {
-                    if (telemetryItem.properties[val] === undefined) {
-                        telemetryItem.properties[val] = this.properties[val];
-                    }
-                });
-            }
-        }
-
-        private _applyCustomMeasurements(envelope: Microsoft.Telemetry.Envelope) {
-            if (this.measurements && envelope && envelope.data && (<any>envelope.data).baseData) {
-                var telemetryItem = (<any>envelope.data).baseData;
-                telemetryItem.measurements = telemetryItem.measurements || {};
-                Object.getOwnPropertyNames(this.measurements).forEach((val, index, array) => {
-                    if (telemetryItem.measurements[val] === undefined) {
-                        telemetryItem.measurements[val] = this.measurements[val];
-                    }
-                });
-            }
         }
 
         private _applyApplicationContext(envelope: Microsoft.Telemetry.Envelope, appContext: Microsoft.ApplicationInsights.Context.Application) {

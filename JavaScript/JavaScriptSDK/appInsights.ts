@@ -27,8 +27,6 @@ module Microsoft.ApplicationInsights {
         verboseLogging: boolean;
         diagnosticLogInterval: number;
         autoTrackPageVisitTime: boolean;
-        properties: Object;
-        measurements: Object;
     }
 
     /**
@@ -72,9 +70,7 @@ module Microsoft.ApplicationInsights {
                 emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
                 maxBatchSizeInBytes: () => this.config.maxBatchSizeInBytes,
                 maxBatchInterval: () => this.config.maxBatchInterval,
-                disableTelemetry: () => this.config.disableTelemetry,
-                properties: () => this.config.properties,
-                measurements: () => this.config.measurements
+                disableTelemetry: () => this.config.disableTelemetry
             }
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);

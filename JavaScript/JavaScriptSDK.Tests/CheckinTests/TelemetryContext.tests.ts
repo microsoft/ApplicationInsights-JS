@@ -76,155 +76,15 @@ class TelemetryContextTests extends TestClass {
         });
 
         this.testCase({
-            name: "TelemetryContext: properties initialized correctly",
-            test: () => {
-                // act
-                var telemetryContext = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
-
-                // verify
-                Assert.deepEqual(this._config.properties(), telemetryContext.properties);
-            }
-        });
-
-        this.testCase(
-            {
-                name: "TelemetryContext: custom properties applied if telemetry item's properties are undefined",
-                test: () => {
-                    // setup
-                    this._telemetryContext.properties = { prop1: "val1" };
-                    var eventEnvelope = this.getTestEventEnvelope(undefined);
-                    // act
-                    (<any>this._telemetryContext)._applyCustomProperties(eventEnvelope);
-
-                    // verify
-                    var resEvent = (<any>eventEnvelope.data).baseData;
-                    Assert.equal("val1", resEvent.properties.prop1);
-
-                    // teardown
-                    this._telemetryContext.properties = null;
-                }
-            });
-
-
-        this.testCase(
-            {
-                name: "TelemetryContext: telemetry item-specific custom properties are not touched",
-                test: () => {
-                    // setup
-                    this._telemetryContext.properties = { prop1: "val1" };
-                    var eventEnvelope = this.getTestEventEnvelope({ testProp: "testVal" });
-                    // act
-                    (<any>this._telemetryContext)._applyCustomProperties(eventEnvelope);
-
-                    // verify
-                    var resEvent = (<any>eventEnvelope.data).baseData;
-                    Assert.equal("testVal", resEvent.properties.testProp);
-
-                    // teardown
-                    this._telemetryContext.properties = null;
-                }
-            });
-
-        this.testCase(
-            {
-                name: "TelemetryContext: telemetry item-specific properties are not overriden",
-                test: () => {
-                    // setup
-                    this._telemetryContext.properties = { prop1: "context wide value" };
-                    var eventEnvelope = this.getTestEventEnvelope({ prop1: "item specific value" });
-                    
-                    // act
-                    (<any>this._telemetryContext)._applyCustomProperties(eventEnvelope);
-
-                    // verify
-                    var resEvent = (<any>eventEnvelope.data).baseData;
-                    Assert.equal("item specific value", resEvent.properties.prop1);
-
-                    // teardown
-                    this._telemetryContext.properties = null;
-                }
-            });
-
-        this.testCase({
-            name: "TelemetryContext: measurements initialized correctly",
-            test: () => {
-                // act
-                var telemetryContext = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
-
-                // verify
-                Assert.deepEqual(this._config.measurements(), telemetryContext.measurements);
-            }
-        });
-
-        this.testCase(
-            {
-                name: "TelemetryContext: custom measurements applied if telemetry item's measurements are undefined",
-                test: () => {
-                    // setup
-                    this._telemetryContext.measurements = { m1: 100 };
-                    var eventEnvelope = this.getTestEventEnvelope(undefined, undefined);
-                    // act
-                    (<any>this._telemetryContext)._applyCustomMeasurements(eventEnvelope);
-
-                    // verify
-                    var resEvent = (<any>eventEnvelope.data).baseData;
-                    Assert.equal(100, resEvent.measurements.m1);
-
-                    // teardown
-                    this._telemetryContext.measurements = null;
-                }
-            });
-
-
-        this.testCase(
-            {
-                name: "TelemetryContext: telemetry item-specific measurements are not touched",
-                test: () => {
-                    // setup
-                    this._telemetryContext.measurements = { m1: 100 };
-                    var eventEnvelope = this.getTestEventEnvelope(undefined, { m2: 200 });
-                    // act
-                    (<any>this._telemetryContext)._applyCustomMeasurements(eventEnvelope);
-
-                    // verify
-                    var resEvent = (<any>eventEnvelope.data).baseData;
-                    Assert.equal(200, resEvent.measurements.m2);
-
-                    // teardown
-                    this._telemetryContext.measurements = null;
-                }
-            });
-
-        this.testCase(
-            {
-                name: "TelemetryContext: telemetry item-specific custom measurements are not overriden",
-                test: () => {
-                    // setup
-                    this._telemetryContext.measurements = { m1: 100 };
-                    var eventEnvelope = this.getTestEventEnvelope(undefined, { m1: 200 });
-                    
-                    // act
-                    (<any>this._telemetryContext)._applyCustomMeasurements(eventEnvelope);
-
-                    // verify
-                    var resEvent = (<any>eventEnvelope.data).baseData;
-                    Assert.equal(200, resEvent.measurements.m1);
-
-                    // teardown
-                    this._telemetryContext.measurements = null;
-                }
-            });
-
-        this.testCase({
-            name: "TelemetryContext: onInitializeTelemetry is called within track() and gets the envelope as an argument",
+            name: "TelemetryContext: onBeforeSendTelemetry is called within track() and gets the envelope as an argument",
             test: () => {
                 var eventEnvelope = this.getTestEventEnvelope();
 
                 var telemetryInitializer = {
-                    onInitializeTelemetry: (envelope) => { }
+                    initializer: (envelope) => { }
                 }
-                var spy = sinon.spy(telemetryInitializer, "onInitializeTelemetry");
-                this._telemetryContext.onInitializeTelemetry = <any>telemetryInitializer.onInitializeTelemetry;
+                var spy = sinon.spy(telemetryInitializer, "onBeforeSendTelemetry");
+                this._telemetryContext.addTelemetryInitializer(<any>telemetryInitializer.initializer);
                     
                 // act
                 (<any>this._telemetryContext)._track(eventEnvelope);
@@ -235,24 +95,24 @@ class TelemetryContextTests extends TestClass {
 
                 // teardown
                 spy.restore();
-                this._telemetryContext.onInitializeTelemetry = undefined;
+                (<any>this._telemetryContext).telemetryInitializers = undefined;
             }
         });
 
         this.testCase({
-            name: "TelemetryContext: onInitializeTelemetry changes the envelope props and sender gets them",
+            name: "TelemetryContext: onBeforeSendTelemetry changes the envelope props and sender gets them",
             test: () => {
                 var nameOverride = "my unique name";
                 var eventEnvelope = this.getTestEventEnvelope();
                 Assert.notEqual(eventEnvelope.name, nameOverride);
                 var telemetryInitializer = {
-                    onInitializeTelemetry: (envelope: Microsoft.ApplicationInsights.Telemetry.Common.Envelope) => {
+                    initializer: (envelope: Microsoft.ApplicationInsights.Telemetry.Common.Envelope) => {
                         envelope.name = nameOverride;
                         return true;
                     }
                 }
 
-                this._telemetryContext.onInitializeTelemetry = <any>telemetryInitializer.onInitializeTelemetry;
+                this._telemetryContext.addTelemetryInitializer(<any>telemetryInitializer.initializer);
                 var stub = sinon.stub(this._telemetryContext._sender, "send");
                     
                 // act
@@ -266,12 +126,12 @@ class TelemetryContextTests extends TestClass {
 
                 // teardown
                 stub.restore();
-                this._telemetryContext.onInitializeTelemetry = undefined;
+                (<any>this._telemetryContext).telemetryInitializers = undefined;
             }
         });
 
         this.testCase({
-            name: "TelemetryContext: onInitializeTelemetry is null means envelope goes straight to the sender",
+            name: "TelemetryContext: telemetryInitializers array is null (not initialized) means envelope goes straight to the sender",
             test: () => {
                 var eventEnvelope = this.getTestEventEnvelope();
                 var stub = sinon.stub(this._telemetryContext._sender, "send");
@@ -287,34 +147,68 @@ class TelemetryContextTests extends TestClass {
                 stub.restore();
             }
         });
-
+        
         this.testCase({
-            name: "TelemetryContext: onInitializeTelemetry returns false means item is not sent",
+            name: "TelemetryContext: telemetry initializer can modify the contents of an envelope",
             test: () => {
                 var eventEnvelope = this.getTestEventEnvelope();
                 var telemetryInitializer = {
-                    onInitializeTelemetry: (envelope) => {
-                        return false;
+                    // This illustrates how to use telemetry initializer (onBeforeSendTelemetry) 
+                    // to access/ modify the contents of an envelope.
+                    init: (envelope: Microsoft.ApplicationInsights.Telemetry.Common.Envelope) => {
+                        envelope.deviceId = "my device id";
+                        if (envelope.name ==
+                            Microsoft.ApplicationInsights.Telemetry.Event.envelopeType) {
+                            var telemetryItem = (<any>envelope.data).baseData;
+                            telemetryItem.name = "my name";
+                            telemetryItem.properties["prop1"] = "val1";
+                        }
                     }
                 }
 
-                this._telemetryContext.onInitializeTelemetry = <any>telemetryInitializer.onInitializeTelemetry;
+                this._telemetryContext.addTelemetryInitializer(<any>telemetryInitializer.init);
                 var stub = sinon.stub(this._telemetryContext._sender, "send");
                     
                 // act
                 (<any>this._telemetryContext)._track(eventEnvelope);
 
                 // verify
-                Assert.ok(stub.notCalled, "sender should not be called");
+                Assert.ok(stub.calledOnce, "sender should be called");
+                Assert.equal("my device id", (<any>stub.args[0][0]).deviceId);
+                Assert.equal("my name", (<any>stub.args[0][0]).baseData.name);
+                Assert.equal("val1", (<any>stub.args[0][0]).baseData.properties["prop1"]);
                 
                 // teardown
                 stub.restore();
-                this._telemetryContext.onInitializeTelemetry = undefined;
+                (<any>this._telemetryContext).telemetryInitializers = undefined;
             }
         });
 
-    }
+        this.testCase({
+            name: "TelemetryContext: all added telemetry initializers get invoked",
+            test: () => {
+                // prepare
+                var eventEnvelope = this.getTestEventEnvelope();                
+                var initializer1 = { init: () => { } };                
+                var initializer2 = { init: () => { } };
+                var spy1 = sinon.spy(initializer1, "init");
+                var spy2 = sinon.spy(initializer2, "init");
 
+                // act
+                this._telemetryContext.addTelemetryInitializer(<any>initializer1.init);
+                this._telemetryContext.addTelemetryInitializer(<any>initializer2.init);
+                
+                (<any>this._telemetryContext)._track(eventEnvelope);
+
+                // verify
+                Assert.ok(spy1.calledOnce);
+                Assert.ok(spy2.calledOnce);
+
+                // tear down
+                (<any>this._telemetryContext).telemetryInitializers = undefined;
+            }
+        });
+    }
 
     private getTestEventEnvelope(properties?: Object, measurements?: Object) {
         var event = new Microsoft.ApplicationInsights.Telemetry.Event('Test Event', properties, measurements);
