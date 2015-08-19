@@ -77,7 +77,7 @@ class TelemetryContextTests extends TestClass {
                 var telemetryInitializer = {
                     initializer: (envelope) => { }
                 }
-                var spy = sinon.spy(telemetryInitializer, "onBeforeSendTelemetry");
+                var spy = sinon.spy(telemetryInitializer, "initializer");
                 this._telemetryContext.addTelemetryInitializer(<any>telemetryInitializer.initializer);
                     
                 // act
@@ -155,6 +155,7 @@ class TelemetryContextTests extends TestClass {
                             Microsoft.ApplicationInsights.Telemetry.Event.envelopeType) {
                             var telemetryItem = (<any>envelope.data).baseData;
                             telemetryItem.name = "my name";
+                            telemetryItem.properties = telemetryItem.properties || {};
                             telemetryItem.properties["prop1"] = "val1";
                         }
                     }
@@ -169,8 +170,8 @@ class TelemetryContextTests extends TestClass {
                 // verify
                 Assert.ok(stub.calledOnce, "sender should be called");
                 Assert.equal("my device id", (<any>stub.args[0][0]).deviceId);
-                Assert.equal("my name", (<any>stub.args[0][0]).baseData.name);
-                Assert.equal("val1", (<any>stub.args[0][0]).baseData.properties["prop1"]);
+                Assert.equal("my name", (<any>stub.args[0][0]).data.baseData.name);
+                Assert.equal("val1", (<any>stub.args[0][0]).data.baseData.properties["prop1"]);
                 
                 // teardown
                 stub.restore();
