@@ -15,7 +15,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             url: false,
             duration: false,
             properties: false,
-            measurement: false
+            measurements: false
         }
 
         /**

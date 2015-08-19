@@ -25,7 +25,7 @@ class InitializationTests extends TestClass {
             disableTelemetry: false,
             verboseLogging: true,
             diagnosticLogInterval: 1,
-            autoTrackPageVisitTime: false
+            autoTrackPageVisitTime: false,
         };
 
         // set default values

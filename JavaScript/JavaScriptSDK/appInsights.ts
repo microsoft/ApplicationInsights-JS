@@ -210,13 +210,13 @@ module Microsoft.ApplicationInsights {
                                 durationMs,
                                 properties,
                                 measurements);
-
+                            
                             if (pageViewPerformance.isValid) {
                                 var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
                                     Telemetry.PageViewPerformance.dataType, pageViewPerformance);
                                 var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
                                 this.context.track(pageViewPerformanceEnvelope);
-                            }
+                            } 
 
                             this.context._sender.triggerSend();
                         }
@@ -430,7 +430,7 @@ module Microsoft.ApplicationInsights {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "_onerror threw " + exceptionDump + " while logging error, error will not be collected: " + errorString);
             }
         }
- 
+
     }
 
     /**
