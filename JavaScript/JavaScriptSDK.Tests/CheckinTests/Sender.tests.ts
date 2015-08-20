@@ -213,6 +213,39 @@ class SenderTests extends TestClass {
         });
 
         this.testCase({
+            name: "SenderTests: XDomain sender correctly handles json response",
+            test: () => {
+                // setup
+                XDomainRequest = <any>(() => {
+                    var xdr = new this.xhr;
+                    xdr.onload = xdr.onreadystatechange;
+                    xdr.responseText = 200;
+                    return xdr;
+                });
+
+                // act
+                var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
+
+                // verify
+                Assert.ok(sender, "sender was constructed");
+
+                // act
+                this.fakeServer.requests.pop();
+                sender.send(this.testTelemetry);
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                // verify
+                requestAsserts();
+                this.fakeServer.requests[0].respond(200, { "Content-Type": "application/json" }, '{"itemsRecieved":2,"itemsAccepted":2,"errors":[]}');
+                successAsserts();
+                logAsserts(0);
+                this.successSpy.reset();
+                this.errorSpy.reset();
+
+            }
+        });
+
+        this.testCase({
             name: "SenderTests: XMLHttpRequest and XDomainRequest native error handlers are logged",
             test: () => {
                 // setup
