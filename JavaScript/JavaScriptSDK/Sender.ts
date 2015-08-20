@@ -221,11 +221,21 @@ module Microsoft.ApplicationInsights {
          * xdr state changes
          */
         public static _xdrOnLoad(xdr: XDomainRequest, payload: string) {
-            if (xdr && (xdr.responseText + "" === "200" || xdr.responseText === "")) {
+            
+            var validResponse: boolean = false;
+            
+            try {
+                // try and parse the response and check for errors
+                validResponse = (JSON.parse(xdr.responseText).errors.length === 0);
+            }
+            catch(e){ }
+            
+            if (validResponse) {
                 Sender._onSuccess(payload);
             } else {
                 Sender._onError(payload, xdr && xdr.responseText || "");
             }
+            
         }
 
         /**
