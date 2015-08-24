@@ -12,7 +12,7 @@
 	ms.tgt_pltfrm="ibiza" 
 	ms.devlang="na" 
 	ms.topic="article" 
-	ms.date="07/21/2015" 
+	ms.date="08/24/2015" 
 	ms.author="awills"/>
  
 
@@ -141,13 +141,15 @@ Set the authenticated user id and the account id in this session. Use this when 
 `authenticatedUserId` | An id that uniquely identifies a user of your app. No spaces, comma, semicolon, equals or vertical bar.
 `accountId` | An optional account id, if your app groups users into accounts. No spaces, comma, semicolon, equals or vertical bar.
     
-In the portal, this will add to the count of authenticated users. Authenticated users provide a more reliable count of the number of real users than the count of anonymous users, which depends on cookies.
+In the portal, this will add to the count of authenticated users. Authenticated users provide a more reliable count of the number of real users than the count of anonymous users.
+
+The authenticated user id will be available as part of the context of the telemetry sent to the portal, so that you can filter and search on it. It will also be saved as a cookie and sent to the server, where the server SDK (if installed) will attach it to server telemetry.
 
 ### clearAuthenticatedUserContext
 
     clearAuthenticatedUserContext ()
 
-Clears the authenticated user id and the account id from the user context.
+Clears the authenticated user id and the account id from the user context, and clears the associated cookie.
 
 
 ### config
@@ -196,7 +198,7 @@ Values that control how the telemetry data is sent.
         diagnosticLogInterval: number;
     }
 
-Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript-api/) that you insert in your web pages.
+Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.
 Look for this line, and add more items:
 
     })({
