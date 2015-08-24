@@ -1,0 +1,16 @@
+{
+  "name": "ApplicationInsights-JS",
+  "version": "0.0.0",
+  "homepage": "https://github.com/Microsoft/ApplicationInsights-JS",
+  "authors": [
+    "Max Shekhovtsov <mashekho@microsoft.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
