@@ -129,6 +129,26 @@ Immediately send all queued telemetry. Synchronous.
 
 You don't usually have to use this, as it happens automatically on window closing.
 
+<a name="setAuthenticatedUserContext"></a>
+### setAuthenticatedUserContext
+
+    setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string)
+
+Set the authenticated user id and the account id in this session. Use this when you have identified a specific signed-in user. Parameters must not contain spaces or ,;=|
+
+ | | 
+---|---|---
+`authenticatedUserId` | An id that uniquely identifies a user of your app. No spaces, comma, semicolon, equals or vertical bar.
+`accountId` | An optional account id, if your app groups users into accounts. No spaces, comma, semicolon, equals or vertical bar.
+    
+In the portal, this will add to the count of authenticated users. Authenticated users provide a more reliable count of the number of real users than the count of anonymous users, which depends on cookies.
+
+### clearAuthenticatedUserContext
+
+    clearAuthenticatedUserContext ()
+
+Clears the authenticated user id and the account id from the user context.
+
 
 ### config
 
@@ -239,7 +259,8 @@ more than one user if they use different machines or browsers, or delete cookies
    |   |
 ---|---|---
 `user.id` | Unique, cookie-based user id, automatically assigned.
-`user.accountId` | 
+`user.authenticatedId` | Id set by your app using [`setAuthenticatedUserContext`](#setAuthenticatedUserContext) when the user signs in.
+`user.accountId` | Set by your app when the user signs in, if your app groups users into accounts.
 `user.accountAcquisitionDate` |
 `user.agent` | 
 `user.storeRegion` | 
