@@ -1299,6 +1299,16 @@ class AppInsightsTests extends TestClass {
                 resetInternalMessageCountStub.restore();
             }
         });
+
+        this.testCase({
+            name: "ajax",
+            test: () => {
+                new Microsoft.ApplicationInsights.Ajax().interceptOpen();
+
+                var xhr = new XMLHttpRequest().open("GET", "microsoft.com", true);
+                xhr.send();
+            }
+        });
     }
 
     private getFirstResult(action: string, trackStub: SinonStub, skipSessionState?: boolean) {

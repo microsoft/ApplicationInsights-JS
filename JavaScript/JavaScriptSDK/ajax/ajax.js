@@ -489,7 +489,6 @@ var $$CsmSt = function () {
             try {
                 this.ajaxData.status = this.status;
                 this.ajaxData.contentType = this.getResponseHeader("Content-Type");
-                this.ajaxData.contentEncoding = this.getResponseHeader("Content-Encoding");
                 this.ajaxData.responseSize = this.responseText.length;
                 this.ajaxData.responseSize += this.getAllResponseHeaders().length;
 

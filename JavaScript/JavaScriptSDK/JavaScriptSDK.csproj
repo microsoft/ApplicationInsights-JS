@@ -121,6 +121,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ajax\ajax.js" />
+    <TypeScriptCompile Include="ajax\AjaxRecord.ts" />
+    <TypeScriptCompile Include="ajax\ajax.ts" />
     <TypeScriptCompile Include="AppInsights.ts" />
     <TypeScriptCompile Include="Context\Sample.ts" />
     <TypeScriptCompile Include="Contracts\Generated\AjaxCallData.ts" />
@@ -182,11 +184,11 @@
   </Target>
   <Target Name="AfterBuild" DependsOnTargets="BuildAjaxMinManifests">
     <Message Text="Build snippet.html" />
-    <Exec Command="Powershell.exe -ExecutionPolicy ByPass -File &quot;$(ProjectDir)min\snippet.ps1&quot; -projectDir $(ProjectDir)" />    
+    <Exec Command="Powershell.exe -ExecutionPolicy ByPass -File &quot;$(ProjectDir)min\snippet.ps1&quot; -projectDir $(ProjectDir)" />
     <Exec Command="copy /b $(ProjectDir)min\ai.min.js + $(ProjectDir)ajax\ajax.js $(ProjectDir)min\ai.ajax.js" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>    
+    <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
 </Project>
