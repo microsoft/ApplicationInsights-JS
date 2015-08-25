@@ -22,7 +22,7 @@ Use your web pages, and then look for user and page view results in the Applicat
 
 Data on users, page views, and exceptions are provided out of the box. You can write your own code to track specific events and metrics.
 
-* Check out https://github.com/Microsoft/ApplicationInsights-JS/blob/master/API-reference.md
+* See [API reference](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/API-reference.md)
 
 ## To build:
 
