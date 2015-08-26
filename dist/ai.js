@@ -107,7 +107,7 @@ var Microsoft;
                         return storage.getItem(name);
                     }
                     catch (e) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Browser failed read of local storage.");
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, "Browser failed read of local storage." + Util.dump(e));
                     }
                 }
                 return null;
@@ -120,7 +120,7 @@ var Microsoft;
                         return true;
                     }
                     catch (e) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Browser failed write to local storage.");
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, "Browser failed write to local storage." + Util.dump(e));
                     }
                 }
                 return false;
@@ -133,7 +133,62 @@ var Microsoft;
                         return true;
                     }
                     catch (e) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Browser failed removal of local storage item.");
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, "Browser failed removal of local storage item." + Util.dump(e));
+                    }
+                }
+                return false;
+            };
+            Util._getSessionStorageObject = function () {
+                try {
+                    if (window.sessionStorage) {
+                        return window.sessionStorage;
+                    }
+                    else {
+                        return null;
+                    }
+                }
+                catch (e) {
+                    console.warn('Failed to get client session storage: ' + e.message);
+                    return null;
+                }
+            };
+            Util.canUseSessionStorage = function () {
+                return !!Util._getSessionStorageObject();
+            };
+            Util.getSessionStorage = function (name) {
+                var storage = Util._getSessionStorageObject();
+                if (storage !== null) {
+                    try {
+                        return storage.getItem(name);
+                    }
+                    catch (e) {
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Browser failed read of session storage." + Util.dump(e));
+                    }
+                }
+                return null;
+            };
+            Util.setSessionStorage = function (name, data) {
+                var storage = Util._getSessionStorageObject();
+                if (storage !== null) {
+                    try {
+                        storage.setItem(name, data);
+                        return true;
+                    }
+                    catch (e) {
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Browser failed write to session storage." + Util.dump(e));
+                    }
+                }
+                return false;
+            };
+            Util.removeSessionStorage = function (name) {
+                var storage = Util._getSessionStorageObject();
+                if (storage !== null) {
+                    try {
+                        storage.removeItem(name);
+                        return true;
+                    }
+                    catch (e) {
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Browser failed removal of session storage item." + Util.dump(e));
                     }
                 }
                 return false;
@@ -762,7 +817,7 @@ var Microsoft;
                         this._sessionHandler(0 /* Start */, now);
                     }
                     if (!ApplicationInsights.Util.canUseLocalStorage()) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Browser does not support local storage. Session durations will be inaccurate.");
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, "Browser does not support local storage. Session durations will be inaccurate.");
                     }
                 };
                 _SessionManager.prototype.setCookie = function (guid, acq, renewal) {
@@ -1480,7 +1535,7 @@ var Microsoft;
             "use strict";
             var Metric = (function (_super) {
                 __extends(Metric, _super);
-                function Metric(name, value, count, min, max) {
+                function Metric(name, value, count, min, max, properties) {
                     _super.call(this);
                     this.aiDataContract = {
                         ver: true,
@@ -1494,6 +1549,7 @@ var Microsoft;
                     dataPoint.name = Telemetry.Common.DataSanitizer.sanitizeString(name);
                     dataPoint.value = value;
                     this.metrics = [dataPoint];
+                    this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
                 }
                 Metric.envelopeType = "Microsoft.ApplicationInsights.Metric";
                 Metric.dataType = "MetricData";
@@ -1535,7 +1591,7 @@ var Microsoft;
                         url: false,
                         duration: false,
                         properties: false,
-                        measurement: false
+                        measurements: false
                     };
                     this.url = Telemetry.Common.DataSanitizer.sanitizeUrl(url);
                     this.name = Telemetry.Common.DataSanitizer.sanitizeString(name || ApplicationInsights.Util.NotSpecified);
@@ -1590,7 +1646,7 @@ var Microsoft;
                         receivedResponse: false,
                         domProcessing: false,
                         properties: false,
-                        measurement: false
+                        measurements: false
                     };
                     this.isValid = false;
                     var timing = PageViewPerformance.getPerformanceTiming();
@@ -1713,6 +1769,10 @@ var Microsoft;
                     this.sample = new ApplicationInsights.Context.Sample();
                 }
             }
+            TelemetryContext.prototype.addTelemetryInitializer = function (telemetryInitializer) {
+                this.telemetryInitializers = this.telemetryInitializers || [];
+                this.telemetryInitializers.push(telemetryInitializer);
+            };
             TelemetryContext.prototype.track = function (envelope) {
                 if (!envelope) {
                     ApplicationInsights._InternalLogging.throwInternalUserActionable(0 /* CRITICAL */, "cannot call .track() with a null or undefined argument");
@@ -1747,7 +1807,24 @@ var Microsoft;
                 this._applySampleContext(envelope, this.sample);
                 this._applyUserContext(envelope, this.user);
                 envelope.iKey = this._config.instrumentationKey();
-                this._sender.send(envelope);
+                var telemetryInitializersFailed = false;
+                try {
+                    this.telemetryInitializers = this.telemetryInitializers || [];
+                    var telemetryInitializersCount = this.telemetryInitializers.length;
+                    for (var i = 0; i < telemetryInitializersCount; ++i) {
+                        var telemetryInitializer = this.telemetryInitializers[i];
+                        if (telemetryInitializer) {
+                            telemetryInitializer.apply(null, [envelope]);
+                        }
+                    }
+                }
+                catch (e) {
+                    telemetryInitializersFailed = true;
+                    ApplicationInsights._InternalLogging.throwInternalUserActionable(0 /* CRITICAL */, "One of telemetry initializers failed, telemetry item will not be sent: " + ApplicationInsights.Util.dump(e));
+                }
+                if (!telemetryInitializersFailed) {
+                    this._sender.send(envelope);
+                }
             };
             TelemetryContext._sessionHandler = function (tc, sessionState, timestamp) {
                 var sessionStateTelemetry = new ApplicationInsights.Telemetry.SessionTelemetry(sessionState);
@@ -1937,8 +2014,94 @@ var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
     (function (ApplicationInsights) {
+        var Telemetry;
+        (function (Telemetry) {
+            "use strict";
+            var PageVisitTimeManager = (function () {
+                function PageVisitTimeManager(pageVisitTimeTrackingHandler) {
+                    this.prevPageVisitDataKeyName = "prevPageVisitData";
+                    this.pageVisitTimeTrackingHandler = pageVisitTimeTrackingHandler;
+                }
+                PageVisitTimeManager.prototype.trackPreviousPageVisit = function (currentPageName, currentPageUrl) {
+                    try {
+                        var prevPageVisitTimeData = this.restartPageVisitTimer(currentPageName, currentPageUrl);
+                        if (prevPageVisitTimeData) {
+                            this.pageVisitTimeTrackingHandler(prevPageVisitTimeData.pageName, prevPageVisitTimeData.pageUrl, prevPageVisitTimeData.pageVisitTime);
+                        }
+                    }
+                    catch (e) {
+                        ApplicationInsights._InternalLogging.warnToConsole("Auto track page visit time failed, metric will not be collected: " + ApplicationInsights.Util.dump(e));
+                    }
+                };
+                PageVisitTimeManager.prototype.restartPageVisitTimer = function (pageName, pageUrl) {
+                    try {
+                        var prevPageVisitData = this.stopPageVisitTimer();
+                        this.startPageVisitTimer(pageName, pageUrl);
+                        return prevPageVisitData;
+                    }
+                    catch (e) {
+                        ApplicationInsights._InternalLogging.warnToConsole("Call to restart failed: " + ApplicationInsights.Util.dump(e));
+                        return null;
+                    }
+                };
+                PageVisitTimeManager.prototype.startPageVisitTimer = function (pageName, pageUrl) {
+                    try {
+                        if (ApplicationInsights.Util.canUseSessionStorage()) {
+                            if (ApplicationInsights.Util.getSessionStorage(this.prevPageVisitDataKeyName) != null) {
+                                throw new Error("Cannot call startPageVisit consecutively without first calling stopPageVisit");
+                            }
+                            var currPageVisitData = new PageVisitData(pageName, pageUrl);
+                            var currPageVisitDataStr = JSON.stringify(currPageVisitData);
+                            ApplicationInsights.Util.setSessionStorage(this.prevPageVisitDataKeyName, currPageVisitDataStr);
+                        }
+                    }
+                    catch (e) {
+                        ApplicationInsights._InternalLogging.warnToConsole("Call to start failed: " + ApplicationInsights.Util.dump(e));
+                    }
+                };
+                PageVisitTimeManager.prototype.stopPageVisitTimer = function () {
+                    try {
+                        if (ApplicationInsights.Util.canUseSessionStorage()) {
+                            var pageVisitEndTime = Date.now();
+                            var pageVisitDataJsonStr = ApplicationInsights.Util.getSessionStorage(this.prevPageVisitDataKeyName);
+                            if (pageVisitDataJsonStr) {
+                                var prevPageVisitData = JSON.parse(pageVisitDataJsonStr);
+                                prevPageVisitData.pageVisitTime = pageVisitEndTime - prevPageVisitData.pageVisitStartTime;
+                                ApplicationInsights.Util.removeSessionStorage(this.prevPageVisitDataKeyName);
+                                return prevPageVisitData;
+                            }
+                            else {
+                                return null;
+                            }
+                        }
+                        return null;
+                    }
+                    catch (e) {
+                        ApplicationInsights._InternalLogging.warnToConsole("Stop page visit timer failed: " + ApplicationInsights.Util.dump(e));
+                        return null;
+                    }
+                };
+                return PageVisitTimeManager;
+            })();
+            Telemetry.PageVisitTimeManager = PageVisitTimeManager;
+            var PageVisitData = (function () {
+                function PageVisitData(pageName, pageUrl) {
+                    this.pageVisitStartTime = Date.now();
+                    this.pageName = pageName;
+                    this.pageUrl = pageUrl;
+                }
+                return PageVisitData;
+            })();
+            Telemetry.PageVisitData = PageVisitData;
+        })(Telemetry = ApplicationInsights.Telemetry || (ApplicationInsights.Telemetry = {}));
+    })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
+})(Microsoft || (Microsoft = {}));
+var Microsoft;
+(function (Microsoft) {
+    var ApplicationInsights;
+    (function (ApplicationInsights) {
         "use strict";
-        ApplicationInsights.Version = "0.16.20150810.0";
+        ApplicationInsights.Version = "0.17.0";
         var AppInsights = (function () {
             function AppInsights(config) {
                 var _this = this;
@@ -1977,6 +2140,7 @@ var Microsoft;
                 this._pageTracking.action = function (name, url, duration, properties, measurements) {
                     _this.sendPageViewInternal(name, url, duration, properties, measurements);
                 };
+                this._pageVisitTimeManager = new ApplicationInsights.Telemetry.PageVisitTimeManager(function (pageName, pageUrl, pageVisitTime) { return _this.trackPageVisitTime(pageName, pageUrl, pageVisitTime); });
             }
             AppInsights.prototype.sendPageViewInternal = function (name, url, duration, properties, measurements) {
                 var pageView = new ApplicationInsights.Telemetry.PageView(name, url, duration, properties, measurements);
@@ -2004,6 +2168,9 @@ var Microsoft;
                         url = window.location && window.location.href || "";
                     }
                     this._pageTracking.stop(name, url, properties, measurements);
+                    if (this.config.autoTrackPageVisitTime) {
+                        this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
+                    }
                 }
                 catch (e) {
                     ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "stopTrackPage failed, page view will not be collected: " + ApplicationInsights.Util.dump(e));
@@ -2018,6 +2185,9 @@ var Microsoft;
                         url = window.location && window.location.href || "";
                     }
                     this.trackPageViewInternal(name, url, properties, measurements);
+                    if (this.config.autoTrackPageVisitTime) {
+                        this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
+                    }
                 }
                 catch (e) {
                     ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "trackPageView failed, page view will not be collected: " + ApplicationInsights.Util.dump(e));
@@ -2099,9 +2269,9 @@ var Microsoft;
                     ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "trackException failed, exception will not be collected: " + ApplicationInsights.Util.dump(e));
                 }
             };
-            AppInsights.prototype.trackMetric = function (name, average, sampleCount, min, max) {
+            AppInsights.prototype.trackMetric = function (name, average, sampleCount, min, max, properties) {
                 try {
-                    var telemetry = new ApplicationInsights.Telemetry.Metric(name, average, sampleCount, min, max);
+                    var telemetry = new ApplicationInsights.Telemetry.Metric(name, average, sampleCount, min, max, properties);
                     var data = new ApplicationInsights.Telemetry.Common.Data(ApplicationInsights.Telemetry.Metric.dataType, telemetry);
                     var envelope = new ApplicationInsights.Telemetry.Common.Envelope(data, ApplicationInsights.Telemetry.Metric.envelopeType);
                     this.context.track(envelope);
@@ -2118,8 +2288,12 @@ var Microsoft;
                     this.context.track(envelope);
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.warnToConsole("trackTrace failed, trace will not be collected: " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, "trackTrace failed, trace will not be collected: " + ApplicationInsights.Util.dump(e));
                 }
+            };
+            AppInsights.prototype.trackPageVisitTime = function (pageName, pageUrl, pageVisitTime) {
+                var properties = { PageName: pageName, PageUrl: pageUrl };
+                this.trackMetric("PageVisitTime", pageVisitTime, 1, pageVisitTime, pageVisitTime, properties);
             };
             AppInsights.prototype.flush = function () {
                 try {
@@ -2379,6 +2553,7 @@ var Microsoft;
                 config.verboseLogging = ApplicationInsights.Util.stringToBoolOrDefault(config.verboseLogging);
                 config.emitLineDelimitedJson = ApplicationInsights.Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
                 config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
+                config.autoTrackPageVisitTime = ApplicationInsights.Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
                 return config;
             };
             return Initialization;
