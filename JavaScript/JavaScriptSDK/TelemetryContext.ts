@@ -67,7 +67,7 @@ module Microsoft.ApplicationInsights {
         /**
         * The array of telemetry initializers to call before sending each telemetry item.
         */
-        private telemetryInitializers: ((envelope: Telemetry.Common.Envelope) => void)[];
+        private telemetryInitializers: { (envelope: Telemetry.Common.Envelope): void; }[];
 
         /**
          * The session manager that manages session on the base of cookies.
@@ -157,7 +157,7 @@ module Microsoft.ApplicationInsights {
                     if (telemetryInitializer) {
                         telemetryInitializer.apply(null, [envelope]);
                     }
-                }                
+                }
             } catch (e) {
                 telemetryInitializersFailed = true;
                 _InternalLogging.throwInternalUserActionable(
