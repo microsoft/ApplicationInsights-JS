@@ -103,6 +103,14 @@ Log an exception you have caught. (Exceptions caught by the browser are also log
 
 In the portal, you can [search on exception type and view](https://azure.microsoft.com/documentation/articles/app-insights-diagnostic-search/) the type, message, and stack trace of individual instances. 
 
+By default, uncaught browser exceptions are caught by the SDK and reported to the portal. To disable this behavior, insert the following line in the initialization snippet that you got from the portal. You can't set this anywhere else:
+
+    })({
+    instrumentationKey: "your instrumentation key",
+
+    disableExceptionTracking: true
+    });
+
 
 ### trackTrace
 
@@ -185,10 +193,7 @@ Values that control how the telemetry data is sent.
         
         // If true, data is sent immediately and not batched.
         enableDebug: boolean;
-        
-        // Report errors caught by the browser. Default true.
-        autoCollectErrors: boolean;
-        
+                
         // If true, telemetry data is not collected or sent. Default false.
         disableTelemetry: boolean; 
         
