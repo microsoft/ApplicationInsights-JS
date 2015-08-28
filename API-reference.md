@@ -314,6 +314,64 @@ Represents the user request. Operation id is used to tie together related events
 
 Sends telemetry to the endpoint.
 
+### addTelemetryInitializer
+
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => void)
+
+Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
+before telemetry item is pushed for sending and in the order they were added.
+
+#### Example
+
+Add this code immediately after the initialization snippet that you get from the portal.
+
+        ...
+        window.appInsights = appInsights;
+        
+        // Add telemetry initializer
+        appInsights.queue.push(function () {
+            appInsights.context.addTelemetryInitializer(function (envelope) {
+                var telemetryItem = envelope.data.baseData;
+
+                // To check the telemetry item’s type:
+                if (envelope.name == Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType) {
+                    // this statement removes url from all page view documents
+                    telemetryItem.url = "URL CENSORED";
+                }
+
+                // To set custom properties:
+                telemetryItem.properties = telemetryItem.properties || {};
+                telemetryItem.properties["globalProperty"] = "boo";
+
+                // To set custom metrics:
+                telemetryItem.measurements = telemetryItem.measurements || {};
+                telemetryItem.measurements["globalMetric"] = 100;
+            });
+        });
+    // end of insertion
+    
+    appInsights.trackPageView();
+
+## class Envelope
+
+        public ver: number;
+        public name: string;
+        public time: string;
+        public sampleRate: number;
+        public seq: string;
+        public iKey: string;
+        public flags: number;
+        public deviceId: string;
+        public os: string;
+        public osVer: string;
+        public appId: string;
+        public appVer: string;
+        public userId: string;
+        public tags: any;
+        public data: Base;  // PageView, Event, Exception etc
+        
+
+
 ## Links
 
 * Read or contribute to the [code for the SDK](https://github.com/Microsoft/ApplicationInsights-js).
