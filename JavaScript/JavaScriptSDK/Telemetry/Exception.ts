@@ -40,30 +40,26 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static CreateSimpleException(message: string, typeName: string, assembly: string, fileName: string,
             details: string, line: number, handledAt?: string): Telemetry.Exception {
 
-            // We can't override constructors, so throwing a fake error to use existing constructor and override all fields after that.
-            var exceptionTelemetry;
-            try {
-                throw new Error();
-            } catch (e) {
-                exceptionTelemetry = new Telemetry.Exception(e);
-            }
-
-            var stack = exceptionTelemetry.exceptions[0].parsedStack[0];
-            stack.assembly = assembly;
-            stack.fileName = fileName;
-            stack.level = 0;
-            stack.line = line;
-            stack.method = "unknown";
-
-            var exception = exceptionTelemetry.exceptions[0];
-            exception.hasFullStack = true;
-            exception.message = message;
-            exception.parsedStack = null;
-            exception.stack = details;
-            exception.typeName = typeName;
-            exceptionTelemetry.handledAt = handledAt || "unhandled";
-
-            return exceptionTelemetry;
+            return <Telemetry.Exception> {
+                handledAt: handledAt || "unhandled",
+                exceptions: [
+                    <AI.ExceptionDetails> {
+                        hasFullStack: true,
+                        message: message,
+                        stack: details,
+                        typeName: typeName,
+                        parsedStack: [
+                            <AI.StackFrame> {
+                                level: 0,
+                                assembly: assembly,
+                                fileName: fileName,
+                                line: line,
+                                method: "unknown"
+                            }
+                        ]
+                    }
+                ]
+            };
         }
     }
 
