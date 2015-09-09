@@ -22,11 +22,14 @@ Use your web pages, and then look for user and page view results in the Applicat
 
 Data on users, page views, and exceptions are provided out of the box. You can write your own code to track specific events and metrics.
 
-* See [API reference](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/API-reference.md)
+See:
+
+* [JavaScript API reference](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/API-reference.md)
+* [API overview with portal examples](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/)
 
 ## To build:
 
-* Visual Studio 2013 Ultimate with Update 4
+* Visual Studio 2013 Ultimate with Update 4 or later
 * Clone the Git repository 
 * Open Visual Studio solution (devenv JavaScript\Microsoft.ApplicationInsights.JavaScript.sln)
 * Build solution in Visual Studio
@@ -39,3 +42,7 @@ Data on users, page views, and exceptions are provided out of the box. You can w
 ## Check out the Wiki for other useful info
 
 https://github.com/Microsoft/ApplicationInsights-JS/wiki
+
+## Contributing
+
+We strongly welcome and encourage contributions to this project. Please read the [contributor's guide][ContribGuide] located in the ApplicationInsights-Home repository. If making a large change we request that you open an [issue][GitHubIssue] first. We follow the [Git Flow][GitFlow] approach to branching. 
