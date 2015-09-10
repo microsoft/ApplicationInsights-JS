@@ -17,7 +17,7 @@ module Microsoft.ApplicationInsights {
                     return null;
                 }   
             } catch (e) {
-                console.warn('Failed to get client localStorage: ' + e.message);
+                _InternalLogging.warnToConsole('Failed to get client localStorage: ' + e.message);
                 return null;
             }
         }
@@ -100,7 +100,7 @@ module Microsoft.ApplicationInsights {
                     return null;
                 }
             } catch (e) {
-                console.warn('Failed to get client session storage: ' + e.message);
+                _InternalLogging.warnToConsole('Failed to get client session storage: ' + e.message);
                 return null;
             }
         }
