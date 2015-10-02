@@ -51,7 +51,7 @@ window.appInsights = {
         // to the page so that it's loaded asynchronously. Note that there is no need to pass in a loadFunc
         // because the url is set. This is a bit of a hack, but it saves some space in minification.
         createScriptElement(localAppInsights.configUrl, function () {
-            createScriptElement("//az639152.vo.msecnd.net/sdk/a/ai.0.10.js");
+            createScriptElement("http://az639152.vo.msecnd.net/sdk/a/ai.0.10.js");
         });
 
         // Don't load a second time:

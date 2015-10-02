@@ -156,6 +156,10 @@ module Microsoft.ApplicationInsights {
             config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
             config.autoTrackPageVisitTime = ApplicationInsights.Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
 
+            if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
+                config.samplingPercentage = 100;
+            }
+
             return config;
         }
     }

@@ -17,6 +17,7 @@ module Microsoft.ApplicationInsights {
         accountId: () => string;
         sessionRenewalMs: () => number;
         sessionExpirationMs: () => number;
+        sampleRate: () => number;
     }
 
     export class TelemetryContext {
@@ -63,7 +64,7 @@ module Microsoft.ApplicationInsights {
          * The object describing a session tracked by this object.
          */
         public session: Context.Session;
-        
+
         /**
         * The array of telemetry initializers to call before sending each telemetry item.
         */
@@ -73,7 +74,7 @@ module Microsoft.ApplicationInsights {
          * The session manager that manages session on the base of cookies.
          */
         public _sessionManager: Microsoft.ApplicationInsights.Context._SessionManager;
-
+        
         constructor(config: ITelemetryConfig) {
             this._config = config;
             this._sender = new Sender(config);
@@ -89,7 +90,7 @@ module Microsoft.ApplicationInsights {
                 this.user = new Context.User(config.accountId());
                 this.operation = new Context.Operation();
                 this.session = new Context.Session();
-                this.sample = new Context.Sample();
+                this.sample = new Context.Sample(config.sampleRate());
             }
         }
 
@@ -113,7 +114,7 @@ module Microsoft.ApplicationInsights {
                 if (envelope.name === Telemetry.PageView.envelopeType) {
                     _InternalLogging.resetInternalMessageCount();
                 }
-
+                
                 if (this.session) {
                     // If customer did not provide custom session id update sessionmanager
                     if (typeof this.session.id !== "string") {
@@ -142,9 +143,9 @@ module Microsoft.ApplicationInsights {
             this._applyDeviceContext(envelope, this.device);
             this._applyInternalContext(envelope, this.internal);
             this._applyLocationContext(envelope, this.location);
-            this._applyOperationContext(envelope, this.operation);
             this._applySampleContext(envelope, this.sample);
             this._applyUserContext(envelope, this.user);
+            this._applyOperationContext(envelope, this.operation);
 
             envelope.iKey = this._config.instrumentationKey();
 
@@ -166,8 +167,17 @@ module Microsoft.ApplicationInsights {
             }
 
             if (!telemetryInitializersFailed) {
-                this._sender.send(envelope);
+                if (envelope.name === Telemetry.SessionTelemetry.envelopeType ||
+                    envelope.name === Telemetry.Metric.envelopeType ||
+                    this.sample.isSampledIn(envelope)) {
+                    this._sender.send(envelope);
+                } else {
+                    _InternalLogging.logInternalMessage(LoggingSeverity.WARNING,
+                        "Telemetry is sampled and not sent to the AI service. SampleRate is " + this.sample.sampleRate);
+                }
             }
+
+            return envelope;
         }
 
         private static _sessionHandler(tc: TelemetryContext, sessionState: AI.SessionState, timestamp: number) {
@@ -178,7 +188,7 @@ module Microsoft.ApplicationInsights {
 
             sessionStateEnvelope.time = Util.toISOStringForIE8(new Date(timestamp));
 
-            tc._track(sessionStateEnvelope);
+            tc._track(sessionStateEnvelope); 
         }
 
         private _applyApplicationContext(envelope: Microsoft.Telemetry.Envelope, appContext: Microsoft.ApplicationInsights.Context.Application) {
@@ -279,11 +289,9 @@ module Microsoft.ApplicationInsights {
         private _applySampleContext(envelope: Microsoft.Telemetry.Envelope, sampleContext: Microsoft.ApplicationInsights.Context.Sample) {
             if (sampleContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
-                if (typeof sampleContext.sampleRate === "string") {
                     envelope.tags[tagKeys.sampleRate] = sampleContext.sampleRate;
                 }
             }
-        }
 
         private _applySessionContext(envelope: Microsoft.Telemetry.Envelope, sessionContext: Microsoft.ApplicationInsights.Context.Session) {
             if (sessionContext) {

@@ -26,6 +26,7 @@ module Microsoft.ApplicationInsights {
         disableTelemetry: boolean;
         verboseLogging: boolean;
         diagnosticLogInterval: number;
+        samplingPercentage: number;
         autoTrackPageVisitTime: boolean;
     }
 
@@ -70,7 +71,8 @@ module Microsoft.ApplicationInsights {
                 emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
                 maxBatchSizeInBytes: () => this.config.maxBatchSizeInBytes,
                 maxBatchInterval: () => this.config.maxBatchInterval,
-                disableTelemetry: () => this.config.disableTelemetry
+                disableTelemetry: () => this.config.disableTelemetry,
+                sampleRate: () => this.config.samplingPercentage
             }
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
@@ -96,12 +98,12 @@ module Microsoft.ApplicationInsights {
         }
 
         private sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
-            var pageView = new Telemetry.PageView(name, url, duration, properties, measurements);
-            var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageView>(Telemetry.PageView.dataType, pageView);
-            var envelope = new Telemetry.Common.Envelope(data, Telemetry.PageView.envelopeType);
+                var pageView = new Telemetry.PageView(name, url, duration, properties, measurements);
+                var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageView>(Telemetry.PageView.dataType, pageView);
+                var envelope = new Telemetry.Common.Envelope(data, Telemetry.PageView.envelopeType);
 
-            this.context.track(envelope);
-        }
+                this.context.track(envelope);
+            }
 
 
         /**
@@ -179,24 +181,24 @@ module Microsoft.ApplicationInsights {
         }
 
         private trackPageViewInternal(name?: string, url?: string, properties?: Object, measurements?: Object) {
-            var durationMs = 0;
-            // check if timing data is available
+                var durationMs = 0;
+                // check if timing data is available
             if (Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
-                // compute current duration (navigation start to now) for the pageViewTelemetry
-                var startTime = window.performance.timing.navigationStart;
-                durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
+                    // compute current duration (navigation start to now) for the pageViewTelemetry
+                    var startTime = window.performance.timing.navigationStart;
+                    durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
 
-                // poll for page load completion and send page view performance data when ready
-                var handle = setInterval(() => {
-                    try {
-                        // abort this check if we have not finished loading after 1 minute
-                        durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-                        var timingDataReady = Telemetry.PageViewPerformance.isPerformanceTimingDataReady();
-                        var timeoutReached = durationMs > 60000;
-                        if (timeoutReached || timingDataReady) {
-                            clearInterval(handle);
+                    // poll for page load completion and send page view performance data when ready
+                    var handle = setInterval(() => {
+                        try {
+                            // abort this check if we have not finished loading after 1 minute
                             durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-                            var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements);
+                        var timingDataReady = Telemetry.PageViewPerformance.isPerformanceTimingDataReady();
+                            var timeoutReached = durationMs > 60000;
+                            if (timeoutReached || timingDataReady) {
+                                clearInterval(handle);
+                                durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
+                                var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements);
 
                             // Sending page view when navigation timing (i.e. client perf data) is ready.
                             // We used to report page view duration separtely and it caused confusion - 
@@ -211,21 +213,21 @@ module Microsoft.ApplicationInsights {
                                 properties,
                                 measurements);
                             
-                            if (pageViewPerformance.isValid) {
-                                var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
-                                    Telemetry.PageViewPerformance.dataType, pageViewPerformance);
-                                var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
-                                this.context.track(pageViewPerformanceEnvelope);
+                                if (pageViewPerformance.isValid) {
+                                    var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
+                                        Telemetry.PageViewPerformance.dataType, pageViewPerformance);
+                                    var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
+                                    this.context.track(pageViewPerformanceEnvelope);
                             } 
 
-                            this.context._sender.triggerSend();
-                        }
-                    } catch (e) {
+                                    this.context._sender.triggerSend();
+                                }
+                        } catch (e) {
                         _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed on page load calculation: " + Util.dump(e));
-                    }
-                }, 100);
+                        }
+                    }, 100);
+                }
             }
-        }
 
 
         /**
