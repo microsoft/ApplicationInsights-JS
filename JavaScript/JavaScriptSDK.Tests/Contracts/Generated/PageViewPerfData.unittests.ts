@@ -12,6 +12,7 @@
 /// <reference path="../../../JavaScriptSDK/Contracts/Generated/PageViewData.ts" />
 /// <reference path="../../../JavaScriptSDK/Contracts/Generated/PageViewPerfData.ts" />
 /// <reference path="../../../JavaScriptSDK/Contracts/Generated/AjaxCallData.ts" />
+/// <reference path="../../../JavaScriptSDK/Contracts/Generated/AvailabilityData.ts" />
 QUnit.test("Test property PageViewPerfData.ver was created and default is set", function () {
     var temp = new AI.PageViewPerfData();
     QUnit.ok(temp.ver !== null, "PageViewPerfData.ver == null");
@@ -43,9 +44,19 @@ QUnit.test("Test property PageViewPerfData.networkConnect was created and defaul
     QUnit.ok(temp.networkConnect !== null, "PageViewPerfData.networkConnect == null");
 });
 
+QUnit.test("Test property PageViewPerfData.referrer was created and default is set", function () {
+    var temp = new AI.PageViewPerfData();
+    QUnit.ok(temp.referrer !== null, "PageViewPerfData.referrer == null");
+});
+
 QUnit.test("Test property PageViewPerfData.sentRequest was created and default is set", function () {
     var temp = new AI.PageViewPerfData();
     QUnit.ok(temp.sentRequest !== null, "PageViewPerfData.sentRequest == null");
+});
+
+QUnit.test("Test property PageViewPerfData.referrerData was created and default is set", function () {
+    var temp = new AI.PageViewPerfData();
+    QUnit.ok(temp.referrerData !== null, "PageViewPerfData.referrerData == null");
 });
 
 QUnit.test("Test property PageViewPerfData.receivedResponse was created and default is set", function () {

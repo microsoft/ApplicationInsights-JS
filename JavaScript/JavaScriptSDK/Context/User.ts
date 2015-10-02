@@ -5,10 +5,19 @@ module Microsoft.ApplicationInsights.Context {
 
     export class User {
 
+        static cookieSeparator: string = '|';
+        static userCookieName: string = 'ai_user';
+        static authUserCookieName: string = 'ai_authUser'; 
+
         /**
          * The user ID.
          */
         public id: string;
+
+        /**
+         * Authenticated user id
+         */
+        public authenticatedId: string;
 
         /**
          * The account ID.
@@ -30,11 +39,51 @@ module Microsoft.ApplicationInsights.Context {
          */
         public storeRegion: string;
         
+         /**
+         * Sets the autheticated user id and the account id in this session.
+         *   
+         * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
+         * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
+         */
+        public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string) {
+
+            // Validate inputs to ensure no cookie control characters.
+            var isInvalidInput = !this.validateUserInput(authenticatedUserId) || (accountId && !this.validateUserInput(accountId));
+            if (isInvalidInput) {
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Setting auth user context failed. " +
+                    "User auth/account id should be of type string, and not contain commas, semi-colons, equal signs, spaces, or vertical-bars.");
+                return;
+            }
+
+            // Create cookie string.
+            this.authenticatedId = authenticatedUserId;
+            var authCookie = this.authenticatedId;
+            if (accountId) {
+                this.accountId = accountId;
+                authCookie = [this.authenticatedId, this.accountId].join(User.cookieSeparator);
+            }
+            
+            // Set the cookie. No expiration date because this is a session cookie (expires when browser closed).
+            // Encoding the cookie to handle unexpected unicode characters.
+            Util.setCookie(User.authUserCookieName, encodeURI(authCookie));
+        }
+
+        /**
+         * Clears the authenticated user id and the account id from the user context.
+         * @returns {} 
+         */
+        public clearAuthenticatedUserContext() {
+            this.authenticatedId = null;
+            this.accountId = null;
+            Util.deleteCookie(User.authUserCookieName);
+        }
+
         constructor(accountId: string) {
+            
             //get userId or create new one if none exists
-            var cookie = Util.getCookie('ai_user');
+            var cookie = Util.getCookie(User.userCookieName);
             if (cookie) {
-                var params = cookie.split("|");
+                var params = cookie.split(User.cookieSeparator);
                 if (params.length > 0) {
                     this.id = params[0];
                 }
@@ -50,10 +99,44 @@ module Microsoft.ApplicationInsights.Context {
                 // 365 * 24 * 60 * 60 * 1000 = 31536000000 
                 date.setTime(date.getTime() + 31536000000);
                 var newCookie = [this.id, acqStr];
-                Util.setCookie('ai_user', newCookie.join('|') + ';expires=' + date.toUTCString());
+                Util.setCookie(User.userCookieName, newCookie.join(User.cookieSeparator) + ';expires=' + date.toUTCString());
+
+                // If we have an ai_session in local storage this means the user actively removed our cookies.
+                // We should respect their wishes and clear ourselves from local storage
+                Util.removeStorage('ai_session');
             }
 
+            // We still take the account id from the ctor param for backward compatibility. 
+            // But if the the customer set the accountId through the newer setAuthenticatedUserContext API, we will override it.
             this.accountId = accountId;
+
+            // Get the auth user id and account id from the cookie if exists
+            // Cookie is in the pattern: <authenticatedId>|<accountId>
+            var authCookie = Util.getCookie(User.authUserCookieName);
+            if (authCookie) {
+                authCookie = decodeURI(authCookie);
+                var authCookieString = authCookie.split(User.cookieSeparator);
+                if (authCookieString[0]) {
+                    this.authenticatedId = authCookieString[0];
+                }
+                if (authCookieString.length > 1 && authCookieString[1]) {
+                    this.accountId = authCookieString[1];
+                }
+            }
+        }
+
+        private validateUserInput(id: string): boolean {
+            // Validate:
+            // 1. Id is a non-empty string.
+            // 2. It does not contain special characters for cookies.
+            if (typeof id !== 'string' ||
+                !id ||
+                id.match(/,|;|=| |\|/)) {
+                return false;
+            }
+
+            return true;
         }
     }
+       
 }

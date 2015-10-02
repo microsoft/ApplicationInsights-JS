@@ -25,6 +25,7 @@ class InitializationTests extends TestClass {
             disableTelemetry: false,
             verboseLogging: true,
             diagnosticLogInterval: 1,
+            autoTrackPageVisitTime: false,
             samplingPercentage: 33
         };
 
@@ -72,7 +73,7 @@ class InitializationTests extends TestClass {
                 var snippet = <Microsoft.ApplicationInsights.Snippet> {
                     config: emptyConfig,
                     queue: []
-                }
+                    }
 
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
 
@@ -157,7 +158,7 @@ class InitializationTests extends TestClass {
 
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
                 var appInsightsLocal = init.loadAppInsights();
-                var trackTraceSpy = sinon.spy(appInsightsLocal, "trackTrace");
+                var trackTraceSpy = sinon.stub(appInsightsLocal, "trackTrace");
 
                 var queue: Array<string> = Microsoft.ApplicationInsights._InternalLogging["queue"];
                 var length = queue.length;
@@ -180,7 +181,7 @@ class InitializationTests extends TestClass {
                 clearInterval(poller);
 
                 trackTraceSpy.restore();
-
+                
             }
         });
 
@@ -243,7 +244,7 @@ class InitializationTests extends TestClass {
                 var appInsightsLocal = init.loadAppInsights();
                 
                 // Act
-                init.addFlushBeforeUnload(appInsightsLocal);
+                init.addHousekeepingBeforeUnload(appInsightsLocal);
                 
                 // Assert
                 Assert.ok(addEventHandlerStub.calledOnce);

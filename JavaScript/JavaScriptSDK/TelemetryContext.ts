@@ -64,12 +64,17 @@ module Microsoft.ApplicationInsights {
          * The object describing a session tracked by this object.
          */
         public session: Context.Session;
-        
+
+        /**
+        * The array of telemetry initializers to call before sending each telemetry item.
+        */
+        private telemetryInitializers: { (envelope: Telemetry.Common.Envelope): void; }[];
+
         /**
          * The session manager that manages session on the base of cookies.
          */
         public _sessionManager: Microsoft.ApplicationInsights.Context._SessionManager;
-
+        
         constructor(config: ITelemetryConfig) {
             this._config = config;
             this._sender = new Sender(config);
@@ -90,17 +95,26 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
+        * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
+        * before telemetry item is pushed for sending and in the order they were added.
+        */
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => void) {
+            this.telemetryInitializers = this.telemetryInitializers || [];
+            this.telemetryInitializers.push(telemetryInitializer);
+        }
+
+        /**
          * Use Sender.ts to send telemetry object to the endpoint
          */
         public track(envelope: Telemetry.Common.Envelope) {
             if (!envelope) {
                 _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, "cannot call .track() with a null or undefined argument");
-            } else {                
+            } else {
                 // If the envelope is PageView, reset the internal message count so that we can send internal telemetry for the new page.
                 if (envelope.name === Telemetry.PageView.envelopeType) {
                     _InternalLogging.resetInternalMessageCount();
                 }
-
+                
                 if (this.session) {
                     // If customer did not provide custom session id update sessionmanager
                     if (typeof this.session.id !== "string") {
@@ -135,14 +149,32 @@ module Microsoft.ApplicationInsights {
 
             envelope.iKey = this._config.instrumentationKey();
 
-            if (envelope.name === Telemetry.SessionTelemetry.envelopeType ||
-                envelope.name === Telemetry.Metric.envelopeType ||
-                this.sample.isSampledIn(envelope)) {
-                this._sender.send(envelope);
+            var telemetryInitializersFailed = false;
+            try {
+                this.telemetryInitializers = this.telemetryInitializers || [];
+                var telemetryInitializersCount = this.telemetryInitializers.length;
+                for (var i = 0; i < telemetryInitializersCount; ++i) {
+                    var telemetryInitializer = this.telemetryInitializers[i];
+                    if (telemetryInitializer) {
+                        telemetryInitializer.apply(null, [envelope]);
+                    }
+                }
+            } catch (e) {
+                telemetryInitializersFailed = true;
+                _InternalLogging.throwInternalUserActionable(
+                    LoggingSeverity.CRITICAL,
+                    "One of telemetry initializers failed, telemetry item will not be sent: " + Util.dump(e));
             }
-            else {
-                _InternalLogging.logInternalMessage(LoggingSeverity.WARNING,
-                    "Telemetry is sampled and not sent to the AI service. SampleRate is " + this.sample.sampleRate);
+
+            if (!telemetryInitializersFailed) {
+                if (envelope.name === Telemetry.SessionTelemetry.envelopeType ||
+                    envelope.name === Telemetry.Metric.envelopeType ||
+                    this.sample.isSampledIn(envelope)) {
+                    this._sender.send(envelope);
+                } else {
+                    _InternalLogging.logInternalMessage(LoggingSeverity.WARNING,
+                        "Telemetry is sampled and not sent to the AI service. SampleRate is " + this.sample.sampleRate);
+                }
             }
 
             return envelope;
@@ -156,7 +188,7 @@ module Microsoft.ApplicationInsights {
 
             sessionStateEnvelope.time = Util.toISOStringForIE8(new Date(timestamp));
 
-            tc._track(sessionStateEnvelope);
+            tc._track(sessionStateEnvelope); 
         }
 
         private _applyApplicationContext(envelope: Microsoft.Telemetry.Envelope, appContext: Microsoft.ApplicationInsights.Context.Application) {
@@ -257,9 +289,9 @@ module Microsoft.ApplicationInsights {
         private _applySampleContext(envelope: Microsoft.Telemetry.Envelope, sampleContext: Microsoft.ApplicationInsights.Context.Sample) {
             if (sampleContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
-                envelope.tags[tagKeys.sampleRate] = sampleContext.sampleRate;
+                    envelope.tags[tagKeys.sampleRate] = sampleContext.sampleRate;
+                }
             }
-        }
 
         private _applySessionContext(envelope: Microsoft.Telemetry.Envelope, sessionContext: Microsoft.ApplicationInsights.Context.Session) {
             if (sessionContext) {
@@ -287,6 +319,9 @@ module Microsoft.ApplicationInsights {
                 }
                 if (typeof userContext.id === "string") {
                     envelope.tags[tagKeys.userId] = userContext.id;
+                }
+                if (typeof userContext.authenticatedId === "string") {
+                    envelope.tags[tagKeys.userAuthUserId] = userContext.authenticatedId;
                 }
                 if (typeof userContext.storeRegion === "string") {
                     envelope.tags[tagKeys.userStoreRegion] = userContext.storeRegion;

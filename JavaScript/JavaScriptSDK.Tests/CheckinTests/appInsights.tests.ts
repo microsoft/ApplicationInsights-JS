@@ -3,7 +3,6 @@
 /// <reference path="../../JavaScriptSDK/Util.ts"/>
 
 class AppInsightsTests extends TestClass {
-
     private getAppInsightsSnippet() {
         var snippet: Microsoft.ApplicationInsights.IConfig = {
             instrumentationKey: "",
@@ -20,6 +19,7 @@ class AppInsightsTests extends TestClass {
             disableTelemetry: false,
             verboseLogging: false,
             diagnosticLogInterval: 1000,
+            autoTrackPageVisitTime: false,
             samplingPercentage: 100
         };
 
@@ -28,13 +28,21 @@ class AppInsightsTests extends TestClass {
     }
 
     public testInitialize() {
+        this.clock.reset();
         Microsoft.ApplicationInsights.Util.setCookie('ai_session', "");
         Microsoft.ApplicationInsights.Util.setCookie('ai_user', "");
+        if (window.localStorage) {
+            window.localStorage.clear();
+    }
     }
 
     public testCleanup() {
+        this.clock.reset();
         Microsoft.ApplicationInsights.Util.setCookie('ai_session', "");
         Microsoft.ApplicationInsights.Util.setCookie('ai_user', "");
+        if (window.localStorage) {
+            window.localStorage.clear();
+    }
     }
 
     public registerTests() {
@@ -78,7 +86,7 @@ class AppInsightsTests extends TestClass {
                 config.disableTelemetry = true;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(config);
                 appInsights.context._sender._sender = () => null;
-                var senderStub = sinon.stub(appInsights.context._sender, "_sender", () => {
+                var senderStub = sinon.stub(appInsights.context._sender, "_sender",() => {
                     console.log("GOT HERE");
                 });
                 
@@ -92,10 +100,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-                test(() => appInsights.trackPageView());
-                test(() => appInsights.trackMetric("testMetric", 0));
-                test(() => appInsights.trackException(new Error()));
-                test(() => appInsights.trackTrace("testTrace"));
 
                 // teardown
                 senderStub.restore();
@@ -113,19 +117,11 @@ class AppInsightsTests extends TestClass {
                 // act
                 appInsights.trackPageView();
 
-                // verify
-                Assert.ok(trackStub.calledOnce, "track was called");
-
                 // act
                 this.clock.tick(100);
 
                 // verify
-                var timingSupported = typeof window != "undefined" && window.performance && window.performance.timing;
-                if (timingSupported) {
-                    Assert.ok(trackStub.calledTwice, "track was called again");
-                } else {
-                    Assert.ok(trackStub.calledOnce, "timing is not supported and track was not called again");
-                }
+                Assert.ok(trackStub.calledTwice, "track was called");
 
                 // teardown
                 trackStub.restore();
@@ -189,10 +185,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"), Microsoft.ApplicationInsights.Telemetry.Event.envelopeType, Microsoft.ApplicationInsights.Telemetry.Event.dataType);
-                test(() => appInsights.trackPageView(), Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType, Microsoft.ApplicationInsights.Telemetry.PageView.dataType);
-                test(() => appInsights.trackMetric("testMetric", 0), Microsoft.ApplicationInsights.Telemetry.Metric.envelopeType, Microsoft.ApplicationInsights.Telemetry.Metric.dataType);
-                test(() => appInsights.trackException(new Error()), Microsoft.ApplicationInsights.Telemetry.Exception.envelopeType, Microsoft.ApplicationInsights.Telemetry.Exception.dataType);
-                test(() => appInsights.trackTrace("testTrace"), Microsoft.ApplicationInsights.Telemetry.Trace.envelopeType, Microsoft.ApplicationInsights.Telemetry.Trace.dataType);
 
                 // teardown
                 trackStub.restore();
@@ -244,10 +236,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-                test(() => appInsights.trackPageView());
-                test(() => appInsights.trackMetric("testMetric", 0));
-                test(() => appInsights.trackException(new Error()));
-                test(() => appInsights.trackTrace("testTrace"));
 
                 // teardown
                 trackStub.restore();
@@ -297,10 +285,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-                test(() => appInsights.trackPageView());
-                test(() => appInsights.trackMetric("testMetric", 0));
-                test(() => appInsights.trackException(new Error()));
-                test(() => appInsights.trackTrace("testTrace"));
 
                 // teardown
                 trackStub.restore();
@@ -330,10 +314,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-                test(() => appInsights.trackPageView());
-                test(() => appInsights.trackMetric("testMetric", 0));
-                test(() => appInsights.trackException(new Error()));
-                test(() => appInsights.trackTrace("testTrace"));
 
                 // teardown
                 trackStub.restore();
@@ -361,10 +341,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-                test(() => appInsights.trackPageView());
-                test(() => appInsights.trackMetric("testMetric", 0));
-                test(() => appInsights.trackException(new Error()));
-                test(() => appInsights.trackTrace("testTrace"));
 
                 // teardown
                 trackStub.restore();
@@ -400,10 +376,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-                test(() => appInsights.trackPageView());
-                test(() => appInsights.trackMetric("testMetric", 0));
-                test(() => appInsights.trackException(new Error()));
-                test(() => appInsights.trackTrace("testTrace"));
 
                 // teardown
                 trackStub.restore();
@@ -430,10 +402,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-                test(() => appInsights.trackPageView());
-                test(() => appInsights.trackMetric("testMetric", 0));
-                test(() => appInsights.trackException(new Error()));
-                test(() => appInsights.trackTrace("testTrace"));
 
                 // teardown
                 trackSpy.restore();
@@ -495,10 +463,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-                test(() => appInsights.trackPageView());
-                test(() => appInsights.trackMetric("testMetric", 0));
-                test(() => appInsights.trackException(new Error()));
-                test(() => appInsights.trackTrace("testTrace"));
 
                 // teardown
                 trackStub.restore();
@@ -534,10 +498,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-                test(() => appInsights.trackPageView());
-                test(() => appInsights.trackMetric("testMetric", 0));
-                test(() => appInsights.trackException(new Error()));
-                test(() => appInsights.trackTrace("testTrace"));
 
                 // teardown
                 trackStub.restore();
@@ -545,73 +505,177 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "AppInsightsTests: trackPageView sends base data 'immediately' and performance data when available",
+            name: "AppInsightsTests: set authenticatedId context is applied",
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var triggerStub = sinon.stub(appInsights.context._sender, "triggerSend");
 
-                var isAvailable = false;
-                if (window.performance && window.performance.timing) {
-                    isAvailable = true;
-                    this.clock.now = window.performance.timing.navigationStart;
-                }
+                appInsights.setAuthenticatedUserContext("10001");
 
-                var pageLoaded = false;
-                var pageLoadStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "checkPageLoad", () => isAvailable ? pageLoaded : undefined);
-
-                // act 
-                appInsights.trackPageView("pagePath");
-                this.clock.tick(99);
-                appInsights.trackTrace("trace");
+                var trackStub = sinon.stub(appInsights.context._sender, "send");
 
                 // verify
-                Assert.ok(triggerStub.notCalled, "send was called once 100ms after invocation");
-                this.clock.tick(1);
-                Assert.ok(triggerStub.calledOnce, "send was called once 100ms after invocation");
+                var test = (action) => {
+                    action();
+                    this.clock.tick(1);
+                    var envelope = this.getFirstResult(action, trackStub);
+                    var contextKeys = new AI.ContextTagKeys();
+                    Assert.equal("10001", envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId");
 
-                this.clock.tick(1000);
-                Assert.ok(triggerStub.calledOnce, "trackPageView polls for timing data to become available");
-
-                pageLoaded = true;
-                this.clock.tick(200);
-                if (isAvailable) {
-                    Assert.ok(triggerStub.calledTwice, "send was called again after timing data became available");
-                }
+                    trackStub.reset();
+                };
 
                 // act
-                triggerStub.reset();
-                pageLoaded = undefined; // this indicates that timing data is not supported by the browser
-                appInsights.trackPageView("pagePath");
-                this.clock.tick(100);
+                test(() => appInsights.trackEvent("testEvent"));
+                
+                // teardown
+                trackStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: set authenticatedId and accountId context is applied",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+
+                appInsights.setAuthenticatedUserContext("10001", "account33");
+
+                var trackStub = sinon.stub(appInsights.context._sender, "send");
 
                 // verify
-                Assert.ok(triggerStub.calledOnce, "send was called once after sending one metric");
-                this.clock.tick(1000);
-                pageLoaded = true;
-                this.clock.tick(1000);
-                Assert.ok(triggerStub.calledOnce, "trackPageView does not attempt to send timing data if it is not supported");
+                var test = (action) => {
+                    action();
+                    this.clock.tick(1);
+                    var envelope = this.getFirstResult(action, trackStub);
+                    var contextKeys = new AI.ContextTagKeys();
+                    Assert.equal("10001", envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId");
+                    Assert.equal("account33", envelope.tags[contextKeys.userAccountId], "user.accountId");
+
+                    trackStub.reset();
+                };
 
                 // act
-                triggerStub.reset();
-                pageLoaded = false;
-                appInsights.trackPageView("pagePath");
-                this.clock.tick(100);
-
-                // verify
-                Assert.ok(triggerStub.calledOnce, "send was called once after sending one metric");
-                this.clock.tick(60000);
-                if (isAvailable) {
-                    Assert.ok(triggerStub.calledTwice, "message is sent after 60s");
-                    pageLoaded = true;
-                    this.clock.tick(200);
-                    Assert.ok(triggerStub.calledTwice, "polling stops after 60s");
-                }
+                test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                pageLoadStub.restore();
+                trackStub.restore();
+                }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: set authenticatedId and accountId context is applied with non-ascii languages",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+
+                appInsights.setAuthenticatedUserContext("\u0428", "\u0429"); // Cyrillic characters
+                var trackStub = sinon.stub(appInsights.context._sender, "send");
+
+                // verify
+                var test = (action) => {
+                    action();
+                    this.clock.tick(1);
+                    var envelope = this.getFirstResult(action, trackStub);
+                    var contextKeys = new AI.ContextTagKeys();
+                    Assert.equal("\u0428", envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId is correct");
+                    Assert.equal("\u0429", envelope.tags[contextKeys.userAccountId], "user.accountId is correct");
+
+                    trackStub.reset();
+                };
+
+                // act 
+                test(() => appInsights.trackEvent("testEvent"));
+                
+                // teardown
+                trackStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: clear authID context is applied",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                appInsights.setAuthenticatedUserContext("1234", "abcd");
+
+                // Clear authenticatedId
+                appInsights.clearAuthenticatedUserContext();
+
+                // verify
+                var test = (action) => {
+                    action();
+                this.clock.tick(1);
+                    var envelope = this.getFirstResult(action, trackStub);
+                    var contextKeys = new AI.ContextTagKeys();
+                    Assert.equal(undefined, envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId");
+                    Assert.equal(undefined, envelope.tags[contextKeys.userAccountId], "user.accountId");
+
+                    trackStub.reset();
+                };
+
+                // act
+                test(() => appInsights.trackEvent("testEvent"));
+
+                // teardown
+                trackStub.restore();
+                }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: trackPageView sends base data and performance data when available",
+            test: () => {
+                // setup
+                var perfDataAvailable = false;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                appInsights.context._sessionManager._sessionHandler = null;
+                var triggerStub = sinon.stub(appInsights.context, "track");
+                var checkPageLoadStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",() => { return perfDataAvailable; });
+
+                // act
+                appInsights.trackPageView();
+
+                // Data not available yet - should not send events
+                this.clock.tick(100);
+                Assert.ok(triggerStub.notCalled, "Data is not yet available hence nothing is sent");
+
+                // Data becomes available - both page view and client perf should be sent
+                perfDataAvailable = true;
+                this.clock.tick(100);
+                Assert.ok(triggerStub.calledTwice, "Data is available hence both page view and client perf should be sent");
+
                 triggerStub.restore();
+                checkPageLoadStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: a page view is sent after 60 seconds even if perf data is not available",
+            test: () => {
+                // setup
+                var duration = 0;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                appInsights.context._sessionManager._sessionHandler = null;
+                var triggerStub = sinon.stub(appInsights.context, "track");
+                var checkPageLoadStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",() => { return false; });
+                var getDurationStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getDuration",() => { return duration; });
+
+                // act
+                appInsights.trackPageView();
+
+                // Data not available yet - should not send events
+                this.clock.tick(100);
+                Assert.ok(triggerStub.notCalled, "Data is not yet available hence nothing is sent");
+
+                // 60 seconds passed, page view is supposed to be sent
+                duration = 60001;
+                this.clock.tick(100);
+                Assert.ok(triggerStub.calledOnce, "60 seconds passed, page view is supposed to be sent");
+
+                triggerStub.restore();
+                checkPageLoadStub.restore();
+                getDurationStub.restore();
             }
         });
 
@@ -627,6 +691,8 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(trackStub.calledOnce, "single exception is tracked");
                 appInsights.trackException(<any>[new Error()]);
                 Assert.ok(trackStub.calledTwice, "array of exceptions is tracked");
+
+                trackStub.restore();
             }
         });
 
@@ -692,18 +758,34 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var dumpSpy = sinon.spy(Microsoft.ApplicationInsights.Util, "dump")
-                try {
                     var unexpectedError = new Error();
-                    sinon.stub(sut, "trackException").throws(unexpectedError);               
+                var stub = sinon.stub(sut, "trackException").throws(unexpectedError);
 
                     sut._onerror("any message", "any://url", 420, 42, new Error());
 
                     Assert.ok(dumpSpy.calledWith(unexpectedError));
+                stub.restore();
+                dumpSpy.restore();
                 }
-                finally {
+        });
+
+        this.testCase({
+            name: "AppInsights._onerror stringifies error object",
+            test: () => {
+                var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var dumpSpy = sinon.spy(Microsoft.ApplicationInsights.Util, "dump")
+                var unexpectedError = new Error("my cool message");
+                var stub = sinon.stub(sut, "trackException").throws(unexpectedError);
+
+                sut._onerror("any message", "any://url", 420, 42, new Error());
+
+                Assert.ok(dumpSpy.returnValues[0].indexOf("stack: ") != -1);
+                Assert.ok(dumpSpy.returnValues[0].indexOf("message: 'my cool message'") != -1);
+                Assert.ok(dumpSpy.returnValues[0].indexOf("name: 'Error'") != -1);
+
+                stub.restore();
                     dumpSpy.restore();
                 }
-            }
         });
 
         this.testCase({
@@ -712,8 +794,7 @@ class AppInsightsTests extends TestClass {
                 var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var throwInternalNonUserActionableSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
                 var dumpStub = sinon.stub(Microsoft.ApplicationInsights.Util, "dump");
-                try {
-                    sinon.stub(sut, "trackException").throws(new Error());
+                var stub = sinon.stub(sut, "trackException").throws(new Error());
                     var expectedErrorDump: string = "test error";
                     dumpStub.returns(expectedErrorDump);
 
@@ -721,11 +802,45 @@ class AppInsightsTests extends TestClass {
 
                     var logMessage: string = throwInternalNonUserActionableSpy.getCall(0).args[1];
                     Assert.notEqual(-1, logMessage.indexOf(expectedErrorDump));
-                }
-                finally {
+                stub.restore();
                     dumpStub.restore();
                     throwInternalNonUserActionableSpy.restore();
                 }
+        });
+
+        this.testCase({
+            name: "AppInsights._onerror add document URL in case of CORS error",
+            test: () => {
+                // prepare
+                var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var trackSpy = sinon.spy(sut.context, "track");                
+
+                // act
+                sut._onerror("Script error.", "", 0, 0, null);
+
+                // assert
+                Assert.equal(document.URL,(<any>trackSpy.args[0][0]).data.baseData.properties.url);
+
+                trackSpy.restore();
+            }
+        });
+
+        this.testCase({
+            name: "AppInsights._onerror adds document URL in case of no CORS error",
+            test: () => {
+                // prepare
+                var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var trackExceptionSpy = sinon.spy(sut, "trackException");                
+
+                // act
+                // Last arg is not an error\null which will be treated as not CORS issue
+                sut._onerror("Script error.", "", 0, 0, <any>new Object());
+
+                // assert
+                // properties are passed as a 3rd parameter
+                Assert.equal(document.URL,(<any>trackExceptionSpy.args[0][2]).url);
+
+                trackExceptionSpy.restore();
             }
         });
 
@@ -751,19 +866,18 @@ class AppInsightsTests extends TestClass {
             // setup
             var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
             appInsights.context._sessionManager._sessionHandler = null;
-            var trackStub = sinon.stub(appInsights.context._sender, "send");
+            var stub = sinon.stub(appInsights, "trackPageViewInternal");
 
             // act
             trackAction(appInsights);
             
             // verify
-            Assert.ok(trackStub.calledOnce, "track was called"); 
-            Assert.ok(trackStub.args.length > 0, "args > 0");
-            var data = <Microsoft.ApplicationInsights.Telemetry.Common.Envelope>trackStub.args[0][0].data.baseData;
+            Assert.ok(stub.called);
+            var data = stub.args[0];
             validateAction(data);
 
             // teardown
-            trackStub.restore();
+            stub.restore();
         }
 
 
@@ -772,11 +886,10 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 var trackAction = (ai) => ai.trackPageView();
                 var validateAction = (data) => {
-                    Assert.notEqual(testValues.name, data.name);
-                    Assert.notEqual(testValues.url, data.url);
-                    Assert.notEqual(Microsoft.ApplicationInsights.Util.msToTimeSpan(testValues.duration), data.duration);
-                    Assert.notEqual(testValues.properties, data.properties);
-                    Assert.notEqual(testValues.measurements, data.measurements);
+                    Assert.notEqual(testValues.name, data[0]);
+                    Assert.notEqual(testValues.url, data[1]);
+                    Assert.notEqual(testValues.properties, data[2]);
+                    Assert.notEqual(testValues.measurements, data[3]);
                 };
 
                 test(trackAction, validateAction);
@@ -789,11 +902,10 @@ class AppInsightsTests extends TestClass {
                 var trackAction = (ai) => ai.trackPageView(testValues.name);
 
                 var validateAction = (data) => {
-                    Assert.equal(testValues.name, data.name);
-                    Assert.notEqual(testValues.url, data.url);
-                    Assert.notEqual(Microsoft.ApplicationInsights.Util.msToTimeSpan(testValues.duration), data.duration);
-                    Assert.notEqual(testValues.properties, data.properties);
-                    Assert.notEqual(testValues.measurements, data.measurements);
+                    Assert.equal(testValues.name, data[0]);
+                    Assert.notEqual(testValues.url, data[1]);
+                    Assert.notEqual(testValues.properties, data[2]);
+                    Assert.notEqual(testValues.measurements, data[3]);
                 };
 
                 test(trackAction, validateAction);
@@ -806,11 +918,10 @@ class AppInsightsTests extends TestClass {
                 var trackAction = (ai) => ai.trackPageView(testValues.name, null, testValues.properties);
 
                 var validateAction = (data) => {
-                    Assert.equal(testValues.name, data.name);
-                    Assert.notEqual(testValues.url, data.url);
-                    Assert.notEqual(Microsoft.ApplicationInsights.Util.msToTimeSpan(testValues.duration), data.duration);
-                    Assert.deepEqual(testValues.properties, data.properties);
-                    Assert.notEqual(testValues.measurements, data.measurements);
+                    Assert.equal(testValues.name, data[0]);
+                    Assert.notEqual(testValues.url, data[1]);
+                    Assert.deepEqual(testValues.properties, data[2]);
+                    Assert.notEqual(testValues.measurements, data[3]);
                 };
 
                 test(trackAction, validateAction);
@@ -823,11 +934,10 @@ class AppInsightsTests extends TestClass {
                 var trackAction = (ai) => ai.trackPageView(testValues.name, testValues.url);
 
                 var validateAction = (data) => {
-                    Assert.equal(testValues.name, data.name);
-                    Assert.equal(testValues.url, data.url);
-                    Assert.notEqual(Microsoft.ApplicationInsights.Util.msToTimeSpan(testValues.duration), data.duration);
-                    Assert.notEqual(testValues.properties, data.properties);
-                    Assert.notEqual(testValues.measurements, data.measurements);
+                    Assert.equal(testValues.name, data[0]);
+                    Assert.equal(testValues.url, data[1]);
+                    Assert.notEqual(testValues.properties, data[2]);
+                    Assert.notEqual(testValues.measurements, data[3]);
                 };
 
                 test(trackAction, validateAction);
@@ -840,11 +950,10 @@ class AppInsightsTests extends TestClass {
                 var trackAction = (ai) => ai.trackPageView(testValues.name, null, testValues.properties, testValues.measurements);
 
                 var validateAction = (data) => {
-                    Assert.equal(testValues.name, data.name);
-                    Assert.notEqual(testValues.url, data.url);
-                    Assert.notEqual(Microsoft.ApplicationInsights.Util.msToTimeSpan(testValues.duration), data.duration);
-                    Assert.deepEqual(testValues.properties, data.properties);
-                    Assert.deepEqual(testValues.measurements, data.measurements);
+                    Assert.equal(testValues.name, data[0]);
+                    Assert.notEqual(testValues.url, data[1]);
+                    Assert.deepEqual(testValues.properties, data[2]);
+                    Assert.deepEqual(testValues.measurements, data[3]);
                 };
 
                 test(trackAction, validateAction);
@@ -857,11 +966,10 @@ class AppInsightsTests extends TestClass {
                 var trackAction = (ai) => ai.trackPageView(testValues.name, testValues.url, testValues.properties);
 
                 var validateAction = (data) => {
-                    Assert.equal(testValues.name, data.name);
-                    Assert.equal(testValues.url, data.url);
-                    Assert.notEqual(Microsoft.ApplicationInsights.Util.msToTimeSpan(testValues.duration), data.duration);
-                    Assert.deepEqual(testValues.properties, data.properties);
-                    Assert.notEqual(testValues.measurements, data.measurements);
+                    Assert.equal(testValues.name, data[0]);
+                    Assert.equal(testValues.url, data[1]);
+                    Assert.deepEqual(testValues.properties, data[2]);
+                    Assert.notEqual(testValues.measurements, data[3]);
                 };
 
                 test(trackAction, validateAction);
@@ -875,11 +983,10 @@ class AppInsightsTests extends TestClass {
                 var trackAction = (ai) => ai.trackPageView(testValues.name, testValues.url, testValues.properties, testValues.measurements);
 
                 var validateAction = (data) => {
-                    Assert.equal(testValues.name, data.name);
-                    Assert.equal(testValues.url, data.url);
-                    Assert.notEqual(Microsoft.ApplicationInsights.Util.msToTimeSpan(testValues.duration), data.duration);
-                    Assert.deepEqual(testValues.properties, data.properties);
-                    Assert.deepEqual(testValues.measurements, data.measurements);
+                    Assert.equal(testValues.name, data[0]);
+                    Assert.equal(testValues.url, data[1]);
+                    Assert.deepEqual(testValues.properties, data[2]);
+                    Assert.deepEqual(testValues.measurements, data[3]);
                 };
 
                 test(trackAction, validateAction);
@@ -902,6 +1009,28 @@ class AppInsightsTests extends TestClass {
         };
 
         this.testCase({
+            name: "Timing Tests: Start/StopPageView pass correct duration",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var spy = sinon.spy(appInsights, "sendPageViewInternal");
+
+                // act
+                appInsights.startTrackPage();
+                this.clock.tick(testValues.duration);
+                appInsights.stopTrackPage();
+
+                // verify
+                Assert.ok(spy.calledOnce, "stop track page view sent data");
+                var actualDuration = spy.args[0][2];
+                Assert.equal(testValues.duration, actualDuration, "duration is calculated and sent correctly");
+
+                // teardown                
+                spy.restore();
+            }
+        });
+
+        this.testCase({
             name: "Timing Tests: Start/StopPageView tracks single page view with no parameters",
             test: () => {
                 // setup
@@ -920,7 +1049,6 @@ class AppInsightsTests extends TestClass {
                 var telemetry = <Microsoft.ApplicationInsights.Telemetry.PageView>trackStub.args[0][0].data.baseData;
                 Assert.notEqual(testValues.name, telemetry.name);
                 Assert.notEqual(testValues.url, telemetry.url);
-                Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(testValues.duration), telemetry.duration);
                 Assert.notEqual(testValues.properties, telemetry.properties);
                 Assert.notEqual(testValues.measurements, telemetry.measurements);
 
@@ -948,7 +1076,6 @@ class AppInsightsTests extends TestClass {
                 var telemetry = <Microsoft.ApplicationInsights.Telemetry.PageView>trackStub.args[0][0].data.baseData;
                 Assert.equal(testValues.name, telemetry.name);
                 Assert.equal(testValues.url, telemetry.url);
-                Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(testValues.duration), telemetry.duration);
                 Assert.deepEqual(testValues.properties, telemetry.properties);
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
 
@@ -963,7 +1090,6 @@ class AppInsightsTests extends TestClass {
                 telemetry = <Microsoft.ApplicationInsights.Telemetry.PageView>trackStub.args[0][0].data.baseData;
                 Assert.equal(testValues.name, telemetry.name);
                 Assert.equal(testValues.url, telemetry.url);
-                Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(testValues.duration), telemetry.duration);
                 Assert.deepEqual(testValues.properties, telemetry.properties);
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
 
@@ -999,7 +1125,6 @@ class AppInsightsTests extends TestClass {
                 var telemetry = <Microsoft.ApplicationInsights.Telemetry.PageView>trackStub.args[0][0].data.baseData;
                 Assert.notEqual(testValues.name, telemetry.name);
                 Assert.notEqual(testValues.url, telemetry.url);
-                Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(testValues.duration), telemetry.duration);
                 Assert.notEqual(testValues.properties, telemetry.properties);
                 Assert.notEqual(testValues.measurements, telemetry.measurements);
 
@@ -1007,7 +1132,6 @@ class AppInsightsTests extends TestClass {
                 telemetry = <Microsoft.ApplicationInsights.Telemetry.PageView>trackStub.args[1][0].data.baseData;
                 Assert.equal(testValues.name, telemetry.name);
                 Assert.equal(testValues.url, telemetry.url);
-                Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(3 * testValues.duration), telemetry.duration);
                 Assert.deepEqual(testValues.properties, telemetry.properties);
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
 

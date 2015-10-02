@@ -35,6 +35,9 @@
         createLazyMethod("track" + method.pop());
     }
 
+    createLazyMethod("setAuthenticatedUserContext");
+    createLazyMethod("clearAuthenticatedUserContext");
+
     // collect global errors
     if (!aiConfig.disableExceptionTracking) {
         method = "onerror";

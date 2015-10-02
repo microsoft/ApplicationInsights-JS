@@ -11,6 +11,7 @@
 /// <reference path="../checkintests/telemetry/trace.tests.ts" />
 /// <reference path="../checkintests/telemetry/DataSanitizer.tests.ts" />
 
+/// <reference path="../checkintests/PageVisitTimeManager.tests.ts" />
 /// <reference path="../checkintests/appinsights.tests.ts" />
 /// <reference path="../checkintests/logging.tests.ts" />
 /// <reference path="../checkintests/sender.tests.ts" />

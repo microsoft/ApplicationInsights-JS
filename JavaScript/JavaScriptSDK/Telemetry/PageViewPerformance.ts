@@ -21,7 +21,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             receivedResponse: false,
             domProcessing: false,
             properties: false,
-            measurement: false
+            measurements: false
         };
 
         /**
@@ -44,10 +44,10 @@ module Microsoft.ApplicationInsights.Telemetry {
              *  |             ||-requestStart
              *  |             ||             |-responseStart
              *  |             ||             |              |-responseEnd
-             *  |             ||             |              ||-domLoading
-             *  |             ||             |              ||         |-loadEventEnd
-             *  |---network---||---request---|---response---||---dom---|
-             *  |--------------------------total-----------------------|
+             *  |             ||             |              |
+             *  |             ||             |              |         |-loadEventEnd
+             *  |---network---||---request---|---response---|---dom---|
+             *  |--------------------------total----------------------|
              */
             var timing = PageViewPerformance.getPerformanceTiming();
             if (timing) {
@@ -55,7 +55,7 @@ module Microsoft.ApplicationInsights.Telemetry {
                 var network = PageViewPerformance.getDuration(timing.navigationStart, timing.connectEnd);
                 var request = PageViewPerformance.getDuration(timing.requestStart, timing.responseStart);
                 var response = PageViewPerformance.getDuration(timing.responseStart, timing.responseEnd);
-                var dom = PageViewPerformance.getDuration(timing.domLoading, timing.loadEventEnd);
+                var dom = PageViewPerformance.getDuration(timing.responseEnd, timing.loadEventEnd);
 
 
                 if (total == 0) {
@@ -107,13 +107,20 @@ module Microsoft.ApplicationInsights.Telemetry {
         }
 
         /**
-         * Returns undefined if not available, true if ready, false otherwise
+        * Returns true is window performance timing API is supported, false otherwise.
+        */
+        public static isPerformanceTimingSupported() {
+            return typeof window != "undefined" && window.performance && window.performance.timing;
+        }
+
+        /**
+         * As page loads different parts of performance timing numbers get set. When all of them are set we can report it.
+         * Returns true if ready, false otherwise.
          */
-        public static checkPageLoad() {
-            var status = undefined;
-            if (typeof window != "undefined" && window.performance && window.performance.timing) {
-                var timing = window.performance.timing;
-                status = timing.domainLookupStart > 0
+        public static isPerformanceTimingDataReady() {
+            var timing = window.performance.timing;
+
+            return timing.domainLookupStart > 0
                 && timing.navigationStart > 0
                 && timing.responseStart > 0
                 && timing.requestStart > 0
@@ -121,14 +128,11 @@ module Microsoft.ApplicationInsights.Telemetry {
                 && timing.responseEnd > 0
                 && timing.connectEnd > 0
                 && timing.domLoading > 0;
-            }
-
-            return status;
         }
 
         public static getDuration(start: any, end: any): number {
             var duration = 0;
-            if (!(isNaN(start) || isNaN(end) || start === 0 || end === 0)) {
+            if (!(isNaN(start) || isNaN(end))) {
                 duration = Math.max(end - start, 0);
             }
 

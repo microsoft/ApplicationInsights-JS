@@ -53,9 +53,9 @@
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.ServiceProcess" />
-    <Reference Include="WebDriver, Version=2.43.1.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="WebDriver, Version=2.47.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\packages\Selenium.WebDriver.2.43.1\lib\net40\WebDriver.dll</HintPath>
+      <HintPath>..\..\..\packages\Selenium.WebDriver.2.47.0\lib\net40\WebDriver.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +166,7 @@
     <TypeScriptCompile Include="CheckinTests\Context\Sample.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Context\SamplingScoreGenerator.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Initialization.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\PageVisitTimeManager.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Telemetry\DataSanitizer.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Telemetry\PageViewPerformance.tests.ts" />
     <TypeScriptCompile Include="Contracts\Generated\Base.unittests.ts" />
@@ -186,6 +187,7 @@
     <TypeScriptCompile Include="Performance\api.perftests.ts" />
     <TypeScriptCompile Include="Performance\pageLoad.perftests.ts" />
     <TypeScriptCompile Include="Performance\serializer.perftests.ts" />
+    <Content Include="TestFramework\PollingAssert.ts" />
     <TypeScriptCompile Include="TestFramework\ContractTestHelper.ts" />
     <TypeScriptCompile Include="CheckinTests\Logging.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Sender.tests.ts" />
