@@ -428,10 +428,11 @@ class AppInsightsTests extends TestClass {
                     Assert.equal("asdf", envelope.tags[contextKeys.userId], "user.id");
                     trackSpy.reset();
                 };
-
+                
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-                test(() => appInsights.trackPageView());
+                var pageViewTimeout = 100; // page views are sent with 100 ms delay (see trackPageView implementation).
+                test(() => { appInsights.trackPageView(); this.clock.tick(pageViewTimeout); });
                 test(() => appInsights.trackException(new Error()));
                 test(() => appInsights.trackTrace("testTrace"));
 

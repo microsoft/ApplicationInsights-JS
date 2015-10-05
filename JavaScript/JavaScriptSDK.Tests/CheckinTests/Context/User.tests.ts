@@ -239,6 +239,7 @@ class UserContextTests extends TestClass {
                 var cookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie");
                 var user = new Microsoft.ApplicationInsights.Context.User(undefined);
                 var loggingStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                cookieStub.reset();
 
                 // act
                 user.setAuthenticatedUserContext(null);
