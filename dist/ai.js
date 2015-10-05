@@ -93,7 +93,7 @@ var Microsoft;
                     }
                 }
                 catch (e) {
-                    console.warn('Failed to get client localStorage: ' + e.message);
+                    ApplicationInsights._InternalLogging.warnToConsole('Failed to get client localStorage: ' + e.message);
                     return null;
                 }
             };
@@ -148,7 +148,7 @@ var Microsoft;
                     }
                 }
                 catch (e) {
-                    console.warn('Failed to get client session storage: ' + e.message);
+                    ApplicationInsights._InternalLogging.warnToConsole('Failed to get client session storage: ' + e.message);
                     return null;
                 }
             };
@@ -696,12 +696,62 @@ var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
     (function (ApplicationInsights) {
+        var SamplingScoreGenerator = (function () {
+            function SamplingScoreGenerator() {
+            }
+            SamplingScoreGenerator.getScore = function (envelope) {
+                var tagKeys = new AI.ContextTagKeys();
+                var score = 0;
+                if (envelope.tags[tagKeys.userId]) {
+                    score = SamplingScoreGenerator.getSamplingHashCode(envelope.tags[tagKeys.userId]) / SamplingScoreGenerator.INT_MAX_VALUE;
+                }
+                else if (envelope.tags[tagKeys.operationId]) {
+                    score = SamplingScoreGenerator.getSamplingHashCode(envelope.tags[tagKeys.operationId]) / SamplingScoreGenerator.INT_MAX_VALUE;
+                }
+                else {
+                    score = Math.random();
+                }
+                return score * 100;
+            };
+            SamplingScoreGenerator.getSamplingHashCode = function (input) {
+                if (input == "") {
+                    return 0;
+                }
+                var hash = 5381;
+                for (var i = 0; i < input.length; ++i) {
+                    hash = ((hash << 5) + hash) + input.charCodeAt(i);
+                    hash = hash & hash;
+                }
+                return Math.abs(hash);
+            };
+            SamplingScoreGenerator.INT_MAX_VALUE = 2147483647;
+            return SamplingScoreGenerator;
+        })();
+        ApplicationInsights.SamplingScoreGenerator = SamplingScoreGenerator;
+    })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
+})(Microsoft || (Microsoft = {}));
+var Microsoft;
+(function (Microsoft) {
+    var ApplicationInsights;
+    (function (ApplicationInsights) {
         var Context;
         (function (Context) {
             "use strict";
             var Sample = (function () {
-                function Sample() {
+                function Sample(sampleRate) {
+                    this.INT_MAX_VALUE = 2147483647;
+                    if (sampleRate > 100 || sampleRate < 0) {
+                        ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "Sampling rate is out of range (0..100): '" + sampleRate + "'. Sampling will be disabled, you may be sending too much data which may affect your AI service level.");
+                        this.sampleRate = 100;
+                    }
+                    this.sampleRate = sampleRate;
                 }
+                Sample.prototype.isSampledIn = function (envelope) {
+                    if (this.sampleRate == 100)
+                        return true;
+                    var score = ApplicationInsights.SamplingScoreGenerator.getScore(envelope);
+                    return score < this.sampleRate;
+                };
                 return Sample;
             })();
             Context.Sample = Sample;
@@ -1766,7 +1816,7 @@ var Microsoft;
                     this.user = new ApplicationInsights.Context.User(config.accountId());
                     this.operation = new ApplicationInsights.Context.Operation();
                     this.session = new ApplicationInsights.Context.Session();
-                    this.sample = new ApplicationInsights.Context.Sample();
+                    this.sample = new ApplicationInsights.Context.Sample(config.sampleRate());
                 }
             }
             TelemetryContext.prototype.addTelemetryInitializer = function (telemetryInitializer) {
@@ -1803,9 +1853,9 @@ var Microsoft;
                 this._applyDeviceContext(envelope, this.device);
                 this._applyInternalContext(envelope, this.internal);
                 this._applyLocationContext(envelope, this.location);
-                this._applyOperationContext(envelope, this.operation);
                 this._applySampleContext(envelope, this.sample);
                 this._applyUserContext(envelope, this.user);
+                this._applyOperationContext(envelope, this.operation);
                 envelope.iKey = this._config.instrumentationKey();
                 var telemetryInitializersFailed = false;
                 try {
@@ -1823,8 +1873,14 @@ var Microsoft;
                     ApplicationInsights._InternalLogging.throwInternalUserActionable(0 /* CRITICAL */, "One of telemetry initializers failed, telemetry item will not be sent: " + ApplicationInsights.Util.dump(e));
                 }
                 if (!telemetryInitializersFailed) {
-                    this._sender.send(envelope);
+                    if (envelope.name === ApplicationInsights.Telemetry.SessionTelemetry.envelopeType || envelope.name === ApplicationInsights.Telemetry.Metric.envelopeType || this.sample.isSampledIn(envelope)) {
+                        this._sender.send(envelope);
+                    }
+                    else {
+                        ApplicationInsights._InternalLogging.logInternalMessage(1 /* WARNING */, "Telemetry is sampled and not sent to the AI service. SampleRate is " + this.sample.sampleRate);
+                    }
                 }
+                return envelope;
             };
             TelemetryContext._sessionHandler = function (tc, sessionState, timestamp) {
                 var sessionStateTelemetry = new ApplicationInsights.Telemetry.SessionTelemetry(sessionState);
@@ -1924,9 +1980,7 @@ var Microsoft;
             TelemetryContext.prototype._applySampleContext = function (envelope, sampleContext) {
                 if (sampleContext) {
                     var tagKeys = new AI.ContextTagKeys();
-                    if (typeof sampleContext.sampleRate === "string") {
-                        envelope.tags[tagKeys.sampleRate] = sampleContext.sampleRate;
-                    }
+                    envelope.tags[tagKeys.sampleRate] = sampleContext.sampleRate;
                 }
             };
             TelemetryContext.prototype._applySessionContext = function (envelope, sessionContext) {
@@ -2101,7 +2155,7 @@ var Microsoft;
     var ApplicationInsights;
     (function (ApplicationInsights) {
         "use strict";
-        ApplicationInsights.Version = "0.17.0";
+        ApplicationInsights.Version = "0.18.0";
         var AppInsights = (function () {
             function AppInsights(config) {
                 var _this = this;
@@ -2126,7 +2180,8 @@ var Microsoft;
                     emitLineDelimitedJson: function () { return _this.config.emitLineDelimitedJson; },
                     maxBatchSizeInBytes: function () { return _this.config.maxBatchSizeInBytes; },
                     maxBatchInterval: function () { return _this.config.maxBatchInterval; },
-                    disableTelemetry: function () { return _this.config.disableTelemetry; }
+                    disableTelemetry: function () { return _this.config.disableTelemetry; },
+                    sampleRate: function () { return _this.config.samplingPercentage; }
                 };
                 this.context = new ApplicationInsights.TelemetryContext(configGetters);
                 this._eventTracking = new Timing("trackEvent");
@@ -2554,6 +2609,9 @@ var Microsoft;
                 config.emitLineDelimitedJson = ApplicationInsights.Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
                 config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
                 config.autoTrackPageVisitTime = ApplicationInsights.Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
+                if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
+                    config.samplingPercentage = 100;
+                }
                 return config;
             };
             return Initialization;
@@ -2582,7 +2640,7 @@ function initializeAppInsights() {
         }
     }
     catch (e) {
-        console.error('Failed to initialize AppInsights JS SDK: ' + e.message);
+        Microsoft.ApplicationInsights._InternalLogging.warnToConsole('Failed to initialize AppInsights JS SDK: ' + e.message);
     }
 }
 initializeAppInsights();
