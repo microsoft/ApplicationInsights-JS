@@ -156,6 +156,34 @@ Error: testmessage2\n\
                 test(ie, firefox);
             }
         });
+
+        this.testCase({
+            name: "CreateSimpleException returns Exception instance with specified properties",
+            test: () => {
+                var expectedMessage = "Test Message";
+                var expectedTypeName = "Test Type Name";
+                var expectedDetails = "Test Details";
+                var expectedAssembly = "Test Assembly";
+                var expectedFileName = "Test File Name";
+                var expectedLineNumber = 42;
+                var expectedHandledAt = "Test Handled At";
+
+                var actual = Microsoft.ApplicationInsights.Telemetry.Exception.CreateSimpleException(expectedMessage, expectedTypeName, expectedAssembly, expectedFileName, expectedDetails, expectedLineNumber, expectedHandledAt);
+
+                Assert.equal(expectedMessage, actual.exceptions[0].message);
+                Assert.equal(expectedTypeName, actual.exceptions[0].typeName);
+                Assert.equal(expectedDetails, actual.exceptions[0].stack);
+                Assert.equal(true, actual.exceptions[0].hasFullStack);
+                
+                Assert.equal(0, actual.exceptions[0].parsedStack[0].level);
+                Assert.equal(expectedAssembly, actual.exceptions[0].parsedStack[0].assembly);
+                Assert.equal(expectedFileName, actual.exceptions[0].parsedStack[0].fileName);
+                Assert.equal(expectedLineNumber, actual.exceptions[0].parsedStack[0].line);
+                Assert.equal("unknown", actual.exceptions[0].parsedStack[0].method);
+
+                Assert.equal(expectedHandledAt, actual.handledAt);
+            }
+        });
     }
 }
 new ExceptionTelemetryTests().registerTests();
