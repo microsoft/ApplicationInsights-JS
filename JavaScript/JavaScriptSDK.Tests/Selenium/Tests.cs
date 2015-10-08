@@ -80,7 +80,7 @@ namespace ApplicationInsights.Javascript.Tests
             RunTest(new OpenQA.Selenium.Safari.SafariDriver());
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void Chrome()
         {
             RunTest(new OpenQA.Selenium.Chrome.ChromeDriver());

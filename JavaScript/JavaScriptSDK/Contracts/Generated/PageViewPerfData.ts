@@ -11,7 +11,9 @@ module AI
         public name: string;
         public duration: string;
         public networkConnect: string;
+        public referrer: string;
         public sentRequest: string;
+        public referrerData: string;
         public receivedResponse: string;
         public domProcessing: string;
         public properties: any;

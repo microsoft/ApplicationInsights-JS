@@ -17,6 +17,7 @@ module Microsoft.ApplicationInsights {
         accountId: () => string;
         sessionRenewalMs: () => number;
         sessionExpirationMs: () => number;
+        sampleRate: () => number;
     }
 
     export class TelemetryContext {
@@ -65,6 +66,11 @@ module Microsoft.ApplicationInsights {
         public session: Context.Session;
 
         /**
+        * The array of telemetry initializers to call before sending each telemetry item.
+        */
+        private telemetryInitializers: { (envelope: Telemetry.Common.Envelope): void; }[];
+
+        /**
          * The session manager that manages session on the base of cookies.
          */
         public _sessionManager: Microsoft.ApplicationInsights.Context._SessionManager;
@@ -84,8 +90,17 @@ module Microsoft.ApplicationInsights {
                 this.user = new Context.User(config.accountId());
                 this.operation = new Context.Operation();
                 this.session = new Context.Session();
-                this.sample = new Context.Sample();
+                this.sample = new Context.Sample(config.sampleRate());
             }
+        }
+
+        /**
+        * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
+        * before telemetry item is pushed for sending and in the order they were added.
+        */
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => void) {
+            this.telemetryInitializers = this.telemetryInitializers || [];
+            this.telemetryInitializers.push(telemetryInitializer);
         }
 
         /**
@@ -128,13 +143,41 @@ module Microsoft.ApplicationInsights {
             this._applyDeviceContext(envelope, this.device);
             this._applyInternalContext(envelope, this.internal);
             this._applyLocationContext(envelope, this.location);
-            this._applyOperationContext(envelope, this.operation);
             this._applySampleContext(envelope, this.sample);
             this._applyUserContext(envelope, this.user);
+            this._applyOperationContext(envelope, this.operation);
 
             envelope.iKey = this._config.instrumentationKey();
 
-            this._sender.send(envelope);
+            var telemetryInitializersFailed = false;
+            try {
+                this.telemetryInitializers = this.telemetryInitializers || [];
+                var telemetryInitializersCount = this.telemetryInitializers.length;
+                for (var i = 0; i < telemetryInitializersCount; ++i) {
+                    var telemetryInitializer = this.telemetryInitializers[i];
+                    if (telemetryInitializer) {
+                        telemetryInitializer.apply(null, [envelope]);
+                    }
+                }
+            } catch (e) {
+                telemetryInitializersFailed = true;
+                _InternalLogging.throwInternalUserActionable(
+                    LoggingSeverity.CRITICAL,
+                    "One of telemetry initializers failed, telemetry item will not be sent: " + Util.dump(e));
+            }
+
+            if (!telemetryInitializersFailed) {
+                if (envelope.name === Telemetry.SessionTelemetry.envelopeType ||
+                    envelope.name === Telemetry.Metric.envelopeType ||
+                    this.sample.isSampledIn(envelope)) {
+                    this._sender.send(envelope);
+                } else {
+                    _InternalLogging.logInternalMessage(LoggingSeverity.WARNING,
+                        "Telemetry is sampled and not sent to the AI service. SampleRate is " + this.sample.sampleRate);
+                }
+            }
+
+            return envelope;
         }
 
         private static _sessionHandler(tc: TelemetryContext, sessionState: AI.SessionState, timestamp: number) {
@@ -149,8 +192,7 @@ module Microsoft.ApplicationInsights {
         }
 
         private _applyApplicationContext(envelope: Microsoft.Telemetry.Envelope, appContext: Microsoft.ApplicationInsights.Context.Application) {
-            if (appContext)
-            {
+            if (appContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
 
                 if (typeof appContext.ver === "string") {
@@ -247,11 +289,9 @@ module Microsoft.ApplicationInsights {
         private _applySampleContext(envelope: Microsoft.Telemetry.Envelope, sampleContext: Microsoft.ApplicationInsights.Context.Sample) {
             if (sampleContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
-                if (typeof sampleContext.sampleRate === "string") {
                     envelope.tags[tagKeys.sampleRate] = sampleContext.sampleRate;
                 }
             }
-        }
 
         private _applySessionContext(envelope: Microsoft.Telemetry.Envelope, sessionContext: Microsoft.ApplicationInsights.Context.Session) {
             if (sessionContext) {
@@ -279,6 +319,9 @@ module Microsoft.ApplicationInsights {
                 }
                 if (typeof userContext.id === "string") {
                     envelope.tags[tagKeys.userId] = userContext.id;
+                }
+                if (typeof userContext.authenticatedId === "string") {
+                    envelope.tags[tagKeys.userAuthUserId] = userContext.authenticatedId;
                 }
                 if (typeof userContext.storeRegion === "string") {
                     envelope.tags[tagKeys.userStoreRegion] = userContext.storeRegion;

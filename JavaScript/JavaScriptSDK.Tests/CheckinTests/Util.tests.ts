@@ -5,7 +5,7 @@ class UtilTests extends TestClass {
 
     public registerTests() {
         var Util = Microsoft.ApplicationInsights.Util;
-
+        
         this.testCase({
             name: "UtilTests: getStorage with available storage",
             test: () => {

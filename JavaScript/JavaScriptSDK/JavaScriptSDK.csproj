@@ -124,6 +124,7 @@
     <TypeScriptCompile Include="ajax\AjaxRecord.ts" />
     <TypeScriptCompile Include="ajax\ajax.ts" />
     <TypeScriptCompile Include="AppInsights.ts" />
+    <TypeScriptCompile Include="Telemetry\PageVisitTimeManager.ts" />
     <TypeScriptCompile Include="Context\Sample.ts" />
     <TypeScriptCompile Include="Contracts\Generated\AjaxCallData.ts" />
     <TypeScriptCompile Include="Contracts\Generated\Base.ts" />
@@ -150,6 +151,7 @@
     <TypeScriptCompile Include="Contracts\Generated\StackFrame.ts" />
     <TypeScriptCompile Include="Init.ts" />
     <TypeScriptCompile Include="Initialization.ts" />
+    <TypeScriptCompile Include="SamplingScoreGenerator.ts" />
     <TypeScriptCompile Include="TelemetryContext.ts" />
     <TypeScriptCompile Include="Telemetry\Common\Base.ts" />
     <TypeScriptCompile Include="Telemetry\Common\Data.ts" />

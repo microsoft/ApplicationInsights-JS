@@ -12,7 +12,7 @@ class InitializationTests extends TestClass {
     private getAppInsightsSnippet() {
         var snippet: Microsoft.ApplicationInsights.IConfig = {
             instrumentationKey: "ffffffff-ffff-ffff-ffff-ffffffffffff",
-            endpointUrl: "//dc-int.services.visualstudio.com/v2/track",
+            endpointUrl: "//dc.services.visualstudio.com/v2/track",
             emitLineDelimitedJson: false,
             accountId: undefined,
             appUserId: undefined,
@@ -24,7 +24,9 @@ class InitializationTests extends TestClass {
             autoCollectErrors: false,
             disableTelemetry: false,
             verboseLogging: true,
-            diagnosticLogInterval: 1
+            diagnosticLogInterval: 1,
+            autoTrackPageVisitTime: false,
+            samplingPercentage: 33
         };
 
         // set default values
@@ -64,7 +66,8 @@ class InitializationTests extends TestClass {
                     autoCollectErrors: undefined,
                     disableTelemetry: undefined,
                     verboseLogging: undefined,
-                    diagnosticLogInterval: undefined
+                    diagnosticLogInterval: undefined,
+                    samplingPercentage: undefined
                 };
 
                 var snippet = <Microsoft.ApplicationInsights.Snippet> {
@@ -84,6 +87,7 @@ class InitializationTests extends TestClass {
                 Assert.equal(15000, init.config.maxBatchInterval);
                 Assert.ok(!init.config.verboseLogging);
                 Assert.equal(10000, init.config.diagnosticLogInterval);
+                Assert.equal(100, init.config.samplingPercentage);
             }
         });
 
@@ -109,6 +113,37 @@ class InitializationTests extends TestClass {
                 Assert.equal(1, init.config.maxBatchInterval);
                 Assert.ok(init.config.verboseLogging);
                 Assert.equal(1, init.config.diagnosticLogInterval);
+                Assert.equal(33, init.config.samplingPercentage);
+            }
+        });
+
+        this.testCase({
+            name: "InitializationTests: invalid sampling values are treated as sampling OFF (sampling percentage gets set to 100)",
+            test: () => {                
+                var res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: 0 });
+                Assert.equal(100, res.samplingPercentage);
+
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: "" });
+                Assert.equal(100, res.samplingPercentage);
+
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: null });
+                Assert.equal(100, res.samplingPercentage);
+
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: undefined });
+                Assert.equal(100, res.samplingPercentage);
+
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: false });
+                Assert.equal(100, res.samplingPercentage);
+
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: -123 });
+                Assert.equal(100, res.samplingPercentage);
+
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: 123 });
+                Assert.equal(100, res.samplingPercentage);
+
+                // "50" is treated as correct number and doesn't reset sampling percentage to 100.
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: "50" });
+                Assert.equal(50, res.samplingPercentage);
             }
         });
 
@@ -123,7 +158,7 @@ class InitializationTests extends TestClass {
 
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
                 var appInsightsLocal = init.loadAppInsights();
-                var trackTraceSpy = sinon.spy(appInsightsLocal, "trackTrace");
+                var trackTraceSpy = sinon.stub(appInsightsLocal, "trackTrace");
 
                 var queue: Array<string> = Microsoft.ApplicationInsights._InternalLogging["queue"];
                 var length = queue.length;

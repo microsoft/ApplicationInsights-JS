@@ -77,7 +77,7 @@
         public static warnToConsole(message: string) {
             if (typeof console !== "undefined" && !!console) {
                 if (typeof console.warn === "function") {
-                console.warn(message);
+                    console.warn(message);
                 } else if (typeof console.log === "function") {
                     console.log(message);
                 }

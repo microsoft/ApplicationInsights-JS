@@ -5,10 +5,19 @@ module Microsoft.ApplicationInsights {
         private static document: any = typeof document !== "undefined" ? document : {};
         public static NotSpecified = "not_specified";
 
+        /**
+         * Gets the localStorage object if available
+         * @return {Storage} - Returns the storage object if available else returns null
+         */
         private static _getStorageObject(): Storage {
-            if (window.localStorage) {
-                return window.localStorage;
-            } else {
+            try {
+                if (window.localStorage) {
+                    return window.localStorage;
+                } else {
+                    return null;
+                }   
+            } catch (e) {
+                _InternalLogging.warnToConsole('Failed to get client localStorage: ' + e.message);
                 return null;
             }
         }
@@ -34,7 +43,7 @@ module Microsoft.ApplicationInsights {
                 try {
                     return storage.getItem(name);
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed read of local storage.");
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed read of local storage." + Util.dump(e));
                 }
             }
             return null;
@@ -54,7 +63,7 @@ module Microsoft.ApplicationInsights {
                     storage.setItem(name, data);
                     return true;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed write to local storage.");
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed write to local storage." + Util.dump(e));
                 }
             }
             return false;
@@ -73,7 +82,90 @@ module Microsoft.ApplicationInsights {
                     storage.removeItem(name);
                     return true;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed removal of local storage item.");
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed removal of local storage item." + Util.dump(e));
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Gets the localStorage object if available
+         * @return {Storage} - Returns the storage object if available else returns null
+         */
+        private static _getSessionStorageObject(): Storage {
+            try {
+                if (window.sessionStorage) {
+                    return window.sessionStorage;
+                } else {
+                    return null;
+                }
+            } catch (e) {
+                _InternalLogging.warnToConsole('Failed to get client session storage: ' + e.message);
+                return null;
+            }
+        }
+
+        /**
+         *  Check if the browser supports session storage.
+         *
+         *  @returns {boolean} True if session storage is supported.
+         */
+        public static canUseSessionStorage(): boolean {
+            return !!Util._getSessionStorageObject();
+        }
+
+        /**
+         *  Get an object from the browser's session storage
+         *
+         *  @param {string} name - the name of the object to get from storage
+         *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
+         */
+        public static getSessionStorage(name: string): string {
+            var storage = Util._getSessionStorageObject();
+            if (storage !== null) {
+                try {
+                    return storage.getItem(name);
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed read of session storage." + Util.dump(e));
+                }
+            }
+            return null;
+        }
+
+        /**
+         *  Set the contents of an object in the browser's session storage
+         *
+         *  @param {string} name - the name of the object to set in storage
+         *  @param {string} data - the contents of the object to set in storage
+         *  @returns {boolean} True if the storage object could be written.
+         */
+        public static setSessionStorage(name: string, data: string): boolean {
+            var storage = Util._getSessionStorageObject();
+            if (storage !== null) {
+                try {
+                    storage.setItem(name, data);
+                    return true;
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed write to session storage." + Util.dump(e));
+                }
+            }
+            return false;
+        }
+
+        /**
+         *  Remove an object from the browser's session storage
+         *
+         *  @param {string} name - the name of the object to remove from storage
+         *  @returns {boolean} True if the storage object could be removed.
+         */
+        public static removeSessionStorage(name: string): boolean {
+            var storage = Util._getSessionStorageObject();
+            if (storage !== null) {
+                try {
+                    storage.removeItem(name);
+                    return true;
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed removal of session storage item." + Util.dump(e));
                 }
             }
             return false;
@@ -113,6 +205,15 @@ module Microsoft.ApplicationInsights {
             }
 
             return value;
+        }
+
+        /**
+         * Deletes a cookie by setting it's expiration time in the past.
+         * @param name - The name of the cookie to delete.
+         */
+        public static deleteCookie(name: string) {
+            // Setting the expiration date in the past immediately removes the cookie
+            Util.document.cookie = name + "=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT;";
         }
 
         /**
