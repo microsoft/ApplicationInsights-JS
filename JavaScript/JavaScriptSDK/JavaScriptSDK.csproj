@@ -121,8 +121,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ajax\ajax.js" />
-    <TypeScriptCompile Include="ajax\AjaxRecord.ts" />
-    <TypeScriptCompile Include="ajax\ajax.ts" />
     <TypeScriptCompile Include="AppInsights.ts" />
     <TypeScriptCompile Include="Telemetry\PageVisitTimeManager.ts" />
     <TypeScriptCompile Include="Context\Sample.ts" />
