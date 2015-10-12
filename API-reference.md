@@ -71,7 +71,7 @@ You can also search and [display individual events](https://azure.microsoft.com/
 
 ### trackMetric
 
-    trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number)
+    trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: {[string]:string})
 
 Log a positive numeric value that is not associated with a specific event. Typically used to send regular reports of performance indicators. 
 
@@ -82,6 +82,7 @@ Log a positive numeric value that is not associated with a specific event. Typic
 `sampleCount` | Count of measurements represented by the average. Defaults to 1. Should be >=1.
 `min` | The smallest measurement in the sample. Defaults to the average. Should be >= 0.
 `max` | The largest measurement in the sample. Defaults to the average. Should be >= 0.
+`properties` | Map of string to string: Additional data used to [filter events](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal.
 
 In the portal, you can select metrics by name to [chart their values over time](https://azure.microsoft.com/documentation/articles/app-insights-metrics-explorer/). You can't search or view individual trackMetric calls.
 
