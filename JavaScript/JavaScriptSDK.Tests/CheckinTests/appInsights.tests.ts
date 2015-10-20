@@ -396,7 +396,7 @@ class AppInsightsTests extends TestClass {
                     this.clock.tick(1);
                     var envelope = trackSpy.returnValues[0];
                     var contextKeys = new AI.ContextTagKeys();
-                    Assert.equal(33, envelope.tags[contextKeys.sampleRate], "sample.sampleRate");
+                    Assert.equal(33, envelope.sampleRate, "sample.sampleRate");
                     trackSpy.reset();
                 };
 
@@ -424,7 +424,7 @@ class AppInsightsTests extends TestClass {
                     //var envelope = this.getFirstResult(action, trackStub);
                     var envelope = trackSpy.args[0][0];
                     var contextKeys = new AI.ContextTagKeys();
-                    Assert.equal(33, envelope.tags[contextKeys.sampleRate], "sample.sampleRate");
+                    Assert.equal(33, envelope.sampleRate, "sample.sampleRate");
                     Assert.equal("asdf", envelope.tags[contextKeys.userId], "user.id");
                     trackSpy.reset();
                 };

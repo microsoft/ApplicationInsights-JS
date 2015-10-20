@@ -288,9 +288,7 @@ module Microsoft.ApplicationInsights {
 
         private _applySampleContext(envelope: Microsoft.Telemetry.Envelope, sampleContext: Microsoft.ApplicationInsights.Context.Sample) {
             if (sampleContext) {
-                envelope.sampleRate = sampleContext.sampleRate;
-                var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
-                envelope.tags[tagKeys.sampleRate] = sampleContext.sampleRate;
+                envelope.sampleRate = sampleContext.sampleRate;                
             }
         }
 
