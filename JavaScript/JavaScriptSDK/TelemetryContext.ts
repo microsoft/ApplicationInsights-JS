@@ -74,7 +74,7 @@ module Microsoft.ApplicationInsights {
          * The session manager that manages session on the base of cookies.
          */
         public _sessionManager: Microsoft.ApplicationInsights.Context._SessionManager;
-        
+
         constructor(config: ITelemetryConfig) {
             this._config = config;
             this._sender = new Sender(config);
@@ -114,7 +114,7 @@ module Microsoft.ApplicationInsights {
                 if (envelope.name === Telemetry.PageView.envelopeType) {
                     _InternalLogging.resetInternalMessageCount();
                 }
-                
+
                 if (this.session) {
                     // If customer did not provide custom session id update sessionmanager
                     if (typeof this.session.id !== "string") {
@@ -188,7 +188,7 @@ module Microsoft.ApplicationInsights {
 
             sessionStateEnvelope.time = Util.toISOStringForIE8(new Date(timestamp));
 
-            tc._track(sessionStateEnvelope); 
+            tc._track(sessionStateEnvelope);
         }
 
         private _applyApplicationContext(envelope: Microsoft.Telemetry.Envelope, appContext: Microsoft.ApplicationInsights.Context.Application) {
@@ -288,10 +288,11 @@ module Microsoft.ApplicationInsights {
 
         private _applySampleContext(envelope: Microsoft.Telemetry.Envelope, sampleContext: Microsoft.ApplicationInsights.Context.Sample) {
             if (sampleContext) {
+                envelope.sampleRate = sampleContext.sampleRate;
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
-                    envelope.tags[tagKeys.sampleRate] = sampleContext.sampleRate;
-                }
+                envelope.tags[tagKeys.sampleRate] = sampleContext.sampleRate;
             }
+        }
 
         private _applySessionContext(envelope: Microsoft.Telemetry.Envelope, sessionContext: Microsoft.ApplicationInsights.Context.Session) {
             if (sessionContext) {
