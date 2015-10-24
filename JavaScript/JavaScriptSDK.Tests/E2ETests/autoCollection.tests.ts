@@ -23,7 +23,6 @@ class AutoCollectionTests extends TestClass {
     public registerTests() {
         var delay = 5000;
 
-        //var errorDomSpy = this.getListener("errorDom");
         this.testCaseAsync({
             name: "AutoCollection: errorDom",
             stepDelay: delay,
@@ -33,126 +32,141 @@ class AutoCollectionTests extends TestClass {
                 }
             ].concat(this.poll(() => {
                 return this.verifyErrorMessages(this.errorSpy, [
-                    //General Error message
-                    "NotFoundError",
-                    
-                    // Safari specific error message
-                    "An attempt was made to reference a Node in a context where it does not exist"     
+                   
                 ], 1);
             }))
         });
+
+        ////var errorDomSpy = this.getListener("errorDom");
+        //this.testCaseAsync({
+        //    name: "AutoCollection: errorDom",
+        //    stepDelay: delay,
+        //    steps: [
+        //        () => {
+        //            this.loadErrorTest("errorDom");
+        //        }
+        //    ].concat(this.poll(() => {
+        //        return this.verifyErrorMessages(this.errorSpy, [
+        //            //General Error message
+        //            "NotFoundError",
+                    
+        //            // Safari specific error message
+        //            "An attempt was made to reference a Node in a context where it does not exist"     
+        //        ], 1);
+        //    }))
+        //});
         
-        //var errorScriptGlobalSpy = this.getListener("errorScriptGlobal");
-        this.testCaseAsync({
-            name: "AutoCollection: errorScriptGlobal",
-            stepDelay: delay,
-            steps: [
-                () => {
-                    this.loadErrorTest("errorScriptGlobal");
-                }
-            ].concat(this.poll(() => {
-                return this.verifyErrorMessages(this.errorSpy, [
-                    // General errors
-                    "undefinedObject is not defined",
+        ////var errorScriptGlobalSpy = this.getListener("errorScriptGlobal");
+        //this.testCaseAsync({
+        //    name: "AutoCollection: errorScriptGlobal",
+        //    stepDelay: delay,
+        //    steps: [
+        //        () => {
+        //            this.loadErrorTest("errorScriptGlobal");
+        //        }
+        //    ].concat(this.poll(() => {
+        //        return this.verifyErrorMessages(this.errorSpy, [
+        //            // General errors
+        //            "undefinedObject is not defined",
 
-                    // IE specific error messages
-                    "Object doesn't support property or method 'unsupportedMethod'",
-                    "The use of a keyword for an identifier is invalid",
-                    "Array length must be a finite positive integer",
-                    "Cannot assign to a function result",
-                    "'undefinedObject' is undefined",
-                    "Boolean.prototype.toString: 'this' is not a Boolean object",
-                    "Function expected",
+        //            // IE specific error messages
+        //            "Object doesn't support property or method 'unsupportedMethod'",
+        //            "The use of a keyword for an identifier is invalid",
+        //            "Array length must be a finite positive integer",
+        //            "Cannot assign to a function result",
+        //            "'undefinedObject' is undefined",
+        //            "Boolean.prototype.toString: 'this' is not a Boolean object",
+        //            "Function expected",
 
-                    // Chrome specific error messages    
-                    "Invalid array length",
-                    "Invalid left-hand side in assignment",
-                    "Boolean.prototype.toString is not generic",
-                    "object is not a function",
-                    "undefined is not a function", 
+        //            // Chrome specific error messages    
+        //            "Invalid array length",
+        //            "Invalid left-hand side in assignment",
+        //            "Boolean.prototype.toString is not generic",
+        //            "object is not a function",
+        //            "undefined is not a function", 
 
-                    // Firefox specific error messages    
-                    "obj.unsupportedMethod is not a function",
-                    "invalid array length", 
-                    "invalid assignment left-hand side",
-                    "toString method called on incompatible Object",
-                    "o is not a function",
+        //            // Firefox specific error messages    
+        //            "obj.unsupportedMethod is not a function",
+        //            "invalid array length", 
+        //            "invalid assignment left-hand side",
+        //            "toString method called on incompatible Object",
+        //            "o is not a function",
 
-                    // Safari specific error messages    
-                    "'undefined' is not a function",
-                    "Array size is not a small enough positive integer",
-                    "Left side of assignment is not a reference",
-                    "Can't find variable: undefinedObject",
-                    "Type error",
-                    "'[object Object]' is not a function (evaluating 'o()')"
-                ], 7);
-            }))
-        });
+        //            // Safari specific error messages    
+        //            "'undefined' is not a function",
+        //            "Array size is not a small enough positive integer",
+        //            "Left side of assignment is not a reference",
+        //            "Can't find variable: undefinedObject",
+        //            "Type error",
+        //            "'[object Object]' is not a function (evaluating 'o()')"
+        //        ], 7);
+        //    }))
+        //});
 
-        //var errorScriptNestedSpy = this.getListener("errorScriptNested");
-        this.testCaseAsync({
-            name: "AutoCollection: errorScriptNested",
-            stepDelay: delay,
-            steps: [
-                () => {
-                    this.loadErrorTest("errorScriptNested");
-                }
-            ].concat(this.poll(() => {
-                return this.verifyErrorMessages(this.errorSpy, [
-                    //General Error message
-                    "first is not defined",
-                    "afterFullAiLoads",
+        ////var errorScriptNestedSpy = this.getListener("errorScriptNested");
+        //this.testCaseAsync({
+        //    name: "AutoCollection: errorScriptNested",
+        //    stepDelay: delay,
+        //    steps: [
+        //        () => {
+        //            this.loadErrorTest("errorScriptNested");
+        //        }
+        //    ].concat(this.poll(() => {
+        //        return this.verifyErrorMessages(this.errorSpy, [
+        //            //General Error message
+        //            "first is not defined",
+        //            "afterFullAiLoads",
                     
-                    // IE specific error messages
-                    "'first' is undefined",
-                    "Unable to get property 'exist' of undefined or null reference",
+        //            // IE specific error messages
+        //            "'first' is undefined",
+        //            "Unable to get property 'exist' of undefined or null reference",
                     
-                    // Chrome specific error messages
-                    "Cannot read property 'exist' of undefined",
+        //            // Chrome specific error messages
+        //            "Cannot read property 'exist' of undefined",
 
-                    // Firefox specific error messages
-                    "no element found",
-                    "window.doesNot is undefined",
+        //            // Firefox specific error messages
+        //            "no element found",
+        //            "window.doesNot is undefined",
 
-                    // Safari specific error messages
-                    "Can't find variable: first",
-                    "'undefined' is not an object"
-                ], 3);
-            }))
-        });
+        //            // Safari specific error messages
+        //            "Can't find variable: first",
+        //            "'undefined' is not an object"
+        //        ], 3);
+        //    }))
+        //});
 
-        //var errorScriptSyntaxSpy = this.getListener("errorScriptSyntax");
-        this.testCaseAsync({
-            name: "AutoCollection: errorScriptSyntax",
-            stepDelay: delay,
-            steps: [
-                () => {
-                    this.loadErrorTest("errorScriptSyntax");
-                }
-            ].concat(this.poll(() => {
-                return this.verifyErrorMessages(this.errorSpy, [
-                    // IE specific error messages
-                    "Object doesn't support property or method 'unsupportedMethod'",
-                    "Expected '}'",
-                    "Unterminated string constant",
+        ////var errorScriptSyntaxSpy = this.getListener("errorScriptSyntax");
+        //this.testCaseAsync({
+        //    name: "AutoCollection: errorScriptSyntax",
+        //    stepDelay: delay,
+        //    steps: [
+        //        () => {
+        //            this.loadErrorTest("errorScriptSyntax");
+        //        }
+        //    ].concat(this.poll(() => {
+        //        return this.verifyErrorMessages(this.errorSpy, [
+        //            // IE specific error messages
+        //            "Object doesn't support property or method 'unsupportedMethod'",
+        //            "Expected '}'",
+        //            "Unterminated string constant",
 
-                    // Chrome specific error messages
-                    "undefined is not a function",
-                    "Unexpected end of input",
-                    "Unexpected token ILLEGAL",
+        //            // Chrome specific error messages
+        //            "undefined is not a function",
+        //            "Unexpected end of input",
+        //            "Unexpected token ILLEGAL",
 
-                    // Firefox specific error messages
-                    "obj.unsupportedMethod is not a function",
-                    "missing } in compound statement",
-                    "unterminated string literal",
-                    "missing } after function body",
+        //            // Firefox specific error messages
+        //            "obj.unsupportedMethod is not a function",
+        //            "missing } in compound statement",
+        //            "unterminated string literal",
+        //            "missing } after function body",
 
-                    // Safari specific error messages
-                    "Expected token '}'",
-                    "Unexpected EOF"
-                ], 5);
-            }))
-        });
+        //            // Safari specific error messages
+        //            "Expected token '}'",
+        //            "Unexpected EOF"
+        //        ], 5);
+        //    }))
+        //});
         
     }
 

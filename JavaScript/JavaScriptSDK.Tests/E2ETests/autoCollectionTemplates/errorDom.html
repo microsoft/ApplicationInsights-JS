@@ -11,20 +11,26 @@
 </head>
 <body>
     <script>
-        // dom exception
-        setTimeout(function() {
-            var node = document.getElementsByTagName('h1').item(0);
-            var siblingNode = node.nextSibling;
-            var invalidNode = document.createTextNode('invalid node specification');
-            node.insertBefore(invalidNode, siblingNode);
-        }, 500);
-
-        // file not found exception (this is not caught, leaving in case there is a way to catch this type of erro)
         setTimeout(function () {
-            var scriptElement = document.createElement("script");
-            scriptElement.src = "../doesNotExist.js";
-            document.getElementsByTagName("script")[0].parentNode.appendChild(scriptElement);
-        }, 500);
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://dc.services.visualstudio.com/v2/track");
+            xhr.send("{fake data}");
+        }, 100);
+
+        //// dom exception
+        //setTimeout(function() {
+        //    var node = document.getElementsByTagName('h1').item(0);
+        //    var siblingNode = node.nextSibling;
+        //    var invalidNode = document.createTextNode('invalid node specification');
+        //    node.insertBefore(invalidNode, siblingNode);
+        //}, 500);
+
+        //// file not found exception (this is not caught, leaving in case there is a way to catch this type of erro)
+        //setTimeout(function () {
+        //    var scriptElement = document.createElement("script");
+        //    scriptElement.src = "../doesNotExist.js";
+        //    document.getElementsByTagName("script")[0].parentNode.appendChild(scriptElement);
+        //}, 500);
     </script>
     <h1>DOM error test page</h1>
 </body>

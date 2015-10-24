@@ -1397,6 +1397,16 @@ class AppInsightsTests extends TestClass {
                 resetInternalMessageCountStub.restore();
             }
         });
+
+        this.testCase({
+            name: "No other event than PageView should cause internal event throttle to be reset",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+
+                
+            }
+        });
     }
 
     private getFirstResult(action: string, trackStub: SinonStub, skipSessionState?: boolean) {
