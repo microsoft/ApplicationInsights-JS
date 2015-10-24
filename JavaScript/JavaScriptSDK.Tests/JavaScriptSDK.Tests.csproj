@@ -98,6 +98,9 @@
     <Content Include="E2ETests\testSnippet.js">
       <DependentUpon>PostBuild.ps1</DependentUpon>
     </Content>
+    <Content Include="E2ETests\ajax.html">
+      <DependentUpon>PostBuild.ps1</DependentUpon>
+    </Content>
     <Content Include="E2ETests\errorDom.html">
       <DependentUpon>PostBuild.ps1</DependentUpon>
     </Content>
@@ -112,6 +115,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="E2ETests\autoCollectionTemplates\ajax.html" />
     <Content Include="E2ETests\autoCollectionTemplates\errorDom.html" />
     <Content Include="E2ETests\autoCollectionTemplates\errorScriptGlobal.html" />
     <Content Include="E2ETests\autoCollectionTemplates\errorScriptNested.html" />

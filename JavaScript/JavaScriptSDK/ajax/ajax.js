@@ -7,7 +7,7 @@ var $$CsmSt = function () {
         re: "removeEventListener",
         udf: "undefined"
     };
-        
+
     ///<summary>Represents an instant in time</summary>
     var dateTime = {
 
@@ -35,7 +35,7 @@ var $$CsmSt = function () {
             return result;
         }
     };
-    
+
     /*#endregion*/
 
     /*#region [Commands]*/
@@ -118,7 +118,7 @@ var $$CsmSt = function () {
     };
     this.Commands = commands;
     /*#endregion*/
-    
+
     ///<summary>Extension methods for object type</summary>
     var extensions = {
         IsNullOrUndefined: function (obj) {
@@ -143,7 +143,7 @@ var $$CsmSt = function () {
             }
 
             return res;
-        }        
+        }
     };
 
     ///<summary>Monitoring information about individual Ajax request</summary>
@@ -294,9 +294,10 @@ var $$CsmSt = function () {
                         self.ajaxData.method = method;
                         self.ajaxData.requestUrl = url;
                         self.ajaxData.requestSize += url.length;
-                        if (!extensions.IsNullOrUndefined(async)) {
-                            self.ajaxData.async = async;
-                        }
+
+                        // If not set async defaults to true 
+                        self.ajaxData.async = extensions.IsNullOrUndefined(async) ? true : async;
+
                     });
                 }
 
@@ -457,7 +458,7 @@ var $$CsmSt = function () {
         function onAjaxComplete() {
             commands.TryCatchTraceWrapper.call(this, "publishData", function () {
                 this.ajaxData.CalculateMetrics();
-                
+
                 window.appInsights.trackAjax(
                     this.ajaxData.getAbsoluteUrl(),
                     this.ajaxData.async,

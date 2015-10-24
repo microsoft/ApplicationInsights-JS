@@ -65,7 +65,7 @@ $testSnippet | out-file "$($projectDir)\E2ETests\testSnippet.js"
 
 # add snippet to error test files
 $instrumentation = gc "$($projectDir)\E2ETests\autoCollectionTemplates\instrumentation.js"
-$files = @("errorDom.html", "errorScriptGlobal.html", "errorScriptNested.html", "errorScriptSyntax.html")
+$files = @("ajax.html", "errorDom.html", "errorScriptGlobal.html", "errorScriptNested.html", "errorScriptSyntax.html")
 foreach ($file in $files) {
     $content = gc "$($projectDir)\E2ETests\autoCollectionTemplates\$($file)"
 
