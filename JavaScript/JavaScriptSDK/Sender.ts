@@ -11,6 +11,18 @@
 /// <reference path="Context/Session.ts"/>
 /// <reference path="Context/User.ts"/>
 
+interface XDomainRequest extends XMLHttpRequestEventTarget {
+    responseText: string;
+    send(payload: string);
+    open(method: string, url: string);
+};
+
+declare var XDomainRequest: {
+    prototype: XDomainRequest;
+    new (): XDomainRequest;
+    create(): XDomainRequest;
+};
+
 module Microsoft.ApplicationInsights {
     "use strict";
 

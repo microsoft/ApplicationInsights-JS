@@ -98,7 +98,7 @@ class UtilTests extends TestClass {
                 var iframe = document.createElement('iframe');
                 iframe.style.cssText = 'display:none;';
                 document.body.appendChild(iframe);
-                var iframeArray = window.frames[window.frames.length - 1].Array;
+                var iframeArray = window.frames[window.frames.length - 1]["Array"];
                 if (typeof iframeArray === "function") {
                     var arr = new iframeArray(1, 2, 3); // [1,2,3]
                     Assert.ok(!(arr instanceof Array), "instanceof doesn't work here");
