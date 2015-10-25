@@ -25,6 +25,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
                 time: true,
                 iKey: true,
                 name: true,
+                sampleRate: true,
                 tags: true,
                 data: true
             };
