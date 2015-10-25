@@ -33,6 +33,30 @@ class AutoCollectionTests extends TestClass {
             ].concat(this.poll(() => {
                 return this.verifyAjax(this.errorSpy, [
                     {
+                        commandName: "https://code.jquery.com/jquery-2.1.4.min.js",
+                        async: true,
+                        success: true,
+                        dependencyTypeName: "Ajax",
+                        dependencyKind: 1,
+                        dependencySource: 2
+                    },
+                    {
+                        commandName: "http://dc.services.visualstudio.com/v2/track",
+                        async: true,
+                        success: false,
+                        dependencyTypeName: "Ajax",
+                        dependencyKind: 1,
+                        dependencySource: 2
+                    },
+                    {
+                        commandName: "http://dc.services.visualstudio.com/v2/track",
+                        async: true,
+                        success: false,
+                        dependencyTypeName: "Ajax",
+                        dependencyKind: 1,
+                        dependencySource: 2
+                    },
+                    {
                         commandName: "http://dc.services.visualstudio.com/v2/track",
                         async: true,
                         success: false,
@@ -253,6 +277,8 @@ class AutoCollectionTests extends TestClass {
         if (spy.called) {
             var args = spy.args;
             var ajaxItems = this.getTelemetryItemsFromMessage(args, Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.dataType);
+
+            Assert.equal(expectedItems.length, ajaxItems.length, "Number of expected and actual ajax calls must match");
 
             for (var i = 0; i < ajaxItems.length; ++i) {
                 var actual = ajaxItems[i];
