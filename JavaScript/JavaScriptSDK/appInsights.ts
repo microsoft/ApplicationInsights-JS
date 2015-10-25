@@ -30,6 +30,7 @@ module Microsoft.ApplicationInsights {
         diagnosticLogInterval: number;
         samplingPercentage: number;
         autoTrackPageVisitTime: boolean;
+        autoTrackAjax: boolean;
     }
 
     /**
@@ -98,7 +99,7 @@ module Microsoft.ApplicationInsights {
             this._pageVisitTimeManager = new ApplicationInsights.Telemetry.PageVisitTimeManager(
                 (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
-            new Microsoft.ApplicationInsights.$$CsmSt(this);
+            if (this.config.autoTrackAjax) { new Microsoft.ApplicationInsights.$$CsmSt(this); }
         }
 
         private sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
