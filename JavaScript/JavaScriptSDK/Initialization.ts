@@ -108,11 +108,11 @@ module Microsoft.ApplicationInsights {
                 queue.length = 0;
             }, this.config.diagnosticLogInterval);
         }
-        
+
         public addHousekeepingBeforeUnload(appInsightsInstance: AppInsights): void {
             // Add callback to push events when the user navigates away
 
-            if ('onbeforeunload' in window) {             
+            if ('onbeforeunload' in window) {
                 var performHousekeeping = function () {
                     // Adds the ability to flush all data before the page unloads.
                     // Note: This approach tries to push an async request with all the pending events onbeforeunload.
@@ -126,7 +126,7 @@ module Microsoft.ApplicationInsights {
                     // This lets us close expired sessions after the cookies themselves expire
                     appInsightsInstance.context._sessionManager.backup();
                 };
-                
+
                 if (!Microsoft.ApplicationInsights.Util.addEventHandler('beforeunload', performHousekeeping)) {
                     Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 'Could not add handler for beforeunload');
                 }
@@ -159,6 +159,10 @@ module Microsoft.ApplicationInsights {
             if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
                 config.samplingPercentage = 100;
             }
+
+            config.autoTrackAjax = (config.autoTrackAjax !== undefined && config.autoTrackAjax !== null) ?
+                Util.stringToBoolOrDefault(config.autoTrackAjax) :
+                true;
 
             return config;
         }
