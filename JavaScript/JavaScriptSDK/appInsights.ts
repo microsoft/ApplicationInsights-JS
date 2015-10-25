@@ -4,6 +4,7 @@
 /// <reference path="./Contracts/Generated/SessionState.ts"/>
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
+/// <reference path="./ajax/ajax.ts"/>
 
 
 module Microsoft.ApplicationInsights {
@@ -96,6 +97,8 @@ module Microsoft.ApplicationInsights {
 
             this._pageVisitTimeManager = new ApplicationInsights.Telemetry.PageVisitTimeManager(
                 (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
+
+            new Microsoft.ApplicationInsights.$$CsmSt(this);
         }
 
         private sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
