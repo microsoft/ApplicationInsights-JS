@@ -10,16 +10,7 @@ var $$CsmSt = function () {
 
     ///<summary>Represents an instant in time</summary>
     var dateTime = {
-
-        ///<summary>Return the number of milliseconds since 1970/01/01 in UTC</summary>
-        UtcNow: function () {
-            var date = new Date();
-            var result = date.getTime();
-            var offsetMilliseconds = date.getTimezoneOffset() * 60 * 1000;
-            result = result + offsetMilliseconds;
-            return result;
-        },
-
+        
         ///<summary>Return the number of milliseconds since 1970/01/01 in local timezon</summary>
         Now: function () {
             return new Date().getTime();
