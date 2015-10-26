@@ -13,7 +13,7 @@ module Microsoft.ApplicationInsights {
         constructor(appInsights: Microsoft.ApplicationInsights.AppInsights) {
             this.appInsights = appInsights;
 
-            var csmConstants = {
+            var constants = {
                 attachEvent: "attachEvent",
                 de: "detachEvent",
                 ad: "addEventListener",
@@ -80,7 +80,7 @@ module Microsoft.ApplicationInsights {
                                     obj.attachEvent("on" + eventNameWithoutOn, handlerRef);
                                     result = true;
                                 },
-                                [obj, eventNameWithoutOn, csmConstants.attachEvent]);
+                                [obj, eventNameWithoutOn, constants.attachEvent]);
                         }
                         else {
                             if (!extensions.IsNullOrUndefined(obj.addEventListener)) {
@@ -92,7 +92,7 @@ module Microsoft.ApplicationInsights {
                                         obj.addEventListener(eventNameWithoutOn, handlerRef, false);
                                         result = true;
                                     },
-                                    [obj, eventNameWithoutOn, csmConstants.ad]);
+                                    [obj, eventNameWithoutOn, constants.ad]);
                             }
                         }
                     }
@@ -108,7 +108,7 @@ module Microsoft.ApplicationInsights {
                                 function () {
                                     obj.detachEvent("on" + eventNameWithoutOn, handlerRef);
                                 },
-                                [obj.toString(), eventNameWithoutOn, csmConstants.de]);
+                                [obj.toString(), eventNameWithoutOn, constants.de]);
                         }
                         else {
                             if (!extensions.IsNullOrUndefined(obj.removeEventListener)) {
@@ -117,7 +117,7 @@ module Microsoft.ApplicationInsights {
                                     function () {
                                         obj.removeEventListener(eventNameWithoutOn, handlerRef, false);
                                     },
-                                    [obj.toString(), eventNameWithoutOn, csmConstants.re]);
+                                    [obj.toString(), eventNameWithoutOn, constants.re]);
                             }
                         }
                     }
@@ -129,7 +129,7 @@ module Microsoft.ApplicationInsights {
             ///<summary>Extension methods for object type</summary>
             var extensions = {
                 IsNullOrUndefined: function (obj) {
-                    return typeof (obj) === csmConstants.udf || obj === null;
+                    return typeof (obj) === constants.udf || obj === null;
                 },
 
             };
