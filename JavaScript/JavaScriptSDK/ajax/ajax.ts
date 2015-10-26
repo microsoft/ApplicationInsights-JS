@@ -5,9 +5,10 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export class $$CsmSt {
+    export class AjaxMonitor {
 
         private appInsights: Microsoft.ApplicationInsights.AppInsights;
+        private ajaxMonitorInternal = null;
 
         constructor(appInsights: Microsoft.ApplicationInsights.AppInsights) {
             this.appInsights = appInsights;
@@ -515,8 +516,10 @@ module Microsoft.ApplicationInsights {
                 }
             };
 
+            
             var ajaxMonitoringObject = new ajaxMonitoring(this.appInsights);
             ajaxMonitoringObject.Init();
+            this.ajaxMonitorInternal = ajaxMonitoringObject;            
         };
     }
 }
