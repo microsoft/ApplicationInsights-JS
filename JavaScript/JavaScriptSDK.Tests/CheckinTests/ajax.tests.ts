@@ -7,9 +7,18 @@ class AjaxTests extends TestClass {
 
     private appInsightsMock = { trackAjax: (absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) => { } }
     private trackAjaxSpy = sinon.spy(this.appInsightsMock, "trackAjax");
-    
+    private requests;
+
     public testInitialize() {
         this.trackAjaxSpy.reset();
+        var xhr = sinon.useFakeXMLHttpRequest();            
+        var requests = this.requests = [];    
+        xhr.onCreate = function (xhr) {
+            requests.push(xhr);
+        };
+    }
+
+    public testCleanup() {
     }
 
     public registerTests() {
@@ -41,7 +50,7 @@ class AjaxTests extends TestClass {
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "http://microsoft.com");
                 xhr.send();
-                this.server.respond();
+                this.requests[0].respond(200, {}, "");
 
                 // assert
                 var ajaxData = (<any>xhr).ajaxData;
@@ -49,22 +58,33 @@ class AjaxTests extends TestClass {
             }
         });
         
-        //this.testCase({
-        //    name: "Ajax: 200",
-        //    test: () => {
-        //        var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);      
-        //        //this.server.respondWith('[200, {}, ""]');          
-                                                
-        //        // act
-        //        var xhr = new XMLHttpRequest();
-        //        xhr.open("GET", "http://microsoft.com");
-        //        xhr.send();
-        //        this.server.respond();                
+        this.testCase({
+            name: "Ajax: successful request, ajax monitor doesn't change payload",
+            test: () => {
+                var callback = sinon.spy();
+                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);                
 
-        //        // assert
-        //        Assert.equal(true, this.trackAjaxSpy.args[0][3]);
-        //    }
-        //});
+                // Act
+                var xhr = new XMLHttpRequest();
+                xhr.onload = callback
+                xhr.open("GET", "/bla");
+                xhr.send();
+
+                Assert.ok(!this.trackAjaxSpy.called, "TrackAjax should not be called yet");
+
+                // Emulate response
+                Assert.equal(1, this.requests.length);
+                this.requests[0].respond(200, { "Content-Type": "application/json" }, "bla");
+                Assert.ok(this.trackAjaxSpy.called, "TrackAjax is called");
+                                
+                // Assert
+                var result = callback.args[0][0].target;
+                Assert.ok(callback.called, "Ajax callback is called");
+                Assert.equal("bla", result.responseText, "Expected result mismatch");
+                Assert.equal(200, result.status, "Expected 200 response code");
+
+            }
+        });
     }
 }
 new AjaxTests().registerTests();
