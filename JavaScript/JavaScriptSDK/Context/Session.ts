@@ -40,9 +40,9 @@ module Microsoft.ApplicationInsights.Context {
         public static renewalSpan = 1800000; // 30 minutes in ms
         public automaticSession: Session;
         public config: ISessionConfig;
-        
+
         public _sessionHandler: (sessionState: AI.SessionState, timestamp: number) => void;
-        
+
         constructor(config: ISessionConfig, sessionHandler: (sessionState: AI.SessionState, timestamp: number) => void) {
 
             if (!config) {
@@ -130,27 +130,27 @@ module Microsoft.ApplicationInsights.Context {
         private initializeAutomaticSessionWithData(sessionData: string) {
             var params = sessionData.split("|");
 
-                if (params.length > 0) {
-                    this.automaticSession.id = params[0];
+            if (params.length > 0) {
+                this.automaticSession.id = params[0];
+            }
+
+            try {
+                if (params.length > 1) {
+                    var acq = +params[1];
+                    this.automaticSession.acquisitionDate = +new Date(acq);
+                    this.automaticSession.acquisitionDate = this.automaticSession.acquisitionDate > 0 ? this.automaticSession.acquisitionDate : 0;
                 }
 
-                try {
-                    if (params.length > 1) {
-                        var acq = +params[1];
-                        this.automaticSession.acquisitionDate = +new Date(acq);
-                        this.automaticSession.acquisitionDate = this.automaticSession.acquisitionDate > 0 ? this.automaticSession.acquisitionDate : 0;
-                    }
-
-                    if (params.length > 2) {
-                        var renewal = +params[2];
-                        this.automaticSession.renewalDate = +new Date(renewal);
-                        this.automaticSession.renewalDate = this.automaticSession.renewalDate > 0 ? this.automaticSession.renewalDate : 0;
-                    }
-                } catch (e) {                    
+                if (params.length > 2) {
+                    var renewal = +params[2];
+                    this.automaticSession.renewalDate = +new Date(renewal);
+                    this.automaticSession.renewalDate = this.automaticSession.renewalDate > 0 ? this.automaticSession.renewalDate : 0;
+                }
+            } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Error parsing ai_session cookie, session will be reset: " + Util.dump(e));
-                }            
+            }
 
-                if (this.automaticSession.renewalDate == 0) {
+            if (this.automaticSession.renewalDate == 0) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "AI session renewal date is 0, session will be reset.");
             }
         }
@@ -187,7 +187,7 @@ module Microsoft.ApplicationInsights.Context {
             } else {
                 cookieExpiry.setTime(renewalExpiry);
             }
-            
+
             Util.setCookie('ai_session', cookie.join('|') + ';expires=' + cookieExpiry.toUTCString());
         }
 

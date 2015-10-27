@@ -4,13 +4,20 @@
 
 class AjaxTests extends TestClass {
 
+
+    private appInsightsMock = { trackAjax: (absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) => { } }
+    private trackAjaxSpy = sinon.spy(this.appInsightsMock, "trackAjax");
+    
+    public testInitialize() {
+        this.trackAjaxSpy.reset();
+    }
+
     public registerTests() {
 
         this.testCase({
             name: "Ajax: xhr.open gets instrumented",
             test: () => {
-                var appInsightsMock = { trackAjax: () => { } }
-                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>appInsightsMock);
+                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
 
                 // act
                 var xhr = new XMLHttpRequest();
@@ -28,11 +35,10 @@ class AjaxTests extends TestClass {
         this.testCase({
             name: "Ajax: ajaxData is removed from xhr after it's completed.",
             test: () => {
-                var appInsightsMock = { trackAjax: () => { } }
-                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>appInsightsMock);
+                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
                 
                 // act
-                var xhr = new XMLHttpRequest();                
+                var xhr = new XMLHttpRequest();
                 xhr.open("GET", "http://microsoft.com");
                 xhr.send();
                 this.server.respond();
@@ -42,6 +48,23 @@ class AjaxTests extends TestClass {
                 Assert.ok(!xhr.hasOwnProperty("ajaxData"), "ajaxData should be removed from xhr to prevent memory leaks");
             }
         });
+        
+        //this.testCase({
+        //    name: "Ajax: 200",
+        //    test: () => {
+        //        var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);      
+        //        //this.server.respondWith('[200, {}, ""]');          
+                                                
+        //        // act
+        //        var xhr = new XMLHttpRequest();
+        //        xhr.open("GET", "http://microsoft.com");
+        //        xhr.send();
+        //        this.server.respond();                
+
+        //        // assert
+        //        Assert.equal(true, this.trackAjaxSpy.args[0][3]);
+        //    }
+        //});
     }
 }
 new AjaxTests().registerTests();

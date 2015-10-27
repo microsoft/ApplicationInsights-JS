@@ -272,7 +272,7 @@ module Microsoft.ApplicationInsights {
                     return initiated
 
                     // checking on ajaxData to see that it was not removed in user code
-                        && (excludeAjaxDataValidation === true || !extensions.IsNullOrUndefined(this.ajaxData))
+                        && (!extensions.IsNullOrUndefined(this.ajaxData))
 
                     // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
                         && commands.TryCatchTraceWrapper.call(this, "Check_If_Monitoring_Enabled_For_XmlHttpRequest_Instance", function () {

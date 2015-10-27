@@ -72,7 +72,7 @@ class AppInsightsTests extends TestClass {
                     Assert.ok(typeof appInsights[name] === "function", name + " is a method");
                 }
 
-                var methods = ["trackTrace", "trackEvent", "trackMetric", "trackException", "trackPageView"];
+                var methods = ["trackTrace", "trackEvent", "trackMetric", "trackException", "trackPageView", "trackAjax"];
                 while (methods.length) {
                     leTest(methods.pop());
                 }
