@@ -98,8 +98,48 @@ class AjaxTests extends TestClass {
 
                 // Emulate response                
                 (<any>xhr).respond();
+
+                // Assert
                 Assert.ok(this.trackAjaxSpy.called, "TrackAjax is called");
                 Assert.ok(onreadystatechange.called, "custom onreadystatechange should be called");
+
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: 200 means success",
+            test: () => {
+                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);                
+
+                // Act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "/bla");
+                xhr.send();
+                
+                // Emulate response                
+                (<any>xhr).respond(200, {}, "");
+
+                // Assert
+                Assert.equal(true, this.trackAjaxSpy.args[0][3], "TrackAjax should receive true as a 'success' argument");
+
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: non 200 means failure",
+            test: () => {
+                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);                
+
+                // Act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "/bla");
+                xhr.send();
+                
+                // Emulate response                
+                (<any>xhr).respond(404, {}, "");
+
+                // Assert
+                Assert.equal(false, this.trackAjaxSpy.args[0][3], "TrackAjax should receive false as a 'success' argument");
 
             }
         });
