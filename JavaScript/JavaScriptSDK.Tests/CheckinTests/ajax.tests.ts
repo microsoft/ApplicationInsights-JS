@@ -2,20 +2,16 @@
 /// <reference path="../../JavaScriptSDK/ajax/ajax.ts" />
 /// <reference path="../../JavaScriptSDK/Util.ts"/>
 
-class AjaxTests extends TestClass {
-
+class AjaxTests extends TestClass {   
 
     private appInsightsMock = { trackAjax: (absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) => { } }
     private trackAjaxSpy = sinon.spy(this.appInsightsMock, "trackAjax");
     private requests;
+    
 
     public testInitialize() {
         this.trackAjaxSpy.reset();
-        var xhr = sinon.useFakeXMLHttpRequest();            
-        var requests = this.requests = [];    
-        xhr.onCreate = function (xhr) {
-            requests.push(xhr);
-        };
+        var xhr = sinon.useFakeXMLHttpRequest();
     }
 
     public testCleanup() {
@@ -50,14 +46,14 @@ class AjaxTests extends TestClass {
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "http://microsoft.com");
                 xhr.send();
-                this.requests[0].respond(200, {}, "");
+                (<any>xhr).respond(200, {}, "");
 
                 // assert
                 var ajaxData = (<any>xhr).ajaxData;
                 Assert.ok(!xhr.hasOwnProperty("ajaxData"), "ajaxData should be removed from xhr to prevent memory leaks");
             }
         });
-        
+
         this.testCase({
             name: "Ajax: successful request, ajax monitor doesn't change payload",
             test: () => {
@@ -66,15 +62,14 @@ class AjaxTests extends TestClass {
 
                 // Act
                 var xhr = new XMLHttpRequest();
-                xhr.onload = callback
+                xhr.onload = callback;
                 xhr.open("GET", "/bla");
                 xhr.send();
 
                 Assert.ok(!this.trackAjaxSpy.called, "TrackAjax should not be called yet");
 
                 // Emulate response
-                Assert.equal(1, this.requests.length);
-                this.requests[0].respond(200, { "Content-Type": "application/json" }, "bla");
+                (<any>xhr).respond(200, { "Content-Type": "application/json" }, "bla");
                 Assert.ok(this.trackAjaxSpy.called, "TrackAjax is called");
                                 
                 // Assert
@@ -82,6 +77,29 @@ class AjaxTests extends TestClass {
                 Assert.ok(callback.called, "Ajax callback is called");
                 Assert.equal("bla", result.responseText, "Expected result mismatch");
                 Assert.equal(200, result.status, "Expected 200 response code");
+                Assert.equal(4, xhr.readyState, "Expected readyState is 4 after request is finished");
+
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: custom onreadystatechange gets called",
+            test: () => {
+                var onreadystatechange = sinon.spy();
+                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);                
+
+                // Act
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = onreadystatechange;
+                xhr.open("GET", "/bla");
+                xhr.send();
+
+                Assert.ok(!this.trackAjaxSpy.called, "TrackAjax should not be called yet");
+
+                // Emulate response                
+                (<any>xhr).respond();
+                Assert.ok(this.trackAjaxSpy.called, "TrackAjax is called");
+                Assert.ok(onreadystatechange.called, "custom onreadystatechange should be called");
 
             }
         });
