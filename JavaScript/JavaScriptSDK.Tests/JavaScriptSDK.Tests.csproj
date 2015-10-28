@@ -138,7 +138,7 @@
     <Content Include="Selenium\JSLitmus.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="External\sinon-1.7.3.js" />
+    <Content Include="External\sinon-1.17.2.js" />
     <Content Include="chromedriver.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
