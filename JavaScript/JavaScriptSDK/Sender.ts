@@ -193,7 +193,7 @@ module Microsoft.ApplicationInsights {
          */
         private _xhrSender(payload: string, isAsync: boolean) {
             var xhr = new XMLHttpRequest();
-            xhr["__csm_disabled"] = true;
+            xhr["Microsoft_ApplicationInsights_BypassAjaxInstrumentation"] = true;
             xhr.open("POST", this._config.endpointUrl(), isAsync);
             xhr.setRequestHeader("Content-type", "application/json");
             xhr.onreadystatechange = () => Sender._xhrReadyStateChange(xhr, payload);

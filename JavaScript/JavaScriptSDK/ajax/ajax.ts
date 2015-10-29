@@ -2,7 +2,6 @@
 /// <reference path="../util.ts" />
 
 module Microsoft.ApplicationInsights {
-
     "use strict";
 
     export class AjaxMonitor {
@@ -260,7 +259,7 @@ module Microsoft.ApplicationInsights {
 
 
                 function getDisabledPropertyName() {
-                    return "__csm_disabled";
+                    return "Microsoft_ApplicationInsights_BypassAjaxInstrumentation";
                 }
 
                 ///<summary>Verifies that particalar instance of XMLHttpRequest needs to be monitored</summary>
