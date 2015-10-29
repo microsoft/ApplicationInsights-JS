@@ -1421,6 +1421,26 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(success, rdd.success);
             }
         });
+
+        this.testCase({
+            name: "trackAjax includes instrumentation key into envelope name",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.instrumentationKey = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = sinon.stub(appInsights.context, "track");
+                // dashes are removed
+                var expectedEnvelopeName = "Microsoft.ApplicationInsights.BDC8736DD8E84B69B19BB0CE6B66A456.RemoteDependency";
+
+                // Act
+                appInsights.trackAjax("http://asdf", true, 123, true);
+
+                // Assert
+                Assert.ok(trackStub.called, "Track should be called");
+                var envelope = trackStub.args[0][0];
+                Assert.equal(expectedEnvelopeName, envelope.name, "Envelope name should include instrumentation key without dashes");
+            }
+        });
     }
 
     private getFirstResult(action: string, trackStub: SinonStub, skipSessionState?: boolean) {
