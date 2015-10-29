@@ -1402,8 +1402,8 @@ class AppInsightsTests extends TestClass {
         this.testCase({
             name: "trackAjax passes ajax data correctly",
             test: () => {
-                var trackStub = sinon.stub(appInsights.context, "track");
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var trackStub = sinon.stub(appInsights.context, "track");
                 var url = "http://myurl.com";
                 var async = true;
                 var duration = 123;
