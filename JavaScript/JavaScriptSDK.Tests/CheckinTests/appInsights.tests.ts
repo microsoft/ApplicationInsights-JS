@@ -1398,6 +1398,29 @@ class AppInsightsTests extends TestClass {
                 resetInternalMessageCountStub.restore();
             }
         });
+
+        this.testCase({
+            name: "trackAjax passes ajax data correctly",
+            test: () => {
+                var trackStub = sinon.stub(appInsights.context, "track");
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var url = "http://myurl.com";
+                var async = true;
+                var duration = 123;
+                var success = false;
+
+                // Act
+                appInsights.trackAjax(url, async, duration, success);
+
+                // Assert
+                Assert.ok(trackStub.called, "Track should be called");
+                var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
+                Assert.equal(url, rdd.commandName);
+                Assert.equal(async, rdd.async);
+                Assert.equal(duration, rdd.value);
+                Assert.equal(success, rdd.success);
+            }
+        });
     }
 
     private getFirstResult(action: string, trackStub: SinonStub, skipSessionState?: boolean) {

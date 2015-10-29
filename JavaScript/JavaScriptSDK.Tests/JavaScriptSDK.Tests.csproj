@@ -173,6 +173,7 @@
     <TypeScriptCompile Include="CheckinTests\Initialization.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\PageVisitTimeManager.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Telemetry\DataSanitizer.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Telemetry\RemoteDependency.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Telemetry\PageViewPerformance.tests.ts" />
     <TypeScriptCompile Include="Contracts\Generated\Base.unittests.ts" />
     <TypeScriptCompile Include="Contracts\Generated\ContextTagKeys.unittests.ts" />
