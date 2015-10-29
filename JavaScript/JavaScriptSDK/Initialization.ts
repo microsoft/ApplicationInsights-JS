@@ -162,7 +162,7 @@ module Microsoft.ApplicationInsights {
 
             config.autoTrackAjax = (config.autoTrackAjax !== undefined && config.autoTrackAjax !== null) ?
                 Util.stringToBoolOrDefault(config.autoTrackAjax) :
-                true;
+                false;
 
             return config;
         }
