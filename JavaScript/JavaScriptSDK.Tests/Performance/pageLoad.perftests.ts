@@ -148,7 +148,7 @@ class PageLoadPerfTests extends PerformanceTestHelper {
         if (window.addEventListener) {
             addEventListener("message", listener.onMessage, false);
         } else {
-            attachEvent("onmessage", listener.onMessage);
+            window["attachEvent"].call("onmessage", listener.onMessage);
         }
 
         return spy;

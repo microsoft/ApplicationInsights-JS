@@ -355,8 +355,8 @@ module Microsoft.ApplicationInsights {
             // check if addEventListener is available
             if (window.addEventListener) {
                 window.addEventListener(eventName, callback, false);
-            } else if (window.attachEvent) { // For older browsers
-                window.attachEvent(verbEventName, callback);
+            } else if (window["attachEvent"]) { // For older browsers
+                window["attachEvent"].call(verbEventName, callback);
             } else { // if all else fails
                 return false;
             }

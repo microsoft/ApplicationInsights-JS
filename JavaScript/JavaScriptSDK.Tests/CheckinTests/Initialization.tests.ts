@@ -26,7 +26,8 @@ class InitializationTests extends TestClass {
             verboseLogging: true,
             diagnosticLogInterval: 1,
             autoTrackPageVisitTime: false,
-            samplingPercentage: 33
+            samplingPercentage: 33,
+            autoTrackAjax: false
         };
 
         // set default values

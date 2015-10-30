@@ -9,6 +9,7 @@
 /// <reference path="../checkintests/telemetry/pageviewperformance.tests.ts" />
 /// <reference path="../checkintests/telemetry/pageview.tests.ts" />
 /// <reference path="../checkintests/telemetry/trace.tests.ts" />
+/// <reference path="../checkintests/telemetry/RemoteDependency.tests.ts" />
 /// <reference path="../checkintests/telemetry/DataSanitizer.tests.ts" />
 
 /// <reference path="../checkintests/PageVisitTimeManager.tests.ts" />
@@ -19,3 +20,4 @@
 /// <reference path="../checkintests/telemetrycontext.tests.ts" />
 /// <reference path="../checkintests/util.tests.ts" />
 /// <reference path="../checkintests/initialization.tests.ts" />
+/// <reference path="../checkintests/ajax.tests.ts" />

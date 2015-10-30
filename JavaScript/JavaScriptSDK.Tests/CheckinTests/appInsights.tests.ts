@@ -20,7 +20,8 @@ class AppInsightsTests extends TestClass {
             verboseLogging: false,
             diagnosticLogInterval: 1000,
             autoTrackPageVisitTime: false,
-            samplingPercentage: 100
+            samplingPercentage: 100,
+            autoTrackAjax: false
         };
 
         // set default values
@@ -71,7 +72,7 @@ class AppInsightsTests extends TestClass {
                     Assert.ok(typeof appInsights[name] === "function", name + " is a method");
                 }
 
-                var methods = ["trackTrace", "trackEvent", "trackMetric", "trackException", "trackPageView"];
+                var methods = ["trackTrace", "trackEvent", "trackMetric", "trackException", "trackPageView", "trackAjax"];
                 while (methods.length) {
                     leTest(methods.pop());
                 }
@@ -1395,6 +1396,49 @@ class AppInsightsTests extends TestClass {
                 // restore
                 senderStub.restore();
                 resetInternalMessageCountStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "trackAjax passes ajax data correctly",
+            test: () => {
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var trackStub = sinon.stub(appInsights.context, "track");
+                var url = "http://myurl.com";
+                var async = true;
+                var duration = 123;
+                var success = false;
+
+                // Act
+                appInsights.trackAjax(url, async, duration, success);
+
+                // Assert
+                Assert.ok(trackStub.called, "Track should be called");
+                var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
+                Assert.equal(url, rdd.commandName);
+                Assert.equal(async, rdd.async);
+                Assert.equal(duration, rdd.value);
+                Assert.equal(success, rdd.success);
+            }
+        });
+
+        this.testCase({
+            name: "trackAjax includes instrumentation key into envelope name",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.instrumentationKey = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = sinon.stub(appInsights.context, "track");
+                // dashes are removed
+                var expectedEnvelopeName = "Microsoft.ApplicationInsights.BDC8736DD8E84B69B19BB0CE6B66A456.RemoteDependency";
+
+                // Act
+                appInsights.trackAjax("http://asdf", true, 123, true);
+
+                // Assert
+                Assert.ok(trackStub.called, "Track should be called");
+                var envelope = trackStub.args[0][0];
+                Assert.equal(expectedEnvelopeName, envelope.name, "Envelope name should include instrumentation key without dashes");
             }
         });
     }

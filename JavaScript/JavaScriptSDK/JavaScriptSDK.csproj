@@ -9,7 +9,7 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <TypeScriptToolsVersion>1.4</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>1.5</TypeScriptToolsVersion>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
@@ -120,6 +120,7 @@
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="ajax\ajax.ts" />
     <TypeScriptCompile Include="AppInsights.ts" />
     <TypeScriptCompile Include="Telemetry\PageVisitTimeManager.ts" />
     <TypeScriptCompile Include="Context\Sample.ts" />
@@ -157,6 +158,7 @@
     <TypeScriptCompile Include="Telemetry\Common\Envelope.ts" />
     <TypeScriptCompile Include="Context\Internal.ts" />
     <TypeScriptCompile Include="Telemetry\PageViewPerformance.ts" />
+    <TypeScriptCompile Include="Telemetry\RemoteDependencyData.ts" />
     <TypeScriptCompile Include="Telemetry\SessionTelemetry.ts" />
     <TypeScriptCompile Include="Util.ts" />
     <TypeScriptCompile Include="Logging.ts" />
@@ -182,7 +184,7 @@
   </Target>
   <Target Name="AfterBuild" DependsOnTargets="BuildAjaxMinManifests">
     <Message Text="Build snippet.html" />
-    <Exec Command="Powershell.exe -ExecutionPolicy ByPass -File &quot;$(ProjectDir)min\snippet.ps1&quot; -projectDir $(ProjectDir)" />
+    <Exec Command="Powershell.exe -ExecutionPolicy ByPass -File &quot;$(ProjectDir)min\snippet.ps1&quot; -projectDir $(ProjectDir)" />    
   </Target>
   <PropertyGroup>
     <PostBuildEvent>

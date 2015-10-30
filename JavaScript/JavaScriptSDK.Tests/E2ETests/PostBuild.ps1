@@ -35,7 +35,7 @@ $queueTest = "var i = 100; while(i--){appInsights.queue.push(function() {window.
 # copy snippet and convert protocol to file://
 $edgePrefix = gc "$($projectDir)\..\JavaScriptSDK\snippet.js"
 $edgePrefix = $edgePrefix -replace $cdnUrl, $aiPath
-$edgePrefix = $edgePrefix -replace "instrumentationKey: ""INSTRUMENTATION_KEY""", "instrumentationKey: ""$($iKey)"", endpointUrl: ""$($endpointUrl)"", maxBatchInterval: 1"
+$edgePrefix = $edgePrefix -replace "instrumentationKey: ""INSTRUMENTATION_KEY""", "instrumentationKey: ""$($iKey)"", endpointUrl: ""$($endpointUrl)"", maxBatchInterval: 1, autoTrackAjax: true"
 $edgePrefix = $edgePrefix -replace 'CDN_PATH',$aiPath
 $edgePrefix += $queueTest
 $edgePrefix | out-file "$($projectDir)\E2ETests\sprint70Snippet.js"
@@ -65,7 +65,7 @@ $testSnippet | out-file "$($projectDir)\E2ETests\testSnippet.js"
 
 # add snippet to error test files
 $instrumentation = gc "$($projectDir)\E2ETests\autoCollectionTemplates\instrumentation.js"
-$files = @("errorDom.html", "errorScriptGlobal.html", "errorScriptNested.html", "errorScriptSyntax.html")
+$files = @("ajax.html", "errorDom.html", "errorScriptGlobal.html", "errorScriptNested.html", "errorScriptSyntax.html")
 foreach ($file in $files) {
     $content = gc "$($projectDir)\E2ETests\autoCollectionTemplates\$($file)"
 

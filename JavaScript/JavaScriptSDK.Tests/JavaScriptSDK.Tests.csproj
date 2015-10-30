@@ -98,6 +98,9 @@
     <Content Include="E2ETests\testSnippet.js">
       <DependentUpon>PostBuild.ps1</DependentUpon>
     </Content>
+    <Content Include="E2ETests\ajax.html">
+      <DependentUpon>PostBuild.ps1</DependentUpon>
+    </Content>
     <Content Include="E2ETests\errorDom.html">
       <DependentUpon>PostBuild.ps1</DependentUpon>
     </Content>
@@ -112,6 +115,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="E2ETests\autoCollectionTemplates\ajax.html" />
     <Content Include="E2ETests\autoCollectionTemplates\errorDom.html" />
     <Content Include="E2ETests\autoCollectionTemplates\errorScriptGlobal.html" />
     <Content Include="E2ETests\autoCollectionTemplates\errorScriptNested.html" />
@@ -134,7 +138,7 @@
     <Content Include="Selenium\JSLitmus.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="External\sinon-1.7.3.js" />
+    <Content Include="External\sinon-1.17.2.js" />
     <Content Include="chromedriver.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -162,12 +166,14 @@
     <Content Include="TestFramework\Common.ts" />
     <Content Include="TestFramework\TestCase.ts" />
     <Content Include="TestFramework\TestClass.ts" />
+    <TypeScriptCompile Include="CheckinTests\ajax.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\appInsights.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Context\Sample.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Context\SamplingScoreGenerator.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Initialization.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\PageVisitTimeManager.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Telemetry\DataSanitizer.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Telemetry\RemoteDependency.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Telemetry\PageViewPerformance.tests.ts" />
     <TypeScriptCompile Include="Contracts\Generated\Base.unittests.ts" />
     <TypeScriptCompile Include="Contracts\Generated\ContextTagKeys.unittests.ts" />

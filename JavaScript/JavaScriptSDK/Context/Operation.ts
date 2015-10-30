@@ -10,7 +10,7 @@ module Microsoft.ApplicationInsights.Context {
         public parentId: string;
         public rootId: string;
         public syntheticSource: string;
-        
+
         constructor() {
             this.id = Util.newGuid();
         }
