@@ -456,11 +456,13 @@ module Microsoft.ApplicationInsights {
                     commands.TryCatchTraceWrapper.call(this, "publishData", function () {
                         this.ajaxData.CalculateMetrics();
 
+                        var successStatuses = [200, 201, 202, 203, 204, 301, 302, 303, 304];
+
                         appInsights.trackAjax(
                             this.ajaxData.getAbsoluteUrl(),
                             this.ajaxData.async,
                             this.ajaxData.ajaxTotalDuration,
-                            this.ajaxData.status == "200"
+                            successStatuses.indexOf(+this.ajaxData.status) != -1
                             );
                     });
 
