@@ -143,6 +143,39 @@ class AjaxTests extends TestClass {
 
             }
         });
+        
+        [200, 201, 202, 203, 204, 301, 302, 303, 304].forEach((responseCode) => {
+            this.testCase({
+                name: "Ajax: test success http response code: " + responseCode,
+                test: () => {
+                    this.testAjaxSuccess(responseCode, true);
+                }
+            })
+        });
+
+        [400, 401, 402, 403, 404, 500, 501].forEach((responseCode) => {
+            this.testCase({
+                name: "Ajax: test failure http response code: " + responseCode,
+                test: () => {
+                    this.testAjaxSuccess(responseCode, false);
+                }
+            })
+        });
+    }
+
+    private testAjaxSuccess(responseCode: number, success: boolean) {
+        var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);                
+
+        // Act
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/bla");
+        xhr.send();
+                
+        // Emulate response                
+        (<any>xhr).respond(responseCode, {}, "");
+
+        // Assert
+        Assert.equal(success, this.trackAjaxSpy.args[0][3], "TrackAjax should receive " + success + " as a 'success' argument");
     }
 }
 new AjaxTests().registerTests();
