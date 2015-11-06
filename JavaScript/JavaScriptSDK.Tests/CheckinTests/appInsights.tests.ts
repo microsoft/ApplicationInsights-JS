@@ -21,7 +21,8 @@ class AppInsightsTests extends TestClass {
             diagnosticLogInterval: 1000,
             autoTrackPageVisitTime: false,
             samplingPercentage: 100,
-            autoTrackAjax: false
+            autoTrackAjax: false,
+            relativePageViewDuration: false
         };
 
         // set default values

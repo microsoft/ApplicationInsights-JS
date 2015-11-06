@@ -29,10 +29,12 @@ module Microsoft.ApplicationInsights.Telemetry {
          */
         public isValid: boolean;
 
+        public durationMs: number;
+
         /**
          * Constructs a new instance of the PageEventTelemetry object
          */
-        constructor(name: string, url: string, durationMs: number, properties?: any, measurements?: any) {
+        constructor(name: string, url: string, unused: number, properties?: any, measurements?: any) {
             super();
 
             this.isValid = false;
@@ -57,7 +59,6 @@ module Microsoft.ApplicationInsights.Telemetry {
                 var response = PageViewPerformance.getDuration(timing.responseStart, timing.responseEnd);
                 var dom = PageViewPerformance.getDuration(timing.responseEnd, timing.loadEventEnd);
 
-
                 if (total == 0) {
                     _InternalLogging.throwInternalNonUserActionable(
                         LoggingSeverity.WARNING,
@@ -70,14 +71,11 @@ module Microsoft.ApplicationInsights.Telemetry {
                     _InternalLogging.throwInternalNonUserActionable(
                         LoggingSeverity.WARNING,
                         "client performance math error:" + total + " < " + network + " + " + request + " + " + response + " + " + dom);
-
                 } else {
-
-                    // use timing data for duration if possible
-                    durationMs = total;
+                    this.durationMs = total;
 
                     // convert to timespans
-                    this.perfTotal = Util.msToTimeSpan(total);
+                    this.perfTotal = this.duration = Util.msToTimeSpan(total);
                     this.networkConnect = Util.msToTimeSpan(network);
                     this.sentRequest = Util.msToTimeSpan(request);
                     this.receivedResponse = Util.msToTimeSpan(response);
@@ -86,16 +84,12 @@ module Microsoft.ApplicationInsights.Telemetry {
                     this.isValid = true;
                 }
             }
+
             this.url = Common.DataSanitizer.sanitizeUrl(url);
             this.name = Common.DataSanitizer.sanitizeString(name || Util.NotSpecified);
 
-            if (!isNaN(durationMs)) {
-                this.duration = Util.msToTimeSpan(durationMs);
-            }
-
             this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
             this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);
-
         }
 
         public static getPerformanceTiming(): PerformanceTiming {
