@@ -175,7 +175,7 @@ module Microsoft.ApplicationInsights {
                     url = window.location && window.location.href || "";
                 }
 
-                this.trackPageViewInternal(this.config.relativePageViewDuration, name, url, properties, measurements);
+                this.trackPageViewInternal(name, url, properties, measurements);
 
                 if (this.config.autoTrackPageVisitTime) {
                     this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
@@ -186,7 +186,7 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        public trackPageViewInternal(relativePageViewDuration: boolean, name?: string, url?: string, properties?: Object, measurements?: Object) {
+        public trackPageViewInternal(name?: string, url?: string, properties?: Object, measurements?: Object) {
             if (!Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
                 // TODO: no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
@@ -195,9 +195,9 @@ module Microsoft.ApplicationInsights {
                 return;
             }
 
-            var start = window.performance.timing.navigationStart;
+            var start = Telemetry.PageViewPerformance.getPerformanceTiming().navigationStart;
 
-            if (relativePageViewDuration) {
+            if (this.config.relativePageViewDuration) {
                 var duration = Telemetry.PageViewPerformance.getDuration(start, +new Date);
                 this.sendPageViewInternal(name, url, duration, properties, measurements);
                 this.flush();
@@ -209,16 +209,12 @@ module Microsoft.ApplicationInsights {
                     if (Telemetry.PageViewPerformance.isPerformanceTimingDataReady()) {
                         clearInterval(handle);
                         var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, null, properties, measurements);
+                        
+                        if (pageViewPerformance.getIsValid()) {
+                            if (!this.config.relativePageViewDuration) {
+                                this.sendPageViewInternal(name, url, pageViewPerformance.getDurationMs(), properties, measurements);
+                            }
 
-                        if (!relativePageViewDuration) {
-                            var duration = pageViewPerformance.isValid ?
-                                pageViewPerformance.durationMs :
-                                maxDurationLimit;
-
-                            this.sendPageViewInternal(name, url, duration, properties, measurements);
-                        }
-
-                        if (pageViewPerformance.isValid) {
                             var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
                                 Telemetry.PageViewPerformance.dataType, pageViewPerformance);
                             var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
@@ -229,7 +225,7 @@ module Microsoft.ApplicationInsights {
                     }
                     else if (Telemetry.PageViewPerformance.getDuration(start, +new Date) > maxDurationLimit) {
                         clearInterval(handle);
-                        if (!relativePageViewDuration) {
+                        if (!this.config.relativePageViewDuration) {
                             this.sendPageViewInternal(name, url, maxDurationLimit, properties, measurements);
                             this.flush();
                         }
@@ -239,60 +235,7 @@ module Microsoft.ApplicationInsights {
                 }
             }, 100);
         }
-
-        //private trackPageViewInternal(name?: string, url?: string, properties?: Object, measurements?: Object) {
-        //    var durationMs = 0;
-        //    // check if timing data is available
-        //    if (Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
-        //        // compute current duration (navigation start to now) for the pageViewTelemetry
-        //        var startTime = window.performance.timing.navigationStart;
-        //        durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-
-        //        // poll for page load completion and send page view performance data when ready
-        //        var handle = setInterval(() => {
-        //            try {
-        //                // abort this check if we have not finished loading after 1 minute
-        //                durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-        //                var timingDataReady = Telemetry.PageViewPerformance.isPerformanceTimingDataReady();
-        //                var timeoutReached = durationMs > 60000;
-        //                if (timeoutReached || timingDataReady) {
-        //                    clearInterval(handle);
-        //                    durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-        //                    var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements);
-
-        //                    // Sending page view when navigation timing (i.e. client perf data) is ready.
-        //                    // We used to report page view duration separtely and it caused confusion - 
-        //                    // how is that different from client perf duration?
-        //                    // So we made these 2 metrics to have the same value (by reporting it at the same time).
-        //                    this.sendPageViewInternal(
-        //                        name,
-        //                        url,
-        //                        pageViewPerformance.isValid && !isNaN(<any>pageViewPerformance.duration) ?
-        //                            +pageViewPerformance.duration :
-        //                            durationMs,
-        //                        properties,
-        //                        measurements);
-
-        //                    if (pageViewPerformance.isValid) {
-        //                        var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
-        //                            Telemetry.PageViewPerformance.dataType, pageViewPerformance);
-        //                        var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
-        //                        this.context.track(pageViewPerformanceEnvelope);
-        //                    }
-
-        //                    this.context._sender.triggerSend();
-        //                }
-        //            } catch (e) {
-        //                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed on page load calculation: " + Util.dump(e));
-        //            }
-        //        }, 100);
-        //    } else {
-        //        // TODO: no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
-        //    }
-
-        //}
-
-
+        
         /**
          * Start timing an extended event. Call {@link stopTrackEvent} to log the event when it ends.
          * @param   name    A string that identifies this event uniquely within the document.

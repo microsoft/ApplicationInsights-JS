@@ -27,9 +27,17 @@ module Microsoft.ApplicationInsights.Telemetry {
         /**
          * Field indicating whether this instance of PageViewPerformance is valid and should be sent
          */
-        public isValid: boolean;
+        private isValid: boolean;
 
-        public durationMs: number;
+        public getIsValid() {
+            return this.isValid;
+        }
+
+        private durationMs: number;
+
+        public getDurationMs() {
+            return this.durationMs;
+        }
 
         /**
          * Constructs a new instance of the PageEventTelemetry object
@@ -111,7 +119,7 @@ module Microsoft.ApplicationInsights.Telemetry {
          * As page loads different parts of performance timing numbers get set. When all of them are set we can report it.
          * Returns true if ready, false otherwise.
          */
-        public static isPerformanceTimingDataReady() {
+            public static isPerformanceTimingDataReady() {
             var timing = window.performance.timing;
 
             return timing.domainLookupStart > 0
