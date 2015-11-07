@@ -11,7 +11,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
     public registerTests() {
         super.registerTests();
         var name = this.name + ": ";
-        
+
         this.testCase({
             name: name + "PageViewPerformanceTelemetry correct timing data",
             test: () => {
@@ -28,7 +28,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 } else {
                     var check = Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.isPerformanceTimingSupported();
                     Assert.equal(false, check, "isPerformanceTimingSupported returns false when not performance timing is not supported");
-            }
+                }
             }
         });
 
@@ -58,13 +58,13 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 timing.responseEnd = 42;
                 timing.loadEventEnd = 60;
 
-                var timingSpy = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",() => {
-                    return timing;                  
+                var timingSpy = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
+                    return timing;
                 });
 
 
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
-                Assert.equal(true, telemetry.isValid);
+                Assert.equal(true, telemetry.getIsValid());
 
                 var data = telemetry;
 
@@ -90,16 +90,16 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 timing.responseEnd = 42;
                 timing.loadEventEnd = 60;
 
-                var timingSpy = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",() => {
+                var timingSpy = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
                     return timing;
                 });
 
                 var actualLoggedMessage = null;
-                var loggingSpy = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole",(m) => actualLoggedMessage = m);
+                var loggingSpy = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole", (m) => actualLoggedMessage = m);
 
 
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
-                Assert.equal(false, telemetry.isValid);
+                Assert.equal(false, telemetry.getIsValid());
 
                 var data = telemetry;
 
@@ -113,7 +113,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
 
                 timingSpy.restore();
                 loggingSpy.restore();
-               
+
             }
         });
 

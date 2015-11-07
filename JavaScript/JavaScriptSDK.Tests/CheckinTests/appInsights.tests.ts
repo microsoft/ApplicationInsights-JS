@@ -661,7 +661,7 @@ class AppInsightsTests extends TestClass {
                 var spy = sinon.stub(appInsights, "sendPageViewInternal");
                 var checkPageLoadStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",
                     () => { return true; });
-                var getDurationStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getDurationMs",
+                var getDurationStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.prototype, "getDurationMs",
                     () => { return expectedDuration; });
 
                 // act
@@ -688,7 +688,7 @@ class AppInsightsTests extends TestClass {
                 var spy = sinon.stub(appInsights, "sendPageViewInternal");
                 var checkPageLoadStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",
                     () => { return true; });
-                var getIsValidStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getIsValid",
+                var getIsValidStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.prototype, "getIsValid",
                     () => { return false; });
 
                 // act
@@ -737,7 +737,7 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var spy = sinon.stub(appInsights.context, "sendPageViewInternal");
+                var spy = sinon.stub(appInsights, "sendPageViewInternal");
                 var checkPageLoadStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",
                     () => { return false; });
                 var stub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",
