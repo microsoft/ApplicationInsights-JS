@@ -671,11 +671,6 @@ class AppInsightsTests extends TestClass {
                 this.clock.tick(100);
                 Assert.ok(spy.calledOnce, "Data is available so page view should be sent");
                 Assert.equal(expectedDuration, spy.args[0][2], "Page view duration taken from page view performance object doesn't match expected value");
-
-                // teardown
-                spy.restore();
-                checkPageLoadStub.restore();
-                getDurationStub.restore();
             }
         });
 
@@ -697,11 +692,6 @@ class AppInsightsTests extends TestClass {
                 // Data not available yet - should not send events
                 this.clock.tick(100);
                 Assert.ok(!spy.called, "Page view should not be sent since the timing data is invalid");
-
-                // teardown
-                spy.restore();
-                checkPageLoadStub.restore();
-                getIsValidStub.restore();
             }
         });
 
@@ -726,9 +716,6 @@ class AppInsightsTests extends TestClass {
                 perfDataAvailable = true;
                 this.clock.tick(100);
                 Assert.ok(triggerStub.calledTwice, "Data is available hence both page view and client perf should be sent");
-
-                triggerStub.restore();
-                checkPageLoadStub.restore();
             }
         });
 
@@ -752,10 +739,6 @@ class AppInsightsTests extends TestClass {
                 this.clock.tick(65432);
                 Assert.ok(spy.calledOnce, "60 seconds passed, page view is supposed to be sent");
                 Assert.equal(60000, spy.args[0][2], "Page view duration doesn't match expected maximum duration (60000 ms)");
-
-                spy.restore();
-                checkPageLoadStub.restore();
-                stub.restore();
             }
         });
 
