@@ -188,7 +188,7 @@ module Microsoft.ApplicationInsights {
 
         public trackPageViewInternal(name?: string, url?: string, properties?: Object, measurements?: Object) {
             if (!Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
-                // TODO: no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
+                // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
                     "trackPageView failed: navigation timing API used for calculation of page duration is not supported in this browser.");
 
