@@ -28,13 +28,19 @@ module Microsoft.ApplicationInsights.Telemetry {
          * Field indicating whether this instance of PageViewPerformance is valid and should be sent
          */
         private isValid: boolean;
-
+                
+        /**
+         * Indicates whether this instance of PageViewPerformance is valid and should be sent
+         */
         public getIsValid() {
             return this.isValid;
         }
 
         private durationMs: number;
 
+        /**
+        * Gets the total duration (PLT) in milliseconds. Check getIsValid() before using this method.
+        */
         public getDurationMs() {
             return this.durationMs;
         }
