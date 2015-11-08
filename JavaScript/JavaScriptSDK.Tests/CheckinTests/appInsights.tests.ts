@@ -630,12 +630,16 @@ class AppInsightsTests extends TestClass {
             name: "AppInsightsTests: trackPageView sends custom duration when configured by user",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
-                snippet.relativePageViewDuration = true;
+                snippet.relativePageViewDuration = true;                
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
-                var spy = sinon.spy(appInsights, "sendPageViewInternal");
-                var stub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",
+                var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
+                var stub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",
                     () => {
                         return { navigationStart: 0 };
+                    });
+                var getDurationMsStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.prototype, "getDurationMs",
+                    () => {
+                        return 54321;
                     });
 
                 // act
@@ -645,23 +649,19 @@ class AppInsightsTests extends TestClass {
                 // verify
                 Assert.ok(spy.calledOnce, "sendPageViewInternal is called");
                 Assert.equal(123, spy.args[0][2], "PageView duration doesn't match expected value");
-                
-                // teardowon
-                spy.restore();
-                stub.restore();
             }
         });
 
         this.testCase({
-            name: "AppInsightsTests: trackPageView gets the data from page view performance when it's available",
+            name: "AppInsightsTests: by default trackPageView gets the data from page view performance when it's available",
             test: () => {
                 // setup
                 var expectedDuration = 123;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var spy = sinon.stub(appInsights, "sendPageViewInternal");
-                var checkPageLoadStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",
+                var spy = this.sandbox.stub(appInsights, "sendPageViewInternal");
+                var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",
                     () => { return true; });
-                var getDurationStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.prototype, "getDurationMs",
+                var getDurationStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.prototype, "getDurationMs",
                     () => { return expectedDuration; });
 
                 // act
@@ -685,10 +685,10 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var spy = sinon.stub(appInsights, "sendPageViewInternal");
-                var checkPageLoadStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",
+                var spy = this.sandbox.stub(appInsights, "sendPageViewInternal");
+                var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",
                     () => { return true; });
-                var getIsValidStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.prototype, "getIsValid",
+                var getIsValidStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.prototype, "getIsValid",
                     () => { return false; });
 
                 // act
@@ -712,8 +712,8 @@ class AppInsightsTests extends TestClass {
                 var perfDataAvailable = false;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 appInsights.context._sessionManager._sessionHandler = null; /* otherwise we'll get session event too */
-                var triggerStub = sinon.stub(appInsights.context, "track");
-                var checkPageLoadStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady", () => { return perfDataAvailable; });
+                var triggerStub = this.sandbox.stub(appInsights.context, "track");
+                var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady", () => { return perfDataAvailable; });
 
                 // act
                 appInsights.trackPageView();
@@ -737,10 +737,10 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var spy = sinon.stub(appInsights, "sendPageViewInternal");
-                var checkPageLoadStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",
+                var spy = this.sandbox.stub(appInsights, "sendPageViewInternal");
+                var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",
                     () => { return false; });
-                var stub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",
+                var stub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",
                     () => {
                         return { navigationStart: 0 };
                     });
