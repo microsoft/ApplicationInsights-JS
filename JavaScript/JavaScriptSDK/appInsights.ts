@@ -31,7 +31,7 @@ module Microsoft.ApplicationInsights {
         samplingPercentage: number;
         autoTrackPageVisitTime: boolean;
         autoTrackAjax: boolean;
-        relativePageViewDuration: boolean;
+        overridePageViewDuration: boolean;
     }
 
     /**
@@ -197,7 +197,7 @@ module Microsoft.ApplicationInsights {
 
             var start = Telemetry.PageViewPerformance.getPerformanceTiming().navigationStart;
 
-            if (this.config.relativePageViewDuration) {
+            if (this.config.overridePageViewDuration) {
                 var duration = Telemetry.PageViewPerformance.getDuration(start, +new Date);
                 this.sendPageViewInternal(name, url, duration, properties, measurements);
                 this.flush();
@@ -211,7 +211,7 @@ module Microsoft.ApplicationInsights {
                         var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, null, properties, measurements);
                         
                         if (pageViewPerformance.getIsValid()) {
-                            if (!this.config.relativePageViewDuration) {
+                            if (!this.config.overridePageViewDuration) {
                                 this.sendPageViewInternal(name, url, pageViewPerformance.getDurationMs(), properties, measurements);
                             }
 
@@ -225,7 +225,7 @@ module Microsoft.ApplicationInsights {
                     }
                     else if (Telemetry.PageViewPerformance.getDuration(start, +new Date) > maxDurationLimit) {
                         clearInterval(handle);
-                        if (!this.config.relativePageViewDuration) {
+                        if (!this.config.overridePageViewDuration) {
                             this.sendPageViewInternal(name, url, maxDurationLimit, properties, measurements);
                             this.flush();
                         }

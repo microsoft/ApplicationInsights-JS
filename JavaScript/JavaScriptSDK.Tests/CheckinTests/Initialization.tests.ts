@@ -28,7 +28,7 @@ class InitializationTests extends TestClass {
             autoTrackPageVisitTime: false,
             samplingPercentage: 33,
             autoTrackAjax: false,
-            relativePageViewDuration: false
+            overridePageViewDuration: false
         };
 
         // set default values

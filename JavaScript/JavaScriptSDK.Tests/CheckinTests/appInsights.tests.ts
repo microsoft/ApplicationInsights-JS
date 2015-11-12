@@ -22,7 +22,7 @@ class AppInsightsTests extends TestClass {
             autoTrackPageVisitTime: false,
             samplingPercentage: 100,
             autoTrackAjax: false,
-            relativePageViewDuration: false
+            overridePageViewDuration: false
         };
 
         // set default values
@@ -630,7 +630,7 @@ class AppInsightsTests extends TestClass {
             name: "AppInsightsTests: trackPageView sends custom duration when configured by user",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
-                snippet.relativePageViewDuration = true;                
+                snippet.overridePageViewDuration = true;                
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
                 var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
                 var stub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",
