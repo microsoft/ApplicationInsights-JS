@@ -31,6 +31,7 @@ module Microsoft.ApplicationInsights {
         samplingPercentage: number;
         autoTrackPageVisitTime: boolean;
         autoTrackAjax: boolean;
+        overridePageViewDuration: boolean;
     }
 
     /**
@@ -185,56 +186,56 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        private trackPageViewInternal(name?: string, url?: string, properties?: Object, measurements?: Object) {
-            var durationMs = 0;
-            // check if timing data is available
-            if (Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
-                // compute current duration (navigation start to now) for the pageViewTelemetry
-                var startTime = window.performance.timing.navigationStart;
-                durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
+        public trackPageViewInternal(name?: string, url?: string, properties?: Object, measurements?: Object) {
+            if (!Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
+                // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    "trackPageView failed: navigation timing API used for calculation of page duration is not supported in this browser.");
 
-                // poll for page load completion and send page view performance data when ready
-                var handle = setInterval(() => {
-                    try {
-                        // abort this check if we have not finished loading after 1 minute
-                        durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-                        var timingDataReady = Telemetry.PageViewPerformance.isPerformanceTimingDataReady();
-                        var timeoutReached = durationMs > 60000;
-                        if (timeoutReached || timingDataReady) {
-                            clearInterval(handle);
-                            durationMs = Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-                            var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements);
+                return;
+            }
 
-                            // Sending page view when navigation timing (i.e. client perf data) is ready.
-                            // We used to report page view duration separtely and it caused confusion - 
-                            // how is that different from client perf duration?
-                            // So we made these 2 metrics to have the same value (by reporting it at the same time).
-                            this.sendPageViewInternal(
-                                name,
-                                url,
-                                pageViewPerformance.isValid && !isNaN(<any>pageViewPerformance.duration) ?
-                                    +pageViewPerformance.duration :
-                                    durationMs,
-                                properties,
-                                measurements);
+            var start = Telemetry.PageViewPerformance.getPerformanceTiming().navigationStart;
 
-                            if (pageViewPerformance.isValid) {
-                                var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
-                                    Telemetry.PageViewPerformance.dataType, pageViewPerformance);
-                                var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
-                                this.context.track(pageViewPerformanceEnvelope);
+            if (this.config.overridePageViewDuration) {
+                var duration = Telemetry.PageViewPerformance.getDuration(start, +new Date);
+                this.sendPageViewInternal(name, url, duration, properties, measurements);
+                this.flush();
+            }
+
+            var maxDurationLimit = 60000;
+            var handle = setInterval(() => {
+                try {
+                    if (Telemetry.PageViewPerformance.isPerformanceTimingDataReady()) {
+                        clearInterval(handle);
+                        var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, null, properties, measurements);
+                        
+                        if (pageViewPerformance.getIsValid()) {
+                            if (!this.config.overridePageViewDuration) {
+                                this.sendPageViewInternal(name, url, pageViewPerformance.getDurationMs(), properties, measurements);
                             }
 
-                            this.context._sender.triggerSend();
+                            var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
+                                Telemetry.PageViewPerformance.dataType, pageViewPerformance);
+                            var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
+                            this.context.track(pageViewPerformanceEnvelope);
                         }
-                    } catch (e) {
-                        _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed on page load calculation: " + Util.dump(e));
+
+                        this.flush();
                     }
-                }, 100);
-            }
+                    else if (Telemetry.PageViewPerformance.getDuration(start, +new Date) > maxDurationLimit) {
+                        clearInterval(handle);
+                        if (!this.config.overridePageViewDuration) {
+                            this.sendPageViewInternal(name, url, maxDurationLimit, properties, measurements);
+                            this.flush();
+                        }
+                    }
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed on page load calculation: " + Util.dump(e));
+                }
+            }, 100);
         }
-
-
+        
         /**
          * Start timing an extended event. Call {@link stopTrackEvent} to log the event when it ends.
          * @param   name    A string that identifies this event uniquely within the document.

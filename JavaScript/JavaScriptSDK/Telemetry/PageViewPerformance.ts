@@ -27,12 +27,28 @@ module Microsoft.ApplicationInsights.Telemetry {
         /**
          * Field indicating whether this instance of PageViewPerformance is valid and should be sent
          */
-        public isValid: boolean;
+        private isValid: boolean;
+                
+        /**
+         * Indicates whether this instance of PageViewPerformance is valid and should be sent
+         */
+        public getIsValid() {
+            return this.isValid;
+        }
+
+        private durationMs: number;
+
+        /**
+        * Gets the total duration (PLT) in milliseconds. Check getIsValid() before using this method.
+        */
+        public getDurationMs() {
+            return this.durationMs;
+        }
 
         /**
          * Constructs a new instance of the PageEventTelemetry object
          */
-        constructor(name: string, url: string, durationMs: number, properties?: any, measurements?: any) {
+        constructor(name: string, url: string, unused: number, properties?: any, measurements?: any) {
             super();
 
             this.isValid = false;
@@ -57,7 +73,6 @@ module Microsoft.ApplicationInsights.Telemetry {
                 var response = PageViewPerformance.getDuration(timing.responseStart, timing.responseEnd);
                 var dom = PageViewPerformance.getDuration(timing.responseEnd, timing.loadEventEnd);
 
-
                 if (total == 0) {
                     _InternalLogging.throwInternalNonUserActionable(
                         LoggingSeverity.WARNING,
@@ -70,14 +85,11 @@ module Microsoft.ApplicationInsights.Telemetry {
                     _InternalLogging.throwInternalNonUserActionable(
                         LoggingSeverity.WARNING,
                         "client performance math error:" + total + " < " + network + " + " + request + " + " + response + " + " + dom);
-
                 } else {
-
-                    // use timing data for duration if possible
-                    durationMs = total;
+                    this.durationMs = total;
 
                     // convert to timespans
-                    this.perfTotal = Util.msToTimeSpan(total);
+                    this.perfTotal = this.duration = Util.msToTimeSpan(total);
                     this.networkConnect = Util.msToTimeSpan(network);
                     this.sentRequest = Util.msToTimeSpan(request);
                     this.receivedResponse = Util.msToTimeSpan(response);
@@ -86,16 +98,12 @@ module Microsoft.ApplicationInsights.Telemetry {
                     this.isValid = true;
                 }
             }
+
             this.url = Common.DataSanitizer.sanitizeUrl(url);
             this.name = Common.DataSanitizer.sanitizeString(name || Util.NotSpecified);
 
-            if (!isNaN(durationMs)) {
-                this.duration = Util.msToTimeSpan(durationMs);
-            }
-
             this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
             this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);
-
         }
 
         public static getPerformanceTiming(): PerformanceTiming {
@@ -117,7 +125,7 @@ module Microsoft.ApplicationInsights.Telemetry {
          * As page loads different parts of performance timing numbers get set. When all of them are set we can report it.
          * Returns true if ready, false otherwise.
          */
-        public static isPerformanceTimingDataReady() {
+            public static isPerformanceTimingDataReady() {
             var timing = window.performance.timing;
 
             return timing.domainLookupStart > 0

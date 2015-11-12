@@ -21,7 +21,8 @@ class AppInsightsTests extends TestClass {
             diagnosticLogInterval: 1000,
             autoTrackPageVisitTime: false,
             samplingPercentage: 100,
-            autoTrackAjax: false
+            autoTrackAjax: false,
+            overridePageViewDuration: false
         };
 
         // set default values
@@ -34,7 +35,7 @@ class AppInsightsTests extends TestClass {
         Microsoft.ApplicationInsights.Util.setCookie('ai_user', "");
         if (window.localStorage) {
             window.localStorage.clear();
-    }
+        }
     }
 
     public testCleanup() {
@@ -43,7 +44,7 @@ class AppInsightsTests extends TestClass {
         Microsoft.ApplicationInsights.Util.setCookie('ai_user', "");
         if (window.localStorage) {
             window.localStorage.clear();
-    }
+        }
     }
 
     public registerTests() {
@@ -87,7 +88,7 @@ class AppInsightsTests extends TestClass {
                 config.disableTelemetry = true;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(config);
                 appInsights.context._sender._sender = () => null;
-                var senderStub = sinon.stub(appInsights.context._sender, "_sender",() => {
+                var senderStub = sinon.stub(appInsights.context._sender, "_sender", () => {
                     console.log("GOT HERE");
                 });
                 
@@ -260,7 +261,7 @@ class AppInsightsTests extends TestClass {
                 appInsights.context.device.osversion = "101";
                 appInsights.context.device.resolution = "101";
                 appInsights.context.device.type = "101";
-                
+
                 var trackStub = sinon.stub(appInsights.context._sender, "send");
 
                 // verify
@@ -562,7 +563,7 @@ class AppInsightsTests extends TestClass {
 
                 // teardown
                 trackStub.restore();
-                }
+            }
         });
 
         this.testCase({
@@ -608,7 +609,7 @@ class AppInsightsTests extends TestClass {
                 // verify
                 var test = (action) => {
                     action();
-                this.clock.tick(1);
+                    this.clock.tick(1);
                     var envelope = this.getFirstResult(action, trackStub);
                     var contextKeys = new AI.ContextTagKeys();
                     Assert.equal(undefined, envelope.tags[contextKeys.userAuthUserId], "user.authenticatedId");
@@ -622,7 +623,76 @@ class AppInsightsTests extends TestClass {
 
                 // teardown
                 trackStub.restore();
-                }
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: trackPageView sends custom duration when configured by user",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.overridePageViewDuration = true;                
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
+                var stub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",
+                    () => {
+                        return { navigationStart: 0 };
+                    });
+                var getDurationMsStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.prototype, "getDurationMs",
+                    () => {
+                        return 54321;
+                    });
+
+                // act
+                this.clock.tick(123);
+                appInsights.trackPageView();
+
+                // verify
+                Assert.ok(spy.calledOnce, "sendPageViewInternal is called");
+                Assert.equal(123, spy.args[0][2], "PageView duration doesn't match expected value");
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: by default trackPageView gets the data from page view performance when it's available",
+            test: () => {
+                // setup
+                var expectedDuration = 123;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var spy = this.sandbox.stub(appInsights, "sendPageViewInternal");
+                var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",
+                    () => { return true; });
+                var getDurationStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.prototype, "getDurationMs",
+                    () => { return expectedDuration; });
+
+                // act
+                appInsights.trackPageView();
+
+                // Data not available yet - should not send events
+                this.clock.tick(100);
+                Assert.ok(spy.calledOnce, "Data is available so page view should be sent");
+                Assert.equal(expectedDuration, spy.args[0][2], "Page view duration taken from page view performance object doesn't match expected value");
+            }
+        });
+
+
+        this.testCase({
+            name: "AppInsightsTests: trackPageView does not send data if page view performance is not valid",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var spy = this.sandbox.stub(appInsights, "sendPageViewInternal");
+                var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",
+                    () => { return true; });
+                var getIsValidStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.prototype, "getIsValid",
+                    () => { return false; });
+
+                // act
+                appInsights.trackPageView();
+
+                // Data not available yet - should not send events
+                this.clock.tick(100);
+                Assert.ok(!spy.called, "Page view should not be sent since the timing data is invalid");
+            }
         });
 
         this.testCase({
@@ -631,9 +701,9 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var perfDataAvailable = false;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var triggerStub = sinon.stub(appInsights.context, "track");
-                var checkPageLoadStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",() => { return perfDataAvailable; });
+                appInsights.context._sessionManager._sessionHandler = null; /* otherwise we'll get session event too */
+                var triggerStub = this.sandbox.stub(appInsights.context, "track");
+                var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady", () => { return perfDataAvailable; });
 
                 // act
                 appInsights.trackPageView();
@@ -646,9 +716,6 @@ class AppInsightsTests extends TestClass {
                 perfDataAvailable = true;
                 this.clock.tick(100);
                 Assert.ok(triggerStub.calledTwice, "Data is available hence both page view and client perf should be sent");
-
-                triggerStub.restore();
-                checkPageLoadStub.restore();
             }
         });
 
@@ -656,28 +723,22 @@ class AppInsightsTests extends TestClass {
             name: "AppInsightsTests: a page view is sent after 60 seconds even if perf data is not available",
             test: () => {
                 // setup
-                var duration = 0;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var triggerStub = sinon.stub(appInsights.context, "track");
-                var checkPageLoadStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",() => { return false; });
-                var getDurationStub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getDuration",() => { return duration; });
-
+                var spy = this.sandbox.stub(appInsights, "sendPageViewInternal");
+                var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",
+                    () => { return false; });
+                var stub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",
+                    () => {
+                        return { navigationStart: 0 };
+                    });
+                
                 // act
                 appInsights.trackPageView();
-
-                // Data not available yet - should not send events
-                this.clock.tick(100);
-                Assert.ok(triggerStub.notCalled, "Data is not yet available hence nothing is sent");
-
-                // 60 seconds passed, page view is supposed to be sent
-                duration = 60001;
-                this.clock.tick(100);
-                Assert.ok(triggerStub.calledOnce, "60 seconds passed, page view is supposed to be sent");
-
-                triggerStub.restore();
-                checkPageLoadStub.restore();
-                getDurationStub.restore();
+                
+                // 60+ seconds passed, page view is supposed to be sent                
+                this.clock.tick(65432);
+                Assert.ok(spy.calledOnce, "60 seconds passed, page view is supposed to be sent");
+                Assert.equal(60000, spy.args[0][2], "Page view duration doesn't match expected maximum duration (60000 ms)");
             }
         });
 
@@ -760,15 +821,15 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var dumpSpy = sinon.spy(Microsoft.ApplicationInsights.Util, "dump")
-                    var unexpectedError = new Error();
+                var unexpectedError = new Error();
                 var stub = sinon.stub(sut, "trackException").throws(unexpectedError);
 
-                    sut._onerror("any message", "any://url", 420, 42, new Error());
+                sut._onerror("any message", "any://url", 420, 42, new Error());
 
-                    Assert.ok(dumpSpy.calledWith(unexpectedError));
+                Assert.ok(dumpSpy.calledWith(unexpectedError));
                 stub.restore();
                 dumpSpy.restore();
-                }
+            }
         });
 
         this.testCase({
@@ -786,8 +847,8 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(dumpSpy.returnValues[0].indexOf("name: 'Error'") != -1);
 
                 stub.restore();
-                    dumpSpy.restore();
-                }
+                dumpSpy.restore();
+            }
         });
 
         this.testCase({
@@ -797,17 +858,17 @@ class AppInsightsTests extends TestClass {
                 var throwInternalNonUserActionableSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
                 var dumpStub = sinon.stub(Microsoft.ApplicationInsights.Util, "dump");
                 var stub = sinon.stub(sut, "trackException").throws(new Error());
-                    var expectedErrorDump: string = "test error";
-                    dumpStub.returns(expectedErrorDump);
+                var expectedErrorDump: string = "test error";
+                dumpStub.returns(expectedErrorDump);
 
-                    sut._onerror("any message", "any://url", 420, 42, new Error());
+                sut._onerror("any message", "any://url", 420, 42, new Error());
 
-                    var logMessage: string = throwInternalNonUserActionableSpy.getCall(0).args[1];
-                    Assert.notEqual(-1, logMessage.indexOf(expectedErrorDump));
+                var logMessage: string = throwInternalNonUserActionableSpy.getCall(0).args[1];
+                Assert.notEqual(-1, logMessage.indexOf(expectedErrorDump));
                 stub.restore();
-                    dumpStub.restore();
-                    throwInternalNonUserActionableSpy.restore();
-                }
+                dumpStub.restore();
+                throwInternalNonUserActionableSpy.restore();
+            }
         });
 
         this.testCase({
@@ -821,7 +882,7 @@ class AppInsightsTests extends TestClass {
                 sut._onerror("Script error.", "", 0, 0, null);
 
                 // assert
-                Assert.equal(document.URL,(<any>trackSpy.args[0][0]).data.baseData.properties.url);
+                Assert.equal(document.URL, (<any>trackSpy.args[0][0]).data.baseData.properties.url);
 
                 trackSpy.restore();
             }
@@ -840,7 +901,7 @@ class AppInsightsTests extends TestClass {
 
                 // assert
                 // properties are passed as a 3rd parameter
-                Assert.equal(document.URL,(<any>trackExceptionSpy.args[0][2]).url);
+                Assert.equal(document.URL, (<any>trackExceptionSpy.args[0][2]).url);
 
                 trackExceptionSpy.restore();
             }
@@ -978,7 +1039,7 @@ class AppInsightsTests extends TestClass {
             }
         });
 
-        
+
         this.testCase({
             name: name + "PageviewData is initialized in constructor with name, url, properties, and measurements and valid",
             test: () => {
