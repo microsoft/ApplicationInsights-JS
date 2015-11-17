@@ -12,12 +12,12 @@ module Microsoft.ApplicationInsights.Telemetry {
 
 
         public aiDataContract = {
-            ver: true,
-            handledAt: true,
-            exceptions: true,
-            severityLevel: false,
-            properties: false,
-            measurements: false
+            ver: FieldType.Required,
+            handledAt: FieldType.Required,
+            exceptions: FieldType.Required,
+            severityLevel: FieldType.Default,
+            properties: FieldType.Default,
+            measurements: FieldType.Default,
         }
 
         /**
@@ -66,13 +66,13 @@ module Microsoft.ApplicationInsights.Telemetry {
     class _ExceptionDetails extends AI.ExceptionDetails implements ISerializable {
 
         public aiDataContract = {
-            id: false,
-            outerId: false,
-            typeName: true,
-            message: true,
-            hasFullStack: false,
-            stack: false,
-            parsedStack: []
+            id: FieldType.Default,
+            outerId: FieldType.Default,
+            typeName: FieldType.Required,
+            message: FieldType.Required,
+            hasFullStack: FieldType.Default,
+            stack: FieldType.Default,
+            parsedStack: FieldType.Array,
         };
 
         constructor(exception: Error) {
@@ -149,11 +149,11 @@ module Microsoft.ApplicationInsights.Telemetry {
         public sizeInBytes = 0;
 
         public aiDataContract = {
-            level: true,
-            method: true,
-            assembly: false,
-            fileName: false,
-            line: false
+            level: FieldType.Required,
+            method: FieldType.Required,
+            assembly: FieldType.Default,
+            fileName: FieldType.Default,
+            line: FieldType.Default,
         };
 
         constructor(frame: string, level: number) {

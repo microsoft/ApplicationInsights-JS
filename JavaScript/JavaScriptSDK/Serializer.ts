@@ -4,6 +4,12 @@
 module Microsoft.ApplicationInsights {
     "use strict";
 
+    /**
+     * Enum is used in aiDataContract to describe how fields are serialized. 
+     * For instance: (Fieldtype.Required | FieldType.Array) will mark the field as required and indicate it's an array
+     */
+    export enum FieldType { Default = 0, Required = 1, Array = 2, Hidden = 4 };
+
     export interface ISerializable {
         /**
          * The set of fields for a serializeable object. 
@@ -65,8 +71,12 @@ module Microsoft.ApplicationInsights {
             
             source[circularReferenceCheck] = true;
             for (var field in source.aiDataContract) {
-                var isRequired = source.aiDataContract[field];
-                var isArray = typeof isRequired !== "boolean";
+
+                var contract = source.aiDataContract[field];
+                var isRequired = (typeof contract === "function") ? (contract() & FieldType.Required) : (contract & FieldType.Required);
+                var isHidden = (typeof contract === "function") ? (contract() & FieldType.Hidden) : (contract & FieldType.Hidden);
+                var isArray = contract & FieldType.Array;
+
                 var isPresent = source[field] !== undefined;
                 var isObject = typeof source[field] === "object" && source[field] !== null;
 
@@ -76,6 +86,11 @@ module Microsoft.ApplicationInsights {
                         "Missing required field specification: The field '" + field + "' on '"+ name + "' is required but not present on source");
 
                     // If not in debug mode, continue and hope the error is permissible
+                    continue;
+                }
+
+                if (isHidden) {
+                    // Don't serialize hidden fields
                     continue;
                 }
 

@@ -11,9 +11,9 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static dataType = "MetricData";
 
         public aiDataContract = {
-            ver: true,
-            metrics: true,
-            properties: false
+            ver: FieldType.Required,
+            metrics: FieldType.Required,
+            properties: FieldType.Default,
         }
 
         /**

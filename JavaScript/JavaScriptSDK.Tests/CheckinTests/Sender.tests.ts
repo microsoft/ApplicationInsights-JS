@@ -368,7 +368,7 @@ class SenderTests extends TestClass {
         });
 
         this.testCase({
-            name: "SenderTests: enableTracking swtich is set to false.  Sender should not send/save data",
+            name: "SenderTests: enableTracking switch is set to false.  Sender should not send/save data",
             test: () => {
                 // setup
                 this.disableTelemetry = true;
@@ -389,7 +389,7 @@ class SenderTests extends TestClass {
         });
 
         this.testCase({
-            name: "SenderTests: enableTracking swtich is set to false.  Trigger send should not send data",
+            name: "SenderTests: enableTracking switch is set to false.  Trigger send should not send data",
             test: () => {
                 // setup
                 this.disableTelemetry = true;

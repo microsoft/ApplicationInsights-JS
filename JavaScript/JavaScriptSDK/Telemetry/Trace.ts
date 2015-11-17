@@ -10,11 +10,11 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static dataType = "MessageData";
 
         public aiDataContract = {
-            ver: true,
-            message: true,
-            severityLevel: false,
-            measurements: false,
-            properties: false
+            ver: FieldType.Required,
+            message: FieldType.Required,
+            severityLevel: FieldType.Default,
+            measurements: FieldType.Default,
+            properties: FieldType.Default
         };
 
         /**

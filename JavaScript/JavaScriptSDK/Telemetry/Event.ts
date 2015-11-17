@@ -10,10 +10,10 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static dataType = "EventData";
 
         public aiDataContract = {
-            ver: true,
-            name: true,
-            properties: false,
-            measurements: false,
+            ver: FieldType.Required,
+            name: FieldType.Required,
+            properties: FieldType.Default,
+            measurements: FieldType.Default,
         }
 
         /**
