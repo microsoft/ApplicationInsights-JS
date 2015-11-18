@@ -11,8 +11,8 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static dataType = "SessionStateData";
 
         public aiDataContract = {
-            ver: true,
-            state: true
+            ver: FieldType.Required,
+            state: FieldType.Required,
         }
 
         constructor(state: AI.SessionState) {

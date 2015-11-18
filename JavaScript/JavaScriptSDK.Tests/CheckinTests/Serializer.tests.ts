@@ -43,8 +43,8 @@ class SerializerTests extends TestClass {
                         stillSerializable: "yep"
                     },
                     aiDataContract: {
-                        str: true,
-                        noContract: true
+                        str: Microsoft.ApplicationInsights.FieldType.Required,
+                        noContract: Microsoft.ApplicationInsights.FieldType.Required
                     }
                 };
 
@@ -64,7 +64,7 @@ class SerializerTests extends TestClass {
                 // act
                 var obj = {
                     aiDataContract: {
-                        str: true
+                        str: Microsoft.ApplicationInsights.FieldType.Required
                     }
                 };
 
@@ -82,14 +82,14 @@ class SerializerTests extends TestClass {
             test: () => {
 
                 // act
-                var noCycle = { value: "value", aiDataContract: { value: true } };
+                var noCycle = { value: "value", aiDataContract: { value: Microsoft.ApplicationInsights.FieldType.Required } };
                 var obj = {
                     arr: [
                         noCycle,
                         noCycle,
                         noCycle
                     ],
-                    aiDataContract: { arr: [] }
+                    aiDataContract: { arr: Microsoft.ApplicationInsights.FieldType.Array }
                 };
                 var expected = '{"arr":[{"value":"value"},{"value":"value"},{"value":"value"}]}';
                 var actual = Microsoft.ApplicationInsights.Serializer.serialize(obj);
@@ -108,7 +108,7 @@ class SerializerTests extends TestClass {
                 // act
                 var obj = {
                     arr: {},
-                    aiDataContract: { arr: [] }
+                    aiDataContract: { arr: Microsoft.ApplicationInsights.FieldType.Array }
                 };
 
                 Microsoft.ApplicationInsights.Serializer.serialize(obj);
@@ -120,18 +120,65 @@ class SerializerTests extends TestClass {
         });
 
         this.testCase({
+            name: "SerializerTests: hidden fields are not serialized",
+            test: () => {
+
+                // act
+                var obj = {
+                    str: "yes!",
+                    hiddenStr: "im the invisible man",
+                    hiddenStrRequired: "required fields can also be marked as hidden",
+                    aiDataContract: {
+                        str: Microsoft.ApplicationInsights.FieldType.Required,
+                        hiddenStr: Microsoft.ApplicationInsights.FieldType.Hidden,
+                        hiddenStrRequired: Microsoft.ApplicationInsights.FieldType.Required | Microsoft.ApplicationInsights.FieldType.Hidden,
+                    }
+                };
+
+                var expected = '{"str":"yes!"}';
+                var actual = Microsoft.ApplicationInsights.Serializer.serialize(obj);
+
+                // verify
+                Assert.equal(expected, actual, "Object is serialized correctly");
+            }
+        });
+
+        this.testCase({
+            name: "SerializerTests: serialize a field which has a dynamic required state",
+            test: () => {
+
+                // act
+                var obj = {
+                    str: "required",
+                    strOptional: "optional",
+
+                    aiDataContract: {
+                        str: { isRequired: () => { return Microsoft.ApplicationInsights.FieldType.Required; } },
+                        strOptional: { isRequired: () => { return Microsoft.ApplicationInsights.FieldType.Default; } }
+                    }
+                };
+
+                var expected = '{"str":"required","strOptional":"optional"}';
+                var actual = Microsoft.ApplicationInsights.Serializer.serialize(obj);
+
+                // verify
+                Assert.equal(expected, actual, "Object is serialized correctly");
+            }
+        });
+
+        this.testCase({
             name: "SerializerTests: cycles without contracts are handled",
             test: () => {
                 // act
-                var cyclePt1 = { value: undefined, aiDataContract: { value: true } };
-                var cyclePt2 = { value: cyclePt1, aiDataContract: { value: true } };
+                var cyclePt1 = { value: undefined, aiDataContract: { value: Microsoft.ApplicationInsights.FieldType.Required } };
+                var cyclePt2 = { value: cyclePt1, aiDataContract: { value: Microsoft.ApplicationInsights.FieldType.Required } };
                 cyclePt1.value = cyclePt2;
                 var obj = {
                     noContractWithCycle: {
                         notSerializable: cyclePt1
                     },
                     aiDataContract: {
-                        noContractWithCycle: true,
+                        noContractWithCycle: Microsoft.ApplicationInsights.FieldType.Required,
                     }
                 };
 
@@ -148,13 +195,13 @@ class SerializerTests extends TestClass {
             name: "SerializerTests: cycles with contracts are handled",
             test: () => {
                 // act
-                var cyclePt1 = { value: undefined, aiDataContract: { value: true } };
-                var cyclePt2 = { value: cyclePt1, aiDataContract: { value: true } };
+                var cyclePt1 = { value: undefined, aiDataContract: { value: Microsoft.ApplicationInsights.FieldType.Required } };
+                var cyclePt2 = { value: cyclePt1, aiDataContract: { value: Microsoft.ApplicationInsights.FieldType.Required } };
                 cyclePt1.value = cyclePt2;
                 var obj = {
                     aCycleWithContract: cyclePt1,
                     aiDataContract: {
-                        aCycleWithContract: true,
+                        aCycleWithContract: Microsoft.ApplicationInsights.FieldType.Required,
                     }
                 };
 
@@ -176,7 +223,7 @@ class SerializerTests extends TestClass {
                     str: "str",
                     notInContract: "foo",
                     aiDataContract: {
-                        str: true,
+                        str: Microsoft.ApplicationInsights.FieldType.Required,
                     }
                 };
 
@@ -196,7 +243,7 @@ class SerializerTests extends TestClass {
                 var obj = {
                     str: "str",
                     aiDataContract: {
-                        str: true
+                        str: Microsoft.ApplicationInsights.FieldType.Required
                     }
                 };
 
@@ -233,8 +280,8 @@ class SerializerTests extends TestClass {
                         properties: props,
                         measurements: meas,
                         aiDataContract: {
-                            properties: false,
-                            measurements: false
+                            properties: Microsoft.ApplicationInsights.FieldType.Default,
+                            measurements: Microsoft.ApplicationInsights.FieldType.Default
                         }
                     };
 
@@ -267,8 +314,8 @@ class SerializerTests extends TestClass {
                         properties: props,
                         measurements: meas,
                         aiDataContract: {
-                            properties: false,
-                            measurements: false
+                            properties: Microsoft.ApplicationInsights.FieldType.Default,
+                            measurements: Microsoft.ApplicationInsights.FieldType.Default,
                         }
                     };
 
@@ -288,7 +335,6 @@ class SerializerTests extends TestClass {
 
             }
         });
-
     }
 }
 new SerializerTests().registerTests();  

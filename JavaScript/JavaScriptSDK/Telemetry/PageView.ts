@@ -10,12 +10,12 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static dataType = "PageviewData";
 
         public aiDataContract = {
-            ver: true,
-            name: false,
-            url: false,
-            duration: false,
-            properties: false,
-            measurements: false
+            ver: FieldType.Required,
+            name: FieldType.Default,
+            url: FieldType.Default,
+            duration: FieldType.Default,
+            properties: FieldType.Default,
+            measurements: FieldType.Default,
         }
 
         /**

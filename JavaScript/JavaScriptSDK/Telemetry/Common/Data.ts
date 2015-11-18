@@ -8,8 +8,8 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
          * The data contract for serializing this object.
          */
         public aiDataContract = {
-            baseType: true,
-            baseData: true
+            baseType: FieldType.Required,
+            baseData: FieldType.Required
         }
 
         /**

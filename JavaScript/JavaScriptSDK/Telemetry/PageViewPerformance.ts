@@ -11,17 +11,17 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static dataType = "PageviewPerformanceData";
 
         public aiDataContract = {
-            ver: true,
-            name: false,
-            url: false,
-            duration: false,
-            perfTotal: false,
-            networkConnect: false,
-            sentRequest: false,
-            receivedResponse: false,
-            domProcessing: false,
-            properties: false,
-            measurements: false
+            ver: FieldType.Required,
+            name: FieldType.Default,
+            url: FieldType.Default,
+            duration: FieldType.Default,
+            perfTotal: FieldType.Default,
+            networkConnect: FieldType.Default,
+            sentRequest: FieldType.Default,
+            receivedResponse: FieldType.Default,
+            domProcessing: FieldType.Default,
+            properties: FieldType.Default,
+            measurements: FieldType.Default
         };
 
         /**

@@ -37,11 +37,18 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
             test: () => {
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
 
-                Assert.equal("boolean", typeof telemetry.aiDataContract.perfTotal, "perfTotal is set in data contract");
-                Assert.equal("boolean", typeof telemetry.aiDataContract.networkConnect, "networkConnect is set in data contract");
-                Assert.equal("boolean", typeof telemetry.aiDataContract.receivedResponse, "receivedResponse is set in data contract");
-                Assert.equal("boolean", typeof telemetry.aiDataContract.sentRequest, "sentRequest is set in data contract");
-                Assert.equal("boolean", typeof telemetry.aiDataContract.domProcessing, "domProcessing is set in data contract");
+                Assert.equal(Microsoft.ApplicationInsights.FieldType.Required, telemetry.aiDataContract.ver, "version fields is required");
+
+                // all other fields are optional
+                for (var field in telemetry.aiDataContract) {
+
+                    if (field == "ver") {
+                        continue;
+                    }
+
+                    var contract = telemetry.aiDataContract[field];
+                    Assert.notEqual(true, contract.isRequired, field + " is not required");
+                }
             }
         });
 
