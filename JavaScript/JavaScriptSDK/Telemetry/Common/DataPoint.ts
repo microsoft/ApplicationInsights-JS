@@ -8,13 +8,13 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
          * The data contract for serializing this object.
          */
         public aiDataContract = {
-            name: true,
-            kind: false,
-            value: true,
-            count: false,
-            min: false,
-            max: false,
-            stdDev: false
+            name: FieldType.Required,
+            kind: FieldType.Default,
+            value: FieldType.Required,
+            count: FieldType.Default,
+            min: FieldType.Default,
+            max: FieldType.Default,
+            stdDev: FieldType.Default
         }
     }
 }

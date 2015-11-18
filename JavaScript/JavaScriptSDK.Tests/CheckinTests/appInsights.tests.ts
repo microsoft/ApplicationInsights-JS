@@ -1389,14 +1389,14 @@ class AppInsightsTests extends TestClass {
                 appInsights.trackEvent("Event3");
 
                 // verify
-                sinon.clock.tick(1);
+                this.clock.tick(1);
                 Assert.ok(senderSpy.notCalled, "data is not sent without calling flush");
 
                 // act
                 appInsights.flush();
 
                 // verify
-                sinon.clock.tick(1);
+                this.clock.tick(1);
                 Assert.ok(senderSpy.calledOnce, "data is sent after calling flush");
 
                 // teardown

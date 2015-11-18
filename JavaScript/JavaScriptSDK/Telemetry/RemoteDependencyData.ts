@@ -11,21 +11,21 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static dataType = "RemoteDependencyData";
 
         public aiDataContract = {
-            ver: true,
-            name: false,
-            kind: true,
-            value: false,
-            count: false,
-            min: false,
-            max: false,
-            stdDev: false,
-            dependencyKind: false,
-            success: false,
-            async: false,
-            dependencySource: false,
-            commandName: false,
-            dependencyTypeName: false,
-            properties: false,
+            ver: FieldType.Required,
+            name: FieldType.Default,
+            kind: FieldType.Required,
+            value: FieldType.Default,
+            count: FieldType.Default,
+            min: FieldType.Default,
+            max: FieldType.Default,
+            stdDev: FieldType.Default,
+            dependencyKind: FieldType.Default,
+            success: FieldType.Default,
+            async: FieldType.Default,
+            dependencySource: FieldType.Default,
+            commandName: FieldType.Default,
+            dependencyTypeName: FieldType.Default,
+            properties: FieldType.Default,
         }
 
         /**

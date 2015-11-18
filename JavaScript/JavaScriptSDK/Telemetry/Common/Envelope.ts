@@ -20,14 +20,16 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
             this.name = name;
             this.data = data;
             this.time = Util.toISOStringForIE8(new Date());
-            
+
             this.aiDataContract = {
-                time: true,
-                iKey: true,
-                name: true,
-                sampleRate: true,
-                tags: true,
-                data: true
+                time: FieldType.Required,
+                iKey: FieldType.Required,
+                name: FieldType.Required,
+                sampleRate: () => {
+                    return (this.sampleRate == 100) ? FieldType.Hidden : FieldType.Required;
+                },
+                tags: FieldType.Required,
+                data: FieldType.Required,
             };
         }
     }

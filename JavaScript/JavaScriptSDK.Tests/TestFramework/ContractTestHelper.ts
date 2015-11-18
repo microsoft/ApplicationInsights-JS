@@ -76,7 +76,7 @@ class ContractTestHelper extends TestClass {
     private allRequiredFieldsAreConstructed(initializer: () => any, name: string) {
         var subject = this.getSubject(initializer, name);
         for (var field in subject.aiDataContract) {
-            if (subject.aiDataContract[field]) {
+            if (subject.aiDataContract[field] & Microsoft.ApplicationInsights.FieldType.Required) {
                 Assert.ok(subject[field] != null, "The required field '" + field + "' is constructed for: '" + name + "'");
             }
         }
