@@ -19,7 +19,7 @@ class SenderTests extends TestClass {
     private disableTelemetry: boolean;
 
     public testInitialize() {
-        this.xhr = window["XMLHttpRequest"];
+        this.xhr = sinon.useFakeXMLHttpRequest();
         this.xdr = window["XDomainRequest"];
         this.fakeServer = sinon.fakeServer.create();
         this.endpointUrl = "testUrl";
@@ -43,12 +43,6 @@ class SenderTests extends TestClass {
     }
 
     public testCleanup() {
-        if (this.xhr === undefined) {
-            delete window["XMLHttpRequest"];
-        } else {
-            window["XMLHttpRequest"] = this.xhr;
-        }
-
         if (this.xdr === undefined) {
             delete window["XDomainRequest"];
         } else {
