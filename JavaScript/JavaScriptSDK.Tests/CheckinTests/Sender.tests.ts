@@ -85,8 +85,11 @@ class SenderTests extends TestClass {
         this.testCase({
             name: "SenderTests: uninitialized sender throws a warning when invoked",
             test: () => {
-                // act
+                // setup
+                XMLHttpRequest = undefined;
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
+
+                // act
                 sender.send(this.testTelemetry);
 
                 // verify
