@@ -20,7 +20,7 @@ class SenderTests extends TestClass {
 
     public testInitialize() {
         this.xhr = sinon.useFakeXMLHttpRequest();
-        this.xdr = window["XDomainRequest"];
+        this.xdr = sinon.useFakeXMLHttpRequest();
         this.fakeServer = sinon.fakeServer.create();
         this.endpointUrl = "testUrl";
         this.maxBatchSizeInBytes = 1000000;
@@ -43,12 +43,6 @@ class SenderTests extends TestClass {
     }
 
     public testCleanup() {
-        if (this.xdr === undefined) {
-            delete window["XDomainRequest"];
-        } else {
-            window["XDomainRequest"] = this.xdr;
-        }
-
         this.errorSpy.restore();
         this.successSpy.restore();
         this.loggingSpy.restore();
@@ -168,6 +162,13 @@ class SenderTests extends TestClass {
             name: "SenderTests: XDomain sender can be invoked and handles errors",
             test: () => {
                 // setup
+                // pretend that you are IE8/IE9 browser which supports XDomainRequests
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    delete xhr.withCredentials;
+                    return xhr;
+                });
+
                 XDomainRequest = <any>(() => {
                     var xdr = new this.xhr;
                     xdr.onload = xdr.onreadystatechange;
@@ -203,7 +204,7 @@ class SenderTests extends TestClass {
                 requestAsserts();
                 this.fakeServer.requests[0].respond(404, { "Content-Type": "application/json" }, '400');
                 errorAsserts();
-                logAsserts(2);
+                logAsserts(1);
                 this.successSpy.reset();
                 this.errorSpy.reset();
             }
