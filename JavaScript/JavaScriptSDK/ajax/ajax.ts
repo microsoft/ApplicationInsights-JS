@@ -373,7 +373,9 @@ module Microsoft.ApplicationInsights {
 
                     // do not intercept onreadystatechange if it is defined and not a function, because we are not able to call original function in this case, which happends on Firefox 13 and lower
                     if (extensions.IsNullOrUndefined(this.onreadystatechange) || (typeof (this.onreadystatechange) === "function")) {
-                        this.ajaxData.originalOnreadystatechage = this.onreadystatechange;
+                        if ((typeof (this.onreadystatechange) === "function") && (this.onreadystatechange.name !== "onreadystatechangeWrapper")) {
+                            this.ajaxData.originalOnreadystatechage = this.onreadystatechange;
+                        }
                         this.onreadystatechange = onreadystatechangeWrapper;
                         result = true;
                     }
