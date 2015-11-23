@@ -1,6 +1,8 @@
 ﻿/// <reference path="initialization.ts" />
 
-function initializeAppInsights() {
+module Microsoft.ApplicationInsights {
+    "use strict";
+
     try {
         // only initialize if we are running in a browser that supports JSON serialization (ie7<, node.js, cordova)
         if (typeof window !== "undefined" && typeof JSON !== "undefined") {
@@ -34,5 +36,3 @@ function initializeAppInsights() {
         Microsoft.ApplicationInsights._InternalLogging.warnToConsole('Failed to initialize AppInsights JS SDK: ' + e.message);
     }
 }
-
-initializeAppInsights();
