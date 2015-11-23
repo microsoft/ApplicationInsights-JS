@@ -519,10 +519,10 @@ module Microsoft.ApplicationInsights {
                 }
             };
 
-            
+
             var ajaxMonitoringObject = new ajaxMonitoring(this.appInsights);
             ajaxMonitoringObject.Init();
-            this.ajaxMonitorInternal = ajaxMonitoringObject;            
+            this.ajaxMonitorInternal = ajaxMonitoringObject;
         }
     }
 }
