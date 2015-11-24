@@ -55,25 +55,6 @@ module Microsoft.ApplicationInsights {
     }
 
     export class commands {
-
-        /// <summary>
-        /// Wrappes function call in try..catch block and trace exception in case it occurs
-        /// <param name="functionName">The name of the function which is wrapped</param>
-        /// <param name="funcPointer">Pointer to the function which needs to be wrappped</param>
-        /// <param name="params">Array of parameters that will be traced in case exception happends in the function</param>
-        /// </summary>
-        public static TryCatchTraceWrapper(functionName, funcPointer, params) {
-            try {
-                return funcPointer.call(this);
-            }
-            catch (ex) {
-                _InternalLogging.throwInternalNonUserActionable(
-                    LoggingSeverity.CRITICAL,
-                    "Failed calling callback '" + functionName + "': "
-                    + Microsoft.ApplicationInsights.Util.dump(ex));
-            }
-        }
-
         ///<summary>Binds the specified function to an event, so that the function gets called whenever the event fires on the object</summary>
         ///<param name="obj">Object to which </param>
         ///<param name="eventNameWithoutOn">String that specifies any of the standard DHTML Events without "on" prefix</param>
@@ -83,27 +64,13 @@ module Microsoft.ApplicationInsights {
             var result = false;
             if (!extensions.IsNullOrUndefined(obj)) {
                 if (!extensions.IsNullOrUndefined(obj.attachEvent)) {
-
-                    // IE before version 9
-                    commands.TryCatchTraceWrapper(
-                        "attachEvent",
-                        function () {
-                            obj.attachEvent("on" + eventNameWithoutOn, handlerRef);
-                            result = true;
-                        },
-                        [obj, eventNameWithoutOn, constants.attachEvent]);
+                    // IE before version 9                    
+                    obj.attachEvent("on" + eventNameWithoutOn, handlerRef);
                 }
                 else {
                     if (!extensions.IsNullOrUndefined(obj.addEventListener)) {
-
                         // all browsers except IE before version 9
-                        commands.TryCatchTraceWrapper(
-                            "addEventListener",
-                            function () {
-                                obj.addEventListener(eventNameWithoutOn, handlerRef, false);
-                                result = true;
-                            },
-                            [obj, eventNameWithoutOn, constants.ad]);
+                        obj.addEventListener(eventNameWithoutOn, handlerRef, false);
                     }
                 }
             }
@@ -114,21 +81,11 @@ module Microsoft.ApplicationInsights {
         public static DetachEvent(obj, eventNameWithoutOn, handlerRef) {
             if (!extensions.IsNullOrUndefined(obj)) {
                 if (!extensions.IsNullOrUndefined(obj.detachEvent)) {
-                    commands.TryCatchTraceWrapper(
-                        "detachEvent",
-                        function () {
-                            obj.detachEvent("on" + eventNameWithoutOn, handlerRef);
-                        },
-                        [obj.toString(), eventNameWithoutOn, constants.de]);
+                    obj.detachEvent("on" + eventNameWithoutOn, handlerRef);
                 }
                 else {
                     if (!extensions.IsNullOrUndefined(obj.removeEventListener)) {
-                        commands.TryCatchTraceWrapper(
-                            "removeEventListener",
-                            function () {
-                                obj.removeEventListener(eventNameWithoutOn, handlerRef, false);
-                            },
-                            [obj.toString(), eventNameWithoutOn, constants.re]);
+                        obj.removeEventListener(eventNameWithoutOn, handlerRef, false);
                     }
                 }
             }
