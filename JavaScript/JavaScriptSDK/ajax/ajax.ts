@@ -29,9 +29,7 @@ module Microsoft.ApplicationInsights {
 
 
         ///<summary>Function that returns property name which will identify that monitoring for given instance of XmlHttpRequest is disabled</summary>
-        private GetDisabledPropertyName = function () {
-            return "Microsoft_ApplicationInsights_BypassAjaxInstrumentation";
-        };
+        public static DisabledPropertyName: string = "Microsoft_ApplicationInsights_BypassAjaxInstrumentation";
 
         ///<summary>Verifies that particalar instance of XMLHttpRequest needs to be monitored</summary>
         ///<param name="excludeAjaxDataValidation">Optional parameter. True if ajaxData must be excluded from verification</param>
@@ -45,7 +43,7 @@ module Microsoft.ApplicationInsights {
                 && (excludeAjaxDataValidation === true || !extensions.IsNullOrUndefined((<any>xhr).ajaxData))
 
             // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
-                && xhr[this.GetDisabledPropertyName()] !== true;
+                && xhr[AjaxMonitor.DisabledPropertyName] !== true;
 
         }
 
@@ -249,9 +247,9 @@ module Microsoft.ApplicationInsights {
                             throw ex;
                         } finally {
                             if (!extensions.IsNullOrUndefined((<any>xhr).ajaxData.originalOnreadystatechage)) {
-                                    if ((<any>this).readyState === 4) {
-                                        (<any>this).ajaxData.callbackFinishedTime = dateTime.Now();
-                                    }
+                                if ((<any>this).readyState === 4) {
+                                    (<any>this).ajaxData.callbackFinishedTime = dateTime.Now();
+                                }
                             }
 
                             ajaxMonitorInstance.onReadyStateChangePostfix(xhr);
@@ -314,7 +312,7 @@ module Microsoft.ApplicationInsights {
                         "Failed to rollback instrumentation of current instance of XMLHttpRequest: "
                         + Microsoft.ApplicationInsights.Util.dump(e));
                 }
-            }           
+            }
         }
 
         private collectResponseData(xhr: XMLHttpRequest) {

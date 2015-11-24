@@ -161,6 +161,48 @@ class AjaxTests extends TestClass {
                 }
             })
         });
+
+        this.testCase({
+            name: "Ajax: overriding ready state change handlers in all possible ways",
+            test: () => {
+                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);                
+                var cb1 = sinon.spy();
+                var cb2 = sinon.spy();
+                var cb3 = sinon.spy();
+                var cb4 = sinon.spy();
+                var cb5 = sinon.spy();
+                var cb6 = sinon.spy();
+                var cb7 = sinon.spy();
+
+                // Act
+                var xhr = new XMLHttpRequest();
+                xhr.addEventListener("readystatechange", cb1);
+                xhr.addEventListener("readystatechange", cb2);
+                xhr.open("GET", "/bla");
+                xhr.onreadystatechange = cb3;
+                xhr.addEventListener("readystatechange", cb4);
+                xhr.addEventListener("readystatechange", cb5);
+                xhr.send();
+                xhr.addEventListener("readystatechange", cb6);
+                xhr.addEventListener("readystatechange", cb7);
+                
+                Assert.ok(!this.trackAjaxSpy.called, "TrackAjax should not be called yet");
+
+                // Emulate response                
+                (<any>xhr).respond(404, {}, "");
+
+                // Assert
+                Assert.ok(this.trackAjaxSpy.calledOnce, "TrackAjax should be called");
+                Assert.ok(cb1.called, "callback 1 should be called");
+                Assert.ok(cb2.called, "callback 2 should be called");
+                Assert.ok(cb3.called, "callback 3 should be called");
+                Assert.ok(cb4.called, "callback 4 should be called");
+                Assert.ok(cb5.called, "callback 5 should be called");
+                Assert.ok(cb6.called, "callback 6 should be called");
+                Assert.ok(cb7.called, "callback 7 should be called");
+
+            }
+        });
     }
 
     private testAjaxSuccess(responseCode: number, success: boolean) {
