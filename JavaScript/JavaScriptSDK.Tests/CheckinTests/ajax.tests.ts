@@ -6,8 +6,8 @@ class AjaxTests extends TestClass {
 
     private appInsightsMock = { trackAjax: (absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) => { } }
     private trackAjaxSpy = sinon.spy(this.appInsightsMock, "trackAjax");
+    private callbackSpy = sinon.spy();
     private requests;
-    
 
     public testInitialize() {
         this.trackAjaxSpy.reset();
@@ -85,12 +85,12 @@ class AjaxTests extends TestClass {
         this.testCase({
             name: "Ajax: custom onreadystatechange gets called",
             test: () => {
-                var onreadystatechange = sinon.spy();
-                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);                
+                var onreadystatechangeSpy = sinon.spy();
+                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
 
                 // Act
                 var xhr = new XMLHttpRequest();
-                xhr.onreadystatechange = onreadystatechange;
+                xhr.onreadystatechange = onreadystatechangeSpy;
                 xhr.open("GET", "/bla");
                 xhr.send();
 
@@ -101,7 +101,7 @@ class AjaxTests extends TestClass {
 
                 // Assert
                 Assert.ok(this.trackAjaxSpy.called, "TrackAjax is called");
-                Assert.ok(onreadystatechange.called, "custom onreadystatechange should be called");
+                Assert.ok(onreadystatechangeSpy.called, "custom onreadystatechange should be called");
 
             }
         });
@@ -109,8 +109,7 @@ class AjaxTests extends TestClass {
         this.testCase({
             name: "Ajax: 200 means success",
             test: () => {
-                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);                
-
+                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
                 // Act
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "/bla");

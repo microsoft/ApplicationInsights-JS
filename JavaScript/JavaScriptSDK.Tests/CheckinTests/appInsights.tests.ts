@@ -39,7 +39,6 @@ class AppInsightsTests extends TestClass {
     }
 
     public testCleanup() {
-        this.clock.reset();
         Microsoft.ApplicationInsights.Util.setCookie('ai_session', "");
         Microsoft.ApplicationInsights.Util.setCookie('ai_user', "");
         if (window.localStorage) {
