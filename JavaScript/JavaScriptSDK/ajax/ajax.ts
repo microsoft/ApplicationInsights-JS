@@ -201,7 +201,7 @@ module Microsoft.ApplicationInsights {
 
         private attachToOnReadyStateChange(xhr: XMLHttpRequest) {
             var ajaxMonitorInstance = this;
-            (<any>xhr).ajaxData.onreadystatechangeCallbackAttached = commands.AttachEvent(xhr, "readystatechange", () => {
+            (<any>xhr).ajaxData.onreadystatechangeCallbackAttached = EventHelper.AttachEvent(xhr, "readystatechange", () => {
                 try {
                     ajaxMonitorInstance.onreadyStateChangeCallback(xhr);
                 } catch (e) {
@@ -306,7 +306,7 @@ module Microsoft.ApplicationInsights {
             }
             finally {
                 try {
-                    commands.DetachEvent(xhr, "readystatechange", this.onreadyStateChangeCallback);
+                    EventHelper.DetachEvent(xhr, "readystatechange", this.onreadyStateChangeCallback);
                     delete (<any>xhr).ajaxData;
                 } catch (e) {
                     _InternalLogging.throwInternalNonUserActionable(

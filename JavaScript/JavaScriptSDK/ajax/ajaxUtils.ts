@@ -4,17 +4,9 @@
 module Microsoft.ApplicationInsights {
     "use strict";
 
-    export class constants {
-        public static attachEvent = "attachEvent";
-        public static de = "detachEvent";
-        public static ad = "addEventListener";
-        public static re = "removeEventListener";
-        public static udf = "undefined";
-    };
-
     export class extensions {
         public static IsNullOrUndefined(obj) {
-            return typeof (obj) === constants.udf || obj === null;
+            return typeof (obj) === "undefined" || obj === null;
         }
     }
 
@@ -54,7 +46,7 @@ module Microsoft.ApplicationInsights {
         }
     }
 
-    export class commands {
+    export class EventHelper {
         ///<summary>Binds the specified function to an event, so that the function gets called whenever the event fires on the object</summary>
         ///<param name="obj">Object to which </param>
         ///<param name="eventNameWithoutOn">String that specifies any of the standard DHTML Events without "on" prefix</param>
