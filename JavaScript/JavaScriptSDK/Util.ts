@@ -366,11 +366,12 @@ module Microsoft.ApplicationInsights {
     }
 
     export class UrlHelper {
+        private static document: any = typeof document !== "undefined" ? document : {};
         private static htmlAnchorElement: HTMLAnchorElement;
 
         public static parseUrl(url): HTMLAnchorElement {
             if (!UrlHelper.htmlAnchorElement) {
-                UrlHelper.htmlAnchorElement = document.createElement('a');
+                UrlHelper.htmlAnchorElement = UrlHelper.document.createElement('a');
             }
 
             UrlHelper.htmlAnchorElement.href = url;

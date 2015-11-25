@@ -23,7 +23,7 @@ module Microsoft.ApplicationInsights {
 
         ///<summary>The main function that needs to be called in order to start Ajax Monitoring</summary>
         private Init = function () {
-            if (this.supportMonitoring()) {
+            if (this.supportsMonitoring()) {
                 this.instrumentOpen();
                 this.instrumentSetRequestHeader();
                 this.instrumentSend();
@@ -39,7 +39,7 @@ module Microsoft.ApplicationInsights {
         ///<summary>Verifies that particalar instance of XMLHttpRequest needs to be monitored</summary>
         ///<param name="excludeAjaxDataValidation">Optional parameter. True if ajaxData must be excluded from verification</param>
         ///<returns type="bool">True if instance needs to be monitored, otherwise false</returns>
-        private isMonitoredInstance(xhr: XMLHttpRequestInstrumented, excludeAjaxDataValidation?: boolean) {
+        private isMonitoredInstance(xhr: XMLHttpRequestInstrumented, excludeAjaxDataValidation?: boolean): boolean {
 
             // checking to see that all interested functions on xhr were instrumented
             return this.initiated
@@ -54,7 +54,7 @@ module Microsoft.ApplicationInsights {
 
         ///<summary>Determines whether ajax monitoring can be enabled on this document</summary>
         ///<returns>True if Ajax monitoring is supported on this page, otherwise false</returns>
-        private supportMonitoring() {
+        private supportsMonitoring(): boolean {
             var result = false;
             if (!extensions.IsNullOrUndefined(XMLHttpRequest)) {
                 result = true;
@@ -114,7 +114,7 @@ module Microsoft.ApplicationInsights {
             };
         }
 
-        public static getFailedAjaxDiagnosticsMessage(xhr: XMLHttpRequestInstrumented) {
+        public static getFailedAjaxDiagnosticsMessage(xhr: XMLHttpRequestInstrumented): string {
             var result = "";
             try {
                 if (!extensions.IsNullOrUndefined(xhr) &&
@@ -211,7 +211,7 @@ module Microsoft.ApplicationInsights {
 
         ///<summary>instrument onreadystatechange callback</summary>
         ///<returns>True, if onreadystatechange is instrumented, otherwise false</returns>
-        private instrumentOnReadyStateChange(xhr: XMLHttpRequestInstrumented) {
+        private instrumentOnReadyStateChange(xhr: XMLHttpRequestInstrumented): boolean {
             var result = false;
 
             // do not instrument onreadystatechange if it is defined and not a function, because we are not able to call original function in this case, which happends on Firefox 13 and lower
@@ -261,7 +261,7 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        private onreadystatechangeWrapper(xhr: XMLHttpRequestInstrumented) {
+        private onreadystatechangeWrapper(xhr: XMLHttpRequestInstrumented): () => any {
             var ajaxMonitorInstance = this;
             var wrapper = () => {
                 try {
