@@ -1464,17 +1464,19 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var trackStub = sinon.stub(appInsights.context, "track");
+                var name = "test";
                 var url = "http://myurl.com";
                 var async = true;
                 var duration = 123;
                 var success = false;
 
                 // Act
-                appInsights.trackAjax(url, async, duration, success);
+                appInsights.trackAjax(name, url, async, duration, success);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
                 var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
+                Assert.equal(name, rdd.name);
                 Assert.equal(url, rdd.commandName);
                 Assert.equal(async, rdd.async);
                 Assert.equal(duration, rdd.value);
@@ -1493,7 +1495,7 @@ class AppInsightsTests extends TestClass {
                 var expectedEnvelopeName = "Microsoft.ApplicationInsights.BDC8736DD8E84B69B19BB0CE6B66A456.RemoteDependency";
 
                 // Act
-                appInsights.trackAjax("http://asdf", true, 123, true);
+                appInsights.trackAjax("test", "http://asdf", true, 123, true);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");

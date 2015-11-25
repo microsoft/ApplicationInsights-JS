@@ -363,16 +363,39 @@ module Microsoft.ApplicationInsights {
             
             return true;
         }
+    }
 
-        public static getAbsoluteUrl = (function () {
-            var a;
+    export class UrlHelper {
+        private static htmlAnchorElement: HTMLAnchorElement;
 
-            return function (url) {
-                if (!a) a = document.createElement('a');
-                a.href = url;
+        public static parseUrl(url): HTMLAnchorElement {
+            if (!UrlHelper.htmlAnchorElement) {
+                UrlHelper.htmlAnchorElement = document.createElement('a');
+            }
 
-                return a.href;
-            };
-        })();
+            UrlHelper.htmlAnchorElement.href = url;
+
+            return UrlHelper.htmlAnchorElement;
+        }
+
+        public static getAbsoluteUrl(url): string {
+            var result: string;
+            var a = UrlHelper.parseUrl(url);
+            if (a) {
+                result = a.href;
+            }
+
+            return result;
+        }
+
+        public static getHostName(url): string {
+            var result: string;
+            var a = UrlHelper.parseUrl(url);
+            if (a) {
+                result = a.hostname;
+            }
+
+            return result;
+        }
     }
 }

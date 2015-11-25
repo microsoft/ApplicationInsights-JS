@@ -52,8 +52,12 @@ module Microsoft.ApplicationInsights {
         //<summary>Determines whether or not JavaScript exception occured in xhr.onreadystatechange code. 1 if occured, otherwise 0.</summary>
         public clientFailure = 0;
 
-        public getAbsoluteUrl = function () {
-            return this.requestUrl ? Util.getAbsoluteUrl(this.requestUrl) : null;
+        public getAbsoluteUrl() {
+            return this.requestUrl ? UrlHelper.getAbsoluteUrl(this.requestUrl) : null;
+        }
+
+        public getHostName() {
+            return this.requestUrl ? UrlHelper.getHostName(this.requestUrl) : null;
         }
 
         public CalculateMetrics = function () {

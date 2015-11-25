@@ -5,6 +5,7 @@
 class RemoteDependencyTests extends ContractTestHelper {
 
     private exception;
+    private static name = "testName"
     private static url = "http://myurl.com"
     private static isAsync = true;
     private static totalTime = 123;
@@ -13,7 +14,7 @@ class RemoteDependencyTests extends ContractTestHelper {
     constructor() {
         super(
             () => new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData(
-                RemoteDependencyTests.url, RemoteDependencyTests.isAsync, RemoteDependencyTests.totalTime, RemoteDependencyTests.success),
+                RemoteDependencyTests.name, RemoteDependencyTests.url, RemoteDependencyTests.isAsync, RemoteDependencyTests.totalTime, RemoteDependencyTests.success),
             "RemoteDependencyTelemetryTests");
     }
 
@@ -25,20 +26,20 @@ class RemoteDependencyTests extends ContractTestHelper {
             name: name + "Constructor parameters are set correctly",
             test: () => {
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData(
-                    RemoteDependencyTests.url, RemoteDependencyTests.isAsync, RemoteDependencyTests.totalTime, RemoteDependencyTests.success);
+                    RemoteDependencyTests.name, RemoteDependencyTests.url, RemoteDependencyTests.isAsync, RemoteDependencyTests.totalTime, RemoteDependencyTests.success);
 
                 Assert.equal(RemoteDependencyTests.url, telemetry.commandName, "commandName should be set to url");
                 Assert.equal(RemoteDependencyTests.isAsync, telemetry.async, "async should be set correctly");
                 Assert.equal(RemoteDependencyTests.totalTime, telemetry.value, "value should be set correctly");
                 Assert.equal(RemoteDependencyTests.success, telemetry.success, "success should be set correctly");
-                Assert.equal(RemoteDependencyTests.url, telemetry.name, "name gets correct value");
+                Assert.equal(RemoteDependencyTests.name, telemetry.name, "name gets correct value");
             }
         });
 
         this.testCase({
             name: name + "default properties are set correctly",
             test: () => {
-                var telemetry = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData("", false, 0, false);
+                var telemetry = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData("", "", false, 0, false);
                 
                 Assert.equal(AI.DependencyKind.Http, telemetry.dependencyKind, "dependencyKind gets correct default value");
                 Assert.equal("Ajax", telemetry.dependencyTypeName, "dependencyTypeName gets correct default value");
@@ -46,4 +47,4 @@ class RemoteDependencyTests extends ContractTestHelper {
         });
     }
 }
-new ExceptionTelemetryTests().registerTests();
+new RemoteDependencyTests().registerTests();

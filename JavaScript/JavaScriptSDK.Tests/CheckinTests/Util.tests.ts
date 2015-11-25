@@ -152,20 +152,24 @@ class UtilTests extends TestClass {
         this.testCase({
             name: "UtilTests: parse cookie",
             test: () => {
-                var test = (cookie, query, expected) => {
-                    Util["document"] = <any>{
-                        cookie: cookie
-                    };
+                try {
+                    var test = (cookie, query, expected) => {
+                        Util["document"] = <any>{
+                            cookie: cookie
+                        };
 
-                    var actual = Util.getCookie(query);
-                    Assert.deepEqual(expected, actual, "cookie is parsed correctly");
+                        var actual = Util.getCookie(query);
+                        Assert.deepEqual(expected, actual, "cookie is parsed correctly");
+                    }
+
+                    test("testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
+                    test("other=foo; testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
+                    test("another=bar; ;a=testCookie=; testCookie=id|acq|renewal; other=foo|3|testCookie=", "testCookie", "id|acq|renewal");
+                    test("xtestCookiex=id|acq|renewal", "testCookie", "");
+                    test("", "testCookie", "");
+                } finally {
+                    Util["document"] = document;
                 }
-
-                test("testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
-                test("other=foo; testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
-                test("another=bar; ;a=testCookie=; testCookie=id|acq|renewal; other=foo|3|testCookie=", "testCookie", "id|acq|renewal");
-                test("xtestCookiex=id|acq|renewal", "testCookie", "");
-                test("", "testCookie", "");
             }
         });
 

@@ -31,7 +31,7 @@ class AjaxTests extends TestClass {
 
                 // assert
                 var ajaxData = (<any>xhr).ajaxData;
-                Assert.ok(xhr.onreadystatechange != null, "Onreadystatechange was not set.");
+                Assert.ok(xhr.onreadystatechange != null, "Onreadystatechange was not set.");                
                 Assert.equal("http://microsoft.com", ajaxData.requestUrl, "RequestUrl is collected correctly");
                 Assert.equal(true, ajaxData.async, "Async flag is collected correctly");
             }
@@ -49,7 +49,6 @@ class AjaxTests extends TestClass {
                 (<any>xhr).respond(200, {}, "");
 
                 // assert
-                var ajaxData = (<any>xhr).ajaxData;
                 Assert.ok(!xhr.hasOwnProperty("ajaxData"), "ajaxData should be removed from xhr to prevent memory leaks");
             }
         });
@@ -119,7 +118,7 @@ class AjaxTests extends TestClass {
                 (<any>xhr).respond(200, {}, "");
 
                 // Assert
-                Assert.equal(true, this.trackAjaxSpy.args[0][3], "TrackAjax should receive true as a 'success' argument");
+                Assert.equal(true, this.trackAjaxSpy.args[0][4], "TrackAjax should receive true as a 'success' argument");
 
             }
         });
@@ -138,7 +137,7 @@ class AjaxTests extends TestClass {
                 (<any>xhr).respond(404, {}, "");
 
                 // Assert
-                Assert.equal(false, this.trackAjaxSpy.args[0][3], "TrackAjax should receive false as a 'success' argument");
+                Assert.equal(false, this.trackAjaxSpy.args[0][4], "TrackAjax should receive false as a 'success' argument");
 
             }
         });
@@ -216,7 +215,7 @@ class AjaxTests extends TestClass {
         (<any>xhr).respond(responseCode, {}, "");
 
         // Assert
-        Assert.equal(success, this.trackAjaxSpy.args[0][3], "TrackAjax should receive " + success + " as a 'success' argument");
+        Assert.equal(success, this.trackAjaxSpy.args[0][4], "TrackAjax should receive " + success + " as a 'success' argument");
     }
 }
 new AjaxTests().registerTests();
