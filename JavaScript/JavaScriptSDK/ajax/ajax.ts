@@ -319,15 +319,13 @@ module Microsoft.ApplicationInsights {
         private onAjaxComplete(xhr: XMLHttpRequestInstrumented) {
             try {
                 xhr.ajaxData.CalculateMetrics();
-
-                var successStatuses = [200, 201, 202, 203, 204, 301, 302, 303, 304];
-
+                
                 this.appInsights.trackAjax(
                     xhr.ajaxData.getHostName(),
                     xhr.ajaxData.getAbsoluteUrl(),
                     xhr.ajaxData.async,
                     xhr.ajaxData.ajaxTotalDuration,
-                    successStatuses.indexOf(+(xhr.ajaxData.status)) != -1
+                    (+(xhr.ajaxData.status)) < 400
                     );
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(
