@@ -29,7 +29,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         }
 
         /**
-         * Constructs a new instance of the PageEventTelemetry object
+         * Constructs a new instance of the RemoteDependencyData object
          */
         constructor(name: string, commandName: string, isAsync: boolean, value: number, success: boolean) {
             super();
