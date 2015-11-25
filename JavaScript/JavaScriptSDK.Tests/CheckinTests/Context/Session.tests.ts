@@ -5,19 +5,21 @@
 
 class SessionContextTests extends TestClass {
 
-    private originalDocument;
+    private originalDocument = Microsoft.ApplicationInsights.Util["document"];
     private results: any[];
 
     /** Method called before the start of each test method */
     public testInitialize() {
         this.results = [];
         this.resetStorage();
+        this.restoreFakeCookie();
     }
 
     /** Method called after each test method has completed */
     public testCleanup() {
         this.results = [];
         this.resetStorage();
+        this.restoreFakeCookie();
     }
 
     public registerTests() {
@@ -335,8 +337,6 @@ class SessionContextTests extends TestClass {
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null, () => { });
                 sessionManager.update();
                 Assert.ok(!sessionManager.automaticSession.isFirst, "isFirst is false when an existing session was set");
-
-                this.restoreFakeCookie();
             }
         });
 
@@ -376,8 +376,6 @@ class SessionContextTests extends TestClass {
                 Assert.equal(2, this.results.length);
                 Assert.equal(AI.SessionState.End, this.results[0], "session end generated");
                 Assert.equal(AI.SessionState.Start, this.results[1], "session start generated");
-
-                this.restoreFakeCookie();
             }
         });
 
@@ -402,8 +400,6 @@ class SessionContextTests extends TestClass {
                 Assert.equal(2, this.results.length);
                 Assert.equal(AI.SessionState.End, this.results[0], "session end generated");
                 Assert.equal(AI.SessionState.Start, this.results[1], "session start generated");
-
-                this.restoreFakeCookie();
             }
         });
 
@@ -425,8 +421,6 @@ class SessionContextTests extends TestClass {
                 Assert.equal(testGuid, sessionManager.automaticSession.id, "cookie session id was used");
                 Assert.equal(+new Date(acquisitionDate), sessionManager.automaticSession.acquisitionDate, "cookie acquisitionDate was used");
                 Assert.equal(+new Date(renewalDate), sessionManager.automaticSession.renewalDate, "cookie renewalDate was used");
-
-                this.restoreFakeCookie();
             }
         });
 
@@ -454,8 +448,6 @@ class SessionContextTests extends TestClass {
                 Assert.equal(2, this.results.length);
                 Assert.equal(AI.SessionState.End, this.results[0], "session end generated");
                 Assert.equal(AI.SessionState.Start, this.results[1], "session start generated");
-
-                this.restoreFakeCookie();
             }
         });
 
@@ -480,8 +472,6 @@ class SessionContextTests extends TestClass {
                 Assert.notEqual(testGuid, sessionManager.automaticSession.id, "cookie session id was renewed");
                 Assert.equal(delta, sessionManager.automaticSession.acquisitionDate, "cookie acquisitionDate was updated");
                 Assert.equal(delta, sessionManager.automaticSession.renewalDate, "cookie renewalDate was updated");
-
-                this.restoreFakeCookie();
             }
         });
 
@@ -504,8 +494,6 @@ class SessionContextTests extends TestClass {
                 Assert.equal(testGuid, sessionManager.automaticSession.id, "cookie session id was not renewed");
                 Assert.equal(0, sessionManager.automaticSession.acquisitionDate, "cookie acquisitionDate was updated");
                 Assert.equal(10, sessionManager.automaticSession.renewalDate, "cookie renewalDate was updated");
-
-                this.restoreFakeCookie();
             }
         });
 
@@ -558,8 +546,6 @@ class SessionContextTests extends TestClass {
                 sessionManager.update();
 
                 // TODO: CHECK THAT A PARSING ERROR OCCURRED AND WE SENT A DIAGNOSTIC TRACE
-
-                this.restoreFakeCookie();
             }
         });
         */

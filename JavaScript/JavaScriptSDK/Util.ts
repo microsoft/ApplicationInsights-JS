@@ -364,4 +364,39 @@ module Microsoft.ApplicationInsights {
             return true;
         }
     }
+
+    export class UrlHelper {
+        private static document: any = typeof document !== "undefined" ? document : {};
+        private static htmlAnchorElement: HTMLAnchorElement;
+
+        public static parseUrl(url): HTMLAnchorElement {
+            if (!UrlHelper.htmlAnchorElement) {
+                UrlHelper.htmlAnchorElement = UrlHelper.document.createElement('a');
+            }
+
+            UrlHelper.htmlAnchorElement.href = url;
+
+            return UrlHelper.htmlAnchorElement;
+        }
+
+        public static getAbsoluteUrl(url): string {
+            var result: string;
+            var a = UrlHelper.parseUrl(url);
+            if (a) {
+                result = a.href;
+            }
+
+            return result;
+        }
+
+        public static getHostName(url): string {
+            var result: string;
+            var a = UrlHelper.parseUrl(url);
+            if (a) {
+                result = a.hostname;
+            }
+
+            return result;
+        }
+    }
 }

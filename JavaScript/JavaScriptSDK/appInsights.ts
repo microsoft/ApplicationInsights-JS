@@ -279,8 +279,8 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        public trackAjax(absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) {
-            var dependency = new Telemetry.RemoteDependencyData(absoluteUrl, isAsync, totalTime, success);
+        public trackAjax(name: string, absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) {
+            var dependency = new Telemetry.RemoteDependencyData(name, absoluteUrl, isAsync, totalTime, success);
             var dependencyData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.RemoteDependencyData>(
                 Telemetry.RemoteDependencyData.dataType, dependency);
             var envelope = new Telemetry.Common.Envelope(dependencyData, "Microsoft.ApplicationInsights." + this.config.instrumentationKey.replace(/-/g, "") + ".RemoteDependency");

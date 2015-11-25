@@ -29,18 +29,19 @@ module Microsoft.ApplicationInsights.Telemetry {
         }
 
         /**
-         * Constructs a new instance of the PageEventTelemetry object
+         * Constructs a new instance of the RemoteDependencyData object
          */
-        constructor(absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) {
+        constructor(name: string, commandName: string, isAsync: boolean, value: number, success: boolean) {
             super();
 
+            this.name = name;
+            this.commandName = commandName;
+            this.async = isAsync;
+            this.value = value;
+            this.success = success;  
+                      
             this.dependencyKind = AI.DependencyKind.Http;
             this.dependencyTypeName = "Ajax";
-            this.async = isAsync;
-            this.value = totalTime;
-            this.commandName = absoluteUrl;
-            this.name = absoluteUrl;
-            this.success = success;
         }
     }
 }
