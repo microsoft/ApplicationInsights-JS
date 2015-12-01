@@ -690,7 +690,8 @@ class AppInsightsTests extends TestClass {
 
                 // Data not available yet - should not send events
                 this.clock.tick(100);
-                Assert.ok(!spy.called, "Page view should not be sent since the timing data is invalid");
+                Assert.ok(spy.called, "Page view should not be sent since the timing data is invalid");
+                Assert.equal(undefined, spy.args[0][2], "Page view duration should be undefined if performance data is not valid.");
             }
         });
 
