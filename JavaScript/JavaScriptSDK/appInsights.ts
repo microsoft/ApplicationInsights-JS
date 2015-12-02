@@ -190,16 +190,18 @@ module Microsoft.ApplicationInsights {
             if (!Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
                 // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
-                    "trackPageView failed: navigation timing API used for calculation of page duration is not supported in this browser.");
+                    "trackPageView: navigation timing API used for calculation of page duration is not supported in this browser. This page view will be collected without duration and timing info.");
 
+                this.sendPageViewInternal(name, url, 0, properties, measurements);
+                this.flush();
                 return;
             }
 
             var start = Telemetry.PageViewPerformance.getPerformanceTiming().navigationStart;
+            var customDuration = Telemetry.PageViewPerformance.getDuration(start, +new Date);
 
             if (this.config.overridePageViewDuration) {
-                var duration = Telemetry.PageViewPerformance.getDuration(start, +new Date);
-                this.sendPageViewInternal(name, url, duration, properties, measurements);
+                this.sendPageViewInternal(name, url, customDuration, properties, measurements);
                 this.flush();
             }
 
@@ -209,8 +211,13 @@ module Microsoft.ApplicationInsights {
                     if (Telemetry.PageViewPerformance.isPerformanceTimingDataReady()) {
                         clearInterval(handle);
                         var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, null, properties, measurements);
-                        
-                        if (pageViewPerformance.getIsValid()) {
+
+                        if (!pageViewPerformance.getIsValid()) {
+                            // If navigation timing gives invalid numbers, then go back to "override page view duration" mode.
+                            // That's the best value we can get that makes sense.
+                            this.sendPageViewInternal(name, url, customDuration, properties, measurements);
+                            this.flush();
+                        } else {
                             if (!this.config.overridePageViewDuration) {
                                 this.sendPageViewInternal(name, url, pageViewPerformance.getDurationMs(), properties, measurements);
                             }
@@ -219,9 +226,9 @@ module Microsoft.ApplicationInsights {
                                 Telemetry.PageViewPerformance.dataType, pageViewPerformance);
                             var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
                             this.context.track(pageViewPerformanceEnvelope);
-                        }
 
-                        this.flush();
+                            this.flush();
+                        }
                     }
                     else if (Telemetry.PageViewPerformance.getDuration(start, +new Date) > maxDurationLimit) {
                         clearInterval(handle);
