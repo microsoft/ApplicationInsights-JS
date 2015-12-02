@@ -1,6 +1,4 @@
 ﻿var appInsights = window.appInsights || (function(aiConfig) {
-    var snippetLoadTime = new Date;
-    
     var appInsights = {
         config: aiConfig
     };
