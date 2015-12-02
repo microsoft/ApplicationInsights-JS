@@ -75,7 +75,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
                 if (total == 0) {
                     _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.WARNING,
+                        LoggingSeverity.CRITICAL,
                         "error calculating page view performance: total='" +
                         total + "', network='" + network + "', request='" + request + "', response='" +
                         response + "', dom='" + dom + "'");
@@ -83,7 +83,7 @@ module Microsoft.ApplicationInsights.Telemetry {
                     // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
                     // in this case, don't report client performance from this page                    
                     _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.WARNING,
+                        LoggingSeverity.CRITICAL,
                         "client performance math error:" + total + " < " + network + " + " + request + " + " + response + " + " + dom);
                 } else {
                     this.durationMs = total;

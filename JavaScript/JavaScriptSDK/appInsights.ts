@@ -192,16 +192,16 @@ module Microsoft.ApplicationInsights {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
                     "trackPageView: navigation timing API used for calculation of page duration is not supported in this browser. This page view will be collected without duration and timing info.");
 
-                this.sendPageViewInternal(name, url, undefined, properties, measurements);
+                this.sendPageViewInternal(name, url, 0, properties, measurements);
                 this.flush();
                 return;
             }
 
             var start = Telemetry.PageViewPerformance.getPerformanceTiming().navigationStart;
+            var customDuration = Telemetry.PageViewPerformance.getDuration(start, +new Date);
 
             if (this.config.overridePageViewDuration) {
-                var duration = Telemetry.PageViewPerformance.getDuration(start, +new Date);
-                this.sendPageViewInternal(name, url, duration, properties, measurements);
+                this.sendPageViewInternal(name, url, customDuration, properties, measurements);
                 this.flush();
             }
 
@@ -213,8 +213,9 @@ module Microsoft.ApplicationInsights {
                         var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, null, properties, measurements);
 
                         if (!pageViewPerformance.getIsValid()) {
-                            var duration = Telemetry.PageViewPerformance.getDuration(start, +new Date);
-                            this.sendPageViewInternal(name, url, duration, properties, measurements);
+                            // If navigation timing gives invalid numbers, then go back to "override page view duration" mode.
+                            // That's the best value we can get that makes sense.
+                            this.sendPageViewInternal(name, url, customDuration, properties, measurements);
                             this.flush();
                         } else {
                             if (!this.config.overridePageViewDuration) {
