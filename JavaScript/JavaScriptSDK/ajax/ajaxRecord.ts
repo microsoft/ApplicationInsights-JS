@@ -5,6 +5,16 @@
 module Microsoft.ApplicationInsights {
     "use strict";
 
+    export class XHRMonitoringState {        
+        public openDone: boolean = false;        
+        public setRequestHeaderDone: boolean = false;
+        public sendDone: boolean = false;
+        public abortDone: boolean = false;
+
+        //<summary>True, if onreadyStateChangeCallback function attached to xhr, otherwise false</summary>
+        public onreadystatechangeCallbackAttached = false;
+    }
+
     export class ajaxRecord {
         public async = false;
         public completed = false;
@@ -45,9 +55,8 @@ module Microsoft.ApplicationInsights {
 
         //<summary>The original xhr onreadystatechange event</summary>
         public originalOnreadystatechage = null;
-
-        //<summary>True, if onreadyStateChangeCallback function attached to xhr, otherwise false</summary>
-        public onreadystatechangeCallbackAttached = false;
+        
+        public xhrMonitoringState: XHRMonitoringState = new XHRMonitoringState();
 
         //<summary>Determines whether or not JavaScript exception occured in xhr.onreadystatechange code. 1 if occured, otherwise 0.</summary>
         public clientFailure = 0;

@@ -12,25 +12,25 @@ module Microsoft.ApplicationInsights {
 
     export class AjaxMonitor {
         private appInsights: AppInsights;
-        private initiated: boolean;
+        private initialized: boolean;
         private static instrumentedByAppInsightsName = "InstrumentedByAppInsights";
 
         constructor(appInsights: Microsoft.ApplicationInsights.AppInsights) {
             this.appInsights = appInsights;
-            var initiated = false;
+            this.initialized = false;
             this.Init();
         }
 
         ///<summary>The main function that needs to be called in order to start Ajax Monitoring</summary>
-        private Init = function () {
+        private Init() {
             if (this.supportsMonitoring()) {
                 this.instrumentOpen();
                 this.instrumentSetRequestHeader();
                 this.instrumentSend();
                 this.instrumentAbort();
-                this.initiated = true;
+                this.initialized = true;
             }
-        };
+        }
 
 
         ///<summary>Function that returns property name which will identify that monitoring for given instance of XmlHttpRequest is disabled</summary>
@@ -42,7 +42,7 @@ module Microsoft.ApplicationInsights {
         private isMonitoredInstance(xhr: XMLHttpRequestInstrumented, excludeAjaxDataValidation?: boolean): boolean {
 
             // checking to see that all interested functions on xhr were instrumented
-            return this.initiated
+            return this.initialized
 
             // checking on ajaxData to see that it was not removed in user code
                 && (excludeAjaxDataValidation === true || !extensions.IsNullOrUndefined(xhr.ajaxData))
@@ -68,16 +68,12 @@ module Microsoft.ApplicationInsights {
             var ajaxMonitorInstance = this;
             XMLHttpRequest.prototype.open = function (method, url, async) {
                 try {
-                    if (ajaxMonitorInstance.isMonitoredInstance(this, true)) {
-                        var ajaxData = new ajaxRecord();
-                        ajaxData.method = method;
-                        ajaxData.requestUrl = url;
-                        ajaxData.requestSize += url.length;
-                        // If not set async defaults to true 
-                        ajaxData.async = extensions.IsNullOrUndefined(async) ? true : async;
-                        this.ajaxData = ajaxData;
-
-                        ajaxMonitorInstance.attachToOnReadyStateChange(this);
+                    if (ajaxMonitorInstance.isMonitoredInstance(this, true) &&
+                        (
+                            !(<XMLHttpRequestInstrumented>this).ajaxData ||
+                            !(<XMLHttpRequestInstrumented>this).ajaxData.xhrMonitoringState.openDone
+                            )) {
+                        ajaxMonitorInstance.openHandler(this, method, url, async);
                     }
                 } catch (e) {
                     _InternalLogging.throwInternalNonUserActionable(
@@ -92,12 +88,25 @@ module Microsoft.ApplicationInsights {
             };
         }
 
+        private openHandler(xhr: XMLHttpRequestInstrumented, method, url, async) {
+            var ajaxData = new ajaxRecord();
+            ajaxData.method = method;
+            ajaxData.requestUrl = url;
+            ajaxData.requestSize += url.length;
+            // If not set async defaults to true 
+            ajaxData.async = extensions.IsNullOrUndefined(async) ? true : async;
+            ajaxData.xhrMonitoringState.openDone = true
+            xhr.ajaxData = ajaxData;
+
+            this.attachToOnReadyStateChange(xhr);
+        }
+
         private instrumentSetRequestHeader() {
             var originalSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
             var ajaxMonitorInstance = this;
             XMLHttpRequest.prototype.setRequestHeader = function (name, value) {
                 try {
-                    if (ajaxMonitorInstance.isMonitoredInstance(this)) {                    
+                    if (ajaxMonitorInstance.isMonitoredInstance(this) && !(<XMLHttpRequestInstrumented>this).ajaxData.xhrMonitoringState.setRequestHeaderDone) {                    
                         // 2 is the length of ": " which is added to each header
                         this.ajaxData.requestSize += stringUtils.GetLength(name) + stringUtils.GetLength(value) + 2;
                     }
@@ -114,7 +123,7 @@ module Microsoft.ApplicationInsights {
             };
         }
 
-        public static getFailedAjaxDiagnosticsMessage(xhr: XMLHttpRequestInstrumented): string {
+        private static getFailedAjaxDiagnosticsMessage(xhr: XMLHttpRequestInstrumented): string {
             var result = "";
             try {
                 if (!extensions.IsNullOrUndefined(xhr) &&
@@ -132,7 +141,9 @@ module Microsoft.ApplicationInsights {
             var ajaxMonitorInstance = this;
             XMLHttpRequest.prototype.send = function (content) {
                 try {
-                    ajaxMonitorInstance.sendPrefixInstrumentor(this, content);
+                    if (ajaxMonitorInstance.isMonitoredInstance(this) && !(<XMLHttpRequestInstrumented>this).ajaxData.xhrMonitoringState.sendDone) {
+                        ajaxMonitorInstance.sendHandler(this, content);
+                    }
                 } catch (e) {
                     _InternalLogging.throwInternalNonUserActionable(
                         LoggingSeverity.CRITICAL,
@@ -146,46 +157,46 @@ module Microsoft.ApplicationInsights {
             };
         }
 
-        private sendPrefixInstrumentor(xhr: XMLHttpRequestInstrumented, content) {
-            if (this.isMonitoredInstance(xhr)) {
-                if (!extensions.IsNullOrUndefined(content) && !extensions.IsNullOrUndefined(content.length)) {
+        private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
+            if (!extensions.IsNullOrUndefined(content) && !extensions.IsNullOrUndefined(content.length)) {
 
-                    // http://www.w3.org/TR/XMLHttpRequest/: If the request method is a case-sensitive match for GET or HEAD act as if data is null.
-                    if (xhr.ajaxData.method !== "GET" && xhr.ajaxData.method !== "HEAD") {
-                        xhr.ajaxData.requestSize += content.length;
-                    }
-                }
-
-                xhr.ajaxData.requestSentTime = dateTime.Now();
-                xhr.ajaxData.loadingRequest = document.readyState === "loading";
-
-                if (!xhr.ajaxData.onreadystatechangeCallbackAttached) {
-
-                    // IE 8 and below does not support xmlh.addEventListener. 
-                    // This is the last place for the browsers that does not support addEventListenener to instrument onreadystatechange
-
-                    var ajaxMonitorInstance = this;
-                    setTimeout(function () {
-                        try {
-                            if (xhr.readyState === 4) {
-                                // ajax is cached, onreadystatechange didn't fire, but it is completed
-                                ajaxMonitorInstance.collectResponseData(xhr);
-                                ajaxMonitorInstance.onAjaxComplete(xhr)
-                            }
-                            else {
-                                ajaxMonitorInstance.instrumentOnReadyStateChange(xhr);
-                            }
-                        } catch (e) {
-                            _InternalLogging.throwInternalNonUserActionable(
-                                LoggingSeverity.CRITICAL,
-                                "Failed to instrument XMLHttpRequest.onreadystatechange"
-                                + AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr)
-                                + ", monitoring data for this ajax call may be incorrect: "
-                                + Microsoft.ApplicationInsights.Util.dump(e));
-                        }
-                    }, 5);
+                // http://www.w3.org/TR/XMLHttpRequest/: If the request method is a case-sensitive match for GET or HEAD act as if data is null.
+                if (xhr.ajaxData.method !== "GET" && xhr.ajaxData.method !== "HEAD") {
+                    xhr.ajaxData.requestSize += content.length;
                 }
             }
+
+            xhr.ajaxData.requestSentTime = dateTime.Now();
+            xhr.ajaxData.loadingRequest = document.readyState === "loading";
+
+            if (!xhr.ajaxData.xhrMonitoringState.onreadystatechangeCallbackAttached) {
+
+                // IE 8 and below does not support xmlh.addEventListener. 
+                // This is the last place for the browsers that does not support addEventListenener to instrument onreadystatechange
+
+                var ajaxMonitorInstance = this;
+                setTimeout(function () {
+                    try {
+                        if (xhr.readyState === 4) {
+                            // ajax is cached, onreadystatechange didn't fire, but it is completed
+                            ajaxMonitorInstance.collectResponseData(xhr);
+                            ajaxMonitorInstance.onAjaxComplete(xhr)
+                        }
+                        else {
+                            ajaxMonitorInstance.instrumentOnReadyStateChange(xhr);
+                        }
+                    } catch (e) {
+                        _InternalLogging.throwInternalNonUserActionable(
+                            LoggingSeverity.CRITICAL,
+                            "Failed to instrument XMLHttpRequest.onreadystatechange"
+                            + AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr)
+                            + ", monitoring data for this ajax call may be incorrect: "
+                            + Microsoft.ApplicationInsights.Util.dump(e));
+                    }
+                }, 5);
+            }
+
+            xhr.ajaxData.xhrMonitoringState.sendDone = true;
         }
 
         private instrumentAbort() {
@@ -193,8 +204,9 @@ module Microsoft.ApplicationInsights {
             var ajaxMonitorInstance = this;
             XMLHttpRequest.prototype.abort = function () {
                 try {
-                    if (ajaxMonitorInstance.isMonitoredInstance(this)) {
-                        this.ajaxData.aborted = 1;
+                    if (ajaxMonitorInstance.isMonitoredInstance(this) && !(<XMLHttpRequestInstrumented>this).ajaxData.xhrMonitoringState.abortDone) {
+                        (<XMLHttpRequestInstrumented>this).ajaxData.aborted = 1;
+                        (<XMLHttpRequestInstrumented>this).ajaxData.xhrMonitoringState.abortDone = true;
                     }
                 } catch (e) {
                     _InternalLogging.throwInternalNonUserActionable(
@@ -227,7 +239,7 @@ module Microsoft.ApplicationInsights {
 
         private attachToOnReadyStateChange(xhr: XMLHttpRequestInstrumented) {
             var ajaxMonitorInstance = this;
-            xhr.ajaxData.onreadystatechangeCallbackAttached = EventHelper.AttachEvent(xhr, "readystatechange", () => {
+            xhr.ajaxData.xhrMonitoringState.onreadystatechangeCallbackAttached = EventHelper.AttachEvent(xhr, "readystatechange", () => {
                 try {
                     ajaxMonitorInstance.onreadyStateChangeCallback(xhr);
                 } catch (e) {
@@ -319,7 +331,7 @@ module Microsoft.ApplicationInsights {
         private onAjaxComplete(xhr: XMLHttpRequestInstrumented) {
             try {
                 xhr.ajaxData.CalculateMetrics();
-                
+
                 this.appInsights.trackAjax(
                     xhr.ajaxData.getHostName(),
                     xhr.ajaxData.getAbsoluteUrl(),
