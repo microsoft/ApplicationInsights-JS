@@ -92,9 +92,7 @@ module Microsoft.ApplicationInsights {
             var ajaxData = new ajaxRecord();
             ajaxData.method = method;
             ajaxData.requestUrl = url;
-            ajaxData.requestSize += url.length;
-            // If not set async defaults to true 
-            ajaxData.async = extensions.IsNullOrUndefined(async) ? true : async;
+            ajaxData.requestSize += url.length;            
             ajaxData.xhrMonitoringState.openDone = true
             xhr.ajaxData = ajaxData;
 
@@ -335,7 +333,6 @@ module Microsoft.ApplicationInsights {
                 this.appInsights.trackAjax(
                     xhr.ajaxData.getHostName(),
                     xhr.ajaxData.getAbsoluteUrl(),
-                    xhr.ajaxData.async,
                     xhr.ajaxData.ajaxTotalDuration,
                     (+(xhr.ajaxData.status)) < 400
                     );

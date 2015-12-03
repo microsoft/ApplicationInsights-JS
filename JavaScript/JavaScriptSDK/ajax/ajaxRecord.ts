@@ -15,8 +15,7 @@ module Microsoft.ApplicationInsights {
         public onreadystatechangeCallbackAttached = false;
     }
 
-    export class ajaxRecord {
-        public async = false;
+    export class ajaxRecord {        
         public completed = false;
         public requestHeadersSize = null;
         public ttfb = null;
