@@ -66,8 +66,8 @@
             this.id = "browser";
 
             // Device type is a dimension in our data platform
-            // Setting it to 'browser' allows to separate client and server dependencies/exceptions
-            this.type = "browser";
+            // Setting it to 'Browser' allows to separate client and server dependencies/exceptions
+            this.type = "Browser";
 
             //get resolution
             if (typeof screen !== "undefined" && screen.width && screen.height) {
