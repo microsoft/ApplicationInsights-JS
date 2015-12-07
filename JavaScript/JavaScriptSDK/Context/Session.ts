@@ -15,10 +15,10 @@ module Microsoft.ApplicationInsights.Context {
          */
         public id: string;
 
-        /**
-         * The true if this is the first session
+        /**  
+         * The true if this is the first session  
          */
-        public isFirst: boolean;
+        public isFirst: boolean;  
 
         /**
          * The date at which this guid was genereated.
@@ -79,7 +79,7 @@ module Microsoft.ApplicationInsights.Context {
                 if (typeof this._sessionHandler === "function") {
                     this._sessionHandler(AI.SessionState.End, this.automaticSession.renewalDate);
                 }
-                this.automaticSession.isFirst = undefined;
+                this.automaticSession.isFirst = undefined; 
                 this.renew();
             } else {
                 this.automaticSession.renewalDate = +new Date;
@@ -116,7 +116,7 @@ module Microsoft.ApplicationInsights.Context {
             }
 
             if (!this.automaticSession.id) {
-                this.automaticSession.isFirst = true;
+                this.automaticSession.isFirst = true; 
                 this.renew();
             }
         }
@@ -158,7 +158,7 @@ module Microsoft.ApplicationInsights.Context {
         private renew() {
             var now = +new Date;
 
-            this.automaticSession.id = Util.newGuid();
+            this.automaticSession.id = Util.newId();
             this.automaticSession.acquisitionDate = now;
             this.automaticSession.renewalDate = now;
 

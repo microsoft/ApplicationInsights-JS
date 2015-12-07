@@ -477,7 +477,6 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 appInsights.context._sessionManager._sessionHandler = null;
-                appInsights.context.user.accountAcquisitionDate = "101";
                 appInsights.context.user.accountId = "101";
                 appInsights.context.user.agent = "101";
                 appInsights.context.user.id = "101";
@@ -490,7 +489,6 @@ class AppInsightsTests extends TestClass {
                     this.clock.tick(1);
                     var envelope = this.getFirstResult(action, trackStub);
                     var contextKeys = new AI.ContextTagKeys();
-                    Assert.equal("101", envelope.tags[contextKeys.userAccountAcquisitionDate], "user.accountAcquisitionDate");
                     Assert.equal("101", envelope.tags[contextKeys.userAccountId], "user.accountId");
                     Assert.equal("101", envelope.tags[contextKeys.userAgent], "user.agent");
                     Assert.equal("101", envelope.tags[contextKeys.userId], "user.id");
