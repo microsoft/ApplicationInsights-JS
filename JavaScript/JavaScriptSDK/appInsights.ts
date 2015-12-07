@@ -1,6 +1,7 @@
 ﻿/// <reference path="telemetrycontext.ts" />
 /// <reference path="./Telemetry/Common/Data.ts"/>
 /// <reference path="./Util.ts"/>
+/// <reference path="./Context/Operation.ts"/>
 /// <reference path="./Contracts/Generated/SessionState.ts"/>
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
@@ -101,6 +102,22 @@ module Microsoft.ApplicationInsights {
                 (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
             if (this.config.autoTrackAjax) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
+        }
+
+        /**
+         * Logs that a page request occurred.
+         * @param   name  The string you used as the name in startTrackPage. Defaults to the document title.
+         * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
+         * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
+         * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+         */
+        public trackPageRequest(name?: string, url?: string, properties?: Object, measurements?: Object) {
+            try {
+                this.context.operation = new Context.Operation();
+                this.trackPageView(name, url, properties, measurements);
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageRequest failed, page request will not be collected: " + Util.dump(e));
+            }
         }
 
         private sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
