@@ -84,6 +84,15 @@ module Microsoft.ApplicationInsights {
             // initialize event timing
             this._eventTracking = new Timing("trackEvent");
             this._eventTracking.action = (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
+                if (properties === undefined) {
+                    properties = { duration: duration };
+                }
+                else {
+                    // do not override existing duration value
+                    if (isNaN(properties["duration"])) {
+                        properties["duration"] = duration;
+                    }
+                }
                 var event = new Telemetry.Event(name, properties, measurements);
                 var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Event>(Telemetry.Event.dataType, event);
                 var envelope = new Telemetry.Common.Envelope(data, Telemetry.Event.envelopeType);
