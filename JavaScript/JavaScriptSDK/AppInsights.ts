@@ -84,6 +84,15 @@ module Microsoft.ApplicationInsights {
             // initialize event timing
             this._eventTracking = new Timing("trackEvent");
             this._eventTracking.action = (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
+                if (!measurements) {
+                    measurements = { duration: duration };
+                }
+                else {
+                    // do not override existing duration value
+                    if (isNaN(measurements["duration"])) {
+                        measurements["duration"] = duration;
+                    }
+                }
                 var event = new Telemetry.Event(name, properties, measurements);
                 var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Event>(Telemetry.Event.dataType, event);
                 var envelope = new Telemetry.Common.Envelope(data, Telemetry.Event.envelopeType);
@@ -211,7 +220,7 @@ module Microsoft.ApplicationInsights {
                     if (Telemetry.PageViewPerformance.isPerformanceTimingDataReady()) {
                         clearInterval(handle);
                         var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, null, properties, measurements);
-
+                        
                         if (!pageViewPerformance.getIsValid()) {
                             // If navigation timing gives invalid numbers, then go back to "override page view duration" mode.
                             // That's the best value we can get that makes sense.
@@ -227,8 +236,8 @@ module Microsoft.ApplicationInsights {
                             var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
                             this.context.track(pageViewPerformanceEnvelope);
 
-                            this.flush();
-                        }
+                        this.flush();
+                    }
                     }
                     else if (Telemetry.PageViewPerformance.getDuration(start, +new Date) > maxDurationLimit) {
                         clearInterval(handle);

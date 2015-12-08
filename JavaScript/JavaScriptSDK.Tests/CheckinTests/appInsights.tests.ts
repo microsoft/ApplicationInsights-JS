@@ -1395,6 +1395,89 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
+            name: "Timing Tests: Start/StopTrackEvent has correct duration",
+            test: () => {
+                // setup
+
+                var testValues1 = {
+                    name: "test1",
+                    duration: 300
+                };
+
+                var testValues2 = {
+                    name: "test2",
+                    duration: 200
+                };
+
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                appInsights.context._sessionManager._sessionHandler = null;
+                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                this.clock.tick(55);        // Needed to ensure the duration calculation works
+
+                // act
+                appInsights.startTrackEvent(testValues1.name);
+                this.clock.tick(testValues1.duration);
+                appInsights.stopTrackEvent(testValues1.name);
+
+                appInsights.startTrackEvent(testValues2.name);
+                this.clock.tick(testValues2.duration);
+                appInsights.stopTrackEvent(testValues2.name);
+               
+                // verify
+                // TestValues1
+                var telemetry = <Microsoft.ApplicationInsights.Telemetry.Event>trackStub.args[0][0].data.baseData;
+                Assert.equal(testValues1.name, telemetry.name);
+                Assert.equal(testValues1.duration, telemetry.measurements["duration"]);
+
+                // TestValues2
+                telemetry = <Microsoft.ApplicationInsights.Telemetry.Event>trackStub.args[1][0].data.baseData;
+                Assert.equal(testValues2.name, telemetry.name);
+                Assert.equal(testValues2.duration, telemetry.measurements["duration"]);
+
+                // teardown
+                trackStub.restore();
+            }
+        });
+
+        this.testCase({
+            name: "Timing Tests: Start/StopTrackEvent custom duration is not overriden",
+            test: () => {
+                // setup
+                var testValues2 = {
+                    name: "name2",
+                    url: "url",
+                    duration: 345,
+                    properties: {
+                        "property1": 5
+                    },
+                    measurements: {
+                        "duration": 777
+                    }
+                };
+
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                appInsights.context._sessionManager._sessionHandler = null;
+                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                this.clock.tick(10);       
+
+                // act
+                appInsights.startTrackEvent(testValues2.name);
+                this.clock.tick(testValues2.duration);
+                appInsights.stopTrackEvent(testValues2.name, testValues2.properties, testValues2.measurements);
+                Assert.ok(trackStub.calledOnce, "single page view tracking stopped");
+
+                // verify
+                var telemetry = <Microsoft.ApplicationInsights.Telemetry.Event>trackStub.args[0][0].data.baseData;
+                Assert.equal(testValues2.name, telemetry.name);
+                Assert.deepEqual(testValues2.properties, telemetry.properties);
+                Assert.deepEqual(testValues2.measurements, telemetry.measurements);
+
+                // teardown
+                trackStub.restore();
+            }
+        });
+
+        this.testCase({
             name: "flush causes queue to be sent",
             test:
             () => {
