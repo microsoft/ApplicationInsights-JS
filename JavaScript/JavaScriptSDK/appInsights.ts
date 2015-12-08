@@ -246,7 +246,7 @@ module Microsoft.ApplicationInsights {
         }
         
         /**
-         * Start timing an extended event. Call {@link stopTrackE-vent} to log the event when it ends.
+         * Start timing an extended event. Call {@link stopTrackEvent} to log the event when it ends.
          * @param   name    A string that identifies this event uniquely within the document.
          */
         public startTrackEvent(name: string) {
