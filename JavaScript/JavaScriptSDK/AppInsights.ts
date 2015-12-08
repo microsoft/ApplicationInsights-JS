@@ -24,13 +24,13 @@ module Microsoft.ApplicationInsights {
         maxBatchSizeInBytes: number;
         maxBatchInterval: number;
         enableDebug: boolean;
-        autoCollectErrors: boolean;
+        disableExceptionTracking: boolean;
         disableTelemetry: boolean;
         verboseLogging: boolean;
         diagnosticLogInterval: number;
         samplingPercentage: number;
         autoTrackPageVisitTime: boolean;
-        autoTrackAjax: boolean;
+        disableAjaxTracking: boolean;
         overridePageViewDuration: boolean;
     }
 
@@ -109,7 +109,7 @@ module Microsoft.ApplicationInsights {
             this._pageVisitTimeManager = new ApplicationInsights.Telemetry.PageVisitTimeManager(
                 (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
-            if (this.config.autoTrackAjax) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
+            if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
         }
 
         private sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
