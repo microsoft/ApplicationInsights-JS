@@ -84,13 +84,13 @@ module Microsoft.ApplicationInsights {
             // initialize event timing
             this._eventTracking = new Timing("trackEvent");
             this._eventTracking.action = (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
-                if (properties === undefined) {
-                    properties = { duration: duration };
+                if (!measurements) {
+                    measurements = { duration: duration };
                 }
                 else {
                     // do not override existing duration value
-                    if (isNaN(properties["duration"])) {
-                        properties["duration"] = duration;
+                    if (isNaN(measurements["duration"])) {
+                        measurements["duration"] = duration;
                     }
                 }
                 var event = new Telemetry.Event(name, properties, measurements);
@@ -218,7 +218,7 @@ module Microsoft.ApplicationInsights {
                     if (Telemetry.PageViewPerformance.isPerformanceTimingDataReady()) {
                         clearInterval(handle);
                         var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, null, properties, measurements);
-                        
+
                         if (pageViewPerformance.getIsValid()) {
                             if (!this.config.overridePageViewDuration) {
                                 this.sendPageViewInternal(name, url, pageViewPerformance.getDurationMs(), properties, measurements);
@@ -246,7 +246,7 @@ module Microsoft.ApplicationInsights {
         }
         
         /**
-         * Start timing an extended event. Call {@link stopTrackEvent} to log the event when it ends.
+         * Start timing an extended event. Call {@link stopTrackE-vent} to log the event when it ends.
          * @param   name    A string that identifies this event uniquely within the document.
          */
         public startTrackEvent(name: string) {

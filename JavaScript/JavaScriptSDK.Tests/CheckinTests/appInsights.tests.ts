@@ -1403,12 +1403,12 @@ class AppInsightsTests extends TestClass {
                 // TestValues1
                 var telemetry = <Microsoft.ApplicationInsights.Telemetry.Event>trackStub.args[0][0].data.baseData;
                 Assert.equal(testValues1.name, telemetry.name);
-                Assert.equal(testValues1.duration, telemetry.properties["duration"]);
+                Assert.equal(testValues1.duration, telemetry.measurements["duration"]);
 
                 // TestValues2
                 telemetry = <Microsoft.ApplicationInsights.Telemetry.Event>trackStub.args[1][0].data.baseData;
                 Assert.equal(testValues2.name, telemetry.name);
-                Assert.equal(testValues2.duration, telemetry.properties["duration"]);
+                Assert.equal(testValues2.duration, telemetry.measurements["duration"]);
 
                 // teardown
                 trackStub.restore();
@@ -1424,10 +1424,11 @@ class AppInsightsTests extends TestClass {
                     url: "url",
                     duration: 345,
                     properties: {
-                        "property1": 5,
-                        "duration": 777
+                        "property1": 5
                     },
-                    measurements: {}
+                    measurements: {
+                        "duration": 777
+                    }
                 };
 
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
