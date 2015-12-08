@@ -12,7 +12,7 @@ module Microsoft.ApplicationInsights.Context {
         public syntheticSource: string;
 
         constructor() {
-            this.id = Util.newGuid();            
+            this.id = Util.newId();            
             if (window && window.location && window.location.pathname) {
                 this.name = window.location.pathname;
             }

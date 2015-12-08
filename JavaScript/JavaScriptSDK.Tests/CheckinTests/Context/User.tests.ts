@@ -41,7 +41,7 @@ class UserContextTests extends TestClass {
                 var id = "userId";
                 var actualCookieName: string;
                 var actualCookieValue: string;
-                var newGuidStub = sinon.stub(Microsoft.ApplicationInsights.Util, "newGuid",() => "newGuid");
+                var newIdStub = sinon.stub(Microsoft.ApplicationInsights.Util, "newId", () => "newId");
                 var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",() => "");
                 var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(cookieName, cookieValue) => {
                     actualCookieName = cookieName;
@@ -57,7 +57,7 @@ class UserContextTests extends TestClass {
 
                 Assert.equal(2, cookieValueParts.length, "ai_user cookie value should have actual value and expiration");
                 Assert.equal(2, cookieValueParts[0].split('|').length, "ai_user cookie value before expiration should include user id and acq date");
-                Assert.equal("newGuid", cookieValueParts[0].split('|')[0], "First part of ai_user cookie value should be new user id guid");
+                Assert.equal("newId", cookieValueParts[0].split('|')[0], "First part of ai_user cookie value should be new user id guid");
                 Assert.equal(new Date().toString(),(new Date(cookieValueParts[0].split('|')[1])).toString(), "Second part of ai_user cookie should be parsable as date");
 
                 var expiration = cookieValueParts[1];
@@ -68,7 +68,7 @@ class UserContextTests extends TestClass {
                 // cleanup
                 getCookieStub.restore();
                 setCookieStub.restore();
-                newGuidStub.restore();
+                newIdStub.restore();
             }
         });
 
@@ -79,7 +79,7 @@ class UserContextTests extends TestClass {
                 var id = "userId"
                 var actualCookieName: string;
                 var actualCookieValue: string;
-                var newGuidStub = sinon.stub(Microsoft.ApplicationInsights.Util, "newGuid",() => "newGuid");
+                var newIdStub = sinon.stub(Microsoft.ApplicationInsights.Util, "newId", () => "newId");
                 var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",() => "");
                 var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(cookieName, cookieValue) => {
                     actualCookieName = cookieName;
@@ -95,7 +95,7 @@ class UserContextTests extends TestClass {
 
                 Assert.equal(2, cookieValueParts.length, "ai_user cookie value should have actual value and expiration");
                 Assert.equal(2, cookieValueParts[0].split('|').length, "ai_user cookie value before expiration should include user id and acq date");
-                Assert.equal("newGuid", cookieValueParts[0].split('|')[0], "First part of ai_user cookie value should be new user id guid");
+                Assert.equal("newId", cookieValueParts[0].split('|')[0], "First part of ai_user cookie value should be new user id guid");
                 Assert.equal(new Date().toString(),(new Date(cookieValueParts[0].split('|')[1])).toString(), "Second part of ai_user cookie should be parsable as date");
 
                 var expiration = cookieValueParts[1];
@@ -106,7 +106,7 @@ class UserContextTests extends TestClass {
                 // cleanup
                 getCookieStub.restore();
                 setCookieStub.restore();
-                newGuidStub.restore();
+                newIdStub.restore();
             }
         });
 

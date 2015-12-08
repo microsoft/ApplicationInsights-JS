@@ -309,9 +309,6 @@ module Microsoft.ApplicationInsights {
         private _applyUserContext(envelope: Microsoft.Telemetry.Envelope, userContext: Microsoft.ApplicationInsights.Context.User) {
             if (userContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
-                if (typeof userContext.accountAcquisitionDate === "string") {
-                    envelope.tags[tagKeys.userAccountAcquisitionDate] = userContext.accountAcquisitionDate;
-                }
                 if (typeof userContext.accountId === "string") {
                     envelope.tags[tagKeys.userAccountId] = userContext.accountId;
                 }

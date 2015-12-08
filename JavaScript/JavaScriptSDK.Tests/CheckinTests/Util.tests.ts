@@ -176,11 +176,14 @@ class UtilTests extends TestClass {
         this.testCase({
             name: "UtilTests: new GUID",
             test: () => {
-                var randomStub = sinon.stub(Math, "random",() => 0);
-                var expected = "00000000-0000-4000-8000-000000000000";
-                var actual = Util.newGuid();
-                Assert.equal(expected, actual, "expected guid was generated");
-                randomStub.restore();
+                var results = [];
+                for (var i = 0; i < 100; i++) {
+                    var newId = Util.newId();
+                    for (var j = 0; j < results.length; j++) {
+                        Assert.notEqual(newId, results[j]);
+                    }
+                    results.push(newId);
+                }
             }
         });
 
