@@ -202,6 +202,12 @@ Values that control how the telemetry data is sent.
         
         // Default 10s:
         diagnosticLogInterval: number;
+        
+        // If true, exceptions are not monitored. 
+        disableExceptionTracking: boolean;
+        
+        // If true, ajax calls are not monitored.
+        disableAjaxTracking: boolean;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.
