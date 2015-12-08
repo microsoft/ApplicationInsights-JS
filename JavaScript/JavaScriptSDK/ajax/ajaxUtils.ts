@@ -58,11 +58,13 @@ module Microsoft.ApplicationInsights {
                 if (!extensions.IsNullOrUndefined(obj.attachEvent)) {
                     // IE before version 9                    
                     obj.attachEvent("on" + eventNameWithoutOn, handlerRef);
+                    result = true;
                 }
                 else {
                     if (!extensions.IsNullOrUndefined(obj.addEventListener)) {
                         // all browsers except IE before version 9
                         obj.addEventListener(eventNameWithoutOn, handlerRef, false);
+                        result = true;
                     }
                 }
             }

@@ -92,7 +92,7 @@ module Microsoft.ApplicationInsights {
             var ajaxData = new ajaxRecord();
             ajaxData.method = method;
             ajaxData.requestUrl = url;
-            ajaxData.requestSize += url.length;            
+            ajaxData.requestSize += url.length;
             ajaxData.xhrMonitoringState.openDone = true
             xhr.ajaxData = ajaxData;
 
@@ -357,7 +357,6 @@ module Microsoft.ApplicationInsights {
 
         private collectResponseData(xhr: XMLHttpRequestInstrumented) {
             var currentTime = dateTime.Now();
-            var self = this;
             xhr.ajaxData.responseFinishedTime = currentTime;
 
             // Next condition is TRUE sometimes, when ajax request is not authorised by server.
