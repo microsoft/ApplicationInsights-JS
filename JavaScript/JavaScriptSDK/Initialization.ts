@@ -147,9 +147,9 @@ module Microsoft.ApplicationInsights {
             config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 1000000;
             config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
             config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
-            config.autoCollectErrors = (config.autoCollectErrors !== undefined && config.autoCollectErrors !== null) ?
-                Util.stringToBoolOrDefault(config.autoCollectErrors) :
-                true;
+            config.disableExceptionTracking = (config.disableExceptionTracking !== undefined && config.disableExceptionTracking !== null) ?
+                Util.stringToBoolOrDefault(config.disableExceptionTracking) :
+                false;
             config.disableTelemetry = Util.stringToBoolOrDefault(config.disableTelemetry);
             config.verboseLogging = Util.stringToBoolOrDefault(config.verboseLogging);
             config.emitLineDelimitedJson = Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
@@ -160,9 +160,9 @@ module Microsoft.ApplicationInsights {
                 config.samplingPercentage = 100;
             }
 
-            config.autoTrackAjax = (config.autoTrackAjax !== undefined && config.autoTrackAjax !== null) ?
-                Util.stringToBoolOrDefault(config.autoTrackAjax) :
-                false;
+            config.disableAjaxTracking = (config.disableAjaxTracking !== undefined && config.disableAjaxTracking !== null) ?
+                Util.stringToBoolOrDefault(config.disableAjaxTracking) :
+                true;
 
             return config;
         }

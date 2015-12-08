@@ -21,13 +21,13 @@ class InitializationTests extends TestClass {
             maxBatchSizeInBytes: 1000000,
             maxBatchInterval: 1,
             enableDebug: true,
-            autoCollectErrors: false,
+            disableExceptionTracking: false,
             disableTelemetry: false,
             verboseLogging: true,
             diagnosticLogInterval: 1,
             autoTrackPageVisitTime: false,
             samplingPercentage: 33,
-            autoTrackAjax: false,
+            disableAjaxTracking: true,
             overridePageViewDuration: false
         };
 
@@ -65,7 +65,7 @@ class InitializationTests extends TestClass {
                     maxBatchSizeInBytes: undefined,
                     maxBatchInterval: undefined,
                     enableDebug: undefined,
-                    autoCollectErrors: undefined,
+                    disableExceptionTracking: undefined,
                     disableTelemetry: undefined,
                     verboseLogging: undefined,
                     diagnosticLogInterval: undefined,
@@ -85,7 +85,7 @@ class InitializationTests extends TestClass {
                 Assert.equal(1000000, init.config.maxBatchSizeInBytes);
                 Assert.equal(15000, init.config.maxBatchInterval);
                 Assert.ok(!init.config.enableDebug);
-                Assert.ok(init.config.autoCollectErrors);
+                Assert.ok(!init.config.disableExceptionTracking);
                 Assert.equal(15000, init.config.maxBatchInterval);
                 Assert.ok(!init.config.verboseLogging);
                 Assert.equal(10000, init.config.diagnosticLogInterval);
@@ -111,7 +111,7 @@ class InitializationTests extends TestClass {
                 Assert.equal(userConfig.maxBatchSizeInBytes, init.config.maxBatchSizeInBytes);
                 Assert.equal(userConfig.maxBatchInterval, init.config.maxBatchInterval);
                 Assert.ok(init.config.enableDebug);
-                Assert.ok(!init.config.autoCollectErrors);
+                Assert.ok(!init.config.disableExceptionTracking);
                 Assert.equal(1, init.config.maxBatchInterval);
                 Assert.ok(init.config.verboseLogging);
                 Assert.equal(1, init.config.diagnosticLogInterval);
@@ -194,7 +194,7 @@ class InitializationTests extends TestClass {
 
                 var userConfig = {
                     enableDebug: "false",
-                    autoCollectErrors: "false",
+                    disableExceptionTracking: "false",
                     disableTelemetry: "false",
                     verboseLogging: "false",
                     emitLineDelimitedJson: "false",
@@ -203,7 +203,7 @@ class InitializationTests extends TestClass {
                 var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>userConfig);
 
                 Assert.ok(!config.enableDebug);
-                Assert.ok(!config.autoCollectErrors);
+                Assert.ok(!config.disableExceptionTracking);
                 Assert.ok(!config.disableTelemetry);
                 Assert.ok(!config.verboseLogging);
                 Assert.ok(!config.emitLineDelimitedJson);
@@ -216,7 +216,7 @@ class InitializationTests extends TestClass {
 
                 var userConfig = {
                     enableDebug: "true",
-                    autoCollectErrors: "true",
+                    disableExceptionTracking: "true",
                     disableTelemetry: "true",
                     verboseLogging: "true",
                     emitLineDelimitedJson: "true",
@@ -225,7 +225,7 @@ class InitializationTests extends TestClass {
                 var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>userConfig);
 
                 Assert.ok(config.enableDebug);
-                Assert.ok(config.autoCollectErrors);
+                Assert.ok(config.disableExceptionTracking);
                 Assert.ok(config.disableTelemetry);
                 Assert.ok(config.verboseLogging);
                 Assert.ok(config.emitLineDelimitedJson);

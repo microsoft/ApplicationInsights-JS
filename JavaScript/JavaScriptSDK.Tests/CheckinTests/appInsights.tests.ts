@@ -15,13 +15,13 @@ class AppInsightsTests extends TestClass {
             maxBatchSizeInBytes: 1000000,
             maxBatchInterval: 1,
             enableDebug: false,
-            autoCollectErrors: false,
+            disableExceptionTracking: false,
             disableTelemetry: false,
             verboseLogging: false,
             diagnosticLogInterval: 1000,
             autoTrackPageVisitTime: false,
             samplingPercentage: 100,
-            autoTrackAjax: false,
+            disableAjaxTracking: true,
             overridePageViewDuration: false
         };
 

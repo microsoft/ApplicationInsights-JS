@@ -35,7 +35,7 @@ $queueTest = "var i = 100; while(i--){appInsights.queue.push(function() {window.
 # copy snippet and convert protocol to file://
 $edgePrefix = gc "$($projectDir)\..\JavaScriptSDK\snippet.js"
 $edgePrefix = $edgePrefix -replace $cdnUrl, $aiPath
-$edgePrefix = $edgePrefix -replace "instrumentationKey: ""INSTRUMENTATION_KEY""", "instrumentationKey: ""$($iKey)"", endpointUrl: ""$($endpointUrl)"", maxBatchInterval: 1, autoTrackAjax: true"
+$edgePrefix = $edgePrefix -replace "instrumentationKey: ""INSTRUMENTATION_KEY""", "instrumentationKey: ""$($iKey)"", endpointUrl: ""$($endpointUrl)"", maxBatchInterval: 1, disableAjaxTracking: false"
 $edgePrefix = $edgePrefix -replace 'CDN_PATH',$aiPath
 $edgePrefix += $queueTest
 $edgePrefix | out-file "$($projectDir)\E2ETests\sprint70Snippet.js"
