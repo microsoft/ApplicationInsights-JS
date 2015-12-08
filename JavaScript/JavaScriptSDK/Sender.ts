@@ -10,6 +10,7 @@
 /// <reference path="Context/Sample.ts"/>
 /// <reference path="Context/Session.ts"/>
 /// <reference path="Context/User.ts"/>
+/// <reference path="ajax/ajax.ts"/>
 
 interface XDomainRequest extends XMLHttpRequestEventTarget {
     responseText: string;
@@ -193,7 +194,7 @@ module Microsoft.ApplicationInsights {
          */
         private _xhrSender(payload: string, isAsync: boolean) {
             var xhr = new XMLHttpRequest();
-            xhr["Microsoft_ApplicationInsights_BypassAjaxInstrumentation"] = true;
+            xhr[AjaxMonitor.DisabledPropertyName] = true;
             xhr.open("POST", this._config.endpointUrl(), isAsync);
             xhr.setRequestHeader("Content-type", "application/json");
             xhr.onreadystatechange = () => Sender._xhrReadyStateChange(xhr, payload);

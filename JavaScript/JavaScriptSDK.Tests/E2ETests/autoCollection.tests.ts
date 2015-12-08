@@ -34,7 +34,6 @@ class AutoCollectionTests extends TestClass {
                 return this.verifyAjax(this.errorSpy, [
                     {
                         commandName: "https://code.jquery.com/jquery-2.1.4.min.js",
-                        async: true,
                         success: true,
                         dependencyTypeName: "Ajax",
                         dependencyKind: 1,
@@ -42,7 +41,6 @@ class AutoCollectionTests extends TestClass {
                     },
                     {
                         commandName: "http://dc.services.visualstudio.com/v2/track",
-                        async: true,
                         success: false,
                         dependencyTypeName: "Ajax",
                         dependencyKind: 1,
@@ -50,7 +48,6 @@ class AutoCollectionTests extends TestClass {
                     },
                     {
                         commandName: "http://dc.services.visualstudio.com/v2/track",
-                        async: true,
                         success: false,
                         dependencyTypeName: "Ajax",
                         dependencyKind: 1,
@@ -58,7 +55,6 @@ class AutoCollectionTests extends TestClass {
                     },
                     {
                         commandName: "http://dc.services.visualstudio.com/v2/track",
-                        async: true,
                         success: false,
                         dependencyTypeName: "Ajax",
                         dependencyKind: 1,
@@ -284,7 +280,6 @@ class AutoCollectionTests extends TestClass {
                 var actual = ajaxItems[i];
                 var expected = expectedItems[i];
 
-                Assert.equal(expected.async, actual.async, "Async property must match");
                 Assert.equal(expected.commandName, actual.commandName, "CommandName must match");
                 Assert.equal(expected.success, actual.success, "Success property must match");
                 Assert.equal(expected.dependencyTypeName, actual.dependencyTypeName, "DependencyTypeName must match");

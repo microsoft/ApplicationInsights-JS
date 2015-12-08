@@ -12,30 +12,32 @@
 </head>
 <body>
     <script>
-        var xhr;
+        $(window).load(function () {
+            var xhr;
 
-        // successful ajax POST
-        xhr = new XMLHttpRequest();
-        xhr.open("GET", "https://code.jquery.com/jquery-2.1.4.min.js")
-        xhr.send("");
+            // successful ajax POST
+            xhr = new XMLHttpRequest();
+            xhr.open("GET", "https://code.jquery.com/jquery-2.1.4.min.js")
+            xhr.send("");
 
-        // ajax POST
-        xhr = new XMLHttpRequest();
-        xhr.open("POST", "http://dc.services.visualstudio.com/v2/track");
-        xhr.send("{fakedata}");
+            // ajax POST
+            xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://dc.services.visualstudio.com/v2/track");
+            xhr.send("{fakedata}");
 
-        // ajax GET
-        xhr = new XMLHttpRequest();
-        xhr.open("GET", "http://dc.services.visualstudio.com/v2/track");
-        xhr.send("{fakedata}");
+            // ajax GET
+            xhr = new XMLHttpRequest();
+            xhr.open("GET", "http://dc.services.visualstudio.com/v2/track");
+            xhr.send("{fakedata}");
 
-        // jQuery ajax
-        $.ajax({
-            url: "http://dc.services.visualstudio.com/v2/track",
-            method: "POST",
-            data: { fake: "fake data" },
-            success: function (data) {
-            }
+            // jQuery ajax
+            $.ajax({
+                url: "http://dc.services.visualstudio.com/v2/track",
+                method: "POST",
+                data: { fake: "fake data" },
+                success: function (data) {
+                }
+            });            
         });
     </script>
     <h1>DOM error test page</h1>

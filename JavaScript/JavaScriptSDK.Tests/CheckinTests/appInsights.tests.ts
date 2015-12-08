@@ -477,7 +477,6 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 appInsights.context._sessionManager._sessionHandler = null;
-                appInsights.context.user.accountAcquisitionDate = "101";
                 appInsights.context.user.accountId = "101";
                 appInsights.context.user.agent = "101";
                 appInsights.context.user.id = "101";
@@ -490,7 +489,6 @@ class AppInsightsTests extends TestClass {
                     this.clock.tick(1);
                     var envelope = this.getFirstResult(action, trackStub);
                     var contextKeys = new AI.ContextTagKeys();
-                    Assert.equal("101", envelope.tags[contextKeys.userAccountAcquisitionDate], "user.accountAcquisitionDate");
                     Assert.equal("101", envelope.tags[contextKeys.userAccountId], "user.accountId");
                     Assert.equal("101", envelope.tags[contextKeys.userAgent], "user.agent");
                     Assert.equal("101", envelope.tags[contextKeys.userId], "user.id");
@@ -675,7 +673,7 @@ class AppInsightsTests extends TestClass {
 
 
         this.testCase({
-            name: "AppInsightsTests: trackPageView does not send data if page view performance is not valid",
+            name: "AppInsightsTests: if performance data is no valid then trackPageView sends page view with duration equal time to spent from navigation start time till calling into trackPageView",
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
@@ -684,13 +682,20 @@ class AppInsightsTests extends TestClass {
                     () => { return true; });
                 var getIsValidStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.prototype, "getIsValid",
                     () => { return false; });
+                var stub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",
+                    () => {
+                        return { navigationStart: 0 };
+                    });
+
+                this.clock.tick(50);
 
                 // act
                 appInsights.trackPageView();
 
                 // Data not available yet - should not send events
                 this.clock.tick(100);
-                Assert.ok(!spy.called, "Page view should not be sent since the timing data is invalid");
+                Assert.ok(spy.called, "Page view should not be sent since the timing data is invalid");
+                Assert.equal(50, spy.args[0][2], "Page view duration should be equal to time from navigation start to when trackPageView is called (aka 'override page view duration' mode)");
             }
         });
 
@@ -738,6 +743,25 @@ class AppInsightsTests extends TestClass {
                 this.clock.tick(65432);
                 Assert.ok(spy.calledOnce, "60 seconds passed, page view is supposed to be sent");
                 Assert.equal(60000, spy.args[0][2], "Page view duration doesn't match expected maximum duration (60000 ms)");
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: a page view is sent with 0 duration if navigation timing API is not supported",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var spy = this.sandbox.stub(appInsights, "sendPageViewInternal");
+                var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingSupported",
+                    () => { return false; });
+                
+                // act
+                appInsights.trackPageView();                
+                this.clock.tick(100);
+
+                // assert
+                Assert.ok(spy.calledOnce, "sendPageViewInternal should be called even if navigation timing is not supported");
+                Assert.equal(0, spy.args[0][2], "Page view duration should be 0");
             }
         });
 
@@ -1547,19 +1571,19 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var trackStub = sinon.stub(appInsights.context, "track");
+                var name = "test";
                 var url = "http://myurl.com";
-                var async = true;
                 var duration = 123;
                 var success = false;
 
                 // Act
-                appInsights.trackAjax(url, async, duration, success);
+                appInsights.trackAjax(name, url, duration, success);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
                 var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
+                Assert.equal(name, rdd.name);
                 Assert.equal(url, rdd.commandName);
-                Assert.equal(async, rdd.async);
                 Assert.equal(duration, rdd.value);
                 Assert.equal(success, rdd.success);
             }
@@ -1576,7 +1600,7 @@ class AppInsightsTests extends TestClass {
                 var expectedEnvelopeName = "Microsoft.ApplicationInsights.BDC8736DD8E84B69B19BB0CE6B66A456.RemoteDependency";
 
                 // Act
-                appInsights.trackAjax("http://asdf", true, 123, true);
+                appInsights.trackAjax("test", "http://asdf", 123, true);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");

@@ -59,15 +59,14 @@ class TelemetryContextTests extends TestClass {
             name: "TelemtetryContext: does not overwrite user sessioncontext with defaults",
             test: () => {
                 this._telemetryContext.session.id = "101";
-                this._telemetryContext.session.isFirst = true;
-                
+                this._telemetryContext.session.isFirst = true; 
+                                
                 var env = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(null, "");
                 this._telemetryContext.track(env);
 
                 var contextKeys = new AI.ContextTagKeys();
                 Assert.equal("101", env.tags[contextKeys.sessionId], "session.id");
-                Assert.equal(true, env.tags[contextKeys.sessionIsFirst], "session.isFirst");
-            }
+                Assert.equal(true, env.tags[contextKeys.sessionIsFirst], "session.isFirst");            }
         });
 
         function getEnvelope<T>(item, dataType: string, envelopeType: string) {

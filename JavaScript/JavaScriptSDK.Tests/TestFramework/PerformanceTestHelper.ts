@@ -24,6 +24,7 @@ interface IPerfResult {
     millisecondsPerOp: number;
     microsecondsPerOp: number;
     secondsPerOp: number;
+    browser: string;
 }
 
 declare var JSLitmus: IJSLitmus;

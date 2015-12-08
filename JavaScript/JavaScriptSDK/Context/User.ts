@@ -90,7 +90,7 @@ module Microsoft.ApplicationInsights.Context {
             }
 
             if (!this.id) {
-                this.id = Util.newGuid();
+                this.id = Util.newId();
                 var date = new Date();
                 var acqStr = Util.toISOStringForIE8(date);
                 this.accountAcquisitionDate = acqStr;

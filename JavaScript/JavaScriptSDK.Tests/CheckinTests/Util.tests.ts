@@ -152,31 +152,38 @@ class UtilTests extends TestClass {
         this.testCase({
             name: "UtilTests: parse cookie",
             test: () => {
-                var test = (cookie, query, expected) => {
-                    Util["document"] = <any>{
-                        cookie: cookie
-                    };
+                try {
+                    var test = (cookie, query, expected) => {
+                        Util["document"] = <any>{
+                            cookie: cookie
+                        };
 
-                    var actual = Util.getCookie(query);
-                    Assert.deepEqual(expected, actual, "cookie is parsed correctly");
+                        var actual = Util.getCookie(query);
+                        Assert.deepEqual(expected, actual, "cookie is parsed correctly");
+                    }
+
+                    test("testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
+                    test("other=foo; testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
+                    test("another=bar; ;a=testCookie=; testCookie=id|acq|renewal; other=foo|3|testCookie=", "testCookie", "id|acq|renewal");
+                    test("xtestCookiex=id|acq|renewal", "testCookie", "");
+                    test("", "testCookie", "");
+                } finally {
+                    Util["document"] = document;
                 }
-
-                test("testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
-                test("other=foo; testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
-                test("another=bar; ;a=testCookie=; testCookie=id|acq|renewal; other=foo|3|testCookie=", "testCookie", "id|acq|renewal");
-                test("xtestCookiex=id|acq|renewal", "testCookie", "");
-                test("", "testCookie", "");
             }
         });
 
         this.testCase({
             name: "UtilTests: new GUID",
             test: () => {
-                var randomStub = sinon.stub(Math, "random",() => 0);
-                var expected = "00000000-0000-4000-8000-000000000000";
-                var actual = Util.newGuid();
-                Assert.equal(expected, actual, "expected guid was generated");
-                randomStub.restore();
+                var results = [];
+                for (var i = 0; i < 100; i++) {
+                    var newId = Util.newId();
+                    for (var j = 0; j < results.length; j++) {
+                        Assert.notEqual(newId, results[j]);
+                    }
+                    results.push(newId);
+                }
             }
         });
 
