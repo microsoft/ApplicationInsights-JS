@@ -172,7 +172,7 @@ module Microsoft.ApplicationInsights {
          * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
          * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
-         * @param   duration    number - the number of milliseconds it took to load the page. Defaults to zero. If set to default value, page load time is calculated internally.
+         * @param   duration    number - the number of milliseconds it took to load the page. Defaults to undefined. If set to default value, page load time is calculated internally.
          */
         public trackPageView(name?: string, url?: string, properties?: Object, measurements?: Object, duration?: number) {
             try {
@@ -197,7 +197,7 @@ module Microsoft.ApplicationInsights {
         }
 
         public trackPageViewInternal(name?: string, url?: string, properties?: Object, measurements?: Object, duration?: number) {
-            if (duration > 0) {
+            if (duration !== null && typeof(duration) !== "undefined") {
                 // custom page load duration was provided, so don't do any additional calculations
                 this.sendPageViewInternal(name, url, duration, properties, measurements);
                 this.flush();
