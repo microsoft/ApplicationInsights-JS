@@ -172,8 +172,9 @@ module Microsoft.ApplicationInsights {
          * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
          * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+         * @param   duration    number - the number of milliseconds it took to load the page. Defaults to zero. If set to default value, page load time is calculated internally.
          */
-        public trackPageView(name?: string, url?: string, properties?: Object, measurements?: Object) {
+        public trackPageView(name?: string, url?: string, properties?: Object, measurements?: Object, duration?: number) {
             try {
                 // ensure we have valid values for the required fields
                 if (typeof name !== "string") {
@@ -184,7 +185,7 @@ module Microsoft.ApplicationInsights {
                     url = window.location && window.location.href || "";
                 }
 
-                this.trackPageViewInternal(name, url, properties, measurements);
+                this.trackPageViewInternal(name, url, properties, measurements, duration);
 
                 if (this.config.autoTrackPageVisitTime) {
                     this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
@@ -195,7 +196,13 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        public trackPageViewInternal(name?: string, url?: string, properties?: Object, measurements?: Object) {
+        public trackPageViewInternal(name?: string, url?: string, properties?: Object, measurements?: Object, duration?: number) {
+            if (duration > 0) {
+                // custom page load duration was provided, so don't do any additional calculations
+                this.sendPageViewInternal(name, url, duration, properties, measurements);
+                this.flush();
+                return;
+            }
             if (!Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
                 // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,

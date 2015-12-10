@@ -624,6 +624,23 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
+            name: "AppInsightsTests: trackPageView sends user-specified duration when passed",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.overridePageViewDuration = true;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
+
+                // act
+                appInsights.trackPageView(null, null, null, null, 124);
+
+                // verify
+                Assert.ok(spy.calledOnce, "sendPageViewInternal is called");
+                Assert.equal(124, spy.args[0][2], "PageView duration doesn't match expected value");
+            }
+        });
+
+        this.testCase({
             name: "AppInsightsTests: trackPageView sends custom duration when configured by user",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
