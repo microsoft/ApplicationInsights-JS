@@ -15,9 +15,9 @@ class DisableTelemetryTests extends TestClass {
         sinon.fakeServer["restore"]();
         this.useFakeTimers = false;
         this.clock.restore();
-        this.errorSpy = sinon.spy(Microsoft.ApplicationInsights.Sender, "_onError");
-        this.successSpy = sinon.stub(Microsoft.ApplicationInsights.Sender, "_onSuccess");
-        this.loggingSpy = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+        this.errorSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onError");
+        this.successSpy = this.sandbox.stub(Microsoft.ApplicationInsights.Sender, "_onSuccess");
+        this.loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
     }
 
     /** Method called after each test method has completed */
@@ -25,9 +25,6 @@ class DisableTelemetryTests extends TestClass {
         console.log("cleanup");
         this.useFakeServer = true;
         this.useFakeTimers = true;
-        this.errorSpy.restore();
-        this.successSpy.restore();
-        this.loggingSpy.restore();
     }
 
     public registerTests() {

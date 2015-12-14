@@ -93,9 +93,9 @@ class SessionContextTests extends TestClass {
                 // setup
                 var actualCookieName: string;
                 var actualCookieValue: string;
-                var newIdStub = sinon.stub(Microsoft.ApplicationInsights.Util, "newId", () => "newId");
-                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie", () => "");
-                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie", (cookieName, cookieValue) => {
+                var newIdStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "newId", () => "newId");
+                var getCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getCookie", () => "");
+                var setCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie", (cookieName, cookieValue) => {
                     actualCookieName = cookieName;
                     actualCookieValue = cookieValue;
                 });
@@ -119,9 +119,9 @@ class SessionContextTests extends TestClass {
                 Assert.equal(30, expirationDate.getTime() / 1000 / 60, "cookie expiration should be in 30 minutes");
 
                 // cleanup
-                getCookieStub.restore();
-                setCookieStub.restore();
-                newIdStub.restore();
+                
+                
+                
             }
         });
 
@@ -132,9 +132,9 @@ class SessionContextTests extends TestClass {
                     // setup
                     var actualCookieName: string;
                     var actualCookieValue: string;
-                    var newIdStub = sinon.stub(Microsoft.ApplicationInsights.Util, "newId", () => "newId");
-                    var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",() => "");
-                    var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(cookieName, cookieValue) => { });
+                    var newIdStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "newId", () => "newId");
+                    var getCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getCookie",() => "");
+                    var setCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie",(cookieName, cookieValue) => { });
 
                     // act
                     var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
@@ -148,9 +148,9 @@ class SessionContextTests extends TestClass {
                     Assert.equal("newId", localStorage["ai_session"].split('|')[0], "First part of cookie value should be new user id guid");
 
                     // cleanup
-                    getCookieStub.restore();
-                    setCookieStub.restore();
-                    newIdStub.restore();
+                    
+                    
+                    
                 } else {
                     // this might happen on IE when using a file:// url
                     Assert.ok(true, "browser does not support local storage in current environment");
@@ -163,12 +163,12 @@ class SessionContextTests extends TestClass {
             test: () => {
                 var cookies = {};
                 var storage = {};
-                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
-                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
+                var getCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
+                var setCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
                     cookies[name] = value;
                 });
-                var getStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
-                var setStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
+                var getStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
+                var setStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
                     storage[name] = value;
                 });
 
@@ -187,10 +187,10 @@ class SessionContextTests extends TestClass {
                 Assert.ok(storage['ai_session'], "session cookie should be backed up in local storage");
 
                 // cleanup
-                getCookieStub.restore();
-                setCookieStub.restore();
-                getStorageStub.restore();
-                setStorageStub.restore();
+                
+                
+                
+                
             }
         });
 
@@ -199,12 +199,12 @@ class SessionContextTests extends TestClass {
             test: () => {
                 var cookies = {};
                 var storage = {};
-                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
-                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
+                var getCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
+                var setCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
                     cookies[name] = value;
                 });
-                var getStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
-                var setStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
+                var getStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
+                var setStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
                     storage[name] = value;
                 });
 
@@ -227,10 +227,10 @@ class SessionContextTests extends TestClass {
                 Assert.ok(!sessionManager.automaticSession.isFirst, "the isFirst state should be conserved after losing the session cookie");
 
                 // cleanup
-                getCookieStub.restore();
-                setCookieStub.restore();
-                getStorageStub.restore();
-                setStorageStub.restore();
+                
+                
+                
+                
             }
         });
 
@@ -239,15 +239,15 @@ class SessionContextTests extends TestClass {
             test: () => {
                 var cookies = {};
                 var storage = {};
-                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
-                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
+                var getCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
+                var setCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
                     cookies[name] = value;
                 });
-                var getStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
-                var setStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
+                var getStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
+                var setStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
                     storage[name] = value;
                 });
-                var removeStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "removeStorage",(name, value) => {
+                var removeStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "removeStorage",(name, value) => {
                     storage[name] = undefined;
                 });
 
@@ -270,11 +270,11 @@ class SessionContextTests extends TestClass {
                 Assert.ok(sessionManager.automaticSession.isFirst, "the isFirst state should be reset after losing all ai cookies");
 
                 // cleanup
-                getCookieStub.restore();
-                setCookieStub.restore();
-                getStorageStub.restore();
-                setStorageStub.restore();
-                removeStorageStub.restore();
+                
+                
+                
+                
+                
             }
         });
 
@@ -283,12 +283,12 @@ class SessionContextTests extends TestClass {
             test: () => {
                 var cookies = {};
                 var storage = {};
-                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
-                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
+                var getCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
+                var setCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
                     cookies[name] = value;
                 });
-                var getStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => null);
-                var setStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => false);
+                var getStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => null);
+                var setStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => false);
 
                 // Initialize our user and session cookies
                 var sessionId = "SESSID";
@@ -314,10 +314,10 @@ class SessionContextTests extends TestClass {
                 Assert.ok(sessionManager.automaticSession.isFirst, "the isFirst state should be reset after losing the session cookie");
 
                 // cleanup
-                getCookieStub.restore();
-                setCookieStub.restore();
-                getStorageStub.restore();
-                setStorageStub.restore();
+                
+                
+                
+                
             }
         });
 

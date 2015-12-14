@@ -34,7 +34,7 @@ class SnippetTests extends TestClass {
         }
 
         window['queueTest'] = () => null;
-        this.queueSpy = sinon.spy(window, "queueTest");
+        this.queueSpy = this.sandbox.spy(window, "queueTest");
         this.useFakeTimers = false;
         this.clock.restore();
         this.useFakeServer = false;
@@ -46,7 +46,6 @@ class SnippetTests extends TestClass {
         this.useFakeServer = true;
         this.useFakeTimers = true;
         window[this.name] = this.originalAppInsights;
-        this.queueSpy.restore();
     }
 
     public registerTests() {
@@ -81,7 +80,7 @@ class SnippetTests extends TestClass {
                     Assert.deepEqual("test", pv.url, "url was set correctly");
                     Assert.deepEqual({ property: "p1" }, pv.properties, "properties were set correctly");
                     Assert.deepEqual({ measurement: 5 }, pv.measurements, "measurements were set correctly");
-                    senderSpy71V2.restore();
+                    
                 }
             ]
         });
@@ -105,7 +104,7 @@ class SnippetTests extends TestClass {
                     var count = 2 + this.timingOffset;
                     Assert.equal(count, senderSpy66V2V1.sender.callCount, "v2 send called " + count + " times");
                     this.boilerPlateAsserts(senderSpy66V2V1);
-                    senderSpy66V2V1.restore();
+                    
                 }
             ]
         });
@@ -173,7 +172,7 @@ class SnippetTests extends TestClass {
                     var count = 5 + this.timingOffset;
                     Assert.equal(count, sender.sender.callCount, "send called " + count + " times");
                     this.boilerPlateAsserts(sender);
-                    sender.restore();
+                    
                 }
             ]
         });
@@ -217,10 +216,10 @@ class SnippetTests extends TestClass {
         window["appInsights"].endpointUrl = "https://dc.services.visualstudio.com/v2/track";
         window["appInsights"].maxBatchInterval = 1;
         var appIn = <Microsoft.ApplicationInsights.AppInsights>window[this.name];
-        var sender = sinon.spy(appIn.context._sender, "send");
-        var errorSpy = sinon.spy(Microsoft.ApplicationInsights.Sender, "_onError");
-        var successSpy = sinon.spy(Microsoft.ApplicationInsights.Sender, "_onSuccess");
-        var loggingSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+        var sender = this.sandbox.spy(appIn.context._sender, "send");
+        var errorSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onError");
+        var successSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onSuccess");
+        var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
 
         return {
             sender: sender,
@@ -228,10 +227,10 @@ class SnippetTests extends TestClass {
             successSpy: successSpy,
             loggingSpy: loggingSpy,
             restore: () => {
-                sender.restore();
-                errorSpy.restore();
-                successSpy.restore();
-                loggingSpy.restore();
+                
+                
+                
+                
             }
         };
     }

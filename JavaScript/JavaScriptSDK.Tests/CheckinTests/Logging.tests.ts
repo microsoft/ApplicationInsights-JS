@@ -36,7 +36,7 @@ class LoggingTests extends TestClass {
                 // setup
                 var throwSpy = null;
                 try {
-                    throwSpy = sinon.spy(console, "warn");
+                    throwSpy = this.sandbox.spy(console, "warn");
                 } catch (e) {
                     Assert.ok(true, "IE8 breaks sinon spies \n" + e.toString());
                 }
@@ -60,8 +60,7 @@ class LoggingTests extends TestClass {
                 Assert.ok(!throwSpy || throwSpy.calledOnce, "console.warn was not called when the error was thrown");
 
                 // cleanup
-                InternalLogging.enableDebugExceptions = () => false;
-                !throwSpy || throwSpy.restore(); // IE8
+                InternalLogging.enableDebugExceptions = () => false;                
             }
         });
 
@@ -120,7 +119,7 @@ class LoggingTests extends TestClass {
                 // setup
                 var throwSpy = null;
                 try {
-                    throwSpy = sinon.spy(console, "warn");
+                    throwSpy = this.sandbox.spy(console, "warn");
 
                     // act
                     var message = "error!";
@@ -133,7 +132,7 @@ class LoggingTests extends TestClass {
                     Assert.equal("AI: " + message, InternalLogging.queue[0]);
 
                     // cleanup
-                    throwSpy.restore();
+                    
                 } catch (e) {
                     Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
                 }
@@ -146,7 +145,7 @@ class LoggingTests extends TestClass {
                 // setup
                 var throwSpy = null;
                 try {
-                    throwSpy = sinon.spy(console, "warn");
+                    throwSpy = this.sandbox.spy(console, "warn");
 
                     // act
                     var message = "error!";
@@ -160,7 +159,7 @@ class LoggingTests extends TestClass {
                     Assert.equal("AI (Internal): " + message, InternalLogging.queue[0]);
 
                     // cleanup
-                    throwSpy.restore();
+                    
                 } catch (e) {
                     Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
                 }
@@ -173,7 +172,7 @@ class LoggingTests extends TestClass {
                 // setup
                 var throwSpy = null;
                 try {
-                    throwSpy = sinon.spy(console, "warn");
+                    throwSpy = this.sandbox.spy(console, "warn");
 
                     // act
                     var message = "error!";
@@ -184,7 +183,7 @@ class LoggingTests extends TestClass {
                     Assert.equal(0, InternalLogging.queue.length);
 
                     // cleanup
-                    throwSpy.restore();
+                    
                 } catch (e) {
                     Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
                 }
@@ -199,7 +198,7 @@ class LoggingTests extends TestClass {
                 var warn = console.warn;
                 try {
                     console.warn = undefined;
-                    throwSpy = sinon.spy(console, "log");
+                    throwSpy = this.sandbox.spy(console, "log");
 
                     // act
                     InternalLogging.enableDebugExceptions = () => false;
@@ -209,7 +208,7 @@ class LoggingTests extends TestClass {
                     Assert.ok(throwSpy.calledOnce, "console.log was called when console.warn was not present");
 
                     // cleanup
-                    throwSpy.restore();
+                    
                 } catch (e) {
                     Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
                 } finally {
@@ -248,7 +247,7 @@ class LoggingTests extends TestClass {
             test: () => {
                 var maxAllowedInternalMessages = 2;
                 var message = "Internal Test Event";
-                var logInternalMessageStub = sinon.stub(InternalLogging, 'logInternalMessage');
+                var logInternalMessageStub = this.sandbox.stub(InternalLogging, 'logInternalMessage');
 
                 // setup
                 InternalLogging.enableDebugExceptions = () => false;
@@ -261,7 +260,7 @@ class LoggingTests extends TestClass {
                 Assert.ok(logInternalMessageStub.calledOnce, 'logInternalMessage was not called by throwInternalNonUserActionable');
 
                 // clean
-                logInternalMessageStub.restore();
+                
             }
         });
         
@@ -270,7 +269,7 @@ class LoggingTests extends TestClass {
             test: () => {
                 var maxAllowedInternalMessages = 2;
                 var message = "Internal Test Event";
-                var logInternalMessageStub = sinon.stub(InternalLogging, 'logInternalMessage');
+                var logInternalMessageStub = this.sandbox.stub(InternalLogging, 'logInternalMessage');
 
                 // setup
                 InternalLogging.enableDebugExceptions = () => false;
@@ -283,7 +282,7 @@ class LoggingTests extends TestClass {
                 Assert.ok(logInternalMessageStub.calledOnce, 'logInternalMessage was not called by throwInternalUserActionable');
 
                 // clean
-                logInternalMessageStub.restore();
+                
             }
         });
 

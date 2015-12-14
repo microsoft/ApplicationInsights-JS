@@ -46,12 +46,12 @@ class TelemetryContextTests extends TestClass {
             name: "TelemtetryContext: calling track with null or undefined fails",
             test: () => {
                 var tc = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
-                var logSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var logSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
                 tc.track(undefined);
                 Assert.ok(logSpy.calledOnce, "sender throws with undefined");
                 tc.track(null);
                 Assert.ok(logSpy.calledTwice, "sender throws with null");
-                logSpy.restore();
+
             }
         });
 
@@ -59,47 +59,26 @@ class TelemetryContextTests extends TestClass {
             name: "TelemtetryContext: does not overwrite user sessioncontext with defaults",
             test: () => {
                 this._telemetryContext.session.id = "101";
-                this._telemetryContext.session.isFirst = true; 
-                                
+                this._telemetryContext.session.isFirst = true;
+
                 var env = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(null, "");
                 this._telemetryContext.track(env);
 
                 var contextKeys = new AI.ContextTagKeys();
                 Assert.equal("101", env.tags[contextKeys.sessionId], "session.id");
-                Assert.equal(true, env.tags[contextKeys.sessionIsFirst], "session.isFirst");            }
+                Assert.equal(true, env.tags[contextKeys.sessionIsFirst], "session.isFirst");
+            }
         });
 
         function getEnvelope<T>(item, dataType: string, envelopeType: string) {
             var data = new Microsoft.ApplicationInsights.Telemetry.Common.Data<T>(dataType, item);
             return new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(data, envelopeType);
         }
-        
-        /**
-        * Gets the sinon stub for telemetryContext.sample.isSampledIn function. Result is wrapped to an object
-        * which has a counter of how many times the stub was accessed with expected envelope type.
-        */
-        function getStub(envelopeType: string, telemetryContext: Microsoft.ApplicationInsights.TelemetryContext) {            
-            var stub = {
-                sinonStub: null,
-                isSampledInCallsCount: 0
-            };
-
-            var isSampledInStub = sinon.stub(telemetryContext.sample, "isSampledIn",
-                (envelope: Microsoft.ApplicationInsights.Telemetry.Common.Envelope) => {
-                    if (envelope.name === envelopeType) {
-                        ++stub.isSampledInCallsCount;
-                    }
-                });
-
-            stub.sinonStub = isSampledInStub;
-
-            return stub;
-        }
 
         this.testCase({
             name: "TelemetryContext: page views get sampled",
             test: () => {
-                var stub = getStub(Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType, this._telemetryContext);
+                var stub = this.getStub(Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType, this._telemetryContext);
 
                 var envelope = getEnvelope<Microsoft.ApplicationInsights.Telemetry.PageView>(
                     new Microsoft.ApplicationInsights.Telemetry.PageView("asdf", "asdf", 10),
@@ -113,15 +92,13 @@ class TelemetryContextTests extends TestClass {
                 Assert.equal(1, stub.isSampledInCallsCount);
 
                 // tear down
-                stub.sinonStub.restore();
             }
         });
-
 
         this.testCase({
             name: "TelemetryContext: events get sampled",
             test: () => {
-                var stub = getStub(Microsoft.ApplicationInsights.Telemetry.Event.envelopeType, this._telemetryContext);
+                var stub = this.getStub(Microsoft.ApplicationInsights.Telemetry.Event.envelopeType, this._telemetryContext);
 
                 var envelope = getEnvelope<Microsoft.ApplicationInsights.Telemetry.Event>(
                     new Microsoft.ApplicationInsights.Telemetry.Event("asdf"),
@@ -135,14 +112,13 @@ class TelemetryContextTests extends TestClass {
                 Assert.equal(1, stub.isSampledInCallsCount);
 
                 // tear down
-                stub.sinonStub.restore();
             }
         });
 
         this.testCase({
             name: "TelemetryContext: exceptions get sampled",
             test: () => {
-                var stub = getStub(Microsoft.ApplicationInsights.Telemetry.Exception.envelopeType, this._telemetryContext);
+                var stub = this.getStub(Microsoft.ApplicationInsights.Telemetry.Exception.envelopeType, this._telemetryContext);
 
                 var exception;
                 try {
@@ -163,14 +139,13 @@ class TelemetryContextTests extends TestClass {
                 Assert.equal(1, stub.isSampledInCallsCount);
 
                 // tear down
-                stub.sinonStub.restore();
             }
         });
 
         this.testCase({
             name: "TelemetryContext: metrics do NOT get sampled",
             test: () => {
-                var stub = getStub(Microsoft.ApplicationInsights.Telemetry.Metric.envelopeType, this._telemetryContext);
+                var stub = this.getStub(Microsoft.ApplicationInsights.Telemetry.Metric.envelopeType, this._telemetryContext);
 
                 var envelope = getEnvelope<Microsoft.ApplicationInsights.Telemetry.Metric>(
                     new Microsoft.ApplicationInsights.Telemetry.Metric("asdf", 1234),
@@ -184,14 +159,13 @@ class TelemetryContextTests extends TestClass {
                 Assert.equal(0, stub.isSampledInCallsCount);
 
                 // tear down
-                stub.sinonStub.restore();
             }
         });
 
         this.testCase({
             name: "TelemetryContext: pageViewPerformance gets sampled",
             test: () => {
-                var stub = getStub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.envelopeType, this._telemetryContext);
+                var stub = this.getStub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.envelopeType, this._telemetryContext);
 
                 var envelope = getEnvelope<Microsoft.ApplicationInsights.Telemetry.PageViewPerformance>(
                     new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("adsf", "asdf", 10),
@@ -205,14 +179,13 @@ class TelemetryContextTests extends TestClass {
                 Assert.equal(1, stub.isSampledInCallsCount);
 
                 // tear down
-                stub.sinonStub.restore();
             }
         });
 
         this.testCase({
             name: "TelemetryContext: sessions do NOT get sampled",
             test: () => {
-                var stub = getStub(Microsoft.ApplicationInsights.Telemetry.SessionTelemetry.envelopeType, this._telemetryContext);
+                var stub = this.getStub(Microsoft.ApplicationInsights.Telemetry.SessionTelemetry.envelopeType, this._telemetryContext);
 
                 var envelope = getEnvelope<Microsoft.ApplicationInsights.Telemetry.SessionTelemetry>(
                     new Microsoft.ApplicationInsights.Telemetry.SessionTelemetry(AI.SessionState.Start),
@@ -226,14 +199,13 @@ class TelemetryContextTests extends TestClass {
                 Assert.equal(0, stub.isSampledInCallsCount);
 
                 // tear down
-                stub.sinonStub.restore();
             }
         });
 
         this.testCase({
             name: "TelemetryContext: traces get sampled",
             test: () => {
-                var stub = getStub(Microsoft.ApplicationInsights.Telemetry.Trace.envelopeType, this._telemetryContext);
+                var stub = this.getStub(Microsoft.ApplicationInsights.Telemetry.Trace.envelopeType, this._telemetryContext);
 
                 var envelope = getEnvelope<Microsoft.ApplicationInsights.Telemetry.Trace>(
                     new Microsoft.ApplicationInsights.Telemetry.Trace("afd"),
@@ -247,9 +219,8 @@ class TelemetryContextTests extends TestClass {
                 Assert.equal(1, stub.isSampledInCallsCount);
 
                 // tear down
-                stub.sinonStub.restore();
             }
-        });     
+        });
 
         this.testCase({
             name: "TelemetryContext: onBeforeSendTelemetry is called within track() and gets the envelope as an argument",
@@ -259,7 +230,7 @@ class TelemetryContextTests extends TestClass {
                 var telemetryInitializer = {
                     initializer: (envelope) => { }
                 }
-                var spy = sinon.spy(telemetryInitializer, "initializer");
+                var spy = this.sandbox.spy(telemetryInitializer, "initializer");
                 this._telemetryContext.addTelemetryInitializer(<any>telemetryInitializer.initializer);
                     
                 // act
@@ -270,7 +241,7 @@ class TelemetryContextTests extends TestClass {
                 Assert.ok(eventEnvelope === spy.args[0][0]);
 
                 // teardown
-                spy.restore();
+                
                 (<any>this._telemetryContext).telemetryInitializers = undefined;
             }
         });
@@ -289,7 +260,7 @@ class TelemetryContextTests extends TestClass {
                 }
 
                 this._telemetryContext.addTelemetryInitializer(<any>telemetryInitializer.initializer);
-                var stub = sinon.stub(this._telemetryContext._sender, "send");
+                var stub = this.sandbox.stub(this._telemetryContext._sender, "send");
                     
                 // act
                 (<any>this._telemetryContext)._track(eventEnvelope);
@@ -301,7 +272,7 @@ class TelemetryContextTests extends TestClass {
                     (<Microsoft.ApplicationInsights.Telemetry.Common.Envelope>stub.args[0][0]).name);
 
                 // teardown
-                stub.restore();
+                
                 (<any>this._telemetryContext).telemetryInitializers = undefined;
             }
         });
@@ -310,7 +281,7 @@ class TelemetryContextTests extends TestClass {
             name: "TelemetryContext: telemetryInitializers array is null (not initialized) means envelope goes straight to the sender",
             test: () => {
                 var eventEnvelope = this.getTestEventEnvelope();
-                var stub = sinon.stub(this._telemetryContext._sender, "send");
+                var stub = this.sandbox.stub(this._telemetryContext._sender, "send");
                     
                 // act
                 (<any>this._telemetryContext)._track(eventEnvelope);
@@ -320,10 +291,10 @@ class TelemetryContextTests extends TestClass {
                 Assert.ok(eventEnvelope === stub.args[0][0]);
 
                 // teardown
-                stub.restore();
+                
             }
         });
-        
+
         this.testCase({
             name: "TelemetryContext: telemetry initializer can modify the contents of an envelope",
             test: () => {
@@ -344,7 +315,7 @@ class TelemetryContextTests extends TestClass {
                 }
 
                 this._telemetryContext.addTelemetryInitializer(<any>telemetryInitializer.init);
-                var stub = sinon.stub(this._telemetryContext._sender, "send");
+                var stub = this.sandbox.stub(this._telemetryContext._sender, "send");
                     
                 // act
                 (<any>this._telemetryContext)._track(eventEnvelope);
@@ -356,7 +327,7 @@ class TelemetryContextTests extends TestClass {
                 Assert.equal("val1", (<any>stub.args[0][0]).data.baseData.properties["prop1"]);
                 
                 // teardown
-                stub.restore();
+                
                 (<any>this._telemetryContext).telemetryInitializers = undefined;
             }
         });
@@ -365,16 +336,16 @@ class TelemetryContextTests extends TestClass {
             name: "TelemetryContext: all added telemetry initializers get invoked",
             test: () => {
                 // prepare
-                var eventEnvelope = this.getTestEventEnvelope();                
-                var initializer1 = { init: () => { } };                
+                var eventEnvelope = this.getTestEventEnvelope();
+                var initializer1 = { init: () => { } };
                 var initializer2 = { init: () => { } };
-                var spy1 = sinon.spy(initializer1, "init");
-                var spy2 = sinon.spy(initializer2, "init");
+                var spy1 = this.sandbox.spy(initializer1, "init");
+                var spy2 = this.sandbox.spy(initializer2, "init");
 
                 // act
                 this._telemetryContext.addTelemetryInitializer(<any>initializer1.init);
                 this._telemetryContext.addTelemetryInitializer(<any>initializer2.init);
-                
+
                 (<any>this._telemetryContext)._track(eventEnvelope);
 
                 // verify
@@ -385,6 +356,28 @@ class TelemetryContextTests extends TestClass {
                 (<any>this._telemetryContext).telemetryInitializers = undefined;
             }
         });
+    }
+
+    /**
+    * Gets the sinon stub for telemetryContext.sample.isSampledIn function. Result is wrapped to an object
+    * which has a counter of how many times the stub was accessed with expected envelope type.
+    */
+    private getStub(envelopeType: string, telemetryContext: Microsoft.ApplicationInsights.TelemetryContext) {
+        var stub = {
+            sinonStub: null,
+            isSampledInCallsCount: 0
+        };
+
+        var isSampledInStub = this.sandbox.stub(telemetryContext.sample, "isSampledIn",
+            (envelope: Microsoft.ApplicationInsights.Telemetry.Common.Envelope) => {
+                if (envelope.name === envelopeType) {
+                    ++stub.isSampledInCallsCount;
+                }
+            });
+
+        stub.sinonStub = isSampledInStub;
+
+        return stub;
     }
 
     private getTestEventEnvelope(properties?: Object, measurements?: Object) {

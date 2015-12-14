@@ -199,7 +199,7 @@ class AutoCollectionTests extends TestClass {
 
     private getListener(address): SinonSpy {
         var listener = { onMessage: () => null };
-        var spy = sinon.spy(listener, "onMessage");
+        var spy = this.sandbox.spy(listener, "onMessage");
 
         if (window.addEventListener) {
             addEventListener("message", listener.onMessage, false);
