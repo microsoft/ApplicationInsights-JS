@@ -124,6 +124,7 @@
     <TypeScriptCompile Include="ajax\ajaxRecord.ts" />
     <TypeScriptCompile Include="ajax\ajaxUtils.ts" />
     <TypeScriptCompile Include="AppInsights.ts" />
+    <TypeScriptCompile Include="Telemetry\PageViewManager.ts" />
     <TypeScriptCompile Include="Telemetry\PageVisitTimeManager.ts" />
     <TypeScriptCompile Include="Context\Sample.ts" />
     <TypeScriptCompile Include="Contracts\Generated\AjaxCallData.ts" />
