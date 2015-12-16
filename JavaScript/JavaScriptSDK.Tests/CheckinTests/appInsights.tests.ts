@@ -986,7 +986,7 @@ class AppInsightsTests extends TestClass {
             // setup
             var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
             appInsights.context._sessionManager._sessionHandler = null;
-            var stub = sinon.stub(appInsights, "trackPageViewInternal");
+            var stub = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewManager.prototype, "trackPageView");
 
             // act
             trackAction(appInsights);
