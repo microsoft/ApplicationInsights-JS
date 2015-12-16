@@ -24,7 +24,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         /**
         * Currently supported cases:
         * 1) (default case) track page view called with default parameters, overridePageViewDuration = false. Page view is sent with page view performance when navigation timing data is available.
-        *    If navigation timieng is not supported then page view is sent right away with 0 duration. Page view performance is not sent.
+        *    If navigation timing is not supported then page view is sent right away with 0 duration. Page view performance is not sent.
         * 2) overridePageViewDuration = true, custom duration provided. Custom duration is used, page view sends right away.
         * 3) overridePageViewDuration = true. Page view is sent right away, duration is time spent from page load till now (or 0 is navigation timing is not supported). 
         * 4) overridePageViewDuration = false, custom duration is provided. Page view is sent right away with custom duration. 
