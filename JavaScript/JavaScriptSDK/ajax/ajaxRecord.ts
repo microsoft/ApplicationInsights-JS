@@ -68,6 +68,10 @@ module Microsoft.ApplicationInsights {
             return this.requestUrl ? UrlHelper.getHostName(this.requestUrl) : null;
         }
 
+        public getPathName() {
+            return this.requestUrl ? UrlHelper.getPathName(this.requestUrl) : null;
+        }
+
         public CalculateMetrics = function () {
             var self = this;
             self.ttfb = dateTime.GetDuration(self.requestSentTime, self.responseStartedTime);
