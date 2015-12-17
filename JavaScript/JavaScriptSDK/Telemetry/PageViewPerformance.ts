@@ -75,15 +75,15 @@ module Microsoft.ApplicationInsights.Telemetry {
 
                 if (total == 0) {
                     _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.CRITICAL,
+                        LoggingSeverity.WARNING,
                         "error calculating page view performance: total='" +
                         total + "', network='" + network + "', request='" + request + "', response='" +
                         response + "', dom='" + dom + "'");
                 } else if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
                     // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
-                    // in this case, don't report client performance from this page                    
+                    // in this case, don't report client performance from this page
                     _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.CRITICAL,
+                        LoggingSeverity.WARNING,
                         "client performance math error:" + total + " < " + network + " + " + request + " + " + response + " + " + dom);
                 } else {
                     this.durationMs = total;
