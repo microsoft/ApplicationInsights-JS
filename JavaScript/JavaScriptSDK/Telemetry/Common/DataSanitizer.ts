@@ -77,7 +77,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
             if (value) {
                 value = Util.trim(value);
                 if (value.toString().length > DataSanitizer.MAX_STRING_LENGTH) {
-                    value = value.substring(0, DataSanitizer.MAX_STRING_LENGTH);
+                    value = value.toString().substring(0, DataSanitizer.MAX_STRING_LENGTH);
                     _InternalLogging.throwInternalUserActionable(
                         LoggingSeverity.WARNING,
                         "string value is too long. It has been truncated to " + DataSanitizer.MAX_STRING_LENGTH + " characters. value: " + value);
