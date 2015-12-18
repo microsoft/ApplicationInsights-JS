@@ -111,14 +111,14 @@ class SampleContextTests extends TestClass {
                 envelope1.tags[contextKeys.userId] = null;
                 envelope1.tags[contextKeys.operationId] = null;
 
-                var mathRandomSpy = sinon.spy(Math, "random");
+                var mathRandomSpy = this.sandbox.spy(Math, "random");
 
                 // act
                 sample.isSampledIn(envelope1);
 
                 // assert
                 Assert.ok(mathRandomSpy.calledOnce);
-                mathRandomSpy.restore();
+                
             }
         });
     }

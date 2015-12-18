@@ -5,11 +5,13 @@
 class AjaxTests extends TestClass {
 
     private appInsightsMock = { trackAjax: (absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) => { } }
-    private trackAjaxSpy = sinon.spy(this.appInsightsMock, "trackAjax");
-    private callbackSpy = sinon.spy();
+    private trackAjaxSpy;
+    private callbackSpy;
     private requests;
 
     public testInitialize() {
+        this.trackAjaxSpy = this.sandbox.spy(this.appInsightsMock, "trackAjax");
+        this.callbackSpy = this.sandbox.spy();
         this.trackAjaxSpy.reset();
         var xhr = sinon.useFakeXMLHttpRequest();
     }
@@ -55,7 +57,7 @@ class AjaxTests extends TestClass {
         this.testCase({
             name: "Ajax: successful request, ajax monitor doesn't change payload",
             test: () => {
-                var callback = sinon.spy();
+                var callback = this.sandbox.spy();
                 var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);                
 
                 // Act
@@ -83,7 +85,7 @@ class AjaxTests extends TestClass {
         this.testCase({
             name: "Ajax: custom onreadystatechange gets called",
             test: () => {
-                var onreadystatechangeSpy = sinon.spy();
+                var onreadystatechangeSpy = this.sandbox.spy();
                 var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
 
                 // Act
@@ -163,13 +165,13 @@ class AjaxTests extends TestClass {
             name: "Ajax: overriding ready state change handlers in all possible ways",
             test: () => {
                 var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
-                var cb1 = sinon.spy();
-                var cb2 = sinon.spy();
-                var cb3 = sinon.spy();
-                var cb4 = sinon.spy();
-                var cb5 = sinon.spy();
-                var cb6 = sinon.spy();
-                var cb7 = sinon.spy();
+                var cb1 = this.sandbox.spy();
+                var cb2 = this.sandbox.spy();
+                var cb3 = this.sandbox.spy();
+                var cb4 = this.sandbox.spy();
+                var cb5 = this.sandbox.spy();
+                var cb6 = this.sandbox.spy();
+                var cb7 = this.sandbox.spy();
 
                 // Act
                 var xhr = new XMLHttpRequest();
@@ -233,7 +235,7 @@ class AjaxTests extends TestClass {
             name: "Ajax: 2nd invokation of xhr.send doesn't cause send wrapper to execute 2nd time",
             test: () => {
                 var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
-                var spy = sinon.spy(ajax, "sendHandler");
+                var spy = this.sandbox.spy(ajax, "sendHandler");
                 
                 // Act
                 var xhr = new XMLHttpRequest();
@@ -254,7 +256,7 @@ class AjaxTests extends TestClass {
             name: "Ajax: 2 invokation of xhr.open() doesn't cause send wrapper to execute 2nd time",
             test: () => {
                 var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
-                var spy = sinon.spy(ajax, "openHandler");
+                var spy = this.sandbox.spy(ajax, "openHandler");
                 
                 // Act
                 var xhr = new XMLHttpRequest();

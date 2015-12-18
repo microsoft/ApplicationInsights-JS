@@ -65,7 +65,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 timing.responseEnd = 42;
                 timing.loadEventEnd = 60;
 
-                var timingSpy = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
+                var timingSpy = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
                     return timing;
                 });
 
@@ -81,7 +81,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(12), data.receivedResponse);
                 Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(18), data.domProcessing);
 
-                timingSpy.restore();
+                
             }
         });
 
@@ -97,12 +97,12 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 timing.responseEnd = 42;
                 timing.loadEventEnd = 60;
 
-                var timingSpy = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
+                var timingSpy = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
                     return timing;
                 });
 
                 var actualLoggedMessage = null;
-                var loggingSpy = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole", (m) => actualLoggedMessage = m);
+                var loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole", (m) => actualLoggedMessage = m);
 
 
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
@@ -118,8 +118,8 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
 
                 Assert.equal("client performance math error:59 < 39 + 19 + 12 + 18", actualLoggedMessage);
 
-                timingSpy.restore();
-                loggingSpy.restore();
+                
+                
 
             }
         });

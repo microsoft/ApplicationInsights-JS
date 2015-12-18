@@ -160,7 +160,7 @@ class InitializationTests extends TestClass {
 
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
                 var appInsightsLocal = init.loadAppInsights();
-                var trackTraceSpy = sinon.stub(appInsightsLocal, "trackTrace");
+                var trackTraceSpy = this.sandbox.stub(appInsightsLocal, "trackTrace");
 
                 var queue: Array<string> = Microsoft.ApplicationInsights._InternalLogging["queue"];
                 var length = queue.length;
@@ -182,7 +182,7 @@ class InitializationTests extends TestClass {
 
                 clearInterval(poller);
 
-                trackTraceSpy.restore();
+                
                 
             }
         });
@@ -241,7 +241,7 @@ class InitializationTests extends TestClass {
                     config: userConfig,
                     queue: []
                 };
-                var addEventHandlerStub = sinon.stub(Microsoft.ApplicationInsights.Util, 'addEventHandler').returns(true);
+                var addEventHandlerStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, 'addEventHandler').returns(true);
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
                 var appInsightsLocal = init.loadAppInsights();
                 

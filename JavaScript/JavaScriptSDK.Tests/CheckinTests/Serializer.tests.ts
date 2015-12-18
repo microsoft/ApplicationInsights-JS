@@ -8,14 +8,8 @@ class SerializerTests extends TestClass {
 
     /** Method called before the start of each test method */
     public testInitialize() {
-        this.throwInternalNonUserActionableSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
-        this.throwInternalUserActionableSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
-    }
-
-    /** Method called after each test method has completed */
-    public testCleanup() {
-        this.throwInternalNonUserActionableSpy.restore();
-        this.throwInternalUserActionableSpy.restore();
+        this.throwInternalNonUserActionableSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
+        this.throwInternalUserActionableSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
     }
 
     public registerTests() {

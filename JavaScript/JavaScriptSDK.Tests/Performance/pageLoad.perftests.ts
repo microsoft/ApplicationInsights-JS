@@ -143,7 +143,7 @@ class PageLoadPerfTests extends PerformanceTestHelper {
 
     private getListener(): SinonSpy {
         var listener = { onMessage: (data) => null };
-        var spy = sinon.spy(listener, "onMessage");
+        var spy = this.sandbox.spy(listener, "onMessage");
 
         if (window.addEventListener) {
             addEventListener("message", listener.onMessage, false);
