@@ -1,7 +1,14 @@
 ﻿module Microsoft.ApplicationInsights {
     
     export enum LoggingSeverity {
+        /**
+         * Error will be sent as internal telemetry
+         */
         CRITICAL = 0,
+
+        /**
+         * Error will NOT be sent as internal telemetry, and will only be shown in browser console
+         */
         WARNING = 1
     }
 

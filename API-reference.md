@@ -36,7 +36,7 @@ In a web page where you have [set up web page tracking](https://azure.microsoft.
 
 ### trackPageView
 
-    trackPageView(name?: string, url?: string, properties?:{[string]:string}, measurements?: {[string]:number})
+    trackPageView(name?: string, url?: string, properties?:{[string]:string}, measurements?: {[string]:number}, duration?: number)
 
 Logs that a page or similar container was displayed to the user. 
 
@@ -47,6 +47,7 @@ Logs that a page or similar container was displayed to the user.
 `url` |  A relative or absolute URL that identifies the page or similar item. Defaults to the window location.
 `properties` | Map of string to string: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 `measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+`duration` | The number of milliseconds it took to load this page, displayed in Metrics Explorer on the portal. Defaults to empty. If empty, end of page view duration is recorded when browser page load event is called.
 
 The standard snippet that you get from the portal includes a call to trackPageView. If you insert your own calls, consider
 removing this default. An example where you might write your own calls is where your app is a single HTML page that has multiple
@@ -208,6 +209,10 @@ Values that control how the telemetry data is sent.
         
         // If true, ajax calls are not monitored.
         disableAjaxTracking: boolean;
+        
+        // If true, default behavior of trackPageView is changed to record end of page view duration interval when 
+        // trackPageView is called.
+        overridePageViewDuration: boolean;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.

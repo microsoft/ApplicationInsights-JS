@@ -331,8 +331,8 @@ module Microsoft.ApplicationInsights {
                 xhr.ajaxData.CalculateMetrics();
 
                 this.appInsights.trackAjax(
-                    xhr.ajaxData.getHostName(),
                     xhr.ajaxData.getAbsoluteUrl(),
+                    xhr.ajaxData.getPathName(),
                     xhr.ajaxData.ajaxTotalDuration,
                     (+(xhr.ajaxData.status)) < 400
                     );

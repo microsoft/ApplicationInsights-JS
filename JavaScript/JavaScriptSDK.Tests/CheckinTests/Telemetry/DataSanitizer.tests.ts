@@ -74,6 +74,18 @@ class DataSanitizerTests extends TestClass {
         });
 
         this.testCase({
+            name: "DataSanitizerTests: Validate object.toString is truncated if object passed to sanitizeString",
+            test: () => {
+                Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer["MAX_STRING_LENGTH"] = 5;
+                var expectedValue = "[obje";
+                var value = { greeting: "Hello", place: "World" };
+
+                var validatedValue = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(value);
+                Assert.equal(expectedValue, validatedValue);
+            }
+        });
+
+        this.testCase({
             name: "DataSanitizerTests: Validate url is truncated after max length ",
             test: () => {
                 Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer["MAX_URL_LENGTH"] = 5;

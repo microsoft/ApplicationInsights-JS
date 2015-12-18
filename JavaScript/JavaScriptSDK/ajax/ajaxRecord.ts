@@ -64,8 +64,8 @@ module Microsoft.ApplicationInsights {
             return this.requestUrl ? UrlHelper.getAbsoluteUrl(this.requestUrl) : null;
         }
 
-        public getHostName() {
-            return this.requestUrl ? UrlHelper.getHostName(this.requestUrl) : null;
+        public getPathName() {
+            return this.requestUrl ? UrlHelper.getPathName(this.requestUrl) : null;
         }
 
         public CalculateMetrics = function () {

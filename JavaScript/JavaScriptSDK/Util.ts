@@ -388,11 +388,11 @@ module Microsoft.ApplicationInsights {
             return result;
         }
 
-        public static getHostName(url): string {
+        public static getPathName(url): string {
             var result: string;
             var a = UrlHelper.parseUrl(url);
             if (a) {
-                result = a.hostname;
+                result = a.pathname;
             }
 
             return result;
