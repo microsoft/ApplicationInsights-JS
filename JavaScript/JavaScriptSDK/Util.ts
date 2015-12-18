@@ -388,16 +388,6 @@ module Microsoft.ApplicationInsights {
             return result;
         }
 
-        public static getHostName(url): string {
-            var result: string;
-            var a = UrlHelper.parseUrl(url);
-            if (a) {
-                result = a.hostname;
-            }
-
-            return result;
-        }
-
         public static getPathName(url): string {
             var result: string;
             var a = UrlHelper.parseUrl(url);
