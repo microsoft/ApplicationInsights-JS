@@ -162,7 +162,7 @@ module Microsoft.ApplicationInsights {
 
             config.disableAjaxTracking = (config.disableAjaxTracking !== undefined && config.disableAjaxTracking !== null) ?
                 Util.stringToBoolOrDefault(config.disableAjaxTracking) :
-                true;
+                false;
 
             return config;
         }
