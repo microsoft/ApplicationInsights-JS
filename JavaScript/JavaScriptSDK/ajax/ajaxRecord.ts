@@ -29,11 +29,8 @@ module Microsoft.ApplicationInsights {
         public method = null;
 
         ///<summary>Returns the HTTP status code.</summary>
-        public status = null;
-        public contentType = null;
-        public contentEncoding = null;
-        public responseSize = 0;
-
+        public status = null;        
+        
         //<summary>The timestamp when open method was invoked</summary>
         public requestSentTime = null;
 

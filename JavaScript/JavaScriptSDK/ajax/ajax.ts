@@ -368,13 +368,7 @@ module Microsoft.ApplicationInsights {
             // http://helpful.knobs-dials.com/index.php/Component_returned_failure_code:_0x80040111_(NS_ERROR_NOT_AVAILABLE)
 
             try {
-                xhr.ajaxData.status = xhr.status;
-                xhr.ajaxData.contentType = xhr.getResponseHeader("Content-Type");
-                xhr.ajaxData.responseSize = xhr.responseText.length;
-                xhr.ajaxData.responseSize += xhr.getAllResponseHeaders().length;
-
-                //add 'HTTP/1.1 200 OK' length
-                xhr.ajaxData.responseSize += 17;
+                xhr.ajaxData.status = xhr.status;                
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(
                     LoggingSeverity.CRITICAL,
