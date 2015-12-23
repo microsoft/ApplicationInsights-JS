@@ -42,10 +42,7 @@ module Microsoft.ApplicationInsights {
 
         //<summary>The timestamp when onreadystatechange callback in readyState 4 finished</summary>
         public callbackFinishedTime = null;
-
-        //<summary>True, if this request was performed when dom was loading, before document was interactive, otherwise false</summary>
-        public loadingRequest = false;
-
+        
         //<summary>The timestamp at which ajax was ended</summary>
         public endTime = null;
 

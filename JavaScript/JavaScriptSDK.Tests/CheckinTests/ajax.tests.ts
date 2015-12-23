@@ -28,29 +28,11 @@ class AjaxTests extends TestClass {
 
                 // act
                 var xhr = new XMLHttpRequest();
-                Assert.ok(xhr.onreadystatechange == null, "Asserting that onreadystatechange is not set to validate that our ajax instrumentation sets it itself.");
                 xhr.open("GET", "http://microsoft.com");
 
                 // assert
                 var ajaxData = (<any>xhr).ajaxData;
-                Assert.ok(xhr.onreadystatechange != null, "Onreadystatechange was not set.");
                 Assert.equal("http://microsoft.com", ajaxData.requestUrl, "RequestUrl is collected correctly");
-            }
-        });
-
-        this.testCase({
-            name: "Ajax: ajaxData is removed from xhr after it's completed.",
-            test: () => {
-                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
-                
-                // act
-                var xhr = new XMLHttpRequest();
-                xhr.open("GET", "http://microsoft.com");
-                xhr.send();
-                (<any>xhr).respond(200, {}, "");
-
-                // assert
-                Assert.ok(!xhr.hasOwnProperty("ajaxData"), "ajaxData should be removed from xhr to prevent memory leaks");
             }
         });
 

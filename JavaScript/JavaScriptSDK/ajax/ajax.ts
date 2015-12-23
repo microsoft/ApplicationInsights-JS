@@ -25,7 +25,6 @@ module Microsoft.ApplicationInsights {
         private Init() {
             if (this.supportsMonitoring()) {
                 this.instrumentOpen();
-                this.instrumentSetRequestHeader();
                 this.instrumentSend();
                 this.instrumentAbort();
                 this.initialized = true;
@@ -44,10 +43,10 @@ module Microsoft.ApplicationInsights {
             // checking to see that all interested functions on xhr were instrumented
             return this.initialized
 
-            // checking on ajaxData to see that it was not removed in user code
+                // checking on ajaxData to see that it was not removed in user code
                 && (excludeAjaxDataValidation === true || !extensions.IsNullOrUndefined(xhr.ajaxData))
 
-            // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
+                // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
                 && xhr[AjaxMonitor.DisabledPropertyName] !== true;
 
         }
@@ -72,7 +71,7 @@ module Microsoft.ApplicationInsights {
                         (
                             !(<XMLHttpRequestInstrumented>this).ajaxData ||
                             !(<XMLHttpRequestInstrumented>this).ajaxData.xhrMonitoringState.openDone
-                            )) {
+                        )) {
                         ajaxMonitorInstance.openHandler(this, method, url, async);
                     }
                 } catch (e) {
@@ -92,33 +91,10 @@ module Microsoft.ApplicationInsights {
             var ajaxData = new ajaxRecord();
             ajaxData.method = method;
             ajaxData.requestUrl = url;
-            ajaxData.requestSize += url.length;
             ajaxData.xhrMonitoringState.openDone = true
             xhr.ajaxData = ajaxData;
 
             this.attachToOnReadyStateChange(xhr);
-        }
-
-        private instrumentSetRequestHeader() {
-            var originalSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
-            var ajaxMonitorInstance = this;
-            XMLHttpRequest.prototype.setRequestHeader = function (name, value) {
-                try {
-                    if (ajaxMonitorInstance.isMonitoredInstance(this) && !(<XMLHttpRequestInstrumented>this).ajaxData.xhrMonitoringState.setRequestHeaderDone) {                    
-                        // 2 is the length of ": " which is added to each header
-                        this.ajaxData.requestSize += stringUtils.GetLength(name) + stringUtils.GetLength(value) + 2;
-                    }
-                } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.CRITICAL,
-                        "Failed to monitor XMLHttpRequest.setRequestHeader"
-                        + AjaxMonitor.getFailedAjaxDiagnosticsMessage(this)
-                        + ", monitoring data for this ajax call may be incorrect: "
-                        + Microsoft.ApplicationInsights.Util.dump(e));
-                }
-
-                return originalSetRequestHeader.apply(this, arguments);
-            };
         }
 
         private static getFailedAjaxDiagnosticsMessage(xhr: XMLHttpRequestInstrumented): string {
@@ -156,44 +132,7 @@ module Microsoft.ApplicationInsights {
         }
 
         private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
-            if (!extensions.IsNullOrUndefined(content) && !extensions.IsNullOrUndefined(content.length)) {
-
-                // http://www.w3.org/TR/XMLHttpRequest/: If the request method is a case-sensitive match for GET or HEAD act as if data is null.
-                if (xhr.ajaxData.method !== "GET" && xhr.ajaxData.method !== "HEAD") {
-                    xhr.ajaxData.requestSize += content.length;
-                }
-            }
-
-            xhr.ajaxData.requestSentTime = dateTime.Now();
-            xhr.ajaxData.loadingRequest = document.readyState === "loading";
-
-            if (!xhr.ajaxData.xhrMonitoringState.onreadystatechangeCallbackAttached) {
-
-                // IE 8 and below does not support xmlh.addEventListener. 
-                // This is the last place for the browsers that does not support addEventListenener to instrument onreadystatechange
-
-                var ajaxMonitorInstance = this;
-                setTimeout(function () {
-                    try {
-                        if (xhr.readyState === 4) {
-                            // ajax is cached, onreadystatechange didn't fire, but it is completed
-                            ajaxMonitorInstance.collectResponseData(xhr);
-                            ajaxMonitorInstance.onAjaxComplete(xhr)
-                        }
-                        else {
-                            ajaxMonitorInstance.instrumentOnReadyStateChange(xhr);
-                        }
-                    } catch (e) {
-                        _InternalLogging.throwInternalNonUserActionable(
-                            LoggingSeverity.CRITICAL,
-                            "Failed to instrument XMLHttpRequest.onreadystatechange"
-                            + AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr)
-                            + ", monitoring data for this ajax call may be incorrect: "
-                            + Microsoft.ApplicationInsights.Util.dump(e));
-                    }
-                }, 5);
-            }
-
+            xhr.ajaxData.requestSentTime = dateTime.Now();            
             xhr.ajaxData.xhrMonitoringState.sendDone = true;
         }
 
@@ -219,27 +158,14 @@ module Microsoft.ApplicationInsights {
             };
         }
 
-        ///<summary>instrument onreadystatechange callback</summary>
-        ///<returns>True, if onreadystatechange is instrumented, otherwise false</returns>
-        private instrumentOnReadyStateChange(xhr: XMLHttpRequestInstrumented): boolean {
-            var result = false;
-
-            // do not instrument onreadystatechange if it is defined and not a function, because we are not able to call original function in this case, which happends on Firefox 13 and lower
-            if (extensions.IsNullOrUndefined(xhr.onreadystatechange) ||
-                (typeof (xhr.onreadystatechange) === "function" && !xhr.onreadystatechange[AjaxMonitor.instrumentedByAppInsightsName])) {
-                xhr.ajaxData.originalOnreadystatechage = xhr.onreadystatechange;
-                xhr.onreadystatechange = this.onreadystatechangeWrapper(xhr);
-                result = true;
-            }
-
-            return result;
-        }
-
         private attachToOnReadyStateChange(xhr: XMLHttpRequestInstrumented) {
             var ajaxMonitorInstance = this;
             xhr.ajaxData.xhrMonitoringState.onreadystatechangeCallbackAttached = EventHelper.AttachEvent(xhr, "readystatechange", () => {
                 try {
-                    ajaxMonitorInstance.onreadyStateChangeCallback(xhr);
+                    if (ajaxMonitorInstance.isMonitoredInstance(xhr)) {
+                        ajaxMonitorInstance.onReadyStateChangePrefix(xhr);
+                        ajaxMonitorInstance.onReadyStateChangePostfix(xhr);
+                    }
                 } catch (e) {
                     _InternalLogging.throwInternalNonUserActionable(
                         LoggingSeverity.CRITICAL,
@@ -251,65 +177,7 @@ module Microsoft.ApplicationInsights {
             });
         }
 
-        private onreadyStateChangeCallback(xhr: XMLHttpRequestInstrumented) {
-            if (this.isMonitoredInstance(xhr)) {
-                if (!xhr.onreadystatechange || !xhr.onreadystatechange[AjaxMonitor.instrumentedByAppInsightsName]) {
-                    if (xhr.readyState < 3) {
-
-                        // it is possible to define onreadystatechange event after xhr.send method was invoked.
-                        // instrumenting xhr.onreadystatechange in order to measure callback time
-                        this.instrumentOnReadyStateChange(xhr);
-                    }
-                    else {
-
-                        // On Firefox 13- we cannot override readystatechange, because it is not a function. 
-                        // In this case we don't include callback time in Ajax Total time on this browser
-                        this.onReadStateChangePrefix(xhr);
-                        this.onReadyStateChangePostfix(xhr);
-                    }
-                }
-            }
-        }
-
-        private onreadystatechangeWrapper(xhr: XMLHttpRequestInstrumented): () => any {
-            var ajaxMonitorInstance = this;
-            var wrapper = () => {
-                try {
-                    // NOTE: this is onreadystatechange event handler of XMLHttpRequest. Therefore 'this' refers to the current instance of XMLHttpRequest.
-                    if (ajaxMonitorInstance.isMonitoredInstance(xhr)) {
-                        ajaxMonitorInstance.onReadStateChangePrefix(xhr);
-                        try {
-                            if (!extensions.IsNullOrUndefined(xhr.ajaxData.originalOnreadystatechage)) {
-                                xhr.ajaxData.originalOnreadystatechage.call(xhr);
-                            }
-                        } catch (ex) {
-                            xhr.ajaxData.clientFailure = 1;
-                            throw ex;
-                        } finally {
-                            if (!extensions.IsNullOrUndefined(xhr.ajaxData.originalOnreadystatechage)) {
-                                if (xhr.readyState === 4) {
-                                    xhr.ajaxData.callbackFinishedTime = dateTime.Now();
-                                }
-                            }
-
-                            ajaxMonitorInstance.onReadyStateChangePostfix(xhr);
-                        }
-                    }
-                } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.CRITICAL,
-                        "Failed to monitor XMLHttpRequest.onreadystatechange"
-                        + AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr)
-                        + ", monitoring data for this ajax call may be incorrect: "
-                        + Microsoft.ApplicationInsights.Util.dump(e));
-                }
-            }
-            wrapper[AjaxMonitor.instrumentedByAppInsightsName] = true;
-
-            return wrapper;
-        }
-
-        private onReadStateChangePrefix(xhr: XMLHttpRequestInstrumented) {
+        private onReadyStateChangePrefix(xhr: XMLHttpRequestInstrumented) {
             switch (xhr.readyState) {
                 case 3:
                     xhr.ajaxData.responseStartedTime = dateTime.Now();
@@ -335,23 +203,12 @@ module Microsoft.ApplicationInsights {
                     xhr.ajaxData.getPathName(),
                     xhr.ajaxData.ajaxTotalDuration,
                     (+(xhr.ajaxData.status)) < 400
-                    );
+                );
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(
                     LoggingSeverity.CRITICAL,
                     "Failed to complete monitoring of this ajax call: "
                     + Microsoft.ApplicationInsights.Util.dump(e));
-            }
-            finally {
-                try {
-                    EventHelper.DetachEvent(xhr, "readystatechange", this.onreadyStateChangeCallback);
-                    delete xhr.ajaxData;
-                } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.WARNING,
-                        "Failed to rollback instrumentation of current instance of XMLHttpRequest" + AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr) + ": "
-                        + Microsoft.ApplicationInsights.Util.dump(e));
-                }
             }
         }
 
@@ -368,7 +225,7 @@ module Microsoft.ApplicationInsights {
             // http://helpful.knobs-dials.com/index.php/Component_returned_failure_code:_0x80040111_(NS_ERROR_NOT_AVAILABLE)
 
             try {
-                xhr.ajaxData.status = xhr.status;                
+                xhr.ajaxData.status = xhr.status;
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(
                     LoggingSeverity.CRITICAL,

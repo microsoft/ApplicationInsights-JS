@@ -33,28 +33,32 @@ class AutoCollectionTests extends TestClass {
             ].concat(this.poll(() => {
                 return this.verifyAjax(this.errorSpy, [
                     {
-                        commandName: "https://code.jquery.com/jquery-2.1.4.min.js",
+                        name: "https://code.jquery.com/jquery-2.1.4.min.js",
                         success: true,
+                        commandName: "/jquery-2.1.4.min.js",
                         dependencyTypeName: "Ajax",
                         dependencyKind: 1,
                         dependencySource: 2
                     },
                     {
-                        commandName: "http://dc.services.visualstudio.com/v2/track",
+                        name: "http://dc.services.visualstudio.com/v2/track",
+                        success: false,
+                        commandName: "/v2/track",
+                        dependencyTypeName: "Ajax",
+                        dependencyKind: 1,
+                        dependencySource: 2
+                    },
+                    {
+                        name: "http://dc.services.visualstudio.com/v2/track",
+                        commandName: "/v2/track",
                         success: false,
                         dependencyTypeName: "Ajax",
                         dependencyKind: 1,
                         dependencySource: 2
                     },
                     {
-                        commandName: "http://dc.services.visualstudio.com/v2/track",
-                        success: false,
-                        dependencyTypeName: "Ajax",
-                        dependencyKind: 1,
-                        dependencySource: 2
-                    },
-                    {
-                        commandName: "http://dc.services.visualstudio.com/v2/track",
+                        name: "http://dc.services.visualstudio.com/v2/track",
+                        commandName: "/v2/track",
                         success: false,
                         dependencyTypeName: "Ajax",
                         dependencyKind: 1,
@@ -280,6 +284,7 @@ class AutoCollectionTests extends TestClass {
                 var actual = ajaxItems[i];
                 var expected = expectedItems[i];
 
+                Assert.equal(expected.name, actual.name, "Name must match");
                 Assert.equal(expected.commandName, actual.commandName, "CommandName must match");
                 Assert.equal(expected.success, actual.success, "Success property must match");
                 Assert.equal(expected.dependencyTypeName, actual.dependencyTypeName, "DependencyTypeName must match");

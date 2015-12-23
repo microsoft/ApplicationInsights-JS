@@ -12,7 +12,7 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "0.20.1";
+    export var Version = "0.20.3";
 
     export interface IConfig {
         instrumentationKey: string;
@@ -249,8 +249,8 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        public trackAjax(name: string, absoluteUrl: string, totalTime: number, success: boolean) {
-            var dependency = new Telemetry.RemoteDependencyData(name, absoluteUrl, totalTime, success);
+        public trackAjax(absoluteUrl: string, pathName: string, totalTime: number, success: boolean) {
+            var dependency = new Telemetry.RemoteDependencyData(absoluteUrl, pathName, totalTime, success);
             var dependencyData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.RemoteDependencyData>(
                 Telemetry.RemoteDependencyData.dataType, dependency);
             var envelope = new Telemetry.Common.Envelope(dependencyData, "Microsoft.ApplicationInsights." + this.config.instrumentationKey.replace(/-/g, "") + ".RemoteDependency");
