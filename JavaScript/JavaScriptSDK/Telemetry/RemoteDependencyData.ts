@@ -26,18 +26,20 @@ module Microsoft.ApplicationInsights.Telemetry {
             commandName: FieldType.Default,
             dependencyTypeName: FieldType.Default,
             properties: FieldType.Default,
+            resultCode: FieldType.Default
         }
 
         /**
          * Constructs a new instance of the RemoteDependencyData object
          */
-        constructor(name: string, commandName: string, value: number, success: boolean) {
+        constructor(name: string, commandName: string, value: number, success: boolean, resultCode: number) {
             super();
 
             this.name = name;
             this.commandName = commandName;
             this.value = value;
             this.success = success;  
+            this.resultCode = resultCode + "";
                       
             this.dependencyKind = AI.DependencyKind.Http;
             this.dependencyTypeName = "Ajax";

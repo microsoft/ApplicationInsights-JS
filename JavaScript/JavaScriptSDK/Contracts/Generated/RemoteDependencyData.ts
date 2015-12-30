@@ -10,6 +10,8 @@ module AI
     {
         public ver: number;
         public name: string;
+        public id: string;
+        public resultCode: string;
         public kind: AI.DataPointType;
         public value: number;
         public count: number;
