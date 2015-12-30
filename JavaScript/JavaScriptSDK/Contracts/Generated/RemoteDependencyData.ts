@@ -10,6 +10,8 @@ module AI
     {
         public ver: number;
         public name: string;
+        public id: string;
+        public resultCode: string;
         public kind: AI.DataPointType;
         public value: number;
         public count: number;
@@ -27,10 +29,10 @@ module AI
         constructor()
         {
             this.ver = 2;
-            this.kind = AI.DataPointType.Aggregation;
+            this.kind = AI.DataPointType.Measurement;
             this.dependencyKind = AI.DependencyKind.Other;
             this.success = true;
-            this.dependencySource = AI.DependencySourceType.Apmc;
+            this.dependencySource = AI.DependencySourceType.Undefined;
             this.properties = {};
             
             super();

@@ -7,6 +7,7 @@ module AI
         public applicationVersion: string;
         public applicationBuild: string;
         public applicationTypeId: string;
+        public applicationId: string;
         public deviceId: string;
         public deviceIp: string;
         public deviceLanguage: string;
@@ -30,6 +31,7 @@ module AI
         public operationRootId: string;
         public operationSyntheticSource: string;
         public operationIsSynthetic: string;
+        public operationCorrelationVector: string;
         public sessionId: string;
         public sessionIsFirst: string;
         public sessionIsNew: string;
@@ -42,6 +44,13 @@ module AI
         public userAnonymousUserAcquisitionDate: string;
         public userAuthenticatedUserAcquisitionDate: string;
         public sampleRate: string;
+        public cloudName: string;
+        public cloudRoleVer: string;
+        public cloudEnvironment: string;
+        public cloudLocation: string;
+        public cloudDeploymentUnit: string;
+        public serverDeviceOS: string;
+        public serverDeviceOSVer: string;
         public internalSdkVersion: string;
         public internalAgentVersion: string;
         public internalDataCollectorReceivedTime: string;
@@ -57,12 +66,14 @@ module AI
         public internalIsAudit: string;
         public internalTrackingSourceId: string;
         public internalTrackingType: string;
+        public internalIsDiagnosticExample: string;
         
         constructor()
         {
             this.applicationVersion = "ai.application.ver";
             this.applicationBuild = "ai.application.build";
             this.applicationTypeId = "ai.application.typeId";
+            this.applicationId = "ai.application.applicationId";
             this.deviceId = "ai.device.id";
             this.deviceIp = "ai.device.ip";
             this.deviceLanguage = "ai.device.language";
@@ -86,6 +97,7 @@ module AI
             this.operationRootId = "ai.operation.rootId";
             this.operationSyntheticSource = "ai.operation.syntheticSource";
             this.operationIsSynthetic = "ai.operation.isSynthetic";
+            this.operationCorrelationVector = "ai.operation.correlationVector";
             this.sessionId = "ai.session.id";
             this.sessionIsFirst = "ai.session.isFirst";
             this.sessionIsNew = "ai.session.isNew";
@@ -98,6 +110,13 @@ module AI
             this.userAnonymousUserAcquisitionDate = "ai.user.anonUserAcquisitionDate";
             this.userAuthenticatedUserAcquisitionDate = "ai.user.authUserAcquisitionDate";
             this.sampleRate = "ai.sample.sampleRate";
+            this.cloudName = "ai.cloud.name";
+            this.cloudRoleVer = "ai.cloud.roleVer";
+            this.cloudEnvironment = "ai.cloud.environment";
+            this.cloudLocation = "ai.cloud.location";
+            this.cloudDeploymentUnit = "ai.cloud.deploymentUnit";
+            this.serverDeviceOS = "ai.serverDevice.os";
+            this.serverDeviceOSVer = "ai.serverDevice.osVer";
             this.internalSdkVersion = "ai.internal.sdkVersion";
             this.internalAgentVersion = "ai.internal.agentVersion";
             this.internalDataCollectorReceivedTime = "ai.internal.dataCollectorReceivedTime";
@@ -113,6 +132,7 @@ module AI
             this.internalIsAudit = "ai.internal.isAudit";
             this.internalTrackingSourceId = "ai.internal.trackingSourceId";
             this.internalTrackingType = "ai.internal.trackingType";
+            this.internalIsDiagnosticExample = "ai.internal.isDiagnosticExample";
         }
     }
 }

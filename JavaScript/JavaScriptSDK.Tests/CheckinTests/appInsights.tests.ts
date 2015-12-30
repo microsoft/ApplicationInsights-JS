@@ -1609,9 +1609,10 @@ class AppInsightsTests extends TestClass {
                 var url = "http://myurl.com";
                 var duration = 123;
                 var success = false;
+                var resultCode = 404;
 
                 // Act
-                appInsights.trackAjax(name, url, duration, success);
+                appInsights.trackAjax(name, url, duration, success, resultCode);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
@@ -1620,6 +1621,7 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(url, rdd.commandName);
                 Assert.equal(duration, rdd.value);
                 Assert.equal(success, rdd.success);
+                Assert.equal(resultCode, rdd.resultCode);
             }
         });
 
@@ -1634,7 +1636,7 @@ class AppInsightsTests extends TestClass {
                 var expectedEnvelopeName = "Microsoft.ApplicationInsights.BDC8736DD8E84B69B19BB0CE6B66A456.RemoteDependency";
 
                 // Act
-                appInsights.trackAjax("test", "http://asdf", 123, true);
+                appInsights.trackAjax("test", "http://asdf", 123, true, 200);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
