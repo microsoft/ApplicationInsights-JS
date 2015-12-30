@@ -32,7 +32,7 @@ module AI
             this.kind = AI.DataPointType.Measurement;
             this.dependencyKind = AI.DependencyKind.Other;
             this.success = true;
-            this.dependencySource = AI.DependencySourceType.Undefined;
+            this.dependencySource = AI.DependencySourceType.Apmc;
             this.properties = {};
             
             super();
