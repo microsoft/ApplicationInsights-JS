@@ -289,7 +289,7 @@ class AutoCollectionTests extends TestClass {
                 Assert.equal(expected.success, actual.success, "Success property must match");
                 Assert.equal(expected.dependencyTypeName, actual.dependencyTypeName, "DependencyTypeName must match");
                 Assert.equal(expected.dependencyKind, actual.dependencyKind, "DependencyKind must match");
-                Assert.equal(expected.dependencySource, actual.dependencySource, "DependencyType must match");
+                Assert.equal(expected.dependencySource, actual.dependencySource, "DependencySource must match");
             }
 
         }

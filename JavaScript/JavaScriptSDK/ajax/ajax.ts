@@ -43,10 +43,10 @@ module Microsoft.ApplicationInsights {
             // checking to see that all interested functions on xhr were instrumented
             return this.initialized
 
-            // checking on ajaxData to see that it was not removed in user code
+                // checking on ajaxData to see that it was not removed in user code
                 && (excludeAjaxDataValidation === true || !extensions.IsNullOrUndefined(xhr.ajaxData))
 
-            // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
+                // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
                 && xhr[AjaxMonitor.DisabledPropertyName] !== true;
 
         }
@@ -71,7 +71,7 @@ module Microsoft.ApplicationInsights {
                         (
                             !(<XMLHttpRequestInstrumented>this).ajaxData ||
                             !(<XMLHttpRequestInstrumented>this).ajaxData.xhrMonitoringState.openDone
-                            )) {
+                        )) {
                         ajaxMonitorInstance.openHandler(this, method, url, async);
                     }
                 } catch (e) {
@@ -132,7 +132,7 @@ module Microsoft.ApplicationInsights {
         }
 
         private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
-            xhr.ajaxData.requestSentTime = dateTime.Now();
+            xhr.ajaxData.requestSentTime = dateTime.Now();            
             xhr.ajaxData.xhrMonitoringState.sendDone = true;
         }
 
@@ -165,7 +165,7 @@ module Microsoft.ApplicationInsights {
                     if (ajaxMonitorInstance.isMonitoredInstance(xhr)) {
                         if (xhr.readyState === 4) {
                             ajaxMonitorInstance.onAjaxComplete(xhr);
-                        }
+                    }
                     }
                 } catch (e) {
                     _InternalLogging.throwInternalNonUserActionable(
@@ -181,7 +181,7 @@ module Microsoft.ApplicationInsights {
         private onAjaxComplete(xhr: XMLHttpRequestInstrumented) {
             xhr.ajaxData.responseFinishedTime = dateTime.Now();
             xhr.ajaxData.status = xhr.status;
-            xhr.ajaxData.CalculateMetrics();
+                xhr.ajaxData.CalculateMetrics();
 
             if (xhr.ajaxData.ajaxTotalDuration < 0) {
                 _InternalLogging.throwInternalNonUserActionable(
@@ -200,8 +200,9 @@ module Microsoft.ApplicationInsights {
                     xhr.ajaxData.getAbsoluteUrl(),
                     xhr.ajaxData.getPathName(),
                     xhr.ajaxData.ajaxTotalDuration,
-                    (+(xhr.ajaxData.status)) < 400
-                    );
+                    (+(xhr.ajaxData.status)) < 400,
+                    +xhr.ajaxData.status
+                );
 
                 xhr.ajaxData = null;
             }

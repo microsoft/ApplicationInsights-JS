@@ -24,6 +24,16 @@ QUnit.test("Test property RemoteDependencyData.name was created and default is s
     QUnit.ok(temp.name !== null, "RemoteDependencyData.name == null");
 });
 
+QUnit.test("Test property RemoteDependencyData.id was created and default is set", function () {
+    var temp = new AI.RemoteDependencyData();
+    QUnit.ok(temp.id !== null, "RemoteDependencyData.id == null");
+});
+
+QUnit.test("Test property RemoteDependencyData.resultCode was created and default is set", function () {
+    var temp = new AI.RemoteDependencyData();
+    QUnit.ok(temp.resultCode !== null, "RemoteDependencyData.resultCode == null");
+});
+
 QUnit.test("Test property RemoteDependencyData.kind was created and default is set", function () {
     var temp = new AI.RemoteDependencyData();
     QUnit.ok(temp.kind !== null, "RemoteDependencyData.kind == null");
