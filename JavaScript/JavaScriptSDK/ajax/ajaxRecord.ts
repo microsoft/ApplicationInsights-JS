@@ -5,8 +5,8 @@
 module Microsoft.ApplicationInsights {
     "use strict";
 
-    export class XHRMonitoringState {        
-        public openDone: boolean = false;        
+    export class XHRMonitoringState {
+        public openDone: boolean = false;
         public setRequestHeaderDone: boolean = false;
         public sendDone: boolean = false;
         public abortDone: boolean = false;
@@ -15,7 +15,7 @@ module Microsoft.ApplicationInsights {
         public onreadystatechangeCallbackAttached = false;
     }
 
-    export class ajaxRecord {        
+    export class ajaxRecord {
         public completed = false;
         public requestHeadersSize = null;
         public ttfb = null;
@@ -48,7 +48,7 @@ module Microsoft.ApplicationInsights {
 
         //<summary>The original xhr onreadystatechange event</summary>
         public originalOnreadystatechage = null;
-        
+
         public xhrMonitoringState: XHRMonitoringState = new XHRMonitoringState();
 
         //<summary>Determines whether or not JavaScript exception occured in xhr.onreadystatechange code. 1 if occured, otherwise 0.</summary>
@@ -64,19 +64,8 @@ module Microsoft.ApplicationInsights {
 
         public CalculateMetrics = function () {
             var self = this;
-            self.ttfb = dateTime.GetDuration(self.requestSentTime, self.responseStartedTime);
-            self.responseReceivingDuration = dateTime.GetDuration(self.responseStartedTime, self.responseFinishedTime);
-            self.callbackDuration = dateTime.GetDuration(self.responseFinishedTime, self.callbackFinishedTime);
+            self.ajaxTotalDuration = dateTime.GetDuration(self.requestSentTime, self.responseFinishedTime);
+        }
+    };
+};           
 
-            var timeStamps = [self.responseStartedTime, self.responseFinishedTime, self.callbackFinishedTime];
-            for (var i = timeStamps.length - 1; i >= 0; i--) {
-                if (timeStamps[i] !== null) {
-                    self.endTime = timeStamps[i];
-                    self.ajaxTotalDuration = dateTime.GetDuration(self.requestSentTime, self.endTime);
-                    break;
-                }
-            }
-        };
-    };           
-
-}

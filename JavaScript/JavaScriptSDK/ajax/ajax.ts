@@ -43,10 +43,10 @@ module Microsoft.ApplicationInsights {
             // checking to see that all interested functions on xhr were instrumented
             return this.initialized
 
-                // checking on ajaxData to see that it was not removed in user code
+            // checking on ajaxData to see that it was not removed in user code
                 && (excludeAjaxDataValidation === true || !extensions.IsNullOrUndefined(xhr.ajaxData))
 
-                // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
+            // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
                 && xhr[AjaxMonitor.DisabledPropertyName] !== true;
 
         }
@@ -71,7 +71,7 @@ module Microsoft.ApplicationInsights {
                         (
                             !(<XMLHttpRequestInstrumented>this).ajaxData ||
                             !(<XMLHttpRequestInstrumented>this).ajaxData.xhrMonitoringState.openDone
-                        )) {
+                            )) {
                         ajaxMonitorInstance.openHandler(this, method, url, async);
                     }
                 } catch (e) {
@@ -132,7 +132,7 @@ module Microsoft.ApplicationInsights {
         }
 
         private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
-            xhr.ajaxData.requestSentTime = dateTime.Now();            
+            xhr.ajaxData.requestSentTime = dateTime.Now();
             xhr.ajaxData.xhrMonitoringState.sendDone = true;
         }
 
@@ -163,8 +163,9 @@ module Microsoft.ApplicationInsights {
             xhr.ajaxData.xhrMonitoringState.onreadystatechangeCallbackAttached = EventHelper.AttachEvent(xhr, "readystatechange", () => {
                 try {
                     if (ajaxMonitorInstance.isMonitoredInstance(xhr)) {
-                        ajaxMonitorInstance.onReadyStateChangePrefix(xhr);
-                        ajaxMonitorInstance.onReadyStateChangePostfix(xhr);
+                        if (xhr.readyState === 4) {
+                            ajaxMonitorInstance.onAjaxComplete(xhr);
+                        }
                     }
                 } catch (e) {
                     _InternalLogging.throwInternalNonUserActionable(
@@ -177,61 +178,32 @@ module Microsoft.ApplicationInsights {
             });
         }
 
-        private onReadyStateChangePrefix(xhr: XMLHttpRequestInstrumented) {
-            switch (xhr.readyState) {
-                case 3:
-                    xhr.ajaxData.responseStartedTime = dateTime.Now();
-                    break;
-                case 4:
-                    this.collectResponseData(xhr);
-                    break;
-            }
-        }
-
-        private onReadyStateChangePostfix(xhr: XMLHttpRequestInstrumented) {
-            if (xhr.readyState === 4) {
-                this.onAjaxComplete(xhr);
-            }
-        }
-
         private onAjaxComplete(xhr: XMLHttpRequestInstrumented) {
-            try {
-                xhr.ajaxData.CalculateMetrics();
+            xhr.ajaxData.responseFinishedTime = dateTime.Now();
+            xhr.ajaxData.status = xhr.status;
+            xhr.ajaxData.CalculateMetrics();
 
+            if (xhr.ajaxData.ajaxTotalDuration < 0) {
+                _InternalLogging.throwInternalNonUserActionable(
+                    LoggingSeverity.CRITICAL,
+                    "Failed to calculate the duration of the ajax call"
+                    + AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr)
+                    + " ("
+                    + xhr.ajaxData.requestSentTime
+                    + ", "
+                    + xhr.ajaxData.responseFinishedTime
+                    + "), monitoring data for this ajax call won't be sent."
+                    );
+            }
+            else {
                 this.appInsights.trackAjax(
                     xhr.ajaxData.getAbsoluteUrl(),
                     xhr.ajaxData.getPathName(),
                     xhr.ajaxData.ajaxTotalDuration,
                     (+(xhr.ajaxData.status)) < 400
-                );
-            } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(
-                    LoggingSeverity.CRITICAL,
-                    "Failed to complete monitoring of this ajax call: "
-                    + Microsoft.ApplicationInsights.Util.dump(e));
-            }
-        }
+                    );
 
-        private collectResponseData(xhr: XMLHttpRequestInstrumented) {
-            var currentTime = dateTime.Now();
-            xhr.ajaxData.responseFinishedTime = currentTime;
-
-            // Next condition is TRUE sometimes, when ajax request is not authorised by server.
-            if (xhr.ajaxData.responseStartedTime === null) {
-                xhr.ajaxData.responseStartedTime = currentTime;
-            }
-
-            // FF throws exception on accessing properties of xhr when network error occured during ajax call
-            // http://helpful.knobs-dials.com/index.php/Component_returned_failure_code:_0x80040111_(NS_ERROR_NOT_AVAILABLE)
-
-            try {
-                xhr.ajaxData.status = xhr.status;
-            } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(
-                    LoggingSeverity.CRITICAL,
-                    "Failed to collect response data"
-                    + AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr) + ": "
-                    + Microsoft.ApplicationInsights.Util.dump(e));
+                xhr.ajaxData = null;
             }
         }
 
