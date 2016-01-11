@@ -188,29 +188,49 @@ class AjaxTests extends TestClass {
         this.testCase({
             name: "Ajax: test ajax duration is calculated correctly",
             test: () => {
-                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
-                // tick to set the initial time be non zero
-                this.clock.tick(23);
+                var initialPerformance = window.performance;
+                try {
+                    // Mocking window performance (sinon doesn't have it).
+                    // tick() is similar to sinon's clock.tick()
+                    window.performance = <any>{
+                        current: 0,
+
+                        now: function () {
+                            return this.current;
+                        },
+
+                        tick: function (ms: number) {
+                            this.current += ms;
+                        },
+
+                        timing: initialPerformance.timing
+                    };
+
+                    var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
+                    // tick to set the initial time be non zero
+                    (<any>window.performance).tick(23);
                 
-                // Act
-                var xhr = new XMLHttpRequest();
-                var clock = this.clock;
-                var expectedResponseDuration = 50;
-                xhr.onreadystatechange = () => {
-                    if (xhr.readyState == 3) {
-                        clock.tick(expectedResponseDuration);
+                    // Act
+                    var xhr = new XMLHttpRequest();
+                    var clock = this.clock;
+                    var expectedResponseDuration = 50;
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState == 3) {
+                            (<any>window.performance).tick(expectedResponseDuration);
+                        }
                     }
+                    xhr.open("GET", "/bla");
+                    xhr.send();
+                    // Emulate response                
+                    (<any>xhr).respond(404, {}, "");
+
+                    // Assert
+                    Assert.ok(this.trackAjaxSpy.calledOnce, "TrackAjax should be called");
+                    Assert.equal(expectedResponseDuration, this.trackAjaxSpy.args[0][2], "Ajax duration should match expected duration");
+                } finally {
+                    window.performance = initialPerformance;
                 }
-                xhr.open("GET", "/bla");
-                xhr.send();
-                // Emulate response                
-                (<any>xhr).respond(404, {}, "");
-
-                // Assert
-                Assert.ok(this.trackAjaxSpy.calledOnce, "TrackAjax should be called");
-                Assert.equal(expectedResponseDuration, this.trackAjaxSpy.args[0][2], "Ajax duration should match expected duration");
-
-            }
+             }
         });
 
         this.testCase({
@@ -223,10 +243,10 @@ class AjaxTests extends TestClass {
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "/bla");
                 xhr.send();
-                                
-                try {                    
+
+                try {
                     xhr.send();
-                } catch (e) {}
+                } catch (e) { }
                                 
 
                 // Assert
@@ -242,7 +262,7 @@ class AjaxTests extends TestClass {
                 
                 // Act
                 var xhr = new XMLHttpRequest();
-                xhr.open("GET", "/bla");                
+                xhr.open("GET", "/bla");
 
                 try {
                     xhr.open("GET", "/bla");

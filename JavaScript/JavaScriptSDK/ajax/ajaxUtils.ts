@@ -31,9 +31,14 @@ module Microsoft.ApplicationInsights {
 
     export class dateTime {
         ///<summary>Return the number of milliseconds since 1970/01/01 in local timezon</summary>
-        public static Now = function () {
-            return new Date().getTime();
-        }
+        public static Now = (window.performance && window.performance.now) ?
+            function () {
+                return performance.now();
+            }
+            :
+            function () {
+                return new Date().getTime();
+            }
 
         ///<summary>Gets duration between two timestamps</summary>
         public static GetDuration = function (start, end) {
