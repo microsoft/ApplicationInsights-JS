@@ -213,6 +213,10 @@ Values that control how the telemetry data is sent.
         // If true, default behavior of trackPageView is changed to record end of page view duration interval when 
         // trackPageView is called.
         overridePageViewDuration: boolean;
+        
+        // Default 20 - controls how many ajax calls will be monitored per page view.
+        // Set to -1 to monitor all ajax calls on the page.
+        maxAjaxCallsPerView: number;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.
