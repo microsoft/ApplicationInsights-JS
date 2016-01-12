@@ -317,7 +317,7 @@ module Microsoft.ApplicationInsights {
         * happens in a script from other domain (cross origin, CORS).		
         */
         public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
-            return (message == "Script error." || message == "Script error") && error == null;
+            return (message === "Script error." || message === "Script error") && error === null;
         }
 
         /**
