@@ -28,7 +28,8 @@ class InitializationTests extends TestClass {
             autoTrackPageVisitTime: false,
             samplingPercentage: 33,
             disableAjaxTracking: true,
-            overridePageViewDuration: false
+            overridePageViewDuration: false,
+            maxAjaxCallsPerView: 44
         };
 
         // set default values
@@ -69,7 +70,8 @@ class InitializationTests extends TestClass {
                     disableTelemetry: undefined,
                     verboseLogging: undefined,
                     diagnosticLogInterval: undefined,
-                    samplingPercentage: undefined
+                    samplingPercentage: undefined,
+                    maxAjaxCallsPerView: undefined
                 };
 
                 var snippet = <Microsoft.ApplicationInsights.Snippet> {
@@ -90,6 +92,7 @@ class InitializationTests extends TestClass {
                 Assert.ok(!init.config.verboseLogging);
                 Assert.equal(10000, init.config.diagnosticLogInterval);
                 Assert.equal(100, init.config.samplingPercentage);
+                Assert.equal(20, init.config.maxAjaxCallsPerView);
             }
         });
 
@@ -116,6 +119,7 @@ class InitializationTests extends TestClass {
                 Assert.ok(init.config.verboseLogging);
                 Assert.equal(1, init.config.diagnosticLogInterval);
                 Assert.equal(33, init.config.samplingPercentage);
+                Assert.equal(44, init.config.maxAjaxCallsPerView);
             }
         });
 

@@ -164,6 +164,8 @@ module Microsoft.ApplicationInsights {
                 Util.stringToBoolOrDefault(config.disableAjaxTracking) :
                 false;
 
+            config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 20;
+
             return config;
         }
     }
