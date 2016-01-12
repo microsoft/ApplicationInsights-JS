@@ -15,7 +15,7 @@ module Microsoft.ApplicationInsights {
                     return window.localStorage;
                 } else {
                     return null;
-                }   
+                }
             } catch (e) {
                 _InternalLogging.warnToConsole('Failed to get client localStorage: ' + e.message);
                 return null;
@@ -37,7 +37,7 @@ module Microsoft.ApplicationInsights {
          *  @param {string} name - the name of the object to get from storage
          *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
          */
-        public static getStorage(name:string):string {
+        public static getStorage(name: string): string {
             var storage = Util._getStorageObject();
             if (storage !== null) {
                 try {
@@ -56,7 +56,7 @@ module Microsoft.ApplicationInsights {
          *  @param {string} data - the contents of the object to set in storage
          *  @returns {boolean} True if the storage object could be written.
          */
-        public static setStorage(name:string, data:string):boolean {
+        public static setStorage(name: string, data: string): boolean {
             var storage = Util._getStorageObject();
             if (storage !== null) {
                 try {
@@ -75,7 +75,7 @@ module Microsoft.ApplicationInsights {
          *  @param {string} name - the name of the object to remove from storage
          *  @returns {boolean} True if the storage object could be removed.
          */
-        public static removeStorage(name: string):boolean {
+        public static removeStorage(name: string): boolean {
             var storage = Util._getStorageObject();
             if (storage !== null) {
                 try {
@@ -317,11 +317,7 @@ module Microsoft.ApplicationInsights {
         * happens in a script from other domain (cross origin, CORS).		
         */
         public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
-            return (message == "Script error." || message == "Script error")
-                && url == ""
-                && lineNumber == 0
-                && columnNumber == 0
-                && error == null;
+            return (message === "Script error." || message === "Script error") && error === null;
         }
 
         /**
@@ -359,7 +355,7 @@ module Microsoft.ApplicationInsights {
             } else { // if all else fails
                 return false;
             }
-            
+
             return true;
         }
     }
