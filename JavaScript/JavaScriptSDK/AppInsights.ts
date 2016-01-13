@@ -51,9 +51,12 @@ module Microsoft.ApplicationInsights {
      */
     export class AppInsights implements IAppInsightsInternal {
 
+        // Counts number of trackAjax invokations.
         // By default we only monitor X ajax call per view to avoid too much load.
         // Default value is set in config.
-        private _ajaxCallsSent: number = 0;
+        // This counter keeps increasing even after the limit is reached.
+        private _trackAjaxAttempts: number = 0;
+
         private _eventTracking: Timing;
         private _pageTracking: Timing;
         private _pageViewManager: Microsoft.ApplicationInsights.Telemetry.PageViewManager;
@@ -137,7 +140,7 @@ module Microsoft.ApplicationInsights {
             this.context.track(envelope);
 
             // reset ajaxes counter
-            this._ajaxCallsSent = 0;
+            this._trackAjaxAttempts = 0;
         }
 
         public sendPageViewPerformanceInternal(pageViewPerformance: ApplicationInsights.Telemetry.PageViewPerformance) {
@@ -258,17 +261,18 @@ module Microsoft.ApplicationInsights {
 
         public trackAjax(absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
             if (this.config.maxAjaxCallsPerView === -1 ||
-                this._ajaxCallsSent < this.config.maxAjaxCallsPerView) {
+                this._trackAjaxAttempts < this.config.maxAjaxCallsPerView) {
                 var dependency = new Telemetry.RemoteDependencyData(absoluteUrl, pathName, totalTime, success, resultCode);
                 var dependencyData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.RemoteDependencyData>(
                     Telemetry.RemoteDependencyData.dataType, dependency);
                 var envelope = new Telemetry.Common.Envelope(dependencyData, "Microsoft.ApplicationInsights." + this.config.instrumentationKey.replace(/-/g, "") + ".RemoteDependency");
                 this.context.track(envelope);
-                ++this._ajaxCallsSent;
-            } else {
+            } else if (this._trackAjaxAttempts === this.config.maxAjaxCallsPerView) {                
                 _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL,
                     "Maximum ajax per page view limit reached, ajax monitoring is paused until the next trackPageView(). In order to increase the limit set the maxAjaxCallsPerView configuration parameter.");
             }
+                                    
+            ++this._trackAjaxAttempts;
         }
 
         /**

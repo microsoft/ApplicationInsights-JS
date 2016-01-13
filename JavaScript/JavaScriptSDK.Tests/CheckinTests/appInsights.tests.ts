@@ -1687,6 +1687,30 @@ class AppInsightsTests extends TestClass {
             }
         });
 
+        this.testCase({
+            name: "trackAjax - only 1 user actionable trace about ajaxes limit per view",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.stub(appInsights.context, "track");
+                var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");                
+
+                // Act
+                for (var i = 0; i < 20; ++i) {
+                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                }
+                
+                loggingSpy.reset();
+
+                for (var i = 0; i < 100; ++i) {
+                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                }
+
+                // Assert
+                Assert.equal(1, loggingSpy.callCount, "Expected 1 invokation of internal logging");
+            }
+        });
+
 
         this.testCase({
             name: "trackAjax - '-1' means no ajax per view limit",
