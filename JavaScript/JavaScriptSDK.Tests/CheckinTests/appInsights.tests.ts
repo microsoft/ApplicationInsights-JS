@@ -22,7 +22,8 @@ class AppInsightsTests extends TestClass {
             autoTrackPageVisitTime: false,
             samplingPercentage: 100,
             disableAjaxTracking: true,
-            overridePageViewDuration: false
+            overridePageViewDuration: false,
+            maxAjaxCallsPerView: 20
         };
 
         // set default values
@@ -96,7 +97,7 @@ class AppInsightsTests extends TestClass {
                     action();
                     this.clock.tick(1);
                     Assert.ok(senderStub.notCalled, "sender was not called called for: " + action);
-                    
+
                 };
 
                 // act
@@ -661,7 +662,7 @@ class AppInsightsTests extends TestClass {
             name: "AppInsightsTests: trackPageView sends custom duration when configured by user",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
-                snippet.overridePageViewDuration = true;                
+                snippet.overridePageViewDuration = true;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
                 var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
                 var stub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",
@@ -790,7 +791,7 @@ class AppInsightsTests extends TestClass {
                     () => { return false; });
                 
                 // act
-                appInsights.trackPageView();                
+                appInsights.trackPageView();
                 this.clock.tick(100);
 
                 // assert
@@ -812,7 +813,7 @@ class AppInsightsTests extends TestClass {
                 appInsights.trackException(<any>[new Error()]);
                 Assert.ok(trackStub.calledTwice, "array of exceptions is tracked");
 
-                
+
             }
         });
 
@@ -884,8 +885,8 @@ class AppInsightsTests extends TestClass {
                 sut._onerror("any message", "any://url", 420, 42, new Error());
 
                 Assert.ok(dumpSpy.calledWith(unexpectedError));
-                
-                
+
+
             }
         });
 
@@ -903,8 +904,8 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(dumpSpy.returnValues[0].indexOf("message: 'my cool message'") != -1);
                 Assert.ok(dumpSpy.returnValues[0].indexOf("name: 'Error'") != -1);
 
-                
-                
+
+
             }
         });
 
@@ -922,9 +923,9 @@ class AppInsightsTests extends TestClass {
 
                 var logMessage: string = throwInternalNonUserActionableSpy.getCall(0).args[1];
                 Assert.notEqual(-1, logMessage.indexOf(expectedErrorDump));
-                
-                
-                
+
+
+
             }
         });
 
@@ -941,7 +942,7 @@ class AppInsightsTests extends TestClass {
                 // assert
                 Assert.equal(document.URL, (<any>trackSpy.args[0][0]).data.baseData.properties.url);
 
-                
+
             }
         });
 
@@ -960,7 +961,7 @@ class AppInsightsTests extends TestClass {
                 // properties are passed as a 3rd parameter
                 Assert.equal(document.URL, (<any>trackExceptionSpy.args[0][2]).url);
 
-                
+
             }
         });
 
@@ -1642,6 +1643,91 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(trackStub.called, "Track should be called");
                 var envelope = trackStub.args[0][0];
                 Assert.equal(expectedEnvelopeName, envelope.name, "Envelope name should include instrumentation key without dashes");
+            }
+        });
+
+        this.testCase({
+            name: "trackAjax - by default no more than 20 ajaxes per view",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.stub(appInsights.context, "track");
+
+                // Act
+                for (var i = 0; i < 100; ++i) {
+                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                }
+
+                // Assert
+                Assert.equal(20, trackStub.callCount, "Expected 20 invokations of trackAjax");
+            }
+        });
+
+        this.testCase({
+            name: "trackAjax - trackPageView resets counter of sent ajaxes",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.stub(appInsights.context, "track");
+
+                // Act
+                for (var i = 0; i < 100; ++i) {
+                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                }
+
+                appInsights.sendPageViewInternal("asdf", "http://microsoft.com", 123);
+                trackStub.reset();
+
+                for (var i = 0; i < 100; ++i) {
+                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                }
+
+                // Assert
+                Assert.equal(20, trackStub.callCount, "Expected 20 invokations of trackAjax");
+            }
+        });
+
+        this.testCase({
+            name: "trackAjax - only 1 user actionable trace about ajaxes limit per view",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.stub(appInsights.context, "track");
+                var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");                
+
+                // Act
+                for (var i = 0; i < 20; ++i) {
+                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                }
+                
+                loggingSpy.reset();
+
+                for (var i = 0; i < 100; ++i) {
+                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                }
+
+                // Assert
+                Assert.equal(1, loggingSpy.callCount, "Expected 1 invokation of internal logging");
+            }
+        });
+
+
+        this.testCase({
+            name: "trackAjax - '-1' means no ajax per view limit",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.maxAjaxCallsPerView = -1;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.stub(appInsights.context, "track");
+                var ajaxCallsCount = 1000;
+
+                // Act
+                for (var i = 0; i < ajaxCallsCount; ++i) {
+                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                }
+
+                // Assert
+                Assert.equal(ajaxCallsCount, trackStub.callCount, "Expected " + ajaxCallsCount + " invokations of trackAjax (no limit)");
             }
         });
     }

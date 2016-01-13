@@ -12,7 +12,7 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "0.21.2";
+    export var Version = "0.21.4";
 
     export interface IConfig {
         instrumentationKey: string;
@@ -33,6 +33,7 @@ module Microsoft.ApplicationInsights {
         autoTrackPageVisitTime: boolean;
         disableAjaxTracking: boolean;
         overridePageViewDuration: boolean;
+        maxAjaxCallsPerView: number;
     }
 
     /**
@@ -49,6 +50,12 @@ module Microsoft.ApplicationInsights {
      * Learn more: http://go.microsoft.com/fwlink/?LinkID=401493
      */
     export class AppInsights implements IAppInsightsInternal {
+
+        // Counts number of trackAjax invokations.
+        // By default we only monitor X ajax call per view to avoid too much load.
+        // Default value is set in config.
+        // This counter keeps increasing even after the limit is reached.
+        private _trackAjaxAttempts: number = 0;
 
         private _eventTracking: Timing;
         private _pageTracking: Timing;
@@ -131,6 +138,9 @@ module Microsoft.ApplicationInsights {
             var envelope = new Telemetry.Common.Envelope(data, Telemetry.PageView.envelopeType);
 
             this.context.track(envelope);
+
+            // reset ajaxes counter
+            this._trackAjaxAttempts = 0;
         }
 
         public sendPageViewPerformanceInternal(pageViewPerformance: ApplicationInsights.Telemetry.PageViewPerformance) {
@@ -250,11 +260,19 @@ module Microsoft.ApplicationInsights {
         }
 
         public trackAjax(absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
-            var dependency = new Telemetry.RemoteDependencyData(absoluteUrl, pathName, totalTime, success, resultCode);
-            var dependencyData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.RemoteDependencyData>(
-                Telemetry.RemoteDependencyData.dataType, dependency);
-            var envelope = new Telemetry.Common.Envelope(dependencyData, "Microsoft.ApplicationInsights." + this.config.instrumentationKey.replace(/-/g, "") + ".RemoteDependency");
-            this.context.track(envelope);
+            if (this.config.maxAjaxCallsPerView === -1 ||
+                this._trackAjaxAttempts < this.config.maxAjaxCallsPerView) {
+                var dependency = new Telemetry.RemoteDependencyData(absoluteUrl, pathName, totalTime, success, resultCode);
+                var dependencyData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.RemoteDependencyData>(
+                    Telemetry.RemoteDependencyData.dataType, dependency);
+                var envelope = new Telemetry.Common.Envelope(dependencyData, "Microsoft.ApplicationInsights." + this.config.instrumentationKey.replace(/-/g, "") + ".RemoteDependency");
+                this.context.track(envelope);
+            } else if (this._trackAjaxAttempts === this.config.maxAjaxCallsPerView) {                
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL,
+                    "Maximum ajax per page view limit reached, ajax monitoring is paused until the next trackPageView(). In order to increase the limit set the maxAjaxCallsPerView configuration parameter.");
+            }
+                                    
+            ++this._trackAjaxAttempts;
         }
 
         /**
