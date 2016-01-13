@@ -214,7 +214,7 @@ Values that control how the telemetry data is sent.
         // trackPageView is called.
         overridePageViewDuration: boolean;
         
-        // Default 20 - controls how many ajax calls will be monitored per page view.
+        // Default 500 - controls how many ajax calls will be monitored per page view.
         // Set to -1 to monitor all ajax calls on the page.
         maxAjaxCallsPerView: number;
     }
