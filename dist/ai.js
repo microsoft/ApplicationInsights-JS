@@ -51,7 +51,7 @@ var Microsoft;
                 if (this._areInternalMessagesThrottled()) {
                     return;
                 }
-                if (this.verboseLogging() || severity === 0 /* CRITICAL */) {
+                if (this.verboseLogging() || severity === LoggingSeverity.CRITICAL) {
                     this.queue.push(message);
                     this._messageCount++;
                 }
@@ -76,6 +76,7 @@ var Microsoft;
         ApplicationInsights._InternalLogging = _InternalLogging;
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="./logging.ts" />
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -107,7 +108,7 @@ var Microsoft;
                         return storage.getItem(name);
                     }
                     catch (e) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, "Browser failed read of local storage." + Util.dump(e));
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "Browser failed read of local storage." + Util.dump(e));
                     }
                 }
                 return null;
@@ -120,7 +121,7 @@ var Microsoft;
                         return true;
                     }
                     catch (e) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, "Browser failed write to local storage." + Util.dump(e));
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "Browser failed write to local storage." + Util.dump(e));
                     }
                 }
                 return false;
@@ -133,7 +134,7 @@ var Microsoft;
                         return true;
                     }
                     catch (e) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, "Browser failed removal of local storage item." + Util.dump(e));
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "Browser failed removal of local storage item." + Util.dump(e));
                     }
                 }
                 return false;
@@ -162,7 +163,7 @@ var Microsoft;
                         return storage.getItem(name);
                     }
                     catch (e) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Browser failed read of session storage." + Util.dump(e));
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Browser failed read of session storage." + Util.dump(e));
                     }
                 }
                 return null;
@@ -175,7 +176,7 @@ var Microsoft;
                         return true;
                     }
                     catch (e) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Browser failed write to session storage." + Util.dump(e));
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Browser failed write to session storage." + Util.dump(e));
                     }
                 }
                 return false;
@@ -188,7 +189,7 @@ var Microsoft;
                         return true;
                     }
                     catch (e) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Browser failed removal of session storage item." + Util.dump(e));
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Browser failed removal of session storage item." + Util.dump(e));
                     }
                 }
                 return false;
@@ -226,15 +227,16 @@ var Microsoft;
                     return str;
                 return str.replace(/^\s+|\s+$/g, "");
             };
-            Util.newGuid = function () {
-                var hexValues = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"];
-                var oct = "", tmp;
-                for (var a = 0; a < 4; a++) {
-                    tmp = (4294967296 * Math.random()) | 0;
-                    oct += hexValues[tmp & 0xF] + hexValues[tmp >> 4 & 0xF] + hexValues[tmp >> 8 & 0xF] + hexValues[tmp >> 12 & 0xF] + hexValues[tmp >> 16 & 0xF] + hexValues[tmp >> 20 & 0xF] + hexValues[tmp >> 24 & 0xF] + hexValues[tmp >> 28 & 0xF];
+            Util.newId = function () {
+                var base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+                var result = "";
+                var random = Math.random() * 1073741824;
+                while (random > 0) {
+                    var char = base64chars.charAt(random % 64);
+                    result += char;
+                    random = Math.floor(random / 64);
                 }
-                var clockSequenceHi = hexValues[8 + (Math.random() * 4) | 0];
-                return oct.substr(0, 8) + "-" + oct.substr(9, 4) + "-4" + oct.substr(13, 3) + "-" + clockSequenceHi + oct.substr(16, 3) + "-" + oct.substr(19, 12);
+                return result;
             };
             Util.isArray = function (obj) {
                 return Object.prototype.toString.call(obj) === "[object Array]";
@@ -258,7 +260,14 @@ var Microsoft;
                             }
                             return r;
                         }
-                        return date.getUTCFullYear() + "-" + pad(date.getUTCMonth() + 1) + "-" + pad(date.getUTCDate()) + "T" + pad(date.getUTCHours()) + ":" + pad(date.getUTCMinutes()) + ":" + pad(date.getUTCSeconds()) + "." + String((date.getUTCMilliseconds() / 1000).toFixed(3)).slice(2, 5) + "Z";
+                        return date.getUTCFullYear()
+                            + "-" + pad(date.getUTCMonth() + 1)
+                            + "-" + pad(date.getUTCDate())
+                            + "T" + pad(date.getUTCHours())
+                            + ":" + pad(date.getUTCMinutes())
+                            + ":" + pad(date.getUTCSeconds())
+                            + "." + String((date.getUTCMilliseconds() / 1000).toFixed(3)).slice(2, 5)
+                            + "Z";
                     }
                 }
             };
@@ -277,7 +286,7 @@ var Microsoft;
                 return hour + ":" + min + ":" + sec + "." + ms;
             };
             Util.isCrossOriginError = function (message, url, lineNumber, columnNumber, error) {
-                return (message == "Script error." || message == "Script error") && url == "" && lineNumber == 0 && columnNumber == 0 && error == null;
+                return (message === "Script error." || message === "Script error") && error === null;
             };
             Util.dump = function (object) {
                 var objectTypeDump = Object.prototype.toString.call(object);
@@ -295,8 +304,8 @@ var Microsoft;
                 if (window.addEventListener) {
                     window.addEventListener(eventName, callback, false);
                 }
-                else if (window.attachEvent) {
-                    window.attachEvent(verbEventName, callback);
+                else if (window["attachEvent"]) {
+                    window["attachEvent"].call(verbEventName, callback);
                 }
                 else {
                     return false;
@@ -308,13 +317,364 @@ var Microsoft;
             return Util;
         })();
         ApplicationInsights.Util = Util;
+        var UrlHelper = (function () {
+            function UrlHelper() {
+            }
+            UrlHelper.parseUrl = function (url) {
+                if (!UrlHelper.htmlAnchorElement) {
+                    UrlHelper.htmlAnchorElement = UrlHelper.document.createElement('a');
+                }
+                UrlHelper.htmlAnchorElement.href = url;
+                return UrlHelper.htmlAnchorElement;
+            };
+            UrlHelper.getAbsoluteUrl = function (url) {
+                var result;
+                var a = UrlHelper.parseUrl(url);
+                if (a) {
+                    result = a.href;
+                }
+                return result;
+            };
+            UrlHelper.getPathName = function (url) {
+                var result;
+                var a = UrlHelper.parseUrl(url);
+                if (a) {
+                    result = a.pathname;
+                }
+                return result;
+            };
+            UrlHelper.document = typeof document !== "undefined" ? document : {};
+            return UrlHelper;
+        })();
+        ApplicationInsights.UrlHelper = UrlHelper;
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="../logging.ts" />
+/// <reference path="../util.ts" />
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
     (function (ApplicationInsights) {
         "use strict";
+        var extensions = (function () {
+            function extensions() {
+            }
+            extensions.IsNullOrUndefined = function (obj) {
+                return typeof (obj) === "undefined" || obj === null;
+            };
+            return extensions;
+        })();
+        ApplicationInsights.extensions = extensions;
+        var stringUtils = (function () {
+            function stringUtils() {
+            }
+            stringUtils.GetLength = function (strObject) {
+                var res = 0;
+                if (!extensions.IsNullOrUndefined(strObject)) {
+                    var stringified = "";
+                    try {
+                        stringified = strObject.toString();
+                    }
+                    catch (ex) {
+                    }
+                    res = stringified.length;
+                    res = isNaN(res) ? 0 : res;
+                }
+                return res;
+            };
+            return stringUtils;
+        })();
+        ApplicationInsights.stringUtils = stringUtils;
+        var dateTime = (function () {
+            function dateTime() {
+            }
+            dateTime.Now = (window.performance && window.performance.now) ?
+                function () {
+                    return performance.now();
+                }
+                :
+                    function () {
+                        return new Date().getTime();
+                    };
+            dateTime.GetDuration = function (start, end) {
+                var result = null;
+                if (start !== 0 && end !== 0 && !extensions.IsNullOrUndefined(start) && !extensions.IsNullOrUndefined(end)) {
+                    result = end - start;
+                }
+                return result;
+            };
+            return dateTime;
+        })();
+        ApplicationInsights.dateTime = dateTime;
+        var EventHelper = (function () {
+            function EventHelper() {
+            }
+            EventHelper.AttachEvent = function (obj, eventNameWithoutOn, handlerRef) {
+                var result = false;
+                if (!extensions.IsNullOrUndefined(obj)) {
+                    if (!extensions.IsNullOrUndefined(obj.attachEvent)) {
+                        obj.attachEvent("on" + eventNameWithoutOn, handlerRef);
+                        result = true;
+                    }
+                    else {
+                        if (!extensions.IsNullOrUndefined(obj.addEventListener)) {
+                            obj.addEventListener(eventNameWithoutOn, handlerRef, false);
+                            result = true;
+                        }
+                    }
+                }
+                return result;
+            };
+            EventHelper.DetachEvent = function (obj, eventNameWithoutOn, handlerRef) {
+                if (!extensions.IsNullOrUndefined(obj)) {
+                    if (!extensions.IsNullOrUndefined(obj.detachEvent)) {
+                        obj.detachEvent("on" + eventNameWithoutOn, handlerRef);
+                    }
+                    else {
+                        if (!extensions.IsNullOrUndefined(obj.removeEventListener)) {
+                            obj.removeEventListener(eventNameWithoutOn, handlerRef, false);
+                        }
+                    }
+                }
+            };
+            return EventHelper;
+        })();
+        ApplicationInsights.EventHelper = EventHelper;
+    })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
+})(Microsoft || (Microsoft = {}));
+/// <reference path="../logging.ts" />
+/// <reference path="../util.ts" />
+/// <reference path="./ajaxUtils.ts" />
+var Microsoft;
+(function (Microsoft) {
+    var ApplicationInsights;
+    (function (ApplicationInsights) {
+        "use strict";
+        var XHRMonitoringState = (function () {
+            function XHRMonitoringState() {
+                this.openDone = false;
+                this.setRequestHeaderDone = false;
+                this.sendDone = false;
+                this.abortDone = false;
+                this.onreadystatechangeCallbackAttached = false;
+            }
+            return XHRMonitoringState;
+        })();
+        ApplicationInsights.XHRMonitoringState = XHRMonitoringState;
+        var ajaxRecord = (function () {
+            function ajaxRecord() {
+                this.completed = false;
+                this.requestHeadersSize = null;
+                this.ttfb = null;
+                this.responseReceivingDuration = null;
+                this.callbackDuration = null;
+                this.ajaxTotalDuration = null;
+                this.aborted = null;
+                this.pageUrl = null;
+                this.requestUrl = null;
+                this.requestSize = 0;
+                this.method = null;
+                this.status = null;
+                this.requestSentTime = null;
+                this.responseStartedTime = null;
+                this.responseFinishedTime = null;
+                this.callbackFinishedTime = null;
+                this.endTime = null;
+                this.originalOnreadystatechage = null;
+                this.xhrMonitoringState = new XHRMonitoringState();
+                this.clientFailure = 0;
+                this.CalculateMetrics = function () {
+                    var self = this;
+                    self.ajaxTotalDuration = ApplicationInsights.dateTime.GetDuration(self.requestSentTime, self.responseFinishedTime);
+                };
+            }
+            ajaxRecord.prototype.getAbsoluteUrl = function () {
+                return this.requestUrl ? ApplicationInsights.UrlHelper.getAbsoluteUrl(this.requestUrl) : null;
+            };
+            ajaxRecord.prototype.getPathName = function () {
+                return this.requestUrl ? ApplicationInsights.UrlHelper.getPathName(this.requestUrl) : null;
+            };
+            return ajaxRecord;
+        })();
+        ApplicationInsights.ajaxRecord = ajaxRecord;
+        ;
+    })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
+})(Microsoft || (Microsoft = {}));
+;
+/// <reference path="../logging.ts" />
+/// <reference path="../util.ts" />
+/// <reference path="./ajaxUtils.ts" />
+/// <reference path="./ajaxRecord.ts" />
+var Microsoft;
+(function (Microsoft) {
+    var ApplicationInsights;
+    (function (ApplicationInsights) {
+        "use strict";
+        var AjaxMonitor = (function () {
+            function AjaxMonitor(appInsights) {
+                this.appInsights = appInsights;
+                this.initialized = false;
+                this.Init();
+            }
+            AjaxMonitor.prototype.Init = function () {
+                if (this.supportsMonitoring()) {
+                    this.instrumentOpen();
+                    this.instrumentSend();
+                    this.instrumentAbort();
+                    this.initialized = true;
+                }
+            };
+            AjaxMonitor.prototype.isMonitoredInstance = function (xhr, excludeAjaxDataValidation) {
+                return this.initialized
+                    && (excludeAjaxDataValidation === true || !ApplicationInsights.extensions.IsNullOrUndefined(xhr.ajaxData))
+                    && xhr[AjaxMonitor.DisabledPropertyName] !== true;
+            };
+            AjaxMonitor.prototype.supportsMonitoring = function () {
+                var result = false;
+                if (!ApplicationInsights.extensions.IsNullOrUndefined(XMLHttpRequest)) {
+                    result = true;
+                }
+                return result;
+            };
+            AjaxMonitor.prototype.instrumentOpen = function () {
+                var originalOpen = XMLHttpRequest.prototype.open;
+                var ajaxMonitorInstance = this;
+                XMLHttpRequest.prototype.open = function (method, url, async) {
+                    try {
+                        if (ajaxMonitorInstance.isMonitoredInstance(this, true) &&
+                            (!this.ajaxData ||
+                                !this.ajaxData.xhrMonitoringState.openDone)) {
+                            ajaxMonitorInstance.openHandler(this, method, url, async);
+                        }
+                    }
+                    catch (e) {
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Failed to monitor XMLHttpRequest.open"
+                            + AjaxMonitor.getFailedAjaxDiagnosticsMessage(this)
+                            + ", monitoring data for this ajax call may be incorrect: "
+                            + Microsoft.ApplicationInsights.Util.dump(e));
+                    }
+                    return originalOpen.apply(this, arguments);
+                };
+            };
+            AjaxMonitor.prototype.openHandler = function (xhr, method, url, async) {
+                var ajaxData = new ApplicationInsights.ajaxRecord();
+                ajaxData.method = method;
+                ajaxData.requestUrl = url;
+                ajaxData.xhrMonitoringState.openDone = true;
+                xhr.ajaxData = ajaxData;
+                this.attachToOnReadyStateChange(xhr);
+            };
+            AjaxMonitor.getFailedAjaxDiagnosticsMessage = function (xhr) {
+                var result = "";
+                try {
+                    if (!ApplicationInsights.extensions.IsNullOrUndefined(xhr) &&
+                        !ApplicationInsights.extensions.IsNullOrUndefined(xhr.ajaxData) &&
+                        !ApplicationInsights.extensions.IsNullOrUndefined(xhr.ajaxData.requestUrl)) {
+                        result += "(url: '" + xhr.ajaxData.requestUrl + "')";
+                    }
+                }
+                catch (e) { }
+                return result;
+            };
+            AjaxMonitor.prototype.instrumentSend = function () {
+                var originalSend = XMLHttpRequest.prototype.send;
+                var ajaxMonitorInstance = this;
+                XMLHttpRequest.prototype.send = function (content) {
+                    try {
+                        if (ajaxMonitorInstance.isMonitoredInstance(this) && !this.ajaxData.xhrMonitoringState.sendDone) {
+                            ajaxMonitorInstance.sendHandler(this, content);
+                        }
+                    }
+                    catch (e) {
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Failed to monitor XMLHttpRequest.send"
+                            + AjaxMonitor.getFailedAjaxDiagnosticsMessage(this)
+                            + ", monitoring data for this ajax call may be incorrect: "
+                            + Microsoft.ApplicationInsights.Util.dump(e));
+                    }
+                    return originalSend.apply(this, arguments);
+                };
+            };
+            AjaxMonitor.prototype.sendHandler = function (xhr, content) {
+                xhr.ajaxData.requestSentTime = ApplicationInsights.dateTime.Now();
+                xhr.ajaxData.xhrMonitoringState.sendDone = true;
+            };
+            AjaxMonitor.prototype.instrumentAbort = function () {
+                var originalAbort = XMLHttpRequest.prototype.abort;
+                var ajaxMonitorInstance = this;
+                XMLHttpRequest.prototype.abort = function () {
+                    try {
+                        if (ajaxMonitorInstance.isMonitoredInstance(this) && !this.ajaxData.xhrMonitoringState.abortDone) {
+                            this.ajaxData.aborted = 1;
+                            this.ajaxData.xhrMonitoringState.abortDone = true;
+                        }
+                    }
+                    catch (e) {
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Failed to monitor XMLHttpRequest.abort"
+                            + AjaxMonitor.getFailedAjaxDiagnosticsMessage(this)
+                            + ", monitoring data for this ajax call may be incorrect: "
+                            + Microsoft.ApplicationInsights.Util.dump(e));
+                    }
+                    return originalAbort.apply(this, arguments);
+                };
+            };
+            AjaxMonitor.prototype.attachToOnReadyStateChange = function (xhr) {
+                var ajaxMonitorInstance = this;
+                xhr.ajaxData.xhrMonitoringState.onreadystatechangeCallbackAttached = ApplicationInsights.EventHelper.AttachEvent(xhr, "readystatechange", function () {
+                    try {
+                        if (ajaxMonitorInstance.isMonitoredInstance(xhr)) {
+                            if (xhr.readyState === 4) {
+                                ajaxMonitorInstance.onAjaxComplete(xhr);
+                            }
+                        }
+                    }
+                    catch (e) {
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Failed to monitor XMLHttpRequest 'readystatechange' event handler"
+                            + AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr)
+                            + ", monitoring data for this ajax call may be incorrect: "
+                            + Microsoft.ApplicationInsights.Util.dump(e));
+                    }
+                });
+            };
+            AjaxMonitor.prototype.onAjaxComplete = function (xhr) {
+                xhr.ajaxData.responseFinishedTime = ApplicationInsights.dateTime.Now();
+                xhr.ajaxData.status = xhr.status;
+                xhr.ajaxData.CalculateMetrics();
+                if (xhr.ajaxData.ajaxTotalDuration < 0) {
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Failed to calculate the duration of the ajax call"
+                        + AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr)
+                        + " ("
+                        + xhr.ajaxData.requestSentTime
+                        + ", "
+                        + xhr.ajaxData.responseFinishedTime
+                        + "), monitoring data for this ajax call won't be sent.");
+                }
+                else {
+                    this.appInsights.trackAjax(xhr.ajaxData.getAbsoluteUrl(), xhr.ajaxData.getPathName(), xhr.ajaxData.ajaxTotalDuration, (+(xhr.ajaxData.status)) < 400, +xhr.ajaxData.status);
+                    xhr.ajaxData = null;
+                }
+            };
+            AjaxMonitor.instrumentedByAppInsightsName = "InstrumentedByAppInsights";
+            AjaxMonitor.DisabledPropertyName = "Microsoft_ApplicationInsights_BypassAjaxInstrumentation";
+            return AjaxMonitor;
+        })();
+        ApplicationInsights.AjaxMonitor = AjaxMonitor;
+    })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
+})(Microsoft || (Microsoft = {}));
+/// <reference path="logging.ts" />
+/// <reference path="util.ts" />
+var Microsoft;
+(function (Microsoft) {
+    var ApplicationInsights;
+    (function (ApplicationInsights) {
+        "use strict";
+        (function (FieldType) {
+            FieldType[FieldType["Default"] = 0] = "Default";
+            FieldType[FieldType["Required"] = 1] = "Required";
+            FieldType[FieldType["Array"] = 2] = "Array";
+            FieldType[FieldType["Hidden"] = 4] = "Hidden";
+        })(ApplicationInsights.FieldType || (ApplicationInsights.FieldType = {}));
+        var FieldType = ApplicationInsights.FieldType;
+        ;
         var Serializer = (function () {
             function Serializer() {
             }
@@ -326,11 +686,11 @@ var Microsoft;
                 var circularReferenceCheck = "__aiCircularRefCheck";
                 var output = {};
                 if (!source) {
-                    ApplicationInsights._InternalLogging.throwInternalUserActionable(0 /* CRITICAL */, "cannot serialize " + name + " because it is null or undefined");
+                    ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "cannot serialize " + name + " because it is null or undefined");
                     return output;
                 }
                 if (source[circularReferenceCheck]) {
-                    ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "Circular reference detected while serializing: '" + name);
+                    ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "Circular reference detected while serializing: '" + name);
                     return output;
                 }
                 if (!source.aiDataContract) {
@@ -347,25 +707,30 @@ var Microsoft;
                         output = Serializer._serializeArray(source, name);
                     }
                     else {
-                        ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "Attempting to serialize an object which does not implement ISerializable: " + name);
+                        ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "Attempting to serialize an object which does not implement ISerializable: " + name);
                         try {
                             JSON.stringify(source);
                             output = source;
                         }
                         catch (e) {
-                            ApplicationInsights._InternalLogging.throwInternalUserActionable(0 /* CRITICAL */, e && typeof e.toString === 'function' ? e.toString() : "Error serializing object");
+                            ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, e && typeof e.toString === 'function' ? e.toString() : "Error serializing object");
                         }
                     }
                     return output;
                 }
                 source[circularReferenceCheck] = true;
                 for (var field in source.aiDataContract) {
-                    var isRequired = source.aiDataContract[field];
-                    var isArray = typeof isRequired !== "boolean";
+                    var contract = source.aiDataContract[field];
+                    var isRequired = (typeof contract === "function") ? (contract() & FieldType.Required) : (contract & FieldType.Required);
+                    var isHidden = (typeof contract === "function") ? (contract() & FieldType.Hidden) : (contract & FieldType.Hidden);
+                    var isArray = contract & FieldType.Array;
                     var isPresent = source[field] !== undefined;
                     var isObject = typeof source[field] === "object" && source[field] !== null;
                     if (isRequired && !isPresent && !isArray) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Missing required field specification: The field '" + field + "' on '" + name + "' is required but not present on source");
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Missing required field specification: The field '" + field + "' on '" + name + "' is required but not present on source");
+                        continue;
+                    }
+                    if (isHidden) {
                         continue;
                     }
                     var value;
@@ -391,7 +756,7 @@ var Microsoft;
                 var output = undefined;
                 if (!!sources) {
                     if (!ApplicationInsights.Util.isArray(sources)) {
-                        ApplicationInsights._InternalLogging.throwInternalUserActionable(0 /* CRITICAL */, "This field was specified as an array in the contract but the item is not an array.\r\n" + name);
+                        ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "This field was specified as an array in the contract but the item is not an array.\r\n" + name);
                     }
                     else {
                         output = [];
@@ -443,7 +808,7 @@ var Microsoft;
                         }
                         else {
                             output[field] = "invalid field: " + name + " is of unknown type.";
-                            ApplicationInsights._InternalLogging.throwInternalUserActionable(0 /* CRITICAL */, output[field]);
+                            ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, output[field]);
                         }
                     }
                 }
@@ -467,6 +832,7 @@ var Microsoft;
         Telemetry.Base = Base;
     })(Telemetry = Microsoft.Telemetry || (Microsoft.Telemetry = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="Base.ts" />
 var Microsoft;
 (function (Microsoft) {
     var Telemetry;
@@ -483,7 +849,10 @@ var Microsoft;
         Telemetry.Envelope = Envelope;
     })(Telemetry = Microsoft.Telemetry || (Microsoft.Telemetry = {}));
 })(Microsoft || (Microsoft = {}));
-var __extends = this.__extends || function (d, b) {
+/// <reference path="../../Contracts/Generated/Envelope.ts" />
+/// <reference path="../../Contracts/Generated/Base.ts" />
+/// <reference path="../../Util.ts"/>
+var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
@@ -501,16 +870,20 @@ var Microsoft;
                 var Envelope = (function (_super) {
                     __extends(Envelope, _super);
                     function Envelope(data, name) {
+                        var _this = this;
                         _super.call(this);
                         this.name = name;
                         this.data = data;
                         this.time = ApplicationInsights.Util.toISOStringForIE8(new Date());
                         this.aiDataContract = {
-                            time: true,
-                            iKey: true,
-                            name: true,
-                            tags: true,
-                            data: true
+                            time: ApplicationInsights.FieldType.Required,
+                            iKey: ApplicationInsights.FieldType.Required,
+                            name: ApplicationInsights.FieldType.Required,
+                            sampleRate: function () {
+                                return (_this.sampleRate == 100) ? ApplicationInsights.FieldType.Hidden : ApplicationInsights.FieldType.Required;
+                            },
+                            tags: ApplicationInsights.FieldType.Required,
+                            data: ApplicationInsights.FieldType.Required
                         };
                     }
                     return Envelope;
@@ -520,6 +893,7 @@ var Microsoft;
         })(Telemetry = ApplicationInsights.Telemetry || (ApplicationInsights.Telemetry = {}));
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="../../Contracts/Generated/Base.ts"/>
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -550,6 +924,7 @@ var AI;
             this.applicationVersion = "ai.application.ver";
             this.applicationBuild = "ai.application.build";
             this.applicationTypeId = "ai.application.typeId";
+            this.applicationId = "ai.application.applicationId";
             this.deviceId = "ai.device.id";
             this.deviceIp = "ai.device.ip";
             this.deviceLanguage = "ai.device.language";
@@ -573,6 +948,7 @@ var AI;
             this.operationRootId = "ai.operation.rootId";
             this.operationSyntheticSource = "ai.operation.syntheticSource";
             this.operationIsSynthetic = "ai.operation.isSynthetic";
+            this.operationCorrelationVector = "ai.operation.correlationVector";
             this.sessionId = "ai.session.id";
             this.sessionIsFirst = "ai.session.isFirst";
             this.sessionIsNew = "ai.session.isNew";
@@ -585,6 +961,13 @@ var AI;
             this.userAnonymousUserAcquisitionDate = "ai.user.anonUserAcquisitionDate";
             this.userAuthenticatedUserAcquisitionDate = "ai.user.authUserAcquisitionDate";
             this.sampleRate = "ai.sample.sampleRate";
+            this.cloudName = "ai.cloud.name";
+            this.cloudRoleVer = "ai.cloud.roleVer";
+            this.cloudEnvironment = "ai.cloud.environment";
+            this.cloudLocation = "ai.cloud.location";
+            this.cloudDeploymentUnit = "ai.cloud.deploymentUnit";
+            this.serverDeviceOS = "ai.serverDevice.os";
+            this.serverDeviceOSVer = "ai.serverDevice.osVer";
             this.internalSdkVersion = "ai.internal.sdkVersion";
             this.internalAgentVersion = "ai.internal.agentVersion";
             this.internalDataCollectorReceivedTime = "ai.internal.dataCollectorReceivedTime";
@@ -600,6 +983,7 @@ var AI;
             this.internalIsAudit = "ai.internal.isAudit";
             this.internalTrackingSourceId = "ai.internal.trackingSourceId";
             this.internalTrackingType = "ai.internal.trackingType";
+            this.internalIsDiagnosticExample = "ai.internal.isDiagnosticExample";
         }
         return ContextTagKeys;
     })();
@@ -631,10 +1015,7 @@ var Microsoft;
             var Device = (function () {
                 function Device() {
                     this.id = "browser";
-                    if (typeof screen !== "undefined" && screen.width && screen.height) {
-                        this.resolution = screen.width + "X" + screen.height;
-                    }
-                    this.locale = (typeof screen !== "undefined" && navigator.browserLanguage) ? navigator.browserLanguage : "unknown";
+                    this.type = "Browser";
                 }
                 return Device;
             })();
@@ -675,6 +1056,7 @@ var Microsoft;
         })(Context = ApplicationInsights.Context || (ApplicationInsights.Context = {}));
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="../util.ts" />
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -684,7 +1066,10 @@ var Microsoft;
             "use strict";
             var Operation = (function () {
                 function Operation() {
-                    this.id = ApplicationInsights.Util.newGuid();
+                    this.id = ApplicationInsights.Util.newId();
+                    if (window && window.location && window.location.pathname) {
+                        this.name = window.location.pathname;
+                    }
                 }
                 return Operation;
             })();
@@ -730,6 +1115,7 @@ var Microsoft;
         ApplicationInsights.SamplingScoreGenerator = SamplingScoreGenerator;
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="../SamplingScoreGenerator.ts" />
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -741,7 +1127,8 @@ var Microsoft;
                 function Sample(sampleRate) {
                     this.INT_MAX_VALUE = 2147483647;
                     if (sampleRate > 100 || sampleRate < 0) {
-                        ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "Sampling rate is out of range (0..100): '" + sampleRate + "'. Sampling will be disabled, you may be sending too much data which may affect your AI service level.");
+                        ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "Sampling rate is out of range (0..100): '" + sampleRate
+                            + "'. Sampling will be disabled, you may be sending too much data which may affect your AI service level.");
                         this.sampleRate = 100;
                     }
                     this.sampleRate = sampleRate;
@@ -767,6 +1154,8 @@ var AI;
     })(AI.SessionState || (AI.SessionState = {}));
     var SessionState = AI.SessionState;
 })(AI || (AI = {}));
+/// <reference path="../util.ts" />
+/// <reference path="../Contracts/Generated/SessionState.ts"/>
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -804,7 +1193,7 @@ var Microsoft;
                     var renewalExpired = now - this.automaticSession.renewalDate > this.config.sessionRenewalMs();
                     if (acquisitionExpired || renewalExpired) {
                         if (typeof this._sessionHandler === "function") {
-                            this._sessionHandler(1 /* End */, this.automaticSession.renewalDate);
+                            this._sessionHandler(AI.SessionState.End, this.automaticSession.renewalDate);
                         }
                         this.automaticSession.isFirst = undefined;
                         this.renew();
@@ -851,23 +1240,23 @@ var Microsoft;
                         }
                     }
                     catch (e) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Error parsing ai_session cookie, session will be reset: " + ApplicationInsights.Util.dump(e));
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Error parsing ai_session cookie, session will be reset: " + ApplicationInsights.Util.dump(e));
                     }
                     if (this.automaticSession.renewalDate == 0) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, "AI session renewal date is 0, session will be reset.");
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "AI session renewal date is 0, session will be reset.");
                     }
                 };
                 _SessionManager.prototype.renew = function () {
                     var now = +new Date;
-                    this.automaticSession.id = ApplicationInsights.Util.newGuid();
+                    this.automaticSession.id = ApplicationInsights.Util.newId();
                     this.automaticSession.acquisitionDate = now;
                     this.automaticSession.renewalDate = now;
                     this.setCookie(this.automaticSession.id, this.automaticSession.acquisitionDate, this.automaticSession.renewalDate);
                     if (typeof this._sessionHandler === "function") {
-                        this._sessionHandler(0 /* Start */, now);
+                        this._sessionHandler(AI.SessionState.Start, now);
                     }
                     if (!ApplicationInsights.Util.canUseLocalStorage()) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, "Browser does not support local storage. Session durations will be inaccurate.");
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "Browser does not support local storage. Session durations will be inaccurate.");
                     }
                 };
                 _SessionManager.prototype.setCookie = function (guid, acq, renewal) {
@@ -894,6 +1283,7 @@ var Microsoft;
         })(Context = ApplicationInsights.Context || (ApplicationInsights.Context = {}));
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="../util.ts" />
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -911,7 +1301,7 @@ var Microsoft;
                         }
                     }
                     if (!this.id) {
-                        this.id = ApplicationInsights.Util.newGuid();
+                        this.id = ApplicationInsights.Util.newId();
                         var date = new Date();
                         var acqStr = ApplicationInsights.Util.toISOStringForIE8(date);
                         this.accountAcquisitionDate = acqStr;
@@ -936,7 +1326,8 @@ var Microsoft;
                 User.prototype.setAuthenticatedUserContext = function (authenticatedUserId, accountId) {
                     var isInvalidInput = !this.validateUserInput(authenticatedUserId) || (accountId && !this.validateUserInput(accountId));
                     if (isInvalidInput) {
-                        ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "Setting auth user context failed. " + "User auth/account id should be of type string, and not contain commas, semi-colons, equal signs, spaces, or vertical-bars.");
+                        ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "Setting auth user context failed. " +
+                            "User auth/account id should be of type string, and not contain commas, semi-colons, equal signs, spaces, or vertical-bars.");
                         return;
                     }
                     this.authenticatedId = authenticatedUserId;
@@ -953,7 +1344,9 @@ var Microsoft;
                     ApplicationInsights.Util.deleteCookie(User.authUserCookieName);
                 };
                 User.prototype.validateUserInput = function (id) {
-                    if (typeof id !== 'string' || !id || id.match(/,|;|=| |\|/)) {
+                    if (typeof id !== 'string' ||
+                        !id ||
+                        id.match(/,|;|=| |\|/)) {
                         return false;
                     }
                     return true;
@@ -967,6 +1360,20 @@ var Microsoft;
         })(Context = ApplicationInsights.Context || (ApplicationInsights.Context = {}));
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="serializer.ts" />
+/// <reference path="Telemetry/Common/Envelope.ts"/>
+/// <reference path="Telemetry/Common/Base.ts" />
+/// <reference path="Contracts/Generated/ContextTagKeys.ts"/>
+/// <reference path="Context/Application.ts"/>
+/// <reference path="Context/Device.ts"/>
+/// <reference path="Context/Internal.ts"/>
+/// <reference path="Context/Location.ts"/>
+/// <reference path="Context/Operation.ts"/>
+/// <reference path="Context/Sample.ts"/>
+/// <reference path="Context/Session.ts"/>
+/// <reference path="Context/User.ts"/>
+/// <reference path="ajax/ajax.ts"/>
+;
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -995,11 +1402,11 @@ var Microsoft;
                         return;
                     }
                     if (!envelope) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Cannot send empty telemetry");
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Cannot send empty telemetry");
                         return;
                     }
                     if (!this._sender) {
-                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Sender was not initialized");
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Sender was not initialized");
                         return;
                     }
                     var payload = ApplicationInsights.Serializer.serialize(envelope);
@@ -1015,7 +1422,7 @@ var Microsoft;
                     }
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + ApplicationInsights.Util.dump(e));
                 }
             };
             Sender.prototype._getSizeInBytes = function (list) {
@@ -1038,7 +1445,9 @@ var Microsoft;
                 try {
                     if (!this._config.disableTelemetry()) {
                         if (this._buffer.length) {
-                            var batch = this._config.emitLineDelimitedJson() ? this._buffer.join("\n") : "[" + this._buffer.join(",") + "]";
+                            var batch = this._config.emitLineDelimitedJson() ?
+                                this._buffer.join("\n") :
+                                "[" + this._buffer.join(",") + "]";
                             this._sender(batch, isAsync);
                         }
                         this._lastSend = +new Date;
@@ -1048,11 +1457,12 @@ var Microsoft;
                     this._timeoutHandle = null;
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "Telemetry transmission failed, some telemetry will be lost: " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Telemetry transmission failed, some telemetry will be lost: " + ApplicationInsights.Util.dump(e));
                 }
             };
             Sender.prototype._xhrSender = function (payload, isAsync) {
                 var xhr = new XMLHttpRequest();
+                xhr[ApplicationInsights.AjaxMonitor.DisabledPropertyName] = true;
                 xhr.open("POST", this._config.endpointUrl(), isAsync);
                 xhr.setRequestHeader("Content-type", "application/json");
                 xhr.onreadystatechange = function () { return Sender._xhrReadyStateChange(xhr, payload); };
@@ -1085,7 +1495,7 @@ var Microsoft;
                 }
             };
             Sender._onError = function (payload, message, event) {
-                ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, "Failed to send telemetry:\n" + message);
+                ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "Failed to send telemetry:\n" + message);
             };
             Sender._onSuccess = function (payload) {
             };
@@ -1119,6 +1529,8 @@ var AI;
     })(AI.SeverityLevel || (AI.SeverityLevel = {}));
     var SeverityLevel = AI.SeverityLevel;
 })(AI || (AI = {}));
+/// <reference path="Domain.ts" />
+/// <reference path="SeverityLevel.ts" />
 var AI;
 (function (AI) {
     "use strict";
@@ -1133,6 +1545,8 @@ var AI;
     })(Microsoft.Telemetry.Domain);
     AI.MessageData = MessageData;
 })(AI || (AI = {}));
+/// <reference path="../../logging.ts" />
+/// <reference path="../../Util.ts"/>
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -1164,11 +1578,11 @@ var Microsoft;
                             name = ApplicationInsights.Util.trim(name.toString());
                             if (name.search(/[^0-9a-zA-Z-._()\/ ]/g) >= 0) {
                                 name = name.replace(/[^0-9a-zA-Z-._()\/ ]/g, "_");
-                                ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "name contains illegal characters. Illgeal character have been replaced with '_'. new name: " + name);
+                                ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "name contains illegal characters. Illgeal character have been replaced with '_'. new name: " + name);
                             }
                             if (name.length > DataSanitizer.MAX_NAME_LENGTH) {
                                 name = name.substring(0, DataSanitizer.MAX_NAME_LENGTH);
-                                ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "name is too long.  It has been truncated to " + DataSanitizer.MAX_NAME_LENGTH + " characters.  name: " + name);
+                                ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "name is too long.  It has been truncated to " + DataSanitizer.MAX_NAME_LENGTH + " characters.  name: " + name);
                             }
                         }
                         return name;
@@ -1177,8 +1591,8 @@ var Microsoft;
                         if (value) {
                             value = ApplicationInsights.Util.trim(value);
                             if (value.toString().length > DataSanitizer.MAX_STRING_LENGTH) {
-                                value = value.substring(0, DataSanitizer.MAX_STRING_LENGTH);
-                                ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "string value is too long. It has been truncated to " + DataSanitizer.MAX_STRING_LENGTH + " characters. value: " + value);
+                                value = value.toString().substring(0, DataSanitizer.MAX_STRING_LENGTH);
+                                ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "string value is too long. It has been truncated to " + DataSanitizer.MAX_STRING_LENGTH + " characters. value: " + value);
                             }
                         }
                         return value;
@@ -1187,7 +1601,7 @@ var Microsoft;
                         if (url) {
                             if (url.length > DataSanitizer.MAX_URL_LENGTH) {
                                 url = url.substring(0, DataSanitizer.MAX_URL_LENGTH);
-                                ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "url is too long, it has been trucated to " + DataSanitizer.MAX_URL_LENGTH + " characters. url: " + url);
+                                ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "url is too long, it has been trucated to " + DataSanitizer.MAX_URL_LENGTH + " characters. url: " + url);
                             }
                         }
                         return url;
@@ -1196,7 +1610,7 @@ var Microsoft;
                         if (message) {
                             if (message.length > DataSanitizer.MAX_MESSAGE_LENGTH) {
                                 message = message.substring(0, DataSanitizer.MAX_MESSAGE_LENGTH);
-                                ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "message is too long, it has been trucated to " + DataSanitizer.MAX_MESSAGE_LENGTH + " characters.  message: " + message);
+                                ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "message is too long, it has been trucated to " + DataSanitizer.MAX_MESSAGE_LENGTH + " characters.  message: " + message);
                             }
                         }
                         return message;
@@ -1205,7 +1619,7 @@ var Microsoft;
                         if (exception) {
                             if (exception.length > DataSanitizer.MAX_EXCEPTION_LENGTH) {
                                 exception = exception.substring(0, DataSanitizer.MAX_EXCEPTION_LENGTH);
-                                ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "exception is too long, iit has been trucated to " + DataSanitizer.MAX_EXCEPTION_LENGTH + " characters.  exception: " + exception);
+                                ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "exception is too long, iit has been trucated to " + DataSanitizer.MAX_EXCEPTION_LENGTH + " characters.  exception: " + exception);
                             }
                         }
                         return exception;
@@ -1250,6 +1664,8 @@ var Microsoft;
         })(Telemetry = ApplicationInsights.Telemetry || (ApplicationInsights.Telemetry = {}));
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="../Contracts/Generated/MessageData.ts" />
+/// <reference path="./Common/DataSanitizer.ts"/>
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -1262,11 +1678,11 @@ var Microsoft;
                 function Trace(message, properties) {
                     _super.call(this);
                     this.aiDataContract = {
-                        ver: true,
-                        message: true,
-                        severityLevel: false,
-                        measurements: false,
-                        properties: false
+                        ver: ApplicationInsights.FieldType.Required,
+                        message: ApplicationInsights.FieldType.Required,
+                        severityLevel: ApplicationInsights.FieldType.Default,
+                        measurements: ApplicationInsights.FieldType.Default,
+                        properties: ApplicationInsights.FieldType.Default
                     };
                     message = message || ApplicationInsights.Util.NotSpecified;
                     this.message = Telemetry.Common.DataSanitizer.sanitizeMessage(message);
@@ -1280,6 +1696,7 @@ var Microsoft;
         })(Telemetry = ApplicationInsights.Telemetry || (ApplicationInsights.Telemetry = {}));
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="Domain.ts" />
 var AI;
 (function (AI) {
     "use strict";
@@ -1295,6 +1712,8 @@ var AI;
     })(Microsoft.Telemetry.Domain);
     AI.EventData = EventData;
 })(AI || (AI = {}));
+/// <reference path="../Contracts/Generated/EventData.ts" />
+/// <reference path="./Common/DataSanitizer.ts"/>
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -1307,10 +1726,10 @@ var Microsoft;
                 function Event(name, properties, measurements) {
                     _super.call(this);
                     this.aiDataContract = {
-                        ver: true,
-                        name: true,
-                        properties: false,
-                        measurements: false
+                        ver: ApplicationInsights.FieldType.Required,
+                        name: ApplicationInsights.FieldType.Required,
+                        properties: ApplicationInsights.FieldType.Default,
+                        measurements: ApplicationInsights.FieldType.Default
                     };
                     this.name = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(name);
                     this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
@@ -1336,6 +1755,9 @@ var AI;
     })();
     AI.ExceptionDetails = ExceptionDetails;
 })(AI || (AI = {}));
+/// <reference path="Domain.ts" />
+/// <reference path="SeverityLevel.ts" />
+/// <reference path="ExceptionDetails.ts"/>
 var AI;
 (function (AI) {
     "use strict";
@@ -1362,6 +1784,9 @@ var AI;
     })();
     AI.StackFrame = StackFrame;
 })(AI || (AI = {}));
+/// <reference path="../Contracts/Generated/ExceptionData.ts" />
+/// <reference path="../Contracts/Generated/StackFrame.ts" />
+/// <reference path="./Common/DataSanitizer.ts"/>
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -1374,12 +1799,12 @@ var Microsoft;
                 function Exception(exception, handledAt, properties, measurements) {
                     _super.call(this);
                     this.aiDataContract = {
-                        ver: true,
-                        handledAt: true,
-                        exceptions: true,
-                        severityLevel: false,
-                        properties: false,
-                        measurements: false
+                        ver: ApplicationInsights.FieldType.Required,
+                        handledAt: ApplicationInsights.FieldType.Required,
+                        exceptions: ApplicationInsights.FieldType.Required,
+                        severityLevel: ApplicationInsights.FieldType.Default,
+                        properties: ApplicationInsights.FieldType.Default,
+                        measurements: ApplicationInsights.FieldType.Default
                     };
                     this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
                     this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);
@@ -1387,27 +1812,26 @@ var Microsoft;
                     this.exceptions = [new _ExceptionDetails(exception)];
                 }
                 Exception.CreateSimpleException = function (message, typeName, assembly, fileName, details, line, handledAt) {
-                    var exceptionTelemetry;
-                    try {
-                        throw new Error();
-                    }
-                    catch (e) {
-                        exceptionTelemetry = new Telemetry.Exception(e);
-                    }
-                    var stack = exceptionTelemetry.exceptions[0].parsedStack[0];
-                    stack.assembly = assembly;
-                    stack.fileName = fileName;
-                    stack.level = 0;
-                    stack.line = line;
-                    stack.method = "unknown";
-                    var exception = exceptionTelemetry.exceptions[0];
-                    exception.hasFullStack = true;
-                    exception.message = message;
-                    exception.parsedStack = null;
-                    exception.stack = details;
-                    exception.typeName = typeName;
-                    exceptionTelemetry.handledAt = handledAt || "unhandled";
-                    return exceptionTelemetry;
+                    return {
+                        handledAt: handledAt || "unhandled",
+                        exceptions: [
+                            {
+                                hasFullStack: true,
+                                message: message,
+                                stack: details,
+                                typeName: typeName,
+                                parsedStack: [
+                                    {
+                                        level: 0,
+                                        assembly: assembly,
+                                        fileName: fileName,
+                                        line: line,
+                                        method: "unknown"
+                                    }
+                                ]
+                            }
+                        ]
+                    };
                 };
                 Exception.envelopeType = "Microsoft.ApplicationInsights.Exception";
                 Exception.dataType = "ExceptionData";
@@ -1419,13 +1843,13 @@ var Microsoft;
                 function _ExceptionDetails(exception) {
                     _super.call(this);
                     this.aiDataContract = {
-                        id: false,
-                        outerId: false,
-                        typeName: true,
-                        message: true,
-                        hasFullStack: false,
-                        stack: false,
-                        parsedStack: []
+                        id: ApplicationInsights.FieldType.Default,
+                        outerId: ApplicationInsights.FieldType.Default,
+                        typeName: ApplicationInsights.FieldType.Required,
+                        message: ApplicationInsights.FieldType.Required,
+                        hasFullStack: ApplicationInsights.FieldType.Default,
+                        stack: ApplicationInsights.FieldType.Default,
+                        parsedStack: ApplicationInsights.FieldType.Array
                     };
                     this.typeName = Telemetry.Common.DataSanitizer.sanitizeString(exception.name || ApplicationInsights.Util.NotSpecified);
                     this.message = Telemetry.Common.DataSanitizer.sanitizeMessage(exception.message || ApplicationInsights.Util.NotSpecified);
@@ -1482,11 +1906,11 @@ var Microsoft;
                     _super.call(this);
                     this.sizeInBytes = 0;
                     this.aiDataContract = {
-                        level: true,
-                        method: true,
-                        assembly: false,
-                        fileName: false,
-                        line: false
+                        level: ApplicationInsights.FieldType.Required,
+                        method: ApplicationInsights.FieldType.Required,
+                        assembly: ApplicationInsights.FieldType.Default,
+                        fileName: ApplicationInsights.FieldType.Default,
+                        line: ApplicationInsights.FieldType.Default
                     };
                     this.level = level;
                     this.method = "unavailable";
@@ -1511,6 +1935,7 @@ var Microsoft;
         })(Telemetry = ApplicationInsights.Telemetry || (ApplicationInsights.Telemetry = {}));
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="Domain.ts" />
 var AI;
 (function (AI) {
     "use strict";
@@ -1535,17 +1960,19 @@ var AI;
     })(AI.DataPointType || (AI.DataPointType = {}));
     var DataPointType = AI.DataPointType;
 })(AI || (AI = {}));
+/// <reference path="DataPointType.ts" />
 var AI;
 (function (AI) {
     "use strict";
     var DataPoint = (function () {
         function DataPoint() {
-            this.kind = 0 /* Measurement */;
+            this.kind = AI.DataPointType.Measurement;
         }
         return DataPoint;
     })();
     AI.DataPoint = DataPoint;
 })(AI || (AI = {}));
+/// <reference path="../../Contracts/Generated/DataPoint.ts"/>
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -1560,13 +1987,13 @@ var Microsoft;
                     function DataPoint() {
                         _super.apply(this, arguments);
                         this.aiDataContract = {
-                            name: true,
-                            kind: false,
-                            value: true,
-                            count: false,
-                            min: false,
-                            max: false,
-                            stdDev: false
+                            name: ApplicationInsights.FieldType.Required,
+                            kind: ApplicationInsights.FieldType.Default,
+                            value: ApplicationInsights.FieldType.Required,
+                            count: ApplicationInsights.FieldType.Default,
+                            min: ApplicationInsights.FieldType.Default,
+                            max: ApplicationInsights.FieldType.Default,
+                            stdDev: ApplicationInsights.FieldType.Default
                         };
                     }
                     return DataPoint;
@@ -1576,6 +2003,9 @@ var Microsoft;
         })(Telemetry = ApplicationInsights.Telemetry || (ApplicationInsights.Telemetry = {}));
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="../Contracts/Generated/MetricData.ts" />
+/// <reference path="./Common/DataSanitizer.ts" />
+/// <reference path="./Common/DataPoint.ts" />
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -1588,9 +2018,9 @@ var Microsoft;
                 function Metric(name, value, count, min, max, properties) {
                     _super.call(this);
                     this.aiDataContract = {
-                        ver: true,
-                        metrics: true,
-                        properties: false
+                        ver: ApplicationInsights.FieldType.Required,
+                        metrics: ApplicationInsights.FieldType.Required,
+                        properties: ApplicationInsights.FieldType.Default
                     };
                     var dataPoint = new Microsoft.ApplicationInsights.Telemetry.Common.DataPoint();
                     dataPoint.count = count > 0 ? count : undefined;
@@ -1609,6 +2039,7 @@ var Microsoft;
         })(Telemetry = ApplicationInsights.Telemetry || (ApplicationInsights.Telemetry = {}));
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="EventData.ts" />
 var AI;
 (function (AI) {
     "use strict";
@@ -1624,6 +2055,8 @@ var AI;
     })(AI.EventData);
     AI.PageViewData = PageViewData;
 })(AI || (AI = {}));
+/// <reference path="../Contracts/Generated/PageViewData.ts" />
+/// <reference path="./Common/DataSanitizer.ts"/>
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -1636,12 +2069,12 @@ var Microsoft;
                 function PageView(name, url, durationMs, properties, measurements) {
                     _super.call(this);
                     this.aiDataContract = {
-                        ver: true,
-                        name: false,
-                        url: false,
-                        duration: false,
-                        properties: false,
-                        measurements: false
+                        ver: ApplicationInsights.FieldType.Required,
+                        name: ApplicationInsights.FieldType.Default,
+                        url: ApplicationInsights.FieldType.Default,
+                        duration: ApplicationInsights.FieldType.Default,
+                        properties: ApplicationInsights.FieldType.Default,
+                        measurements: ApplicationInsights.FieldType.Default
                     };
                     this.url = Telemetry.Common.DataSanitizer.sanitizeUrl(url);
                     this.name = Telemetry.Common.DataSanitizer.sanitizeString(name || ApplicationInsights.Util.NotSpecified);
@@ -1659,6 +2092,7 @@ var Microsoft;
         })(Telemetry = ApplicationInsights.Telemetry || (ApplicationInsights.Telemetry = {}));
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="PageViewData.ts" />
 var AI;
 (function (AI) {
     "use strict";
@@ -1674,6 +2108,9 @@ var AI;
     })(AI.PageViewData);
     AI.PageViewPerfData = PageViewPerfData;
 })(AI || (AI = {}));
+/// <reference path="../Contracts/Generated/PageViewPerfData.ts"/>
+/// <reference path="./Common/DataSanitizer.ts"/>
+/// <reference path="../Util.ts"/>
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -1683,20 +2120,20 @@ var Microsoft;
             "use strict";
             var PageViewPerformance = (function (_super) {
                 __extends(PageViewPerformance, _super);
-                function PageViewPerformance(name, url, durationMs, properties, measurements) {
+                function PageViewPerformance(name, url, unused, properties, measurements) {
                     _super.call(this);
                     this.aiDataContract = {
-                        ver: true,
-                        name: false,
-                        url: false,
-                        duration: false,
-                        perfTotal: false,
-                        networkConnect: false,
-                        sentRequest: false,
-                        receivedResponse: false,
-                        domProcessing: false,
-                        properties: false,
-                        measurements: false
+                        ver: ApplicationInsights.FieldType.Required,
+                        name: ApplicationInsights.FieldType.Default,
+                        url: ApplicationInsights.FieldType.Default,
+                        duration: ApplicationInsights.FieldType.Default,
+                        perfTotal: ApplicationInsights.FieldType.Default,
+                        networkConnect: ApplicationInsights.FieldType.Default,
+                        sentRequest: ApplicationInsights.FieldType.Default,
+                        receivedResponse: ApplicationInsights.FieldType.Default,
+                        domProcessing: ApplicationInsights.FieldType.Default,
+                        properties: ApplicationInsights.FieldType.Default,
+                        measurements: ApplicationInsights.FieldType.Default
                     };
                     this.isValid = false;
                     var timing = PageViewPerformance.getPerformanceTiming();
@@ -1707,14 +2144,16 @@ var Microsoft;
                         var response = PageViewPerformance.getDuration(timing.responseStart, timing.responseEnd);
                         var dom = PageViewPerformance.getDuration(timing.responseEnd, timing.loadEventEnd);
                         if (total == 0) {
-                            ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, "error calculating page view performance: total='" + total + "', network='" + network + "', request='" + request + "', response='" + response + "', dom='" + dom + "'");
+                            ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "error calculating page view performance: total='" +
+                                total + "', network='" + network + "', request='" + request + "', response='" +
+                                response + "', dom='" + dom + "'");
                         }
                         else if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
-                            ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, "client performance math error:" + total + " < " + network + " + " + request + " + " + response + " + " + dom);
+                            ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "client performance math error:" + total + " < " + network + " + " + request + " + " + response + " + " + dom);
                         }
                         else {
-                            durationMs = total;
-                            this.perfTotal = ApplicationInsights.Util.msToTimeSpan(total);
+                            this.durationMs = total;
+                            this.perfTotal = this.duration = ApplicationInsights.Util.msToTimeSpan(total);
                             this.networkConnect = ApplicationInsights.Util.msToTimeSpan(network);
                             this.sentRequest = ApplicationInsights.Util.msToTimeSpan(request);
                             this.receivedResponse = ApplicationInsights.Util.msToTimeSpan(response);
@@ -1724,12 +2163,15 @@ var Microsoft;
                     }
                     this.url = Telemetry.Common.DataSanitizer.sanitizeUrl(url);
                     this.name = Telemetry.Common.DataSanitizer.sanitizeString(name || ApplicationInsights.Util.NotSpecified);
-                    if (!isNaN(durationMs)) {
-                        this.duration = ApplicationInsights.Util.msToTimeSpan(durationMs);
-                    }
                     this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
                     this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);
                 }
+                PageViewPerformance.prototype.getIsValid = function () {
+                    return this.isValid;
+                };
+                PageViewPerformance.prototype.getDurationMs = function () {
+                    return this.durationMs;
+                };
                 PageViewPerformance.getPerformanceTiming = function () {
                     if (typeof window != "undefined" && window.performance && window.performance.timing) {
                         return window.performance.timing;
@@ -1741,7 +2183,14 @@ var Microsoft;
                 };
                 PageViewPerformance.isPerformanceTimingDataReady = function () {
                     var timing = window.performance.timing;
-                    return timing.domainLookupStart > 0 && timing.navigationStart > 0 && timing.responseStart > 0 && timing.requestStart > 0 && timing.loadEventEnd > 0 && timing.responseEnd > 0 && timing.connectEnd > 0 && timing.domLoading > 0;
+                    return timing.domainLookupStart > 0
+                        && timing.navigationStart > 0
+                        && timing.responseStart > 0
+                        && timing.requestStart > 0
+                        && timing.loadEventEnd > 0
+                        && timing.responseEnd > 0
+                        && timing.connectEnd > 0
+                        && timing.domLoading > 0;
                 };
                 PageViewPerformance.getDuration = function (start, end) {
                     var duration = 0;
@@ -1758,6 +2207,8 @@ var Microsoft;
         })(Telemetry = ApplicationInsights.Telemetry || (ApplicationInsights.Telemetry = {}));
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="Domain.ts" />
+/// <reference path="SessionState.ts" />
 var AI;
 (function (AI) {
     "use strict";
@@ -1765,13 +2216,16 @@ var AI;
         __extends(SessionStateData, _super);
         function SessionStateData() {
             this.ver = 2;
-            this.state = 0 /* Start */;
+            this.state = AI.SessionState.Start;
             _super.call(this);
         }
         return SessionStateData;
     })(Microsoft.Telemetry.Domain);
     AI.SessionStateData = SessionStateData;
 })(AI || (AI = {}));
+/// <reference path="../Contracts/Generated/SessionStateData.ts" />
+/// <reference path="../Contracts/Generated/SessionState.ts"/>
+/// <reference path="./Common/DataSanitizer.ts"/>
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -1784,8 +2238,8 @@ var Microsoft;
                 function SessionTelemetry(state) {
                     _super.call(this);
                     this.aiDataContract = {
-                        ver: true,
-                        state: true
+                        ver: ApplicationInsights.FieldType.Required,
+                        state: ApplicationInsights.FieldType.Required
                     };
                     this.state = state;
                 }
@@ -1797,6 +2251,16 @@ var Microsoft;
         })(Telemetry = ApplicationInsights.Telemetry || (ApplicationInsights.Telemetry = {}));
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="sender.ts"/>
+/// <reference path="telemetry/trace.ts" />
+/// <reference path="telemetry/event.ts" />
+/// <reference path="telemetry/exception.ts" />
+/// <reference path="telemetry/metric.ts" />
+/// <reference path="telemetry/pageview.ts" />
+/// <reference path="telemetry/pageviewperformance.ts" />
+/// <reference path="telemetry/SessionTelemetry.ts" />
+/// <reference path="./Util.ts"/>
+/// <reference path="./Contracts/Generated/SessionState.ts"/>
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -1825,7 +2289,7 @@ var Microsoft;
             };
             TelemetryContext.prototype.track = function (envelope) {
                 if (!envelope) {
-                    ApplicationInsights._InternalLogging.throwInternalUserActionable(0 /* CRITICAL */, "cannot call .track() with a null or undefined argument");
+                    ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "cannot call .track() with a null or undefined argument");
                 }
                 else {
                     if (envelope.name === ApplicationInsights.Telemetry.PageView.envelopeType) {
@@ -1870,14 +2334,16 @@ var Microsoft;
                 }
                 catch (e) {
                     telemetryInitializersFailed = true;
-                    ApplicationInsights._InternalLogging.throwInternalUserActionable(0 /* CRITICAL */, "One of telemetry initializers failed, telemetry item will not be sent: " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "One of telemetry initializers failed, telemetry item will not be sent: " + ApplicationInsights.Util.dump(e));
                 }
                 if (!telemetryInitializersFailed) {
-                    if (envelope.name === ApplicationInsights.Telemetry.SessionTelemetry.envelopeType || envelope.name === ApplicationInsights.Telemetry.Metric.envelopeType || this.sample.isSampledIn(envelope)) {
+                    if (envelope.name === ApplicationInsights.Telemetry.SessionTelemetry.envelopeType ||
+                        envelope.name === ApplicationInsights.Telemetry.Metric.envelopeType ||
+                        this.sample.isSampledIn(envelope)) {
                         this._sender.send(envelope);
                     }
                     else {
-                        ApplicationInsights._InternalLogging.logInternalMessage(1 /* WARNING */, "Telemetry is sampled and not sent to the AI service. SampleRate is " + this.sample.sampleRate);
+                        ApplicationInsights._InternalLogging.logInternalMessage(ApplicationInsights.LoggingSeverity.WARNING, "Telemetry is sampled and not sent to the AI service. SampleRate is " + this.sample.sampleRate);
                     }
                 }
                 return envelope;
@@ -1979,8 +2445,7 @@ var Microsoft;
             };
             TelemetryContext.prototype._applySampleContext = function (envelope, sampleContext) {
                 if (sampleContext) {
-                    var tagKeys = new AI.ContextTagKeys();
-                    envelope.tags[tagKeys.sampleRate] = sampleContext.sampleRate;
+                    envelope.sampleRate = sampleContext.sampleRate;
                 }
             };
             TelemetryContext.prototype._applySessionContext = function (envelope, sessionContext) {
@@ -1997,9 +2462,6 @@ var Microsoft;
             TelemetryContext.prototype._applyUserContext = function (envelope, userContext) {
                 if (userContext) {
                     var tagKeys = new AI.ContextTagKeys();
-                    if (typeof userContext.accountAcquisitionDate === "string") {
-                        envelope.tags[tagKeys.userAccountAcquisitionDate] = userContext.accountAcquisitionDate;
-                    }
                     if (typeof userContext.accountId === "string") {
                         envelope.tags[tagKeys.userAccountId] = userContext.accountId;
                     }
@@ -2022,6 +2484,7 @@ var Microsoft;
         ApplicationInsights.TelemetryContext = TelemetryContext;
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="Base.ts" />
 var Microsoft;
 (function (Microsoft) {
     var Telemetry;
@@ -2037,6 +2500,7 @@ var Microsoft;
         Telemetry.Data = Data;
     })(Telemetry = Microsoft.Telemetry || (Microsoft.Telemetry = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="../../Contracts/Generated/Data.ts"/>
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -2051,8 +2515,8 @@ var Microsoft;
                     function Data(type, data) {
                         _super.call(this);
                         this.aiDataContract = {
-                            baseType: true,
-                            baseData: true
+                            baseType: ApplicationInsights.FieldType.Required,
+                            baseData: ApplicationInsights.FieldType.Required
                         };
                         this.baseType = type;
                         this.baseData = data;
@@ -2064,6 +2528,91 @@ var Microsoft;
         })(Telemetry = ApplicationInsights.Telemetry || (ApplicationInsights.Telemetry = {}));
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="../Contracts/Generated/PageViewData.ts" />
+/// <reference path="./Common/DataSanitizer.ts"/>
+var Microsoft;
+(function (Microsoft) {
+    var ApplicationInsights;
+    (function (ApplicationInsights) {
+        var Telemetry;
+        (function (Telemetry) {
+            "use strict";
+            var PageViewManager = (function () {
+                function PageViewManager(appInsights, overridePageViewDuration) {
+                    this.pageViewPerformanceSent = false;
+                    this.overridePageViewDuration = false;
+                    this.overridePageViewDuration = overridePageViewDuration;
+                    this.appInsights = appInsights;
+                }
+                PageViewManager.prototype.trackPageView = function (name, url, properties, measurements, duration) {
+                    var _this = this;
+                    if (typeof name !== "string") {
+                        name = window.document && window.document.title || "";
+                    }
+                    if (typeof url !== "string") {
+                        url = window.location && window.location.href || "";
+                    }
+                    var pageViewSent = false;
+                    var customDuration = 0;
+                    if (Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
+                        var start = Telemetry.PageViewPerformance.getPerformanceTiming().navigationStart;
+                        customDuration = Telemetry.PageViewPerformance.getDuration(start, +new Date);
+                    }
+                    else {
+                        this.appInsights.sendPageViewInternal(name, url, 0, properties, measurements);
+                        this.appInsights.flush();
+                        pageViewSent = true;
+                    }
+                    if (this.overridePageViewDuration || !isNaN(duration)) {
+                        this.appInsights.sendPageViewInternal(name, url, duration ? duration : customDuration, properties, measurements);
+                        this.appInsights.flush();
+                        pageViewSent = true;
+                    }
+                    var maxDurationLimit = 60000;
+                    if (!Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "trackPageView: navigation timing API used for calculation of page duration is not supported in this browser. This page view will be collected without duration and timing info.");
+                        return;
+                    }
+                    var handle = setInterval(function () {
+                        try {
+                            if (Telemetry.PageViewPerformance.isPerformanceTimingDataReady()) {
+                                clearInterval(handle);
+                                var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, null, properties, measurements);
+                                if (!pageViewPerformance.getIsValid() && !pageViewSent) {
+                                    _this.appInsights.sendPageViewInternal(name, url, customDuration, properties, measurements);
+                                    _this.appInsights.flush();
+                                }
+                                else {
+                                    if (!pageViewSent) {
+                                        _this.appInsights.sendPageViewInternal(name, url, pageViewPerformance.getDurationMs(), properties, measurements);
+                                    }
+                                    if (!_this.pageViewPerformanceSent) {
+                                        _this.appInsights.sendPageViewPerformanceInternal(pageViewPerformance);
+                                        _this.pageViewPerformanceSent = true;
+                                    }
+                                    _this.appInsights.flush();
+                                }
+                            }
+                            else if (Telemetry.PageViewPerformance.getDuration(start, +new Date) > maxDurationLimit) {
+                                clearInterval(handle);
+                                if (!pageViewSent) {
+                                    _this.appInsights.sendPageViewInternal(name, url, maxDurationLimit, properties, measurements);
+                                    _this.appInsights.flush();
+                                }
+                            }
+                        }
+                        catch (e) {
+                            ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "trackPageView failed on page load calculation: " + ApplicationInsights.Util.dump(e));
+                        }
+                    }, 100);
+                };
+                return PageViewManager;
+            })();
+            Telemetry.PageViewManager = PageViewManager;
+        })(Telemetry = ApplicationInsights.Telemetry || (ApplicationInsights.Telemetry = {}));
+    })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
+})(Microsoft || (Microsoft = {}));
+/// <reference path="../AppInsights.ts" />
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -2150,15 +2699,114 @@ var Microsoft;
         })(Telemetry = ApplicationInsights.Telemetry || (ApplicationInsights.Telemetry = {}));
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+var AI;
+(function (AI) {
+    "use strict";
+    (function (DependencyKind) {
+        DependencyKind[DependencyKind["SQL"] = 0] = "SQL";
+        DependencyKind[DependencyKind["Http"] = 1] = "Http";
+        DependencyKind[DependencyKind["Other"] = 2] = "Other";
+    })(AI.DependencyKind || (AI.DependencyKind = {}));
+    var DependencyKind = AI.DependencyKind;
+})(AI || (AI = {}));
+var AI;
+(function (AI) {
+    "use strict";
+    (function (DependencySourceType) {
+        DependencySourceType[DependencySourceType["Undefined"] = 0] = "Undefined";
+        DependencySourceType[DependencySourceType["Aic"] = 1] = "Aic";
+        DependencySourceType[DependencySourceType["Apmc"] = 2] = "Apmc";
+    })(AI.DependencySourceType || (AI.DependencySourceType = {}));
+    var DependencySourceType = AI.DependencySourceType;
+})(AI || (AI = {}));
+/// <reference path="Domain.ts" />
+/// <reference path="DataPointType.ts" />
+/// <reference path="DependencyKind.ts" />
+/// <reference path="DependencySourceType.ts" />
+var AI;
+(function (AI) {
+    "use strict";
+    var RemoteDependencyData = (function (_super) {
+        __extends(RemoteDependencyData, _super);
+        function RemoteDependencyData() {
+            this.ver = 2;
+            this.kind = AI.DataPointType.Aggregation;
+            this.dependencyKind = AI.DependencyKind.Other;
+            this.success = true;
+            this.dependencySource = AI.DependencySourceType.Apmc;
+            this.properties = {};
+            _super.call(this);
+        }
+        return RemoteDependencyData;
+    })(Microsoft.Telemetry.Domain);
+    AI.RemoteDependencyData = RemoteDependencyData;
+})(AI || (AI = {}));
+/// <reference path="../Contracts/Generated/PageViewData.ts" />
+/// <reference path="./Common/DataSanitizer.ts"/>
+/// <reference path="../Contracts/Generated/RemoteDependencyData.ts"/>
+var Microsoft;
+(function (Microsoft) {
+    var ApplicationInsights;
+    (function (ApplicationInsights) {
+        var Telemetry;
+        (function (Telemetry) {
+            "use strict";
+            var RemoteDependencyData = (function (_super) {
+                __extends(RemoteDependencyData, _super);
+                function RemoteDependencyData(name, commandName, value, success, resultCode) {
+                    _super.call(this);
+                    this.aiDataContract = {
+                        ver: ApplicationInsights.FieldType.Required,
+                        name: ApplicationInsights.FieldType.Default,
+                        kind: ApplicationInsights.FieldType.Required,
+                        value: ApplicationInsights.FieldType.Default,
+                        count: ApplicationInsights.FieldType.Default,
+                        min: ApplicationInsights.FieldType.Default,
+                        max: ApplicationInsights.FieldType.Default,
+                        stdDev: ApplicationInsights.FieldType.Default,
+                        dependencyKind: ApplicationInsights.FieldType.Default,
+                        success: ApplicationInsights.FieldType.Default,
+                        async: ApplicationInsights.FieldType.Default,
+                        dependencySource: ApplicationInsights.FieldType.Default,
+                        commandName: ApplicationInsights.FieldType.Default,
+                        dependencyTypeName: ApplicationInsights.FieldType.Default,
+                        properties: ApplicationInsights.FieldType.Default,
+                        resultCode: ApplicationInsights.FieldType.Default
+                    };
+                    this.name = name;
+                    this.commandName = commandName;
+                    this.value = value;
+                    this.success = success;
+                    this.resultCode = resultCode + "";
+                    this.dependencyKind = AI.DependencyKind.Http;
+                    this.dependencyTypeName = "Ajax";
+                }
+                RemoteDependencyData.envelopeType = "Microsoft.ApplicationInsights.RemoteDependencyData";
+                RemoteDependencyData.dataType = "RemoteDependencyData";
+                return RemoteDependencyData;
+            })(AI.RemoteDependencyData);
+            Telemetry.RemoteDependencyData = RemoteDependencyData;
+        })(Telemetry = ApplicationInsights.Telemetry || (ApplicationInsights.Telemetry = {}));
+    })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
+})(Microsoft || (Microsoft = {}));
+/// <reference path="telemetrycontext.ts" />
+/// <reference path="./Telemetry/Common/Data.ts"/>
+/// <reference path="./Util.ts"/>
+/// <reference path="./Contracts/Generated/SessionState.ts"/>
+/// <reference path="./Telemetry/PageViewManager.ts"/>
+/// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
+/// <reference path="./Telemetry/RemoteDependencyData.ts"/>
+/// <reference path="./ajax/ajax.ts"/>
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
     (function (ApplicationInsights) {
         "use strict";
-        ApplicationInsights.Version = "0.18.0";
+        ApplicationInsights.Version = "0.21.4";
         var AppInsights = (function () {
             function AppInsights(config) {
                 var _this = this;
+                this._trackAjaxAttempts = 0;
                 this.config = config || {};
                 var defaults = AppInsights.defaultConfig;
                 if (defaults !== undefined) {
@@ -2184,8 +2832,17 @@ var Microsoft;
                     sampleRate: function () { return _this.config.samplingPercentage; }
                 };
                 this.context = new ApplicationInsights.TelemetryContext(configGetters);
+                this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
                 this._eventTracking = new Timing("trackEvent");
                 this._eventTracking.action = function (name, url, duration, properties, measurements) {
+                    if (!measurements) {
+                        measurements = { duration: duration };
+                    }
+                    else {
+                        if (isNaN(measurements["duration"])) {
+                            measurements["duration"] = duration;
+                        }
+                    }
                     var event = new ApplicationInsights.Telemetry.Event(name, properties, measurements);
                     var data = new ApplicationInsights.Telemetry.Common.Data(ApplicationInsights.Telemetry.Event.dataType, event);
                     var envelope = new ApplicationInsights.Telemetry.Common.Envelope(data, ApplicationInsights.Telemetry.Event.envelopeType);
@@ -2196,12 +2853,21 @@ var Microsoft;
                     _this.sendPageViewInternal(name, url, duration, properties, measurements);
                 };
                 this._pageVisitTimeManager = new ApplicationInsights.Telemetry.PageVisitTimeManager(function (pageName, pageUrl, pageVisitTime) { return _this.trackPageVisitTime(pageName, pageUrl, pageVisitTime); });
+                if (!this.config.disableAjaxTracking) {
+                    new Microsoft.ApplicationInsights.AjaxMonitor(this);
+                }
             }
             AppInsights.prototype.sendPageViewInternal = function (name, url, duration, properties, measurements) {
                 var pageView = new ApplicationInsights.Telemetry.PageView(name, url, duration, properties, measurements);
                 var data = new ApplicationInsights.Telemetry.Common.Data(ApplicationInsights.Telemetry.PageView.dataType, pageView);
                 var envelope = new ApplicationInsights.Telemetry.Common.Envelope(data, ApplicationInsights.Telemetry.PageView.envelopeType);
                 this.context.track(envelope);
+                this._trackAjaxAttempts = 0;
+            };
+            AppInsights.prototype.sendPageViewPerformanceInternal = function (pageViewPerformance) {
+                var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data(ApplicationInsights.Telemetry.PageViewPerformance.dataType, pageViewPerformance);
+                var pageViewPerformanceEnvelope = new ApplicationInsights.Telemetry.Common.Envelope(pageViewPerformanceData, ApplicationInsights.Telemetry.PageViewPerformance.envelopeType);
+                this.context.track(pageViewPerformanceEnvelope);
             };
             AppInsights.prototype.startTrackPage = function (name) {
                 try {
@@ -2211,7 +2877,7 @@ var Microsoft;
                     this._pageTracking.start(name);
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "startTrackPage failed, page view may not be collected: " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "startTrackPage failed, page view may not be collected: " + ApplicationInsights.Util.dump(e));
                 }
             };
             AppInsights.prototype.stopTrackPage = function (name, url, properties, measurements) {
@@ -2228,54 +2894,18 @@ var Microsoft;
                     }
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "stopTrackPage failed, page view will not be collected: " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "stopTrackPage failed, page view will not be collected: " + ApplicationInsights.Util.dump(e));
                 }
             };
-            AppInsights.prototype.trackPageView = function (name, url, properties, measurements) {
+            AppInsights.prototype.trackPageView = function (name, url, properties, measurements, duration) {
                 try {
-                    if (typeof name !== "string") {
-                        name = window.document && window.document.title || "";
-                    }
-                    if (typeof url !== "string") {
-                        url = window.location && window.location.href || "";
-                    }
-                    this.trackPageViewInternal(name, url, properties, measurements);
+                    this._pageViewManager.trackPageView(name, url, properties, measurements, duration);
                     if (this.config.autoTrackPageVisitTime) {
                         this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
                     }
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "trackPageView failed, page view will not be collected: " + ApplicationInsights.Util.dump(e));
-                }
-            };
-            AppInsights.prototype.trackPageViewInternal = function (name, url, properties, measurements) {
-                var _this = this;
-                var durationMs = 0;
-                if (ApplicationInsights.Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
-                    var startTime = window.performance.timing.navigationStart;
-                    durationMs = ApplicationInsights.Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-                    var handle = setInterval(function () {
-                        try {
-                            durationMs = ApplicationInsights.Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-                            var timingDataReady = ApplicationInsights.Telemetry.PageViewPerformance.isPerformanceTimingDataReady();
-                            var timeoutReached = durationMs > 60000;
-                            if (timeoutReached || timingDataReady) {
-                                clearInterval(handle);
-                                durationMs = ApplicationInsights.Telemetry.PageViewPerformance.getDuration(startTime, +new Date);
-                                var pageViewPerformance = new ApplicationInsights.Telemetry.PageViewPerformance(name, url, durationMs, properties, measurements);
-                                _this.sendPageViewInternal(name, url, pageViewPerformance.isValid && !isNaN(pageViewPerformance.duration) ? +pageViewPerformance.duration : durationMs, properties, measurements);
-                                if (pageViewPerformance.isValid) {
-                                    var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data(ApplicationInsights.Telemetry.PageViewPerformance.dataType, pageViewPerformance);
-                                    var pageViewPerformanceEnvelope = new ApplicationInsights.Telemetry.Common.Envelope(pageViewPerformanceData, ApplicationInsights.Telemetry.PageViewPerformance.envelopeType);
-                                    _this.context.track(pageViewPerformanceEnvelope);
-                                }
-                                _this.context._sender.triggerSend();
-                            }
-                        }
-                        catch (e) {
-                            ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "trackPageView failed on page load calculation: " + ApplicationInsights.Util.dump(e));
-                        }
-                    }, 100);
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "trackPageView failed, page view will not be collected: " + ApplicationInsights.Util.dump(e));
                 }
             };
             AppInsights.prototype.startTrackEvent = function (name) {
@@ -2283,7 +2913,7 @@ var Microsoft;
                     this._eventTracking.start(name);
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "startTrackEvent failed, event will not be collected: " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "startTrackEvent failed, event will not be collected: " + ApplicationInsights.Util.dump(e));
                 }
             };
             AppInsights.prototype.stopTrackEvent = function (name, properties, measurements) {
@@ -2291,7 +2921,7 @@ var Microsoft;
                     this._eventTracking.stop(name, undefined, properties, measurements);
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "stopTrackEvent failed, event will not be collected: " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "stopTrackEvent failed, event will not be collected: " + ApplicationInsights.Util.dump(e));
                 }
             };
             AppInsights.prototype.trackEvent = function (name, properties, measurements) {
@@ -2302,8 +2932,21 @@ var Microsoft;
                     this.context.track(envelope);
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "trackEvent failed, event will not be collected: " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "trackEvent failed, event will not be collected: " + ApplicationInsights.Util.dump(e));
                 }
+            };
+            AppInsights.prototype.trackAjax = function (absoluteUrl, pathName, totalTime, success, resultCode) {
+                if (this.config.maxAjaxCallsPerView === -1 ||
+                    this._trackAjaxAttempts < this.config.maxAjaxCallsPerView) {
+                    var dependency = new ApplicationInsights.Telemetry.RemoteDependencyData(absoluteUrl, pathName, totalTime, success, resultCode);
+                    var dependencyData = new ApplicationInsights.Telemetry.Common.Data(ApplicationInsights.Telemetry.RemoteDependencyData.dataType, dependency);
+                    var envelope = new ApplicationInsights.Telemetry.Common.Envelope(dependencyData, "Microsoft.ApplicationInsights." + this.config.instrumentationKey.replace(/-/g, "") + ".RemoteDependency");
+                    this.context.track(envelope);
+                }
+                else if (this._trackAjaxAttempts === this.config.maxAjaxCallsPerView) {
+                    ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "Maximum ajax per page view limit reached, ajax monitoring is paused until the next trackPageView(). In order to increase the limit set the maxAjaxCallsPerView configuration parameter.");
+                }
+                ++this._trackAjaxAttempts;
             };
             AppInsights.prototype.trackException = function (exception, handledAt, properties, measurements) {
                 try {
@@ -2321,7 +2964,7 @@ var Microsoft;
                     this.context.track(envelope);
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "trackException failed, exception will not be collected: " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "trackException failed, exception will not be collected: " + ApplicationInsights.Util.dump(e));
                 }
             };
             AppInsights.prototype.trackMetric = function (name, average, sampleCount, min, max, properties) {
@@ -2332,7 +2975,7 @@ var Microsoft;
                     this.context.track(envelope);
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "trackMetric failed, metric will not be collected: " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "trackMetric failed, metric will not be collected: " + ApplicationInsights.Util.dump(e));
                 }
             };
             AppInsights.prototype.trackTrace = function (message, properties) {
@@ -2343,7 +2986,7 @@ var Microsoft;
                     this.context.track(envelope);
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, "trackTrace failed, trace will not be collected: " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "trackTrace failed, trace will not be collected: " + ApplicationInsights.Util.dump(e));
                 }
             };
             AppInsights.prototype.trackPageVisitTime = function (pageName, pageUrl, pageVisitTime) {
@@ -2355,7 +2998,7 @@ var Microsoft;
                     this.context._sender.triggerSend();
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "flush failed, telemetry will not be collected: " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "flush failed, telemetry will not be collected: " + ApplicationInsights.Util.dump(e));
                 }
             };
             AppInsights.prototype.setAuthenticatedUserContext = function (authenticatedUserId, accountId) {
@@ -2363,7 +3006,7 @@ var Microsoft;
                     this.context.user.setAuthenticatedUserContext(authenticatedUserId, accountId);
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "Setting auth user context failed. " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "Setting auth user context failed. " + ApplicationInsights.Util.dump(e));
                 }
             };
             AppInsights.prototype.clearAuthenticatedUserContext = function () {
@@ -2371,7 +3014,7 @@ var Microsoft;
                     this.context.user.clearAuthenticatedUserContext();
                 }
                 catch (e) {
-                    ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "Clearing auth user context failed. " + ApplicationInsights.Util.dump(e));
+                    ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "Clearing auth user context failed. " + ApplicationInsights.Util.dump(e));
                 }
             };
             AppInsights.prototype.SendCORSException = function (properties) {
@@ -2399,7 +3042,7 @@ var Microsoft;
                 catch (exception) {
                     var errorString = error ? (error.name + ", " + error.message) : "null";
                     var exceptionDump = ApplicationInsights.Util.dump(exception);
-                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, "_onerror threw " + exceptionDump + " while logging error, error will not be collected: " + errorString);
+                    ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, "_onerror threw " + exceptionDump + " while logging error, error will not be collected: " + errorString);
                 }
             };
             return AppInsights;
@@ -2412,14 +3055,14 @@ var Microsoft;
             }
             Timing.prototype.start = function (name) {
                 if (typeof this._events[name] !== "undefined") {
-                    ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "start" + this._name + " was called more than once for this event without calling stop" + this._name + ". key is '" + name + "'");
+                    ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "start" + this._name + " was called more than once for this event without calling stop" + this._name + ". key is '" + name + "'");
                 }
                 this._events[name] = +new Date;
             };
             Timing.prototype.stop = function (name, url, properties, measurements) {
                 var start = this._events[name];
                 if (isNaN(start)) {
-                    ApplicationInsights._InternalLogging.throwInternalUserActionable(1 /* WARNING */, "stop" + this._name + " was called without a corresponding start" + this._name + " . Event name is '" + name + "'");
+                    ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.WARNING, "stop" + this._name + " was called without a corresponding start" + this._name + " . Event name is '" + name + "'");
                 }
                 else {
                     var end = +new Date;
@@ -2433,6 +3076,7 @@ var Microsoft;
         })();
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
+/// <reference path="PageViewData.ts" />
 var AI;
 (function (AI) {
     "use strict";
@@ -2448,44 +3092,7 @@ var AI;
     })(AI.PageViewData);
     AI.AjaxCallData = AjaxCallData;
 })(AI || (AI = {}));
-var AI;
-(function (AI) {
-    "use strict";
-    (function (DependencyKind) {
-        DependencyKind[DependencyKind["SQL"] = 0] = "SQL";
-        DependencyKind[DependencyKind["Http"] = 1] = "Http";
-        DependencyKind[DependencyKind["Other"] = 2] = "Other";
-    })(AI.DependencyKind || (AI.DependencyKind = {}));
-    var DependencyKind = AI.DependencyKind;
-})(AI || (AI = {}));
-var AI;
-(function (AI) {
-    "use strict";
-    (function (DependencySourceType) {
-        DependencySourceType[DependencySourceType["Undefined"] = 0] = "Undefined";
-        DependencySourceType[DependencySourceType["Aic"] = 1] = "Aic";
-        DependencySourceType[DependencySourceType["Apmc"] = 2] = "Apmc";
-    })(AI.DependencySourceType || (AI.DependencySourceType = {}));
-    var DependencySourceType = AI.DependencySourceType;
-})(AI || (AI = {}));
-var AI;
-(function (AI) {
-    "use strict";
-    var RemoteDependencyData = (function (_super) {
-        __extends(RemoteDependencyData, _super);
-        function RemoteDependencyData() {
-            this.ver = 2;
-            this.kind = 0 /* Measurement */;
-            this.dependencyKind = 2 /* Other */;
-            this.success = true;
-            this.dependencySource = 0 /* Undefined */;
-            this.properties = {};
-            _super.call(this);
-        }
-        return RemoteDependencyData;
-    })(Microsoft.Telemetry.Domain);
-    AI.RemoteDependencyData = RemoteDependencyData;
-})(AI || (AI = {}));
+/// <reference path="Domain.ts" />
 var AI;
 (function (AI) {
     "use strict";
@@ -2501,6 +3108,7 @@ var AI;
     })(Microsoft.Telemetry.Domain);
     AI.RequestData = RequestData;
 })(AI || (AI = {}));
+/// <reference path="appinsights.ts" />
 var Microsoft;
 (function (Microsoft) {
     var ApplicationInsights;
@@ -2567,7 +3175,7 @@ var Microsoft;
                     if (exception && typeof exception.toString === "function") {
                         message += ": " + exception.toString();
                     }
-                    Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(1 /* WARNING */, message);
+                    Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.WARNING, message);
                 }
             };
             Initialization.prototype.pollInteralLogs = function (appInsightsInstance) {
@@ -2581,13 +3189,14 @@ var Microsoft;
                 }, this.config.diagnosticLogInterval);
             };
             Initialization.prototype.addHousekeepingBeforeUnload = function (appInsightsInstance) {
+                // Add callback to push events when the user navigates away
                 if ('onbeforeunload' in window) {
                     var performHousekeeping = function () {
                         appInsightsInstance.context._sender.triggerSend();
                         appInsightsInstance.context._sessionManager.backup();
                     };
                     if (!Microsoft.ApplicationInsights.Util.addEventHandler('beforeunload', performHousekeeping)) {
-                        Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(0 /* CRITICAL */, 'Could not add handler for beforeunload');
+                        Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 'Could not add handler for beforeunload');
                     }
                 }
             };
@@ -2603,7 +3212,9 @@ var Microsoft;
                 config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 1000000;
                 config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
                 config.enableDebug = ApplicationInsights.Util.stringToBoolOrDefault(config.enableDebug);
-                config.autoCollectErrors = (config.autoCollectErrors !== undefined && config.autoCollectErrors !== null) ? ApplicationInsights.Util.stringToBoolOrDefault(config.autoCollectErrors) : true;
+                config.disableExceptionTracking = (config.disableExceptionTracking !== undefined && config.disableExceptionTracking !== null) ?
+                    ApplicationInsights.Util.stringToBoolOrDefault(config.disableExceptionTracking) :
+                    false;
                 config.disableTelemetry = ApplicationInsights.Util.stringToBoolOrDefault(config.disableTelemetry);
                 config.verboseLogging = ApplicationInsights.Util.stringToBoolOrDefault(config.verboseLogging);
                 config.emitLineDelimitedJson = ApplicationInsights.Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
@@ -2612,6 +3223,10 @@ var Microsoft;
                 if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
                     config.samplingPercentage = 100;
                 }
+                config.disableAjaxTracking = (config.disableAjaxTracking !== undefined && config.disableAjaxTracking !== null) ?
+                    ApplicationInsights.Util.stringToBoolOrDefault(config.disableAjaxTracking) :
+                    false;
+                config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
                 return config;
             };
             return Initialization;
@@ -2619,28 +3234,33 @@ var Microsoft;
         ApplicationInsights.Initialization = Initialization;
     })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
 })(Microsoft || (Microsoft = {}));
-function initializeAppInsights() {
-    try {
-        if (typeof window !== "undefined" && typeof JSON !== "undefined") {
-            var aiName = "appInsights";
-            if (window[aiName] === undefined) {
-                Microsoft.ApplicationInsights.AppInsights.defaultConfig = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
-            }
-            else {
-                var snippet = window[aiName] || {};
-                var init = new Microsoft.ApplicationInsights.Initialization(snippet);
-                var appInsightsLocal = init.loadAppInsights();
-                for (var field in appInsightsLocal) {
-                    snippet[field] = appInsightsLocal[field];
+/// <reference path="initialization.ts" />
+var Microsoft;
+(function (Microsoft) {
+    var ApplicationInsights;
+    (function (ApplicationInsights) {
+        "use strict";
+        try {
+            if (typeof window !== "undefined" && typeof JSON !== "undefined") {
+                var aiName = "appInsights";
+                if (window[aiName] === undefined) {
+                    Microsoft.ApplicationInsights.AppInsights.defaultConfig = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
                 }
-                init.emptyQueue();
-                init.pollInteralLogs(appInsightsLocal);
-                init.addHousekeepingBeforeUnload(appInsightsLocal);
+                else {
+                    var snippet = window[aiName] || {};
+                    var init = new Microsoft.ApplicationInsights.Initialization(snippet);
+                    var appInsightsLocal = init.loadAppInsights();
+                    for (var field in appInsightsLocal) {
+                        snippet[field] = appInsightsLocal[field];
+                    }
+                    init.emptyQueue();
+                    init.pollInteralLogs(appInsightsLocal);
+                    init.addHousekeepingBeforeUnload(appInsightsLocal);
+                }
             }
         }
-    }
-    catch (e) {
-        Microsoft.ApplicationInsights._InternalLogging.warnToConsole('Failed to initialize AppInsights JS SDK: ' + e.message);
-    }
-}
-initializeAppInsights();
+        catch (e) {
+            Microsoft.ApplicationInsights._InternalLogging.warnToConsole('Failed to initialize AppInsights JS SDK: ' + e.message);
+        }
+    })(ApplicationInsights = Microsoft.ApplicationInsights || (Microsoft.ApplicationInsights = {}));
+})(Microsoft || (Microsoft = {}));
