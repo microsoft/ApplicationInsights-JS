@@ -2802,7 +2802,7 @@ var Microsoft;
     var ApplicationInsights;
     (function (ApplicationInsights) {
         "use strict";
-        ApplicationInsights.Version = "0.21.4";
+        ApplicationInsights.Version = "0.21.5";
         var AppInsights = (function () {
             function AppInsights(config) {
                 var _this = this;
