@@ -92,7 +92,7 @@ class InitializationTests extends TestClass {
                 Assert.ok(!init.config.verboseLogging);
                 Assert.equal(10000, init.config.diagnosticLogInterval);
                 Assert.equal(100, init.config.samplingPercentage);
-                Assert.equal(20, init.config.maxAjaxCallsPerView);
+                Assert.equal(500, init.config.maxAjaxCallsPerView);
             }
         });
 
