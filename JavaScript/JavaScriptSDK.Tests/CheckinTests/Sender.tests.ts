@@ -554,7 +554,7 @@ class SenderTests extends TestClass {
             test: () => {
                 // setup
                 Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { } };
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
                 var loggerSpy = this.sandbox.spy(Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights, "trackTrace");
                                 
                 // act
@@ -569,13 +569,13 @@ class SenderTests extends TestClass {
                 );
             }
         });
-
+        
         this.testCase({
             name: "SenderTests: data loss analyzer - result 0; didn't report loss",
             test: () => {
                 // setup
                 Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { } };
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
                 var loggerSpy = this.sandbox.spy(Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights, "trackTrace");
                                 
                 // act
@@ -583,6 +583,23 @@ class SenderTests extends TestClass {
                 
                 // Validate
                 Assert.ok(loggerSpy.notCalled);
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: data loss analyzer - restores to 0 after reporting data loss",
+            test: () => {
+                // setup
+                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
+                var loggerSpy = this.sandbox.spy(Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights, "trackTrace");
+                                
+                // act
+                Microsoft.ApplicationInsights.DataLossAnalyzer.itemQueued();
+                Microsoft.ApplicationInsights.DataLossAnalyzer.reportLostItems();
+                                
+                // Validate
+                Assert.equal(0, Microsoft.ApplicationInsights.DataLossAnalyzer.getNumberOfLostItems(), "Expected to reset to 0");
             }
         });
     }

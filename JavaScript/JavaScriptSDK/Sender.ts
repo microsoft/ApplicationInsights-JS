@@ -77,7 +77,8 @@ module Microsoft.ApplicationInsights {
                         "AI (Internal): Not all telemetry items were sent from the previous page. Please set maxBatchSizeInBytes and/or maxBatchInterval to increase sending frequency. Count of missing items: "
                         + DataLossAnalyzer.getNumberOfLostItems()
                         , null);          
-                    DataLossAnalyzer.appInsights.flush();          
+                    DataLossAnalyzer.appInsights.flush();   
+                    DataLossAnalyzer.reset();     
                 }
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Failed to report data loss: " + Util.dump(e));
