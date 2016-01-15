@@ -27,6 +27,49 @@ declare var XDomainRequest: {
 module Microsoft.ApplicationInsights {
     "use strict";
 
+    export class DataLossAnalyzer {
+        static enabled = false;
+
+        static reset() {
+            sessionStorage.setItem("itemsQueued", "0");
+        }
+
+        static itemQueued() {
+            try {
+                if (sessionStorage && sessionStorage.getItem && sessionStorage.setItem) {
+                    var itemsQueued = sessionStorage.getItem("itemsQueued");
+                    itemsQueued = itemsQueued || 0;
+                    ++itemsQueued;
+                    sessionStorage.setItem("itemsQueued", itemsQueued);
+                }
+            } catch (e) { }
+        }
+
+        static itemsSentSuccessfully(countOfItemsSentSuccessfully: number) {
+            try {
+                if (sessionStorage && sessionStorage.getItem && sessionStorage.setItem) {
+                    var itemsQueued = sessionStorage.getItem("itemsQueued");
+                    itemsQueued = itemsQueued
+                        ? (itemsQueued - countOfItemsSentSuccessfully)
+                        : 0;
+                    sessionStorage.setItem("itemsQueued", itemsQueued);
+                }
+            } catch (e) { }
+        }
+
+        static getNumberOfLostItems(): number {
+            try {
+                if (sessionStorage && sessionStorage.getItem && sessionStorage.setItem) {
+                    var itemsQueued = sessionStorage.getItem("itemsQueued");
+                    itemsQueued = itemsQueued || 0;
+                    return itemsQueued;
+                }
+            } catch (e) {
+                return 0;
+            }
+        }
+    }
+
     export interface ISenderConfig {
         /**
          * The url to which payloads will be sent
@@ -67,7 +110,7 @@ module Microsoft.ApplicationInsights {
         /**
          * A method which will cause data to be send to the url
          */
-        public _sender: (payload: string, isAsync: boolean) => void;
+        public _sender: (payload: string, isAsync: boolean, numberOfItemsInPayload: number) => void;
 
         /**
          * Constructs a new instance of the Sender class
@@ -84,8 +127,14 @@ module Microsoft.ApplicationInsights {
                 } else if (typeof XDomainRequest !== "undefined") {
                     this._sender = this._xdrSender; //IE 8 and 9
                 }
+
+                if (DataLossAnalyzer.enabled && DataLossAnalyzer.getNumberOfLostItems() > 0) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                        "Not all telemetry items were sent from the previous page. Please set maxBatchSizeInBytes and/or maxBatchInterval to increase sending frequency. Count of missing items: " + DataLossAnalyzer.getNumberOfLostItems());
+                }
             }
         }
+
 
         /**
          * Add a telemetry item to the send buffer
@@ -128,6 +177,8 @@ module Microsoft.ApplicationInsights {
                         this.triggerSend();
                     }, this._config.maxBatchInterval());
                 }
+
+                DataLossAnalyzer.enabled && DataLossAnalyzer.itemQueued();
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.dump(e));
             }
@@ -159,7 +210,7 @@ module Microsoft.ApplicationInsights {
             if (typeof async === 'boolean') {
                 isAsync = async;
             }
-            
+
             try {
                 // Send data only if disableTelemetry is false
                 if (!this._config.disableTelemetry()) {
@@ -171,7 +222,7 @@ module Microsoft.ApplicationInsights {
                             "[" + this._buffer.join(",") + "]";
 
                         // invoke send
-                        this._sender(batch, isAsync);
+                        this._sender(batch, isAsync, this._buffer.length);
                     }
 
                     // update lastSend time to enable throttling
@@ -192,12 +243,12 @@ module Microsoft.ApplicationInsights {
          * @param payload {string} - The data payload to be sent.
          * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
          */
-        private _xhrSender(payload: string, isAsync: boolean) {
+        private _xhrSender(payload: string, isAsync: boolean, countOfItemsInPayload: number) {
             var xhr = new XMLHttpRequest();
             xhr[AjaxMonitor.DisabledPropertyName] = true;
             xhr.open("POST", this._config.endpointUrl(), isAsync);
             xhr.setRequestHeader("Content-type", "application/json");
-            xhr.onreadystatechange = () => Sender._xhrReadyStateChange(xhr, payload);
+            xhr.onreadystatechange = () => Sender._xhrReadyStateChange(xhr, payload, countOfItemsInPayload);
             xhr.onerror = (event: ErrorEvent) => Sender._onError(payload, xhr.responseText || xhr.response || "", event);
             xhr.send(payload);
         }
@@ -221,12 +272,12 @@ module Microsoft.ApplicationInsights {
         /**
          * xhr state changes
          */
-        public static _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string) {
+        public static _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string, countOfItemsInPayload: number) {
             if (xhr.readyState === 4) {
                 if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
                     Sender._onError(payload, xhr.responseText || xhr.response || "");
                 } else {
-                    Sender._onSuccess(payload);
+                    Sender._onSuccess(payload, countOfItemsInPayload);
                 }
             }
         }
@@ -236,7 +287,7 @@ module Microsoft.ApplicationInsights {
          */
         public static _xdrOnLoad(xdr: XDomainRequest, payload: string) {
             if (xdr && (xdr.responseText + "" === "200" || xdr.responseText === "")) {
-                Sender._onSuccess(payload);
+                Sender._onSuccess(payload, 0);
             } else {
                 Sender._onError(payload, xdr && xdr.responseText || "");
             }
@@ -252,8 +303,8 @@ module Microsoft.ApplicationInsights {
         /**
          * success handler
          */
-        public static _onSuccess(payload: string) {
-            // no-op, used in tests
+        public static _onSuccess(payload: string, countOfItemsInPayload: number) {
+            DataLossAnalyzer.enabled && DataLossAnalyzer.itemsSentSuccessfully(countOfItemsInPayload);
         }
     }
 
