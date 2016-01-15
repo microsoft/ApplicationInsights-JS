@@ -29,7 +29,8 @@ class InitializationTests extends TestClass {
             samplingPercentage: 33,
             disableAjaxTracking: true,
             overridePageViewDuration: false,
-            maxAjaxCallsPerView: 44
+            maxAjaxCallsPerView: 44,
+            disableDataLossAnalysis: true
         };
 
         // set default values

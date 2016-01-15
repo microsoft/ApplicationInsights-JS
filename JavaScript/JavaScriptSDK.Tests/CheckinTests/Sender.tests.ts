@@ -37,7 +37,7 @@ class SenderTests extends TestClass {
             maxBatchInterval: () => this.maxBatchInterval,
             disableTelemetry: () => this.disableTelemetry
         };
-          
+
         this.getSender = () => new Microsoft.ApplicationInsights.Sender(config);
         this.errorSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onError");
         this.successSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onSuccess");
@@ -222,7 +222,7 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                
+
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 this.clock.tick(sender._config.maxBatchInterval() + 1);
                 sender.send(this.testTelemetry);
@@ -235,7 +235,7 @@ class SenderTests extends TestClass {
 
                 // setup
                 var xdr = new this.xhr;
-                XMLHttpRequest = <any>(() => {});
+                XMLHttpRequest = <any>(() => { });
                 XDomainRequest = <any>(() => {
                     xdr.onload = xdr.onreadystatechange;
                     xdr.responseText = 200;
@@ -288,7 +288,7 @@ class SenderTests extends TestClass {
                 Assert.ok(senderSpy.notCalled, "sender was not invoked a third time after maxInterval elapsed");
                 logAsserts(0);
 
-                
+
             }
         });
 
@@ -313,7 +313,7 @@ class SenderTests extends TestClass {
                 Assert.ok(senderSpy.calledOnce, "sender was invoked");
                 logAsserts(0);
 
-                
+
                 Microsoft.ApplicationInsights._InternalLogging.enableDebugExceptions = () => false;
             }
         });
@@ -351,7 +351,7 @@ class SenderTests extends TestClass {
                 Assert.ok(senderSpy.calledTwice, "sender was invoked twice");
                 logAsserts(0);
 
-                
+
             }
         });
 
@@ -384,7 +384,7 @@ class SenderTests extends TestClass {
                 Assert.ok(senderSpy.notCalled, "sender was not called");
                 logAsserts(0);
 
-                
+
             }
         });
 
@@ -406,7 +406,7 @@ class SenderTests extends TestClass {
                 Assert.ok(senderSpy.notCalled, "sender was not called");
                 logAsserts(0);
 
-                
+
             }
         });
 
@@ -426,7 +426,7 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.equal(true, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = true");
 
-                
+
             }
         });
 
@@ -446,7 +446,7 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.equal(false, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = false");
 
-                
+
             }
         });
 
@@ -466,7 +466,7 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.equal(true, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = true");
 
-                
+
             }
         });
 
@@ -554,17 +554,18 @@ class SenderTests extends TestClass {
             test: () => {
                 // setup
                 Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                var loggerSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { } };
+                var loggerSpy = this.sandbox.spy(Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights, "trackTrace");
                                 
                 // act
                 Microsoft.ApplicationInsights.DataLossAnalyzer.itemQueued();
-                var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
-                
+                Microsoft.ApplicationInsights.DataLossAnalyzer.reportLostItems();
+                                
                 // Validate
                 Assert.ok(loggerSpy.calledOnce);
                 Assert.equal(
-                    "Not all telemetry items were sent from the previous page. Please set maxBatchSizeInBytes and/or maxBatchInterval to increase sending frequency. Count of missing items: 1",
-                    loggerSpy.args[0][1]
+                    "AI (Internal): Not all telemetry items were sent from the previous page. Please set maxBatchSizeInBytes and/or maxBatchInterval to increase sending frequency. Count of missing items: 1",
+                    loggerSpy.args[0][0]
                 );
             }
         });
@@ -574,10 +575,11 @@ class SenderTests extends TestClass {
             test: () => {
                 // setup
                 Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                var loggerSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { } };
+                var loggerSpy = this.sandbox.spy(Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights, "trackTrace");
                                 
                 // act
-                var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
+                Microsoft.ApplicationInsights.DataLossAnalyzer.reportLostItems();
                 
                 // Validate
                 Assert.ok(loggerSpy.notCalled);

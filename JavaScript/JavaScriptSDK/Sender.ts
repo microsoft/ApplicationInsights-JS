@@ -29,6 +29,7 @@ module Microsoft.ApplicationInsights {
 
     export class DataLossAnalyzer {
         static enabled = false;
+        static appInsights: Microsoft.ApplicationInsights.AppInsights;
 
         static reset() {
             sessionStorage.setItem("itemsQueued", "0");
@@ -66,6 +67,19 @@ module Microsoft.ApplicationInsights {
                 }
             } catch (e) {
                 return 0;
+            }
+        }
+
+        static reportLostItems() {
+            try {
+                if (DataLossAnalyzer.enabled && DataLossAnalyzer.appInsights && DataLossAnalyzer.getNumberOfLostItems() > 0) {
+                    DataLossAnalyzer.appInsights.trackTrace(
+                        "AI (Internal): Not all telemetry items were sent from the previous page. Please set maxBatchSizeInBytes and/or maxBatchInterval to increase sending frequency. Count of missing items: "
+                        + DataLossAnalyzer.getNumberOfLostItems()
+                        , null);                    
+                }
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Failed to report data loss: " + Util.dump(e));
             }
         }
     }
@@ -127,14 +141,8 @@ module Microsoft.ApplicationInsights {
                 } else if (typeof XDomainRequest !== "undefined") {
                     this._sender = this._xdrSender; //IE 8 and 9
                 }
-
-                if (DataLossAnalyzer.enabled && DataLossAnalyzer.getNumberOfLostItems() > 0) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
-                        "Not all telemetry items were sent from the previous page. Please set maxBatchSizeInBytes and/or maxBatchInterval to increase sending frequency. Count of missing items: " + DataLossAnalyzer.getNumberOfLostItems());
-                }
             }
         }
-
 
         /**
          * Add a telemetry item to the send buffer

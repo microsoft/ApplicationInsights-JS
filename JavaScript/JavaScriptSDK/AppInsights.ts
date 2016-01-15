@@ -34,6 +34,7 @@ module Microsoft.ApplicationInsights {
         disableAjaxTracking: boolean;
         overridePageViewDuration: boolean;
         maxAjaxCallsPerView: number;
+        disableDataLossAnalysis: boolean;
     }
 
     /**
@@ -96,9 +97,11 @@ module Microsoft.ApplicationInsights {
                 disableTelemetry: () => this.config.disableTelemetry,
                 sampleRate: () => this.config.samplingPercentage
             }
-
+            
+            DataLossAnalyzer.enabled = !this.config.disableDataLossAnalysis;      
+            DataLossAnalyzer.appInsights = this;      
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
-
+            
             this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
 
             // initialize event timing
@@ -130,6 +133,8 @@ module Microsoft.ApplicationInsights {
                 (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
             if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
+
+            DataLossAnalyzer.reportLostItems();
         }
 
         public sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {

@@ -23,7 +23,8 @@ class AppInsightsTests extends TestClass {
             samplingPercentage: 100,
             disableAjaxTracking: true,
             overridePageViewDuration: false,
-            maxAjaxCallsPerView: 20
+            maxAjaxCallsPerView: 20,
+            disableDataLossAnalysis: true
         };
 
         // set default values
