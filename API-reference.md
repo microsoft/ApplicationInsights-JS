@@ -337,10 +337,13 @@ Sends telemetry to the endpoint.
 
 ### addTelemetryInitializer
 
-        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => void)
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => boolean)
 
 Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
-before telemetry item is pushed for sending and in the order they were added.
+before telemetry item is pushed for sending and in the order they were added. 
+If one of telemetry initializers returns false then telemetry item will not be sent.
+If one of telemetry initializers throws an error then telemetry item will not be sent.
+
 
 #### Example
 

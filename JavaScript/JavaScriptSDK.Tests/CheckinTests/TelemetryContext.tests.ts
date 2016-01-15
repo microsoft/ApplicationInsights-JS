@@ -29,6 +29,7 @@ class TelemetryContextTests extends TestClass {
 
     /** Method called after each test method has completed */
     public testCleanup() {
+        (<any>this._telemetryContext).telemetryInitializers = undefined;
     }
 
     public registerTests() {
@@ -242,7 +243,7 @@ class TelemetryContextTests extends TestClass {
 
                 // teardown
                 
-                (<any>this._telemetryContext).telemetryInitializers = undefined;
+                
             }
         });
 
@@ -273,7 +274,7 @@ class TelemetryContextTests extends TestClass {
 
                 // teardown
                 
-                (<any>this._telemetryContext).telemetryInitializers = undefined;
+                
             }
         });
 
@@ -328,7 +329,7 @@ class TelemetryContextTests extends TestClass {
                 
                 // teardown
                 
-                (<any>this._telemetryContext).telemetryInitializers = undefined;
+                
             }
         });
 
@@ -351,9 +352,125 @@ class TelemetryContextTests extends TestClass {
                 // verify
                 Assert.ok(spy1.calledOnce);
                 Assert.ok(spy2.calledOnce);
+            }
+        });
 
-                // tear down
-                (<any>this._telemetryContext).telemetryInitializers = undefined;
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer - returning false means don't send an item",
+            test: () => {
+                // prepare
+                var eventEnvelope = this.getTestEventEnvelope();
+                var stub = this.sandbox.stub(this._telemetryContext._sender, "send");
+
+                // act
+                this._telemetryContext.addTelemetryInitializer(<any>(() => { return false; }));
+                (<any>this._telemetryContext)._track(eventEnvelope);
+
+                // verify
+                Assert.ok(stub.notCalled);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer - returning void means do send an item (back compact with older telemetry initializers)",
+            test: () => {
+                // prepare
+                var eventEnvelope = this.getTestEventEnvelope();
+                var stub = this.sandbox.stub(this._telemetryContext._sender, "send");
+
+                // act
+                this._telemetryContext.addTelemetryInitializer(<any>(() => { return; }));
+                (<any>this._telemetryContext)._track(eventEnvelope);
+
+                // verify
+                Assert.ok(stub.calledOnce);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer - returning true means do send an item",
+            test: () => {
+                // prepare
+                var eventEnvelope = this.getTestEventEnvelope();
+                var stub = this.sandbox.stub(this._telemetryContext._sender, "send");
+
+                // act
+                this._telemetryContext.addTelemetryInitializer(<any>(() => { return true; }));
+                (<any>this._telemetryContext)._track(eventEnvelope);
+
+                // verify
+                Assert.ok(stub.calledOnce);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer - if one of initializers returns false than item is not sent",
+            test: () => {
+                // prepare
+                var eventEnvelope = this.getTestEventEnvelope();
+                var stub = this.sandbox.stub(this._telemetryContext._sender, "send");
+
+                // act
+                this._telemetryContext.addTelemetryInitializer(<any>(() => { return true; }));
+                this._telemetryContext.addTelemetryInitializer(<any>(() => { return false; }));
+
+                (<any>this._telemetryContext)._track(eventEnvelope);
+
+                // verify
+                Assert.ok(stub.notCalled);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer - if one of initializers returns false (any order) than item is not sent",
+            test: () => {
+                // prepare
+                var eventEnvelope = this.getTestEventEnvelope();
+                var stub = this.sandbox.stub(this._telemetryContext._sender, "send");
+
+                // act
+                this._telemetryContext.addTelemetryInitializer(<any>(() => { return false; }));
+                this._telemetryContext.addTelemetryInitializer(<any>(() => { return true; }));
+
+                (<any>this._telemetryContext)._track(eventEnvelope);
+
+                // verify
+                Assert.ok(stub.notCalled);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer - returning not boolean/undefined/null means do send an item (back compat with older telemetry initializers)",
+            test: () => {
+                // prepare
+                var eventEnvelope = this.getTestEventEnvelope();
+                var stub = this.sandbox.stub(this._telemetryContext._sender, "send");
+
+                // act
+                this._telemetryContext.addTelemetryInitializer(<any>(() => { return "asdf"; }));
+                this._telemetryContext.addTelemetryInitializer(<any>(() => { return null; }));
+                this._telemetryContext.addTelemetryInitializer(<any>(() => { return undefined; }));
+                (<any>this._telemetryContext)._track(eventEnvelope);
+
+                // verify
+                Assert.ok(stub.calledOnce);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer - if one initializer fails then telemetry is not sent",
+            test: () => {
+                // prepare
+                var eventEnvelope = this.getTestEventEnvelope();
+                var stub = this.sandbox.stub(this._telemetryContext._sender, "send");
+
+                // act
+                this._telemetryContext.addTelemetryInitializer(<any>(() => { throw new Error(); }));
+                this._telemetryContext.addTelemetryInitializer(<any>(() => { }));
+                (<any>this._telemetryContext)._track(eventEnvelope);
+
+                // verify
+                Assert.ok(stub.notCalled);
             }
         });
     }
