@@ -70,7 +70,7 @@ module Microsoft.ApplicationInsights {
         /**
         * The array of telemetry initializers to call before sending each telemetry item.
         */
-        private telemetryInitializers: { (envelope: Telemetry.Common.Envelope): void; }[];
+        private telemetryInitializers: { (envelope: Telemetry.Common.Envelope): boolean; }[];
 
         /**
          * The session manager that manages session on the base of cookies.
@@ -100,7 +100,7 @@ module Microsoft.ApplicationInsights {
         * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
         * before telemetry item is pushed for sending and in the order they were added.
         */
-        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => void) {
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => boolean) {
             this.telemetryInitializers = this.telemetryInitializers || [];
             this.telemetryInitializers.push(telemetryInitializer);
         }
@@ -151,24 +151,27 @@ module Microsoft.ApplicationInsights {
 
             envelope.iKey = this._config.instrumentationKey();
 
-            var telemetryInitializersFailed = false;
+            var doNotSendItem = false;            
             try {
                 this.telemetryInitializers = this.telemetryInitializers || [];
                 var telemetryInitializersCount = this.telemetryInitializers.length;
                 for (var i = 0; i < telemetryInitializersCount; ++i) {
                     var telemetryInitializer = this.telemetryInitializers[i];
                     if (telemetryInitializer) {
-                        telemetryInitializer.apply(null, [envelope]);
+                        if (telemetryInitializer.apply(null, [envelope]) === false) {
+                            doNotSendItem = true;
+                            break;
+                        }
                     }
                 }
             } catch (e) {
-                telemetryInitializersFailed = true;
+                doNotSendItem = true;
                 _InternalLogging.throwInternalUserActionable(
                     LoggingSeverity.CRITICAL,
                     "One of telemetry initializers failed, telemetry item will not be sent: " + Util.dump(e));
             }
 
-            if (!telemetryInitializersFailed) {
+            if (!doNotSendItem) {
                 if (envelope.name === Telemetry.SessionTelemetry.envelopeType ||
                     envelope.name === Telemetry.Metric.envelopeType ||
                     this.sample.isSampledIn(envelope)) {
