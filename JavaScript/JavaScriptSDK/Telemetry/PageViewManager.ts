@@ -63,7 +63,7 @@ module Microsoft.ApplicationInsights.Telemetry {
                 this.appInsights.sendPageViewInternal(
                     name,
                     url,
-                    duration ? duration : customDuration,
+                    !isNaN(duration) ? duration : customDuration,
                     properties,
                     measurements);
                 this.appInsights.flush();
