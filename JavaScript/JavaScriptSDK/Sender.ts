@@ -130,7 +130,7 @@ module Microsoft.ApplicationInsights {
                     }, this._config.maxBatchInterval());
                 }
 
-                DataLossAnalyzer.itemQueued();
+                DataLossAnalyzer.incrementItemsQueued();
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.dump(e));
             }
@@ -256,7 +256,7 @@ module Microsoft.ApplicationInsights {
          * success handler
          */
         public static _onSuccess(payload: string, countOfItemsInPayload: number) {
-            DataLossAnalyzer.itemsSentSuccessfully(countOfItemsInPayload);
+            DataLossAnalyzer.decrementItemsQueued(countOfItemsInPayload);
         }
     }
 

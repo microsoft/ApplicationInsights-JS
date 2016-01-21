@@ -4,45 +4,63 @@
     export class DataLossAnalyzer {
         static enabled = false;
         static appInsights: Microsoft.ApplicationInsights.AppInsights;
+        static issuesReportedForThisSession;
+        static LIMIT_PER_SESSION = 3;
+        static ITEMS_QUEUED_KEY = "AI_itemsQueued";
+        static ISSUES_REPORTED_KEY = "AI_lossIssuesReported";
 
         static reset() {
-            sessionStorage.setItem("itemsQueued", "0");
+            if (DataLossAnalyzer.isEnabled()) {
+                sessionStorage.setItem(DataLossAnalyzer.ITEMS_QUEUED_KEY, "0");
+            }
         }
 
         private static isEnabled(): boolean {
-            return DataLossAnalyzer.enabled && (DataLossAnalyzer.appInsights != null);
+            return DataLossAnalyzer.enabled &&
+                DataLossAnalyzer.appInsights != null &&
+                window.sessionStorage != null &&
+                window.sessionStorage.getItem != null &&
+                window.sessionStorage.setItem != null;
         }
 
-        static itemQueued() {
+        static getIssuesReported(): number {
+            return
+            (
+                !DataLossAnalyzer.isEnabled() ||
+                isNaN(+sessionStorage.getItem(DataLossAnalyzer.ISSUES_REPORTED_KEY))
+            ) ?
+                0 :
+                +sessionStorage.getItem(DataLossAnalyzer.ISSUES_REPORTED_KEY);
+        }
+
+        static incrementItemsQueued() {
             try {
-                if (DataLossAnalyzer.isEnabled() && sessionStorage && sessionStorage.getItem && sessionStorage.setItem) {
-                    var itemsQueued = sessionStorage.getItem("itemsQueued");
-                    itemsQueued = itemsQueued || 0;
+                if (DataLossAnalyzer.isEnabled()) {
+                    var itemsQueued: number = DataLossAnalyzer.getNumberOfLostItems();
                     ++itemsQueued;
-                    sessionStorage.setItem("itemsQueued", itemsQueued);
+                    sessionStorage.setItem(DataLossAnalyzer.ITEMS_QUEUED_KEY, itemsQueued.toString());
                 }
             } catch (e) { }
         }
 
-        static itemsSentSuccessfully(countOfItemsSentSuccessfully: number) {
+        static decrementItemsQueued(countOfItemsSentSuccessfully: number) {
             try {
-                if (DataLossAnalyzer.isEnabled() && sessionStorage && sessionStorage.getItem && sessionStorage.setItem) {
-                    var itemsQueued = sessionStorage.getItem("itemsQueued");
-                    itemsQueued = itemsQueued
-                        ? (itemsQueued - countOfItemsSentSuccessfully)
-                        : 0;
-                    sessionStorage.setItem("itemsQueued", itemsQueued);
+                if (DataLossAnalyzer.isEnabled()) {
+                    var itemsQueued: number = DataLossAnalyzer.getNumberOfLostItems();
+                    itemsQueued -= countOfItemsSentSuccessfully;
+                    if (itemsQueued < 0) itemsQueued = 0;
+                    sessionStorage.setItem(DataLossAnalyzer.ITEMS_QUEUED_KEY, itemsQueued.toString());
                 }
             } catch (e) { }
         }
 
         static getNumberOfLostItems(): number {
-            var result = 0;
+            var result: number = 0;
             try {
-                if (DataLossAnalyzer.isEnabled() && sessionStorage && sessionStorage.getItem && sessionStorage.setItem) {
-                    var itemsQueued = sessionStorage.getItem("itemsQueued");
-                    itemsQueued = itemsQueued || 0;
-                    result = itemsQueued;
+                if (DataLossAnalyzer.isEnabled()) {
+                    result = isNaN(+sessionStorage.getItem(DataLossAnalyzer.ITEMS_QUEUED_KEY)) ?
+                        0 :
+                        +sessionStorage.getItem(DataLossAnalyzer.ITEMS_QUEUED_KEY);
                 }
             } catch (e) {
                 result = 0;
@@ -53,12 +71,19 @@
 
         static reportLostItems() {
             try {
-                if (DataLossAnalyzer.isEnabled() && DataLossAnalyzer.getNumberOfLostItems() > 0) {
+                if (DataLossAnalyzer.isEnabled() &&
+                    DataLossAnalyzer.getIssuesReported() < DataLossAnalyzer.LIMIT_PER_SESSION &&
+                    DataLossAnalyzer.getNumberOfLostItems() > 0) {
+
                     DataLossAnalyzer.appInsights.trackTrace(
                         "AI (Internal): Internal error DATALOSS: "
                         + DataLossAnalyzer.getNumberOfLostItems()
                         , null);
                     DataLossAnalyzer.appInsights.flush();
+
+                    var issuesReported: number = DataLossAnalyzer.getIssuesReported();
+                    ++issuesReported;
+                    sessionStorage.setItem(DataLossAnalyzer.ISSUES_REPORTED_KEY, issuesReported.toString());
                 }
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Failed to report data loss: " + Util.dump(e));

@@ -20,6 +20,7 @@ class SenderTests extends TestClass {
     private requests;
 
     public testInitialize() {
+        sessionStorage.clear();
         this.requests = [];
         this.xhr = sinon.useFakeXMLHttpRequest();
 
@@ -43,7 +44,6 @@ class SenderTests extends TestClass {
         this.successSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onSuccess");
         this.loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole");
         this.testTelemetry = { aiDataContract: true };
-        Microsoft.ApplicationInsights.DataLossAnalyzer.reset();
     }
 
     public testCleanup() {
@@ -475,6 +475,7 @@ class SenderTests extends TestClass {
             test: () => {
                 // setup
                 Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -494,6 +495,7 @@ class SenderTests extends TestClass {
             test: () => {
                 // setup
                 Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -514,6 +516,7 @@ class SenderTests extends TestClass {
             test: () => {
                 // setup
                 Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -534,6 +537,7 @@ class SenderTests extends TestClass {
             test: () => {
                 // setup
                 Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -546,62 +550,7 @@ class SenderTests extends TestClass {
                 // Validate
                 Assert.equal(1, Microsoft.ApplicationInsights.DataLossAnalyzer.getNumberOfLostItems());
             }
-        });
-
-
-        this.testCase({
-            name: "SenderTests: data loss analyzer - result 1; reported 1",
-            test: () => {
-                // setup
-                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
-                var loggerSpy = this.sandbox.spy(Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights, "trackTrace");
-                                
-                // act
-                Microsoft.ApplicationInsights.DataLossAnalyzer.itemQueued();
-                Microsoft.ApplicationInsights.DataLossAnalyzer.reportLostItems();
-                                
-                // Validate
-                Assert.ok(loggerSpy.calledOnce);
-                Assert.equal(
-                    "AI (Internal): Internal error DATALOSS: 1",
-                    loggerSpy.args[0][0]
-                );
-            }
-        });
-        
-        this.testCase({
-            name: "SenderTests: data loss analyzer - result 0; didn't report loss",
-            test: () => {
-                // setup
-                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
-                var loggerSpy = this.sandbox.spy(Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights, "trackTrace");
-                                
-                // act
-                Microsoft.ApplicationInsights.DataLossAnalyzer.reportLostItems();
-                
-                // Validate
-                Assert.ok(loggerSpy.notCalled);
-            }
-        });
-
-        this.testCase({
-            name: "SenderTests: data loss analyzer - restores to 0 after reporting data loss",
-            test: () => {
-                // setup
-                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
-                var loggerSpy = this.sandbox.spy(Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights, "trackTrace");
-                                
-                // act
-                Microsoft.ApplicationInsights.DataLossAnalyzer.itemQueued();
-                Microsoft.ApplicationInsights.DataLossAnalyzer.reportLostItems();
-                                
-                // Validate
-                Assert.equal(0, Microsoft.ApplicationInsights.DataLossAnalyzer.getNumberOfLostItems(), "Expected to reset to 0");
-            }
-        });
+        });       
     }
 }
 
