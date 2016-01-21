@@ -74,7 +74,7 @@ module Microsoft.ApplicationInsights {
             try {
                 if (DataLossAnalyzer.enabled && DataLossAnalyzer.appInsights && DataLossAnalyzer.getNumberOfLostItems() > 0) {
                     DataLossAnalyzer.appInsights.trackTrace(
-                        "AI (Internal): Not all telemetry items were sent from the previous page. Please set maxBatchSizeInBytes and/or maxBatchInterval to increase sending frequency. Count of missing items: "
+                        "AI (Internal): Internal error DATALOSS: "
                         + DataLossAnalyzer.getNumberOfLostItems()
                         , null);          
                     DataLossAnalyzer.appInsights.flush();   

@@ -564,7 +564,7 @@ class SenderTests extends TestClass {
                 // Validate
                 Assert.ok(loggerSpy.calledOnce);
                 Assert.equal(
-                    "AI (Internal): Not all telemetry items were sent from the previous page. Please set maxBatchSizeInBytes and/or maxBatchInterval to increase sending frequency. Count of missing items: 1",
+                    "AI (Internal): Internal error DATALOSS: 1",
                     loggerSpy.args[0][0]
                 );
             }

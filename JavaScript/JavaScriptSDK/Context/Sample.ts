@@ -5,6 +5,7 @@ module Microsoft.ApplicationInsights.Context {
 
     export class Sample {
         public sampleRate: number;
+        private samplingScoreGenerator: SamplingScoreGenerator;
 
         // We're using 32 bit math, hence max value is (2^31 - 1)
         public INT_MAX_VALUE: number = 2147483647;
@@ -15,8 +16,9 @@ module Microsoft.ApplicationInsights.Context {
                     + "'. Sampling will be disabled, you may be sending too much data which may affect your AI service level.");
                 this.sampleRate = 100;
             }
-
+                        
             this.sampleRate = sampleRate;
+            this.samplingScoreGenerator = new SamplingScoreGenerator();
         }
 
         /**
@@ -25,7 +27,7 @@ module Microsoft.ApplicationInsights.Context {
         public isSampledIn(envelope: Telemetry.Common.Envelope): boolean {
             if (this.sampleRate == 100) return true;
 
-            var score = SamplingScoreGenerator.getScore(envelope);
+            var score = this.samplingScoreGenerator.getSamplingScore(envelope);
 
             return score < this.sampleRate;
         }

@@ -6,7 +6,7 @@
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
 /// <reference path="./ajax/ajax.ts"/>
-
+/// <reference path="./SplitTest.ts"/>
 
 module Microsoft.ApplicationInsights {
 
@@ -98,7 +98,7 @@ module Microsoft.ApplicationInsights {
                 sampleRate: () => this.config.samplingPercentage
             }
             
-            DataLossAnalyzer.enabled = !this.config.disableDataLossAnalysis;      
+            DataLossAnalyzer.enabled = new SplitTest().isEnabled(this.config.instrumentationKey, 10); // Enabling data loss analyzer on 10% of ikeys
             DataLossAnalyzer.appInsights = this;      
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
             
@@ -133,7 +133,7 @@ module Microsoft.ApplicationInsights {
                 (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
             if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
-
+            
             DataLossAnalyzer.reportLostItems();
         }
 
