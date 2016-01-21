@@ -165,11 +165,7 @@ module Microsoft.ApplicationInsights {
                 false;
 
             config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
-
-            config.disableDataLossAnalysis = config.disableDataLossAnalysis ?
-                config.disableDataLossAnalysis.toString().toLowerCase() === "true" :
-                false;
-
+            
             return config;
         }
     }
