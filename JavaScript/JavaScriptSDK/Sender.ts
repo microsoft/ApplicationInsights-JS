@@ -11,6 +11,7 @@
 /// <reference path="Context/Session.ts"/>
 /// <reference path="Context/User.ts"/>
 /// <reference path="ajax/ajax.ts"/>
+/// <reference path="./DataLossAnalyzer.ts"/>
 
 interface XDomainRequest extends XMLHttpRequestEventTarget {
     responseText: string;
@@ -26,65 +27,6 @@ declare var XDomainRequest: {
 
 module Microsoft.ApplicationInsights {
     "use strict";
-
-    export class DataLossAnalyzer {
-        static enabled = false;
-        static appInsights: Microsoft.ApplicationInsights.AppInsights;
-
-        static reset() {
-            sessionStorage.setItem("itemsQueued", "0");
-        }
-
-        static itemQueued() {
-            try {
-                if (sessionStorage && sessionStorage.getItem && sessionStorage.setItem) {
-                    var itemsQueued = sessionStorage.getItem("itemsQueued");
-                    itemsQueued = itemsQueued || 0;
-                    ++itemsQueued;
-                    sessionStorage.setItem("itemsQueued", itemsQueued);
-                }
-            } catch (e) { }
-        }
-
-        static itemsSentSuccessfully(countOfItemsSentSuccessfully: number) {
-            try {
-                if (sessionStorage && sessionStorage.getItem && sessionStorage.setItem) {
-                    var itemsQueued = sessionStorage.getItem("itemsQueued");
-                    itemsQueued = itemsQueued
-                        ? (itemsQueued - countOfItemsSentSuccessfully)
-                        : 0;
-                    sessionStorage.setItem("itemsQueued", itemsQueued);
-                }
-            } catch (e) { }
-        }
-
-        static getNumberOfLostItems(): number {
-            try {
-                if (sessionStorage && sessionStorage.getItem && sessionStorage.setItem) {
-                    var itemsQueued = sessionStorage.getItem("itemsQueued");
-                    itemsQueued = itemsQueued || 0;
-                    return itemsQueued;
-                }
-            } catch (e) {
-                return 0;
-            }
-        }
-
-        static reportLostItems() {
-            try {
-                if (DataLossAnalyzer.enabled && DataLossAnalyzer.appInsights && DataLossAnalyzer.getNumberOfLostItems() > 0) {
-                    DataLossAnalyzer.appInsights.trackTrace(
-                        "AI (Internal): Internal error DATALOSS: "
-                        + DataLossAnalyzer.getNumberOfLostItems()
-                        , null);          
-                    DataLossAnalyzer.appInsights.flush();   
-                    DataLossAnalyzer.reset();     
-                }
-            } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Failed to report data loss: " + Util.dump(e));
-            }
-        }
-    }
 
     export interface ISenderConfig {
         /**
@@ -188,7 +130,7 @@ module Microsoft.ApplicationInsights {
                     }, this._config.maxBatchInterval());
                 }
 
-                DataLossAnalyzer.enabled && DataLossAnalyzer.itemQueued();
+                DataLossAnalyzer.itemQueued();
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.dump(e));
             }
@@ -314,7 +256,7 @@ module Microsoft.ApplicationInsights {
          * success handler
          */
         public static _onSuccess(payload: string, countOfItemsInPayload: number) {
-            DataLossAnalyzer.enabled && DataLossAnalyzer.itemsSentSuccessfully(countOfItemsInPayload);
+            DataLossAnalyzer.itemsSentSuccessfully(countOfItemsInPayload);
         }
     }
 

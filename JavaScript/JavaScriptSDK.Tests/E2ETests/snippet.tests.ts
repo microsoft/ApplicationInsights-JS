@@ -4,7 +4,7 @@
 
 class SnippetTests extends TestClass {
     private name = "appInsights";
-    private instrumentationKey = "89330895-7c53-4315-a242-85d136ad9c16";
+    private instrumentationKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46";
     private originalAppInsights;
     private timingOffset = 0;
     private queueSpy;

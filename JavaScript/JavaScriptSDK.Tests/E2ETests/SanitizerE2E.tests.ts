@@ -29,7 +29,7 @@ class Sanitizer2ETests extends TestClass {
         var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
         config.maxBatchInterval = 1000;
         config.endpointUrl = "https://dc.services.visualstudio.com/v2/track";
-        config.instrumentationKey = "89330895-7c53-4315-a242-85d136ad9c16";
+        config.instrumentationKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46";
 
         var delay = config.maxBatchInterval + 100;
         var testAi = new Microsoft.ApplicationInsights.AppInsights(config);

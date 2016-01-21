@@ -6,6 +6,7 @@
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
 /// <reference path="./ajax/ajax.ts"/>
+/// <reference path="./DataLossAnalyzer.ts"/>
 /// <reference path="./SplitTest.ts"/>
 
 module Microsoft.ApplicationInsights {

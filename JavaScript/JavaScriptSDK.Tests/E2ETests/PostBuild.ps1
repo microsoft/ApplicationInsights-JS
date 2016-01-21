@@ -6,7 +6,7 @@ Param(
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="The instrumentation key.")]
-    [string]$iKey = "89330895-7c53-4315-a242-85d136ad9c16", 
+    [string]$iKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46", 
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="The endpoinoint URL. (dev: datacollection-devred.cloudapp.net, int: dc-int.services.visualstudio.com, prod: dc.services.visualstudio.com")]
