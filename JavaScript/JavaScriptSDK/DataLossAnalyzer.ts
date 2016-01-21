@@ -5,7 +5,7 @@
         static enabled = false;
         static appInsights: Microsoft.ApplicationInsights.AppInsights;
         static issuesReportedForThisSession;
-        static LIMIT_PER_SESSION = 3;
+        static LIMIT_PER_SESSION = 10;
         static ITEMS_QUEUED_KEY = "AI_itemsQueued";
         static ISSUES_REPORTED_KEY = "AI_lossIssuesReported";
 
@@ -76,7 +76,7 @@
                     DataLossAnalyzer.getNumberOfLostItems() > 0) {
 
                     DataLossAnalyzer.appInsights.trackTrace(
-                        "AI (Internal): Internal error DATALOSS: "
+                        "AI (Internal): Internal report DATALOSS: "
                         + DataLossAnalyzer.getNumberOfLostItems()
                         , null);
                     DataLossAnalyzer.appInsights.flush();

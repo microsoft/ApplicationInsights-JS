@@ -27,7 +27,7 @@ class DataLossAnalyzerTests extends TestClass {
                 // Validate
                 Assert.ok(loggerSpy.calledOnce);
                 Assert.equal(
-                    "AI (Internal): Internal error DATALOSS: 1",
+                    "AI (Internal): Internal report DATALOSS: 1",
                     loggerSpy.args[0][0]
                 );
             }
@@ -67,7 +67,7 @@ class DataLossAnalyzerTests extends TestClass {
         });
 
         this.testCase({
-            name: "DataLossAnalyzer: no more than 3 data loss trace messages per browser session",
+            name: "DataLossAnalyzer: no more than 10 data loss trace messages per browser session",
             test: () => {
                 // setup
                 Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
@@ -75,13 +75,13 @@ class DataLossAnalyzerTests extends TestClass {
                 var loggerSpy = this.sandbox.spy(Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights, "trackTrace");
                                 
                 // act
-                for (var i = 0; i < 10; ++i) {
+                for (var i = 0; i < 100; ++i) {
                     Microsoft.ApplicationInsights.DataLossAnalyzer.incrementItemsQueued();
                     Microsoft.ApplicationInsights.DataLossAnalyzer.reportLostItems();
                 }
                                 
                 // Validate
-                Assert.equal(3, loggerSpy.callCount);
+                Assert.equal(10, loggerSpy.callCount);
             }
         });
     }
