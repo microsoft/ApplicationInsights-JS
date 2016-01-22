@@ -3,6 +3,9 @@
         // We're using 32 bit math, hence max value is (2^31 - 1)
         public static INT_MAX_VALUE: number = 2147483647;
 
+        // (Magic number) DJB algorithm can't work on shorter strings (results in poor distribution
+        private static MIN_INPUT_LENGTH: number = 8;
+
         public getHashCodeScore(key: string): number {
             var score = this.getHashCode(key) / HashCodeScoreGenerator.INT_MAX_VALUE;
             return score * 100;
@@ -10,6 +13,10 @@
 
         public getHashCode(input: string): number {
             if (input == "") { return 0; }
+
+            while (input.length < HashCodeScoreGenerator.MIN_INPUT_LENGTH) {
+                input = input.concat(input);
+            }
 
             // 5358 is a magic number: http://stackoverflow.com/questions/10696223/reason-for-5381-number-in-djb-hash-function
             var hash: number = 5381;

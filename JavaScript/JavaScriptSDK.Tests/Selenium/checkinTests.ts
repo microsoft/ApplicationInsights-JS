@@ -1,4 +1,5 @@
-﻿/// <reference path="../checkintests/context/SamplingScoreGenerator.tests.ts" />
+﻿/// <reference path="../checkintests/appinsights.tests.ts" />
+/// <reference path="../checkintests/context/HashCodeScoreGenerator.tests.ts" />
 /// <reference path="../checkintests/context/sample.tests.ts" />
 /// <reference path="../checkintests/context/user.tests.ts" />
 /// <reference path="../checkintests/context/session.tests.ts" />
@@ -13,7 +14,6 @@
 /// <reference path="../checkintests/telemetry/DataSanitizer.tests.ts" />
 
 /// <reference path="../checkintests/PageVisitTimeManager.tests.ts" />
-/// <reference path="../checkintests/appinsights.tests.ts" />
 /// <reference path="../checkintests/logging.tests.ts" />
 /// <reference path="../checkintests/sender.tests.ts" />
 /// <reference path="../checkintests/serializer.tests.ts" />
