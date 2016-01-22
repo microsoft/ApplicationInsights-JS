@@ -11,6 +11,7 @@
 /// <reference path="Context/Session.ts"/>
 /// <reference path="Context/User.ts"/>
 /// <reference path="ajax/ajax.ts"/>
+/// <reference path="./DataLossAnalyzer.ts"/>
 
 interface XDomainRequest extends XMLHttpRequestEventTarget {
     responseText: string;
@@ -67,7 +68,7 @@ module Microsoft.ApplicationInsights {
         /**
          * A method which will cause data to be send to the url
          */
-        public _sender: (payload: string, isAsync: boolean) => void;
+        public _sender: (payload: string, isAsync: boolean, numberOfItemsInPayload: number) => void;
 
         /**
          * Constructs a new instance of the Sender class
@@ -128,6 +129,8 @@ module Microsoft.ApplicationInsights {
                         this.triggerSend();
                     }, this._config.maxBatchInterval());
                 }
+
+                DataLossAnalyzer.incrementItemsQueued();
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.dump(e));
             }
@@ -159,7 +162,7 @@ module Microsoft.ApplicationInsights {
             if (typeof async === 'boolean') {
                 isAsync = async;
             }
-            
+
             try {
                 // Send data only if disableTelemetry is false
                 if (!this._config.disableTelemetry()) {
@@ -171,7 +174,7 @@ module Microsoft.ApplicationInsights {
                             "[" + this._buffer.join(",") + "]";
 
                         // invoke send
-                        this._sender(batch, isAsync);
+                        this._sender(batch, isAsync, this._buffer.length);
                     }
 
                     // update lastSend time to enable throttling
@@ -192,12 +195,12 @@ module Microsoft.ApplicationInsights {
          * @param payload {string} - The data payload to be sent.
          * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
          */
-        private _xhrSender(payload: string, isAsync: boolean) {
+        private _xhrSender(payload: string, isAsync: boolean, countOfItemsInPayload: number) {
             var xhr = new XMLHttpRequest();
             xhr[AjaxMonitor.DisabledPropertyName] = true;
             xhr.open("POST", this._config.endpointUrl(), isAsync);
             xhr.setRequestHeader("Content-type", "application/json");
-            xhr.onreadystatechange = () => Sender._xhrReadyStateChange(xhr, payload);
+            xhr.onreadystatechange = () => Sender._xhrReadyStateChange(xhr, payload, countOfItemsInPayload);
             xhr.onerror = (event: ErrorEvent) => Sender._onError(payload, xhr.responseText || xhr.response || "", event);
             xhr.send(payload);
         }
@@ -221,12 +224,12 @@ module Microsoft.ApplicationInsights {
         /**
          * xhr state changes
          */
-        public static _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string) {
+        public static _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string, countOfItemsInPayload: number) {
             if (xhr.readyState === 4) {
                 if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
                     Sender._onError(payload, xhr.responseText || xhr.response || "");
                 } else {
-                    Sender._onSuccess(payload);
+                    Sender._onSuccess(payload, countOfItemsInPayload);
                 }
             }
         }
@@ -236,7 +239,7 @@ module Microsoft.ApplicationInsights {
          */
         public static _xdrOnLoad(xdr: XDomainRequest, payload: string) {
             if (xdr && (xdr.responseText + "" === "200" || xdr.responseText === "")) {
-                Sender._onSuccess(payload);
+                Sender._onSuccess(payload, 0);
             } else {
                 Sender._onError(payload, xdr && xdr.responseText || "");
             }
@@ -252,8 +255,8 @@ module Microsoft.ApplicationInsights {
         /**
          * success handler
          */
-        public static _onSuccess(payload: string) {
-            // no-op, used in tests
+        public static _onSuccess(payload: string, countOfItemsInPayload: number) {
+            DataLossAnalyzer.decrementItemsQueued(countOfItemsInPayload);
         }
     }
 

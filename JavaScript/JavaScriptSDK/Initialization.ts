@@ -165,7 +165,7 @@ module Microsoft.ApplicationInsights {
                 false;
 
             config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
-
+            
             return config;
         }
     }

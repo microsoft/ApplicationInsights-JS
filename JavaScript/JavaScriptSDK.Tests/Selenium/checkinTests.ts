@@ -21,3 +21,4 @@
 /// <reference path="../checkintests/util.tests.ts" />
 /// <reference path="../checkintests/initialization.tests.ts" />
 /// <reference path="../checkintests/ajax.tests.ts" />
+/// <reference path="../checkintests/SplitTest.tests.ts" />

@@ -36,7 +36,7 @@
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
         <WebProjectProperties>
-          <UseIIS>True</UseIIS>
+          <UseIIS>False</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>52143</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
@@ -123,6 +123,9 @@
     <TypeScriptCompile Include="ajax\ajax.ts" />
     <TypeScriptCompile Include="ajax\ajaxRecord.ts" />
     <TypeScriptCompile Include="ajax\ajaxUtils.ts" />
+    <TypeScriptCompile Include="HashCodeScoreGenerator.ts" />
+    <TypeScriptCompile Include="Sender.ts" />
+    <TypeScriptCompile Include="SplitTest.ts" />
     <TypeScriptCompile Include="AppInsights.ts" />
     <TypeScriptCompile Include="Telemetry\PageViewManager.ts" />
     <TypeScriptCompile Include="Telemetry\PageVisitTimeManager.ts" />
@@ -165,7 +168,7 @@
     <TypeScriptCompile Include="Telemetry\SessionTelemetry.ts" />
     <TypeScriptCompile Include="Util.ts" />
     <TypeScriptCompile Include="Logging.ts" />
-    <TypeScriptCompile Include="Sender.ts" />
+    <TypeScriptCompile Include="DataLossAnalyzer.ts" />
     <TypeScriptCompile Include="Serializer.ts" />
     <TypeScriptCompile Include="Telemetry\PageView.ts" />
     <TypeScriptCompile Include="Telemetry\Trace.ts" />

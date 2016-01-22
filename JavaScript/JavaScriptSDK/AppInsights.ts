@@ -6,13 +6,14 @@
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
 /// <reference path="./ajax/ajax.ts"/>
-
+/// <reference path="./DataLossAnalyzer.ts"/>
+/// <reference path="./SplitTest.ts"/>
 
 module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "0.21.5";
+    export var Version = "0.22.3";
 
     export interface IConfig {
         instrumentationKey: string;
@@ -34,6 +35,7 @@ module Microsoft.ApplicationInsights {
         disableAjaxTracking: boolean;
         overridePageViewDuration: boolean;
         maxAjaxCallsPerView: number;
+        disableDataLossAnalysis: boolean;
     }
 
     /**
@@ -96,9 +98,9 @@ module Microsoft.ApplicationInsights {
                 disableTelemetry: () => this.config.disableTelemetry,
                 sampleRate: () => this.config.samplingPercentage
             }
-
+            
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
-
+            
             this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
 
             // initialize event timing
@@ -129,7 +131,7 @@ module Microsoft.ApplicationInsights {
             this._pageVisitTimeManager = new ApplicationInsights.Telemetry.PageVisitTimeManager(
                 (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
-            if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
+            if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }            
         }
 
         public sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {

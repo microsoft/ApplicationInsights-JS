@@ -54,7 +54,7 @@ class PerformanceTestHelper extends TestClass {
         this.clock.restore();
 
         this.appInsights = new Microsoft.ApplicationInsights.AppInsights(<any>{
-            instrumentationKey: "89330895-7c53-4315-a242-85d136ad9c16",
+            instrumentationKey: "3e6a441c-b52b-4f39-8944-f81dd6c2dc46",
             url: "file:///C:/src/sdk/src/JavaScript/JavaScriptSDK.Tests//E2ETests/ai.js",
             endpointUrl: "http://dc.services.visualstudio.com/v2/track",
             maxBatchInterval: 0

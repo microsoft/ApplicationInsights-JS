@@ -67,8 +67,9 @@ class SamplingScoreGeneratorTests extends TestClass {
                     [ "hqmyv", 261671706 ],
                 ];
 
+                var sut = new Microsoft.ApplicationInsights.HashCodeScoreGenerator();
                 for (var i = 0; i < testArray.length; ++i) {
-                    var res = Microsoft.ApplicationInsights.SamplingScoreGenerator.getSamplingHashCode(<string>testArray[i][0]);
+                    var res = sut.getHashCode(<string>testArray[i][0]);
                     Assert.equal(<number>testArray[i][1], res);
                 }
             }

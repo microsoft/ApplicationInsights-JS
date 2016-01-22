@@ -80,6 +80,7 @@ module Microsoft.ApplicationInsights {
         constructor(config: ITelemetryConfig) {
             this._config = config;
             this._sender = new Sender(config);
+
             // window will be undefined in node.js where we do not want to initialize contexts
             if (typeof window !== 'undefined') {
                 this._sessionManager = new ApplicationInsights.Context._SessionManager(
