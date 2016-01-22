@@ -24,13 +24,12 @@
         }
 
         static getIssuesReported(): number {
-            return
-            (
-                !DataLossAnalyzer.isEnabled() ||
-                isNaN(+sessionStorage.getItem(DataLossAnalyzer.ISSUES_REPORTED_KEY))
-            ) ?
-                0 :
-                +sessionStorage.getItem(DataLossAnalyzer.ISSUES_REPORTED_KEY);
+            var result =
+                (!DataLossAnalyzer.isEnabled() || isNaN(+sessionStorage.getItem(DataLossAnalyzer.ISSUES_REPORTED_KEY))) ?
+                    0 :
+                    +sessionStorage.getItem(DataLossAnalyzer.ISSUES_REPORTED_KEY);
+
+            return result;
         }
 
         static incrementItemsQueued() {

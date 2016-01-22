@@ -99,8 +99,6 @@ module Microsoft.ApplicationInsights {
                 sampleRate: () => this.config.samplingPercentage
             }
             
-            DataLossAnalyzer.enabled = new SplitTest().isEnabled(this.config.instrumentationKey, 10); // Enabling data loss analyzer on 10% of ikeys
-            DataLossAnalyzer.appInsights = this;      
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
             
             this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
@@ -133,9 +131,7 @@ module Microsoft.ApplicationInsights {
             this._pageVisitTimeManager = new ApplicationInsights.Telemetry.PageVisitTimeManager(
                 (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
-            if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
-            
-            DataLossAnalyzer.reportLostItems();
+            if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }            
         }
 
         public sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
