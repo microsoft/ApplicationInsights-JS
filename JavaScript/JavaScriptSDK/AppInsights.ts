@@ -13,7 +13,7 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "0.22.3";
+    export var Version = "0.22.4";
 
     export interface IConfig {
         instrumentationKey: string;
