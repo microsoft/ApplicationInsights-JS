@@ -225,7 +225,7 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
-         * generate GUID
+         * generate random id string
          */
         public static newId(): string {
             var base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
