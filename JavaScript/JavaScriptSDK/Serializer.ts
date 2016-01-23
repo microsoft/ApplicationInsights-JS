@@ -34,12 +34,14 @@ module Microsoft.ApplicationInsights {
             var output = {};
 
             if (!source) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, "cannot serialize " + name + " because it is null or undefined");
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage("cannot serialize object because it is null or undefined", { name: name }));
                 return output;
             }
 
             if (source[circularReferenceCheck]) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Circular reference detected while serializing: '" + name);
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING,
+                    new _InternalLogMessage("Circular reference detected while serializing object", { name: name }));
                 return output;
             }
 
@@ -54,7 +56,8 @@ module Microsoft.ApplicationInsights {
                 } else if (Util.isArray(source)) {
                     output = Serializer._serializeArray(<any>source, name);
                 } else {
-                    _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Attempting to serialize an object which does not implement ISerializable: " + name);
+                    _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING,
+                        new _InternalLogMessage("Attempting to serialize an object which does not implement ISerializable", { name: name }));
 
                     try {
                         // verify that the object can be stringified
@@ -83,7 +86,8 @@ module Microsoft.ApplicationInsights {
                 if (isRequired && !isPresent && !isArray) {
                     _InternalLogging.throwInternalNonUserActionable(
                         LoggingSeverity.CRITICAL,
-                        "Missing required field specification: The field '" + field + "' on '"+ name + "' is required but not present on source");
+                        new _InternalLogMessage("Missing required field specification. The field is required but not present on source",
+                            { field: field, name: name }));
 
                     // If not in debug mode, continue and hope the error is permissible
                     continue;
@@ -125,7 +129,8 @@ module Microsoft.ApplicationInsights {
                 if (!Util.isArray(sources)) {
                     _InternalLogging.throwInternalUserActionable(
                         LoggingSeverity.CRITICAL,
-                        "This field was specified as an array in the contract but the item is not an array.\r\n" + name);
+                        new _InternalLogMessage("This field was specified as an array in the contract but the item is not an array.\r\n",
+                            { name: name }));
                 } else {
                     output = [];
                     for (var i = 0; i < sources.length; i++) {

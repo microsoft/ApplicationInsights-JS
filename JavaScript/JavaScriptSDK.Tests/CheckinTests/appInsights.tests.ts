@@ -911,19 +911,19 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "AppInsights._onerror logs dump of unexpected error thrown by trackException for diagnostics",
+            name: "AppInsights._onerror logs name of unexpected error thrown by trackException for diagnostics",
             test: () => {
                 var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var throwInternalNonUserActionableSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
-                var dumpStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "dump");
+                var nameStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getExceptionName");
                 var stub = this.sandbox.stub(sut, "trackException").throws(new Error());
-                var expectedErrorDump: string = "test error";
-                dumpStub.returns(expectedErrorDump);
+                var expectedErrorName: string = "test error";
+                nameStub.returns(expectedErrorName);
 
                 sut._onerror("any message", "any://url", 420, 42, new Error());
 
-                var logMessage: string = throwInternalNonUserActionableSpy.getCall(0).args[1];
-                Assert.notEqual(-1, logMessage.indexOf(expectedErrorDump));
+                var logMessage: Microsoft.ApplicationInsights._InternalLogMessage = throwInternalNonUserActionableSpy.getCall(0).args[1];
+                Assert.notEqual(-1, logMessage.message.indexOf(expectedErrorName));
 
 
 

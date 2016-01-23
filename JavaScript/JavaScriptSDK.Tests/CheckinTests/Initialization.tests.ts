@@ -167,13 +167,13 @@ class InitializationTests extends TestClass {
                 var appInsightsLocal = init.loadAppInsights();
                 var trackTraceSpy = this.sandbox.stub(appInsightsLocal, "trackTrace");
 
-                var queue: Array<string> = Microsoft.ApplicationInsights._InternalLogging["queue"];
+                var queue: Array<Microsoft.ApplicationInsights._InternalLogMessage> = Microsoft.ApplicationInsights._InternalLogging["queue"];
                 var length = queue.length;
                 for (var i = 0; i < length; i++) {
                     queue.shift();
                 }
-                queue.push("Hello1");
-                queue.push("Hello2");
+                queue.push(new Microsoft.ApplicationInsights._InternalLogMessage("Hello1"));
+                queue.push(new Microsoft.ApplicationInsights._InternalLogMessage("Hello2"));
 
                 init.loadAppInsights();
                 var poller = init.pollInteralLogs(appInsightsLocal);
