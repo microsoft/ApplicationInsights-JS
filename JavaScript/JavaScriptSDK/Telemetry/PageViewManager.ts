@@ -74,8 +74,8 @@ module Microsoft.ApplicationInsights.Telemetry {
 
             if (!Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
                 // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
-                    "trackPageView: navigation timing API used for calculation of page duration is not supported in this browser. This page view will be collected without duration and timing info.");
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage(
+                    "trackPageView: navigation timing API used for calculation of page duration is not supported in this browser. This page view will be collected without duration and timing info."));
                 return;
             }
 
@@ -110,7 +110,8 @@ module Microsoft.ApplicationInsights.Telemetry {
                         }
                     }
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed on page load calculation: " + Util.dump(e));
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(
+                        "trackPageView failed on page load calculation: " + Util.getExceptionName(e), { exception: Util.dump(e) }));
                 }
             }, 100);
         }

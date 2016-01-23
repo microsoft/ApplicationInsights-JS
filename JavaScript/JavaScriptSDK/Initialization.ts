@@ -89,9 +89,10 @@ module Microsoft.ApplicationInsights {
                     delete this.snippet.queue;
                 }
             } catch (exception) {
-                var message = "Failed to send queued telemetry";
+                var message = new _InternalLogMessage("Failed to send queued telemetry");
                 if (exception && typeof exception.toString === "function") {
-                    message += ": " + exception.toString();
+                    message.properties = {};
+                    message.properties.exception = exception.toString();
                 }
 
                 Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
@@ -100,10 +101,15 @@ module Microsoft.ApplicationInsights {
 
         public pollInteralLogs(appInsightsInstance: AppInsights) {
             return setInterval(() => {
-                var queue: Array<string> = Microsoft.ApplicationInsights._InternalLogging.queue;
+                var queue: Array<_InternalLogMessage> = Microsoft.ApplicationInsights._InternalLogging.queue;
                 var length = queue.length;
                 for (var i = 0; i < length; i++) {
-                    appInsightsInstance.trackTrace(queue[i]);
+                    if (typeof (queue[i].properties) === "object") {
+                        appInsightsInstance.trackTrace(queue[i].message, queue[i].properties);
+                    }
+                    else {
+                        appInsightsInstance.trackTrace(queue[i].message);
+                    }
                 }
                 queue.length = 0;
             }, this.config.diagnosticLogInterval);
@@ -128,7 +134,8 @@ module Microsoft.ApplicationInsights {
                 };
 
                 if (!Microsoft.ApplicationInsights.Util.addEventHandler('beforeunload', performHousekeeping)) {
-                    Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 'Could not add handler for beforeunload');
+                    Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL,
+                        new _InternalLogMessage('Could not add handler for beforeunload'));
                 }
             }
         }

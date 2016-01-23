@@ -28,6 +28,7 @@ class LoggingTests extends TestClass {
 
     public registerTests() {
         var InternalLogging = Microsoft.ApplicationInsights._InternalLogging;
+        var InternalLoggingMessage = Microsoft.ApplicationInsights._InternalLogMessage;
         InternalLogging.setMaxInternalMessageLimit(Number.MAX_VALUE);
 
         this.testCase({
@@ -45,7 +46,7 @@ class LoggingTests extends TestClass {
                 Assert.ok(!InternalLogging.enableDebugExceptions(), "enableDebugExceptions is false by default");
 
                 // act
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, "error!");
+                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage("error!"));
 
                 // verify
                 Assert.ok(!throwSpy || throwSpy.calledOnce, "console.warn was called instead of throwing while enableDebugExceptions is false");
@@ -55,7 +56,7 @@ class LoggingTests extends TestClass {
 
                 // verify
                 Assert.throws(() =>
-                    InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, "error!"),
+                    InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage("error!")),
                     "error is thrown when enableDebugExceptions is true");
                 Assert.ok(!throwSpy || throwSpy.calledOnce, "console.warn was not called when the error was thrown");
 
@@ -72,18 +73,17 @@ class LoggingTests extends TestClass {
                 InternalLogging.verboseLogging = () => true;
 
                 // act
-                var message = "error!";
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, message);
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, message);
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new InternalLoggingMessage("error!"));
+                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new InternalLoggingMessage("error!"));
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage("error!"));
+                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage("error!"));
 
                 //verify
                 Assert.equal(4, InternalLogging.queue.length);
-                Assert.equal("AI (Internal): " + message, InternalLogging.queue[0]);
-                Assert.equal("AI: " + message, InternalLogging.queue[1]);
-                Assert.equal("AI (Internal): " + message, InternalLogging.queue[2]);
-                Assert.equal("AI: " + message, InternalLogging.queue[3]);
+                Assert.equal("AI (Internal): " + "error!", InternalLogging.queue[0].message);
+                Assert.equal("AI: " + "error!", InternalLogging.queue[1].message);
+                Assert.equal("AI (Internal): " + "error!", InternalLogging.queue[2].message);
+                Assert.equal("AI: " + "error!", InternalLogging.queue[3].message);
 
                 // cleanup
                 InternalLogging.verboseLogging = () => false;
@@ -97,19 +97,18 @@ class LoggingTests extends TestClass {
                 InternalLogging.enableDebugExceptions = () => false;
 
                 // act
-                var message = "error!";
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, message);
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, message);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new InternalLoggingMessage("error!"));
+        InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new InternalLoggingMessage("error!"));
 
                 Assert.equal(0, InternalLogging.queue.length);
                 
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage("error!"));
+                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage("error!"));
 
                 //verify
                 Assert.equal(2, InternalLogging.queue.length);
-                Assert.equal("AI (Internal): " + message, InternalLogging.queue[0]);
-                Assert.equal("AI: " + message, InternalLogging.queue[1]);
+                Assert.equal("AI (Internal): " + "error!", InternalLogging.queue[0].message);
+                Assert.equal("AI: " + "error!", InternalLogging.queue[1].message);
             }
         });
 
@@ -122,14 +121,14 @@ class LoggingTests extends TestClass {
                     throwSpy = this.sandbox.spy(console, "warn");
 
                     // act
-                    var message = "error!";
+                    var message = new InternalLoggingMessage("error!");
                     InternalLogging.enableDebugExceptions = () => false;
                     InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
 
                     // verify
                     Assert.ok(throwSpy.calledOnce, "console.warn was not called while debug mode was false");
                     Assert.equal(1, InternalLogging.queue.length);
-                    Assert.equal("AI: " + message, InternalLogging.queue[0]);
+                    Assert.equal("AI: " + "error!", InternalLogging.queue[0].message);
 
                     // cleanup
                     
@@ -148,7 +147,7 @@ class LoggingTests extends TestClass {
                     throwSpy = this.sandbox.spy(console, "warn");
 
                     // act
-                    var message = "error!";
+                    var message = new InternalLoggingMessage("error!");
                     InternalLogging.enableDebugExceptions = () => false;
                     InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
 
@@ -156,7 +155,7 @@ class LoggingTests extends TestClass {
                     Assert.ok(throwSpy.calledOnce, "console.warn was not called while debug mode was false");
 
                     Assert.equal(1, InternalLogging.queue.length);
-                    Assert.equal("AI (Internal): " + message, InternalLogging.queue[0]);
+                    Assert.equal("AI (Internal): " + "error!", InternalLogging.queue[0].message);
 
                     // cleanup
                     
@@ -202,7 +201,7 @@ class LoggingTests extends TestClass {
 
                     // act
                     InternalLogging.enableDebugExceptions = () => false;
-                    InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, "error!");
+                    InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage("error!"));
 
                     // verify
                     Assert.ok(throwSpy.calledOnce, "console.log was called when console.warn was not present");
@@ -221,7 +220,7 @@ class LoggingTests extends TestClass {
             name: "LoggingTests: logInternalMessage throttles messages when the throttle limit is reached",
             test: () => {
                 var maxAllowedInternalMessages = 2;
-                var message = "Internal Test Event";
+                var message = new InternalLoggingMessage("Internal Test Event");
 
                 // setup
                 InternalLogging.enableDebugExceptions = () => false;
@@ -238,7 +237,7 @@ class LoggingTests extends TestClass {
                 Assert.equal(maxAllowedInternalMessages + 1, InternalLogging.queue.length); // Since we always send one "extra" event to denote that limit was reached
                 Assert.equal(InternalLogging.queue[0], message);
                 Assert.equal(InternalLogging.queue[1], message);
-                Assert.equal(InternalLogging.queue[2], "AI (Internal): Internal events throttle limit per PageView reached for this app.");
+                Assert.equal(InternalLogging.queue[2].message, "AI (Internal): Internal events throttle limit per PageView reached for this app.");
             }
         });
 
@@ -246,7 +245,7 @@ class LoggingTests extends TestClass {
             name: "LoggingTests: throwInternalNonUserActionable should call logInternalMessage",
             test: () => {
                 var maxAllowedInternalMessages = 2;
-                var message = "Internal Test Event";
+                var message = new InternalLoggingMessage("Internal Test Event");
                 var logInternalMessageStub = this.sandbox.stub(InternalLogging, 'logInternalMessage');
 
                 // setup
@@ -268,7 +267,7 @@ class LoggingTests extends TestClass {
             name: "LoggingTests: throwInternalUserActionable should call logInternalMessage",
             test: () => {
                 var maxAllowedInternalMessages = 2;
-                var message = "Internal Test Event";
+                var message = new InternalLoggingMessage("Internal Test Event");
                 var logInternalMessageStub = this.sandbox.stub(InternalLogging, 'logInternalMessage');
 
                 // setup
@@ -290,7 +289,7 @@ class LoggingTests extends TestClass {
             name: "LoggingTests: logInternalMessage will log events when the throttle is reset",
             test: () => {
                 var maxAllowedInternalMessages = 2;
-                var message = "Internal Test Event";
+                var message = new InternalLoggingMessage("Internal Test Event");
 
                 // setup
                 InternalLogging.enableDebugExceptions = () => false;

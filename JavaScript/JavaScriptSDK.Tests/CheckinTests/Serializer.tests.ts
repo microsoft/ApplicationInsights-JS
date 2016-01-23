@@ -180,8 +180,8 @@ class SerializerTests extends TestClass {
 
                 // verify
                 Assert.ok(this.throwInternalUserActionableSpy.calledTwice, "user actionable error is thrown");
-                var error = this.throwInternalUserActionableSpy.args[0][1].toLowerCase();
-                Assert.equal("attempting to serialize an object which does not implement iserializable: nocontractwithcycle", error);
+                var error = this.throwInternalUserActionableSpy.args[0][1].message.toLowerCase();
+                Assert.equal("ai: attempting to serialize an object which does not implement iserializable", error);
             }
         });
 
@@ -203,7 +203,7 @@ class SerializerTests extends TestClass {
 
                 // verify
                 Assert.ok(this.throwInternalUserActionableSpy.calledOnce, "error is thrown");
-                var error = this.throwInternalUserActionableSpy.args[0][1].toLowerCase();
+                var error = this.throwInternalUserActionableSpy.args[0][1].message.toLowerCase();
                 Assert.ok(error.indexOf("circular") >= 0 || error.indexOf("cyclic") >= 0, "error message");
             }
         });

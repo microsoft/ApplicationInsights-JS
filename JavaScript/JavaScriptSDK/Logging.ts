@@ -1,5 +1,5 @@
 ﻿module Microsoft.ApplicationInsights {
-    
+
     export enum LoggingSeverity {
         /**
          * Error will be sent as internal telemetry
@@ -10,6 +10,21 @@
          * Error will NOT be sent as internal telemetry, and will only be shown in browser console
          */
         WARNING = 1
+    }
+
+    export class _InternalLogMessage {
+        public message: string;
+        public properties: any;
+
+        constructor(msg: string, properties?: Object) {
+            this.message = msg;
+            if (typeof (properties) === "undefined" || !properties) {
+                this.properties = {};
+            }
+            else {
+                this.properties = properties;
+            }            
+        }
     }
 
     export class _InternalLogging {
@@ -52,28 +67,51 @@
         /**
          * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
          * @param severity {LoggingSeverity} - The severity of the log message
-         * @param message {string} - The log message.
+         * @param message {_InternalLogMessage} - The log message.
          */
-        public static throwInternalNonUserActionable(severity: LoggingSeverity, message: string) {
+        public static throwInternalNonUserActionable(severity: LoggingSeverity, message: _InternalLogMessage) {
             if (this.enableDebugExceptions()) {
                 throw message;
             } else {
-                this.warnToConsole(message);
-                this.logInternalMessage(severity, this.AiNonUserActionablePrefix + message);
+                if (typeof (message) !== "undefined" && !!message) {
+                    if (typeof (message.message) != "undefined") {
+                        if (typeof (message.properties) !== "undefined" && !!message.properties) {
+                            this.warnToConsole(message.message + " properties: " + JSON.stringify(message.properties));
+                        }
+                        else {
+                            this.warnToConsole(message.message);
+                        }
+                        message.message = this.AiNonUserActionablePrefix + message.message;
+
+                        this.logInternalMessage(severity, message);
+                    }
+                }
+                
             }
         }
 
         /**
          * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
          * @param severity {LoggingSeverity} - The severity of the log message
-         * @param message {string} - The log message.
+         * @param message {_InternalLogMessage} - The log message.
          */
-        public static throwInternalUserActionable(severity: LoggingSeverity, message: string) {
+        public static throwInternalUserActionable(severity: LoggingSeverity, message: _InternalLogMessage) {
             if (this.enableDebugExceptions()) {
                 throw message;
             } else {
-                this.warnToConsole(message);
-                this.logInternalMessage(severity, this.AiUserActionablePrefix + message);
+                if (typeof (message) !== "undefined" && !!message) {
+                    if (typeof (message.message) !== "undefined") {
+                        if (typeof (message.properties) !== "undefined" && !!message.properties) {
+                            this.warnToConsole(message.message + " properties: " + JSON.stringify(message.properties));
+                        }
+                        else {
+                            this.warnToConsole(message.message);
+                        }
+                        message.message = this.AiUserActionablePrefix + message.message;
+
+                        this.logInternalMessage(severity, message);
+                    }
+                }
             }
         }
 
@@ -113,9 +151,9 @@
         /**
          * Logs a message to the internal queue.
          * @param severity {LoggingSeverity} - The severity of the log message
-         * @param message {string} - The message to log.
+         * @param message {_InternalLogMessage} - The message to log.
          */
-        public static logInternalMessage(severity: LoggingSeverity, message: string): void {
+        public static logInternalMessage(severity: LoggingSeverity, message: _InternalLogMessage): void {
             if (this._areInternalMessagesThrottled()) {
                 return;
             }
@@ -129,7 +167,9 @@
             // When throttle limit reached, send a special event
             if (this._messageCount == this.MAX_INTERNAL_MESSAGE_LIMIT) {
                 var throttleLimitMessage = this.AiNonUserActionablePrefix + "Internal events throttle limit per PageView reached for this app.";
-                this.queue.push(throttleLimitMessage);
+                var throttleMessage = new _InternalLogMessage(throttleLimitMessage);
+
+                this.queue.push(throttleMessage);
                 this.warnToConsole(throttleLimitMessage);
             }
         }
