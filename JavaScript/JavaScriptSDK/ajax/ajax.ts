@@ -185,7 +185,7 @@ module Microsoft.ApplicationInsights {
 
             if (xhr.ajaxData.ajaxTotalDuration < 0) {
                 _InternalLogging.throwInternalNonUserActionable(
-                    LoggingSeverity.CRITICAL,
+                    LoggingSeverity.WARNING,
                     "Failed to calculate the duration of the ajax call"
                     + AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr)
                     + " ("
