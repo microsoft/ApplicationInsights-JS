@@ -183,15 +183,15 @@ module Microsoft.ApplicationInsights {
             xhr.ajaxData.status = xhr.status;
                 xhr.ajaxData.CalculateMetrics();
 
-                if (xhr.ajaxData.ajaxTotalDuration < 0) {
-                    var message = new _InternalLogMessage("Failed to calculate the duration of the ajax call, monitoring data for this ajax call won't be sent.");
-                    _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.WARNING,
-                        new _InternalLogMessage("Failed to calculate the duration of the ajax call, monitoring data for this ajax call won't be sent.", {
-                            ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr),
-                            requestSentTime: xhr.ajaxData.requestSentTime,
-                            responseFinishedTime: xhr.ajaxData.responseFinishedTime
-                        }));
+            if (xhr.ajaxData.ajaxTotalDuration < 0) {
+                var message = new _InternalLogMessage("Failed to calculate the duration of the ajax call, monitoring data for this ajax call won't be sent.");
+                _InternalLogging.throwInternalNonUserActionable(
+                    LoggingSeverity.WARNING,
+                    new _InternalLogMessage("Failed to calculate the duration of the ajax call, monitoring data for this ajax call won't be sent.", {
+                        ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr),
+                        requestSentTime: xhr.ajaxData.requestSentTime,
+                        responseFinishedTime: xhr.ajaxData.responseFinishedTime
+                    }));
             }
             else {
                 this.appInsights.trackAjax(
