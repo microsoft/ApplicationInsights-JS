@@ -50,8 +50,8 @@ module Microsoft.ApplicationInsights.Context {
             // Validate inputs to ensure no cookie control characters.
             var isInvalidInput = !this.validateUserInput(authenticatedUserId) || (accountId && !this.validateUserInput(accountId));
             if (isInvalidInput) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Setting auth user context failed. " +
-                    "User auth/account id should be of type string, and not contain commas, semi-colons, equal signs, spaces, or vertical-bars.");
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage("Setting auth user context failed. " +
+                    "User auth/account id should be of type string, and not contain commas, semi-colons, equal signs, spaces, or vertical-bars."));
                 return;
             }
 

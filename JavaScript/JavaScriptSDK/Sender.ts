@@ -101,13 +101,13 @@ module Microsoft.ApplicationInsights {
         
                 // validate input
                 if (!envelope) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Cannot send empty telemetry");
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage("Cannot send empty telemetry"));
                     return;
                 }
 
                 // ensure a sender was constructed
                 if (!this._sender) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Sender was not initialized");
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage("Sender was not initialized"));
                     return;
                 }
             
@@ -132,7 +132,8 @@ module Microsoft.ApplicationInsights {
 
                 DataLossAnalyzer.incrementItemsQueued();
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage("Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
             }
         }
 
@@ -186,7 +187,8 @@ module Microsoft.ApplicationInsights {
                 clearTimeout(this._timeoutHandle);
                 this._timeoutHandle = null;
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Telemetry transmission failed, some telemetry will be lost: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage("Telemetry transmission failed, some telemetry will be lost: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
             }
         }
 
@@ -249,7 +251,7 @@ module Microsoft.ApplicationInsights {
          * error handler
          */
         public static _onError(payload: string, message: string, event?: ErrorEvent) {
-            _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Failed to send telemetry:\n" + message);
+            _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage("Failed to send telemetry.", { message: message }));
         }
 
         /**

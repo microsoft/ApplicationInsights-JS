@@ -43,7 +43,9 @@ module Microsoft.ApplicationInsights {
                 try {
                     return storage.getItem(name);
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed read of local storage." + Util.dump(e));
+                    var message = new _InternalLogMessage("Browser failed read of local storage. " + Util.getExceptionName(e));
+                    message.properties.exception = Util.dump(e);
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
                 }
             }
             return null;
@@ -63,7 +65,9 @@ module Microsoft.ApplicationInsights {
                     storage.setItem(name, data);
                     return true;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed write to local storage." + Util.dump(e));
+                    var message = new _InternalLogMessage("Browser failed write to local storage. " + Util.getExceptionName(e));
+                    message.properties.exception = Util.dump(e);
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
                 }
             }
             return false;
@@ -82,7 +86,9 @@ module Microsoft.ApplicationInsights {
                     storage.removeItem(name);
                     return true;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed removal of local storage item." + Util.dump(e));
+                    var message = new _InternalLogMessage("Browser failed removal of local storage item. " + Util.getExceptionName(e));
+                    message.properties.exception = Util.dump(e);
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
                 }
             }
             return false;
@@ -126,7 +132,9 @@ module Microsoft.ApplicationInsights {
                 try {
                     return storage.getItem(name);
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed read of session storage." + Util.dump(e));
+                    var message = new _InternalLogMessage("Browser failed read of session storage. " + Util.getExceptionName(e));
+                    message.properties.exception = Util.dump(e);
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, message);
                 }
             }
             return null;
@@ -146,7 +154,9 @@ module Microsoft.ApplicationInsights {
                     storage.setItem(name, data);
                     return true;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed write to session storage." + Util.dump(e));
+                    var message = new _InternalLogMessage("Browser failed write to session storage. " + Util.getExceptionName(e));
+                    message.properties.exception = Util.dump(e);
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, message);
                 }
             }
             return false;
@@ -165,7 +175,9 @@ module Microsoft.ApplicationInsights {
                     storage.removeItem(name);
                     return true;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed removal of session storage item." + Util.dump(e));
+                    var message = new _InternalLogMessage("Browser failed removal of session storage item. " + Util.getExceptionName(e));
+                    message.properties.exception = Util.dump(e);
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, message);
                 }
             }
             return false;
@@ -332,7 +344,18 @@ module Microsoft.ApplicationInsights {
 
             return objectTypeDump + propertyValueDump;
         }
-        
+
+        /**
+        * Returns the name of object if it's an Error. Otherwise, returns empty string.
+        */
+        public static getExceptionName(object: any): string {
+            var objectTypeDump: string = Object.prototype.toString.call(object);
+            if (objectTypeDump === "[object Error]") {
+                return object.name;
+            }
+            return "";
+        }
+
         /**
          * Adds an event handler for the specified event
          * @param eventName {string} - The name of the event
