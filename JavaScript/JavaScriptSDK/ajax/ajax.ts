@@ -183,17 +183,29 @@ module Microsoft.ApplicationInsights {
             xhr.ajaxData.status = xhr.status;
                 xhr.ajaxData.CalculateMetrics();
 
-            if (xhr.ajaxData.ajaxTotalDuration >= 0) {
-                this.appInsights.trackAjax(
-                    xhr.ajaxData.getAbsoluteUrl(),
-                    xhr.ajaxData.getPathName(),
-                    xhr.ajaxData.ajaxTotalDuration,
-                    (+(xhr.ajaxData.status)) < 400,
-                    +xhr.ajaxData.status
-                );
+                if (xhr.ajaxData.ajaxTotalDuration < 0) {
+                    _InternalLogging.throwInternalNonUserActionable(
+                        LoggingSeverity.WARNING,
+                        "Failed to calculate the duration of the ajax call"
+                        + AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr)
+                        + " ("
+                        + xhr.ajaxData.requestSentTime
+                        + ", "
+                        + xhr.ajaxData.responseFinishedTime
+                        + "), monitoring data for this ajax call won't be sent."
+                    );
+                }
+                else {
+                    this.appInsights.trackAjax(
+                        xhr.ajaxData.getAbsoluteUrl(),
+                        xhr.ajaxData.getPathName(),
+                        xhr.ajaxData.ajaxTotalDuration,
+                        (+(xhr.ajaxData.status)) < 400,
+                        +xhr.ajaxData.status
+                    );
 
-                xhr.ajaxData = null;
-            }
+                    xhr.ajaxData = null;
+                }
         }
 
     }
