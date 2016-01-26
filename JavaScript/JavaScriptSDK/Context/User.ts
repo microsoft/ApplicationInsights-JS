@@ -95,7 +95,7 @@ module Microsoft.ApplicationInsights.Context {
                 var acqStr = Util.toISOStringForIE8(date);
                 this.accountAcquisitionDate = acqStr;
                 // without expiration, cookies expire at the end of the session
-                // set it to a year from now
+                // set it to 365 days from now
                 // 365 * 24 * 60 * 60 * 1000 = 31536000000 
                 date.setTime(date.getTime() + 31536000000);
                 var newCookie = [this.id, acqStr];
