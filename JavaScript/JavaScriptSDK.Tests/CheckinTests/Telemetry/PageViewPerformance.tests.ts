@@ -116,7 +116,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 Assert.equal(undefined, data.receivedResponse);
                 Assert.equal(undefined, data.domProcessing);
 
-                Assert.equal("client performance math error. properties: {\"total\":59,\"network\":39,\"request\":19,\"response\":12,\"dom\":18}", actualLoggedMessage);
+                Assert.equal("AI (Internal): client performance math error. properties: {\"total\":59,\"network\":39,\"request\":19,\"response\":12,\"dom\":18}", actualLoggedMessage);
 
                 
                 

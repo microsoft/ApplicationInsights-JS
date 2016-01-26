@@ -74,14 +74,14 @@
                 throw message;
             } else {
                 if (typeof (message) !== "undefined" && !!message) {
-                    if (typeof (message.message) != "undefined") {
-                        if (typeof (message.properties) !== "undefined" && !!message.properties) {
+                    if (typeof (message.message) !== "undefined") {
+                        message.message = this.AiNonUserActionablePrefix + message.message;
+                        if (typeof (message.properties) === "object") {
                             this.warnToConsole(message.message + " properties: " + JSON.stringify(message.properties));
                         }
                         else {
                             this.warnToConsole(message.message);
                         }
-                        message.message = this.AiNonUserActionablePrefix + message.message;
 
                         this.logInternalMessage(severity, message);
                     }
@@ -101,13 +101,13 @@
             } else {
                 if (typeof (message) !== "undefined" && !!message) {
                     if (typeof (message.message) !== "undefined") {
-                        if (typeof (message.properties) !== "undefined" && !!message.properties) {
+                        message.message = this.AiUserActionablePrefix + message.message;
+                        if (typeof (message.properties) === "object") {
                             this.warnToConsole(message.message + " properties: " + JSON.stringify(message.properties));
                         }
                         else {
                             this.warnToConsole(message.message);
                         }
-                        message.message = this.AiUserActionablePrefix + message.message;
 
                         this.logInternalMessage(severity, message);
                     }
