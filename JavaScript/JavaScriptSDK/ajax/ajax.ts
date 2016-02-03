@@ -197,7 +197,7 @@ module Microsoft.ApplicationInsights {
                     xhr.ajaxData.getAbsoluteUrl(),
                     xhr.ajaxData.getPathName(),
                     xhr.ajaxData.ajaxTotalDuration,
-                    (+(xhr.ajaxData.status)) < 400,
+                    (+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
                     +xhr.ajaxData.status
                 );
 
