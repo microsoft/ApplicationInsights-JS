@@ -12,18 +12,75 @@
         WARNING = 1
     }
 
+   /**
+    * Internal message ID. Please create a new one for every conceptually different message. Please keep alphabetically ordered
+    */
+    export enum _InternalMessageId {
+        NONUSRACT_BrowserDoesNotSupportLocalStorage,
+        NONUSRACT_CannotSendEmptyTelemetry,
+        NONUSRACT_ErrorParsingAISessionCookie,
+        NONUSRACT_ExceptionWhileLoggingError,
+        NONUSRACT_FailedAddingTelemetryToBuffer,
+        NONUSRACT_FailedMonitorAjaxAbort,
+        NONUSRACT_FailedMonitorAjaxDur,
+        NONUSRACT_FailedMonitorAjaxOpen,
+        NONUSRACT_FailedMonitorAjaxRSC,
+        NONUSRACT_FailedMonitorAjaxSend,
+        NONUSRACT_FailedToAddHandlerForOnBeforeUnload,
+        NONUSRACT_FailedToSendQueuedTelemetry,
+        NONUSRACT_FailedToReportDataLoss,
+        NONUSRACT_FlushFailed,
+        NONUSRACT_MessageLimitPerPVExceeded,
+        NONUSRACT_MissingRequiredFieldSpecification,
+        NONUSRACT_OnError,
+        NONUSRACT_SessionRenewalDateIsZero,
+        NONUSRACT_SenderNotInitialized,
+        NONUSRACT_StartTrackEventFailed,
+        NONUSRACT_StopTrackEventFailed,
+        NONUSRACT_StartTrackFailed,
+        NONUSRACT_StopTrackFailed,
+        NONUSRACT_TelemetrySampledAndNotSent,
+        NONUSRACT_TrackEventFailed,
+        NONUSRACT_TrackExceptionFailed,
+        NONUSRACT_TrackMetricFailed,
+        NONUSRACT_TrackPVFailed,
+        NONUSRACT_TrackTraceFailed,
+        NONUSRACT_TransmissionFailed,
+
+        USRACT_CannotSerializeObject,
+        USRACT_CannotSerializeObjectNonSerializable,
+        USRACT_CircularReferenceDetected,
+        USRACT_ClearAuthContextFailed,
+        USRACT_IllegalCharsInName,
+        USRACT_ItemNotInArray,
+        USRACT_MaxAjaxPerPVExceeded,
+        USRACT_NameTooLong,
+        USRACT_SampleRateOutOfRange,
+        USRACT_SetAuthContextFailed,
+        USRACT_SetAuthContextFailedAccountName,
+        USRACT_StartCalledMoreThanOnce,
+        USRACT_StopCalledWithoutStart,
+        USRACT_TelemetryInitializerFailed,
+        USRACT_TrackArgumentsNotSpecified,
+    }
+
     export class _InternalLogMessage {
         public message: string;
         public properties: any;
 
-        constructor(msg: string, properties?: Object) {
-            this.message = msg;
+        constructor(msgId: _InternalMessageId, msg: string, properties?: Object) {
+            
+            this.message = _InternalMessageId[msgId].toString();
+
             if (typeof (properties) === "undefined" || !properties) {
                 this.properties = {};
             }
             else {
                 this.properties = properties;
-            }            
+            }
+
+            // always add property as msg on the message (regardless of whether it is actionable or non-actionable)
+            this.properties["msg"] = msg;       
         }
     }
 
@@ -167,7 +224,7 @@
             // When throttle limit reached, send a special event
             if (this._messageCount == this.MAX_INTERNAL_MESSAGE_LIMIT) {
                 var throttleLimitMessage = this.AiNonUserActionablePrefix + "Internal events throttle limit per PageView reached for this app.";
-                var throttleMessage = new _InternalLogMessage(throttleLimitMessage);
+                var throttleMessage = new _InternalLogMessage(_InternalMessageId.NONUSRACT_MessageLimitPerPVExceeded, throttleLimitMessage);
 
                 this.queue.push(throttleMessage);
                 this.warnToConsole(throttleLimitMessage);

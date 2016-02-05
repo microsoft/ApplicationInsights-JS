@@ -57,7 +57,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
                 if (name.search(/[^0-9a-zA-Z-._()\/ ]/g) >= 0) {
                     name = name.replace(/[^0-9a-zA-Z-._()\/ ]/g, "_");
                     _InternalLogging.throwInternalUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage("name contains illegal characters. Illegal characters have been replaced with '_'.",
+                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.USRACT_IllegalCharsInName, "name contains illegal characters. Illegal characters have been replaced with '_'.",
                             { newName: name }));
                 }
 
@@ -65,7 +65,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
                 if (name.length > DataSanitizer.MAX_NAME_LENGTH) {
                     name = name.substring(0, DataSanitizer.MAX_NAME_LENGTH);
                     _InternalLogging.throwInternalUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage("name is too long.  It has been truncated to " + DataSanitizer.MAX_NAME_LENGTH + " characters.",
+                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.USRACT_NameTooLong, "name is too long.  It has been truncated to " + DataSanitizer.MAX_NAME_LENGTH + " characters.",
                             { name: name }));
                 }
             }

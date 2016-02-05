@@ -101,13 +101,13 @@ module Microsoft.ApplicationInsights {
         
                 // validate input
                 if (!envelope) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage("Cannot send empty telemetry"));
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.NONUSRACT_CannotSendEmptyTelemetry, "Cannot send empty telemetry"));
                     return;
                 }
 
                 // ensure a sender was constructed
                 if (!this._sender) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage("Sender was not initialized"));
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.NONUSRACT_SenderNotInitialized, "Sender was not initialized"));
                     return;
                 }
             
@@ -132,7 +132,8 @@ module Microsoft.ApplicationInsights {
 
                 DataLossAnalyzer.incrementItemsQueued();
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage("Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.getExceptionName(e),
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedAddingTelemetryToBuffer, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.getExceptionName(e),
                     { exception: Util.dump(e) }));
             }
         }
@@ -187,7 +188,7 @@ module Microsoft.ApplicationInsights {
                 clearTimeout(this._timeoutHandle);
                 this._timeoutHandle = null;
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage("Telemetry transmission failed, some telemetry will be lost: " + Util.getExceptionName(e),
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, "Telemetry transmission failed, some telemetry will be lost: " + Util.getExceptionName(e),
                     { exception: Util.dump(e) }));
             }
         }
@@ -251,7 +252,8 @@ module Microsoft.ApplicationInsights {
          * error handler
          */
         public static _onError(payload: string, message: string, event?: ErrorEvent) {
-            _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage("Failed to send telemetry.", { message: message }));
+            _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
+                new _InternalLogMessage(_InternalMessageId.NONUSRACT_OnError, "Failed to send telemetry.", { message: message }));
         }
 
         /**

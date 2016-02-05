@@ -111,7 +111,7 @@ module Microsoft.ApplicationInsights {
          */
         public track(envelope: Telemetry.Common.Envelope) {
             if (!envelope) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage("cannot call .track() with a null or undefined argument"));
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.USRACT_TrackArgumentsNotSpecified, "cannot call .track() with a null or undefined argument"));
             } else {
                 // If the envelope is PageView, reset the internal message count so that we can send internal telemetry for the new page.
                 if (envelope.name === Telemetry.PageView.envelopeType) {
@@ -168,7 +168,7 @@ module Microsoft.ApplicationInsights {
             } catch (e) {
                 doNotSendItem = true;
                 _InternalLogging.throwInternalUserActionable(
-                    LoggingSeverity.CRITICAL, new _InternalLogMessage("One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
+                    LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.USRACT_TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
                         { exception: Util.dump(e) }));
             }
 
@@ -178,7 +178,7 @@ module Microsoft.ApplicationInsights {
                     this.sample.isSampledIn(envelope)) {
                     this._sender.send(envelope);
                 } else {
-                    _InternalLogging.logInternalMessage(LoggingSeverity.WARNING, new _InternalLogMessage(
+                    _InternalLogging.logInternalMessage(LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_TelemetrySampledAndNotSent,
                         "Telemetry is sampled and not sent to the AI service.", { SampleRate: this.sample.sampleRate }));
                 }
             }

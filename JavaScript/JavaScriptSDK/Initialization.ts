@@ -89,7 +89,7 @@ module Microsoft.ApplicationInsights {
                     delete this.snippet.queue;
                 }
             } catch (exception) {
-                var message = new _InternalLogMessage("Failed to send queued telemetry");
+                var message = new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToSendQueuedTelemetry, "Failed to send queued telemetry");
                 if (exception && typeof exception.toString === "function") {
                     message.properties = {};
                     message.properties.exception = exception.toString();
@@ -135,7 +135,7 @@ module Microsoft.ApplicationInsights {
 
                 if (!Microsoft.ApplicationInsights.Util.addEventHandler('beforeunload', performHousekeeping)) {
                     Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL,
-                        new _InternalLogMessage('Could not add handler for beforeunload'));
+                        new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToAddHandlerForOnBeforeUnload, 'Could not add handler for beforeunload'));
                 }
             }
         }
