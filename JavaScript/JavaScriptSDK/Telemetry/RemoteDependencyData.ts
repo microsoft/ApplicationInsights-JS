@@ -11,6 +11,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static dataType = "RemoteDependencyData";
 
         public aiDataContract = {
+            id: FieldType.Required,
             ver: FieldType.Required,
             name: FieldType.Default,
             kind: FieldType.Required,
@@ -32,9 +33,10 @@ module Microsoft.ApplicationInsights.Telemetry {
         /**
          * Constructs a new instance of the RemoteDependencyData object
          */
-        constructor(name: string, commandName: string, value: number, success: boolean, resultCode: number) {
+        constructor(id: string, name: string, commandName: string, value: number, success: boolean, resultCode: number) {
             super();
 
+            this.id = id;
             this.name = name;
             this.commandName = commandName;
             this.value = value;

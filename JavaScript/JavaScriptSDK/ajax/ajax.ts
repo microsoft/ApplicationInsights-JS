@@ -88,7 +88,7 @@ module Microsoft.ApplicationInsights {
         }
 
         private openHandler(xhr: XMLHttpRequestInstrumented, method, url, async) {
-            var ajaxData = new ajaxRecord();
+            var ajaxData = new ajaxRecord(Util.newId());
             ajaxData.method = method;
             ajaxData.requestUrl = url;
             ajaxData.xhrMonitoringState.openDone = true
@@ -194,6 +194,7 @@ module Microsoft.ApplicationInsights {
             }
             else {
                 this.appInsights.trackAjax(
+                    xhr.ajaxData.id,
                     xhr.ajaxData.getAbsoluteUrl(),
                     xhr.ajaxData.getPathName(),
                     xhr.ajaxData.ajaxTotalDuration,
