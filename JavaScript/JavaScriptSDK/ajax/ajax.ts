@@ -14,8 +14,10 @@ module Microsoft.ApplicationInsights {
         private appInsights: AppInsights;
         private initialized: boolean;
         private static instrumentedByAppInsightsName = "InstrumentedByAppInsights";
+        private currentWindowHost;
 
         constructor(appInsights: Microsoft.ApplicationInsights.AppInsights) {
+            this.currentWindowHost = window.location.host;
             this.appInsights = appInsights;
             this.initialized = false;
             this.Init();
@@ -132,7 +134,11 @@ module Microsoft.ApplicationInsights {
         }
 
         private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
-            xhr.ajaxData.requestSentTime = dateTime.Now();            
+            xhr.ajaxData.requestSentTime = dateTime.Now();
+            if (UrlHelper.parseUrl(xhr.ajaxData.getAbsoluteUrl()).host == this.currentWindowHost) {
+                xhr.setRequestHeader("x-ms-request-root-id", this.appInsights.context.operation.id);
+                xhr.setRequestHeader("x-ms-request-id", xhr.ajaxData.id);
+            }
             xhr.ajaxData.xhrMonitoringState.sendDone = true;
         }
 
@@ -165,7 +171,7 @@ module Microsoft.ApplicationInsights {
                     if (ajaxMonitorInstance.isMonitoredInstance(xhr)) {
                         if (xhr.readyState === 4) {
                             ajaxMonitorInstance.onAjaxComplete(xhr);
-                    }
+                        }
                     }
                 } catch (e) {
                     _InternalLogging.throwInternalNonUserActionable(
@@ -181,7 +187,7 @@ module Microsoft.ApplicationInsights {
         private onAjaxComplete(xhr: XMLHttpRequestInstrumented) {
             xhr.ajaxData.responseFinishedTime = dateTime.Now();
             xhr.ajaxData.status = xhr.status;
-                xhr.ajaxData.CalculateMetrics();
+            xhr.ajaxData.CalculateMetrics();
 
             if (xhr.ajaxData.ajaxTotalDuration < 0) {
                 _InternalLogging.throwInternalNonUserActionable(

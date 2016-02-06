@@ -1739,7 +1739,7 @@ class AppInsightsTests extends TestClass {
                 snippet.disableAjaxTracking = false;
                 snippet.maxBatchInterval = 0;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
-                var trackStub = this.sandbox.spy(appInsights.context, "track");
+                var trackStub = this.sandbox.spy(appInsights, "trackAjax");
                 var expectedRootId = appInsights.context.operation.id;
                 Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
                 
@@ -1747,12 +1747,17 @@ class AppInsightsTests extends TestClass {
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "/bla");
                 xhr.send();
+
+                var expectedAjaxId = (<any>xhr).ajaxData.id;
+                Assert.ok(expectedAjaxId.length > 0, "ajax id was initialized");
                 
-                // Emulate response                
+                // Emulate response                               
                 (<any>xhr).respond("200", {}, "");
 
                 // Assert
-                
+                Assert.equal(expectedAjaxId, (<any>xhr).requestHeaders['x-ms-request-id'], "x-ms-request-id id set correctly");
+                Assert.equal(expectedRootId, (<any>xhr).requestHeaders['x-ms-request-root-id'], "x-ms-request-root-id set correctly");
+                Assert.equal(expectedAjaxId, trackStub.args[0][0], "ajax id passed to trackAjax correctly");
             }
         });
     }

@@ -4,7 +4,14 @@
 
 class AjaxTests extends TestClass {
 
-    private appInsightsMock = { trackAjax: (id: string, absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) => { } }
+    private appInsightsMock = {
+        trackAjax: (id: string, absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) => { },
+        context: {
+            operation: {
+                id: "asdf"                
+            }
+        }
+    }
     private trackAjaxSpy;
     private callbackSpy;
     private requests;
