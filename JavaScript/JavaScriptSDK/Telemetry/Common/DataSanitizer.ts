@@ -79,7 +79,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
                 if (value.toString().length > DataSanitizer.MAX_STRING_LENGTH) {
                     value = value.toString().substring(0, DataSanitizer.MAX_STRING_LENGTH);
                     _InternalLogging.throwInternalUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage("string value is too long. It has been truncated to " + DataSanitizer.MAX_STRING_LENGTH + " characters.",
+                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.USRACT_StringValueTooLong, "string value is too long. It has been truncated to " + DataSanitizer.MAX_STRING_LENGTH + " characters.",
                             { value: value }));
                 }
             }
@@ -92,7 +92,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
                 if (url.length > DataSanitizer.MAX_URL_LENGTH) {
                     url = url.substring(0, DataSanitizer.MAX_URL_LENGTH);
                     _InternalLogging.throwInternalUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage("url is too long, it has been trucated to " + DataSanitizer.MAX_URL_LENGTH + " characters.",
+                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.USRACT_UrlTooLong, "url is too long, it has been trucated to " + DataSanitizer.MAX_URL_LENGTH + " characters.",
                             { url: url }));
                 }
             }
@@ -105,7 +105,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
                 if (message.length > DataSanitizer.MAX_MESSAGE_LENGTH) {
                     message = message.substring(0, DataSanitizer.MAX_MESSAGE_LENGTH);
                     _InternalLogging.throwInternalUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage("message is too long, it has been trucated to " + DataSanitizer.MAX_MESSAGE_LENGTH + " characters.",
+                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.USRACT_MessageTruncated, "message is too long, it has been trucated to " + DataSanitizer.MAX_MESSAGE_LENGTH + " characters.",
                             { message: message }));
                 }
             }
@@ -118,7 +118,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
                 if (exception.length > DataSanitizer.MAX_EXCEPTION_LENGTH) {
                     exception = exception.substring(0, DataSanitizer.MAX_EXCEPTION_LENGTH);
                     _InternalLogging.throwInternalUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage("exception is too long, it has been trucated to " + DataSanitizer.MAX_EXCEPTION_LENGTH + " characters.",
+                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.USRACT_ExceptionTruncated, "exception is too long, it has been trucated to " + DataSanitizer.MAX_EXCEPTION_LENGTH + " characters.",
                             { exception: exception }));
                 }
             }

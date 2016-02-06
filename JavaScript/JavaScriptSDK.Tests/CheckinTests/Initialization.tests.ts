@@ -172,8 +172,8 @@ class InitializationTests extends TestClass {
                 for (var i = 0; i < length; i++) {
                     queue.shift();
                 }
-                queue.push(new Microsoft.ApplicationInsights._InternalLogMessage("Hello1"));
-                queue.push(new Microsoft.ApplicationInsights._InternalLogMessage("Hello2"));
+                queue.push(new Microsoft.ApplicationInsights._InternalLogMessage(1, "Hello1"));
+                queue.push(new Microsoft.ApplicationInsights._InternalLogMessage(2, "Hello2"));
 
                 init.loadAppInsights();
                 var poller = init.pollInteralLogs(appInsightsLocal);
