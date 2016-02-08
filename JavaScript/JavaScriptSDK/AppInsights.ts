@@ -36,6 +36,7 @@ module Microsoft.ApplicationInsights {
         overridePageViewDuration: boolean;
         maxAjaxCallsPerView: number;
         disableDataLossAnalysis: boolean;
+        disableCorrelationHeaders: boolean;
     }
 
     /**

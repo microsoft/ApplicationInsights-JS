@@ -24,7 +24,8 @@ class AppInsightsTests extends TestClass {
             disableAjaxTracking: true,
             overridePageViewDuration: false,
             maxAjaxCallsPerView: 20,
-            disableDataLossAnalysis: true
+            disableDataLossAnalysis: true,
+            disableCorrelationHeaders: false
         };
 
         // set default values
