@@ -8,8 +8,11 @@ class AjaxTests extends TestClass {
         trackAjax: (id: string, absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) => { },
         context: {
             operation: {
-                id: "asdf"                
+                id: "asdf"
             }
+        },
+        config: {
+            disableCorrelationHeaders: false
         }
     }
     private trackAjaxSpy;
@@ -237,7 +240,7 @@ class AjaxTests extends TestClass {
                 } finally {
                     window.performance = initialPerformance;
                 }
-             }
+            }
         });
 
         this.testCase({
