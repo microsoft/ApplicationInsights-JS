@@ -24,7 +24,8 @@ class AppInsightsTests extends TestClass {
             disableAjaxTracking: true,
             overridePageViewDuration: false,
             maxAjaxCallsPerView: 20,
-            disableDataLossAnalysis: true
+            disableDataLossAnalysis: true,
+            disableCorrelationHeaders: false
         };
 
         // set default values
@@ -1614,7 +1615,7 @@ class AppInsightsTests extends TestClass {
                 var resultCode = 404;
 
                 // Act
-                appInsights.trackAjax(name, url, duration, success, resultCode);
+                appInsights.trackAjax("0", name, url, duration, success, resultCode);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
@@ -1638,7 +1639,7 @@ class AppInsightsTests extends TestClass {
                 var expectedEnvelopeName = "Microsoft.ApplicationInsights.BDC8736DD8E84B69B19BB0CE6B66A456.RemoteDependency";
 
                 // Act
-                appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
@@ -1656,7 +1657,7 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
                 }
 
                 // Assert
@@ -1673,14 +1674,14 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
                 }
 
                 appInsights.sendPageViewInternal("asdf", "http://microsoft.com", 123);
                 trackStub.reset();
 
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
                 }
 
                 // Assert
@@ -1698,13 +1699,13 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < 20; ++i) {
-                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
                 }
                 
                 loggingSpy.reset();
 
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
                 }
 
                 // Assert
@@ -1724,11 +1725,67 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < ajaxCallsCount; ++i) {
-                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
                 }
 
                 // Assert
                 Assert.equal(ajaxCallsCount, trackStub.callCount, "Expected " + ajaxCallsCount + " invokations of trackAjax (no limit)");
+            }
+        });
+        
+        this.testCase({
+            name: "Ajax - root/parent id are set and passed correctly",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.disableAjaxTracking = false;
+                snippet.disableCorrelationHeaders = false;
+                snippet.maxBatchInterval = 0;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.spy(appInsights, "trackAjax");
+                var expectedRootId = appInsights.context.operation.id;
+                Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+                
+                // Act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "/bla");
+                xhr.send();
+
+                var expectedAjaxId = (<any>xhr).ajaxData.id;
+                Assert.ok(expectedAjaxId.length > 0, "ajax id was initialized");
+                
+                // Emulate response                               
+                (<any>xhr).respond("200", {}, "");
+
+                // Assert
+                Assert.equal(expectedAjaxId, (<any>xhr).requestHeaders['x-ms-request-id'], "x-ms-request-id id set correctly");
+                Assert.equal(expectedRootId, (<any>xhr).requestHeaders['x-ms-request-root-id'], "x-ms-request-root-id set correctly");
+                Assert.equal(expectedAjaxId, trackStub.args[0][0], "ajax id passed to trackAjax correctly");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax - disableCorrelationHeaders disables x-ms-request-id headers",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.disableAjaxTracking = false;
+                snippet.disableCorrelationHeaders = true;
+                snippet.maxBatchInterval = 0;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.spy(appInsights, "trackAjax");
+                var expectedRootId = appInsights.context.operation.id;
+                Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+                
+                // Act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "/bla");
+                xhr.send();
+                                
+                // Emulate response                               
+                (<any>xhr).respond("200", {}, "");
+
+                // Assert
+                Assert.equal(null, (<any>xhr).requestHeaders['x-ms-request-id'], "x-ms-request-id should not be set");
+                Assert.equal(null, (<any>xhr).requestHeaders['x-ms-request-root-id'], "x-ms-request-root-id should not be set");
             }
         });
     }

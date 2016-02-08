@@ -4,7 +4,17 @@
 
 class AjaxTests extends TestClass {
 
-    private appInsightsMock = { trackAjax: (absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) => { } }
+    private appInsightsMock = {
+        trackAjax: (id: string, absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) => { },
+        context: {
+            operation: {
+                id: "asdf"
+            }
+        },
+        config: {
+            disableCorrelationHeaders: false
+        }
+    }
     private trackAjaxSpy;
     private callbackSpy;
     private requests;
@@ -101,7 +111,7 @@ class AjaxTests extends TestClass {
                 (<any>xhr).respond(200, {}, "");
 
                 // Assert
-                Assert.equal(true, this.trackAjaxSpy.args[0][3], "TrackAjax should receive true as a 'success' argument");
+                Assert.equal(true, this.trackAjaxSpy.args[0][4], "TrackAjax should receive true as a 'success' argument");
 
             }
         });
@@ -120,7 +130,7 @@ class AjaxTests extends TestClass {
                 (<any>xhr).respond(404, {}, "");
 
                 // Assert
-                Assert.equal(false, this.trackAjaxSpy.args[0][3], "TrackAjax should receive false as a 'success' argument");
+                Assert.equal(false, this.trackAjaxSpy.args[0][4], "TrackAjax should receive false as a 'success' argument");
 
             }
         });
@@ -226,11 +236,11 @@ class AjaxTests extends TestClass {
 
                     // Assert
                     Assert.ok(this.trackAjaxSpy.calledOnce, "TrackAjax should be called");
-                    Assert.equal(expectedResponseDuration, this.trackAjaxSpy.args[0][2], "Ajax duration should match expected duration");
+                    Assert.equal(expectedResponseDuration, this.trackAjaxSpy.args[0][3], "Ajax duration should match expected duration");
                 } finally {
                     window.performance = initialPerformance;
                 }
-             }
+            }
         });
 
         this.testCase({
@@ -287,7 +297,7 @@ class AjaxTests extends TestClass {
         (<any>xhr).respond(responseCode, {}, "");
 
         // Assert
-        Assert.equal(success, this.trackAjaxSpy.args[0][3], "TrackAjax should receive " + success + " as a 'success' argument");
+        Assert.equal(success, this.trackAjaxSpy.args[0][4], "TrackAjax should receive " + success + " as a 'success' argument");
     }
 }
 new AjaxTests().registerTests();
