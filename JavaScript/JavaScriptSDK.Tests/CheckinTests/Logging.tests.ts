@@ -14,6 +14,9 @@ class LoggingTests extends TestClass {
 
         // Reset the internal throttle max limit
         Microsoft.ApplicationInsights._InternalLogging.setMaxInternalMessageLimit(Number.MAX_VALUE);
+
+        // Clear records indicating what internal message types were already logged
+        Microsoft.ApplicationInsights._InternalLogging.clearInternalMessageLoggedTypes();
     }
 
     /**
@@ -220,23 +223,26 @@ class LoggingTests extends TestClass {
             name: "LoggingTests: logInternalMessage throttles messages when the throttle limit is reached",
             test: () => {
                 var maxAllowedInternalMessages = 2;
-                var message = new InternalLoggingMessage(Microsoft.ApplicationInsights._InternalMessageId.NONUSRACT_MessageLimitPerPVExceeded, "Internal Test Event");
-
+                var message1 = new InternalLoggingMessage(1, "");
+                var message2 = new InternalLoggingMessage(2, "");
+                var message3 = new InternalLoggingMessage(3, "");
+                var message4 = new InternalLoggingMessage(4, "");
+             
                 // setup
                 InternalLogging.enableDebugExceptions = () => false;
                 InternalLogging.setMaxInternalMessageLimit(maxAllowedInternalMessages);
                 InternalLogging.resetInternalMessageCount();
 
                 // act
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message3);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message4);
 
                 // verify
                 Assert.equal(maxAllowedInternalMessages + 1, InternalLogging.queue.length); // Since we always send one "extra" event to denote that limit was reached
-                Assert.equal(InternalLogging.queue[0], message);
-                Assert.equal(InternalLogging.queue[1], message);
+                Assert.equal(InternalLogging.queue[0], message1);
+                Assert.equal(InternalLogging.queue[1], message2);
                 Assert.equal(InternalLogging.queue[2].message, "NONUSRACT_MessageLimitPerPVExceeded message:\"Internal events throttle limit per PageView reached for this app.\"");
             }
         });
@@ -245,7 +251,7 @@ class LoggingTests extends TestClass {
             name: "LoggingTests: throwInternalNonUserActionable should call logInternalMessage",
             test: () => {
                 var maxAllowedInternalMessages = 2;
-                var message = new InternalLoggingMessage(1, "Internal Test Event");
+                var message1 = new InternalLoggingMessage(1, "");
                 var logInternalMessageStub = this.sandbox.stub(InternalLogging, 'logInternalMessage');
 
                 // setup
@@ -253,13 +259,41 @@ class LoggingTests extends TestClass {
                 InternalLogging.resetInternalMessageCount();
 
                 // act
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
 
                 // verify
                 Assert.ok(logInternalMessageStub.calledOnce, 'logInternalMessage was not called by throwInternalNonUserActionable');
 
                 // clean
                 
+            }
+        });
+
+        this.testCase({
+            name: "LoggingTests: only single message of specific type can be sent within the same session",
+            test: () => {
+                var maxAllowedInternalMessages = 2;
+                var message1 = new InternalLoggingMessage(1, "1");
+                var message2 = new InternalLoggingMessage(2, "2");
+               
+
+                // setup
+                InternalLogging.enableDebugExceptions = () => false;
+                InternalLogging.resetInternalMessageCount();
+                InternalLogging.clearInternalMessageLoggedTypes();
+
+                // act
+                // send 4 messages, with 2 distinct types
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+
+                // verify
+                // only two messages should be in the queue, because we have to distinct types
+                Assert.equal(2, InternalLogging.queue.length);
+                Assert.equal(InternalLogging.queue[0], message1);
+                Assert.equal(InternalLogging.queue[1], message2);              
             }
         });
         
@@ -289,18 +323,22 @@ class LoggingTests extends TestClass {
             name: "LoggingTests: logInternalMessage will log events when the throttle is reset",
             test: () => {
                 var maxAllowedInternalMessages = 2;
-                var message = new InternalLoggingMessage(1, "Internal Test Event");
+                var message1 = new InternalLoggingMessage(1, "1");
+                var message2 = new InternalLoggingMessage(2, "2");
+                var message3 = new InternalLoggingMessage(3, "3");
+                var message4 = new InternalLoggingMessage(4, "4");
 
                 // setup
                 InternalLogging.enableDebugExceptions = () => false;
                 InternalLogging.setMaxInternalMessageLimit(maxAllowedInternalMessages);
                 InternalLogging.resetInternalMessageCount();
+                InternalLogging.clearInternalMessageLoggedTypes();
 
                 // act
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message3);
+                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message4);
 
                 // verify that internal events are throttled
                 Assert.equal(InternalLogging.queue.length, maxAllowedInternalMessages + 1); // Since we always send one "extra" event to denote that limit was reached
@@ -309,14 +347,15 @@ class LoggingTests extends TestClass {
                 this.clearInternalLoggingQueue();
                 // reset the message count
                 InternalLogging.resetInternalMessageCount();
+                InternalLogging.clearInternalMessageLoggedTypes();
                 // Send some internal messages
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
 
                 // verify again
                 Assert.equal(InternalLogging.queue.length, maxAllowedInternalMessages + 1); // Since we always send one "extra" event to denote that limit was reached
-                Assert.equal(InternalLogging.queue[0], message);
-                Assert.equal(InternalLogging.queue[1], message);
+                Assert.equal(InternalLogging.queue[0], message1);
+                Assert.equal(InternalLogging.queue[1], message2);
             }
         });
     }

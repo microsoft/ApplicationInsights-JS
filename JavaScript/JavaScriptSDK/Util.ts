@@ -130,6 +130,22 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
+         *  Gets the list of session storage keys
+         *
+         *  @returns {string[]} List of session storage keys
+         */
+        public static getSessionStorageKeys(): string[] {
+            var keys = [];
+
+            if (Util.canUseSessionStorage()) {
+                for (var key in window.sessionStorage) {
+                    keys.push(key);
+                }
+            }
+            return keys;
+        }
+
+        /**
          *  Get an object from the browser's session storage
          *
          *  @param {string} name - the name of the object to get from storage

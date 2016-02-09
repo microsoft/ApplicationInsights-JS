@@ -80,10 +80,13 @@
 
     export class _InternalLogMessage {
         public message: string;
+        public messageId: _InternalMessageId;
 
         constructor(msgId: _InternalMessageId, msg: string, properties?: Object) {
 
             this.message = _InternalMessageId[msgId].toString();
+            this.messageId = msgId;
+
             var diagnosticText =
                 (msg ? " message:" + _InternalLogMessage.sanitizeDiagnosticText(msg) : "") +
                 (properties ? " props:" + _InternalLogMessage.sanitizeDiagnosticText(JSON.stringify(properties)) : "");
@@ -102,6 +105,11 @@
          * Prefix of the traces in portal.
          */
         private static AiUserActionablePrefix = "AI: ";
+
+        /**
+        *  Session storage key for the prefix for the key indicating message type already logged
+        */
+        private static AIInternalMessagePrefix: string = "AITR_";
 
         /**
          * For user non actionable traces use AI Internal prefix.
@@ -194,6 +202,20 @@
         }
 
         /**
+         * Clears the list of records indicating that internal message type was already logged
+         */
+        public static clearInternalMessageLoggedTypes(): void {
+            if (Util.canUseSessionStorage()) {
+                var sessionStorageKeys = Util.getSessionStorageKeys();
+                for (var i = 0; i < sessionStorageKeys.length; i++) {
+                    if (sessionStorageKeys[i].indexOf(_InternalLogging.AIInternalMessagePrefix) === 0) {
+                        Util.removeSessionStorage(sessionStorageKeys[i]);
+                    }
+                }
+            }
+        }
+
+        /**
          * Sets the limit for the number of internal events before they are throttled
          * @param limit {number} - The throttle limit to set for internal events
          */
@@ -215,19 +237,33 @@
                 return;
             }
 
-            // Push the event in the internal queue
-            if (this.verboseLogging() || severity === LoggingSeverity.CRITICAL) {
-                this.queue.push(message);
-                this._messageCount++;
+            // check if this message type was already logged for this session and if so, don't log it again
+            var logMessage = true;
+            if (Util.canUseSessionStorage()) {
+                var storageMessageKey = _InternalLogging.AIInternalMessagePrefix + _InternalMessageId[message.messageId];
+                var internalMessageTypeLogRecord = Util.getSessionStorage(storageMessageKey);
+                if (internalMessageTypeLogRecord) {
+                    logMessage = false;
+                } else {
+                    Util.setSessionStorage(storageMessageKey, "1");
+                }
             }
 
-            // When throttle limit reached, send a special event
-            if (this._messageCount == this.MAX_INTERNAL_MESSAGE_LIMIT) {
-                var throttleLimitMessage = "Internal events throttle limit per PageView reached for this app.";
-                var throttleMessage = new _InternalLogMessage(_InternalMessageId.NONUSRACT_MessageLimitPerPVExceeded, throttleLimitMessage);
+            if (logMessage) {
+                // Push the event in the internal queue
+                if (this.verboseLogging() || severity === LoggingSeverity.CRITICAL) {
+                    this.queue.push(message);
+                    this._messageCount++;
+                }
 
-                this.queue.push(throttleMessage);
-                this.warnToConsole(throttleLimitMessage);
+                // When throttle limit reached, send a special event
+                if (this._messageCount == this.MAX_INTERNAL_MESSAGE_LIMIT) {
+                    var throttleLimitMessage = "Internal events throttle limit per PageView reached for this app.";
+                    var throttleMessage = new _InternalLogMessage(_InternalMessageId.NONUSRACT_MessageLimitPerPVExceeded, throttleLimitMessage);
+
+                    this.queue.push(throttleMessage);
+                    this.warnToConsole(throttleLimitMessage);
+                }
             }
         }
 
