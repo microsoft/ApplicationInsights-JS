@@ -13,7 +13,7 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "0.22.5";
+    export var Version = "0.22.6";
 
     export interface IConfig {
         instrumentationKey: string;
@@ -36,6 +36,7 @@ module Microsoft.ApplicationInsights {
         overridePageViewDuration: boolean;
         maxAjaxCallsPerView: number;
         disableDataLossAnalysis: boolean;
+        disableCorrelationHeaders: boolean;
     }
 
     /**
@@ -273,10 +274,10 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        public trackAjax(absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
+        public trackAjax(id: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
             if (this.config.maxAjaxCallsPerView === -1 ||
                 this._trackAjaxAttempts < this.config.maxAjaxCallsPerView) {
-                var dependency = new Telemetry.RemoteDependencyData(absoluteUrl, pathName, totalTime, success, resultCode);
+                var dependency = new Telemetry.RemoteDependencyData(id, absoluteUrl, pathName, totalTime, success, resultCode);
                 var dependencyData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.RemoteDependencyData>(
                     Telemetry.RemoteDependencyData.dataType, dependency);
                 var envelope = new Telemetry.Common.Envelope(dependencyData, "Microsoft.ApplicationInsights." + this.config.instrumentationKey.replace(/-/g, "") + ".RemoteDependency");
