@@ -181,7 +181,7 @@ class SerializerTests extends TestClass {
                 // verify
                 Assert.ok(this.throwInternalUserActionableSpy.calledTwice, "user actionable error is thrown");
                 var error = this.throwInternalUserActionableSpy.args[0][1].message.toLowerCase();
-                Assert.equal("ai: attempting to serialize an object which does not implement iserializable", error);
+                Assert.equal("ai: usract_cannotserializeobjectnonserializable message:\"attempting to serialize an object which does not implement iserializable\" props:\"{name:nocontractwithcycle}\"", error);
             }
         });
 

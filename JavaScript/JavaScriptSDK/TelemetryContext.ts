@@ -178,7 +178,7 @@ module Microsoft.ApplicationInsights {
                     this.sample.isSampledIn(envelope)) {
                     this._sender.send(envelope);
                 } else {
-                    _InternalLogging.logInternalMessage(LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_TelemetrySampledAndNotSent,
+                    _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_TelemetrySampledAndNotSent,
                         "Telemetry is sampled and not sent to the AI service.", { SampleRate: this.sample.sampleRate }));
                 }
             }

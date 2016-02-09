@@ -80,10 +80,10 @@ class LoggingTests extends TestClass {
 
                 //verify
                 Assert.equal(4, InternalLogging.queue.length);
-                Assert.equal("AI (Internal): " + "error!", InternalLogging.queue[0].message);
-                Assert.equal("AI: " + "error!", InternalLogging.queue[1].message);
-                Assert.equal("AI (Internal): " + "error!", InternalLogging.queue[2].message);
-                Assert.equal("AI: " + "error!", InternalLogging.queue[3].message);
+                Assert.equal("AI (Internal): " + "NONUSRACT_BrowserCannotWriteLocalStorage message:\"error!\"", InternalLogging.queue[0].message);
+                Assert.equal("AI: " + "NONUSRACT_BrowserCannotWriteSessionStorage message:\"error!\"", InternalLogging.queue[1].message);
+                Assert.equal("AI (Internal): " + "NONUSRACT_BrowserFailedRemovalFromLocalStorage message:\"error!\"", InternalLogging.queue[2].message);
+                Assert.equal("AI: " + "NONUSRACT_BrowserFailedRemovalFromSessionStorage message:\"error!\"", InternalLogging.queue[3].message);
 
                 // cleanup
                 InternalLogging.verboseLogging = () => false;
@@ -107,8 +107,8 @@ class LoggingTests extends TestClass {
 
                 //verify
                 Assert.equal(2, InternalLogging.queue.length);
-                Assert.equal("AI (Internal): " + "error!", InternalLogging.queue[0].message);
-                Assert.equal("AI: " + "error!", InternalLogging.queue[1].message);
+                Assert.equal("AI (Internal): " + "NONUSRACT_BrowserCannotWriteLocalStorage message:\"error!\"", InternalLogging.queue[0].message);
+                Assert.equal("AI: " + "NONUSRACT_BrowserCannotWriteSessionStorage message:\"error!\"", InternalLogging.queue[1].message);
             }
         });
 
@@ -128,7 +128,7 @@ class LoggingTests extends TestClass {
                     // verify
                     Assert.ok(throwSpy.calledOnce, "console.warn was not called while debug mode was false");
                     Assert.equal(1, InternalLogging.queue.length);
-                    Assert.equal("AI: " + "error!", InternalLogging.queue[0].message);
+                    Assert.equal("AI: " + "NONUSRACT_BrowserCannotReadLocalStorage message:\"error!\"", InternalLogging.queue[0].message);
 
                     // cleanup
                     
@@ -155,7 +155,7 @@ class LoggingTests extends TestClass {
                     Assert.ok(throwSpy.calledOnce, "console.warn was not called while debug mode was false");
 
                     Assert.equal(1, InternalLogging.queue.length);
-                    Assert.equal("AI (Internal): " + "error!", InternalLogging.queue[0].message);
+                    Assert.equal("AI (Internal): " + "NONUSRACT_BrowserCannotReadLocalStorage message:\"error!\"", InternalLogging.queue[0].message);
 
                     // cleanup
                     
@@ -220,7 +220,7 @@ class LoggingTests extends TestClass {
             name: "LoggingTests: logInternalMessage throttles messages when the throttle limit is reached",
             test: () => {
                 var maxAllowedInternalMessages = 2;
-                var message = new InternalLoggingMessage(1, "Internal Test Event");
+                var message = new InternalLoggingMessage(Microsoft.ApplicationInsights._InternalMessageId.NONUSRACT_MessageLimitPerPVExceeded, "Internal Test Event");
 
                 // setup
                 InternalLogging.enableDebugExceptions = () => false;
@@ -228,16 +228,16 @@ class LoggingTests extends TestClass {
                 InternalLogging.resetInternalMessageCount();
 
                 // act
-                InternalLogging.logInternalMessage(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.logInternalMessage(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.logInternalMessage(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.logInternalMessage(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
 
                 // verify
                 Assert.equal(maxAllowedInternalMessages + 1, InternalLogging.queue.length); // Since we always send one "extra" event to denote that limit was reached
                 Assert.equal(InternalLogging.queue[0], message);
                 Assert.equal(InternalLogging.queue[1], message);
-                Assert.equal(InternalLogging.queue[2].message, "AI (Internal): Internal events throttle limit per PageView reached for this app.");
+                Assert.equal(InternalLogging.queue[2].message, "NONUSRACT_MessageLimitPerPVExceeded message:\"Internal events throttle limit per PageView reached for this app.\"");
             }
         });
 
@@ -310,8 +310,8 @@ class LoggingTests extends TestClass {
                 // reset the message count
                 InternalLogging.resetInternalMessageCount();
                 // Send some internal messages
-                InternalLogging.logInternalMessage(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
-                InternalLogging.logInternalMessage(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
 
                 // verify again
                 Assert.equal(InternalLogging.queue.length, maxAllowedInternalMessages + 1); // Since we always send one "extra" event to denote that limit was reached

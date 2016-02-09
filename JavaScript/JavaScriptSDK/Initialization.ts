@@ -89,11 +89,12 @@ module Microsoft.ApplicationInsights {
                     delete this.snippet.queue;
                 }
             } catch (exception) {
-                var message = new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToSendQueuedTelemetry, "Failed to send queued telemetry");
+                var properties: any = {};
                 if (exception && typeof exception.toString === "function") {
-                    message.properties = {};
-                    message.properties.exception = exception.toString();
+                    properties.exception = exception.toString();
                 }
+                var message = new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToSendQueuedTelemetry, "Failed to send queued telemetry", properties);
+
 
                 Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
             }
@@ -104,12 +105,7 @@ module Microsoft.ApplicationInsights {
                 var queue: Array<_InternalLogMessage> = Microsoft.ApplicationInsights._InternalLogging.queue;
                 var length = queue.length;
                 for (var i = 0; i < length; i++) {
-                    if (typeof (queue[i].properties) === "object") {
-                        appInsightsInstance.trackTrace(queue[i].message, queue[i].properties);
-                    }
-                    else {
-                        appInsightsInstance.trackTrace(queue[i].message);
-                    }
+                    appInsightsInstance.trackTrace(queue[i].message);
                 }
                 queue.length = 0;
             }, this.config.diagnosticLogInterval);
@@ -172,7 +168,7 @@ module Microsoft.ApplicationInsights {
                 false;
 
             config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
-            
+
             return config;
         }
     }

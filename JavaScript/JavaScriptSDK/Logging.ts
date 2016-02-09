@@ -12,9 +12,9 @@
         WARNING = 1
     }
 
-   /**
-    * Internal message ID. Please create a new one for every conceptually different message. Please keep alphabetically ordered
-    */
+    /**
+     * Internal message ID. Please create a new one for every conceptually different message. Please keep alphabetically ordered
+     */
     export enum _InternalMessageId {
         NONUSRACT_BrowserDoesNotSupportLocalStorage,
         NONUSRACT_BrowserCannotReadLocalStorage,
@@ -80,21 +80,19 @@
 
     export class _InternalLogMessage {
         public message: string;
-        public properties: any;
 
         constructor(msgId: _InternalMessageId, msg: string, properties?: Object) {
-            
+
             this.message = _InternalMessageId[msgId].toString();
+            var diagnosticText =
+                (msg ? " message:" + _InternalLogMessage.sanitizeDiagnosticText(msg) : "") +
+                (properties ? " props:" + _InternalLogMessage.sanitizeDiagnosticText(JSON.stringify(properties)) : "");
 
-            if (typeof (properties) === "undefined" || !properties) {
-                this.properties = {};
-            }
-            else {
-                this.properties = properties;
-            }
+            this.message += diagnosticText;
+        }
 
-            // always add property as msg on the message (regardless of whether it is actionable or non-actionable)
-            this.properties["msg"] = msg;       
+        private static sanitizeDiagnosticText(text: string) {
+            return "\"" + text.replace(/\"/g, "") + "\"";
         }
     }
 
@@ -147,17 +145,11 @@
                 if (typeof (message) !== "undefined" && !!message) {
                     if (typeof (message.message) !== "undefined") {
                         message.message = this.AiNonUserActionablePrefix + message.message;
-                        if (typeof (message.properties) === "object") {
-                            this.warnToConsole(message.message + " properties: " + JSON.stringify(message.properties));
-                        }
-                        else {
-                            this.warnToConsole(message.message);
-                        }
-
+                        this.warnToConsole(message.message);
                         this.logInternalMessage(severity, message);
                     }
                 }
-                
+
             }
         }
 
@@ -173,13 +165,7 @@
                 if (typeof (message) !== "undefined" && !!message) {
                     if (typeof (message.message) !== "undefined") {
                         message.message = this.AiUserActionablePrefix + message.message;
-                        if (typeof (message.properties) === "object") {
-                            this.warnToConsole(message.message + " properties: " + JSON.stringify(message.properties));
-                        }
-                        else {
-                            this.warnToConsole(message.message);
-                        }
-
+                        this.warnToConsole(message.message);
                         this.logInternalMessage(severity, message);
                     }
                 }
@@ -215,7 +201,7 @@
             if (!limit) {
                 throw new Error('limit cannot be undefined.');
             }
-            
+
             this.MAX_INTERNAL_MESSAGE_LIMIT = limit;
         }
         
@@ -224,7 +210,7 @@
          * @param severity {LoggingSeverity} - The severity of the log message
          * @param message {_InternalLogMessage} - The message to log.
          */
-        public static logInternalMessage(severity: LoggingSeverity, message: _InternalLogMessage): void {
+        private static logInternalMessage(severity: LoggingSeverity, message: _InternalLogMessage): void {
             if (this._areInternalMessagesThrottled()) {
                 return;
             }
@@ -237,7 +223,7 @@
 
             // When throttle limit reached, send a special event
             if (this._messageCount == this.MAX_INTERNAL_MESSAGE_LIMIT) {
-                var throttleLimitMessage = this.AiNonUserActionablePrefix + "Internal events throttle limit per PageView reached for this app.";
+                var throttleLimitMessage = "Internal events throttle limit per PageView reached for this app.";
                 var throttleMessage = new _InternalLogMessage(_InternalMessageId.NONUSRACT_MessageLimitPerPVExceeded, throttleLimitMessage);
 
                 this.queue.push(throttleMessage);
