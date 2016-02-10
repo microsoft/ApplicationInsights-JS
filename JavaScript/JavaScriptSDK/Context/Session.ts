@@ -148,13 +148,15 @@ module Microsoft.ApplicationInsights.Context {
                 }
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
-                    new _InternalLogMessage("Error parsing ai_session cookie, session will be reset: " + Util.getExceptionName(e),
+                    new _InternalLogMessage(
+                        _InternalMessageId.NONUSRACT_ErrorParsingAISessionCookie,
+                        "Error parsing ai_session cookie, session will be reset: " + Util.getExceptionName(e),
                         { exception: Util.dump(e) }));
             }
 
             if (this.automaticSession.renewalDate == 0) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
-                    new _InternalLogMessage("AI session renewal date is 0, session will be reset."));
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_SessionRenewalDateIsZero, "AI session renewal date is 0, session will be reset."));
             }
         }
 
@@ -174,7 +176,7 @@ module Microsoft.ApplicationInsights.Context {
             // If this browser does not support local storage, fire an internal log to keep track of it at this point
             if (!Util.canUseLocalStorage()) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
-                    new _InternalLogMessage("Browser does not support local storage. Session durations will be inaccurate."));
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_BrowserDoesNotSupportLocalStorage, "Browser does not support local storage. Session durations will be inaccurate."));
             }
         }
 

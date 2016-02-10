@@ -39,19 +39,22 @@ module Microsoft.ApplicationInsights.Context {
          */
         public storeRegion: string;
         
-         /**
-         * Sets the autheticated user id and the account id in this session.
-         *   
-         * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
-         * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
-         */
+        /**
+        * Sets the autheticated user id and the account id in this session.
+        *   
+        * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
+        * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
+        */
         public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string) {
 
             // Validate inputs to ensure no cookie control characters.
             var isInvalidInput = !this.validateUserInput(authenticatedUserId) || (accountId && !this.validateUserInput(accountId));
             if (isInvalidInput) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage("Setting auth user context failed. " +
-                    "User auth/account id should be of type string, and not contain commas, semi-colons, equal signs, spaces, or vertical-bars."));
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING,
+                    new _InternalLogMessage(
+                        _InternalMessageId.USRACT_SetAuthContextFailedAccountName,
+                        "Setting auth user context failed. " +
+                        "User auth/account id should be of type string, and not contain commas, semi-colons, equal signs, spaces, or vertical-bars."));
                 return;
             }
 
@@ -138,5 +141,5 @@ module Microsoft.ApplicationInsights.Context {
             return true;
         }
     }
-       
+
 }
