@@ -45,11 +45,13 @@ class LoggingTests extends TestClass {
                     Assert.ok(true, "IE8 breaks sinon spies \n" + e.toString());
                 }
 
+                var i = 0;
+
                 // verify
                 Assert.ok(!InternalLogging.enableDebugExceptions(), "enableDebugExceptions is false by default");
 
                 // act
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage(1, "error!"));
+                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage(++i, "error!"));
 
                 // verify
                 Assert.ok(!throwSpy || throwSpy.calledOnce, "console.warn was called instead of throwing while enableDebugExceptions is false");
@@ -59,7 +61,7 @@ class LoggingTests extends TestClass {
 
                 // verify
                 Assert.throws(() =>
-                    InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage(2, "error!")),
+                    InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage(++i, "error!")),
                     "error is thrown when enableDebugExceptions is true");
                 Assert.ok(!throwSpy || throwSpy.calledOnce, "console.warn was not called when the error was thrown");
 
@@ -75,11 +77,12 @@ class LoggingTests extends TestClass {
                 InternalLogging.enableDebugExceptions = () => false;
                 InternalLogging.verboseLogging = () => true;
 
+                var i = 2;
                 // act
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new InternalLoggingMessage(3, "error!"));
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new InternalLoggingMessage(4, "error!"));
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage(5, "error!"));
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage(6, "error!"));
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new InternalLoggingMessage(++i, "error!"));
+                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new InternalLoggingMessage(++i, "error!"));
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage(++i, "error!"));
+                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage(++i, "error!"));
 
                 //verify
                 Assert.equal(4, InternalLogging.queue.length);
@@ -99,14 +102,15 @@ class LoggingTests extends TestClass {
                 // setup
                 InternalLogging.enableDebugExceptions = () => false;
 
+                var i = 0;
                 // act
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new InternalLoggingMessage(1, "error!"));
-        InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new InternalLoggingMessage(2, "error!"));
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new InternalLoggingMessage(++i, "error!"));
+                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new InternalLoggingMessage(++i, "error!"));
 
                 Assert.equal(0, InternalLogging.queue.length);
                 
-                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage(3, "error!"));
-                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage(4, "error!"));
+                InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage(++i, "error!"));
+                InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new InternalLoggingMessage(++i, "error!"));
 
                 //verify
                 Assert.equal(2, InternalLogging.queue.length);
@@ -222,11 +226,13 @@ class LoggingTests extends TestClass {
         this.testCase({
             name: "LoggingTests: logInternalMessage throttles messages when the throttle limit is reached",
             test: () => {
+
+                var i = 0;
                 var maxAllowedInternalMessages = 2;
-                var message1 = new InternalLoggingMessage(1, "");
-                var message2 = new InternalLoggingMessage(2, "");
-                var message3 = new InternalLoggingMessage(3, "");
-                var message4 = new InternalLoggingMessage(4, "");
+                var message1 = new InternalLoggingMessage(++i, "");
+                var message2 = new InternalLoggingMessage(++i, "");
+                var message3 = new InternalLoggingMessage(++i, "");
+                var message4 = new InternalLoggingMessage(++i, "");
              
                 // setup
                 InternalLogging.enableDebugExceptions = () => false;
@@ -323,10 +329,11 @@ class LoggingTests extends TestClass {
             name: "LoggingTests: logInternalMessage will log events when the throttle is reset",
             test: () => {
                 var maxAllowedInternalMessages = 2;
-                var message1 = new InternalLoggingMessage(1, "1");
-                var message2 = new InternalLoggingMessage(2, "2");
-                var message3 = new InternalLoggingMessage(3, "3");
-                var message4 = new InternalLoggingMessage(4, "4");
+                var i = 0;
+                var message1 = new InternalLoggingMessage(++i, "1");
+                var message2 = new InternalLoggingMessage(++i, "2");
+                var message3 = new InternalLoggingMessage(++i, "3");
+                var message4 = new InternalLoggingMessage(++i, "4");
 
                 // setup
                 InternalLogging.enableDebugExceptions = () => false;
