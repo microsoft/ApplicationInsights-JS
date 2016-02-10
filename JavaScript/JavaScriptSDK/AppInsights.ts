@@ -64,7 +64,7 @@ module Microsoft.ApplicationInsights {
         private _pageTracking: Timing;
         private _pageViewManager: Microsoft.ApplicationInsights.Telemetry.PageViewManager;
         private _pageVisitTimeManager: Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager;
-
+        private _maxAJAXPerPageLimitExceededMessageAlreadySentKey = "MaxAJAXLimitMessageSent";
         public config: IConfig;
         public context: TelemetryContext;
 
@@ -276,9 +276,23 @@ module Microsoft.ApplicationInsights {
                     Telemetry.RemoteDependencyData.dataType, dependency);
                 var envelope = new Telemetry.Common.Envelope(dependencyData, "Microsoft.ApplicationInsights." + this.config.instrumentationKey.replace(/-/g, "") + ".RemoteDependency");
                 this.context.track(envelope);
-            } else if (this._trackAjaxAttempts === this.config.maxAjaxCallsPerView) {                
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(
-                    "Maximum ajax per page view limit reached, ajax monitoring is paused until the next trackPageView(). In order to increase the limit set the maxAjaxCallsPerView configuration parameter."));
+
+            } else if (this._trackAjaxAttempts === this.config.maxAjaxCallsPerView) {
+
+                // better err on the side of not sending, so if local storage is not supported (which is generally the case for specific browsers), don't send the message
+                // as for the application author it is enough to get some samples of this message from some of the clients
+                var trackLimitPerPageViewExceededMessageAlreadySent = true;
+                if (Util.canUseSessionStorage()) {
+                    if (!Util.getSessionStorage(this._maxAJAXPerPageLimitExceededMessageAlreadySentKey)) {
+                        Util.setSessionStorage(this._maxAJAXPerPageLimitExceededMessageAlreadySentKey, "1");
+                        trackLimitPerPageViewExceededMessageAlreadySent = false;
+                    }
+                }
+
+                if (trackLimitPerPageViewExceededMessageAlreadySent) {
+                    _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(
+                        "Maximum ajax per page view limit reached, ajax monitoring is paused until the next trackPageView(). In order to increase the limit set the maxAjaxCallsPerView configuration parameter."));
+                }
             }
                                     
             ++this._trackAjaxAttempts;
