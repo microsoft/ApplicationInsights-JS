@@ -1758,7 +1758,6 @@ class AppInsightsTests extends TestClass {
 
                 // Assert
                 Assert.equal(expectedAjaxId, (<any>xhr).requestHeaders['x-ms-request-id'], "x-ms-request-id id set correctly");
-                Assert.equal(expectedRootId, (<any>xhr).requestHeaders['x-ms-request-root-id'], "x-ms-request-root-id set correctly");
                 Assert.equal(expectedAjaxId, trackStub.args[0][0], "ajax id passed to trackAjax correctly");
             }
         });
@@ -1785,7 +1784,6 @@ class AppInsightsTests extends TestClass {
 
                 // Assert
                 Assert.equal(null, (<any>xhr).requestHeaders['x-ms-request-id'], "x-ms-request-id should not be set");
-                Assert.equal(null, (<any>xhr).requestHeaders['x-ms-request-root-id'], "x-ms-request-root-id should not be set");
             }
         });
     }
