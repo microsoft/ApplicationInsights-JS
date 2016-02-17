@@ -211,7 +211,8 @@ Values that control how the telemetry data is sent.
         disableAjaxTracking: boolean;
         
         // If true, default behavior of trackPageView is changed to record end of page view duration interval when 
-        // trackPageView is called.
+        // trackPageView is called. If false and no custom duration is provided to trackPageView, the page view
+        // performance is calculated using the navigation timing API.
         overridePageViewDuration: boolean;
         
         // Default 500 - controls how many ajax calls will be monitored per page view.
