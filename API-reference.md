@@ -53,6 +53,29 @@ The standard snippet that you get from the portal includes a call to trackPageVi
 removing this default. An example where you might write your own calls is where your app is a single HTML page that has multiple
 tabs, and you want to log a page view when each tab opens.
 
+### startTrackPage
+
+    startTrackPage(name?: string)
+    
+Starts the timer for tracking a page view. Use this instead of ```trackPageView``` if you want to control when the page view timer starts and stops, but don't want to calculate the duration yourself. This method doesn't send any telemetry. Call ```stopTrackPage``` to log the end of the page view and send the event.
+
+ | |
+---|---|---
+`name` | The name used to identify the page in the portal. Defaults to the document title.
+
+### stopTrackPage
+
+    stopTrackPage(name?: string, url?: string, properties?: Object, measurements?: Object)
+
+Stops the timer that was started by calling ```startTrackPage``` and sends the page view telemetry with the specified properties and measurements. The duration of the page view will be the time between calling ```startTrackPage``` and ```stopTrackPage```.
+
+ | |
+---|---|---
+`name` | The name used to identify the page in the portal. Defaults to the document title.
+`url` |  A relative or absolute URL that identifies the page or similar item. Defaults to the window location.
+`properties` | Map of string to string: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
+`measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+
 ### trackEvent
 
     trackEvent(name: string, properties?: {[string]:string}, measurements?: {[string]:number})
