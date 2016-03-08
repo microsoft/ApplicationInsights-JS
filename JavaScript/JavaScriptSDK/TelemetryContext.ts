@@ -152,6 +152,9 @@ module Microsoft.ApplicationInsights {
 
             envelope.iKey = this._config.instrumentationKey();
 
+            var iKeyNoDashes = this._config.instrumentationKey().replace(/-/g, "");
+            envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
+
             var doNotSendItem = false;            
             try {
                 this.telemetryInitializers = this.telemetryInitializers || [];

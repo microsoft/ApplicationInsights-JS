@@ -171,8 +171,10 @@ class AppInsightsTests extends TestClass {
             name: "AppInsightsTests: envelope type, data type and ikey are correct",
             test: () => {
                 // setup
+                var iKey = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                var iKeyNoDash = "BDC8736DD8E84B69B19BB0CE6B66A456";
                 var config = this.getAppInsightsSnippet();
-                config.instrumentationKey = "12345";
+                config.instrumentationKey = iKey;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(config);
                 appInsights.context._sessionManager._sessionHandler = null;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
@@ -181,8 +183,8 @@ class AppInsightsTests extends TestClass {
                 var test = (action, expectedEnvelopeType, expectedDataType) => {
                     action();
                     var envelope = this.getFirstResult(action, trackStub);
-                    Assert.equal("12345", envelope.iKey, "envelope iKey");
-                    Assert.equal(expectedEnvelopeType, envelope.name, "envelope name");
+                    Assert.equal(iKey, envelope.iKey, "envelope iKey");
+                    Assert.equal(expectedEnvelopeType.replace("{0}", iKeyNoDash), envelope.name, "envelope name");
                     Assert.equal(expectedDataType, envelope.data.baseType, "type name");
                     trackStub.reset();
                 };
@@ -1631,20 +1633,28 @@ class AppInsightsTests extends TestClass {
         this.testCase({
             name: "trackAjax includes instrumentation key into envelope name",
             test: () => {
+                var iKey = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                var iKeyNoDash = "BDC8736DD8E84B69B19BB0CE6B66A456";
                 var snippet = this.getAppInsightsSnippet();
-                snippet.instrumentationKey = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                snippet.instrumentationKey = iKey;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
-                var trackStub = this.sandbox.stub(appInsights.context, "track");
-                // dashes are removed
-                var expectedEnvelopeName = "Microsoft.ApplicationInsights.BDC8736DD8E84B69B19BB0CE6B66A456.RemoteDependency";
 
-                // Act
-                appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
+                appInsights.context._sessionManager._sessionHandler = null;
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
-                // Assert
-                Assert.ok(trackStub.called, "Track should be called");
-                var envelope = trackStub.args[0][0];
-                Assert.equal(expectedEnvelopeName, envelope.name, "Envelope name should include instrumentation key without dashes");
+                // verify
+                var test = (action, expectedEnvelopeType, expectedDataType) => {
+                    action();
+                    var envelope = this.getFirstResult(action, trackStub);
+                    Assert.equal(iKey, envelope.iKey, "envelope iKey");
+                    Assert.equal(expectedEnvelopeType.replace("{0}", iKeyNoDash), envelope.name, "envelope name");
+                    Assert.equal(expectedDataType, envelope.data.baseType, "type name");
+                    trackStub.reset();
+                };
+
+                // act
+                test(() => appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200), Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType,
+                    Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.dataType);
             }
         });
 

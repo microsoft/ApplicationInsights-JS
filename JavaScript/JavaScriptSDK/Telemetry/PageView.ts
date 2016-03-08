@@ -6,7 +6,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
     export class PageView extends AI.PageViewData implements ISerializable {
 
-        public static envelopeType = "Microsoft.ApplicationInsights.Pageview";
+        public static envelopeType = "Microsoft.ApplicationInsights.{0}.Pageview";
         public static dataType = "PageviewData";
 
         public aiDataContract = {

@@ -7,7 +7,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
     export class PageViewPerformance extends AI.PageViewPerfData implements ISerializable {
 
-        public static envelopeType = "Microsoft.ApplicationInsights.PageviewPerformance";
+        public static envelopeType = "Microsoft.ApplicationInsights.{0}.PageviewPerformance";
         public static dataType = "PageviewPerformanceData";
 
         public aiDataContract = {
