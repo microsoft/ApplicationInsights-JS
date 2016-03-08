@@ -6,7 +6,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
     export class Trace extends AI.MessageData implements ISerializable {
 
-        public static envelopeType = "Microsoft.ApplicationInsights.Message";
+        public static envelopeType = "Microsoft.ApplicationInsights.{0}.Message";
         public static dataType = "MessageData";
 
         public aiDataContract = {

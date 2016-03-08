@@ -7,7 +7,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
     export class RemoteDependencyData extends AI.RemoteDependencyData implements ISerializable {
 
-        public static envelopeType = "Microsoft.ApplicationInsights.RemoteDependencyData";
+        public static envelopeType = "Microsoft.ApplicationInsights.{0}.RemoteDependency";
         public static dataType = "RemoteDependencyData";
 
         public aiDataContract = {

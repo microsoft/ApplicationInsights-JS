@@ -280,7 +280,7 @@ module Microsoft.ApplicationInsights {
                 var dependency = new Telemetry.RemoteDependencyData(id, absoluteUrl, pathName, totalTime, success, resultCode);
                 var dependencyData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.RemoteDependencyData>(
                     Telemetry.RemoteDependencyData.dataType, dependency);
-                var envelope = new Telemetry.Common.Envelope(dependencyData, "Microsoft.ApplicationInsights." + this.config.instrumentationKey.replace(/-/g, "") + ".RemoteDependency");
+                var envelope = new Telemetry.Common.Envelope(dependencyData, ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType);
                 this.context.track(envelope);
             } else if (this._trackAjaxAttempts === this.config.maxAjaxCallsPerView) {                
                 _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(

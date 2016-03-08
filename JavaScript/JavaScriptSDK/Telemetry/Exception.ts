@@ -7,7 +7,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
     export class Exception extends AI.ExceptionData implements ISerializable {
 
-        public static envelopeType = "Microsoft.ApplicationInsights.Exception";
+        public static envelopeType = "Microsoft.ApplicationInsights.{0}.Exception";
         public static dataType = "ExceptionData";
 
 
