@@ -152,9 +152,6 @@ module Microsoft.ApplicationInsights {
 
             envelope.iKey = this._config.instrumentationKey();
 
-            var iKeyNoDashes = this._config.instrumentationKey().replace(/-/g, "");
-            envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
-
             var doNotSendItem = false;            
             try {
                 this.telemetryInitializers = this.telemetryInitializers || [];
@@ -179,7 +176,9 @@ module Microsoft.ApplicationInsights {
                 if (envelope.name === Telemetry.SessionTelemetry.envelopeType ||
                     envelope.name === Telemetry.Metric.envelopeType ||
                     this.sample.isSampledIn(envelope)) {
-                    this._sender.send(envelope);
+                        var iKeyNoDashes = this._config.instrumentationKey().replace(/-/g, "");
+                        envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
+                        this._sender.send(envelope);
                 } else {
                     _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_TelemetrySampledAndNotSent,
                         "Telemetry is sampled and not sent to the AI service.", { SampleRate: this.sample.sampleRate }));
