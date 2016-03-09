@@ -338,6 +338,13 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
+         * return true if we are running on IE
+         */
+        public static isIE():boolean {         
+                return navigator.userAgent.toLowerCase().indexOf("msie") != -1;
+        }
+
+        /**
          * Convert ms to c# time span format
          */
         public static msToTimeSpan(totalms: number): string {

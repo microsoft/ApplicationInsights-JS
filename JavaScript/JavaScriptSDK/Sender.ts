@@ -188,8 +188,10 @@ module Microsoft.ApplicationInsights {
                 clearTimeout(this._timeoutHandle);
                 this._timeoutHandle = null;
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, "Telemetry transmission failed, some telemetry will be lost: " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) }));
+                if (Util.isIE()) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, "Telemetry transmission failed, some telemetry will be lost: " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }));
+                }
             }
         }
 
