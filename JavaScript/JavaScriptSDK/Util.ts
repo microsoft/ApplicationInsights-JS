@@ -338,10 +338,11 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
-         * return true if we are running on IE
+         * Gets IE version if we are running on IE, or null otherwise
          */
-        public static isIE():boolean {         
-                return navigator.userAgent.toLowerCase().indexOf("msie") != -1;
+        public static getIEVersion():number {         
+            var myNav = navigator.userAgent.toLowerCase();
+            return (myNav.indexOf('msie') != -1) ? parseInt(myNav.split('msie')[1]) : null;
         }
 
         /**
