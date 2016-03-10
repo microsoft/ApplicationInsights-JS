@@ -358,6 +358,16 @@ class UtilTests extends TestClass {
                 Assert.equal(false, returnValue, 'Event handler was attached for illegal callback');
             }
         });
+
+        this.testCase({
+            name: "getIE function should return null for non-IE user agent string and IE version for IE",
+            test: () => {
+                
+                // Assert
+                Assert.equal(null, Util.getIEVersion("Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36"), "Should return null for non-IE");
+                Assert.equal(8, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 10.0; Win64; x64; Trident/7.0; .NET4.0C; .NET4.0E; .NET CLR 2.0.50727; .NET CLR 3.0.30729; .NET CLR 3.5.30729"), "Should return IE version for IE browser");
+            }
+        });
     }
 
     private getMockStorage() {

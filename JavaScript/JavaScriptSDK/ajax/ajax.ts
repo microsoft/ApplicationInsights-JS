@@ -173,12 +173,17 @@ module Microsoft.ApplicationInsights {
                         }
                     }
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.CRITICAL,
-                        new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedMonitorAjaxRSC, "Failed to monitor XMLHttpRequest 'readystatechange' event handler, monitoring data for this ajax call may be incorrect.", {
-                            ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr),
-                            exception: Microsoft.ApplicationInsights.Util.dump(e)
-                        }));
+                    var exceptionText = Microsoft.ApplicationInsights.Util.dump(e);
+
+                    // ignore messages with c00c023f, as this a known IE9 XHR abort issue
+                    if (!exceptionText || exceptionText.toLowerCase().indexOf("c00c023f") == -1) {
+                        _InternalLogging.throwInternalNonUserActionable(
+                            LoggingSeverity.CRITICAL,
+                            new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedMonitorAjaxRSC, "Failed to monitor XMLHttpRequest 'readystatechange' event handler, monitoring data for this ajax call may be incorrect.", {
+                                ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr),
+                                exception: Microsoft.ApplicationInsights.Util.dump(e)
+                            }));
+                    }
                 }
             });
         }

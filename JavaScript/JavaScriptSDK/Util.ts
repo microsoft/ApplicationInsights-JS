@@ -338,6 +338,14 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
+         * Gets IE version if we are running on IE, or null otherwise
+         */
+        public static getIEVersion(userAgentStr: string = null): number {
+            var myNav = userAgentStr ? userAgentStr.toLowerCase() : navigator.userAgent.toLowerCase();
+            return (myNav.indexOf('msie') != -1) ? parseInt(myNav.split('msie')[1]) : null;
+        }
+
+        /**
          * Convert ms to c# time span format
          */
         public static msToTimeSpan(totalms: number): string {
