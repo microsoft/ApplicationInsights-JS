@@ -13,7 +13,6 @@ class TelemetryContextTests extends TestClass {
         this._config = {
             instrumentationKey: () => "testKey",
             accountId: () => undefined,
-            appUserId: () => undefined,
             sessionRenewalMs: () => 10,
             sessionExpirationMs: () => 10,
             endpointUrl: () => "asdf",
