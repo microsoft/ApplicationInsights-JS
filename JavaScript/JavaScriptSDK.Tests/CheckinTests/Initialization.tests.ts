@@ -30,7 +30,8 @@ class InitializationTests extends TestClass {
             disableAjaxTracking: true,
             overridePageViewDuration: false,
             maxAjaxCallsPerView: 44,
-            disableDataLossAnalysis: true
+            disableDataLossAnalysis: true,
+            cookieDomain: undefined
         };
 
         // set default values

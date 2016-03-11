@@ -36,6 +36,7 @@ module Microsoft.ApplicationInsights {
         overridePageViewDuration: boolean;
         maxAjaxCallsPerView: number;
         disableDataLossAnalysis: boolean;
+        cookieDomain: string;
     }
 
     /**
@@ -96,7 +97,8 @@ module Microsoft.ApplicationInsights {
                 maxBatchSizeInBytes: () => this.config.maxBatchSizeInBytes,
                 maxBatchInterval: () => this.config.maxBatchInterval,
                 disableTelemetry: () => this.config.disableTelemetry,
-                sampleRate: () => this.config.samplingPercentage
+                sampleRate: () => this.config.samplingPercentage,
+                cookieDomain: () => this.config.cookieDomain
             }
             
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
