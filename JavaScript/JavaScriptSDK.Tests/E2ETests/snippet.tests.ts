@@ -206,7 +206,6 @@ class SnippetTests extends TestClass {
         // context values
         testContextValues("instrumentationKey", "instrumentationKey");
         testContextValues("accountId", "accountId");
-        testContextValues("appUserId", "appUserId");
 
         // logging
         test(true, "enableDebug", Microsoft.ApplicationInsights._InternalLogging.enableDebugExceptions);

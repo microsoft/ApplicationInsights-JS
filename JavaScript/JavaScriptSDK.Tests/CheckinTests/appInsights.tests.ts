@@ -9,7 +9,6 @@ class AppInsightsTests extends TestClass {
             endpointUrl: "//dc.services.visualstudio.com/v2/track",
             emitLineDelimitedJson: false,
             accountId: undefined,
-            appUserId: undefined,
             sessionRenewalMs: 10,
             sessionExpirationMs: 10,
             maxBatchSizeInBytes: 1000000,
@@ -864,7 +863,6 @@ class AppInsightsTests extends TestClass {
                 // verify
                 test("instrumentationKey");
                 test("accountId");
-                test("appUserId");
                 test("sessionRenewalMs");
                 test("sessionExpirationMs");
                 test("endpointUrl");

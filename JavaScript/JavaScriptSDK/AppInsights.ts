@@ -20,7 +20,6 @@ module Microsoft.ApplicationInsights {
         endpointUrl: string;
         emitLineDelimitedJson: boolean;
         accountId: string;
-        appUserId: string;
         sessionRenewalMs: number;
         sessionExpirationMs: number;
         maxBatchSizeInBytes: number;
@@ -88,7 +87,6 @@ module Microsoft.ApplicationInsights {
             var configGetters: ApplicationInsights.ITelemetryConfig = {
                 instrumentationKey: () => this.config.instrumentationKey,
                 accountId: () => this.config.accountId,
-                appUserId: () => this.config.appUserId,
                 sessionRenewalMs: () => this.config.sessionRenewalMs,
                 sessionExpirationMs: () => this.config.sessionExpirationMs,
                 endpointUrl: () => this.config.endpointUrl,
