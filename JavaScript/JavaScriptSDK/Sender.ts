@@ -22,7 +22,6 @@ interface XDomainRequest extends XMLHttpRequestEventTarget {
 declare var XDomainRequest: {
     prototype: XDomainRequest;
     new (): XDomainRequest;
-    create(): XDomainRequest;
 };
 
 module Microsoft.ApplicationInsights {

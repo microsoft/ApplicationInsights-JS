@@ -199,7 +199,6 @@ Values that control how the telemetry data is sent.
         endpointUrl: string;
         
         accountId: string;
-        appUserId: string;
         
         // A session is logged if the user is inactive for this time in milliseconds. Default 30 mins.
         sessionRenewalMs: number; 

@@ -18,7 +18,6 @@ module Microsoft.ApplicationInsights {
         sessionRenewalMs: () => number;
         sessionExpirationMs: () => number;
         sampleRate: () => number;
-        appUserId: () => string;
         endpointUrl: () => string;
     }
 
