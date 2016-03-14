@@ -7,7 +7,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
     export class SessionTelemetry extends AI.SessionStateData implements ISerializable {
 
-        public static envelopeType = "Microsoft.ApplicationInsights.SessionState";
+        public static envelopeType = "Microsoft.ApplicationInsights.{0}.SessionState";
         public static dataType = "SessionStateData";
 
         public aiDataContract = {

@@ -6,7 +6,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
     export class Event extends AI.EventData implements ISerializable {
 
-        public static envelopeType = "Microsoft.ApplicationInsights.Event";
+        public static envelopeType = "Microsoft.ApplicationInsights.{0}.Event";
         public static dataType = "EventData";
 
         public aiDataContract = {

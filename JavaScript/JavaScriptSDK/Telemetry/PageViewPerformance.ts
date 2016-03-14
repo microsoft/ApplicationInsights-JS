@@ -7,7 +7,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
     export class PageViewPerformance extends AI.PageViewPerfData implements ISerializable {
 
-        public static envelopeType = "Microsoft.ApplicationInsights.PageviewPerformance";
+        public static envelopeType = "Microsoft.ApplicationInsights.{0}.PageviewPerformance";
         public static dataType = "PageviewPerformanceData";
 
         public aiDataContract = {
@@ -75,13 +75,13 @@ module Microsoft.ApplicationInsights.Telemetry {
 
                 if (total == 0) {
                     _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage("error calculating page view performance.",
+                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_ErrorPVCalc, "error calculating page view performance.",
                             { total: total, network: network, request: request, response: response, dom: dom }));
                 } else if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
                     // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
                     // in this case, don't report client performance from this page
                     _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage("client performance math error.",
+                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_ClientPerformanceMathError, "client performance math error.",
                             { total: total, network: network, request: request, response: response, dom: dom }));
                 } else {
                     this.durationMs = total;

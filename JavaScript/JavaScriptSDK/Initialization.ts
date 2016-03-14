@@ -89,11 +89,12 @@ module Microsoft.ApplicationInsights {
                     delete this.snippet.queue;
                 }
             } catch (exception) {
-                var message = new _InternalLogMessage("Failed to send queued telemetry");
+                var properties: any = {};
                 if (exception && typeof exception.toString === "function") {
-                    message.properties = {};
-                    message.properties.exception = exception.toString();
+                    properties.exception = exception.toString();
                 }
+                var message = new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToSendQueuedTelemetry, "Failed to send queued telemetry", properties);
+
 
                 Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
             }
@@ -104,12 +105,7 @@ module Microsoft.ApplicationInsights {
                 var queue: Array<_InternalLogMessage> = Microsoft.ApplicationInsights._InternalLogging.queue;
                 var length = queue.length;
                 for (var i = 0; i < length; i++) {
-                    if (typeof (queue[i].properties) === "object") {
-                        appInsightsInstance.trackTrace(queue[i].message, queue[i].properties);
-                    }
-                    else {
-                        appInsightsInstance.trackTrace(queue[i].message);
-                    }
+                    appInsightsInstance.trackTrace(queue[i].message);
                 }
                 queue.length = 0;
             }, this.config.diagnosticLogInterval);
@@ -135,7 +131,7 @@ module Microsoft.ApplicationInsights {
 
                 if (!Microsoft.ApplicationInsights.Util.addEventHandler('beforeunload', performHousekeeping)) {
                     Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL,
-                        new _InternalLogMessage('Could not add handler for beforeunload'));
+                        new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToAddHandlerForOnBeforeUnload, 'Could not add handler for beforeunload'));
                 }
             }
         }
@@ -148,7 +144,6 @@ module Microsoft.ApplicationInsights {
             // set default values
             config.endpointUrl = config.endpointUrl || "//dc.services.visualstudio.com/v2/track";
             config.accountId = config.accountId;
-            config.appUserId = config.appUserId;
             config.sessionRenewalMs = 30 * 60 * 1000;
             config.sessionExpirationMs = 24 * 60 * 60 * 1000;
             config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 1000000;
@@ -173,7 +168,10 @@ module Microsoft.ApplicationInsights {
                 false;
 
             config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
-            
+            config.disableCorrelationHeaders = (config.disableCorrelationHeaders !== undefined && config.disableCorrelationHeaders !== null) ?
+                Util.stringToBoolOrDefault(config.disableCorrelationHeaders) :
+                true;
+           
             return config;
         }
     }

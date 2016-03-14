@@ -15,7 +15,6 @@ class InitializationTests extends TestClass {
             endpointUrl: "//dc.services.visualstudio.com/v2/track",
             emitLineDelimitedJson: false,
             accountId: undefined,
-            appUserId: undefined,
             sessionRenewalMs: 10,
             sessionExpirationMs: 10,
             maxBatchSizeInBytes: 1000000,
@@ -31,6 +30,7 @@ class InitializationTests extends TestClass {
             overridePageViewDuration: false,
             maxAjaxCallsPerView: 44,
             disableDataLossAnalysis: true,
+            disableCorrelationHeaders: false,
             cookieDomain: undefined
         };
 
@@ -62,7 +62,6 @@ class InitializationTests extends TestClass {
                     instrumentationKey: "ffffffff-ffff - ffff - ffff - ffffffffffff",
                     endpointUrl: undefined,
                     accountId: undefined,
-                    appUserId: undefined,
                     sessionRenewalMs: undefined,
                     sessionExpirationMs: undefined,
                     maxBatchSizeInBytes: undefined,
@@ -173,8 +172,8 @@ class InitializationTests extends TestClass {
                 for (var i = 0; i < length; i++) {
                     queue.shift();
                 }
-                queue.push(new Microsoft.ApplicationInsights._InternalLogMessage("Hello1"));
-                queue.push(new Microsoft.ApplicationInsights._InternalLogMessage("Hello2"));
+                queue.push(new Microsoft.ApplicationInsights._InternalLogMessage(1, "Hello1"));
+                queue.push(new Microsoft.ApplicationInsights._InternalLogMessage(2, "Hello2"));
 
                 init.loadAppInsights();
                 var poller = init.pollInteralLogs(appInsightsLocal);

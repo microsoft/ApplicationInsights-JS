@@ -158,3 +158,6 @@ $RECYCLE.BIN/
 *.err
 *.prf
 *.wrn
+
+# Visual studio 2015 user specific files
+JavaScript/.vs

@@ -9,7 +9,6 @@ class AppInsightsTests extends TestClass {
             endpointUrl: "//dc.services.visualstudio.com/v2/track",
             emitLineDelimitedJson: false,
             accountId: undefined,
-            appUserId: undefined,
             sessionRenewalMs: 10,
             sessionExpirationMs: 10,
             maxBatchSizeInBytes: 1000000,
@@ -24,8 +23,9 @@ class AppInsightsTests extends TestClass {
             disableAjaxTracking: true,
             overridePageViewDuration: false,
             maxAjaxCallsPerView: 20,
+            cookieDomain: undefined,
             disableDataLossAnalysis: true,
-            cookieDomain: undefined
+            disableCorrelationHeaders: false
         };
 
         // set default values
@@ -171,8 +171,10 @@ class AppInsightsTests extends TestClass {
             name: "AppInsightsTests: envelope type, data type and ikey are correct",
             test: () => {
                 // setup
+                var iKey = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                var iKeyNoDash = "BDC8736DD8E84B69B19BB0CE6B66A456";
                 var config = this.getAppInsightsSnippet();
-                config.instrumentationKey = "12345";
+                config.instrumentationKey = iKey;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(config);
                 appInsights.context._sessionManager._sessionHandler = null;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
@@ -181,8 +183,8 @@ class AppInsightsTests extends TestClass {
                 var test = (action, expectedEnvelopeType, expectedDataType) => {
                     action();
                     var envelope = this.getFirstResult(action, trackStub);
-                    Assert.equal("12345", envelope.iKey, "envelope iKey");
-                    Assert.equal(expectedEnvelopeType, envelope.name, "envelope name");
+                    Assert.equal(iKey, envelope.iKey, "envelope iKey");
+                    Assert.equal(expectedEnvelopeType.replace("{0}", iKeyNoDash), envelope.name, "envelope name");
                     Assert.equal(expectedDataType, envelope.data.baseType, "type name");
                     trackStub.reset();
                 };
@@ -867,7 +869,6 @@ class AppInsightsTests extends TestClass {
                 // verify
                 test("instrumentationKey");
                 test("accountId");
-                test("appUserId");
                 test("sessionRenewalMs");
                 test("sessionExpirationMs");
                 test("endpointUrl");
@@ -1618,7 +1619,7 @@ class AppInsightsTests extends TestClass {
                 var resultCode = 404;
 
                 // Act
-                appInsights.trackAjax(name, url, duration, success, resultCode);
+                appInsights.trackAjax("0", name, url, duration, success, resultCode);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
@@ -1634,20 +1635,28 @@ class AppInsightsTests extends TestClass {
         this.testCase({
             name: "trackAjax includes instrumentation key into envelope name",
             test: () => {
+                var iKey = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                var iKeyNoDash = "BDC8736DD8E84B69B19BB0CE6B66A456";
                 var snippet = this.getAppInsightsSnippet();
-                snippet.instrumentationKey = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                snippet.instrumentationKey = iKey;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
-                var trackStub = this.sandbox.stub(appInsights.context, "track");
-                // dashes are removed
-                var expectedEnvelopeName = "Microsoft.ApplicationInsights.BDC8736DD8E84B69B19BB0CE6B66A456.RemoteDependency";
 
-                // Act
-                appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                appInsights.context._sessionManager._sessionHandler = null;
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
-                // Assert
-                Assert.ok(trackStub.called, "Track should be called");
-                var envelope = trackStub.args[0][0];
-                Assert.equal(expectedEnvelopeName, envelope.name, "Envelope name should include instrumentation key without dashes");
+                // verify
+                var test = (action, expectedEnvelopeType, expectedDataType) => {
+                    action();
+                    var envelope = this.getFirstResult(action, trackStub);
+                    Assert.equal(iKey, envelope.iKey, "envelope iKey");
+                    Assert.equal(expectedEnvelopeType.replace("{0}", iKeyNoDash), envelope.name, "envelope name");
+                    Assert.equal(expectedDataType, envelope.data.baseType, "type name");
+                    trackStub.reset();
+                };
+
+                // act
+                test(() => appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200), Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType,
+                    Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.dataType);
             }
         });
 
@@ -1660,7 +1669,7 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
                 }
 
                 // Assert
@@ -1677,14 +1686,14 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
                 }
 
                 appInsights.sendPageViewInternal("asdf", "http://microsoft.com", 123);
                 trackStub.reset();
 
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
                 }
 
                 // Assert
@@ -1702,13 +1711,13 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < 20; ++i) {
-                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
                 }
                 
                 loggingSpy.reset();
 
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
                 }
 
                 // Assert
@@ -1728,11 +1737,65 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < ajaxCallsCount; ++i) {
-                    appInsights.trackAjax("test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
                 }
 
                 // Assert
                 Assert.equal(ajaxCallsCount, trackStub.callCount, "Expected " + ajaxCallsCount + " invokations of trackAjax (no limit)");
+            }
+        });
+        
+        this.testCase({
+            name: "Ajax - root/parent id are set and passed correctly",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.disableAjaxTracking = false;
+                snippet.disableCorrelationHeaders = false;
+                snippet.maxBatchInterval = 0;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.spy(appInsights, "trackAjax");
+                var expectedRootId = appInsights.context.operation.id;
+                Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+                
+                // Act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "/bla");
+                xhr.send();
+
+                var expectedAjaxId = (<any>xhr).ajaxData.id;
+                Assert.ok(expectedAjaxId.length > 0, "ajax id was initialized");
+                
+                // Emulate response                               
+                (<any>xhr).respond("200", {}, "");
+
+                // Assert
+                Assert.equal(expectedAjaxId, (<any>xhr).requestHeaders['x-ms-request-id'], "x-ms-request-id id set correctly");
+                Assert.equal(expectedAjaxId, trackStub.args[0][0], "ajax id passed to trackAjax correctly");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax - disableCorrelationHeaders disables x-ms-request-id headers",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.disableAjaxTracking = false;
+                snippet.disableCorrelationHeaders = true;
+                snippet.maxBatchInterval = 0;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.spy(appInsights, "trackAjax");
+                var expectedRootId = appInsights.context.operation.id;
+                Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+                
+                // Act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "/bla");
+                xhr.send();
+                                
+                // Emulate response                               
+                (<any>xhr).respond("200", {}, "");
+
+                // Assert
+                Assert.equal(null, (<any>xhr).requestHeaders['x-ms-request-id'], "x-ms-request-id should not be set");
             }
         });
     }
