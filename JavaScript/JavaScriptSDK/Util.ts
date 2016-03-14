@@ -31,7 +31,9 @@ module Microsoft.ApplicationInsights {
                 if (fail) {
                     storage = null;
                 }
-            } catch (exception) { }
+            } catch (exception) {
+                storage = null;
+            }
 
             return storage;
         }
