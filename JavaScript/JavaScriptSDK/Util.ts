@@ -9,17 +9,33 @@ module Microsoft.ApplicationInsights {
          * Gets the localStorage object if available
          * @return {Storage} - Returns the storage object if available else returns null
          */
-        private static _getStorageObject(): Storage {
+        private static _getLocalStorageObject(): Storage {
+            return Util._getVerifiedStorageObject(window.localStorage);
+        }
+
+        /**
+         * Tests storage object (localStorage or sessionStorage) to verify that it is usable
+         * More details here: https://mathiasbynens.be/notes/localstorage-pattern
+         * @param storageRef
+         * @return {Storage} Returns storage object verified that it is usable
+         */
+        private static _getVerifiedStorageObject(storageRef: Storage): Storage {
+            var storage: Storage = null;
+            var fail: boolean;
+            var uid;
             try {
-                if (window.localStorage) {
-                    return window.localStorage;
-                } else {
-                    return null;
+                uid = new Date;
+                (storage = storageRef).setItem(uid, uid);
+                fail = storage.getItem(uid) != uid;
+                storage.removeItem(uid);
+                if (fail) {
+                    storage = null;
                 }
-            } catch (e) {
-                _InternalLogging.warnToConsole('Failed to get client localStorage: ' + e.message);
-                return null;
+            } catch (exception) {
+                storage = null;
             }
+
+            return storage;
         }
 
         /**
@@ -28,7 +44,7 @@ module Microsoft.ApplicationInsights {
          *  @returns {boolean} True if local storage is supported.
          */
         public static canUseLocalStorage(): boolean {
-            return !!Util._getStorageObject();
+            return !!Util._getLocalStorageObject();
         }
 
         /**
@@ -38,7 +54,7 @@ module Microsoft.ApplicationInsights {
          *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
          */
         public static getStorage(name: string): string {
-            var storage = Util._getStorageObject();
+            var storage = Util._getLocalStorageObject();
             if (storage !== null) {
                 try {
                     return storage.getItem(name);
@@ -62,7 +78,7 @@ module Microsoft.ApplicationInsights {
          *  @returns {boolean} True if the storage object could be written.
          */
         public static setStorage(name: string, data: string): boolean {
-            var storage = Util._getStorageObject();
+            var storage = Util._getLocalStorageObject();
             if (storage !== null) {
                 try {
                     storage.setItem(name, data);
@@ -86,7 +102,7 @@ module Microsoft.ApplicationInsights {
          *  @returns {boolean} True if the storage object could be removed.
          */
         public static removeStorage(name: string): boolean {
-            var storage = Util._getStorageObject();
+            var storage = Util._getLocalStorageObject();
             if (storage !== null) {
                 try {
                     storage.removeItem(name);
@@ -104,20 +120,11 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
-         * Gets the localStorage object if available
+         * Gets the sessionStorage object if available
          * @return {Storage} - Returns the storage object if available else returns null
          */
         private static _getSessionStorageObject(): Storage {
-            try {
-                if (window.sessionStorage) {
-                    return window.sessionStorage;
-                } else {
-                    return null;
-                }
-            } catch (e) {
-                _InternalLogging.warnToConsole('Failed to get client session storage: ' + e.message);
-                return null;
-            }
+            return Util._getVerifiedStorageObject(window.sessionStorage);
         }
 
         /**
