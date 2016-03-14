@@ -15,6 +15,7 @@ module Microsoft.ApplicationInsights {
 
         /**
          * Tests storage object (localStorage or sessionStorage) to verify that it is usable
+         * More details here: https://mathiasbynens.be/notes/localstorage-pattern
          * @param storageRef
          * @return {Storage} Returns storage object verified that it is usable
          */
@@ -24,7 +25,7 @@ module Microsoft.ApplicationInsights {
             var uid;
             try {
                 uid = new Date;
-                (storage = window.localStorage).setItem(uid, uid);
+                (storage = storageRef).setItem(uid, uid);
                 fail = storage.getItem(uid) != uid;
                 storage.removeItem(uid);
                 if (fail) {
