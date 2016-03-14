@@ -110,6 +110,8 @@ module Microsoft.ApplicationInsights {
         private static _getSessionStorageObject(): Storage {
             try {
                 if (window.sessionStorage) {
+                    // Test getting items in case private browsing throws an error.
+                    window.sessionStorage.getItem('');
                     return window.sessionStorage;
                 } else {
                     return null;
