@@ -240,6 +240,9 @@ Values that control how the telemetry data is sent.
         // Default 500 - controls how many ajax calls will be monitored per page view.
         // Set to -1 to monitor all ajax calls on the page.
         maxAjaxCallsPerView: number;
+        
+        // Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains.
+        cookieDomain: string;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.

@@ -31,7 +31,8 @@ class InitializationTests extends TestClass {
             maxAjaxCallsPerView: 44,
             disableDataLossAnalysis: true,
             disableCorrelationHeaders: false,
-            disableFlushOnBeforeUnload: false
+            disableFlushOnBeforeUnload: false,
+            cookieDomain: undefined
         };
 
         // set default values

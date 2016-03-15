@@ -10,7 +10,7 @@ class UtilTests extends TestClass {
             name: "UtilTests: getStorage with available storage",
             test: () => {
                 var storage = this.getMockStorage();
-                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
 
                 storage["test"] = "A";
 
@@ -25,7 +25,7 @@ class UtilTests extends TestClass {
             name: "UtilTests: getStorage with no storage support",
             test: () => {
                 var storage = undefined;
-                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
 
                 Assert.equal(null, Util.getStorage("test"), "getStorage should return null when storage is unavailable");
 
@@ -37,7 +37,7 @@ class UtilTests extends TestClass {
             name: "UtilTests: setStorage with available storage",
             test: () => {
                 var storage = this.getMockStorage();
-                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
 
                 Assert.ok(Util.setStorage("test","A"), "setStorage should return true if storage is available for writes");
 
@@ -49,7 +49,7 @@ class UtilTests extends TestClass {
             name: "UtilTests: setStorage with no storage support",
             test: () => {
                 var storage = undefined;
-                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
 
                 Assert.ok(!Util.setStorage("test", "A"), "setStorage should return false if storage is unavailable for writes");
 
@@ -61,7 +61,7 @@ class UtilTests extends TestClass {
             name: "UtilTests: removeStorage with available storage",
             test: () => {
                 var storage = this.getMockStorage();
-                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
 
                 storage["test"] = "A";
 
@@ -76,7 +76,7 @@ class UtilTests extends TestClass {
             name: "UtilTests: removeStorage with no storage support",
             test: () => {
                 var storage = undefined;
-                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
 
                 Assert.ok(!Util.removeStorage("test"), "removeStorage should return false if storage is unavailable for writes");
 

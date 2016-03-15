@@ -13,7 +13,7 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "0.22.6";
+    export var Version = "0.22.8";
 
     export interface IConfig {
         instrumentationKey: string;
@@ -37,6 +37,7 @@ module Microsoft.ApplicationInsights {
         disableDataLossAnalysis: boolean;
         disableCorrelationHeaders: boolean;
         disableFlushOnBeforeUnload: boolean;
+        cookieDomain: string;
     }
 
     /**
@@ -96,7 +97,8 @@ module Microsoft.ApplicationInsights {
                 maxBatchSizeInBytes: () => this.config.maxBatchSizeInBytes,
                 maxBatchInterval: () => this.config.maxBatchInterval,
                 disableTelemetry: () => this.config.disableTelemetry,
-                sampleRate: () => this.config.samplingPercentage
+                sampleRate: () => this.config.samplingPercentage,
+                cookieDomain: () => this.config.cookieDomain
             }
             
             this.context = new ApplicationInsights.TelemetryContext(configGetters);

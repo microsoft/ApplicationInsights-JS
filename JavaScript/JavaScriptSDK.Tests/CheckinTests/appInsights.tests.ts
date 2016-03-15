@@ -23,6 +23,7 @@ class AppInsightsTests extends TestClass {
             disableAjaxTracking: true,
             overridePageViewDuration: false,
             maxAjaxCallsPerView: 20,
+            cookieDomain: undefined,
             disableDataLossAnalysis: true,
             disableCorrelationHeaders: false,
             disableFlushOnBeforeUnload: false
@@ -36,7 +37,7 @@ class AppInsightsTests extends TestClass {
         this.clock.reset();
         Microsoft.ApplicationInsights.Util.setCookie('ai_session', "");
         Microsoft.ApplicationInsights.Util.setCookie('ai_user', "");
-        if (window.localStorage) {
+        if (Microsoft.ApplicationInsights.Util.canUseLocalStorage()) {
             window.localStorage.clear();
         }
     }
@@ -44,7 +45,7 @@ class AppInsightsTests extends TestClass {
     public testCleanup() {
         Microsoft.ApplicationInsights.Util.setCookie('ai_session', "");
         Microsoft.ApplicationInsights.Util.setCookie('ai_user', "");
-        if (window.localStorage) {
+        if (Microsoft.ApplicationInsights.Util.canUseLocalStorage()) {
             window.localStorage.clear();
         }
     }
@@ -857,6 +858,8 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var snippet = this.getAppInsightsSnippet();
+                snippet.cookieDomain = ".example.com";
+
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
                 appInsights.context._sessionManager._sessionHandler = null;
 
@@ -872,6 +875,7 @@ class AppInsightsTests extends TestClass {
                 test("endpointUrl");
                 test("maxBatchSizeInBytes");
                 test("maxBatchInterval");
+                test("cookieDomain");
 
                 Assert.equal(snippet.enableDebug, Microsoft.ApplicationInsights._InternalLogging.enableDebugExceptions(), "enableDebugExceptions is set and correct");
             }
