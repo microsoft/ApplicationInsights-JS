@@ -143,7 +143,6 @@ module Microsoft.ApplicationInsights {
 
             // set default values
             config.endpointUrl = config.endpointUrl || "//dc.services.visualstudio.com/v2/track";
-            config.accountId = config.accountId;
             config.sessionRenewalMs = 30 * 60 * 1000;
             config.sessionExpirationMs = 24 * 60 * 60 * 1000;
             config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 1000000;
@@ -157,7 +156,6 @@ module Microsoft.ApplicationInsights {
             config.emitLineDelimitedJson = Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
             config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
             config.autoTrackPageVisitTime = ApplicationInsights.Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
-            config.cookieDomain = config.cookieDomain;
 
             if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
                 config.samplingPercentage = 100;
