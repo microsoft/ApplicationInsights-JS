@@ -8,7 +8,9 @@ class DataLossAnalyzerTests extends TestClass {
     }
 
     public testInialize() {
-        sessionStorage.clear();
+        if (Microsoft.ApplicationInsights.Util.canUseSessionStorage()) {
+            sessionStorage.clear();
+        }
     }
 
     public registerTests() {

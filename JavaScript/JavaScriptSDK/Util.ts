@@ -1,6 +1,14 @@
 ﻿/// <reference path="./logging.ts" />
 module Microsoft.ApplicationInsights {
 
+         /**
+         * Type of storage to differentiate between local storage and session storage
+         */
+    enum StorageType {
+        LocalStorage,
+        SessionStorage
+    }
+
     export class Util {
         private static document: any = typeof document !== "undefined" ? document : {};
         public static NotSpecified = "not_specified";
@@ -10,22 +18,23 @@ module Microsoft.ApplicationInsights {
          * @return {Storage} - Returns the storage object if available else returns null
          */
         private static _getLocalStorageObject(): Storage {
-            return Util._getVerifiedStorageObject(window.localStorage);
+            return Util._getVerifiedStorageObject(StorageType.LocalStorage);
         }
 
         /**
          * Tests storage object (localStorage or sessionStorage) to verify that it is usable
          * More details here: https://mathiasbynens.be/notes/localstorage-pattern
-         * @param storageRef
+         * @param storageType Type of storage
          * @return {Storage} Returns storage object verified that it is usable
          */
-        private static _getVerifiedStorageObject(storageRef: Storage): Storage {
+        private static _getVerifiedStorageObject(storageType: StorageType): Storage {
             var storage: Storage = null;
             var fail: boolean;
             var uid;
             try {
                 uid = new Date;
-                (storage = storageRef).setItem(uid, uid);
+                storage = storageType === StorageType.LocalStorage ? window.localStorage : window.sessionStorage;
+                storage.setItem(uid, uid);
                 fail = storage.getItem(uid) != uid;
                 storage.removeItem(uid);
                 if (fail) {
@@ -124,7 +133,7 @@ module Microsoft.ApplicationInsights {
          * @return {Storage} - Returns the storage object if available else returns null
          */
         private static _getSessionStorageObject(): Storage {
-            return Util._getVerifiedStorageObject(window.sessionStorage);
+            return Util._getVerifiedStorageObject(StorageType.SessionStorage);
         }
 
         /**

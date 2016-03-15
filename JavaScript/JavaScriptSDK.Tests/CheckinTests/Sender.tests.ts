@@ -20,7 +20,9 @@ class SenderTests extends TestClass {
     private requests;
 
     public testInitialize() {
-        sessionStorage.clear();
+        if (Microsoft.ApplicationInsights.Util.canUseSessionStorage()) {
+            sessionStorage.clear();
+        }
         this.requests = [];
         this.xhr = sinon.useFakeXMLHttpRequest();
 
