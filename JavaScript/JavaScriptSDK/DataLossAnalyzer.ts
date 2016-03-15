@@ -11,23 +11,21 @@
 
         static reset() {
             if (DataLossAnalyzer.isEnabled()) {
-                sessionStorage.setItem(DataLossAnalyzer.ITEMS_QUEUED_KEY, "0");
+                Util.setSessionStorage(DataLossAnalyzer.ITEMS_QUEUED_KEY, "0");
             }
         }
 
         private static isEnabled(): boolean {
             return DataLossAnalyzer.enabled &&
                 DataLossAnalyzer.appInsights != null &&
-                window.sessionStorage != null &&
-                window.sessionStorage.getItem != null &&
-                window.sessionStorage.setItem != null;
+                Util.canUseSessionStorage()
         }
 
         static getIssuesReported(): number {
             var result =
-                (!DataLossAnalyzer.isEnabled() || isNaN(+sessionStorage.getItem(DataLossAnalyzer.ISSUES_REPORTED_KEY))) ?
+                (!DataLossAnalyzer.isEnabled() || isNaN(+Util.getSessionStorage(DataLossAnalyzer.ISSUES_REPORTED_KEY))) ?
                     0 :
-                    +sessionStorage.getItem(DataLossAnalyzer.ISSUES_REPORTED_KEY);
+                    +Util.getSessionStorage(DataLossAnalyzer.ISSUES_REPORTED_KEY);
 
             return result;
         }
@@ -37,7 +35,7 @@
                 if (DataLossAnalyzer.isEnabled()) {
                     var itemsQueued: number = DataLossAnalyzer.getNumberOfLostItems();
                     ++itemsQueued;
-                    sessionStorage.setItem(DataLossAnalyzer.ITEMS_QUEUED_KEY, itemsQueued.toString());
+                    Util.setSessionStorage(DataLossAnalyzer.ITEMS_QUEUED_KEY, itemsQueued.toString());
                 }
             } catch (e) { }
         }
@@ -48,7 +46,7 @@
                     var itemsQueued: number = DataLossAnalyzer.getNumberOfLostItems();
                     itemsQueued -= countOfItemsSentSuccessfully;
                     if (itemsQueued < 0) itemsQueued = 0;
-                    sessionStorage.setItem(DataLossAnalyzer.ITEMS_QUEUED_KEY, itemsQueued.toString());
+                    Util.setSessionStorage(DataLossAnalyzer.ITEMS_QUEUED_KEY, itemsQueued.toString());
                 }
             } catch (e) { }
         }
@@ -57,9 +55,9 @@
             var result: number = 0;
             try {
                 if (DataLossAnalyzer.isEnabled()) {
-                    result = isNaN(+sessionStorage.getItem(DataLossAnalyzer.ITEMS_QUEUED_KEY)) ?
+                    result = isNaN(+Util.getSessionStorage(DataLossAnalyzer.ITEMS_QUEUED_KEY)) ?
                         0 :
-                        +sessionStorage.getItem(DataLossAnalyzer.ITEMS_QUEUED_KEY);
+                        +Util.getSessionStorage(DataLossAnalyzer.ITEMS_QUEUED_KEY);
                 }
             } catch (e) {
                 result = 0;
@@ -82,7 +80,7 @@
 
                     var issuesReported: number = DataLossAnalyzer.getIssuesReported();
                     ++issuesReported;
-                    sessionStorage.setItem(DataLossAnalyzer.ISSUES_REPORTED_KEY, issuesReported.toString());
+                    Util.setSessionStorage(DataLossAnalyzer.ISSUES_REPORTED_KEY, issuesReported.toString());
                 }
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,

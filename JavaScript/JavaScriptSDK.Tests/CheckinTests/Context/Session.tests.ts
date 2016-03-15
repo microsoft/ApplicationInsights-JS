@@ -128,7 +128,7 @@ class SessionContextTests extends TestClass {
         this.testCase({
             name: "ai_session local storage has correct structure",
             test: () => {
-                if (window.localStorage) {
+                if (Microsoft.ApplicationInsights.Util.canUseLocalStorage()) {
                     // setup
                     var actualCookieName: string;
                     var actualCookieValue: string;
@@ -569,7 +569,7 @@ class SessionContextTests extends TestClass {
     }
 
     private resetStorage() {
-        if (window.localStorage) {
+        if (Microsoft.ApplicationInsights.Util.canUseLocalStorage()) {
             window.localStorage.clear();
         }
     }

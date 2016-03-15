@@ -36,7 +36,7 @@ class AppInsightsTests extends TestClass {
         this.clock.reset();
         Microsoft.ApplicationInsights.Util.setCookie('ai_session', "");
         Microsoft.ApplicationInsights.Util.setCookie('ai_user', "");
-        if (window.localStorage) {
+        if (Microsoft.ApplicationInsights.Util.canUseLocalStorage()) {
             window.localStorage.clear();
         }
     }
@@ -44,7 +44,7 @@ class AppInsightsTests extends TestClass {
     public testCleanup() {
         Microsoft.ApplicationInsights.Util.setCookie('ai_session', "");
         Microsoft.ApplicationInsights.Util.setCookie('ai_user', "");
-        if (window.localStorage) {
+        if (Microsoft.ApplicationInsights.Util.canUseLocalStorage()) {
             window.localStorage.clear();
         }
     }
