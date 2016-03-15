@@ -30,7 +30,8 @@ class InitializationTests extends TestClass {
             overridePageViewDuration: false,
             maxAjaxCallsPerView: 44,
             disableDataLossAnalysis: true,
-            disableCorrelationHeaders: false
+            disableCorrelationHeaders: false,
+            disableFlushOnBeforeUnload: false
         };
 
         // set default values
@@ -256,6 +257,28 @@ class InitializationTests extends TestClass {
                 Assert.ok(addEventHandlerStub.calledOnce);
                 Assert.equal(addEventHandlerStub.getCall(0).args[0], 'beforeunload');
                 Assert.ok(addEventHandlerStub.getCall(0).args[1] !== undefined, 'addEventHandler was called with undefined callback');
+            }
+        });
+
+        this.testCase({
+            name: "InitializationTests: disableFlushOnBeforeUnload switch works",
+            test: () => {
+                // Assemble
+                var userConfig = this.getAppInsightsSnippet();
+                userConfig.disableFlushOnBeforeUnload = true;
+                var snippet = <Microsoft.ApplicationInsights.Snippet>{
+                    config: userConfig,
+                    queue: []
+                };
+                var addEventHandlerStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, 'addEventHandler').returns(true);
+                var init = new Microsoft.ApplicationInsights.Initialization(snippet);
+                var appInsightsLocal = init.loadAppInsights();
+                
+                // Act
+                init.addHousekeepingBeforeUnload(appInsightsLocal);
+                
+                // Assert
+                Assert.ok(addEventHandlerStub.notCalled);                
             }
         });
     }

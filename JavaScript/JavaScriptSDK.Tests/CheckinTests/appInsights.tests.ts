@@ -24,7 +24,8 @@ class AppInsightsTests extends TestClass {
             overridePageViewDuration: false,
             maxAjaxCallsPerView: 20,
             disableDataLossAnalysis: true,
-            disableCorrelationHeaders: false
+            disableCorrelationHeaders: false,
+            disableFlushOnBeforeUnload: false
         };
 
         // set default values

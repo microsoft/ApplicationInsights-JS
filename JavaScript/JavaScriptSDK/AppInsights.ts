@@ -36,6 +36,7 @@ module Microsoft.ApplicationInsights {
         maxAjaxCallsPerView: number;
         disableDataLossAnalysis: boolean;
         disableCorrelationHeaders: boolean;
+        disableFlushOnBeforeUnload: boolean;
     }
 
     /**
