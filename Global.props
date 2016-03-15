@@ -110,7 +110,7 @@
     -->
     <SemanticVersionMajor>0</SemanticVersionMajor>
     <SemanticVersionMinor>22</SemanticVersionMinor>
-    <SemanticVersionPatch>7</SemanticVersionPatch>
+    <SemanticVersionPatch>8</SemanticVersionPatch>
 
     <!-- 
       Date when Semantic Version was changed. 
