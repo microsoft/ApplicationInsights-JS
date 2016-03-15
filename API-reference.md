@@ -242,7 +242,7 @@ Values that control how the telemetry data is sent.
         maxAjaxCallsPerView: number;
         
         // Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains.
-        cookieDomain: string
+        cookieDomain: string;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.
