@@ -7,6 +7,7 @@ module Microsoft.ApplicationInsights.Context {
     export interface ISessionConfig {
         sessionRenewalMs: () => number;
         sessionExpirationMs: () => number;
+        cookieDomain: () => string;
     }
 
     export class Session {
@@ -194,7 +195,9 @@ module Microsoft.ApplicationInsights.Context {
                 cookieExpiry.setTime(renewalExpiry);
             }
 
-            Util.setCookie('ai_session', cookie.join('|') + ';expires=' + cookieExpiry.toUTCString());
+            var cookieDomnain = this.config.cookieDomain ? this.config.cookieDomain() : null;
+
+            Util.setCookie('ai_session', cookie.join('|') + ';expires=' + cookieExpiry.toUTCString(), cookieDomnain);
         }
 
         private setStorage(guid: string, acq: number, renewal: number) {

@@ -36,6 +36,7 @@ module Microsoft.ApplicationInsights {
         maxAjaxCallsPerView: number;
         disableDataLossAnalysis: boolean;
         disableCorrelationHeaders: boolean;
+        cookieDomain: string;
     }
 
     /**
@@ -95,7 +96,8 @@ module Microsoft.ApplicationInsights {
                 maxBatchSizeInBytes: () => this.config.maxBatchSizeInBytes,
                 maxBatchInterval: () => this.config.maxBatchInterval,
                 disableTelemetry: () => this.config.disableTelemetry,
-                sampleRate: () => this.config.samplingPercentage
+                sampleRate: () => this.config.samplingPercentage,
+                cookieDomain: () => this.config.cookieDomain
             }
             
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
@@ -410,7 +412,7 @@ module Microsoft.ApplicationInsights {
                 _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING,
                     new _InternalLogMessage(_InternalMessageId.USRACT_SetAuthContextFailed, "Clearing auth user context failed. " + Util.getExceptionName(e),
                     { exception: Util.dump(e) }));
-            } 
+            }
         }
 
         /**

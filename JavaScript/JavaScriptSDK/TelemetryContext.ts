@@ -19,6 +19,7 @@ module Microsoft.ApplicationInsights {
         sessionExpirationMs: () => number;
         sampleRate: () => number;
         endpointUrl: () => string;
+        cookieDomain: () => string;
     }
 
     export class TelemetryContext {
@@ -89,7 +90,7 @@ module Microsoft.ApplicationInsights {
                 this.device = new Context.Device();
                 this.internal = new Context.Internal();
                 this.location = new Context.Location();
-                this.user = new Context.User(config.accountId());
+                this.user = new Context.User(config);
                 this.operation = new Context.Operation();
                 this.session = new Context.Session();
                 this.sample = new Context.Sample(config.sampleRate());

@@ -180,7 +180,7 @@ class SessionContextTests extends TestClass {
                 cookies['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
                 // Ensure session manager backs up properly
-                new Microsoft.ApplicationInsights.Context.User(undefined);
+                new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
                 sessionManager.update();
                 sessionManager.backup();
@@ -217,7 +217,7 @@ class SessionContextTests extends TestClass {
                 storage['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
                 // Initalize the session manager
-                new Microsoft.ApplicationInsights.Context.User(undefined);
+                new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
                 sessionManager.update();
                 sessionManager.backup();
@@ -258,7 +258,7 @@ class SessionContextTests extends TestClass {
                 storage['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
                 // Initialize the session manager
-                new Microsoft.ApplicationInsights.Context.User(undefined);
+                new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
                 sessionManager.update();
 
@@ -297,14 +297,14 @@ class SessionContextTests extends TestClass {
                 cookies['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
                 // Back up the session
-                new Microsoft.ApplicationInsights.Context.User(undefined);
+                new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
                 sessionManager.update();
                 sessionManager.backup();
 
                 // Lose the session cookie but not the user cookie
                 cookies['ai_session'] = undefined;
-                new Microsoft.ApplicationInsights.Context.User(undefined);
+                new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
                 var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
                 sessionManager.update();
                 sessionManager.backup();
@@ -506,7 +506,8 @@ class SessionContextTests extends TestClass {
                 var sessionExpirationMs = 10;
                 var config: Microsoft.ApplicationInsights.Context.ISessionConfig = {
                     sessionRenewalMs: () => sessionRenewalMs,
-                    sessionExpirationMs: () => sessionExpirationMs
+                    sessionExpirationMs: () => sessionExpirationMs,
+                    cookieDomain: () => undefined
                 };
 
                 // act
@@ -571,6 +572,23 @@ class SessionContextTests extends TestClass {
         if (window.localStorage) {
             window.localStorage.clear();
         }
+    }
+
+    private getEmptyConfig() {
+        return {
+            instrumentationKey: () => null,
+            accountId: () => null,
+            sessionRenewalMs: () => null,
+            sessionExpirationMs: () => null,
+            sampleRate: () => null,
+            appUserId: () => null,
+            endpointUrl: () => null,
+            cookieDomain: () => null,
+            emitLineDelimitedJson: () => null,
+            maxBatchSizeInBytes: () => null,
+            maxBatchInterval: () => null,
+            disableTelemetry: () => null
+        };
     }
 }
 new SessionContextTests().registerTests();

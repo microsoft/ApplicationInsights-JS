@@ -227,8 +227,14 @@ module Microsoft.ApplicationInsights {
         /**
          * helper method to set userId and sessionId cookie
          */
-        public static setCookie(name, value) {
-            Util.document.cookie = name + "=" + value + ";path=/";
+        public static setCookie(name, value, domain?) {
+            var domainAttrib = "";
+
+            if (domain) {
+                domainAttrib = ";domain=" + domain;
+            }
+
+            Util.document.cookie = name + "=" + value + domainAttrib + ";path=/";
         }
 
         public static stringToBoolOrDefault(str: any): boolean {
