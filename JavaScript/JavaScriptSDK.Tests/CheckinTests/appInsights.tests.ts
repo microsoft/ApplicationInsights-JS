@@ -25,7 +25,8 @@ class AppInsightsTests extends TestClass {
             maxAjaxCallsPerView: 20,
             cookieDomain: undefined,
             disableDataLossAnalysis: true,
-            disableCorrelationHeaders: false
+            disableCorrelationHeaders: false,
+            disableFlushOnBeforeUnload: false
         };
 
         // set default values

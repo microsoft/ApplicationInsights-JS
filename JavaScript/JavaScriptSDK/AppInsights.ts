@@ -36,6 +36,7 @@ module Microsoft.ApplicationInsights {
         maxAjaxCallsPerView: number;
         disableDataLossAnalysis: boolean;
         disableCorrelationHeaders: boolean;
+        disableFlushOnBeforeUnload: boolean;
         cookieDomain: string;
     }
 
@@ -412,7 +413,7 @@ module Microsoft.ApplicationInsights {
                 _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING,
                     new _InternalLogMessage(_InternalMessageId.USRACT_SetAuthContextFailed, "Clearing auth user context failed. " + Util.getExceptionName(e),
                     { exception: Util.dump(e) }));
-            }
+            } 
         }
 
         /**

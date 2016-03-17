@@ -184,6 +184,17 @@ Error: testmessage2\n\
                 Assert.equal(expectedHandledAt, actual.handledAt);
             }
         });
+
+        this.testCase({
+            name: "Stack trace with no method serializes as <no_method>",
+            test: () => {
+                // Act
+                var sut = new Microsoft.ApplicationInsights.Telemetry._StackFrame("    at http://myScript.js:40:50", 1);
+
+                // Verify
+                Assert.equal("<no_method>", sut.method);
+            }
+        });
     }
 }
 new ExceptionTelemetryTests().registerTests();
