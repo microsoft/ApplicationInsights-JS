@@ -32,9 +32,7 @@ class PublicApiTests extends TestClass {
         config.instrumentationKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46";
 
         var delay = config.maxBatchInterval + 100;
-        var testAi = new Microsoft.ApplicationInsights.AppInsights(config);
-        // disable session state event:
-        testAi.context._sessionManager._sessionHandler = null;
+        var testAi = new Microsoft.ApplicationInsights.AppInsights(config);        
 
         var boilerPlateAsserts = () => {
             Assert.ok(this.successSpy.called, "success");

@@ -5,7 +5,6 @@
 /// <reference path="telemetry/metric.ts" />
 /// <reference path="telemetry/pageview.ts" />
 /// <reference path="telemetry/pageviewperformance.ts" />
-/// <reference path="telemetry/SessionTelemetry.ts" />
 /// <reference path="./Util.ts"/>
 /// <reference path="./Contracts/Generated/SessionState.ts"/>
 
@@ -83,9 +82,7 @@ module Microsoft.ApplicationInsights {
 
             // window will be undefined in node.js where we do not want to initialize contexts
             if (typeof window !== 'undefined') {
-                this._sessionManager = new ApplicationInsights.Context._SessionManager(
-                    config,
-                    (sessionState, timestamp) => TelemetryContext._sessionHandler(this, sessionState, timestamp));
+                this._sessionManager = new ApplicationInsights.Context._SessionManager(config);
                 this.application = new Context.Application();
                 this.device = new Context.Device();
                 this.internal = new Context.Internal();
@@ -152,7 +149,7 @@ module Microsoft.ApplicationInsights {
 
             envelope.iKey = this._config.instrumentationKey();
 
-            var doNotSendItem = false;            
+            var doNotSendItem = false;
             try {
                 this.telemetryInitializers = this.telemetryInitializers || [];
                 var telemetryInitializersCount = this.telemetryInitializers.length;
@@ -173,12 +170,11 @@ module Microsoft.ApplicationInsights {
             }
 
             if (!doNotSendItem) {
-                if (envelope.name === Telemetry.SessionTelemetry.envelopeType ||
-                    envelope.name === Telemetry.Metric.envelopeType ||
+                if (envelope.name === Telemetry.Metric.envelopeType ||
                     this.sample.isSampledIn(envelope)) {
-                        var iKeyNoDashes = this._config.instrumentationKey().replace(/-/g, "");
-                        envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
-                        this._sender.send(envelope);
+                    var iKeyNoDashes = this._config.instrumentationKey().replace(/-/g, "");
+                    envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
+                    this._sender.send(envelope);
                 } else {
                     _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_TelemetrySampledAndNotSent,
                         "Telemetry is sampled and not sent to the AI service.", { SampleRate: this.sample.sampleRate }));
@@ -186,17 +182,6 @@ module Microsoft.ApplicationInsights {
             }
 
             return envelope;
-        }
-
-        private static _sessionHandler(tc: TelemetryContext, sessionState: AI.SessionState, timestamp: number) {
-
-            var sessionStateTelemetry = new Telemetry.SessionTelemetry(sessionState);
-            var sessionStateData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.SessionTelemetry>(Telemetry.SessionTelemetry.dataType, sessionStateTelemetry);
-            var sessionStateEnvelope = new Telemetry.Common.Envelope(sessionStateData, Telemetry.SessionTelemetry.envelopeType);
-
-            sessionStateEnvelope.time = Util.toISOStringForIE8(new Date(timestamp));
-
-            tc._track(sessionStateEnvelope);
         }
 
         private _applyApplicationContext(envelope: Microsoft.Telemetry.Envelope, appContext: Microsoft.ApplicationInsights.Context.Application) {
@@ -296,7 +281,7 @@ module Microsoft.ApplicationInsights {
 
         private _applySampleContext(envelope: Microsoft.Telemetry.Envelope, sampleContext: Microsoft.ApplicationInsights.Context.Sample) {
             if (sampleContext) {
-                envelope.sampleRate = sampleContext.sampleRate;                
+                envelope.sampleRate = sampleContext.sampleRate;
             }
         }
 
