@@ -89,6 +89,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
 
         public static sanitizeUrl(url) {
             if (url) {
+                url = Util.trim(url);
                 if (url.length > DataSanitizer.MAX_URL_LENGTH) {
                     url = url.substring(0, DataSanitizer.MAX_URL_LENGTH);
                     _InternalLogging.throwInternalUserActionable(
