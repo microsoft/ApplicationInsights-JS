@@ -184,26 +184,6 @@ class TelemetryContextTests extends TestClass {
         });
 
         this.testCase({
-            name: "TelemetryContext: sessions do NOT get sampled",
-            test: () => {
-                var stub = this.getStub(Microsoft.ApplicationInsights.Telemetry.SessionTelemetry.envelopeType, this._telemetryContext);
-
-                var envelope = getEnvelope<Microsoft.ApplicationInsights.Telemetry.SessionTelemetry>(
-                    new Microsoft.ApplicationInsights.Telemetry.SessionTelemetry(AI.SessionState.Start),
-                    Microsoft.ApplicationInsights.Telemetry.SessionTelemetry.dataType,
-                    Microsoft.ApplicationInsights.Telemetry.SessionTelemetry.envelopeType);
-                                
-                // act
-                this._telemetryContext.track(envelope);
-
-                // assert
-                Assert.equal(0, stub.isSampledInCallsCount);
-
-                // tear down
-            }
-        });
-
-        this.testCase({
             name: "TelemetryContext: traces get sampled",
             test: () => {
                 var stub = this.getStub(Microsoft.ApplicationInsights.Telemetry.Trace.envelopeType, this._telemetryContext);

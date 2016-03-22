@@ -41,10 +41,8 @@ module Microsoft.ApplicationInsights.Context {
         public static renewalSpan = 1800000; // 30 minutes in ms
         public automaticSession: Session;
         public config: ISessionConfig;
-
-        public _sessionHandler: (sessionState: AI.SessionState, timestamp: number) => void;
-
-        constructor(config: ISessionConfig, sessionHandler: (sessionState: AI.SessionState, timestamp: number) => void) {
+        
+        constructor(config: ISessionConfig) {
 
             if (!config) {
                 config = <any>{};
@@ -60,7 +58,6 @@ module Microsoft.ApplicationInsights.Context {
 
             this.config = config;
 
-            this._sessionHandler = sessionHandler;
             this.automaticSession = new Session();
         }
 
@@ -76,10 +73,7 @@ module Microsoft.ApplicationInsights.Context {
 
             // renew if acquisitionSpan or renewalSpan has ellapsed
             if (acquisitionExpired || renewalExpired) {
-                // first send session end than update automaticSession so session state has correct id
-                if (typeof this._sessionHandler === "function") {
-                    this._sessionHandler(AI.SessionState.End, this.automaticSession.renewalDate);
-                }
+                // update automaticSession so session state has correct id                
                 this.automaticSession.isFirst = undefined; 
                 this.renew();
             } else {
@@ -169,10 +163,6 @@ module Microsoft.ApplicationInsights.Context {
             this.automaticSession.renewalDate = now;
 
             this.setCookie(this.automaticSession.id, this.automaticSession.acquisitionDate, this.automaticSession.renewalDate);
-            // first we updated automaticSession than we send session start so it has correct id
-            if (typeof this._sessionHandler === "function") {
-                this._sessionHandler(AI.SessionState.Start, now);
-            }
 
             // If this browser does not support local storage, fire an internal log to keep track of it at this point
             if (!Util.canUseLocalStorage()) {

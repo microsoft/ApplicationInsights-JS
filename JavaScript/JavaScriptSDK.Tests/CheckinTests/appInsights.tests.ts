@@ -115,8 +115,7 @@ class AppInsightsTests extends TestClass {
             name: "AppInsightsTests: track page view performance",
             test: () => {
                 // setup
-                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());                
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // act
@@ -132,42 +131,7 @@ class AppInsightsTests extends TestClass {
                 
             }
         });
-
-        this.testCase({
-            name: "AppInsightsTests: start and stop session events have correct time",
-            test: () => {
-                // setup
-                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
-                
-                // act
-                this.clock.tick(1);
-                appInsights.trackEvent("first event");
-
-                // verify
-                Assert.ok(trackStub.calledTwice, "track was called for event and session start");
-                var sessionStartEnvelope1 = <Microsoft.Telemetry.Envelope>trackStub.args[0][0];
-                Assert.equal(1, +new Date(sessionStartEnvelope1.time), "first session start time");
-                
-                // act
-                this.clock.tick(2); // now "3"
-                appInsights.trackEvent("first event"); // session event is not generated but session end should have this time
-                this.clock.tick(appInsights.config.sessionRenewalMs * 2); // now "23"
-                appInsights.trackEvent("second event"); // this will generate session end and start
-
-                // verify
-                Assert.equal(6, trackStub.callCount, "track was called for event, session end and session start");
-                var sessionStopEnvelope2 = <Microsoft.Telemetry.Envelope>trackStub.args[3][0];
-                var sessionStartEnvelope2 = <Microsoft.Telemetry.Envelope>trackStub.args[4][0];
-                Assert.equal(3, +new Date(sessionStopEnvelope2.time), "session end time");
-                Assert.equal(3 + appInsights.config.sessionRenewalMs * 2, +new Date(sessionStartEnvelope2.time), "second session start time");
-                
-
-                // teardown
-                
-            }
-        });
-
+        
         this.testCase({
             name: "AppInsightsTests: envelope type, data type and ikey are correct",
             test: () => {
@@ -177,7 +141,6 @@ class AppInsightsTests extends TestClass {
                 var config = this.getAppInsightsSnippet();
                 config.instrumentationKey = iKey;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(config);
-                appInsights.context._sessionManager._sessionHandler = null;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // verify
@@ -204,7 +167,6 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var config = this.getAppInsightsSnippet();
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(config);
-                appInsights.context._sessionManager._sessionHandler = null;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 this.clock.tick(60000);
 
@@ -225,7 +187,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.context.application.ver = "101";
                 appInsights.context.application.build = "101";
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
@@ -254,7 +215,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.context.device.id = "101";
                 appInsights.context.device.ip = "101";
                 appInsights.context.device.language = "101";
@@ -303,7 +263,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.context.internal.agentVersion = "101";
                 appInsights.context.internal.sdkVersion = "101";
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
@@ -332,7 +291,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.context.location.ip = "101";
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
@@ -359,7 +317,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.context.operation.id = "101";
                 appInsights.context.operation.name = "101";
                 appInsights.context.operation.parentId = "101";
@@ -453,7 +410,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.context.session.id = "101";
                 appInsights.context.session.isFirst = true;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
@@ -482,7 +438,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.context.user.accountId = "101";
                 appInsights.context.user.agent = "101";
                 appInsights.context.user.id = "101";
@@ -745,7 +700,6 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var perfDataAvailable = false;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null; /* otherwise we'll get session event too */
                 var triggerStub = this.sandbox.stub(appInsights.context, "track");
                 var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady", () => { return perfDataAvailable; });
 
@@ -810,7 +764,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 appInsights.trackException(new Error());
@@ -827,7 +780,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // act 
@@ -861,7 +813,6 @@ class AppInsightsTests extends TestClass {
                 snippet.cookieDomain = ".example.com";
 
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
-                appInsights.context._sessionManager._sessionHandler = null;
 
                 var test = (name) => {
                     Assert.equal(snippet[name], appInsights.context._config[name](), name + " is set and correct");
@@ -993,7 +944,6 @@ class AppInsightsTests extends TestClass {
         var test = (trackAction, validateAction) => {
             // setup
             var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-            appInsights.context._sessionManager._sessionHandler = null;
             var stub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewManager.prototype, "trackPageView");
 
             // act
@@ -1163,7 +1113,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
 
@@ -1190,7 +1139,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
 
@@ -1231,7 +1179,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
 
@@ -1274,7 +1221,6 @@ class AppInsightsTests extends TestClass {
             () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
                 
@@ -1296,7 +1242,6 @@ class AppInsightsTests extends TestClass {
             () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
 
@@ -1316,7 +1261,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
 
@@ -1361,7 +1305,6 @@ class AppInsightsTests extends TestClass {
                 };
 
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
 
@@ -1399,7 +1342,6 @@ class AppInsightsTests extends TestClass {
             () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
 
@@ -1421,7 +1363,6 @@ class AppInsightsTests extends TestClass {
             () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
 
@@ -1452,7 +1393,6 @@ class AppInsightsTests extends TestClass {
                 };
 
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 this.clock.tick(55);        // Needed to ensure the duration calculation works
 
@@ -1498,7 +1438,6 @@ class AppInsightsTests extends TestClass {
                 };
 
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 this.clock.tick(10);       
 
@@ -1525,7 +1464,6 @@ class AppInsightsTests extends TestClass {
             () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.config.maxBatchInterval = 100;
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
                 appInsights.context._sender._sender = () => null;
@@ -1557,7 +1495,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
                 appInsights.context._sender._sender = () => null;
                 var senderStub = this.sandbox.stub(appInsights.context._sender, "_sender");
@@ -1585,7 +1522,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
                 appInsights.context._sender._sender = () => null;
                 var senderStub = this.sandbox.stub(appInsights.context._sender, "_sender");
@@ -1642,7 +1578,6 @@ class AppInsightsTests extends TestClass {
                 snippet.instrumentationKey = iKey;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
 
-                appInsights.context._sessionManager._sessionHandler = null;
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // verify
