@@ -38,6 +38,22 @@ class RemoteDependencyTests extends ContractTestHelper {
         });
 
         this.testCase({
+            name: name + "Command name is truncated if too long",
+            test: () => {
+                var urlLength = 2049;
+                var longUrl = "";
+                for (var i = 0; i < urlLength; i++) {
+                    longUrl += "A";
+                }
+
+                var telemetry = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData(
+                    RemoteDependencyTests.id, RemoteDependencyTests.name, longUrl, RemoteDependencyTests.totalTime, RemoteDependencyTests.success, RemoteDependencyTests.resultCode);
+
+                Assert.equal(2048, telemetry.commandName.length, "commandName should be truncated");
+            }
+        });
+
+        this.testCase({
             name: name + "default properties are set correctly",
             test: () => {
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData("", "", "", 0, false, 0);

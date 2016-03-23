@@ -38,7 +38,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
             this.id = id;
             this.name = name;
-            this.commandName = commandName;
+            this.commandName = Common.DataSanitizer.sanitizeUrl(commandName);
             this.value = value;
             this.success = success;  
             this.resultCode = resultCode + "";
