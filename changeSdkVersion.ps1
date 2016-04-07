@@ -15,7 +15,7 @@ $packagesJson = (Get-Content $packageJsonPath -Raw) | ConvertFrom-Json
 $oldVersion = $packagesJson.version;
 
 Write-Host "Current JSSDK version is '$oldVersion'"
-$version = Read-Host "Please enter new version";
+$version = Read-Host "Please enter a new version number";
 
 if (-Not ($version -match "\d+\.\d+\.\d+")) {
     Write-Warning "Invalid version number. Expecting three numbers: Major, Minor and Path (e.g. 1.2.3)"
@@ -68,4 +68,4 @@ git add JavaScript/JavaScriptSDK/AppInsights.ts
 git commit -m "version update $oldVersion -> $version"
 
 Write-Host ""
-Write-Host "Git commit ready. Please review, push and create a pull request on GitHub"
+Write-Host "Git commit ready. Please push and create a pull request on GitHub"

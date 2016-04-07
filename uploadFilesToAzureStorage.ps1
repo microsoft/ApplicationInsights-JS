@@ -17,7 +17,7 @@ $packagesJson = (Get-Content $packageJsonPath -Raw) | ConvertFrom-Json
 $version = $packagesJson.version;
 
 # check if the minified dir exists
-$jssdkMinDir = $jssdkDir + "JavaScript\JavaScriptSDK\min\";
+$jssdkMinDir = Join-Path $jssdkDir -ChildPath "JavaScript\JavaScriptSDK\min\";
 
 if (-Not (Test-Path $jssdkMinDir)) {
     Write-Warning "'$jssdkMinDir' directory doesn't exist. Compile JSSDK first.";
@@ -26,7 +26,7 @@ if (-Not (Test-Path $jssdkMinDir)) {
 
 Write-Host "Preparing js files...";
 
-$releaseFromDir = $jssdkMinDir + $version + "\";
+$releaseFromDir = Join-Path $jssdkMinDir -ChildPath $version;
 $jsFile = "ai.js";
 $jsMinFile = "ai.min.js";
 
@@ -37,10 +37,10 @@ if (Test-Path $releaseFromDir) {
 }
 
 New-Item -ItemType directory -Path $releaseFromDir | Out-Null
-Copy-Item ($jssdkMinDir + "ai.js") ($releaseFromDir + "ai.js")
-Copy-Item ($jssdkMinDir + "ai.js") ($releaseFromDir + "ai." + $version + ".js")
-Copy-Item ($jssdkMinDir + "ai.min.js") ($releaseFromDir + "ai.0.js")
-Copy-Item ($jssdkMinDir + "ai.min.js") ($releaseFromDir + "ai." + $version + ".min.js")
+Copy-Item ($jssdkMinDir + "ai.js") (Join-Path $releaseFromDir -ChildPath "ai.js")
+Copy-Item ($jssdkMinDir + "ai.js") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".js"))
+Copy-Item ($jssdkMinDir + "ai.min.js") (Join-Path $releaseFromDir -ChildPath "ai.0.js")
+Copy-Item ($jssdkMinDir + "ai.min.js") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".min.js"))
 
 Write-Host "Please review files in $releaseFromDir"
 Write-Host "Files will be uploaded to Azure storage! Press any key to continue..."
@@ -55,7 +55,7 @@ $cacheControlValue = "public, max-age=600";
 # upload files to Azure Storage
 $files = Get-ChildItem $releaseFromDir;
 foreach($file in $files) {
-    Set-AzureStorageBlobContent -Container scripts -File ($releaseFromDir + $file) -Blob ("a/"+$file) -Context $azureContext -Properties @{CacheControl = $cacheControlValue; ContentType = "application/x-javascript"} 
+    Set-AzureStorageBlobContent -Container scripts -File (Join-Path $releaseFromDir -ChildPath $file) -Blob ("test/"+$file) -Context $azureContext -Properties @{CacheControl = $cacheControlValue; ContentType = "application/x-javascript"} 
 }
 
 Write-Host "Files uploaded successfully to Azure Storage."
