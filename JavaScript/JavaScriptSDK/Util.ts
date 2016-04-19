@@ -453,7 +453,7 @@ module Microsoft.ApplicationInsights {
 
         public static parseUrl(url): HTMLAnchorElement {
             if (!UrlHelper.htmlAnchorElement) {
-                UrlHelper.htmlAnchorElement = UrlHelper.document.createElement('a');
+                UrlHelper.htmlAnchorElement = !!UrlHelper.document.createElement ? UrlHelper.document.createElement('a'): {};
             }
 
             UrlHelper.htmlAnchorElement.href = url;
