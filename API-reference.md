@@ -384,7 +384,7 @@ Add this code immediately after the initialization snippet that you get from the
                 var telemetryItem = envelope.data.baseData;
 
                 // To check the telemetry item’s type:
-                if (envelope.name == Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType) {
+                if (envelope.name === Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType) {
                     // this statement removes url from all page view documents
                     telemetryItem.url = "URL CENSORED";
                 }
