@@ -10,6 +10,8 @@
 /// <reference path="Context/Sample.ts"/>
 /// <reference path="Context/Session.ts"/>
 /// <reference path="Context/User.ts"/>
+/// <reference path="ajax/ajax.ts"/>
+/// <reference path="./DataLossAnalyzer.ts"/>
 
 interface XDomainRequest extends XMLHttpRequestEventTarget {
     responseText: string;
@@ -20,7 +22,6 @@ interface XDomainRequest extends XMLHttpRequestEventTarget {
 declare var XDomainRequest: {
     prototype: XDomainRequest;
     new (): XDomainRequest;
-    create(): XDomainRequest;
 };
 
 module Microsoft.ApplicationInsights {
@@ -66,7 +67,7 @@ module Microsoft.ApplicationInsights {
         /**
          * A method which will cause data to be send to the url
          */
-        public _sender: (payload: string, isAsync: boolean) => void;
+        public _sender: (payload: string, isAsync: boolean, numberOfItemsInPayload: number) => void;
 
         /**
          * Constructs a new instance of the Sender class
@@ -99,13 +100,13 @@ module Microsoft.ApplicationInsights {
         
                 // validate input
                 if (!envelope) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Cannot send empty telemetry");
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.NONUSRACT_CannotSendEmptyTelemetry, "Cannot send empty telemetry"));
                     return;
                 }
 
                 // ensure a sender was constructed
                 if (!this._sender) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Sender was not initialized");
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.NONUSRACT_SenderNotInitialized, "Sender was not initialized"));
                     return;
                 }
             
@@ -127,8 +128,12 @@ module Microsoft.ApplicationInsights {
                         this.triggerSend();
                     }, this._config.maxBatchInterval());
                 }
+
+                DataLossAnalyzer.incrementItemsQueued();
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedAddingTelemetryToBuffer, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
             }
         }
 
@@ -158,7 +163,7 @@ module Microsoft.ApplicationInsights {
             if (typeof async === 'boolean') {
                 isAsync = async;
             }
-            
+
             try {
                 // Send data only if disableTelemetry is false
                 if (!this._config.disableTelemetry()) {
@@ -170,7 +175,7 @@ module Microsoft.ApplicationInsights {
                             "[" + this._buffer.join(",") + "]";
 
                         // invoke send
-                        this._sender(batch, isAsync);
+                        this._sender(batch, isAsync, this._buffer.length);
                     }
 
                     // update lastSend time to enable throttling
@@ -182,7 +187,11 @@ module Microsoft.ApplicationInsights {
                 clearTimeout(this._timeoutHandle);
                 this._timeoutHandle = null;
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Telemetry transmission failed, some telemetry will be lost: " + Util.dump(e));
+                /* Ignore this error for IE under v10 */
+                if (!Util.getIEVersion() || Util.getIEVersion() > 9) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, "Telemetry transmission failed, some telemetry will be lost: " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }));
+                }
             }
         }
 
@@ -191,12 +200,12 @@ module Microsoft.ApplicationInsights {
          * @param payload {string} - The data payload to be sent.
          * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
          */
-        private _xhrSender(payload: string, isAsync: boolean) {
+        private _xhrSender(payload: string, isAsync: boolean, countOfItemsInPayload: number) {
             var xhr = new XMLHttpRequest();
-            xhr["Microsoft_ApplicationInsights_BypassAjaxInstrumentation"] = true;
+            xhr[AjaxMonitor.DisabledPropertyName] = true;
             xhr.open("POST", this._config.endpointUrl(), isAsync);
             xhr.setRequestHeader("Content-type", "application/json");
-            xhr.onreadystatechange = () => Sender._xhrReadyStateChange(xhr, payload);
+            xhr.onreadystatechange = () => Sender._xhrReadyStateChange(xhr, payload, countOfItemsInPayload);
             xhr.onerror = (event: ErrorEvent) => Sender._onError(payload, xhr.responseText || xhr.response || "", event);
             xhr.send(payload);
         }
@@ -220,12 +229,12 @@ module Microsoft.ApplicationInsights {
         /**
          * xhr state changes
          */
-        public static _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string) {
+        public static _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string, countOfItemsInPayload: number) {
             if (xhr.readyState === 4) {
                 if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
                     Sender._onError(payload, xhr.responseText || xhr.response || "");
                 } else {
-                    Sender._onSuccess(payload);
+                    Sender._onSuccess(payload, countOfItemsInPayload);
                 }
             }
         }
@@ -235,7 +244,7 @@ module Microsoft.ApplicationInsights {
          */
         public static _xdrOnLoad(xdr: XDomainRequest, payload: string) {
             if (xdr && (xdr.responseText + "" === "200" || xdr.responseText === "")) {
-                Sender._onSuccess(payload);
+                Sender._onSuccess(payload, 0);
             } else {
                 Sender._onError(payload, xdr && xdr.responseText || "");
             }
@@ -245,14 +254,15 @@ module Microsoft.ApplicationInsights {
          * error handler
          */
         public static _onError(payload: string, message: string, event?: ErrorEvent) {
-            _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Failed to send telemetry:\n" + message);
+            _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
+                new _InternalLogMessage(_InternalMessageId.NONUSRACT_OnError, "Failed to send telemetry.", { message: message }));
         }
 
         /**
          * success handler
          */
-        public static _onSuccess(payload: string) {
-            // no-op, used in tests
+        public static _onSuccess(payload: string, countOfItemsInPayload: number) {
+            DataLossAnalyzer.decrementItemsQueued(countOfItemsInPayload);
         }
     }
 

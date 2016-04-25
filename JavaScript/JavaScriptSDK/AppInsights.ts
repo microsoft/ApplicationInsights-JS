@@ -2,46 +2,68 @@
 /// <reference path="./Telemetry/Common/Data.ts"/>
 /// <reference path="./Util.ts"/>
 /// <reference path="./Contracts/Generated/SessionState.ts"/>
+/// <reference path="./Telemetry/PageViewManager.ts"/>
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
 /// <reference path="./ajax/ajax.ts"/>
-
+/// <reference path="./DataLossAnalyzer.ts"/>
+/// <reference path="./SplitTest.ts"/>
 
 module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "0.19.1";
+    export var Version = "0.22.9";
 
     export interface IConfig {
         instrumentationKey: string;
         endpointUrl: string;
         emitLineDelimitedJson: boolean;
         accountId: string;
-        appUserId: string;
         sessionRenewalMs: number;
         sessionExpirationMs: number;
         maxBatchSizeInBytes: number;
         maxBatchInterval: number;
         enableDebug: boolean;
-        autoCollectErrors: boolean;
+        disableExceptionTracking: boolean;
         disableTelemetry: boolean;
         verboseLogging: boolean;
         diagnosticLogInterval: number;
         samplingPercentage: number;
         autoTrackPageVisitTime: boolean;
-        autoTrackAjax: boolean;
+        disableAjaxTracking: boolean;
         overridePageViewDuration: boolean;
+        maxAjaxCallsPerView: number;
+        disableDataLossAnalysis: boolean;
+        disableCorrelationHeaders: boolean;
+        disableFlushOnBeforeUnload: boolean;
+        cookieDomain: string;
+    }
+
+    /**
+    * Internal interface to pass appInsights object to subcomponents without coupling 
+    */
+    export interface IAppInsightsInternal {
+        sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object);
+        sendPageViewPerformanceInternal(pageViewPerformance: ApplicationInsights.Telemetry.PageViewPerformance);
+        flush();
     }
 
     /**
      * The main API that sends telemetry to Application Insights.
      * Learn more: http://go.microsoft.com/fwlink/?LinkID=401493
      */
-    export class AppInsights {
+    export class AppInsights implements IAppInsightsInternal {
+
+        // Counts number of trackAjax invokations.
+        // By default we only monitor X ajax call per view to avoid too much load.
+        // Default value is set in config.
+        // This counter keeps increasing even after the limit is reached.
+        private _trackAjaxAttempts: number = 0;
 
         private _eventTracking: Timing;
         private _pageTracking: Timing;
+        private _pageViewManager: Microsoft.ApplicationInsights.Telemetry.PageViewManager;
         private _pageVisitTimeManager: Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager;
 
         public config: IConfig;
@@ -68,7 +90,6 @@ module Microsoft.ApplicationInsights {
             var configGetters: ApplicationInsights.ITelemetryConfig = {
                 instrumentationKey: () => this.config.instrumentationKey,
                 accountId: () => this.config.accountId,
-                appUserId: () => this.config.appUserId,
                 sessionRenewalMs: () => this.config.sessionRenewalMs,
                 sessionExpirationMs: () => this.config.sessionExpirationMs,
                 endpointUrl: () => this.config.endpointUrl,
@@ -76,14 +97,26 @@ module Microsoft.ApplicationInsights {
                 maxBatchSizeInBytes: () => this.config.maxBatchSizeInBytes,
                 maxBatchInterval: () => this.config.maxBatchInterval,
                 disableTelemetry: () => this.config.disableTelemetry,
-                sampleRate: () => this.config.samplingPercentage
+                sampleRate: () => this.config.samplingPercentage,
+                cookieDomain: () => this.config.cookieDomain
             }
-
+            
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
             
+            this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
+
             // initialize event timing
             this._eventTracking = new Timing("trackEvent");
             this._eventTracking.action = (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
+                if (!measurements) {
+                    measurements = { duration: duration };
+                }
+                else {
+                    // do not override existing duration value
+                    if (isNaN(measurements["duration"])) {
+                        measurements["duration"] = duration;
+                    }
+                }
                 var event = new Telemetry.Event(name, properties, measurements);
                 var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Event>(Telemetry.Event.dataType, event);
                 var envelope = new Telemetry.Common.Envelope(data, Telemetry.Event.envelopeType);
@@ -100,17 +133,26 @@ module Microsoft.ApplicationInsights {
             this._pageVisitTimeManager = new ApplicationInsights.Telemetry.PageVisitTimeManager(
                 (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
-            if (this.config.autoTrackAjax) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
+            if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }            
         }
 
-        private sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
+        public sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
             var pageView = new Telemetry.PageView(name, url, duration, properties, measurements);
             var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageView>(Telemetry.PageView.dataType, pageView);
             var envelope = new Telemetry.Common.Envelope(data, Telemetry.PageView.envelopeType);
 
             this.context.track(envelope);
+
+            // reset ajaxes counter
+            this._trackAjaxAttempts = 0;
         }
 
+        public sendPageViewPerformanceInternal(pageViewPerformance: ApplicationInsights.Telemetry.PageViewPerformance) {
+            var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
+                Telemetry.PageViewPerformance.dataType, pageViewPerformance);
+            var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
+            this.context.track(pageViewPerformanceEnvelope);
+        }
 
         /**
          * Starts timing how long the user views a page or other item. Call this when the page opens. 
@@ -125,7 +167,9 @@ module Microsoft.ApplicationInsights {
 
                 this._pageTracking.start(name);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "startTrackPage failed, page view may not be collected: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_StartTrackFailed, "startTrackPage failed, page view may not be collected: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
             }
         }
 
@@ -153,7 +197,9 @@ module Microsoft.ApplicationInsights {
                 }
 
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "stopTrackPage failed, page view will not be collected: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_StopTrackFailed, "stopTrackPage failed, page view will not be collected: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
             }
         }
 
@@ -163,79 +209,23 @@ module Microsoft.ApplicationInsights {
          * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
          * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+         * @param   duration    number - the number of milliseconds it took to load the page. Defaults to undefined. If set to default value, page load time is calculated internally.
          */
-        public trackPageView(name?: string, url?: string, properties?: Object, measurements?: Object) {
+        public trackPageView(name?: string, url?: string, properties?: Object, measurements?: Object, duration?: number) {
             try {
-                // ensure we have valid values for the required fields
-                if (typeof name !== "string") {
-                    name = window.document && window.document.title || "";
-                }
-
-                if (typeof url !== "string") {
-                    url = window.location && window.location.href || "";
-                }
-
-                this.trackPageViewInternal(name, url, properties, measurements);
+                this._pageViewManager.trackPageView(name, url, properties, measurements, duration);
 
                 if (this.config.autoTrackPageVisitTime) {
                     this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
                 }
 
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed, page view will not be collected: " + Util.dump(e));
-            }
-        }
-
-        public trackPageViewInternal(name?: string, url?: string, properties?: Object, measurements?: Object) {
-            if (!Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
-                // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
-                    "trackPageView failed: navigation timing API used for calculation of page duration is not supported in this browser.");
-
-                return;
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_TrackPVFailed, "trackPageView failed, page view will not be collected: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
             }
-
-            var start = Telemetry.PageViewPerformance.getPerformanceTiming().navigationStart;
-
-            if (this.config.overridePageViewDuration) {
-                var duration = Telemetry.PageViewPerformance.getDuration(start, +new Date);
-                this.sendPageViewInternal(name, url, duration, properties, measurements);
-                this.flush();
-            }
-
-            var maxDurationLimit = 60000;
-            var handle = setInterval(() => {
-                try {
-                    if (Telemetry.PageViewPerformance.isPerformanceTimingDataReady()) {
-                        clearInterval(handle);
-                        var pageViewPerformance = new Telemetry.PageViewPerformance(name, url, null, properties, measurements);
-                        
-                        if (pageViewPerformance.getIsValid()) {
-                            if (!this.config.overridePageViewDuration) {
-                                this.sendPageViewInternal(name, url, pageViewPerformance.getDurationMs(), properties, measurements);
-                            }
-
-                            var pageViewPerformanceData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageViewPerformance>(
-                                Telemetry.PageViewPerformance.dataType, pageViewPerformance);
-                            var pageViewPerformanceEnvelope = new Telemetry.Common.Envelope(pageViewPerformanceData, Telemetry.PageViewPerformance.envelopeType);
-                            this.context.track(pageViewPerformanceEnvelope);
-                        }
-
-                        this.flush();
-                    }
-                    else if (Telemetry.PageViewPerformance.getDuration(start, +new Date) > maxDurationLimit) {
-                        clearInterval(handle);
-                        if (!this.config.overridePageViewDuration) {
-                            this.sendPageViewInternal(name, url, maxDurationLimit, properties, measurements);
-                            this.flush();
-                        }
-                    }
-                } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackPageView failed on page load calculation: " + Util.dump(e));
-                }
-            }, 100);
         }
-        
+       
         /**
          * Start timing an extended event. Call {@link stopTrackEvent} to log the event when it ends.
          * @param   name    A string that identifies this event uniquely within the document.
@@ -244,7 +234,9 @@ module Microsoft.ApplicationInsights {
             try {
                 this._eventTracking.start(name);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "startTrackEvent failed, event will not be collected: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_StartTrackEventFailed, "startTrackEvent failed, event will not be collected: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
             }
         }
 
@@ -258,7 +250,9 @@ module Microsoft.ApplicationInsights {
             try {
                 this._eventTracking.stop(name, undefined, properties, measurements);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "stopTrackEvent failed, event will not be collected: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_StopTrackEventFailed, "stopTrackEvent failed, event will not be collected: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
             }
         }
 
@@ -275,16 +269,27 @@ module Microsoft.ApplicationInsights {
                 var envelope = new Telemetry.Common.Envelope(data, Telemetry.Event.envelopeType);
                 this.context.track(envelope);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackEvent failed, event will not be collected: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_TrackEventFailed, "trackEvent failed, event will not be collected: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
             }
         }
 
-        public trackAjax(absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) {
-            var dependency = new Telemetry.RemoteDependencyData(absoluteUrl, isAsync, totalTime, success);
-            var dependencyData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.RemoteDependencyData>(
-                Telemetry.RemoteDependencyData.dataType, dependency);
-            var envelope = new Telemetry.Common.Envelope(dependencyData, "Microsoft.ApplicationInsights." + this.config.instrumentationKey.replace(/-/g, "") + ".RemoteDependency");
-            this.context.track(envelope);
+        public trackAjax(id: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
+            if (this.config.maxAjaxCallsPerView === -1 ||
+                this._trackAjaxAttempts < this.config.maxAjaxCallsPerView) {
+                var dependency = new Telemetry.RemoteDependencyData(id, absoluteUrl, pathName, totalTime, success, resultCode);
+                var dependencyData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.RemoteDependencyData>(
+                    Telemetry.RemoteDependencyData.dataType, dependency);
+                var envelope = new Telemetry.Common.Envelope(dependencyData, ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType);
+                this.context.track(envelope);
+            } else if (this._trackAjaxAttempts === this.config.maxAjaxCallsPerView) {                
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(
+                    _InternalMessageId.USRACT_MaxAjaxPerPVExceeded,
+                    "Maximum ajax per page view limit reached, ajax monitoring is paused until the next trackPageView(). In order to increase the limit set the maxAjaxCallsPerView configuration parameter."));
+            }
+                                    
+            ++this._trackAjaxAttempts;
         }
 
         /**
@@ -309,7 +314,9 @@ module Microsoft.ApplicationInsights {
                 var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
                 this.context.track(envelope);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackException failed, exception will not be collected: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_TrackExceptionFailed, "trackException failed, exception will not be collected: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
             }
         }
 
@@ -331,7 +338,9 @@ module Microsoft.ApplicationInsights {
 
                 this.context.track(envelope);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "trackMetric failed, metric will not be collected: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_TrackMetricFailed, "trackMetric failed, metric will not be collected: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
             }
         }
 
@@ -348,7 +357,9 @@ module Microsoft.ApplicationInsights {
 
                 this.context.track(envelope);
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "trackTrace failed, trace will not be collected: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_TrackTraceFailed, "trackTrace failed, trace will not be collected: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
             }
         }
 
@@ -369,7 +380,9 @@ module Microsoft.ApplicationInsights {
             try {
                 this.context._sender.triggerSend();
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "flush failed, telemetry will not be collected: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FlushFailed, "flush failed, telemetry will not be collected: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
             }
         }
 
@@ -384,7 +397,9 @@ module Microsoft.ApplicationInsights {
             try {
                 this.context.user.setAuthenticatedUserContext(authenticatedUserId, accountId);
             } catch (e) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Setting auth user context failed. " + Util.dump(e));
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING,
+                    new _InternalLogMessage(_InternalMessageId.USRACT_SetAuthContextFailed, "Setting auth user context failed. " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
             }
         }
 
@@ -395,8 +410,10 @@ module Microsoft.ApplicationInsights {
             try {
                 this.context.user.clearAuthenticatedUserContext();
             } catch (e) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Clearing auth user context failed. " + Util.dump(e));
-            }
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING,
+                    new _InternalLogMessage(_InternalMessageId.USRACT_SetAuthContextFailed, "Clearing auth user context failed. " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }));
+            } 
         }
 
         /**
@@ -443,7 +460,9 @@ module Microsoft.ApplicationInsights {
 
                 var exceptionDump: string = Util.dump(exception);
 
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "_onerror threw " + exceptionDump + " while logging error, error will not be collected: " + errorString);
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_ExceptionWhileLoggingError, "_onerror threw exception while logging error, error will not be collected: " + Util.getExceptionName(exception),
+                    { exception: exceptionDump, errorString: errorString }));
             }
         }
 
@@ -467,8 +486,8 @@ module Microsoft.ApplicationInsights {
         public start(name: string) {
             if (typeof this._events[name] !== "undefined") {
                 _InternalLogging.throwInternalUserActionable(
-                    LoggingSeverity.WARNING,
-                    "start" + this._name + " was called more than once for this event without calling stop" + this._name + ". key is '" + name + "'");
+                    LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.USRACT_StartCalledMoreThanOnce, "start was called more than once for this event without calling stop.",
+                        { name: this._name, key: name }));
             }
 
             this._events[name] = +new Date;
@@ -478,8 +497,8 @@ module Microsoft.ApplicationInsights {
             var start = this._events[name];
             if (isNaN(start)) {
                 _InternalLogging.throwInternalUserActionable(
-                    LoggingSeverity.WARNING,
-                    "stop" + this._name + " was called without a corresponding start" + this._name + " . Event name is '" + name + "'");
+                    LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.USRACT_StopCalledWithoutStart, "stop was called without a corresponding start.",
+                        { name: this._name, key: name }));
             } else {
                 var end = +new Date;
                 var duration = Telemetry.PageViewPerformance.getDuration(start, end);

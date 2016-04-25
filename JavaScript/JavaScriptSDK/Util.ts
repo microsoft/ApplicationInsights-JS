@@ -1,6 +1,14 @@
 ﻿/// <reference path="./logging.ts" />
 module Microsoft.ApplicationInsights {
 
+         /**
+         * Type of storage to differentiate between local storage and session storage
+         */
+    enum StorageType {
+        LocalStorage,
+        SessionStorage
+    }
+
     export class Util {
         private static document: any = typeof document !== "undefined" ? document : {};
         public static NotSpecified = "not_specified";
@@ -9,17 +17,34 @@ module Microsoft.ApplicationInsights {
          * Gets the localStorage object if available
          * @return {Storage} - Returns the storage object if available else returns null
          */
-        private static _getStorageObject(): Storage {
+        private static _getLocalStorageObject(): Storage {
+            return Util._getVerifiedStorageObject(StorageType.LocalStorage);
+        }
+
+        /**
+         * Tests storage object (localStorage or sessionStorage) to verify that it is usable
+         * More details here: https://mathiasbynens.be/notes/localstorage-pattern
+         * @param storageType Type of storage
+         * @return {Storage} Returns storage object verified that it is usable
+         */
+        private static _getVerifiedStorageObject(storageType: StorageType): Storage {
+            var storage: Storage = null;
+            var fail: boolean;
+            var uid;
             try {
-                if (window.localStorage) {
-                    return window.localStorage;
-                } else {
-                    return null;
-                }   
-            } catch (e) {
-                _InternalLogging.warnToConsole('Failed to get client localStorage: ' + e.message);
-                return null;
+                uid = new Date;
+                storage = storageType === StorageType.LocalStorage ? window.localStorage : window.sessionStorage;
+                storage.setItem(uid, uid);
+                fail = storage.getItem(uid) != uid;
+                storage.removeItem(uid);
+                if (fail) {
+                    storage = null;
+                }
+            } catch (exception) {
+                storage = null;
             }
+
+            return storage;
         }
 
         /**
@@ -28,7 +53,7 @@ module Microsoft.ApplicationInsights {
          *  @returns {boolean} True if local storage is supported.
          */
         public static canUseLocalStorage(): boolean {
-            return !!Util._getStorageObject();
+            return !!Util._getLocalStorageObject();
         }
 
         /**
@@ -37,13 +62,18 @@ module Microsoft.ApplicationInsights {
          *  @param {string} name - the name of the object to get from storage
          *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
          */
-        public static getStorage(name:string):string {
-            var storage = Util._getStorageObject();
+        public static getStorage(name: string): string {
+            var storage = Util._getLocalStorageObject();
             if (storage !== null) {
                 try {
                     return storage.getItem(name);
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed read of local storage." + Util.dump(e));
+                    var message = new _InternalLogMessage(
+                        _InternalMessageId.NONUSRACT_BrowserCannotReadLocalStorage,
+                        "Browser failed read of local storage. " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }
+                    );
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
                 }
             }
             return null;
@@ -56,14 +86,19 @@ module Microsoft.ApplicationInsights {
          *  @param {string} data - the contents of the object to set in storage
          *  @returns {boolean} True if the storage object could be written.
          */
-        public static setStorage(name:string, data:string):boolean {
-            var storage = Util._getStorageObject();
+        public static setStorage(name: string, data: string): boolean {
+            var storage = Util._getLocalStorageObject();
             if (storage !== null) {
                 try {
                     storage.setItem(name, data);
                     return true;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed write to local storage." + Util.dump(e));
+                    var message = new _InternalLogMessage(
+                        _InternalMessageId.NONUSRACT_BrowserCannotWriteLocalStorage,
+                        "Browser failed write to local storage. " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }
+                    );
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
                 }
             }
             return false;
@@ -75,34 +110,30 @@ module Microsoft.ApplicationInsights {
          *  @param {string} name - the name of the object to remove from storage
          *  @returns {boolean} True if the storage object could be removed.
          */
-        public static removeStorage(name: string):boolean {
-            var storage = Util._getStorageObject();
+        public static removeStorage(name: string): boolean {
+            var storage = Util._getLocalStorageObject();
             if (storage !== null) {
                 try {
                     storage.removeItem(name);
                     return true;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser failed removal of local storage item." + Util.dump(e));
+                    var message = new _InternalLogMessage(
+                        _InternalMessageId.NONUSRACT_BrowserFailedRemovalFromLocalStorage,
+                        "Browser failed removal of local storage item. " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }
+                    );
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
                 }
             }
             return false;
         }
 
         /**
-         * Gets the localStorage object if available
+         * Gets the sessionStorage object if available
          * @return {Storage} - Returns the storage object if available else returns null
          */
         private static _getSessionStorageObject(): Storage {
-            try {
-                if (window.sessionStorage) {
-                    return window.sessionStorage;
-                } else {
-                    return null;
-                }
-            } catch (e) {
-                _InternalLogging.warnToConsole('Failed to get client session storage: ' + e.message);
-                return null;
-            }
+            return Util._getVerifiedStorageObject(StorageType.SessionStorage);
         }
 
         /**
@@ -112,6 +143,22 @@ module Microsoft.ApplicationInsights {
          */
         public static canUseSessionStorage(): boolean {
             return !!Util._getSessionStorageObject();
+        }
+
+        /**
+         *  Gets the list of session storage keys
+         *
+         *  @returns {string[]} List of session storage keys
+         */
+        public static getSessionStorageKeys(): string[] {
+            var keys = [];
+
+            if (Util.canUseSessionStorage()) {
+                for (var key in window.sessionStorage) {
+                    keys.push(key);
+                }
+            }
+            return keys;
         }
 
         /**
@@ -126,7 +173,12 @@ module Microsoft.ApplicationInsights {
                 try {
                     return storage.getItem(name);
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed read of session storage." + Util.dump(e));
+                    var message = new _InternalLogMessage(
+                        _InternalMessageId.NONUSRACT_BrowserCannotReadSessionStorage,
+                        "Browser failed read of session storage. " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }
+                    );
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, message);
                 }
             }
             return null;
@@ -146,7 +198,12 @@ module Microsoft.ApplicationInsights {
                     storage.setItem(name, data);
                     return true;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed write to session storage." + Util.dump(e));
+                    var message = new _InternalLogMessage(
+                        _InternalMessageId.NONUSRACT_BrowserCannotWriteSessionStorage,
+                        "Browser failed write to session storage. " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }
+                    );
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, message);
                 }
             }
             return false;
@@ -165,7 +222,12 @@ module Microsoft.ApplicationInsights {
                     storage.removeItem(name);
                     return true;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Browser failed removal of session storage item." + Util.dump(e));
+                    var message = new _InternalLogMessage(
+                        _InternalMessageId.NONUSRACT_BrowserFailedRemovalFromSessionStorage,
+                        "Browser failed removal of session storage item. " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }
+                    );
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, message);
                 }
             }
             return false;
@@ -174,8 +236,14 @@ module Microsoft.ApplicationInsights {
         /**
          * helper method to set userId and sessionId cookie
          */
-        public static setCookie(name, value) {
-            Util.document.cookie = name + "=" + value + ";path=/";
+        public static setCookie(name, value, domain?) {
+            var domainAttrib = "";
+
+            if (domain) {
+                domainAttrib = ";domain=" + domain;
+            }
+
+            Util.document.cookie = name + "=" + value + domainAttrib + ";path=/";
         }
 
         public static stringToBoolOrDefault(str: any): boolean {
@@ -225,21 +293,20 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
-         * generate GUID
+         * generate random id string
          */
-        public static newGuid() {
-            var hexValues = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"];
+        public static newId(): string {
+            var base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
-            // c.f. rfc4122 (UUID version 4 = xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx)
-            var oct = "", tmp;
-            for (var a = 0; a < 4; a++) {
-                tmp = (4294967296 * Math.random()) | 0;
-                oct += hexValues[tmp & 0xF] + hexValues[tmp >> 4 & 0xF] + hexValues[tmp >> 8 & 0xF] + hexValues[tmp >> 12 & 0xF] + hexValues[tmp >> 16 & 0xF] + hexValues[tmp >> 20 & 0xF] + hexValues[tmp >> 24 & 0xF] + hexValues[tmp >> 28 & 0xF];
+            var result = "";
+            var random = Math.random() * 1073741824; //5 symbols in base64, almost maxint
+
+            while (random > 0) {
+                var char = base64chars.charAt(random % 64);
+                result += char;
+                random = Math.floor(random / 64);
             }
-
-            // "Set the two most significant bits (bits 6 and 7) of the clock_seq_hi_and_reserved to zero and one, respectively"
-            var clockSequenceHi = hexValues[8 + (Math.random() * 4) | 0];
-            return oct.substr(0, 8) + "-" + oct.substr(9, 4) + "-4" + oct.substr(13, 3) + "-" + clockSequenceHi + oct.substr(16, 3) + "-" + oct.substr(19, 12);
+            return result;
         }
 
         /**
@@ -293,6 +360,14 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
+         * Gets IE version if we are running on IE, or null otherwise
+         */
+        public static getIEVersion(userAgentStr: string = null): number {
+            var myNav = userAgentStr ? userAgentStr.toLowerCase() : navigator.userAgent.toLowerCase();
+            return (myNav.indexOf('msie') != -1) ? parseInt(myNav.split('msie')[1]) : null;
+        }
+
+        /**
          * Convert ms to c# time span format
          */
         public static msToTimeSpan(totalms: number): string {
@@ -318,11 +393,7 @@ module Microsoft.ApplicationInsights {
         * happens in a script from other domain (cross origin, CORS).		
         */
         public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
-            return (message == "Script error." || message == "Script error")
-                && url == ""
-                && lineNumber == 0
-                && columnNumber == 0
-                && error == null;
+            return (message === "Script error." || message === "Script error") && error === null;
         }
 
         /**
@@ -337,7 +408,18 @@ module Microsoft.ApplicationInsights {
 
             return objectTypeDump + propertyValueDump;
         }
-        
+
+        /**
+        * Returns the name of object if it's an Error. Otherwise, returns empty string.
+        */
+        public static getExceptionName(object: any): string {
+            var objectTypeDump: string = Object.prototype.toString.call(object);
+            if (objectTypeDump === "[object Error]") {
+                return object.name;
+            }
+            return "";
+        }
+
         /**
          * Adds an event handler for the specified event
          * @param eventName {string} - The name of the event
@@ -360,8 +442,43 @@ module Microsoft.ApplicationInsights {
             } else { // if all else fails
                 return false;
             }
-            
+
             return true;
+        }
+    }
+
+    export class UrlHelper {
+        private static document: any = typeof document !== "undefined" ? document : {};
+        private static htmlAnchorElement: HTMLAnchorElement;
+
+        public static parseUrl(url): HTMLAnchorElement {
+            if (!UrlHelper.htmlAnchorElement) {
+                UrlHelper.htmlAnchorElement = !!UrlHelper.document.createElement ? UrlHelper.document.createElement('a'): {};
+            }
+
+            UrlHelper.htmlAnchorElement.href = url;
+
+            return UrlHelper.htmlAnchorElement;
+        }
+
+        public static getAbsoluteUrl(url): string {
+            var result: string;
+            var a = UrlHelper.parseUrl(url);
+            if (a) {
+                result = a.href;
+            }
+
+            return result;
+        }
+
+        public static getPathName(url): string {
+            var result: string;
+            var a = UrlHelper.parseUrl(url);
+            if (a) {
+                result = a.pathname;
+            }
+
+            return result;
         }
     }
 }

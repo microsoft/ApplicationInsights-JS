@@ -36,7 +36,7 @@ In a web page where you have [set up web page tracking](https://azure.microsoft.
 
 ### trackPageView
 
-    trackPageView(name?: string, url?: string, properties?:{[string]:string}, measurements?: {[string]:number})
+    trackPageView(name?: string, url?: string, properties?:{[string]:string}, measurements?: {[string]:number}, duration?: number)
 
 Logs that a page or similar container was displayed to the user. 
 
@@ -47,10 +47,34 @@ Logs that a page or similar container was displayed to the user.
 `url` |  A relative or absolute URL that identifies the page or similar item. Defaults to the window location.
 `properties` | Map of string to string: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 `measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+`duration` | The number of milliseconds it took to load this page, displayed in Metrics Explorer on the portal. Defaults to empty. If empty, end of page view duration is recorded when browser page load event is called.
 
 The standard snippet that you get from the portal includes a call to trackPageView. If you insert your own calls, consider
 removing this default. An example where you might write your own calls is where your app is a single HTML page that has multiple
 tabs, and you want to log a page view when each tab opens.
+
+### startTrackPage
+
+    startTrackPage(name?: string)
+    
+Starts the timer for tracking a page view. Use this instead of ```trackPageView``` if you want to control when the page view timer starts and stops, but don't want to calculate the duration yourself. This method doesn't send any telemetry. Call ```stopTrackPage``` to log the end of the page view and send the event.
+
+ | |
+---|---|---
+`name` | The name used to identify the page in the portal. Defaults to the document title.
+
+### stopTrackPage
+
+    stopTrackPage(name?: string, url?: string, properties?: Object, measurements?: Object)
+
+Stops the timer that was started by calling ```startTrackPage``` and sends the page view telemetry with the specified properties and measurements. The duration of the page view will be the time between calling ```startTrackPage``` and ```stopTrackPage```.
+
+ | |
+---|---|---
+`name` | The name used to identify the page in the portal. Defaults to the document title.
+`url` |  A relative or absolute URL that identifies the page or similar item. Defaults to the window location.
+`properties` | Map of string to string: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
+`measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
 
 ### trackEvent
 
@@ -175,7 +199,6 @@ Values that control how the telemetry data is sent.
         endpointUrl: string;
         
         accountId: string;
-        appUserId: string;
         
         // A session is logged if the user is inactive for this time in milliseconds. Default 30 mins.
         sessionRenewalMs: number; 
@@ -202,6 +225,24 @@ Values that control how the telemetry data is sent.
         
         // Default 10s:
         diagnosticLogInterval: number;
+        
+        // If true, exceptions are not monitored. 
+        disableExceptionTracking: boolean;
+        
+        // If true, ajax calls are not monitored.
+        disableAjaxTracking: boolean;
+        
+        // If true, default behavior of trackPageView is changed to record end of page view duration interval when 
+        // trackPageView is called. If false and no custom duration is provided to trackPageView, the page view
+        // performance is calculated using the navigation timing API.
+        overridePageViewDuration: boolean;
+        
+        // Default 500 - controls how many ajax calls will be monitored per page view.
+        // Set to -1 to monitor all ajax calls on the page.
+        maxAjaxCallsPerView: number;
+        
+        // Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains.
+        cookieDomain: string;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.
@@ -322,10 +363,13 @@ Sends telemetry to the endpoint.
 
 ### addTelemetryInitializer
 
-        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => void)
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => boolean)
 
 Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
-before telemetry item is pushed for sending and in the order they were added.
+before telemetry item is pushed for sending and in the order they were added. 
+If one of telemetry initializers returns false then telemetry item will not be sent.
+If one of telemetry initializers throws an error then telemetry item will not be sent.
+
 
 #### Example
 
@@ -340,7 +384,7 @@ Add this code immediately after the initialization snippet that you get from the
                 var telemetryItem = envelope.data.baseData;
 
                 // To check the telemetry item’s type:
-                if (envelope.name == Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType) {
+                if (envelope.name === Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType) {
                     // this statement removes url from all page view documents
                     telemetryItem.url = "URL CENSORED";
                 }

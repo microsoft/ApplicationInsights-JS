@@ -89,10 +89,12 @@ module Microsoft.ApplicationInsights {
                     delete this.snippet.queue;
                 }
             } catch (exception) {
-                var message = "Failed to send queued telemetry";
+                var properties: any = {};
                 if (exception && typeof exception.toString === "function") {
-                    message += ": " + exception.toString();
+                    properties.exception = exception.toString();
                 }
+                var message = new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToSendQueuedTelemetry, "Failed to send queued telemetry", properties);
+
 
                 Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
             }
@@ -100,10 +102,10 @@ module Microsoft.ApplicationInsights {
 
         public pollInteralLogs(appInsightsInstance: AppInsights) {
             return setInterval(() => {
-                var queue: Array<string> = Microsoft.ApplicationInsights._InternalLogging.queue;
+                var queue: Array<_InternalLogMessage> = Microsoft.ApplicationInsights._InternalLogging.queue;
                 var length = queue.length;
                 for (var i = 0; i < length; i++) {
-                    appInsightsInstance.trackTrace(queue[i]);
+                    appInsightsInstance.trackTrace(queue[i].message);
                 }
                 queue.length = 0;
             }, this.config.diagnosticLogInterval);
@@ -112,7 +114,7 @@ module Microsoft.ApplicationInsights {
         public addHousekeepingBeforeUnload(appInsightsInstance: AppInsights): void {
             // Add callback to push events when the user navigates away
 
-            if ('onbeforeunload' in window) {
+            if (!appInsightsInstance.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
                 var performHousekeeping = function () {
                     // Adds the ability to flush all data before the page unloads.
                     // Note: This approach tries to push an async request with all the pending events onbeforeunload.
@@ -128,7 +130,8 @@ module Microsoft.ApplicationInsights {
                 };
 
                 if (!Microsoft.ApplicationInsights.Util.addEventHandler('beforeunload', performHousekeeping)) {
-                    Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 'Could not add handler for beforeunload');
+                    Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL,
+                        new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToAddHandlerForOnBeforeUnload, 'Could not add handler for beforeunload'));
                 }
             }
         }
@@ -140,16 +143,14 @@ module Microsoft.ApplicationInsights {
 
             // set default values
             config.endpointUrl = config.endpointUrl || "//dc.services.visualstudio.com/v2/track";
-            config.accountId = config.accountId;
-            config.appUserId = config.appUserId;
             config.sessionRenewalMs = 30 * 60 * 1000;
             config.sessionExpirationMs = 24 * 60 * 60 * 1000;
             config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 1000000;
             config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
             config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
-            config.autoCollectErrors = (config.autoCollectErrors !== undefined && config.autoCollectErrors !== null) ?
-                Util.stringToBoolOrDefault(config.autoCollectErrors) :
-                true;
+            config.disableExceptionTracking = (config.disableExceptionTracking !== undefined && config.disableExceptionTracking !== null) ?
+                Util.stringToBoolOrDefault(config.disableExceptionTracking) :
+                false;
             config.disableTelemetry = Util.stringToBoolOrDefault(config.disableTelemetry);
             config.verboseLogging = Util.stringToBoolOrDefault(config.verboseLogging);
             config.emitLineDelimitedJson = Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
@@ -160,10 +161,19 @@ module Microsoft.ApplicationInsights {
                 config.samplingPercentage = 100;
             }
 
-            config.autoTrackAjax = (config.autoTrackAjax !== undefined && config.autoTrackAjax !== null) ?
-                Util.stringToBoolOrDefault(config.autoTrackAjax) :
+            config.disableAjaxTracking = (config.disableAjaxTracking !== undefined && config.disableAjaxTracking !== null) ?
+                Util.stringToBoolOrDefault(config.disableAjaxTracking) :
                 false;
 
+            config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
+            config.disableCorrelationHeaders = (config.disableCorrelationHeaders !== undefined && config.disableCorrelationHeaders !== null) ?
+                Util.stringToBoolOrDefault(config.disableCorrelationHeaders) :
+                true;
+
+            config.disableFlushOnBeforeUnload = (config.disableFlushOnBeforeUnload !== undefined && config.disableFlushOnBeforeUnload !== null) ?
+                Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload) :
+                false;
+           
             return config;
         }
     }

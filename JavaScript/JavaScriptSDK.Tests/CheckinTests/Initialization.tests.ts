@@ -15,20 +15,24 @@ class InitializationTests extends TestClass {
             endpointUrl: "//dc.services.visualstudio.com/v2/track",
             emitLineDelimitedJson: false,
             accountId: undefined,
-            appUserId: undefined,
             sessionRenewalMs: 10,
             sessionExpirationMs: 10,
             maxBatchSizeInBytes: 1000000,
             maxBatchInterval: 1,
             enableDebug: true,
-            autoCollectErrors: false,
+            disableExceptionTracking: false,
             disableTelemetry: false,
             verboseLogging: true,
             diagnosticLogInterval: 1,
             autoTrackPageVisitTime: false,
             samplingPercentage: 33,
-            autoTrackAjax: false,
-            overridePageViewDuration: false
+            disableAjaxTracking: true,
+            overridePageViewDuration: false,
+            maxAjaxCallsPerView: 44,
+            disableDataLossAnalysis: true,
+            disableCorrelationHeaders: false,
+            disableFlushOnBeforeUnload: false,
+            cookieDomain: undefined
         };
 
         // set default values
@@ -59,17 +63,17 @@ class InitializationTests extends TestClass {
                     instrumentationKey: "ffffffff-ffff - ffff - ffff - ffffffffffff",
                     endpointUrl: undefined,
                     accountId: undefined,
-                    appUserId: undefined,
                     sessionRenewalMs: undefined,
                     sessionExpirationMs: undefined,
                     maxBatchSizeInBytes: undefined,
                     maxBatchInterval: undefined,
                     enableDebug: undefined,
-                    autoCollectErrors: undefined,
+                    disableExceptionTracking: undefined,
                     disableTelemetry: undefined,
                     verboseLogging: undefined,
                     diagnosticLogInterval: undefined,
-                    samplingPercentage: undefined
+                    samplingPercentage: undefined,
+                    maxAjaxCallsPerView: undefined
                 };
 
                 var snippet = <Microsoft.ApplicationInsights.Snippet> {
@@ -85,11 +89,12 @@ class InitializationTests extends TestClass {
                 Assert.equal(1000000, init.config.maxBatchSizeInBytes);
                 Assert.equal(15000, init.config.maxBatchInterval);
                 Assert.ok(!init.config.enableDebug);
-                Assert.ok(init.config.autoCollectErrors);
+                Assert.ok(!init.config.disableExceptionTracking);
                 Assert.equal(15000, init.config.maxBatchInterval);
                 Assert.ok(!init.config.verboseLogging);
                 Assert.equal(10000, init.config.diagnosticLogInterval);
                 Assert.equal(100, init.config.samplingPercentage);
+                Assert.equal(500, init.config.maxAjaxCallsPerView);
             }
         });
 
@@ -111,11 +116,12 @@ class InitializationTests extends TestClass {
                 Assert.equal(userConfig.maxBatchSizeInBytes, init.config.maxBatchSizeInBytes);
                 Assert.equal(userConfig.maxBatchInterval, init.config.maxBatchInterval);
                 Assert.ok(init.config.enableDebug);
-                Assert.ok(!init.config.autoCollectErrors);
+                Assert.ok(!init.config.disableExceptionTracking);
                 Assert.equal(1, init.config.maxBatchInterval);
                 Assert.ok(init.config.verboseLogging);
                 Assert.equal(1, init.config.diagnosticLogInterval);
                 Assert.equal(33, init.config.samplingPercentage);
+                Assert.equal(44, init.config.maxAjaxCallsPerView);
             }
         });
 
@@ -160,15 +166,15 @@ class InitializationTests extends TestClass {
 
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
                 var appInsightsLocal = init.loadAppInsights();
-                var trackTraceSpy = sinon.stub(appInsightsLocal, "trackTrace");
+                var trackTraceSpy = this.sandbox.stub(appInsightsLocal, "trackTrace");
 
-                var queue: Array<string> = Microsoft.ApplicationInsights._InternalLogging["queue"];
+                var queue: Array<Microsoft.ApplicationInsights._InternalLogMessage> = Microsoft.ApplicationInsights._InternalLogging["queue"];
                 var length = queue.length;
                 for (var i = 0; i < length; i++) {
                     queue.shift();
                 }
-                queue.push("Hello1");
-                queue.push("Hello2");
+                queue.push(new Microsoft.ApplicationInsights._InternalLogMessage(1, "Hello1"));
+                queue.push(new Microsoft.ApplicationInsights._InternalLogMessage(2, "Hello2"));
 
                 init.loadAppInsights();
                 var poller = init.pollInteralLogs(appInsightsLocal);
@@ -182,7 +188,7 @@ class InitializationTests extends TestClass {
 
                 clearInterval(poller);
 
-                trackTraceSpy.restore();
+                
                 
             }
         });
@@ -194,7 +200,7 @@ class InitializationTests extends TestClass {
 
                 var userConfig = {
                     enableDebug: "false",
-                    autoCollectErrors: "false",
+                    disableExceptionTracking: "false",
                     disableTelemetry: "false",
                     verboseLogging: "false",
                     emitLineDelimitedJson: "false",
@@ -203,7 +209,7 @@ class InitializationTests extends TestClass {
                 var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>userConfig);
 
                 Assert.ok(!config.enableDebug);
-                Assert.ok(!config.autoCollectErrors);
+                Assert.ok(!config.disableExceptionTracking);
                 Assert.ok(!config.disableTelemetry);
                 Assert.ok(!config.verboseLogging);
                 Assert.ok(!config.emitLineDelimitedJson);
@@ -216,7 +222,7 @@ class InitializationTests extends TestClass {
 
                 var userConfig = {
                     enableDebug: "true",
-                    autoCollectErrors: "true",
+                    disableExceptionTracking: "true",
                     disableTelemetry: "true",
                     verboseLogging: "true",
                     emitLineDelimitedJson: "true",
@@ -225,7 +231,7 @@ class InitializationTests extends TestClass {
                 var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>userConfig);
 
                 Assert.ok(config.enableDebug);
-                Assert.ok(config.autoCollectErrors);
+                Assert.ok(config.disableExceptionTracking);
                 Assert.ok(config.disableTelemetry);
                 Assert.ok(config.verboseLogging);
                 Assert.ok(config.emitLineDelimitedJson);
@@ -241,7 +247,7 @@ class InitializationTests extends TestClass {
                     config: userConfig,
                     queue: []
                 };
-                var addEventHandlerStub = sinon.stub(Microsoft.ApplicationInsights.Util, 'addEventHandler').returns(true);
+                var addEventHandlerStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, 'addEventHandler').returns(true);
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
                 var appInsightsLocal = init.loadAppInsights();
                 
@@ -252,6 +258,28 @@ class InitializationTests extends TestClass {
                 Assert.ok(addEventHandlerStub.calledOnce);
                 Assert.equal(addEventHandlerStub.getCall(0).args[0], 'beforeunload');
                 Assert.ok(addEventHandlerStub.getCall(0).args[1] !== undefined, 'addEventHandler was called with undefined callback');
+            }
+        });
+
+        this.testCase({
+            name: "InitializationTests: disableFlushOnBeforeUnload switch works",
+            test: () => {
+                // Assemble
+                var userConfig = this.getAppInsightsSnippet();
+                userConfig.disableFlushOnBeforeUnload = true;
+                var snippet = <Microsoft.ApplicationInsights.Snippet>{
+                    config: userConfig,
+                    queue: []
+                };
+                var addEventHandlerStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, 'addEventHandler').returns(true);
+                var init = new Microsoft.ApplicationInsights.Initialization(snippet);
+                var appInsightsLocal = init.loadAppInsights();
+                
+                // Act
+                init.addHousekeepingBeforeUnload(appInsightsLocal);
+                
+                // Assert
+                Assert.ok(addEventHandlerStub.notCalled);                
             }
         });
     }

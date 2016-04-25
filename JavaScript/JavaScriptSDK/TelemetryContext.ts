@@ -5,7 +5,6 @@
 /// <reference path="telemetry/metric.ts" />
 /// <reference path="telemetry/pageview.ts" />
 /// <reference path="telemetry/pageviewperformance.ts" />
-/// <reference path="telemetry/SessionTelemetry.ts" />
 /// <reference path="./Util.ts"/>
 /// <reference path="./Contracts/Generated/SessionState.ts"/>
 
@@ -18,6 +17,8 @@ module Microsoft.ApplicationInsights {
         sessionRenewalMs: () => number;
         sessionExpirationMs: () => number;
         sampleRate: () => number;
+        endpointUrl: () => string;
+        cookieDomain: () => string;
     }
 
     export class TelemetryContext {
@@ -68,7 +69,7 @@ module Microsoft.ApplicationInsights {
         /**
         * The array of telemetry initializers to call before sending each telemetry item.
         */
-        private telemetryInitializers: { (envelope: Telemetry.Common.Envelope): void; }[];
+        private telemetryInitializers: { (envelope: Telemetry.Common.Envelope): boolean; }[];
 
         /**
          * The session manager that manages session on the base of cookies.
@@ -78,16 +79,15 @@ module Microsoft.ApplicationInsights {
         constructor(config: ITelemetryConfig) {
             this._config = config;
             this._sender = new Sender(config);
+
             // window will be undefined in node.js where we do not want to initialize contexts
             if (typeof window !== 'undefined') {
-                this._sessionManager = new ApplicationInsights.Context._SessionManager(
-                    config,
-                    (sessionState, timestamp) => TelemetryContext._sessionHandler(this, sessionState, timestamp));
+                this._sessionManager = new ApplicationInsights.Context._SessionManager(config);
                 this.application = new Context.Application();
                 this.device = new Context.Device();
                 this.internal = new Context.Internal();
                 this.location = new Context.Location();
-                this.user = new Context.User(config.accountId());
+                this.user = new Context.User(config);
                 this.operation = new Context.Operation();
                 this.session = new Context.Session();
                 this.sample = new Context.Sample(config.sampleRate());
@@ -98,7 +98,7 @@ module Microsoft.ApplicationInsights {
         * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
         * before telemetry item is pushed for sending and in the order they were added.
         */
-        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => void) {
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => boolean) {
             this.telemetryInitializers = this.telemetryInitializers || [];
             this.telemetryInitializers.push(telemetryInitializer);
         }
@@ -108,7 +108,7 @@ module Microsoft.ApplicationInsights {
          */
         public track(envelope: Telemetry.Common.Envelope) {
             if (!envelope) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, "cannot call .track() with a null or undefined argument");
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.USRACT_TrackArgumentsNotSpecified, "cannot call .track() with a null or undefined argument"));
             } else {
                 // If the envelope is PageView, reset the internal message count so that we can send internal telemetry for the new page.
                 if (envelope.name === Telemetry.PageView.envelopeType) {
@@ -149,46 +149,39 @@ module Microsoft.ApplicationInsights {
 
             envelope.iKey = this._config.instrumentationKey();
 
-            var telemetryInitializersFailed = false;
+            var doNotSendItem = false;
             try {
                 this.telemetryInitializers = this.telemetryInitializers || [];
                 var telemetryInitializersCount = this.telemetryInitializers.length;
                 for (var i = 0; i < telemetryInitializersCount; ++i) {
                     var telemetryInitializer = this.telemetryInitializers[i];
                     if (telemetryInitializer) {
-                        telemetryInitializer.apply(null, [envelope]);
+                        if (telemetryInitializer.apply(null, [envelope]) === false) {
+                            doNotSendItem = true;
+                            break;
+                        }
                     }
                 }
             } catch (e) {
-                telemetryInitializersFailed = true;
+                doNotSendItem = true;
                 _InternalLogging.throwInternalUserActionable(
-                    LoggingSeverity.CRITICAL,
-                    "One of telemetry initializers failed, telemetry item will not be sent: " + Util.dump(e));
+                    LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.USRACT_TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }));
             }
 
-            if (!telemetryInitializersFailed) {
-                if (envelope.name === Telemetry.SessionTelemetry.envelopeType ||
-                    envelope.name === Telemetry.Metric.envelopeType ||
+            if (!doNotSendItem) {
+                if (envelope.name === Telemetry.Metric.envelopeType ||
                     this.sample.isSampledIn(envelope)) {
+                    var iKeyNoDashes = this._config.instrumentationKey().replace(/-/g, "");
+                    envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
                     this._sender.send(envelope);
                 } else {
-                    _InternalLogging.logInternalMessage(LoggingSeverity.WARNING,
-                        "Telemetry is sampled and not sent to the AI service. SampleRate is " + this.sample.sampleRate);
+                    _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_TelemetrySampledAndNotSent,
+                        "Telemetry is sampled and not sent to the AI service.", { SampleRate: this.sample.sampleRate }));
                 }
             }
 
             return envelope;
-        }
-
-        private static _sessionHandler(tc: TelemetryContext, sessionState: AI.SessionState, timestamp: number) {
-
-            var sessionStateTelemetry = new Telemetry.SessionTelemetry(sessionState);
-            var sessionStateData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.SessionTelemetry>(Telemetry.SessionTelemetry.dataType, sessionStateTelemetry);
-            var sessionStateEnvelope = new Telemetry.Common.Envelope(sessionStateData, Telemetry.SessionTelemetry.envelopeType);
-
-            sessionStateEnvelope.time = Util.toISOStringForIE8(new Date(timestamp));
-
-            tc._track(sessionStateEnvelope);
         }
 
         private _applyApplicationContext(envelope: Microsoft.Telemetry.Envelope, appContext: Microsoft.ApplicationInsights.Context.Application) {
@@ -288,7 +281,7 @@ module Microsoft.ApplicationInsights {
 
         private _applySampleContext(envelope: Microsoft.Telemetry.Envelope, sampleContext: Microsoft.ApplicationInsights.Context.Sample) {
             if (sampleContext) {
-                envelope.sampleRate = sampleContext.sampleRate;                
+                envelope.sampleRate = sampleContext.sampleRate;
             }
         }
 
@@ -307,9 +300,6 @@ module Microsoft.ApplicationInsights {
         private _applyUserContext(envelope: Microsoft.Telemetry.Envelope, userContext: Microsoft.ApplicationInsights.Context.User) {
             if (userContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
-                if (typeof userContext.accountAcquisitionDate === "string") {
-                    envelope.tags[tagKeys.userAccountAcquisitionDate] = userContext.accountAcquisitionDate;
-                }
                 if (typeof userContext.accountId === "string") {
                     envelope.tags[tagKeys.userAccountId] = userContext.accountId;
                 }

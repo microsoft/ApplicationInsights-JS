@@ -111,14 +111,44 @@ class SampleContextTests extends TestClass {
                 envelope1.tags[contextKeys.userId] = null;
                 envelope1.tags[contextKeys.operationId] = null;
 
-                var mathRandomSpy = sinon.spy(Math, "random");
+                var mathRandomSpy = this.sandbox.spy(Math, "random");
 
                 // act
                 sample.isSampledIn(envelope1);
 
                 // assert
                 Assert.ok(mathRandomSpy.calledOnce);
-                mathRandomSpy.restore();
+                
+            }
+        });
+
+        this.testCase({
+            name: "Sampling: actual sampling rate should fall into 5% error range",
+            test: () => {
+                // setup
+                var errorRange = 5;
+                var totalItems = 1000;
+                var ids = [];                
+                for (var i = 0; i < totalItems; ++i) {
+                    ids.push(Microsoft.ApplicationInsights.Util.newId());
+                }
+
+                var sampleRates = [50, 33, 25, 20, 16, 10];
+
+                // act
+                sampleRates.forEach((sampleRate) => {
+                    var sut = new Microsoft.ApplicationInsights.HashCodeScoreGenerator();
+                    var countOfSampledItems = 0;
+                    
+                    ids.forEach(function (id) {
+                        if (sut.getHashCodeScore(id) < sampleRate)++countOfSampledItems;
+                    });
+
+                    // Assert
+                    var actualSampleRate = 100 * countOfSampledItems / totalItems;
+                    Assert.ok(Math.abs(actualSampleRate - sampleRate) < errorRange,
+                        "Actual sampling (" + actualSampleRate + ") does not fall into +-2% range from expected rate (" + sampleRate + ")");
+                });
             }
         });
     }

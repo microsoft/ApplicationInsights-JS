@@ -9,18 +9,12 @@ class PageVisitTimeManagerTests extends TestClass {
     /** Method called before the start of each test method */
     public testInitialize() {
         var storage = this.getMockStorage();
-        this.getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getSessionStorageObject",() => storage);
+        this.getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getSessionStorageObject",() => storage);
 
-        this.throwInternalNonUserActionableSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
-        this.throwInternalUserActionableSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+        this.throwInternalNonUserActionableSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
+        this.throwInternalUserActionableSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
     }
 
-    /** Method called after each test method has completed */
-    public testCleanup() {
-        this.getStorageObjectStub.restore();
-        this.throwInternalNonUserActionableSpy.restore();
-        this.throwInternalUserActionableSpy.restore();
-    }
 
     public registerTests() {
 
@@ -44,7 +38,7 @@ class PageVisitTimeManagerTests extends TestClass {
 
                 //setup
                 var object = { method: function () { } };
-                var spy = sinon.spy(object, "method");
+                var spy = this.sandbox.spy(object, "method");
                 var pageVisitTimeManager = new Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager(spy);
 
 
@@ -64,7 +58,7 @@ class PageVisitTimeManagerTests extends TestClass {
 
                 //setup
                 var object = { method: function () { } };
-                var spy = sinon.spy(object, "method");
+                var spy = this.sandbox.spy(object, "method");
                 var pageVisitTimeManager = new Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager(spy);
 
 

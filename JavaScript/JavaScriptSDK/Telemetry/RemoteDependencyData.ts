@@ -7,10 +7,11 @@ module Microsoft.ApplicationInsights.Telemetry {
 
     export class RemoteDependencyData extends AI.RemoteDependencyData implements ISerializable {
 
-        public static envelopeType = "Microsoft.ApplicationInsights.RemoteDependencyData";
+        public static envelopeType = "Microsoft.ApplicationInsights.{0}.RemoteDependency";
         public static dataType = "RemoteDependencyData";
 
         public aiDataContract = {
+            id: FieldType.Required,
             ver: FieldType.Required,
             name: FieldType.Default,
             kind: FieldType.Required,
@@ -26,21 +27,24 @@ module Microsoft.ApplicationInsights.Telemetry {
             commandName: FieldType.Default,
             dependencyTypeName: FieldType.Default,
             properties: FieldType.Default,
+            resultCode: FieldType.Default
         }
 
         /**
-         * Constructs a new instance of the PageEventTelemetry object
+         * Constructs a new instance of the RemoteDependencyData object
          */
-        constructor(absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) {
+        constructor(id: string, name: string, commandName: string, value: number, success: boolean, resultCode: number) {
             super();
 
+            this.id = id;
+            this.name = name;
+            this.commandName = Common.DataSanitizer.sanitizeUrl(commandName);
+            this.value = value;
+            this.success = success;  
+            this.resultCode = resultCode + "";
+                      
             this.dependencyKind = AI.DependencyKind.Http;
             this.dependencyTypeName = "Ajax";
-            this.async = isAsync;
-            this.value = totalTime;
-            this.commandName = absoluteUrl;
-            this.name = absoluteUrl;
-            this.success = success;
         }
     }
 }

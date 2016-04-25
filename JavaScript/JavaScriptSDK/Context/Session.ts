@@ -7,6 +7,7 @@ module Microsoft.ApplicationInsights.Context {
     export interface ISessionConfig {
         sessionRenewalMs: () => number;
         sessionExpirationMs: () => number;
+        cookieDomain: () => string;
     }
 
     export class Session {
@@ -15,10 +16,10 @@ module Microsoft.ApplicationInsights.Context {
          */
         public id: string;
 
-        /**
-         * The true if this is the first session
+        /**  
+         * The true if this is the first session  
          */
-        public isFirst: boolean;
+        public isFirst: boolean;  
 
         /**
          * The date at which this guid was genereated.
@@ -40,10 +41,8 @@ module Microsoft.ApplicationInsights.Context {
         public static renewalSpan = 1800000; // 30 minutes in ms
         public automaticSession: Session;
         public config: ISessionConfig;
-
-        public _sessionHandler: (sessionState: AI.SessionState, timestamp: number) => void;
-
-        constructor(config: ISessionConfig, sessionHandler: (sessionState: AI.SessionState, timestamp: number) => void) {
+        
+        constructor(config: ISessionConfig) {
 
             if (!config) {
                 config = <any>{};
@@ -59,7 +58,6 @@ module Microsoft.ApplicationInsights.Context {
 
             this.config = config;
 
-            this._sessionHandler = sessionHandler;
             this.automaticSession = new Session();
         }
 
@@ -75,11 +73,8 @@ module Microsoft.ApplicationInsights.Context {
 
             // renew if acquisitionSpan or renewalSpan has ellapsed
             if (acquisitionExpired || renewalExpired) {
-                // first send session end than update automaticSession so session state has correct id
-                if (typeof this._sessionHandler === "function") {
-                    this._sessionHandler(AI.SessionState.End, this.automaticSession.renewalDate);
-                }
-                this.automaticSession.isFirst = undefined;
+                // update automaticSession so session state has correct id                
+                this.automaticSession.isFirst = undefined; 
                 this.renew();
             } else {
                 this.automaticSession.renewalDate = +new Date;
@@ -116,7 +111,7 @@ module Microsoft.ApplicationInsights.Context {
             }
 
             if (!this.automaticSession.id) {
-                this.automaticSession.isFirst = true;
+                this.automaticSession.isFirst = true; 
                 this.renew();
             }
         }
@@ -147,30 +142,32 @@ module Microsoft.ApplicationInsights.Context {
                     this.automaticSession.renewalDate = this.automaticSession.renewalDate > 0 ? this.automaticSession.renewalDate : 0;
                 }
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, "Error parsing ai_session cookie, session will be reset: " + Util.dump(e));
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(
+                        _InternalMessageId.NONUSRACT_ErrorParsingAISessionCookie,
+                        "Error parsing ai_session cookie, session will be reset: " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }));
             }
 
             if (this.automaticSession.renewalDate == 0) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "AI session renewal date is 0, session will be reset.");
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_SessionRenewalDateIsZero, "AI session renewal date is 0, session will be reset."));
             }
         }
 
         private renew() {
             var now = +new Date;
 
-            this.automaticSession.id = Util.newGuid();
+            this.automaticSession.id = Util.newId();
             this.automaticSession.acquisitionDate = now;
             this.automaticSession.renewalDate = now;
 
             this.setCookie(this.automaticSession.id, this.automaticSession.acquisitionDate, this.automaticSession.renewalDate);
-            // first we updated automaticSession than we send session start so it has correct id
-            if (typeof this._sessionHandler === "function") {
-                this._sessionHandler(AI.SessionState.Start, now);
-            }
 
             // If this browser does not support local storage, fire an internal log to keep track of it at this point
             if (!Util.canUseLocalStorage()) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, "Browser does not support local storage. Session durations will be inaccurate.");
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_BrowserDoesNotSupportLocalStorage, "Browser does not support local storage. Session durations will be inaccurate."));
             }
         }
 
@@ -188,7 +185,9 @@ module Microsoft.ApplicationInsights.Context {
                 cookieExpiry.setTime(renewalExpiry);
             }
 
-            Util.setCookie('ai_session', cookie.join('|') + ';expires=' + cookieExpiry.toUTCString());
+            var cookieDomnain = this.config.cookieDomain ? this.config.cookieDomain() : null;
+
+            Util.setCookie('ai_session', cookie.join('|') + ';expires=' + cookieExpiry.toUTCString(), cookieDomnain);
         }
 
         private setStorage(guid: string, acq: number, renewal: number) {

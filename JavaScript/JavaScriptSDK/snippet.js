@@ -1,5 +1,4 @@
 ﻿var appInsights = window.appInsights || (function(aiConfig) {
-
     var appInsights = {
         config: aiConfig
     };

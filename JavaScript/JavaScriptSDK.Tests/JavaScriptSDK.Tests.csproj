@@ -167,9 +167,11 @@
     <Content Include="TestFramework\TestCase.ts" />
     <Content Include="TestFramework\TestClass.ts" />
     <TypeScriptCompile Include="CheckinTests\ajax.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\DataLossAnalyzer.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\SplitTest.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\appInsights.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Context\Sample.tests.ts" />
-    <TypeScriptCompile Include="CheckinTests\Context\SamplingScoreGenerator.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Context\HashCodeScoreGenerator.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Initialization.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\PageVisitTimeManager.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Telemetry\DataSanitizer.tests.ts" />

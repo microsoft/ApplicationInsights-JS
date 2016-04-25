@@ -19,6 +19,12 @@ QUnit.test("Test property ContextTagKeys.ApplicationTypeId was created and defau
     QUnit.ok(temp.applicationTypeId === "ai.application.typeId", "Issue with ContextTagKeys.applicationTypeId");
 });
 
+QUnit.test("Test property ContextTagKeys.ApplicationId was created and default is set", function () {
+    var temp = new AI.ContextTagKeys();
+    QUnit.ok(temp.applicationId !== null, "ContextTagKeys.applicationId == null");
+    QUnit.ok(temp.applicationId === "ai.application.applicationId", "Issue with ContextTagKeys.applicationId");
+});
+
 QUnit.test("Test property ContextTagKeys.DeviceId was created and default is set", function () {
     var temp = new AI.ContextTagKeys();
     QUnit.ok(temp.deviceId !== null, "ContextTagKeys.deviceId == null");
@@ -157,6 +163,12 @@ QUnit.test("Test property ContextTagKeys.OperationIsSynthetic was created and de
     QUnit.ok(temp.operationIsSynthetic === "ai.operation.isSynthetic", "Issue with ContextTagKeys.operationIsSynthetic");
 });
 
+QUnit.test("Test property ContextTagKeys.OperationCorrelationVector was created and default is set", function () {
+    var temp = new AI.ContextTagKeys();
+    QUnit.ok(temp.operationCorrelationVector !== null, "ContextTagKeys.operationCorrelationVector == null");
+    QUnit.ok(temp.operationCorrelationVector === "ai.operation.correlationVector", "Issue with ContextTagKeys.operationCorrelationVector");
+});
+
 QUnit.test("Test property ContextTagKeys.SessionId was created and default is set", function () {
     var temp = new AI.ContextTagKeys();
     QUnit.ok(temp.sessionId !== null, "ContextTagKeys.sessionId == null");
@@ -227,6 +239,48 @@ QUnit.test("Test property ContextTagKeys.SampleRate was created and default is s
     var temp = new AI.ContextTagKeys();
     QUnit.ok(temp.sampleRate !== null, "ContextTagKeys.sampleRate == null");
     QUnit.ok(temp.sampleRate === "ai.sample.sampleRate", "Issue with ContextTagKeys.sampleRate");
+});
+
+QUnit.test("Test property ContextTagKeys.CloudName was created and default is set", function () {
+    var temp = new AI.ContextTagKeys();
+    QUnit.ok(temp.cloudName !== null, "ContextTagKeys.cloudName == null");
+    QUnit.ok(temp.cloudName === "ai.cloud.name", "Issue with ContextTagKeys.cloudName");
+});
+
+QUnit.test("Test property ContextTagKeys.CloudRoleVer was created and default is set", function () {
+    var temp = new AI.ContextTagKeys();
+    QUnit.ok(temp.cloudRoleVer !== null, "ContextTagKeys.cloudRoleVer == null");
+    QUnit.ok(temp.cloudRoleVer === "ai.cloud.roleVer", "Issue with ContextTagKeys.cloudRoleVer");
+});
+
+QUnit.test("Test property ContextTagKeys.CloudEnvironment was created and default is set", function () {
+    var temp = new AI.ContextTagKeys();
+    QUnit.ok(temp.cloudEnvironment !== null, "ContextTagKeys.cloudEnvironment == null");
+    QUnit.ok(temp.cloudEnvironment === "ai.cloud.environment", "Issue with ContextTagKeys.cloudEnvironment");
+});
+
+QUnit.test("Test property ContextTagKeys.CloudLocation was created and default is set", function () {
+    var temp = new AI.ContextTagKeys();
+    QUnit.ok(temp.cloudLocation !== null, "ContextTagKeys.cloudLocation == null");
+    QUnit.ok(temp.cloudLocation === "ai.cloud.location", "Issue with ContextTagKeys.cloudLocation");
+});
+
+QUnit.test("Test property ContextTagKeys.CloudDeploymentUnit was created and default is set", function () {
+    var temp = new AI.ContextTagKeys();
+    QUnit.ok(temp.cloudDeploymentUnit !== null, "ContextTagKeys.cloudDeploymentUnit == null");
+    QUnit.ok(temp.cloudDeploymentUnit === "ai.cloud.deploymentUnit", "Issue with ContextTagKeys.cloudDeploymentUnit");
+});
+
+QUnit.test("Test property ContextTagKeys.ServerDeviceOS was created and default is set", function () {
+    var temp = new AI.ContextTagKeys();
+    QUnit.ok(temp.serverDeviceOS !== null, "ContextTagKeys.serverDeviceOS == null");
+    QUnit.ok(temp.serverDeviceOS === "ai.serverDevice.os", "Issue with ContextTagKeys.serverDeviceOS");
+});
+
+QUnit.test("Test property ContextTagKeys.ServerDeviceOSVer was created and default is set", function () {
+    var temp = new AI.ContextTagKeys();
+    QUnit.ok(temp.serverDeviceOSVer !== null, "ContextTagKeys.serverDeviceOSVer == null");
+    QUnit.ok(temp.serverDeviceOSVer === "ai.serverDevice.osVer", "Issue with ContextTagKeys.serverDeviceOSVer");
 });
 
 QUnit.test("Test property ContextTagKeys.InternalSdkVersion was created and default is set", function () {
@@ -317,5 +371,11 @@ QUnit.test("Test property ContextTagKeys.InternalTrackingType was created and de
     var temp = new AI.ContextTagKeys();
     QUnit.ok(temp.internalTrackingType !== null, "ContextTagKeys.internalTrackingType == null");
     QUnit.ok(temp.internalTrackingType === "ai.internal.trackingType", "Issue with ContextTagKeys.internalTrackingType");
+});
+
+QUnit.test("Test property ContextTagKeys.InternalIsDiagnosticExample was created and default is set", function () {
+    var temp = new AI.ContextTagKeys();
+    QUnit.ok(temp.internalIsDiagnosticExample !== null, "ContextTagKeys.internalIsDiagnosticExample == null");
+    QUnit.ok(temp.internalIsDiagnosticExample === "ai.internal.isDiagnosticExample", "Issue with ContextTagKeys.internalIsDiagnosticExample");
 });
 

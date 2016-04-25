@@ -17,10 +17,16 @@ class SenderTests extends TestClass {
     private maxBatchSizeInBytes: number;
     private maxBatchInterval: number;
     private disableTelemetry: boolean;
+    private requests;
 
     public testInitialize() {
-        this.xhr = window["XMLHttpRequest"];
-        this.xdr = window["XDomainRequest"];
+        if (Microsoft.ApplicationInsights.Util.canUseSessionStorage()) {
+            sessionStorage.clear();
+        }
+        this.requests = [];
+        this.xhr = sinon.useFakeXMLHttpRequest();
+
+        this.xdr = sinon.useFakeXMLHttpRequest();
         this.fakeServer = sinon.fakeServer.create();
         this.endpointUrl = "testUrl";
         this.maxBatchSizeInBytes = 1000000;
@@ -34,30 +40,16 @@ class SenderTests extends TestClass {
             maxBatchInterval: () => this.maxBatchInterval,
             disableTelemetry: () => this.disableTelemetry
         };
-          
+
         this.getSender = () => new Microsoft.ApplicationInsights.Sender(config);
-        this.errorSpy = sinon.spy(Microsoft.ApplicationInsights.Sender, "_onError");
-        this.successSpy = sinon.stub(Microsoft.ApplicationInsights.Sender, "_onSuccess");
-        this.loggingSpy = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole");
+        this.errorSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onError");
+        this.successSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onSuccess");
+        this.loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole");
         this.testTelemetry = { aiDataContract: true };
     }
 
     public testCleanup() {
-        if (this.xhr === undefined) {
-            delete window["XMLHttpRequest"];
-        } else {
-            window["XMLHttpRequest"] = this.xhr;
-        }
-
-        if (this.xdr === undefined) {
-            delete window["XDomainRequest"];
-        } else {
-            window["XDomainRequest"] = this.xdr;
-        }
-
-        this.errorSpy.restore();
-        this.successSpy.restore();
-        this.loggingSpy.restore();
+        Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = false;
     }
 
     public registerTests() {
@@ -91,8 +83,11 @@ class SenderTests extends TestClass {
         this.testCase({
             name: "SenderTests: uninitialized sender throws a warning when invoked",
             test: () => {
-                // act
+                // setup
+                XMLHttpRequest = undefined;
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
+
+                // act
                 sender.send(this.testTelemetry);
 
                 // verify
@@ -171,6 +166,13 @@ class SenderTests extends TestClass {
             name: "SenderTests: XDomain sender can be invoked and handles errors",
             test: () => {
                 // setup
+                // pretend that you are IE8/IE9 browser which supports XDomainRequests
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    delete xhr.withCredentials;
+                    return xhr;
+                });
+
                 XDomainRequest = <any>(() => {
                     var xdr = new this.xhr;
                     xdr.onload = xdr.onreadystatechange;
@@ -206,7 +208,7 @@ class SenderTests extends TestClass {
                 requestAsserts();
                 this.fakeServer.requests[0].respond(404, { "Content-Type": "application/json" }, '400');
                 errorAsserts();
-                logAsserts(2);
+                logAsserts(1);
                 this.successSpy.reset();
                 this.errorSpy.reset();
             }
@@ -222,7 +224,7 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                
+
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 this.clock.tick(sender._config.maxBatchInterval() + 1);
                 sender.send(this.testTelemetry);
@@ -235,7 +237,7 @@ class SenderTests extends TestClass {
 
                 // setup
                 var xdr = new this.xhr;
-                XMLHttpRequest = <any>(() => {});
+                XMLHttpRequest = <any>(() => { });
                 XDomainRequest = <any>(() => {
                     xdr.onload = xdr.onreadystatechange;
                     xdr.responseText = 200;
@@ -260,7 +262,7 @@ class SenderTests extends TestClass {
                 // setup
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 sender._sender = () => null;
-                var senderSpy = sinon.spy(sender, "_sender");
+                var senderSpy = this.sandbox.spy(sender, "_sender");
                 this.maxBatchSizeInBytes = Microsoft.ApplicationInsights.Serializer.serialize(this.testTelemetry).length
                 this.maxBatchInterval = 1;
                 this.clock.now = 1;
@@ -288,7 +290,7 @@ class SenderTests extends TestClass {
                 Assert.ok(senderSpy.notCalled, "sender was not invoked a third time after maxInterval elapsed");
                 logAsserts(0);
 
-                senderSpy.restore();
+
             }
         });
 
@@ -298,7 +300,7 @@ class SenderTests extends TestClass {
                 // setup
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 sender._sender = () => null;
-                var senderSpy = sinon.spy(sender, "_sender");
+                var senderSpy = this.sandbox.spy(sender, "_sender");
                 this.maxBatchSizeInBytes = Microsoft.ApplicationInsights.Serializer.serialize(this.testTelemetry).length;
                 this.maxBatchInterval = 1;
                 this.clock.now = 1;
@@ -313,7 +315,7 @@ class SenderTests extends TestClass {
                 Assert.ok(senderSpy.calledOnce, "sender was invoked");
                 logAsserts(0);
 
-                senderSpy.restore();
+
                 Microsoft.ApplicationInsights._InternalLogging.enableDebugExceptions = () => false;
             }
         });
@@ -324,7 +326,7 @@ class SenderTests extends TestClass {
                 // setup
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 sender._sender = () => null;
-                var senderSpy = sinon.spy(sender, "_sender");
+                var senderSpy = this.sandbox.spy(sender, "_sender");
                 this.maxBatchSizeInBytes = Microsoft.ApplicationInsights.Serializer.serialize(this.testTelemetry).length * 2;
                 this.maxBatchInterval = 2;
 
@@ -351,7 +353,7 @@ class SenderTests extends TestClass {
                 Assert.ok(senderSpy.calledTwice, "sender was invoked twice");
                 logAsserts(0);
 
-                senderSpy.restore();
+
             }
         });
 
@@ -374,7 +376,7 @@ class SenderTests extends TestClass {
                 this.disableTelemetry = true;
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 sender._sender = () => null;
-                var senderSpy = sinon.spy(sender, "_sender");
+                var senderSpy = this.sandbox.spy(sender, "_sender");
                 
                 // act
                 sender.send(this.testTelemetry);
@@ -384,7 +386,7 @@ class SenderTests extends TestClass {
                 Assert.ok(senderSpy.notCalled, "sender was not called");
                 logAsserts(0);
 
-                senderSpy.restore();
+
             }
         });
 
@@ -395,7 +397,7 @@ class SenderTests extends TestClass {
                 this.disableTelemetry = true;
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 sender._sender = () => null;
-                var senderSpy = sinon.spy(sender, "_sender");
+                var senderSpy = this.sandbox.spy(sender, "_sender");
                 this.maxBatchInterval = 100;
 
                 // act
@@ -406,7 +408,7 @@ class SenderTests extends TestClass {
                 Assert.ok(senderSpy.notCalled, "sender was not called");
                 logAsserts(0);
 
-                senderSpy.restore();
+
             }
         });
 
@@ -416,7 +418,7 @@ class SenderTests extends TestClass {
                 // setup
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 sender._sender = () => null;
-                var senderSpy = sinon.spy(sender, "_sender");
+                var senderSpy = this.sandbox.spy(sender, "_sender");
                 this.maxBatchInterval = 100;
 
                 // act
@@ -426,7 +428,7 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.equal(true, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = true");
 
-                senderSpy.restore();
+
             }
         });
 
@@ -436,7 +438,7 @@ class SenderTests extends TestClass {
                 // setup
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 sender._sender = () => null;
-                var senderSpy = sinon.spy(sender, "_sender");
+                var senderSpy = this.sandbox.spy(sender, "_sender");
                 this.maxBatchInterval = 100;
 
                 // act
@@ -446,7 +448,7 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.equal(false, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = false");
 
-                senderSpy.restore();
+
             }
         });
 
@@ -456,7 +458,7 @@ class SenderTests extends TestClass {
                 // setup
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 sender._sender = () => null;
-                var senderSpy = sinon.spy(sender, "_sender");
+                var senderSpy = this.sandbox.spy(sender, "_sender");
                 this.maxBatchInterval = 100;
 
                 // act
@@ -466,9 +468,91 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.equal(true, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = true");
 
-                senderSpy.restore();
+
             }
         });
+
+        this.testCase({
+            name: "SenderTests: data loss analyzer - send(item), queued, sent; result 0",
+            test: () => {
+                // setup
+                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
+                var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
+                this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
+                var senderSpy = this.sandbox.spy(sender, "_sender");
+                
+                // act
+                sender.send(this.testTelemetry);
+                sender.triggerSend();
+                this.fakeServer.requests[0].respond(200, {}, "");
+
+                // Validate
+                Assert.equal(0, Microsoft.ApplicationInsights.DataLossAnalyzer.getNumberOfLostItems());
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: data loss analyzer - send(item), queued, send(item), queued, sent; result 0",
+            test: () => {
+                // setup
+                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
+                var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
+                this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
+                var senderSpy = this.sandbox.spy(sender, "_sender");
+                
+                // act
+                sender.send(this.testTelemetry);
+                sender.send(this.testTelemetry);
+                sender.triggerSend();
+                this.fakeServer.requests[0].respond(200, {}, "");
+
+                // Validate
+                Assert.equal(0, Microsoft.ApplicationInsights.DataLossAnalyzer.getNumberOfLostItems());
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: data loss analyzer - send(item), queued, sent, send(item), leave; result 1",
+            test: () => {
+                // setup
+                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
+                var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
+                this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
+                var senderSpy = this.sandbox.spy(sender, "_sender");
+                
+                // act
+                sender.send(this.testTelemetry);
+                sender.triggerSend();
+                this.fakeServer.requests[0].respond(200, {}, "");
+                sender.send(this.testTelemetry);
+
+                // Validate
+                Assert.equal(1, Microsoft.ApplicationInsights.DataLossAnalyzer.getNumberOfLostItems());
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: data loss analyzer - send(item), queued, post failed; result 1",
+            test: () => {
+                // setup
+                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
+                var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
+                this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
+                var senderSpy = this.sandbox.spy(sender, "_sender");
+                
+                // act
+                sender.send(this.testTelemetry);
+                sender.triggerSend();
+                this.fakeServer.requests[0].respond(400, {}, "");
+
+                // Validate
+                Assert.equal(1, Microsoft.ApplicationInsights.DataLossAnalyzer.getNumberOfLostItems());
+            }
+        });       
     }
 }
 

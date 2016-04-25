@@ -7,7 +7,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
     export class Metric extends AI.MetricData implements ISerializable {
 
-        public static envelopeType = "Microsoft.ApplicationInsights.Metric";
+        public static envelopeType = "Microsoft.ApplicationInsights.{0}.Metric";
         public static dataType = "MetricData";
 
         public aiDataContract = {

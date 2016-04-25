@@ -65,7 +65,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 timing.responseEnd = 42;
                 timing.loadEventEnd = 60;
 
-                var timingSpy = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
+                var timingSpy = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
                     return timing;
                 });
 
@@ -81,7 +81,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(12), data.receivedResponse);
                 Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(18), data.domProcessing);
 
-                timingSpy.restore();
+                
             }
         });
 
@@ -97,12 +97,12 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 timing.responseEnd = 42;
                 timing.loadEventEnd = 60;
 
-                var timingSpy = sinon.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
+                var timingSpy = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
                     return timing;
                 });
 
                 var actualLoggedMessage = null;
-                var loggingSpy = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole", (m) => actualLoggedMessage = m);
+                var loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole", (m) => actualLoggedMessage = m);
 
 
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
@@ -116,10 +116,10 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 Assert.equal(undefined, data.receivedResponse);
                 Assert.equal(undefined, data.domProcessing);
 
-                Assert.equal("client performance math error:59 < 39 + 19 + 12 + 18", actualLoggedMessage);
+                Assert.equal("AI (Internal): NONUSRACT_ClientPerformanceMathError message:\"client performance math error.\" props:\"{total:59,network:39,request:19,response:12,dom:18}\"", actualLoggedMessage);
 
-                timingSpy.restore();
-                loggingSpy.restore();
+                
+                
 
             }
         });

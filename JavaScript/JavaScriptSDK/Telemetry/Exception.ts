@@ -7,7 +7,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
     export class Exception extends AI.ExceptionData implements ISerializable {
 
-        public static envelopeType = "Microsoft.ApplicationInsights.Exception";
+        public static envelopeType = "Microsoft.ApplicationInsights.{0}.Exception";
         public static dataType = "ExceptionData";
 
 
@@ -140,7 +140,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         }
     }
 
-    class _StackFrame extends AI.StackFrame implements ISerializable {
+    export class _StackFrame extends AI.StackFrame implements ISerializable {
         
         // regex to match stack frames from ie/chrome/ff
         // methodName=$2, fileName=$4, lineNo=$5, column=$6
@@ -159,11 +159,11 @@ module Microsoft.ApplicationInsights.Telemetry {
         constructor(frame: string, level: number) {
             super();
             this.level = level;
-            this.method = "unavailable";
+            this.method = "<no_method>";
             this.assembly = Util.trim(frame);
             var matches = frame.match(_StackFrame.regex);
             if (matches && matches.length >= 5) {
-                this.method = Util.trim(matches[2]);
+                this.method = Util.trim(matches[2]) || this.method;
                 this.fileName = Util.trim(matches[4]);
                 this.line = parseInt(matches[5]) || 0;
             }

@@ -46,3 +46,7 @@ https://github.com/Microsoft/ApplicationInsights-JS/wiki
 ## Contributing
 
 We strongly welcome and encourage contributions to this project. Please read the [contributor's guide][ContribGuide] located in the ApplicationInsights-Home repository. If making a large change we request that you open an [issue][GitHubIssue] first. We follow the [Git Flow][GitFlow] approach to branching. 
+
+[ContribGuide]: https://github.com/Microsoft/ApplicationInsights-Home/blob/master/CONTRIBUTING.md
+[GitFlow]: http://nvie.com/posts/a-successful-git-branching-model/
+[GitHubIssue]: https://github.com/Microsoft/ApplicationInsights-JS/issues

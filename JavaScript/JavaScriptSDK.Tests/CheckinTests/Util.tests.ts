@@ -10,14 +10,14 @@ class UtilTests extends TestClass {
             name: "UtilTests: getStorage with available storage",
             test: () => {
                 var storage = this.getMockStorage();
-                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
 
                 storage["test"] = "A";
 
                 Assert.equal("A", Util.getStorage("test"), "getStorage should return value of getItem for known keys");
                 Assert.equal(undefined, Util.getStorage("another"), "getStorage should return value of getItem for unknown keys");
 
-                getStorageObjectStub.restore();
+                
             }
         });
 
@@ -25,11 +25,11 @@ class UtilTests extends TestClass {
             name: "UtilTests: getStorage with no storage support",
             test: () => {
                 var storage = undefined;
-                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
 
                 Assert.equal(null, Util.getStorage("test"), "getStorage should return null when storage is unavailable");
 
-                getStorageObjectStub.restore();
+                
             }
         });
 
@@ -37,11 +37,11 @@ class UtilTests extends TestClass {
             name: "UtilTests: setStorage with available storage",
             test: () => {
                 var storage = this.getMockStorage();
-                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
 
                 Assert.ok(Util.setStorage("test","A"), "setStorage should return true if storage is available for writes");
 
-                getStorageObjectStub.restore();
+                
             }
         });
 
@@ -49,11 +49,11 @@ class UtilTests extends TestClass {
             name: "UtilTests: setStorage with no storage support",
             test: () => {
                 var storage = undefined;
-                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
 
                 Assert.ok(!Util.setStorage("test", "A"), "setStorage should return false if storage is unavailable for writes");
 
-                getStorageObjectStub.restore();
+                
             }
         });
 
@@ -61,14 +61,14 @@ class UtilTests extends TestClass {
             name: "UtilTests: removeStorage with available storage",
             test: () => {
                 var storage = this.getMockStorage();
-                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
 
                 storage["test"] = "A";
 
                 Assert.ok(Util.removeStorage("test"), "removeStorage should return true if storage is available for writes");
                 Assert.deepEqual(undefined, storage["test"], "removeStorage should remove items from storage");
 
-                getStorageObjectStub.restore();
+                
             }
         });
 
@@ -76,11 +76,11 @@ class UtilTests extends TestClass {
             name: "UtilTests: removeStorage with no storage support",
             test: () => {
                 var storage = undefined;
-                var getStorageObjectStub = sinon.stub(Microsoft.ApplicationInsights.Util, "_getStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
 
                 Assert.ok(!Util.removeStorage("test"), "removeStorage should return false if storage is unavailable for writes");
 
-                getStorageObjectStub.restore();
+                
             }
         });
         
@@ -152,31 +152,38 @@ class UtilTests extends TestClass {
         this.testCase({
             name: "UtilTests: parse cookie",
             test: () => {
-                var test = (cookie, query, expected) => {
-                    Util["document"] = <any>{
-                        cookie: cookie
-                    };
+                try {
+                    var test = (cookie, query, expected) => {
+                        Util["document"] = <any>{
+                            cookie: cookie
+                        };
 
-                    var actual = Util.getCookie(query);
-                    Assert.deepEqual(expected, actual, "cookie is parsed correctly");
+                        var actual = Util.getCookie(query);
+                        Assert.deepEqual(expected, actual, "cookie is parsed correctly");
+                    }
+
+                    test("testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
+                    test("other=foo; testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
+                    test("another=bar; ;a=testCookie=; testCookie=id|acq|renewal; other=foo|3|testCookie=", "testCookie", "id|acq|renewal");
+                    test("xtestCookiex=id|acq|renewal", "testCookie", "");
+                    test("", "testCookie", "");
+                } finally {
+                    Util["document"] = document;
                 }
-
-                test("testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
-                test("other=foo; testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
-                test("another=bar; ;a=testCookie=; testCookie=id|acq|renewal; other=foo|3|testCookie=", "testCookie", "id|acq|renewal");
-                test("xtestCookiex=id|acq|renewal", "testCookie", "");
-                test("", "testCookie", "");
             }
         });
 
         this.testCase({
             name: "UtilTests: new GUID",
             test: () => {
-                var randomStub = sinon.stub(Math, "random",() => 0);
-                var expected = "00000000-0000-4000-8000-000000000000";
-                var actual = Util.newGuid();
-                Assert.equal(expected, actual, "expected guid was generated");
-                randomStub.restore();
+                var results = [];
+                for (var i = 0; i < 100; i++) {
+                    var newId = Util.newId();
+                    for (var j = 0; j < results.length; j++) {
+                        Assert.notEqual(newId, results[j]);
+                    }
+                    results.push(newId);
+                }
             }
         });
 
@@ -258,7 +265,7 @@ class UtilTests extends TestClass {
                 Assert.ok(Util.isCrossOriginError("Script error.", "", 0, 0, null) === true);
 
                 Assert.ok(Util.isCrossOriginError("Script error.", "http://microsoft.com", 0, 0, null)
-                    === false);
+                    === true);
             }
         });
 
@@ -349,6 +356,16 @@ class UtilTests extends TestClass {
 
                 // Assert
                 Assert.equal(false, returnValue, 'Event handler was attached for illegal callback');
+            }
+        });
+
+        this.testCase({
+            name: "getIE function should return null for non-IE user agent string and IE version for IE",
+            test: () => {
+                
+                // Assert
+                Assert.equal(null, Util.getIEVersion("Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36"), "Should return null for non-IE");
+                Assert.equal(8, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 10.0; Win64; x64; Trident/7.0; .NET4.0C; .NET4.0E; .NET CLR 2.0.50727; .NET CLR 3.0.30729; .NET CLR 3.5.30729"), "Should return IE version for IE browser");
             }
         });
     }

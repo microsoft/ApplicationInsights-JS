@@ -10,6 +10,11 @@ module Microsoft.ApplicationInsights.Context {
         static authUserCookieName: string = 'ai_authUser'; 
 
         /**
+         * The telemetry configuration.
+         */
+        public config: ITelemetryConfig;
+
+        /**
          * The user ID.
          */
         public id: string;
@@ -39,19 +44,22 @@ module Microsoft.ApplicationInsights.Context {
          */
         public storeRegion: string;
         
-         /**
-         * Sets the autheticated user id and the account id in this session.
-         *   
-         * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
-         * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
-         */
+        /**
+        * Sets the autheticated user id and the account id in this session.
+        *   
+        * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
+        * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
+        */
         public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string) {
 
             // Validate inputs to ensure no cookie control characters.
             var isInvalidInput = !this.validateUserInput(authenticatedUserId) || (accountId && !this.validateUserInput(accountId));
             if (isInvalidInput) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, "Setting auth user context failed. " +
-                    "User auth/account id should be of type string, and not contain commas, semi-colons, equal signs, spaces, or vertical-bars.");
+                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING,
+                    new _InternalLogMessage(
+                        _InternalMessageId.USRACT_SetAuthContextFailedAccountName,
+                        "Setting auth user context failed. " +
+                        "User auth/account id should be of type string, and not contain commas, semi-colons, equal signs, spaces, or vertical-bars."));
                 return;
             }
 
@@ -65,7 +73,7 @@ module Microsoft.ApplicationInsights.Context {
             
             // Set the cookie. No expiration date because this is a session cookie (expires when browser closed).
             // Encoding the cookie to handle unexpected unicode characters.
-            Util.setCookie(User.authUserCookieName, encodeURI(authCookie));
+            Util.setCookie(User.authUserCookieName, encodeURI(authCookie), this.config.cookieDomain());
         }
 
         /**
@@ -78,7 +86,7 @@ module Microsoft.ApplicationInsights.Context {
             Util.deleteCookie(User.authUserCookieName);
         }
 
-        constructor(accountId: string) {
+        constructor(config: ITelemetryConfig) {
             
             //get userId or create new one if none exists
             var cookie = Util.getCookie(User.userCookieName);
@@ -89,17 +97,21 @@ module Microsoft.ApplicationInsights.Context {
                 }
             }
 
+            this.config = config;
+
             if (!this.id) {
-                this.id = Util.newGuid();
+                this.id = Util.newId();
                 var date = new Date();
                 var acqStr = Util.toISOStringForIE8(date);
                 this.accountAcquisitionDate = acqStr;
                 // without expiration, cookies expire at the end of the session
-                // set it to a year from now
+                // set it to 365 days from now
                 // 365 * 24 * 60 * 60 * 1000 = 31536000000 
                 date.setTime(date.getTime() + 31536000000);
                 var newCookie = [this.id, acqStr];
-                Util.setCookie(User.userCookieName, newCookie.join(User.cookieSeparator) + ';expires=' + date.toUTCString());
+                var cookieDomain = this.config.cookieDomain ? this.config.cookieDomain() : undefined;
+
+                Util.setCookie(User.userCookieName, newCookie.join(User.cookieSeparator) + ';expires=' + date.toUTCString(), cookieDomain);
 
                 // If we have an ai_session in local storage this means the user actively removed our cookies.
                 // We should respect their wishes and clear ourselves from local storage
@@ -108,7 +120,7 @@ module Microsoft.ApplicationInsights.Context {
 
             // We still take the account id from the ctor param for backward compatibility. 
             // But if the the customer set the accountId through the newer setAuthenticatedUserContext API, we will override it.
-            this.accountId = accountId;
+            this.accountId = config.accountId ? config.accountId() : undefined;
 
             // Get the auth user id and account id from the cookie if exists
             // Cookie is in the pattern: <authenticatedId>|<accountId>
@@ -138,5 +150,5 @@ module Microsoft.ApplicationInsights.Context {
             return true;
         }
     }
-       
+
 }

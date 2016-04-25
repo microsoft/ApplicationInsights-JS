@@ -6,7 +6,7 @@ Param(
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="The instrumentation key.")]
-    [string]$iKey = "89330895-7c53-4315-a242-85d136ad9c16", 
+    [string]$iKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46", 
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="The endpoinoint URL. (dev: datacollection-devred.cloudapp.net, int: dc-int.services.visualstudio.com, prod: dc.services.visualstudio.com")]
@@ -35,7 +35,7 @@ $queueTest = "var i = 100; while(i--){appInsights.queue.push(function() {window.
 # copy snippet and convert protocol to file://
 $edgePrefix = gc "$($projectDir)\..\JavaScriptSDK\snippet.js"
 $edgePrefix = $edgePrefix -replace $cdnUrl, $aiPath
-$edgePrefix = $edgePrefix -replace "instrumentationKey: ""INSTRUMENTATION_KEY""", "instrumentationKey: ""$($iKey)"", endpointUrl: ""$($endpointUrl)"", maxBatchInterval: 1, autoTrackAjax: true"
+$edgePrefix = $edgePrefix -replace "instrumentationKey: ""INSTRUMENTATION_KEY""", "instrumentationKey: ""$($iKey)"", endpointUrl: ""$($endpointUrl)"", maxBatchInterval: 1, disableAjaxTracking: false"
 $edgePrefix = $edgePrefix -replace 'CDN_PATH',$aiPath
 $edgePrefix += $queueTest
 $edgePrefix | out-file "$($projectDir)\E2ETests\sprint70Snippet.js"

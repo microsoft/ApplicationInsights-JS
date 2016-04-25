@@ -5,19 +5,21 @@
 
 class SessionContextTests extends TestClass {
 
-    private originalDocument;
+    private originalDocument = Microsoft.ApplicationInsights.Util["document"];
     private results: any[];
 
     /** Method called before the start of each test method */
     public testInitialize() {
         this.results = [];
         this.resetStorage();
+        this.restoreFakeCookie();
     }
 
     /** Method called after each test method has completed */
     public testCleanup() {
         this.results = [];
         this.resetStorage();
+        this.restoreFakeCookie();
     }
 
     public registerTests() {
@@ -30,7 +32,7 @@ class SessionContextTests extends TestClass {
                     cookie: ""
                 };
 
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null, () => { });
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                 Assert.ok(!sessionManager.automaticSession.isFirst, "isFirst");
                 Assert.ok(!sessionManager.automaticSession.id, "id");
                 Assert.ok(!sessionManager.automaticSession.acquisitionDate, "acquisitionDate");
@@ -41,23 +43,23 @@ class SessionContextTests extends TestClass {
         this.testCase({
             name: "SessionContext: session manager updates isFirst field correctly",
             test: () => {
-                // no cookie, isNew should be true
+                // no cookie, isNew should be true  
                 Microsoft.ApplicationInsights.Util["document"] = <any>{
                     cookie: ""
                 };
 
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null, () => { });
-                
-                // after first update, should be true
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
+        
+                // after first update, should be true  
                 this.clock.tick(10);
                 sessionManager.update();
                 Assert.ok(sessionManager.automaticSession.isFirst, "isFirst should be true after 1st update");
-
-                // after second update also true
+        
+                // after second update also true  
                 sessionManager.update();
                 Assert.ok(sessionManager.automaticSession.isFirst, "isFirst should be true after 2st update");
-
-                // after renewal, should be false
+        
+                // after renewal, should be false  
                 this.clock.tick(Microsoft.ApplicationInsights.Context._SessionManager.renewalSpan + 1);
                 sessionManager.update();
                 Assert.ok(!sessionManager.automaticSession.isFirst, "isFirst should be false after renewal");
@@ -67,38 +69,39 @@ class SessionContextTests extends TestClass {
         this.testCase({
             name: "SessionContext: when sessionmanager initailzes it sets isFirst to false if cookie is present",
             test: () => {
-                // no cookie, isNew should be true
+                // no cookie, isNew should be true  
                 Microsoft.ApplicationInsights.Util["document"] = <any>{
                     cookie: ""
                 };
 
                 this.clock.tick(10);
-                var sessionManager1 = new Microsoft.ApplicationInsights.Context._SessionManager(null, () => { });
+                var sessionManager1 = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                 sessionManager1.update();
                 this.clock.tick(Microsoft.ApplicationInsights.Context._SessionManager.renewalSpan + 1);
-                
-                // Creating one more instance immulate that browser was closed
-                var sessionManager2 = new Microsoft.ApplicationInsights.Context._SessionManager(null, () => { });
+
+                // Creating one more instance immulate that browser was closed  
+                var sessionManager2 = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                 sessionManager2.update();
                 Assert.ok(!sessionManager2.automaticSession.isFirst, "isFirst should be false because it is same browser/user");
             }
         });
 
-        this.testCase({
+        this.testCase({  
+
             name: "ai_session cookie has correct structure",
             test: () => {
                 // setup
                 var actualCookieName: string;
                 var actualCookieValue: string;
-                var newGuidStub = sinon.stub(Microsoft.ApplicationInsights.Util, "newGuid", () => "newGuid");
-                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie", () => "");
-                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie", (cookieName, cookieValue) => {
+                var newIdStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "newId", () => "newId");
+                var getCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getCookie", () => "");
+                var setCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie", (cookieName, cookieValue) => {
                     actualCookieName = cookieName;
                     actualCookieValue = cookieValue;
                 });
 
                 // act
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null, () => { });
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                 sessionManager.update();
 
                 // verify
@@ -107,7 +110,7 @@ class SessionContextTests extends TestClass {
 
                 Assert.equal(2, cookieValueParts.length, "Cookie value should have actual value and expiration");
                 Assert.equal(3, cookieValueParts[0].split('|').length, "Cookie value before expiration should include user id, acq date and renew date");
-                Assert.equal("newGuid", cookieValueParts[0].split('|')[0], "First part of cookie value should be new user id guid");
+                Assert.equal("newId", cookieValueParts[0].split('|')[0], "First part of cookie value should be new user id guid");
                 
                 // The cookie should expire 30 minutes after activity by default
                 var expiration = cookieValueParts[1];
@@ -116,25 +119,25 @@ class SessionContextTests extends TestClass {
                 Assert.equal(30, expirationDate.getTime() / 1000 / 60, "cookie expiration should be in 30 minutes");
 
                 // cleanup
-                getCookieStub.restore();
-                setCookieStub.restore();
-                newGuidStub.restore();
+                
+                
+                
             }
         });
 
         this.testCase({
             name: "ai_session local storage has correct structure",
             test: () => {
-                if (window.localStorage) {
+                if (Microsoft.ApplicationInsights.Util.canUseLocalStorage()) {
                     // setup
                     var actualCookieName: string;
                     var actualCookieValue: string;
-                    var newGuidStub = sinon.stub(Microsoft.ApplicationInsights.Util, "newGuid",() => "newGuid");
-                    var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",() => "");
-                    var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(cookieName, cookieValue) => { });
+                    var newIdStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "newId", () => "newId");
+                    var getCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getCookie",() => "");
+                    var setCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie",(cookieName, cookieValue) => { });
 
                     // act
-                    var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                    var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                     sessionManager.update();
                     sessionManager.backup();
 
@@ -142,12 +145,12 @@ class SessionContextTests extends TestClass {
                     Assert.ok(localStorage["ai_session"], "ai_session storage is set");
 
                     Assert.equal(3, localStorage["ai_session"].split('|').length, "Cookie value before expiration should include user id, acq date and renew date");
-                    Assert.equal("newGuid", localStorage["ai_session"].split('|')[0], "First part of cookie value should be new user id guid");
+                    Assert.equal("newId", localStorage["ai_session"].split('|')[0], "First part of cookie value should be new user id guid");
 
                     // cleanup
-                    getCookieStub.restore();
-                    setCookieStub.restore();
-                    newGuidStub.restore();
+                    
+                    
+                    
                 } else {
                     // this might happen on IE when using a file:// url
                     Assert.ok(true, "browser does not support local storage in current environment");
@@ -160,12 +163,12 @@ class SessionContextTests extends TestClass {
             test: () => {
                 var cookies = {};
                 var storage = {};
-                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
-                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
+                var getCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
+                var setCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
                     cookies[name] = value;
                 });
-                var getStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
-                var setStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
+                var getStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
+                var setStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
                     storage[name] = value;
                 });
 
@@ -177,17 +180,17 @@ class SessionContextTests extends TestClass {
                 cookies['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
                 // Ensure session manager backs up properly
-                new Microsoft.ApplicationInsights.Context.User(undefined);
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                 sessionManager.update();
                 sessionManager.backup();
                 Assert.ok(storage['ai_session'], "session cookie should be backed up in local storage");
 
                 // cleanup
-                getCookieStub.restore();
-                setCookieStub.restore();
-                getStorageStub.restore();
-                setStorageStub.restore();
+                
+                
+                
+                
             }
         });
 
@@ -196,12 +199,12 @@ class SessionContextTests extends TestClass {
             test: () => {
                 var cookies = {};
                 var storage = {};
-                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
-                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
+                var getCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
+                var setCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
                     cookies[name] = value;
                 });
-                var getStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
-                var setStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
+                var getStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
+                var setStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
                     storage[name] = value;
                 });
 
@@ -214,8 +217,8 @@ class SessionContextTests extends TestClass {
                 storage['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
                 // Initalize the session manager
-                new Microsoft.ApplicationInsights.Context.User(undefined);
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                 sessionManager.update();
                 sessionManager.backup();
 
@@ -224,10 +227,10 @@ class SessionContextTests extends TestClass {
                 Assert.ok(!sessionManager.automaticSession.isFirst, "the isFirst state should be conserved after losing the session cookie");
 
                 // cleanup
-                getCookieStub.restore();
-                setCookieStub.restore();
-                getStorageStub.restore();
-                setStorageStub.restore();
+                
+                
+                
+                
             }
         });
 
@@ -236,15 +239,15 @@ class SessionContextTests extends TestClass {
             test: () => {
                 var cookies = {};
                 var storage = {};
-                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
-                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
+                var getCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
+                var setCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
                     cookies[name] = value;
                 });
-                var getStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
-                var setStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
+                var getStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => storage[name]);
+                var setStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => {
                     storage[name] = value;
                 });
-                var removeStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "removeStorage",(name, value) => {
+                var removeStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "removeStorage",(name, value) => {
                     storage[name] = undefined;
                 });
 
@@ -255,8 +258,8 @@ class SessionContextTests extends TestClass {
                 storage['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
                 // Initialize the session manager
-                new Microsoft.ApplicationInsights.Context.User(undefined);
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                 sessionManager.update();
 
                 // Verify the backup was lost
@@ -267,11 +270,11 @@ class SessionContextTests extends TestClass {
                 Assert.ok(sessionManager.automaticSession.isFirst, "the isFirst state should be reset after losing all ai cookies");
 
                 // cleanup
-                getCookieStub.restore();
-                setCookieStub.restore();
-                getStorageStub.restore();
-                setStorageStub.restore();
-                removeStorageStub.restore();
+                
+                
+                
+                
+                
             }
         });
 
@@ -280,12 +283,12 @@ class SessionContextTests extends TestClass {
             test: () => {
                 var cookies = {};
                 var storage = {};
-                var getCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
-                var setCookieStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
+                var getCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getCookie",(name) => cookies[name]);
+                var setCookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie",(name, value) => {
                     cookies[name] = value;
                 });
-                var getStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => null);
-                var setStorageStub = sinon.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => false);
+                var getStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getStorage",(name) => null);
+                var setStorageStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setStorage",(name, value) => false);
 
                 // Initialize our user and session cookies
                 var sessionId = "SESSID";
@@ -294,15 +297,15 @@ class SessionContextTests extends TestClass {
                 cookies['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
                 // Back up the session
-                new Microsoft.ApplicationInsights.Context.User(undefined);
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                 sessionManager.update();
                 sessionManager.backup();
 
                 // Lose the session cookie but not the user cookie
                 cookies['ai_session'] = undefined;
-                new Microsoft.ApplicationInsights.Context.User(undefined);
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,() => { });
+                new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                 sessionManager.update();
                 sessionManager.backup();
 
@@ -311,17 +314,17 @@ class SessionContextTests extends TestClass {
                 Assert.ok(sessionManager.automaticSession.isFirst, "the isFirst state should be reset after losing the session cookie");
 
                 // cleanup
-                getCookieStub.restore();
-                setCookieStub.restore();
-                getStorageStub.restore();
-                setStorageStub.restore();
+                
+                
+                
+                
             }
         });
 
         this.testCase({
             name: "SessionContext: session manager sets the isFirst to false if cookie was present",
             test: () => {
-                // no cookie, isNew should be true
+                // no cookie, isNew should be true  
                 Microsoft.ApplicationInsights.Util["document"] = <any>{
                     cookie: ""
                 };
@@ -332,78 +335,9 @@ class SessionContextTests extends TestClass {
 
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null, () => { });
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                 sessionManager.update();
                 Assert.ok(!sessionManager.automaticSession.isFirst, "isFirst is false when an existing session was set");
-
-                this.restoreFakeCookie();
-            }
-        });
-
-        this.testCase({
-            name: "SessionContext: session start is generated without cookies",
-            test: () => {
-                // no cookie, isNew should be true
-                Microsoft.ApplicationInsights.Util["document"] = <any>{
-                    cookie: ""
-                };
-
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null, (t) => { this.results.push(t); });
-                sessionManager.update();
-
-                Assert.equal(AI.SessionState.Start, this.results[0], "session start generated");
-            }
-        });
-
-        this.testCase({
-            name: "SessionContext: session start and end are generated after timeout expired",
-            test: () => {
-                // setup
-                var testGuid = "00000000-0000-0000-0000-000000000000";
-                var delta = (Microsoft.ApplicationInsights.Context._SessionManager.renewalSpan + 1);
-                this.clock.tick(delta); // safari crashes without this
-                var cookieTime = +new Date - delta;
-                var acquisitionDate = +new Date(cookieTime);
-                var renewalDate = +new Date(cookieTime);
-
-                this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
-
-                // act
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null, (t) => { this.results.push(t); });
-                sessionManager.update();
-
-                // verify
-                Assert.equal(2, this.results.length);
-                Assert.equal(AI.SessionState.End, this.results[0], "session end generated");
-                Assert.equal(AI.SessionState.Start, this.results[1], "session start generated");
-
-                this.restoreFakeCookie();
-            }
-        });
-
-        this.testCase({
-            name: "SessionContext: session manager renews when acquisition date has expired",
-            test: () => {
-                // setup
-                var testGuid = "00000000-0000-0000-0000-000000000000";
-                var delta = (Microsoft.ApplicationInsights.Context._SessionManager.acquisitionSpan + 1);
-                this.clock.tick(delta); // safari crashes without this
-                var cookieTime = +new Date - delta;
-                var acquisitionDate = +new Date(cookieTime);
-                var renewalDate = +new Date();
-
-                this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
-
-                // act
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null, (t) => { this.results.push(t); });
-                sessionManager.update();
-
-                // verify
-                Assert.equal(2, this.results.length);
-                Assert.equal(AI.SessionState.End, this.results[0], "session end generated");
-                Assert.equal(AI.SessionState.Start, this.results[1], "session start generated");
-
-                this.restoreFakeCookie();
             }
         });
 
@@ -418,15 +352,13 @@ class SessionContextTests extends TestClass {
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
                 // act
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null, () => { });
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                 sessionManager.update();
 
                 // verify
                 Assert.equal(testGuid, sessionManager.automaticSession.id, "cookie session id was used");
                 Assert.equal(+new Date(acquisitionDate), sessionManager.automaticSession.acquisitionDate, "cookie acquisitionDate was used");
                 Assert.equal(+new Date(renewalDate), sessionManager.automaticSession.renewalDate, "cookie renewalDate was used");
-
-                this.restoreFakeCookie();
             }
         });
 
@@ -444,18 +376,13 @@ class SessionContextTests extends TestClass {
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
                 // act
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null, (t) => { this.results.push(t); });
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                 sessionManager.update();
 
                 // verify
                 Assert.notEqual(testGuid, sessionManager.automaticSession.id, "cookie session id was renewed");
                 Assert.equal(delta, sessionManager.automaticSession.acquisitionDate, "cookie acquisitionDate was updated");
                 Assert.equal(delta, sessionManager.automaticSession.renewalDate, "cookie renewalDate was updated");
-                Assert.equal(2, this.results.length);
-                Assert.equal(AI.SessionState.End, this.results[0], "session end generated");
-                Assert.equal(AI.SessionState.Start, this.results[1], "session start generated");
-
-                this.restoreFakeCookie();
             }
         });
 
@@ -473,15 +400,13 @@ class SessionContextTests extends TestClass {
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
                 // act
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null, () => { });
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                 sessionManager.update();
 
                 // verify
                 Assert.notEqual(testGuid, sessionManager.automaticSession.id, "cookie session id was renewed");
                 Assert.equal(delta, sessionManager.automaticSession.acquisitionDate, "cookie acquisitionDate was updated");
                 Assert.equal(delta, sessionManager.automaticSession.renewalDate, "cookie renewalDate was updated");
-
-                this.restoreFakeCookie();
             }
         });
 
@@ -496,7 +421,7 @@ class SessionContextTests extends TestClass {
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
                 // act
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null, () => { });
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
                 this.clock.tick(10);
                 sessionManager.update();
 
@@ -504,8 +429,6 @@ class SessionContextTests extends TestClass {
                 Assert.equal(testGuid, sessionManager.automaticSession.id, "cookie session id was not renewed");
                 Assert.equal(0, sessionManager.automaticSession.acquisitionDate, "cookie acquisitionDate was updated");
                 Assert.equal(10, sessionManager.automaticSession.renewalDate, "cookie renewalDate was updated");
-
-                this.restoreFakeCookie();
             }
         });
 
@@ -517,11 +440,12 @@ class SessionContextTests extends TestClass {
                 var sessionExpirationMs = 10;
                 var config: Microsoft.ApplicationInsights.Context.ISessionConfig = {
                     sessionRenewalMs: () => sessionRenewalMs,
-                    sessionExpirationMs: () => sessionExpirationMs
+                    sessionExpirationMs: () => sessionExpirationMs,
+                    cookieDomain: () => undefined
                 };
 
                 // act
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(config, () => { });
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(config);
 
                 // verify
                 Assert.equal(sessionRenewalMs, sessionManager.config.sessionRenewalMs(), "config sessionRenewalMs is set correctly");
@@ -536,33 +460,6 @@ class SessionContextTests extends TestClass {
                 Assert.equal(sessionExpirationMs, sessionManager.config.sessionExpirationMs(), "config sessionExpirationMs is updated correctly");
             }
         });
-
-        /* Temporarily disabled until we figure out sinon js behavior with Date.
-        * Problems:
-        *   - new Date normally gives the current date, with sinon - 1970
-        *   - new Date(NaN) normally throws an exception, with sinon - return undefined
-
-
-        this.testCase({
-            name: "SessionContext: renewal and aquisition dates from cookie are treated as numbers",
-            test: () => {
-                // setup
-                var testGuid = "00000000-0000-0000-0000-000000000000";                
-                var acquisitionDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date());
-                var renewalDate = Microsoft.ApplicationInsights.Util.toISOStringForIE8(new Date());
-
-                this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
-
-                // act
-                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null,(t) => { this.results.push(t); });
-                sessionManager.update();
-
-                // TODO: CHECK THAT A PARSING ERROR OCCURRED AND WE SENT A DIAGNOSTIC TRACE
-
-                this.restoreFakeCookie();
-            }
-        });
-        */
     }
 
     private setFakeCookie(id, acqDate, renewalDate) {
@@ -581,9 +478,26 @@ class SessionContextTests extends TestClass {
     }
 
     private resetStorage() {
-        if (window.localStorage) {
+        if (Microsoft.ApplicationInsights.Util.canUseLocalStorage()) {
             window.localStorage.clear();
         }
+    }
+
+    private getEmptyConfig() {
+        return {
+            instrumentationKey: () => null,
+            accountId: () => null,
+            sessionRenewalMs: () => null,
+            sessionExpirationMs: () => null,
+            sampleRate: () => null,
+            appUserId: () => null,
+            endpointUrl: () => null,
+            cookieDomain: () => null,
+            emitLineDelimitedJson: () => null,
+            maxBatchSizeInBytes: () => null,
+            maxBatchInterval: () => null,
+            disableTelemetry: () => null
+        };
     }
 }
 new SessionContextTests().registerTests();

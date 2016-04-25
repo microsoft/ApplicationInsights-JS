@@ -9,20 +9,24 @@ class AppInsightsTests extends TestClass {
             endpointUrl: "//dc.services.visualstudio.com/v2/track",
             emitLineDelimitedJson: false,
             accountId: undefined,
-            appUserId: undefined,
             sessionRenewalMs: 10,
             sessionExpirationMs: 10,
             maxBatchSizeInBytes: 1000000,
             maxBatchInterval: 1,
             enableDebug: false,
-            autoCollectErrors: false,
+            disableExceptionTracking: false,
             disableTelemetry: false,
             verboseLogging: false,
             diagnosticLogInterval: 1000,
             autoTrackPageVisitTime: false,
             samplingPercentage: 100,
-            autoTrackAjax: false,
-            overridePageViewDuration: false
+            disableAjaxTracking: true,
+            overridePageViewDuration: false,
+            maxAjaxCallsPerView: 20,
+            cookieDomain: undefined,
+            disableDataLossAnalysis: true,
+            disableCorrelationHeaders: false,
+            disableFlushOnBeforeUnload: false
         };
 
         // set default values
@@ -33,16 +37,15 @@ class AppInsightsTests extends TestClass {
         this.clock.reset();
         Microsoft.ApplicationInsights.Util.setCookie('ai_session', "");
         Microsoft.ApplicationInsights.Util.setCookie('ai_user', "");
-        if (window.localStorage) {
+        if (Microsoft.ApplicationInsights.Util.canUseLocalStorage()) {
             window.localStorage.clear();
         }
     }
 
     public testCleanup() {
-        this.clock.reset();
         Microsoft.ApplicationInsights.Util.setCookie('ai_session', "");
         Microsoft.ApplicationInsights.Util.setCookie('ai_user', "");
-        if (window.localStorage) {
+        if (Microsoft.ApplicationInsights.Util.canUseLocalStorage()) {
             window.localStorage.clear();
         }
     }
@@ -88,7 +91,7 @@ class AppInsightsTests extends TestClass {
                 config.disableTelemetry = true;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(config);
                 appInsights.context._sender._sender = () => null;
-                var senderStub = sinon.stub(appInsights.context._sender, "_sender", () => {
+                var senderStub = this.sandbox.stub(appInsights.context._sender, "_sender", () => {
                     console.log("GOT HERE");
                 });
                 
@@ -97,14 +100,14 @@ class AppInsightsTests extends TestClass {
                     action();
                     this.clock.tick(1);
                     Assert.ok(senderStub.notCalled, "sender was not called called for: " + action);
-                    senderStub.restore();
+
                 };
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                senderStub.restore();
+                
             }
         });
 
@@ -112,9 +115,8 @@ class AppInsightsTests extends TestClass {
             name: "AppInsightsTests: track page view performance",
             test: () => {
                 // setup
-                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());                
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // act
                 appInsights.trackPageView();
@@ -126,61 +128,27 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(trackStub.calledTwice, "track was called");
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
-
-        this.testCase({
-            name: "AppInsightsTests: start and stop session events have correct time",
-            test: () => {
-                // setup
-                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
-                
-                // act
-                this.clock.tick(1);
-                appInsights.trackEvent("first event");
-
-                // verify
-                Assert.ok(trackStub.calledTwice, "track was called for event and session start");
-                var sessionStartEnvelope1 = <Microsoft.Telemetry.Envelope>trackStub.args[0][0];
-                Assert.equal(1, +new Date(sessionStartEnvelope1.time), "first session start time");
-                
-                // act
-                this.clock.tick(2); // now "3"
-                appInsights.trackEvent("first event"); // session event is not generated but session end should have this time
-                this.clock.tick(appInsights.config.sessionRenewalMs * 2); // now "23"
-                appInsights.trackEvent("second event"); // this will generate session end and start
-
-                // verify
-                Assert.equal(6, trackStub.callCount, "track was called for event, session end and session start");
-                var sessionStopEnvelope2 = <Microsoft.Telemetry.Envelope>trackStub.args[3][0];
-                var sessionStartEnvelope2 = <Microsoft.Telemetry.Envelope>trackStub.args[4][0];
-                Assert.equal(3, +new Date(sessionStopEnvelope2.time), "session end time");
-                Assert.equal(3 + appInsights.config.sessionRenewalMs * 2, +new Date(sessionStartEnvelope2.time), "second session start time");
-                
-
-                // teardown
-                trackStub.restore();
-            }
-        });
-
+        
         this.testCase({
             name: "AppInsightsTests: envelope type, data type and ikey are correct",
             test: () => {
                 // setup
+                var iKey = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                var iKeyNoDash = "BDC8736DD8E84B69B19BB0CE6B66A456";
                 var config = this.getAppInsightsSnippet();
-                config.instrumentationKey = "12345";
+                config.instrumentationKey = iKey;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(config);
-                appInsights.context._sessionManager._sessionHandler = null;
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // verify
                 var test = (action, expectedEnvelopeType, expectedDataType) => {
                     action();
                     var envelope = this.getFirstResult(action, trackStub);
-                    Assert.equal("12345", envelope.iKey, "envelope iKey");
-                    Assert.equal(expectedEnvelopeType, envelope.name, "envelope name");
+                    Assert.equal(iKey, envelope.iKey, "envelope iKey");
+                    Assert.equal(expectedEnvelopeType.replace("{0}", iKeyNoDash), envelope.name, "envelope name");
                     Assert.equal(expectedDataType, envelope.data.baseType, "type name");
                     trackStub.reset();
                 };
@@ -189,7 +157,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"), Microsoft.ApplicationInsights.Telemetry.Event.envelopeType, Microsoft.ApplicationInsights.Telemetry.Event.dataType);
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -199,8 +167,7 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var config = this.getAppInsightsSnippet();
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(config);
-                appInsights.context._sessionManager._sessionHandler = null;
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 this.clock.tick(60000);
 
                 // act 
@@ -211,7 +178,7 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(60000, new Date(envelope.time).getTime(), "envelope time");
                 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -220,10 +187,9 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.context.application.ver = "101";
                 appInsights.context.application.build = "101";
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // verify
                 var test = (action) => {
@@ -240,7 +206,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -249,7 +215,6 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.context.device.id = "101";
                 appInsights.context.device.ip = "101";
                 appInsights.context.device.language = "101";
@@ -262,7 +227,7 @@ class AppInsightsTests extends TestClass {
                 appInsights.context.device.resolution = "101";
                 appInsights.context.device.type = "101";
 
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // verify
                 var test = (action) => {
@@ -289,7 +254,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -298,10 +263,9 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.context.internal.agentVersion = "101";
                 appInsights.context.internal.sdkVersion = "101";
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // verify
                 var test = (action) => {
@@ -318,7 +282,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -327,9 +291,8 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.context.location.ip = "101";
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // verify
                 var test = (action) => {
@@ -345,7 +308,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -354,13 +317,12 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.context.operation.id = "101";
                 appInsights.context.operation.name = "101";
                 appInsights.context.operation.parentId = "101";
                 appInsights.context.operation.rootId = "101";
                 appInsights.context.operation.syntheticSource = "101";
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // verify
                 var test = (action) => {
@@ -380,7 +342,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -390,7 +352,7 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 appInsights.context.sample.sampleRate = 33;
-                var trackSpy = sinon.spy(appInsights.context, "_track");
+                var trackSpy = this.sandbox.spy(appInsights.context, "_track");
 
                 // verify
                 var test = (action) => {
@@ -406,7 +368,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                trackSpy.restore();
+                
             }
         });
 
@@ -417,7 +379,7 @@ class AppInsightsTests extends TestClass {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 appInsights.context.sample.sampleRate = 33;
                 appInsights.context.user.id = "asdf";
-                var trackSpy = sinon.spy(appInsights.context.sample, "isSampledIn");
+                var trackSpy = this.sandbox.spy(appInsights.context.sample, "isSampledIn");
 
                 // verify
                 var test = (action) => {
@@ -439,7 +401,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackTrace("testTrace"));
 
                 // teardown
-                trackSpy.restore();
+                
             }
         });
 
@@ -448,10 +410,9 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.context.session.id = "101";
                 appInsights.context.session.isFirst = true;
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // verify
                 var test = (action) => {
@@ -468,7 +429,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -477,13 +438,11 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                appInsights.context.user.accountAcquisitionDate = "101";
                 appInsights.context.user.accountId = "101";
                 appInsights.context.user.agent = "101";
                 appInsights.context.user.id = "101";
                 appInsights.context.user.storeRegion = "101";
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // verify
                 var test = (action) => {
@@ -491,7 +450,6 @@ class AppInsightsTests extends TestClass {
                     this.clock.tick(1);
                     var envelope = this.getFirstResult(action, trackStub);
                     var contextKeys = new AI.ContextTagKeys();
-                    Assert.equal("101", envelope.tags[contextKeys.userAccountAcquisitionDate], "user.accountAcquisitionDate");
                     Assert.equal("101", envelope.tags[contextKeys.userAccountId], "user.accountId");
                     Assert.equal("101", envelope.tags[contextKeys.userAgent], "user.agent");
                     Assert.equal("101", envelope.tags[contextKeys.userId], "user.id");
@@ -503,7 +461,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -515,7 +473,7 @@ class AppInsightsTests extends TestClass {
 
                 appInsights.setAuthenticatedUserContext("10001");
 
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // verify
                 var test = (action) => {
@@ -532,7 +490,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
                 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -544,7 +502,7 @@ class AppInsightsTests extends TestClass {
 
                 appInsights.setAuthenticatedUserContext("10001", "account33");
 
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // verify
                 var test = (action) => {
@@ -562,7 +520,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -573,7 +531,7 @@ class AppInsightsTests extends TestClass {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
 
                 appInsights.setAuthenticatedUserContext("\u0428", "\u0429"); // Cyrillic characters
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // verify
                 var test = (action) => {
@@ -591,7 +549,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
                 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -600,7 +558,7 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 appInsights.setAuthenticatedUserContext("1234", "abcd");
 
                 // Clear authenticatedId
@@ -622,7 +580,41 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                trackStub.restore();
+                
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: trackPageView sends user-specified duration when passed",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.overridePageViewDuration = true;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
+
+                // act
+                appInsights.trackPageView(null, null, null, null, 124);
+
+                // verify
+                Assert.ok(spy.calledOnce, "sendPageViewInternal is called");
+                Assert.equal(124, spy.args[0][2], "PageView duration doesn't match expected value");
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: trackPageView sends user-specified duration when 0 passed",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.overridePageViewDuration = true;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
+
+                // act
+                appInsights.trackPageView(null, null, null, null, 0);
+
+                // verify
+                Assert.ok(spy.calledOnce, "sendPageViewInternal is called");
+                Assert.equal(0, spy.args[0][2], "PageView duration doesn't match expected value");
             }
         });
 
@@ -630,7 +622,7 @@ class AppInsightsTests extends TestClass {
             name: "AppInsightsTests: trackPageView sends custom duration when configured by user",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
-                snippet.overridePageViewDuration = true;                
+                snippet.overridePageViewDuration = true;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
                 var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
                 var stub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",
@@ -676,7 +668,7 @@ class AppInsightsTests extends TestClass {
 
 
         this.testCase({
-            name: "AppInsightsTests: trackPageView does not send data if page view performance is not valid",
+            name: "AppInsightsTests: if performance data is no valid then trackPageView sends page view with duration equal time to spent from navigation start time till calling into trackPageView",
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
@@ -685,13 +677,20 @@ class AppInsightsTests extends TestClass {
                     () => { return true; });
                 var getIsValidStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.prototype, "getIsValid",
                     () => { return false; });
+                var stub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",
+                    () => {
+                        return { navigationStart: 0 };
+                    });
+
+                this.clock.tick(50);
 
                 // act
                 appInsights.trackPageView();
 
                 // Data not available yet - should not send events
                 this.clock.tick(100);
-                Assert.ok(!spy.called, "Page view should not be sent since the timing data is invalid");
+                Assert.ok(spy.called, "Page view should not be sent since the timing data is invalid");
+                Assert.equal(50, spy.args[0][2], "Page view duration should be equal to time from navigation start to when trackPageView is called (aka 'override page view duration' mode)");
             }
         });
 
@@ -701,7 +700,6 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var perfDataAvailable = false;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null; /* otherwise we'll get session event too */
                 var triggerStub = this.sandbox.stub(appInsights.context, "track");
                 var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady", () => { return perfDataAvailable; });
 
@@ -743,19 +741,37 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
+            name: "AppInsightsTests: a page view is sent with 0 duration if navigation timing API is not supported",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var spy = this.sandbox.stub(appInsights, "sendPageViewInternal");
+                var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingSupported",
+                    () => { return false; });
+                
+                // act
+                appInsights.trackPageView();
+                this.clock.tick(100);
+
+                // assert
+                Assert.ok(spy.calledOnce, "sendPageViewInternal should be called even if navigation timing is not supported");
+                Assert.equal(0, spy.args[0][2], "Page view duration should be 0");
+            }
+        });
+
+        this.testCase({
             name: "AppInsightsTests: trackException accepts single exception and an array of exceptions",
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 appInsights.trackException(new Error());
                 Assert.ok(trackStub.calledOnce, "single exception is tracked");
                 appInsights.trackException(<any>[new Error()]);
                 Assert.ok(trackStub.calledTwice, "array of exceptions is tracked");
 
-                trackStub.restore();
+
             }
         });
 
@@ -764,8 +780,7 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // act 
                 appInsights.trackMetric("testMetric", 0);
@@ -786,7 +801,7 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(100, trackStub.callCount, "track was called 100 times");
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -795,8 +810,9 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var snippet = this.getAppInsightsSnippet();
+                snippet.cookieDomain = ".example.com";
+
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
-                appInsights.context._sessionManager._sessionHandler = null;
 
                 var test = (name) => {
                     Assert.equal(snippet[name], appInsights.context._config[name](), name + " is set and correct");
@@ -805,12 +821,12 @@ class AppInsightsTests extends TestClass {
                 // verify
                 test("instrumentationKey");
                 test("accountId");
-                test("appUserId");
                 test("sessionRenewalMs");
                 test("sessionExpirationMs");
                 test("endpointUrl");
                 test("maxBatchSizeInBytes");
                 test("maxBatchInterval");
+                test("cookieDomain");
 
                 Assert.equal(snippet.enableDebug, Microsoft.ApplicationInsights._InternalLogging.enableDebugExceptions(), "enableDebugExceptions is set and correct");
             }
@@ -820,15 +836,15 @@ class AppInsightsTests extends TestClass {
             name: "AppInsights._onerror creates a dump of unexpected error thrown by trackException for logging",
             test: () => {
                 var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var dumpSpy = sinon.spy(Microsoft.ApplicationInsights.Util, "dump")
+                var dumpSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Util, "dump")
                 var unexpectedError = new Error();
-                var stub = sinon.stub(sut, "trackException").throws(unexpectedError);
+                var stub = this.sandbox.stub(sut, "trackException").throws(unexpectedError);
 
                 sut._onerror("any message", "any://url", 420, 42, new Error());
 
                 Assert.ok(dumpSpy.calledWith(unexpectedError));
-                stub.restore();
-                dumpSpy.restore();
+
+
             }
         });
 
@@ -836,9 +852,9 @@ class AppInsightsTests extends TestClass {
             name: "AppInsights._onerror stringifies error object",
             test: () => {
                 var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var dumpSpy = sinon.spy(Microsoft.ApplicationInsights.Util, "dump")
+                var dumpSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Util, "dump")
                 var unexpectedError = new Error("my cool message");
-                var stub = sinon.stub(sut, "trackException").throws(unexpectedError);
+                var stub = this.sandbox.stub(sut, "trackException").throws(unexpectedError);
 
                 sut._onerror("any message", "any://url", 420, 42, new Error());
 
@@ -846,28 +862,28 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(dumpSpy.returnValues[0].indexOf("message: 'my cool message'") != -1);
                 Assert.ok(dumpSpy.returnValues[0].indexOf("name: 'Error'") != -1);
 
-                stub.restore();
-                dumpSpy.restore();
+
+
             }
         });
 
         this.testCase({
-            name: "AppInsights._onerror logs dump of unexpected error thrown by trackException for diagnostics",
+            name: "AppInsights._onerror logs name of unexpected error thrown by trackException for diagnostics",
             test: () => {
                 var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var throwInternalNonUserActionableSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
-                var dumpStub = sinon.stub(Microsoft.ApplicationInsights.Util, "dump");
-                var stub = sinon.stub(sut, "trackException").throws(new Error());
-                var expectedErrorDump: string = "test error";
-                dumpStub.returns(expectedErrorDump);
+                var throwInternalNonUserActionableSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
+                var nameStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getExceptionName");
+                var stub = this.sandbox.stub(sut, "trackException").throws(new Error());
+                var expectedErrorName: string = "test error";
+                nameStub.returns(expectedErrorName);
 
                 sut._onerror("any message", "any://url", 420, 42, new Error());
 
-                var logMessage: string = throwInternalNonUserActionableSpy.getCall(0).args[1];
-                Assert.notEqual(-1, logMessage.indexOf(expectedErrorDump));
-                stub.restore();
-                dumpStub.restore();
-                throwInternalNonUserActionableSpy.restore();
+                var logMessage: Microsoft.ApplicationInsights._InternalLogMessage = throwInternalNonUserActionableSpy.getCall(0).args[1];
+                Assert.notEqual(-1, logMessage.message.indexOf(expectedErrorName));
+
+
+
             }
         });
 
@@ -876,7 +892,7 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // prepare
                 var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var trackSpy = sinon.spy(sut.context, "track");                
+                var trackSpy = this.sandbox.spy(sut.context, "track");                
 
                 // act
                 sut._onerror("Script error.", "", 0, 0, null);
@@ -884,7 +900,7 @@ class AppInsightsTests extends TestClass {
                 // assert
                 Assert.equal(document.URL, (<any>trackSpy.args[0][0]).data.baseData.properties.url);
 
-                trackSpy.restore();
+
             }
         });
 
@@ -893,7 +909,7 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // prepare
                 var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var trackExceptionSpy = sinon.spy(sut, "trackException");                
+                var trackExceptionSpy = this.sandbox.spy(sut, "trackException");                
 
                 // act
                 // Last arg is not an error\null which will be treated as not CORS issue
@@ -903,7 +919,7 @@ class AppInsightsTests extends TestClass {
                 // properties are passed as a 3rd parameter
                 Assert.equal(document.URL, (<any>trackExceptionSpy.args[0][2]).url);
 
-                trackExceptionSpy.restore();
+
             }
         });
 
@@ -928,8 +944,7 @@ class AppInsightsTests extends TestClass {
         var test = (trackAction, validateAction) => {
             // setup
             var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-            appInsights.context._sessionManager._sessionHandler = null;
-            var stub = sinon.stub(appInsights, "trackPageViewInternal");
+            var stub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewManager.prototype, "trackPageView");
 
             // act
             trackAction(appInsights);
@@ -940,7 +955,7 @@ class AppInsightsTests extends TestClass {
             validateAction(data);
 
             // teardown
-            stub.restore();
+            
         }
 
 
@@ -1076,7 +1091,7 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var spy = sinon.spy(appInsights, "sendPageViewInternal");
+                var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
 
                 // act
                 appInsights.startTrackPage();
@@ -1089,7 +1104,7 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(testValues.duration, actualDuration, "duration is calculated and sent correctly");
 
                 // teardown                
-                spy.restore();
+                
             }
         });
 
@@ -1098,8 +1113,7 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
 
                 // act
@@ -1116,7 +1130,7 @@ class AppInsightsTests extends TestClass {
                 Assert.notEqual(testValues.measurements, telemetry.measurements);
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -1125,8 +1139,7 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
 
                 // act
@@ -1157,7 +1170,7 @@ class AppInsightsTests extends TestClass {
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -1166,8 +1179,7 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
 
                 // act
@@ -1199,7 +1211,7 @@ class AppInsightsTests extends TestClass {
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -1209,8 +1221,7 @@ class AppInsightsTests extends TestClass {
             () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var logStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
                 
                 // act
@@ -1221,7 +1232,7 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(logStub.calledOnce, "calling start twice triggers warning to user");
 
                 // teardown
-                logStub.restore();
+                
             }
         });
 
@@ -1231,8 +1242,7 @@ class AppInsightsTests extends TestClass {
             () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var logStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
 
                 // act
@@ -1242,7 +1252,7 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(logStub.calledOnce, "calling stop without a corresponding start triggers warning to user");
 
                 // teardown
-                logStub.restore();
+                
             }
         });
 
@@ -1251,8 +1261,7 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
 
                 // act
@@ -1281,7 +1290,7 @@ class AppInsightsTests extends TestClass {
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -1296,8 +1305,7 @@ class AppInsightsTests extends TestClass {
                 };
 
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var trackStub = sinon.stub(appInsights.context._sender, "send");
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
 
                 // act
@@ -1324,7 +1332,7 @@ class AppInsightsTests extends TestClass {
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
 
                 // teardown
-                trackStub.restore();
+                
             }
         });
 
@@ -1334,8 +1342,7 @@ class AppInsightsTests extends TestClass {
             () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var logStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
 
                 // act
@@ -1346,7 +1353,7 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(logStub.calledOnce, "calling startTrackEvent twice triggers warning to user");
 
                 // teardown
-                logStub.restore();
+                
             }
         });
 
@@ -1356,8 +1363,7 @@ class AppInsightsTests extends TestClass {
             () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
-                var logStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
 
                 // act
@@ -1367,7 +1373,88 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(logStub.calledOnce, "calling stopTrackEvent without a corresponding start triggers warning to user");
 
                 // teardown
-                logStub.restore();
+                
+            }
+        });
+
+        this.testCase({
+            name: "Timing Tests: Start/StopTrackEvent has correct duration",
+            test: () => {
+                // setup
+
+                var testValues1 = {
+                    name: "test1",
+                    duration: 300
+                };
+
+                var testValues2 = {
+                    name: "test2",
+                    duration: 200
+                };
+
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
+                this.clock.tick(55);        // Needed to ensure the duration calculation works
+
+                // act
+                appInsights.startTrackEvent(testValues1.name);
+                this.clock.tick(testValues1.duration);
+                appInsights.stopTrackEvent(testValues1.name);
+
+                appInsights.startTrackEvent(testValues2.name);
+                this.clock.tick(testValues2.duration);
+                appInsights.stopTrackEvent(testValues2.name);
+               
+                // verify
+                // TestValues1
+                var telemetry = <Microsoft.ApplicationInsights.Telemetry.Event>trackStub.args[0][0].data.baseData;
+                Assert.equal(testValues1.name, telemetry.name);
+                Assert.equal(testValues1.duration, telemetry.measurements["duration"]);
+
+                // TestValues2
+                telemetry = <Microsoft.ApplicationInsights.Telemetry.Event>trackStub.args[1][0].data.baseData;
+                Assert.equal(testValues2.name, telemetry.name);
+                Assert.equal(testValues2.duration, telemetry.measurements["duration"]);
+
+                // teardown
+                
+            }
+        });
+
+        this.testCase({
+            name: "Timing Tests: Start/StopTrackEvent custom duration is not overriden",
+            test: () => {
+                // setup
+                var testValues2 = {
+                    name: "name2",
+                    url: "url",
+                    duration: 345,
+                    properties: {
+                        "property1": 5
+                    },
+                    measurements: {
+                        "duration": 777
+                    }
+                };
+
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
+                this.clock.tick(10);       
+
+                // act
+                appInsights.startTrackEvent(testValues2.name);
+                this.clock.tick(testValues2.duration);
+                appInsights.stopTrackEvent(testValues2.name, testValues2.properties, testValues2.measurements);
+                Assert.ok(trackStub.calledOnce, "single page view tracking stopped");
+
+                // verify
+                var telemetry = <Microsoft.ApplicationInsights.Telemetry.Event>trackStub.args[0][0].data.baseData;
+                Assert.equal(testValues2.name, telemetry.name);
+                Assert.deepEqual(testValues2.properties, telemetry.properties);
+                Assert.deepEqual(testValues2.measurements, telemetry.measurements);
+
+                // teardown
+                
             }
         });
 
@@ -1377,11 +1464,10 @@ class AppInsightsTests extends TestClass {
             () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 appInsights.config.maxBatchInterval = 100;
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
                 appInsights.context._sender._sender = () => null;
-                var senderSpy = sinon.spy(appInsights.context._sender, "_sender");
+                var senderSpy = this.sandbox.spy(appInsights.context._sender, "_sender");
 
                 // act
                 appInsights.trackEvent("Event1");
@@ -1400,7 +1486,7 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(senderSpy.calledOnce, "data is sent after calling flush");
 
                 // teardown
-                senderSpy.restore();
+                
             }
         });
 
@@ -1409,11 +1495,10 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
                 appInsights.context._sender._sender = () => null;
-                var senderStub = sinon.stub(appInsights.context._sender, "_sender");
-                var resetInternalMessageCountStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "resetInternalMessageCount");
+                var senderStub = this.sandbox.stub(appInsights.context._sender, "_sender");
+                var resetInternalMessageCountStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "resetInternalMessageCount");
 
                 // setup a page view envelope
                 var pageView = new Microsoft.ApplicationInsights.Telemetry.PageView();
@@ -1427,8 +1512,8 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(resetInternalMessageCountStub.calledOnce, "Internal throttle was not reset even though Page View was tracked");
 
                 // restore
-                senderStub.restore();
-                resetInternalMessageCountStub.restore();
+                
+                
             }
         });
 
@@ -1437,11 +1522,10 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.context._sessionManager._sessionHandler = null;
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
                 appInsights.context._sender._sender = () => null;
-                var senderStub = sinon.stub(appInsights.context._sender, "_sender");
-                var resetInternalMessageCountStub = sinon.stub(Microsoft.ApplicationInsights._InternalLogging, "resetInternalMessageCount");
+                var senderStub = this.sandbox.stub(appInsights.context._sender, "_sender");
+                var resetInternalMessageCountStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "resetInternalMessageCount");
 
                 // setup a some other envelope
                 var event = new Microsoft.ApplicationInsights.Telemetry.Event('Test Event');
@@ -1455,8 +1539,8 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(resetInternalMessageCountStub.notCalled, "Internal throttle was reset even though Page View was not tracked");
 
                 // restore
-                senderStub.restore();
-                resetInternalMessageCountStub.restore();
+                
+                
             }
         });
 
@@ -1464,42 +1548,190 @@ class AppInsightsTests extends TestClass {
             name: "trackAjax passes ajax data correctly",
             test: () => {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var trackStub = sinon.stub(appInsights.context, "track");
+                var trackStub = this.sandbox.stub(appInsights.context, "track");
+                var name = "test";
                 var url = "http://myurl.com";
-                var async = true;
                 var duration = 123;
                 var success = false;
+                var resultCode = 404;
 
                 // Act
-                appInsights.trackAjax(url, async, duration, success);
+                appInsights.trackAjax("0", name, url, duration, success, resultCode);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
                 var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
+                Assert.equal(name, rdd.name);
                 Assert.equal(url, rdd.commandName);
-                Assert.equal(async, rdd.async);
                 Assert.equal(duration, rdd.value);
                 Assert.equal(success, rdd.success);
+                Assert.equal(resultCode, rdd.resultCode);
             }
         });
 
         this.testCase({
             name: "trackAjax includes instrumentation key into envelope name",
             test: () => {
+                var iKey = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                var iKeyNoDash = "BDC8736DD8E84B69B19BB0CE6B66A456";
                 var snippet = this.getAppInsightsSnippet();
-                snippet.instrumentationKey = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                snippet.instrumentationKey = iKey;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
-                var trackStub = sinon.stub(appInsights.context, "track");
-                // dashes are removed
-                var expectedEnvelopeName = "Microsoft.ApplicationInsights.BDC8736DD8E84B69B19BB0CE6B66A456.RemoteDependency";
+
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
+
+                // verify
+                var test = (action, expectedEnvelopeType, expectedDataType) => {
+                    action();
+                    var envelope = this.getFirstResult(action, trackStub);
+                    Assert.equal(iKey, envelope.iKey, "envelope iKey");
+                    Assert.equal(expectedEnvelopeType.replace("{0}", iKeyNoDash), envelope.name, "envelope name");
+                    Assert.equal(expectedDataType, envelope.data.baseType, "type name");
+                    trackStub.reset();
+                };
+
+                // act
+                test(() => appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200), Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType,
+                    Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.dataType);
+            }
+        });
+
+        this.testCase({
+            name: "trackAjax - by default no more than 20 ajaxes per view",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.stub(appInsights.context, "track");
 
                 // Act
-                appInsights.trackAjax("http://asdf", true, 123, true);
+                for (var i = 0; i < 100; ++i) {
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
+                }
 
                 // Assert
-                Assert.ok(trackStub.called, "Track should be called");
-                var envelope = trackStub.args[0][0];
-                Assert.equal(expectedEnvelopeName, envelope.name, "Envelope name should include instrumentation key without dashes");
+                Assert.equal(20, trackStub.callCount, "Expected 20 invokations of trackAjax");
+            }
+        });
+
+        this.testCase({
+            name: "trackAjax - trackPageView resets counter of sent ajaxes",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.stub(appInsights.context, "track");
+
+                // Act
+                for (var i = 0; i < 100; ++i) {
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
+                }
+
+                appInsights.sendPageViewInternal("asdf", "http://microsoft.com", 123);
+                trackStub.reset();
+
+                for (var i = 0; i < 100; ++i) {
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
+                }
+
+                // Assert
+                Assert.equal(20, trackStub.callCount, "Expected 20 invokations of trackAjax");
+            }
+        });
+
+        this.testCase({
+            name: "trackAjax - only 1 user actionable trace about ajaxes limit per view",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.stub(appInsights.context, "track");
+                var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");                
+
+                // Act
+                for (var i = 0; i < 20; ++i) {
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
+                }
+                
+                loggingSpy.reset();
+
+                for (var i = 0; i < 100; ++i) {
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
+                }
+
+                // Assert
+                Assert.equal(1, loggingSpy.callCount, "Expected 1 invokation of internal logging");
+            }
+        });
+
+
+        this.testCase({
+            name: "trackAjax - '-1' means no ajax per view limit",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.maxAjaxCallsPerView = -1;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.stub(appInsights.context, "track");
+                var ajaxCallsCount = 1000;
+
+                // Act
+                for (var i = 0; i < ajaxCallsCount; ++i) {
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
+                }
+
+                // Assert
+                Assert.equal(ajaxCallsCount, trackStub.callCount, "Expected " + ajaxCallsCount + " invokations of trackAjax (no limit)");
+            }
+        });
+        
+        this.testCase({
+            name: "Ajax - root/parent id are set and passed correctly",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.disableAjaxTracking = false;
+                snippet.disableCorrelationHeaders = false;
+                snippet.maxBatchInterval = 0;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.spy(appInsights, "trackAjax");
+                var expectedRootId = appInsights.context.operation.id;
+                Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+                
+                // Act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "/bla");
+                xhr.send();
+
+                var expectedAjaxId = (<any>xhr).ajaxData.id;
+                Assert.ok(expectedAjaxId.length > 0, "ajax id was initialized");
+                
+                // Emulate response                               
+                (<any>xhr).respond("200", {}, "");
+
+                // Assert
+                Assert.equal(expectedAjaxId, (<any>xhr).requestHeaders['x-ms-request-id'], "x-ms-request-id id set correctly");
+                Assert.equal(expectedAjaxId, trackStub.args[0][0], "ajax id passed to trackAjax correctly");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax - disableCorrelationHeaders disables x-ms-request-id headers",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.disableAjaxTracking = false;
+                snippet.disableCorrelationHeaders = true;
+                snippet.maxBatchInterval = 0;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.spy(appInsights, "trackAjax");
+                var expectedRootId = appInsights.context.operation.id;
+                Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+                
+                // Act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "/bla");
+                xhr.send();
+                                
+                // Emulate response                               
+                (<any>xhr).respond("200", {}, "");
+
+                // Assert
+                Assert.equal(null, (<any>xhr).requestHeaders['x-ms-request-id'], "x-ms-request-id should not be set");
             }
         });
     }

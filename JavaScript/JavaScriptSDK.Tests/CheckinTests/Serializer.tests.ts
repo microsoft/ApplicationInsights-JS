@@ -8,14 +8,8 @@ class SerializerTests extends TestClass {
 
     /** Method called before the start of each test method */
     public testInitialize() {
-        this.throwInternalNonUserActionableSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
-        this.throwInternalUserActionableSpy = sinon.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
-    }
-
-    /** Method called after each test method has completed */
-    public testCleanup() {
-        this.throwInternalNonUserActionableSpy.restore();
-        this.throwInternalUserActionableSpy.restore();
+        this.throwInternalNonUserActionableSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
+        this.throwInternalUserActionableSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
     }
 
     public registerTests() {
@@ -186,8 +180,8 @@ class SerializerTests extends TestClass {
 
                 // verify
                 Assert.ok(this.throwInternalUserActionableSpy.calledTwice, "user actionable error is thrown");
-                var error = this.throwInternalUserActionableSpy.args[0][1].toLowerCase();
-                Assert.equal("attempting to serialize an object which does not implement iserializable: nocontractwithcycle", error);
+                var error = this.throwInternalUserActionableSpy.args[0][1].message.toLowerCase();
+                Assert.equal("ai: usract_cannotserializeobjectnonserializable message:\"attempting to serialize an object which does not implement iserializable\" props:\"{name:nocontractwithcycle}\"", error);
             }
         });
 
@@ -209,7 +203,7 @@ class SerializerTests extends TestClass {
 
                 // verify
                 Assert.ok(this.throwInternalUserActionableSpy.calledOnce, "error is thrown");
-                var error = this.throwInternalUserActionableSpy.args[0][1].toLowerCase();
+                var error = this.throwInternalUserActionableSpy.args[0][1].message.toLowerCase();
                 Assert.ok(error.indexOf("circular") >= 0 || error.indexOf("cyclic") >= 0, "error message");
             }
         });
