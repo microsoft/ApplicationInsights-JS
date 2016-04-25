@@ -38,6 +38,7 @@ module Microsoft.ApplicationInsights {
         disableCorrelationHeaders: boolean;
         disableFlushOnBeforeUnload: boolean;
         cookieDomain: string;
+        singlePageApp: boolean;
     }
 
     /**
@@ -165,6 +166,10 @@ module Microsoft.ApplicationInsights {
                     name = window.document && window.document.title || "";
                 }
 
+                if (this.config.singlePageApp) {
+                    this.context.operation = new Context.Operation();
+                }
+
                 this._pageTracking.start(name);
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
@@ -213,6 +218,10 @@ module Microsoft.ApplicationInsights {
          */
         public trackPageView(name?: string, url?: string, properties?: Object, measurements?: Object, duration?: number) {
             try {
+                if (this.config.singlePageApp) {
+                    this.context.operation = new Context.Operation();
+                }
+                
                 this._pageViewManager.trackPageView(name, url, properties, measurements, duration);
 
                 if (this.config.autoTrackPageVisitTime) {
