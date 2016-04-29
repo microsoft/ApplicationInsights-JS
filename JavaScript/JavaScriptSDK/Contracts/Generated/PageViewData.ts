@@ -16,6 +16,8 @@ module AI
         
         constructor()
         {
+            super();
+
             this.ver = 2;
             this.properties = {};
             this.measurements = {};
