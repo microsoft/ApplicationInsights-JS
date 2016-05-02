@@ -102,6 +102,7 @@ module Microsoft.ApplicationInsights {
             }
 
             // Enabling data loss analyzer on 10% of ikeys
+            DataLossAnalyzer.appInsights = this;
             DataLossAnalyzer.enabled = new SplitTest().isEnabled(this.config.instrumentationKey, 10); 
 
             // report lost items from the previous page
