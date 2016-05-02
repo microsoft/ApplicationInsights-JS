@@ -18,7 +18,7 @@
                 input = input.concat(input);
             }
 
-            // 5358 is a magic number: http://stackoverflow.com/questions/10696223/reason-for-5381-number-in-djb-hash-function
+            // 5381 is a magic number: http://stackoverflow.com/questions/10696223/reason-for-5381-number-in-djb-hash-function
             var hash: number = 5381;
 
             for (var i: number = 0; i < input.length; ++i) {
