@@ -76,38 +76,35 @@ module Microsoft.ApplicationInsights {
     export class SessionStorageSendBuffer implements ISendBuffer {
         static SEND_BUFFER_KEY = "AI_sendBuffer";
 
+        // An in-memory copy of the buffer. A copy is saved to the session store on enqueue and clear. 
+        // The buffer is restored in constructor and will contain un-sent events from previous page.
+        private _buffer: string[];
         private _config: ISenderConfig;
 
         constructor(config: ISenderConfig) {
             this._config = config;
+            this._buffer = this.getBuffer();
         }
 
         public enqueue(payload: string) {
-            var buffer = this.getBuffer();
-
-            if (buffer) {
-                buffer.push(payload);
-                this.setBuffer(buffer);
-            }
+            this._buffer.push(payload);
+            this.setBuffer(this._buffer);
         }
 
         public count(): number {
-            var buffer = this.getBuffer();
-
-            return buffer ? buffer.length : 0;
+            return this._buffer.length;
         }
 
         public clear() {
+            this._buffer.length = 0;
             this.setBuffer([]);
         }
 
         public batchPayloads(): string {
-            var buffer = this.getBuffer();
-
-            if (buffer && buffer.length > 0) {
+            if (this._buffer && this._buffer.length > 0) {
                 var batch = this._config.emitLineDelimitedJson() ?
-                    buffer.join("\n") :
-                    "[" + buffer.join(",") + "]";
+                    this._buffer.join("\n") :
+                    "[" + this._buffer.join(",") + "]";
 
                 return batch;
             }
@@ -117,7 +114,12 @@ module Microsoft.ApplicationInsights {
 
         private getBuffer(): string[] {
             var bufferJson = Util.getSessionStorage(SessionStorageSendBuffer.SEND_BUFFER_KEY);
-            return JSON.parse(bufferJson);
+
+            if (bufferJson) {
+                return JSON.parse(bufferJson);
+            }
+
+            return [];
         }
 
         private setBuffer(buffer: string[]) {
