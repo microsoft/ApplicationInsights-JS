@@ -11,7 +11,8 @@
 /// <reference path="Context/Session.ts"/>
 /// <reference path="Context/User.ts"/>
 /// <reference path="ajax/ajax.ts"/>
-/// <reference path="./DataLossAnalyzer.ts"/>
+/// <reference path="DataLossAnalyzer.ts"/>
+/// <reference path="SendBuffer.ts"/>
 
 interface XDomainRequest extends XMLHttpRequestEventTarget {
     responseText: string;
@@ -55,9 +56,9 @@ module Microsoft.ApplicationInsights {
     }
 
     export class Sender {
-        private _buffer: string[];
         private _lastSend: number;
         private _timeoutHandle: any;
+        private _buffer: ISendBuffer;
 
         /**
          * The configuration for this sender instance
@@ -73,10 +74,11 @@ module Microsoft.ApplicationInsights {
          * Constructs a new instance of the Sender class
          */
         constructor(config: ISenderConfig) {
-            this._buffer = [];
             this._lastSend = 0;
             this._config = config;
             this._sender = null;
+            this._buffer = new SessionStorageSendBuffer(config);
+
             if (typeof XMLHttpRequest != "undefined") {
                 var testXhr = new XMLHttpRequest();
                 if ("withCredentials" in testXhr) {
@@ -97,7 +99,7 @@ module Microsoft.ApplicationInsights {
                     // Do not send/save data
                     return;
                 }
-        
+
                 // validate input
                 if (!envelope) {
                     _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.NONUSRACT_CannotSendEmptyTelemetry, "Cannot send empty telemetry"));
@@ -109,17 +111,18 @@ module Microsoft.ApplicationInsights {
                     _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.NONUSRACT_SenderNotInitialized, "Sender was not initialized"));
                     return;
                 }
-            
+
                 // check if the incoming payload is too large, truncate if necessary
                 var payload: string = Serializer.serialize(envelope);
-            
+
                 // flush if we would exceet the max-size limit by adding this item
-                if (this._getSizeInBytes(this._buffer) + payload.length > this._config.maxBatchSizeInBytes()) {
+                var batch = this._buffer.batchPayloads();
+                if (batch && (batch.length + payload.length > this._config.maxBatchSizeInBytes())) {
                     this.triggerSend();
                 }
 
                 // enqueue the payload
-                this._buffer.push(payload);
+                this._buffer.enqueue(payload);
 
                 // ensure an invocation timeout is set
                 if (!this._timeoutHandle) {
@@ -133,7 +136,7 @@ module Microsoft.ApplicationInsights {
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
                     new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedAddingTelemetryToBuffer, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) }));
+                        { exception: Util.dump(e) }));
             }
         }
 
@@ -158,7 +161,7 @@ module Microsoft.ApplicationInsights {
         public triggerSend(async?: boolean) {
             // We are async by default
             var isAsync = true;
-            
+
             // Respect the parameter passed to the func
             if (typeof async === 'boolean') {
                 isAsync = async;
@@ -168,22 +171,19 @@ module Microsoft.ApplicationInsights {
                 // Send data only if disableTelemetry is false
                 if (!this._config.disableTelemetry()) {
 
-                    if (this._buffer.length) {
+                    if (this._buffer.count() > 0) {
                         // compose an array of payloads
-                        var batch = this._config.emitLineDelimitedJson() ?
-                            this._buffer.join("\n") :
-                            "[" + this._buffer.join(",") + "]";
+                        var batch = this._buffer.batchPayloads();
 
                         // invoke send
-                        this._sender(batch, isAsync, this._buffer.length);
+                        this._sender(batch, isAsync, this._buffer.count());
                     }
 
                     // update lastSend time to enable throttling
                     this._lastSend = +new Date;
                 }
 
-                // clear buffer
-                this._buffer.length = 0;
+                this._buffer.clear();
                 clearTimeout(this._timeoutHandle);
                 this._timeoutHandle = null;
             } catch (e) {

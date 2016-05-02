@@ -28,6 +28,7 @@
     <TypeScriptGeneratesDeclarations>True</TypeScriptGeneratesDeclarations>
     <!-- Suppress the "CS2008: No source files specified" warning -->
     <NoWarn>2008</NoWarn>
+    <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
@@ -124,6 +125,7 @@
     <TypeScriptCompile Include="ajax\ajaxRecord.ts" />
     <TypeScriptCompile Include="ajax\ajaxUtils.ts" />
     <TypeScriptCompile Include="HashCodeScoreGenerator.ts" />
+    <TypeScriptCompile Include="SendBuffer.ts" />
     <TypeScriptCompile Include="Sender.ts" />
     <TypeScriptCompile Include="SplitTest.ts" />
     <TypeScriptCompile Include="AppInsights.ts" />

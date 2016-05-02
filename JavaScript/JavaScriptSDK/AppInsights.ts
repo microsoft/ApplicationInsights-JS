@@ -37,6 +37,7 @@ module Microsoft.ApplicationInsights {
         disableDataLossAnalysis: boolean;
         disableCorrelationHeaders: boolean;
         disableFlushOnBeforeUnload: boolean;
+        storeSendQueueInSessionStorage: boolean;
         cookieDomain: string;
     }
 
