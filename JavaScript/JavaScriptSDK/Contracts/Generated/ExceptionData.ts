@@ -18,6 +18,8 @@ module AI
         
         constructor()
         {
+            super();
+
             this.ver = 2;
             this.exceptions = [];
             this.properties = {};
