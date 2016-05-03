@@ -11,6 +11,8 @@ module AI
         
         constructor()
         {
+            super();
+
             this.ver = 2;
             this.metrics = [];
             this.properties = {};

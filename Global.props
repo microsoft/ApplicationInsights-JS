@@ -1,22 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
-    <!-- This file (Global.props) must be included into all projects in all solutions of this product.                    -->
-    <!-- It defines common build paths and infrastructure.                                                                -->
-    <!-- Other products / repositories using the same build pattern will have an own copy of copy this file               -->
-
-    <!-- Project file location for the Import statement:                                                                  -->
-    <!--  * You MUST include this file towards the bottom of each respective project file, *                              -->
-    <!--  * BELOW all local definitions, RIGHT ABOVE the targets import.                   *                              -->
-    <!--  * For example, right above this line:                                            *                              -->
-    <!--  *     <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />            *                              -->
-    
-    <!-- There are two easy ways to import this file. The shortest way is to write something  like:                       -->
-    <!--     <Import Project="..\..\Global.props" />                                                                      -->
-    <!-- However, you will need to match the number of "..\" segments to the respective location of each project file in  -->
-    <!-- your sourcce tree. A more robust approach is to include the following code. It can stay the same regardless of   -->
-    <!-- your project file location:                                                                                      -->
-    <!--
+  <!-- This file (Global.props) must be included into all projects in all solutions of this product.                    -->
+  <!-- It defines common build paths and infrastructure.                                                                -->
+  <!-- Other products / repositories using the same build pattern will have an own copy of copy this file               -->
+  <!-- Project file location for the Import statement:                                                                  -->
+  <!--  * You MUST include this file towards the bottom of each respective project file, *                              -->
+  <!--  * BELOW all local definitions, RIGHT ABOVE the targets import.                   *                              -->
+  <!--  * For example, right above this line:                                            *                              -->
+  <!--  *     <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />            *                              -->
+  <!-- There are two easy ways to import this file. The shortest way is to write something  like:                       -->
+  <!--     <Import Project="..\..\Global.props" />                                                                      -->
+  <!-- However, you will need to match the number of "..\" segments to the respective location of each project file in  -->
+  <!-- your sourcce tree. A more robust approach is to include the following code. It can stay the same regardless of   -->
+  <!-- your project file location:                                                                                      -->
+  <!--
         <PropertyGroup Label="Include_Common_Build_Properties">
             <CommonBuildPropsLocation>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'EnlistmentRoot.marker'))</CommonBuildPropsLocation>
         </PropertyGroup>
@@ -24,84 +21,67 @@
             <Import Project="$(CommonBuildPropsLocation)\Global.props" />
         </ImportGroup>
      -->
-
-    <PropertyGroup>
-        <!--  The common project structure looks like this:                                                               -->
-        <!--  d:\DDGit\                                                                                                   -->
-        <!--          ServiceFoo\                                                                                         -->
-        <!--                  Bin\                                                                                        -->
-        <!--                  Obj\                                                                                        -->
-        <!--                  Packages\                                                                                   -->
-        <!--                  Src\                                                                                        -->
-        <!--                          .git\                                                                               -->
-        <!--                          .nuget\                                                                             -->
-        <!--                          Global.props                                                                        -->
-        <!--                          SomeProjectFolderA\                                                                 -->
-        <!--                                  NuGet.config                                                                -->
-        <!--                                  SomeProjectA.sln                                                            -->
-        <!--                                  ...                                                                         -->
-        <!--                          SomeProjectFolderB\                                                                 -->
-        <!--                                  ...                                                                         -->
-        <!--                          EnlistmentRoot.marker                                                               -->
-        <!--          ServiceBar\                                                                                         -->
-        <!--                  Bin\                                                                                        -->
-        <!--                  Obj\                                                                                        -->
-        <!--                  Packages\                                                                                   -->
-        <!--                  Src\                                                                                        -->
-        <!--                  ...                                                                                         -->
-        <!--                                                                                                              -->        
-        <!--  The Bin folder contains ALL build output.                                                                   -->
-        <!--  The Obj folder contains all intermediate build files (like the obj folder).                                 -->
-        <!--  The Packages folder contains ALL packages downloaded by NuGet.                                              -->
-        <!--  The above folders contain NOTHING that is checked in (they are not checked in themselves).                  -->
-        <!--  The Src folder contains EVERHYTHNG that is checked in and ALL that is checked in.                           -->
-        <!--  No build output or temp files should end up in the Src folder! (barring a few *small* VS temporaries)       -->
-        <!--                                                                                                              -->
-        <!--  Src MUST contain the EnlistmentRoot.marker file which marks the EnlistmentRoot.                             -->        
-        <!--  Src also contains the NuGet.config file which ensures that NuGet uses the NuGet.Packages folder.            -->        
-        
-        <EnlistmentRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'EnlistmentRoot.marker'))</EnlistmentRoot>
-        
-        <BinRoot>$(EnlistmentRoot)\..\bin</BinRoot>
-        <BinRoot>$([System.IO.Path]::GetFullPath( $(BinRoot) ))</BinRoot>
-                
-        <RelativeOutputPathBase>$(MSBuildProjectDirectory.Substring($(EnlistmentRoot.Length)))</RelativeOutputPathBase>
-        
-        <BaseIntermediateOutputPath>$(EnlistmentRoot)\..\obj</BaseIntermediateOutputPath>
-        <BaseIntermediateOutputPath>$([System.IO.Path]::GetFullPath( $(BaseIntermediateOutputPath) ))</BaseIntermediateOutputPath>
-
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        
-        <OutputPath>$(BinRoot)\$(Configuration)\$(RelativeOutputPathBase)</OutputPath>
-        <OutputPath>$([System.IO.Path]::GetFullPath( $(OutputPath) ))\</OutputPath>
-
-        <!-- Collect all NuGet packages in the same folder for convenience during testing -->
-        <PackageOutputDir>$(BinRoot)\$(Configuration)\NuGet</PackageOutputDir>
-      
-        <AppxPackageDir>$(OutputPath)</AppxPackageDir>
-
-        <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)\$(RelativeOutputPathBase)</IntermediateOutputPath>
-        <IntermediateOutputPath>$([System.IO.Path]::GetFullPath( $(IntermediateOutputPath) ))\</IntermediateOutputPath>
-        
-        <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">$(EnlistmentRoot)\</SolutionDir>
-        
-        <PackagesDir>$(EnlistmentRoot)\..\packages</PackagesDir>
-        <PackagesDir>$([System.IO.Path]::GetFullPath( $(PackagesDir) ))</PackagesDir>
-                
-    </PropertyGroup>
-   
-    <PropertyGroup>
-        <!-- Enable NuGet package restore during build -->
-        <RestorePackages>true</RestorePackages>
-        <RequireRestoreConsent>false</RequireRestoreConsent>
-        
-        <!-- Set the root namespace for all assemblies in this project hierarchy --> 
-        <RootNamespace>Microsoft.ApplicationInsights</RootNamespace>        
-      
-        <!-- Disable StyleCop by default to prevent StyleCop.MSBuild package from slowing down the debug build -->
-        <StyleCopEnabled>false</StyleCopEnabled>
-    </PropertyGroup>
-    
+  <PropertyGroup>
+    <!--  The common project structure looks like this:                                                               -->
+    <!--  d:\DDGit\                                                                                                   -->
+    <!--          ServiceFoo\                                                                                         -->
+    <!--                  Bin\                                                                                        -->
+    <!--                  Obj\                                                                                        -->
+    <!--                  Packages\                                                                                   -->
+    <!--                  Src\                                                                                        -->
+    <!--                          .git\                                                                               -->
+    <!--                          .nuget\                                                                             -->
+    <!--                          Global.props                                                                        -->
+    <!--                          SomeProjectFolderA\                                                                 -->
+    <!--                                  NuGet.config                                                                -->
+    <!--                                  SomeProjectA.sln                                                            -->
+    <!--                                  ...                                                                         -->
+    <!--                          SomeProjectFolderB\                                                                 -->
+    <!--                                  ...                                                                         -->
+    <!--                          EnlistmentRoot.marker                                                               -->
+    <!--          ServiceBar\                                                                                         -->
+    <!--                  Bin\                                                                                        -->
+    <!--                  Obj\                                                                                        -->
+    <!--                  Packages\                                                                                   -->
+    <!--                  Src\                                                                                        -->
+    <!--                  ...                                                                                         -->
+    <!--                                                                                                              -->
+    <!--  The Bin folder contains ALL build output.                                                                   -->
+    <!--  The Obj folder contains all intermediate build files (like the obj folder).                                 -->
+    <!--  The Packages folder contains ALL packages downloaded by NuGet.                                              -->
+    <!--  The above folders contain NOTHING that is checked in (they are not checked in themselves).                  -->
+    <!--  The Src folder contains EVERHYTHNG that is checked in and ALL that is checked in.                           -->
+    <!--  No build output or temp files should end up in the Src folder! (barring a few *small* VS temporaries)       -->
+    <!--                                                                                                              -->
+    <!--  Src MUST contain the EnlistmentRoot.marker file which marks the EnlistmentRoot.                             -->
+    <!--  Src also contains the NuGet.config file which ensures that NuGet uses the NuGet.Packages folder.            -->
+    <EnlistmentRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'EnlistmentRoot.marker'))</EnlistmentRoot>
+    <BinRoot>$(EnlistmentRoot)\..\bin</BinRoot>
+    <BinRoot>$([System.IO.Path]::GetFullPath( $(BinRoot) ))</BinRoot>
+    <RelativeOutputPathBase>$(MSBuildProjectDirectory.Substring($(EnlistmentRoot.Length)))</RelativeOutputPathBase>
+    <BaseIntermediateOutputPath>$(EnlistmentRoot)\..\obj</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath>$([System.IO.Path]::GetFullPath( $(BaseIntermediateOutputPath) ))</BaseIntermediateOutputPath>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <OutputPath>$(BinRoot)\$(Configuration)\$(RelativeOutputPathBase)</OutputPath>
+    <OutputPath>$([System.IO.Path]::GetFullPath( $(OutputPath) ))\</OutputPath>
+    <!-- Collect all NuGet packages in the same folder for convenience during testing -->
+    <PackageOutputDir>$(BinRoot)\$(Configuration)\NuGet</PackageOutputDir>
+    <AppxPackageDir>$(OutputPath)</AppxPackageDir>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)\$(RelativeOutputPathBase)</IntermediateOutputPath>
+    <IntermediateOutputPath>$([System.IO.Path]::GetFullPath( $(IntermediateOutputPath) ))\</IntermediateOutputPath>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">$(EnlistmentRoot)\</SolutionDir>
+    <PackagesDir>$(EnlistmentRoot)\..\packages</PackagesDir>
+    <PackagesDir>$([System.IO.Path]::GetFullPath( $(PackagesDir) ))</PackagesDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Enable NuGet package restore during build -->
+    <RestorePackages>true</RestorePackages>
+    <RequireRestoreConsent>false</RequireRestoreConsent>
+    <!-- Set the root namespace for all assemblies in this project hierarchy -->
+    <RootNamespace>Microsoft.ApplicationInsights</RootNamespace>
+    <!-- Disable StyleCop by default to prevent StyleCop.MSBuild package from slowing down the debug build -->
+    <StyleCopEnabled>false</StyleCopEnabled>
+  </PropertyGroup>
   <!-- Generate AssemblyFileVersion and AssemblyVersion attributes. -->
   <PropertyGroup>
     <!-- 
@@ -110,20 +90,17 @@
     -->
     <SemanticVersionMajor>0</SemanticVersionMajor>
     <SemanticVersionMinor>22</SemanticVersionMinor>
-    <SemanticVersionPatch>9</SemanticVersionPatch>
-
+    <SemanticVersionPatch>10</SemanticVersionPatch>
     <!-- 
       Date when Semantic Version was changed. 
       Update for every public release.
     -->
-    <SemanticVersionDate>2016-03-22</SemanticVersionDate>
-
+    <SemanticVersionDate>2016-05-02</SemanticVersionDate>
     <!-- 
       Pre-release version is used to distinguish internally built NuGet packages.
       Pre-release version = Minutes since semantic version was set, divided by 5 (to make it fit in a UInt16).
     -->
     <PreReleaseVersion>$([MSBuild]::Divide($([System.DateTime]::Now.Subtract($([System.DateTime]::Parse($(SemanticVersionDate)))).TotalMinutes), 5).ToString('F0'))</PreReleaseVersion>
-
     <!-- Turn on dynamic assembly attribute generation -->
     <AssemblyAttributesPath>$(IntermediateOutputPath)\AssemblyInfo.g.cs</AssemblyAttributesPath>
     <GenerateAdditionalSources>true</GenerateAdditionalSources>

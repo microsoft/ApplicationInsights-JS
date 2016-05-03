@@ -28,6 +28,8 @@ module AI
         
         constructor()
         {
+            super();
+
             this.ver = 2;
             this.kind = AI.DataPointType.Aggregation;
             this.dependencyKind = AI.DependencyKind.Other;
