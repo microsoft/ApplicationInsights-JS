@@ -417,7 +417,8 @@ class UserContextTests extends TestClass {
             emitLineDelimitedJson: () => null,
             maxBatchSizeInBytes: () => null,
             maxBatchInterval: () => null,
-            disableTelemetry: () => null
+            disableTelemetry: () => null,
+            storeSendBufferInSessionStorage: () => null
         };
     }
 }

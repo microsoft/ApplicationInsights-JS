@@ -38,7 +38,8 @@ class SenderTests extends TestClass {
             emitLineDelimitedJson: () => this.emitLineDelimitedJson,
             maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
             maxBatchInterval: () => this.maxBatchInterval,
-            disableTelemetry: () => this.disableTelemetry
+            disableTelemetry: () => this.disableTelemetry,
+            storeSendBufferInSessionStorage: () => false
         };
 
         this.getSender = () => new Microsoft.ApplicationInsights.Sender(config);
@@ -327,7 +328,7 @@ class SenderTests extends TestClass {
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 sender._sender = () => null;
                 var senderSpy = this.sandbox.spy(sender, "_sender");
-                this.maxBatchSizeInBytes = Microsoft.ApplicationInsights.Serializer.serialize(this.testTelemetry).length * 2;
+                this.maxBatchSizeInBytes = Microsoft.ApplicationInsights.Serializer.serialize(this.testTelemetry).length * 2 + 2; // +2 for "[]"
                 this.maxBatchInterval = 2;
 
                 // act

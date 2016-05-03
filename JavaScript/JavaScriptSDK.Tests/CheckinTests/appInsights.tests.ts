@@ -26,7 +26,8 @@ class AppInsightsTests extends TestClass {
             cookieDomain: undefined,
             disableDataLossAnalysis: true,
             disableCorrelationHeaders: false,
-            disableFlushOnBeforeUnload: false
+            disableFlushOnBeforeUnload: false,
+            storeSendBufferInSessionStorage: false
         };
 
         // set default values

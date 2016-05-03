@@ -16,6 +16,7 @@
 /// <reference path="../checkintests/PageVisitTimeManager.tests.ts" />
 /// <reference path="../checkintests/logging.tests.ts" />
 /// <reference path="../checkintests/sender.tests.ts" />
+/// <reference path="../checkintests/SendBuffer.tests.ts" />
 /// <reference path="../checkintests/serializer.tests.ts" />
 /// <reference path="../checkintests/telemetrycontext.tests.ts" />
 /// <reference path="../checkintests/util.tests.ts" />

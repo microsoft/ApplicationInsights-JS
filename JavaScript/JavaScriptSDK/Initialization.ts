@@ -173,6 +173,10 @@ module Microsoft.ApplicationInsights {
             config.disableFlushOnBeforeUnload = (config.disableFlushOnBeforeUnload !== undefined && config.disableFlushOnBeforeUnload !== null) ?
                 Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload) :
                 false;
+
+            config.storeSendBufferInSessionStorage = (config.storeSendBufferInSessionStorage !== undefined && config.storeSendBufferInSessionStorage !== null) ?
+                Util.stringToBoolOrDefault(config.storeSendBufferInSessionStorage) :
+                false;;
            
             return config;
         }
