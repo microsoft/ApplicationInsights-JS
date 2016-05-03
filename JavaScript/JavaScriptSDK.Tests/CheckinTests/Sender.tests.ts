@@ -328,7 +328,7 @@ class SenderTests extends TestClass {
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 sender._sender = () => null;
                 var senderSpy = this.sandbox.spy(sender, "_sender");
-                this.maxBatchSizeInBytes = Microsoft.ApplicationInsights.Serializer.serialize(this.testTelemetry).length * 2;
+                this.maxBatchSizeInBytes = Microsoft.ApplicationInsights.Serializer.serialize(this.testTelemetry).length * 2 + 2; // +2 for "[]"
                 this.maxBatchInterval = 2;
 
                 // act

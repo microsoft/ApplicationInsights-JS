@@ -168,6 +168,7 @@
     <Content Include="TestFramework\TestClass.ts" />
     <TypeScriptCompile Include="CheckinTests\ajax.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\DataLossAnalyzer.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\SendBuffer.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\SplitTest.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\appInsights.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\Context\Sample.tests.ts" />

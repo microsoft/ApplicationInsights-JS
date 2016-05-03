@@ -77,13 +77,13 @@ module Microsoft.ApplicationInsights {
     }
 
     /*
-     * Session storege buffer holds a copy of all un-sent items in the browser session storage.
+     * Session storege buffer holds a copy of all unsent items in the browser session storage.
      */
     export class SessionStorageSendBuffer implements ISendBuffer {
         static SEND_BUFFER_KEY = "AI_sendBuffer";
 
-        // An in-memory copy of the buffer. A copy is saved to the session storage on enqueue and clear. 
-        // The buffer is restored in a constructor and will contain un-sent events from a previous page.
+        // An in-memory copy of the buffer. A copy is saved to the session storage on enqueue() and clear(). 
+        // The buffer is restored in a constructor and contains unsent events from a previous page.
         private _buffer: string[];
         private _config: ISenderConfig;
 
