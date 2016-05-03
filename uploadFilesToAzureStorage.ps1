@@ -55,7 +55,7 @@ $cacheControlValue = "public, max-age=600";
 # upload files to Azure Storage
 $files = Get-ChildItem $releaseFromDir;
 foreach($file in $files) {
-    Set-AzureStorageBlobContent -Container scripts -File (Join-Path $releaseFromDir -ChildPath $file) -Blob ("test/"+$file) -Context $azureContext -Properties @{CacheControl = $cacheControlValue; ContentType = "application/x-javascript"} 
+    Set-AzureStorageBlobContent -Container scripts -File (Join-Path $releaseFromDir -ChildPath $file) -Blob ("a/"+$file) -Context $azureContext -Properties @{CacheControl = $cacheControlValue; ContentType = "application/x-javascript"} 
 }
 
 Write-Host "Files uploaded successfully to Azure Storage."
