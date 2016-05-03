@@ -38,6 +38,9 @@ module Microsoft.ApplicationInsights {
         batchPayloads: () => string;
     }
 
+    /*
+     * An array based send buffer. 
+     */
     export class ArraySendBuffer implements ISendBuffer {
         private _config: ISenderConfig;
         private _buffer: string[];
@@ -73,11 +76,14 @@ module Microsoft.ApplicationInsights {
         }
     }
 
+    /*
+     * Session storege buffer holds a copy of all un-sent items in the browser session storage.
+     */
     export class SessionStorageSendBuffer implements ISendBuffer {
         static SEND_BUFFER_KEY = "AI_sendBuffer";
 
-        // An in-memory copy of the buffer. A copy is saved to the session store on enqueue and clear. 
-        // The buffer is restored in constructor and will contain un-sent events from previous page.
+        // An in-memory copy of the buffer. A copy is saved to the session storage on enqueue and clear. 
+        // The buffer is restored in a constructor and will contain un-sent events from a previous page.
         private _buffer: string[];
         private _config: ISenderConfig;
 
@@ -116,7 +122,10 @@ module Microsoft.ApplicationInsights {
             var bufferJson = Util.getSessionStorage(SessionStorageSendBuffer.SEND_BUFFER_KEY);
 
             if (bufferJson) {
-                return JSON.parse(bufferJson);
+                var buffer: string[] = JSON.parse(bufferJson);
+                if (buffer) {
+                    return buffer;
+                }
             }
 
             return [];
