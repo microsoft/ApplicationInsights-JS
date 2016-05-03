@@ -24,13 +24,18 @@ if (-Not ($version -match "\d+\.\d+\.\d+")) {
 
 # update package.json 
 $packagesJson.version = $version
-$packagesJson | ConvertTo-Json | Out-File $packageJsonPath
+$packagesJson = $packagesJson | ConvertTo-Json 
+$packagesJson = $packagesJson -replace "\\u0026", "&"
+$packagesJson | Out-File $packageJsonPath
 
 # update bower.json
 $bowerJsonPath = Join-Path $jsSdkDir -ChildPath "bower.json"
 $bowerJson = (Get-Content $bowerJsonPath -Raw) | ConvertFrom-Json
 $bowerJson.version = $version
-$packagesJson | ConvertTo-Json | Out-File $bowerJsonPath
+$bowerJson = $bowerJson | ConvertTo-Json 
+$bowerJson = $bowerJson -replace "\\u003c", "<"
+$bowerJson = $bowerJson -replace "\\u003e", ">"
+$bowerJson | Out-File $bowerJsonPath
 
 # update JavaScript\JavaScriptSDK\AppInsights.ts
 $appInsightsTsPath = Join-Path $jsSdkDir -ChildPath "JavaScript\JavaScriptSDK\AppInsights.ts"
@@ -56,6 +61,9 @@ $ns.AddNamespace("ns", $globalPropsXml.DocumentElement.NamespaceURI)
 $globalPropsXml.SelectSingleNode("//ns:SemanticVersionMajor", $ns).InnerText = $versionSplit[0]
 $globalPropsXml.SelectSingleNode("//ns:SemanticVersionMinor", $ns).InnerText = $versionSplit[1]
 $globalPropsXml.SelectSingleNode("//ns:SemanticVersionPatch", $ns).InnerText = $versionSplit[2]
+
+$versionDate = Get-date -format yyy-MM-dd
+$globalPropsXml.SelectSingleNode("//ns:SemanticVersionDate", $ns).InnerText = $versionDate
 
 $globalPropsXml.Save($globalPropsPath);
 
