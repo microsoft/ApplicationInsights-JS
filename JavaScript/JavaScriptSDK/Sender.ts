@@ -53,6 +53,11 @@ module Microsoft.ApplicationInsights {
          * The master off switch.  Do not send any data if set to TRUE
          */
         disableTelemetry: () => boolean;
+
+        /**
+         * Store a copy of a send buffer in the session storage
+         */
+        storeSendBufferInSessionStorage: () => boolean;
     }
 
     export class Sender {
@@ -77,7 +82,7 @@ module Microsoft.ApplicationInsights {
             this._lastSend = 0;
             this._config = config;
             this._sender = null;
-            this._buffer = new SessionStorageSendBuffer(config);
+            this._buffer = this._config.storeSendBufferInSessionStorage() ? new SessionStorageSendBuffer(config) : new ArraySendBuffer(config);
 
             if (typeof XMLHttpRequest != "undefined") {
                 var testXhr = new XMLHttpRequest();

@@ -38,7 +38,8 @@ class SenderTests extends TestClass {
             emitLineDelimitedJson: () => this.emitLineDelimitedJson,
             maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
             maxBatchInterval: () => this.maxBatchInterval,
-            disableTelemetry: () => this.disableTelemetry
+            disableTelemetry: () => this.disableTelemetry,
+            storeSendBufferInSessionStorage: () => false
         };
 
         this.getSender = () => new Microsoft.ApplicationInsights.Sender(config);

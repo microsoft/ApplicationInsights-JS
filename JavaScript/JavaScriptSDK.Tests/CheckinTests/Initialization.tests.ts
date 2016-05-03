@@ -32,7 +32,8 @@ class InitializationTests extends TestClass {
             disableDataLossAnalysis: true,
             disableCorrelationHeaders: false,
             disableFlushOnBeforeUnload: false,
-            cookieDomain: undefined
+            cookieDomain: undefined,
+            storeSendBufferInSessionStorage: false
         };
 
         // set default values
