@@ -101,8 +101,8 @@ module Microsoft.ApplicationInsights {
                 cookieDomain: () => this.config.cookieDomain
             }
 
-            this.context = new ApplicationInsights.TelemetryContext(configGetters);
-
+			this.context = new ApplicationInsights.TelemetryContext(configGetters);
+			
             // Enabling data loss analyzer on 10% of ikeys
             DataLossAnalyzer.appInsights = this;
             DataLossAnalyzer.enabled = new SplitTest().isEnabled(this.config.instrumentationKey, 10); 
