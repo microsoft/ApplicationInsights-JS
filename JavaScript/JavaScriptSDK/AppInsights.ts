@@ -1,4 +1,4 @@
-﻿/// <reference path="telemetrycontext.ts" />
+/// <reference path="telemetrycontext.ts" />
 /// <reference path="./Telemetry/Common/Data.ts"/>
 /// <reference path="./Util.ts"/>
 /// <reference path="./Contracts/Generated/SessionState.ts"/>

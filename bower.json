@@ -1,4 +1,4 @@
-﻿{
+{
     "name":  "applicationinsights-js",
     "main":  "dist/ai.0.js",
     "version":  "0.22.11,
