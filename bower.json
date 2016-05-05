@@ -1,17 +1,17 @@
-﻿{
-    "name":  "applicationinsights-js",
-    "main":  "dist/ai.0.js",
-    "version":  "0.22.11",
-    "homepage":  "https://github.com/Microsoft/ApplicationInsights-JS",
-    "authors":  [
-                    "Max Shekhovtsov <mashekho@microsoft.com>"
-                ],
-    "license":  "MIT",
-    "ignore":  [
-                   "**/.*",
-                   "node_modules",
-                   "bower_components",
-                   "test",
-                   "tests"
-               ]
+{
+  "name": "applicationinsights-js",
+  "main": "dist/ai.0.js",
+  "version": "0.22.11",
+  "homepage": "https://github.com/Microsoft/ApplicationInsights-JS",
+  "authors": [
+    "Max Shekhovtsov <mashekho@microsoft.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
 }
