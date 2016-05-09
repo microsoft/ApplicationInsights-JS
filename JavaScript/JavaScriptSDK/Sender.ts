@@ -73,7 +73,7 @@ module Microsoft.ApplicationInsights {
         /**
          * A method which will cause data to be send to the url
          */
-        public _sender: (payload: string, isAsync: boolean, numberOfItemsInPayload: number) => void;
+        public _sender: (payload: string[], isAsync: boolean, numberOfItemsInPayload: number) => void;
 
         /**
          * Constructs a new instance of the Sender class
@@ -82,7 +82,8 @@ module Microsoft.ApplicationInsights {
             this._lastSend = 0;
             this._config = config;
             this._sender = null;
-            this._buffer = this._config.storeSendBufferInSessionStorage() ? new SessionStorageSendBuffer(config) : new ArraySendBuffer(config);
+            // this._buffer = this._config.storeSendBufferInSessionStorage() ? new SessionStorageSendBuffer(config) : new ArraySendBuffer(config);
+            this._buffer = new SessionStorageSendBuffer(config);
 
             if (typeof XMLHttpRequest != "undefined") {
                 var testXhr = new XMLHttpRequest();
@@ -177,18 +178,16 @@ module Microsoft.ApplicationInsights {
                 if (!this._config.disableTelemetry()) {
 
                     if (this._buffer.count() > 0) {
-                        // compose an array of payloads
-                        var batch = this._buffer.batchPayloads();
-
                         // invoke send
-                        this._sender(batch, isAsync, this._buffer.count());
+                        this._sender(this._buffer.getItems(), isAsync, this._buffer.count());
                     }
 
                     // update lastSend time to enable throttling
                     this._lastSend = +new Date;
+                } else {
+                    this._buffer.clear();
                 }
 
-                this._buffer.clear();
                 clearTimeout(this._timeoutHandle);
                 this._timeoutHandle = null;
             } catch (e) {
@@ -205,14 +204,19 @@ module Microsoft.ApplicationInsights {
          * @param payload {string} - The data payload to be sent.
          * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
          */
-        private _xhrSender(payload: string, isAsync: boolean, countOfItemsInPayload: number) {
+        private _xhrSender(payload: string[], isAsync: boolean, countOfItemsInPayload: number) {
+            // compose an array of payloads
+            var batch = this._buffer.batchPayloads();
+
             var xhr = new XMLHttpRequest();
             xhr[AjaxMonitor.DisabledPropertyName] = true;
             xhr.open("POST", this._config.endpointUrl(), isAsync);
             xhr.setRequestHeader("Content-type", "application/json");
-            xhr.onreadystatechange = () => Sender._xhrReadyStateChange(xhr, payload, countOfItemsInPayload);
-            xhr.onerror = (event: ErrorEvent) => Sender._onError(payload, xhr.responseText || xhr.response || "", event);
+            xhr.onreadystatechange = () => this._xhrReadyStateChange(xhr, payload, countOfItemsInPayload);
+            xhr.onerror = (event: ErrorEvent) => this._onError(payload, xhr.responseText || xhr.response || "", event);
             xhr.send(payload);
+
+            this._buffer.markAsSent(payload);
         }
 
         /**
@@ -223,23 +227,28 @@ module Microsoft.ApplicationInsights {
          * Note: XDomainRequest does not support sync requests. This 'isAsync' parameter is added
          * to maintain consistency with the xhrSender's contract
          */
-        private _xdrSender(payload: string, isAsync: boolean) {
+        private _xdrSender(payload: string[], isAsync: boolean) {
+            // compose an array of payloads
+            var batch = this._buffer.batchPayloads();
+
             var xdr = new XDomainRequest();
-            xdr.onload = () => Sender._xdrOnLoad(xdr, payload);
-            xdr.onerror = (event: ErrorEvent) => Sender._onError(payload, xdr.responseText || "", event);
+            xdr.onload = () => this._xdrOnLoad(xdr, payload);
+            xdr.onerror = (event: ErrorEvent) => this._onError(payload, xdr.responseText || "", event);
             xdr.open('POST', this._config.endpointUrl());
-            xdr.send(payload);
+            xdr.send(batch);
+
+            this._buffer.markAsSent(payload);
         }
 
         /**
          * xhr state changes
          */
-        public static _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string, countOfItemsInPayload: number) {
+        public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) {
             if (xhr.readyState === 4) {
                 if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
-                    Sender._onError(payload, xhr.responseText || xhr.response || "");
+                    this._onError(payload, xhr.responseText || xhr.response || "");
                 } else {
-                    Sender._onSuccess(payload, countOfItemsInPayload);
+                    this._onSuccess(payload, countOfItemsInPayload);
                 }
             }
         }
@@ -247,18 +256,18 @@ module Microsoft.ApplicationInsights {
         /**
          * xdr state changes
          */
-        public static _xdrOnLoad(xdr: XDomainRequest, payload: string) {
+        public _xdrOnLoad(xdr: XDomainRequest, payload: string[]) {
             if (xdr && (xdr.responseText + "" === "200" || xdr.responseText === "")) {
-                Sender._onSuccess(payload, 0);
+                this._onSuccess(payload, 0);
             } else {
-                Sender._onError(payload, xdr && xdr.responseText || "");
+                this._onError(payload, xdr && xdr.responseText || "");
             }
         }
 
         /**
          * error handler
          */
-        public static _onError(payload: string, message: string, event?: ErrorEvent) {
+        public _onError(payload: string[], message: string, event?: ErrorEvent) {
             _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
                 new _InternalLogMessage(_InternalMessageId.NONUSRACT_OnError, "Failed to send telemetry.", { message: message }));
         }
@@ -266,8 +275,9 @@ module Microsoft.ApplicationInsights {
         /**
          * success handler
          */
-        public static _onSuccess(payload: string, countOfItemsInPayload: number) {
+        public _onSuccess(payload: string[], countOfItemsInPayload: number) {
             DataLossAnalyzer.decrementItemsQueued(countOfItemsInPayload);
+            this._buffer.clearSent(payload);
         }
     }
 

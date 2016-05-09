@@ -32,10 +32,17 @@ module Microsoft.ApplicationInsights {
          */
         clear: () => void;
 
+        getItems: () => string[];
+
         /**
          * Build a batch of all queued elements
          */
         batchPayloads: () => string;
+
+
+        markAsSent: (payload: string[]) => void;
+
+        clearSent: (payload: string[]) => void;
     }
 
     /*
@@ -63,6 +70,10 @@ module Microsoft.ApplicationInsights {
             this._buffer.length = 0;
         }
 
+        public getItems(): string[] {
+            return this._buffer;
+        }
+
         public batchPayloads(): string {
             if (this.count() > 0) {
                 var batch = this._config.emitLineDelimitedJson() ?
@@ -74,13 +85,22 @@ module Microsoft.ApplicationInsights {
 
             return null;
         }
+
+        public markAsSent(payload: string[]) {
+            this.clear();
+        }
+
+        public clearSent(payload: string[]) {
+            // already cleared
+        }
     }
 
     /*
      * Session storege buffer holds a copy of all unsent items in the browser session storage.
      */
     export class SessionStorageSendBuffer implements ISendBuffer {
-        static SEND_BUFFER_KEY = "AI_sendBuffer";
+        static BUFFER_KEY = "AI_buffer";
+        static SENT_BUFFER_KEY = "AI_sentBuffer";
 
         // An in-memory copy of the buffer. A copy is saved to the session storage on enqueue() and clear(). 
         // The buffer is restored in a constructor and contains unsent events from a previous page.
@@ -89,12 +109,19 @@ module Microsoft.ApplicationInsights {
 
         constructor(config: ISenderConfig) {
             this._config = config;
-            this._buffer = this.getBuffer();
+
+            var bufferItems = this.getBuffer(SessionStorageSendBuffer.BUFFER_KEY);
+            var notDeliveredItems = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+
+            this._buffer = bufferItems.concat(notDeliveredItems);
+
+            this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
+            this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
         }
 
         public enqueue(payload: string) {
             this._buffer.push(payload);
-            this.setBuffer(this._buffer);
+            this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
         }
 
         public count(): number {
@@ -103,7 +130,11 @@ module Microsoft.ApplicationInsights {
 
         public clear() {
             this._buffer.length = 0;
-            this.setBuffer([]);
+            this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, []);
+        }
+
+        public getItems(): string[] {
+            return this._buffer;
         }
 
         public batchPayloads(): string {
@@ -118,8 +149,37 @@ module Microsoft.ApplicationInsights {
             return null;
         }
 
-        private getBuffer(): string[] {
-            var bufferJson = Util.getSessionStorage(SessionStorageSendBuffer.SEND_BUFFER_KEY);
+        public markAsSent(payload: string[]) {
+            var sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+            sentElements = sentElements.concat(payload);
+
+            this._buffer = this.removePayloadsFromBuffer(payload, this._buffer);
+
+            this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
+            this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
+        }
+
+        public clearSent(payload: string[]) {
+            var sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY); 
+            sentElements = this.removePayloadsFromBuffer(payload, sentElements);
+
+            this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
+        }
+
+        private removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
+            var cleared: string[] = [];
+
+            buffer.forEach((item) => {
+                if (!payloads.some(p => p == item)) {
+                    cleared.push(item);
+                }
+            });
+
+            return cleared;
+        }
+
+        private getBuffer(key: string): string[] {
+            var bufferJson = Util.getSessionStorage(key);
 
             if (bufferJson) {
                 var buffer: string[] = JSON.parse(bufferJson);
@@ -131,9 +191,9 @@ module Microsoft.ApplicationInsights {
             return [];
         }
 
-        private setBuffer(buffer: string[]) {
+        private setBuffer(key: string, buffer: string[]) {
             var bufferJson = JSON.stringify(buffer);
-            Util.setSessionStorage(SessionStorageSendBuffer.SEND_BUFFER_KEY, bufferJson);
+            Util.setSessionStorage(key, bufferJson);
         }
     }
 }
