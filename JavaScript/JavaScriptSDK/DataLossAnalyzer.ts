@@ -73,9 +73,8 @@
                     DataLossAnalyzer.getNumberOfLostItems() > 0) {
 
                     DataLossAnalyzer.appInsights.trackTrace(
-                        "AI (Internal): Internal report DATALOSS: "
-                        + DataLossAnalyzer.getNumberOfLostItems()
-                        , null);
+                        "AI (Internal): Internal report DATALOSS:\"" + DataLossAnalyzer.getNumberOfLostItems() + "\"",
+                        null);
                     DataLossAnalyzer.appInsights.flush();
 
                     var issuesReported: number = DataLossAnalyzer.getIssuesReported();
