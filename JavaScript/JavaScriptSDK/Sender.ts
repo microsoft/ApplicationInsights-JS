@@ -63,7 +63,11 @@ module Microsoft.ApplicationInsights {
     export class Sender {
         private _lastSend: number;
         private _timeoutHandle: any;
-        private _buffer: ISendBuffer;
+
+        /**
+         * A send buffer object
+         */
+        public _buffer: ISendBuffer;
 
         /**
          * The configuration for this sender instance
@@ -82,8 +86,7 @@ module Microsoft.ApplicationInsights {
             this._lastSend = 0;
             this._config = config;
             this._sender = null;
-            // this._buffer = this._config.storeSendBufferInSessionStorage() ? new SessionStorageSendBuffer(config) : new ArraySendBuffer(config);
-            this._buffer = new SessionStorageSendBuffer(config);
+            this._buffer = this._config.storeSendBufferInSessionStorage() ? new SessionStorageSendBuffer(config) : new ArraySendBuffer(config);
 
             if (typeof XMLHttpRequest != "undefined") {
                 var testXhr = new XMLHttpRequest();
@@ -214,7 +217,7 @@ module Microsoft.ApplicationInsights {
             xhr.setRequestHeader("Content-type", "application/json");
             xhr.onreadystatechange = () => this._xhrReadyStateChange(xhr, payload, countOfItemsInPayload);
             xhr.onerror = (event: ErrorEvent) => this._onError(payload, xhr.responseText || xhr.response || "", event);
-            xhr.send(payload);
+            xhr.send(batch);
 
             this._buffer.markAsSent(payload);
         }
@@ -270,6 +273,9 @@ module Microsoft.ApplicationInsights {
         public _onError(payload: string[], message: string, event?: ErrorEvent) {
             _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
                 new _InternalLogMessage(_InternalMessageId.NONUSRACT_OnError, "Failed to send telemetry.", { message: message }));
+
+            // TODO: add error handling
+            this._buffer.clearSent(payload);
         }
 
         /**

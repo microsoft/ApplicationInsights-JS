@@ -23,9 +23,9 @@ class SenderTests extends TestClass {
         if (Microsoft.ApplicationInsights.Util.canUseSessionStorage()) {
             sessionStorage.clear();
         }
+
         this.requests = [];
         this.xhr = sinon.useFakeXMLHttpRequest();
-
         this.xdr = sinon.useFakeXMLHttpRequest();
         this.fakeServer = sinon.fakeServer.create();
         this.endpointUrl = "testUrl";
@@ -42,9 +42,15 @@ class SenderTests extends TestClass {
             storeSendBufferInSessionStorage: () => false
         };
 
-        this.getSender = () => new Microsoft.ApplicationInsights.Sender(config);
-        this.errorSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onError");
-        this.successSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onSuccess");
+        this.getSender = () => {
+            var sender = new Microsoft.ApplicationInsights.Sender(config);
+
+            this.errorSpy = this.sandbox.spy(sender, "_onError");
+            this.successSpy = this.sandbox.spy(sender, "_onSuccess");
+
+            return sender;
+        }
+        
         this.loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole");
         this.testTelemetry = { aiDataContract: true };
     }
@@ -340,11 +346,15 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.ok(senderSpy.calledTwice, "sender was invoked twice");
                 logAsserts(0);
+                sender._buffer.clear();
 
                 // act (fill buffer, trigger send, refill buffer, wait)
                 this.clock.tick(1);
                 senderSpy.reset();
                 sender.send(this.testTelemetry);
+                sender.send(this.testTelemetry);
+                sender.send(this.testTelemetry);
+                sender._buffer.clear();
                 sender.send(this.testTelemetry);
                 sender.send(this.testTelemetry);
                 sender.send(this.testTelemetry);
