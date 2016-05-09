@@ -13,7 +13,7 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "0.22.11";
+    export var Version = "0.22.12";
 
     export interface IConfig {
         instrumentationKey: string;
@@ -104,13 +104,6 @@ module Microsoft.ApplicationInsights {
             }
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
-
-            // Enabling data loss analyzer on 10% of ikeys
-            DataLossAnalyzer.appInsights = this;
-            DataLossAnalyzer.enabled = new SplitTest().isEnabled(this.config.instrumentationKey, 10); 
-
-            // report lost items from the previous page
-            DataLossAnalyzer.reportLostItems();
 
             this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
 
