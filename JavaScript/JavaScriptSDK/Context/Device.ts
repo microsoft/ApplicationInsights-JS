@@ -39,7 +39,7 @@
         public locale: string;
         
         /**
-         * The device id.
+         * The IP address.
          */
         public ip: string;
 
