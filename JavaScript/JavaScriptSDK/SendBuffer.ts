@@ -39,9 +39,15 @@ module Microsoft.ApplicationInsights {
          */
         batchPayloads: () => string;
 
-
+        /**
+         * Moves items to the SENT_BUFFER.
+         * The buffer holds items which were sent, but we haven't received any response from the backend for them yet. 
+         */
         markAsSent: (payload: string[]) => void;
 
+        /**
+         * Removes items from the SENT_BUFFER. Should be called on successful response from the backend. 
+         */
         clearSent: (payload: string[]) => void;
     }
 
