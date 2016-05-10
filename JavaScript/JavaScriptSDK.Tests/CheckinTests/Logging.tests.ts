@@ -156,6 +156,7 @@ class LoggingTests extends TestClass {
                     // act
                     var message = new InternalLoggingMessage(1, "error!");
                     InternalLogging.enableDebugExceptions = () => false;
+                    InternalLogging.verboseLogging = () => true;
                     InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
 
                     // verify
@@ -166,6 +167,34 @@ class LoggingTests extends TestClass {
 
                     // cleanup
                     
+                } catch (e) {
+                    Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
+                }
+            }
+        });
+
+        this.testCase({
+            name: "LoggingTests: throwInternalNonUserActionable does not call console.warn without verboseLogging",
+            test: () => {
+                // setup
+                var throwSpy = null;
+                try {
+                    throwSpy = this.sandbox.spy(console, "warn");
+
+                    // act
+                    var message = new InternalLoggingMessage(1, "error!");
+                    InternalLogging.enableDebugExceptions = () => false;
+                    InternalLogging.verboseLogging = () => false;
+                    InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+
+                    // verify
+                    Assert.ok(throwSpy.notCalled, "console.warn was called while verboseLogging mode was false");
+
+                    Assert.equal(1, InternalLogging.queue.length);
+                    Assert.equal("AI (Internal): " + "NONUSRACT_BrowserCannotReadLocalStorage message:\"error!\"", InternalLogging.queue[0].message);
+
+                    // cleanup
+
                 } catch (e) {
                     Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
                 }

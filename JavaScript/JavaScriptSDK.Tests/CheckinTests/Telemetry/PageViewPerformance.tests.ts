@@ -102,6 +102,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 });
 
                 var actualLoggedMessage = null;
+                Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
                 var loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole", (m) => actualLoggedMessage = m);
 
 
