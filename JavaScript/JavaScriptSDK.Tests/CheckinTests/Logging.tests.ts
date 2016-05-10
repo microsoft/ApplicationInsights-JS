@@ -166,7 +166,8 @@ class LoggingTests extends TestClass {
                     Assert.equal("AI (Internal): " + "NONUSRACT_BrowserCannotReadLocalStorage message:\"error!\"", InternalLogging.queue[0].message);
 
                     // cleanup
-                    
+                    InternalLogging.verboseLogging = () => false;
+
                 } catch (e) {
                     Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
                 }
