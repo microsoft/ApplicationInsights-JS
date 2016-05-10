@@ -358,7 +358,6 @@ class SenderTests extends TestClass {
                 sender.send(this.testTelemetry);
                 sender.send(this.testTelemetry);
                 sender.send(this.testTelemetry);
-                this.clock.tick(sender._config.maxBatchInterval());
 
                 // verify
                 Assert.ok(senderSpy.calledTwice, "sender was invoked twice");

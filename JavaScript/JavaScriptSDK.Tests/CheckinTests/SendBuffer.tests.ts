@@ -42,8 +42,10 @@ class SendBufferTests extends TestClass {
         }
     }
 
-    public registerTests() {
+    private BUFFER_KEY = "AI_buffer";
+    private SENT_BUFFER_KEY = "AI_sentBuffer";
 
+    public registerTests() {
         // ArraySendBuffer tests
 
         this.testCase({
@@ -74,7 +76,7 @@ class SendBufferTests extends TestClass {
 
                 // verify
                 Assert.equal(2, buffer.count(), "two items expected");
-                
+
                 //act
                 buffer.clear();
 
@@ -144,7 +146,7 @@ class SendBufferTests extends TestClass {
                 var batch = buffer.batchPayloads();
 
                 // verify
-                Assert.equal("[" + payload1 + ","+ payload2 + "]", batch, "invalid batch");
+                Assert.equal("[" + payload1 + "," + payload2 + "]", batch, "invalid batch");
             }
         });
 
@@ -295,6 +297,33 @@ class SendBufferTests extends TestClass {
             test: () => {
                 // setup
                 var buffer = this.getSessionStorageSendBuffer(true);
+                var payload1 = "{ test: test1 }";
+                var payload2 = "{ test: test2 }";
+                var payload3 = "{ test: test3 }";
+
+                // act
+                buffer.enqueue(payload1);
+                buffer.enqueue(payload2);
+                buffer.enqueue(payload3);
+
+                var sent = [payload1, payload2];
+                buffer.markAsSent(sent);
+
+                var delivered = [payload1];
+                buffer.clearSent(delivered);
+
+                var buffer2 = this.getSessionStorageSendBuffer(true);
+
+                // verify
+                Assert.equal(2, buffer2.count(), "there should be two elements in the buffer");
+            }
+        });
+
+        this.testCase({
+            name: "SessionStorageSendBuffer: markAsSent saves items in the SENT_BUFFER",
+            test: () => {
+                // setup
+                var buffer = this.getSessionStorageSendBuffer(true);
 
                 // act
                 var payload1 = "{ test: test }";
@@ -303,13 +332,89 @@ class SendBufferTests extends TestClass {
                 buffer.enqueue(payload1);
                 buffer.enqueue(payload2);
 
-                var buffer2 = this.getSessionStorageSendBuffer(true);
+                // verify
+                Assert.equal(2, buffer.count(), "there should be two elements in the buffer");
+
+                // act
+                var payload = buffer.getItems();
+                buffer.markAsSent(payload);
 
                 // verify
-                Assert.equal(2, buffer2.count(), "there should be two elements in the buffer");
+                Assert.equal(0, buffer.count(), "There shouldn't be any items in the buffer");
+                var sentBuffer = this.getBuffer(this.SENT_BUFFER_KEY);
+
+                Assert.equal(2, sentBuffer.length, "There should be 2 items in the sent buffer");
+            }
+        });
+
+        this.testCase({
+            name: "SessionStorageSendBuffer: markAsSent removes only sent items from the buffer",
+            test: () => {
+                // setup
+                var buffer = this.getSessionStorageSendBuffer(true);
+
+                // act
+                var payload1 = "{ test: test1 }";
+                var payload2 = "{ test: test2 }";
+                var payload3 = "{ test: test3 }";
+
+                buffer.enqueue(payload1);
+                buffer.enqueue(payload2);
+                buffer.enqueue(payload3);
+
+                // verify
+                Assert.equal(3, buffer.count(), "there should be three elements in the buffer");
+
+                // act
+                var payload = [payload1, payload2];
+                buffer.markAsSent(payload);
+
+                // verify
+                Assert.equal(1, buffer.count(), "There should be one notsent item left in the buffer");
+                var sentBuffer = this.getBuffer(this.SENT_BUFFER_KEY);
+
+                Assert.equal(2, sentBuffer.length, "There should be 2 items in the sent buffer");
+            }
+        });
+
+        this.testCase({
+            name: "SessionStorageSendBuffer: clearSent clears the SENT_BUFFER",
+            test: () => {
+                // setup
+                var buffer = this.getSessionStorageSendBuffer(true);
+
+                var payload1 = "{ test: test1 }";
+                var payload2 = "{ test: test2 }";
+
+                buffer.enqueue(payload1);
+                buffer.enqueue(payload2);
+
+                var payload = buffer.getItems();
+                buffer.markAsSent(payload);
+
+                // act
+                buffer.clearSent(payload);
+
+                // verify
+                var sentBuffer = this.getBuffer(this.SENT_BUFFER_KEY);
+                Assert.equal(0, sentBuffer.length, "There should be 0 items in the sent buffer");
             }
         });
     }
+
+    private getBuffer(key: string): string[] {
+        var bufferJson = Microsoft.ApplicationInsights.Util.getSessionStorage(key);
+
+        if (bufferJson) {
+            var buffer: string[] = JSON.parse(bufferJson);
+            if (buffer) {
+                return buffer;
+            }
+        }
+
+        return [];
+    }
+
 }
 
 new SendBufferTests().registerTests(); 
