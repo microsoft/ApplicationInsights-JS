@@ -7,10 +7,6 @@ class SendBufferTests extends TestClass {
     private getArraySendBuffer: (emitLineDelimitedJson?: boolean) => Microsoft.ApplicationInsights.ArraySendBuffer;
     private getSessionStorageSendBuffer: (emitLineDelimitedJson?: boolean) => Microsoft.ApplicationInsights.SessionStorageSendBuffer;
 
-    public testCleanup() {
-        Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = false;
-    }
-
     public testInitialize() {
         if (Microsoft.ApplicationInsights.Util.canUseSessionStorage()) {
             sessionStorage.clear();
@@ -40,6 +36,11 @@ class SendBufferTests extends TestClass {
 
             return new Microsoft.ApplicationInsights.SessionStorageSendBuffer(config);
         }
+    }
+
+    public testCleanup() {
+        // reset enableDebugger to a default value
+        Microsoft.ApplicationInsights._InternalLogging.enableDebugExceptions = () => false;
     }
 
     private BUFFER_KEY = "AI_buffer";
