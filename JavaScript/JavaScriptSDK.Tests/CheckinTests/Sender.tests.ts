@@ -39,7 +39,7 @@ class SenderTests extends TestClass {
             maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
             maxBatchInterval: () => this.maxBatchInterval,
             disableTelemetry: () => this.disableTelemetry,
-            storeSendBufferInSessionStorage: () => false
+            enableSessionStorageBuffer: () => false
         };
 
         this.getSender = () => {
@@ -56,7 +56,7 @@ class SenderTests extends TestClass {
     }
 
     public testCleanup() {
-        Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = false;
+        Microsoft.ApplicationInsights._InternalLogging.enableDebugExceptions = () => false;
     }
 
     public registerTests() {
@@ -321,9 +321,6 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.ok(senderSpy.calledOnce, "sender was invoked");
                 logAsserts(0);
-
-
-                Microsoft.ApplicationInsights._InternalLogging.enableDebugExceptions = () => false;
             }
         });
 
@@ -334,7 +331,7 @@ class SenderTests extends TestClass {
                 var sender: Microsoft.ApplicationInsights.Sender = this.getSender();
                 sender._sender = () => null;
                 var senderSpy = this.sandbox.spy(sender, "_sender");
-                this.maxBatchSizeInBytes = Microsoft.ApplicationInsights.Serializer.serialize(this.testTelemetry).length * 2 + 2; // +2 for "[]"
+                this.maxBatchSizeInBytes = Microsoft.ApplicationInsights.Serializer.serialize(this.testTelemetry).length * 2 + 3; // +3 for "[],"
                 this.maxBatchInterval = 2;
 
                 // act

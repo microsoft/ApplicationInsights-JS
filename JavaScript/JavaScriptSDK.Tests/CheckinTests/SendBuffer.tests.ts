@@ -18,7 +18,7 @@ class SendBufferTests extends TestClass {
 
         var config: Microsoft.ApplicationInsights.ISenderConfig = {
             emitLineDelimitedJson: () => false,
-            storeSendBufferInSessionStorage: () => false,
+            enableSessionStorageBuffer: () => false,
             endpointUrl: () => null,
             maxBatchSizeInBytes: () => null,
             maxBatchInterval: () => null,
@@ -46,249 +46,132 @@ class SendBufferTests extends TestClass {
     private SENT_BUFFER_KEY = "AI_sentBuffer";
 
     public registerTests() {
-        // ArraySendBuffer tests
 
         this.testCase({
             name: "ArraySendBuffer: initialize",
             test: () => {
-                // setup
                 var buffer = this.getArraySendBuffer();
 
-                // verify
-                Assert.equal(0, buffer.count(), "new buffer should be empty");
+                this.Test_Initialize(buffer);
+            }
+        });
+
+        this.testCase({
+            name: "SessionStorageSendBuffer: initialize",
+            test: () => {
+                var buffer = this.getSessionStorageSendBuffer();
+
+                this.Test_Initialize(buffer);
             }
         });
 
         this.testCase({
             name: "ArraySendBuffer: can enqueue and clear the buffer",
             test: () => {
-                // setup
                 var buffer = this.getArraySendBuffer();
 
-                // act
-                buffer.enqueue("");
-
-                // verify
-                Assert.equal(1, buffer.count(), "one item expected");
-
-                // act
-                buffer.enqueue("");
-
-                // verify
-                Assert.equal(2, buffer.count(), "two items expected");
-
-                //act
-                buffer.clear();
-
-                // verify
-                Assert.equal(0, buffer.count(), "buffer should be empty");
-
-            }
-        });
-
-        this.testCase({
-            name: "ArraySendBuffer: can clear empty buffer",
-            test: () => {
-                // setup
-                var buffer = this.getArraySendBuffer();
-
-                // act
-                buffer.clear();
-
-                // verify
-                Assert.equal(0, buffer.count(), "buffer should be empty");
-            }
-        });
-
-        this.testCase({
-            name: "ArraySendBuffer: call batchPayloads when a buffer is empty",
-            test: () => {
-                // setup
-                var buffer = this.getArraySendBuffer();
-
-                // act
-                var batch = buffer.batchPayloads();
-
-                // verify
-                Assert.equal(null, batch, "expecting null");
-            }
-        });
-
-        this.testCase({
-            name: "ArraySendBuffer: call batchPayloads when a buffer has one element",
-            test: () => {
-                // setup
-                var buffer = this.getArraySendBuffer();
-
-                // act
-                var payload = "{ test: test }";
-
-                buffer.enqueue(payload);
-                var batch = buffer.batchPayloads();
-
-                // verify
-                Assert.equal("[" + payload + "]", batch, "invalid batch");
-            }
-        });
-
-        this.testCase({
-            name: "ArraySendBuffer: call batchPayloads when a buffer has two elements",
-            test: () => {
-                // setup
-                var buffer = this.getArraySendBuffer();
-
-                // act
-                var payload1 = "{ test: test }";
-                var payload2 = "{ }";
-
-                buffer.enqueue(payload1);
-                buffer.enqueue(payload2);
-                var batch = buffer.batchPayloads();
-
-                // verify
-                Assert.equal("[" + payload1 + "," + payload2 + "]", batch, "invalid batch");
-            }
-        });
-
-        this.testCase({
-            name: "ArraySendBuffer: call batchPayloads when a buffer has two elements - emitLineDelimitedJson",
-            test: () => {
-                // setup
-                var buffer = this.getArraySendBuffer(true);
-
-                // act
-                var payload1 = "{ test: test }";
-                var payload2 = "{ test: test }";
-
-                buffer.enqueue(payload1);
-                buffer.enqueue(payload2);
-                var batch = buffer.batchPayloads();
-
-                // verify
-                Assert.equal(payload1 + "\n" + payload2, batch, "invalid batch");
-            }
-        });
-
-        // SessionStorageSendBuffer tests
-
-        this.testCase({
-            name: "SessionStorageSendBuffer: initialize",
-            test: () => {
-                // setup
-                var buffer = this.getSessionStorageSendBuffer();
-
-                // verify
-                Assert.equal(0, buffer.count(), "new buffer should be empty");
+                this.Test_CanEnqueueAndClearTheBuffer(buffer);
             }
         });
 
         this.testCase({
             name: "SessionStorageSendBuffer: can enqueue and clear the buffer",
             test: () => {
-                // setup
                 var buffer = this.getSessionStorageSendBuffer();
 
-                // act
-                buffer.enqueue("");
+                this.Test_CanEnqueueAndClearTheBuffer(buffer);
+            }
+        });
 
-                // verify
-                Assert.equal(1, buffer.count(), "one item expected");
 
-                // act
-                buffer.enqueue("");
+        this.testCase({
+            name: "ArraySendBuffer: can clear empty buffer",
+            test: () => {
+                var buffer = this.getArraySendBuffer();
 
-                // verify
-                Assert.equal(2, buffer.count(), "two items expected");
-
-                //act
-                buffer.clear();
-
-                // verify
-                Assert.equal(0, buffer.count(), "buffer should be empty");
-
+                this.Test_CanClearEmptyBuffer(buffer);
             }
         });
 
         this.testCase({
             name: "SessionStorageSendBuffer: can clear empty buffer",
             test: () => {
-                // setup
                 var buffer = this.getSessionStorageSendBuffer();
 
-                // act
-                buffer.clear();
+                this.Test_CanClearEmptyBuffer(buffer);
+            }
+        });
 
-                // verify
-                Assert.equal(0, buffer.count(), "buffer should be empty");
+        this.testCase({
+            name: "ArraySendBuffer: call batchPayloads when a buffer is empty",
+            test: () => {
+                var buffer = this.getArraySendBuffer();
+
+                this.Test_CanClearEmptyBuffer(buffer);
             }
         });
 
         this.testCase({
             name: "SessionStorageSendBuffer: call batchPayloads when a buffer is empty",
             test: () => {
-                // setup
                 var buffer = this.getSessionStorageSendBuffer();
 
-                // act
-                var batch = buffer.batchPayloads();
+                this.Test_CanClearEmptyBuffer(buffer);
+            }
+        });
 
-                // verify
-                Assert.equal(null, batch, "expecting null");
+
+        this.testCase({
+            name: "ArraySendBuffer: call batchPayloads when a buffer has one element",
+            test: () => {
+                var buffer = this.getArraySendBuffer();
+
+                this.Test_CallBatchPayloadsWithOneElement(buffer);
             }
         });
 
         this.testCase({
             name: "SessionStorageSendBuffer: call batchPayloads when a buffer has one element",
             test: () => {
-                // setup
                 var buffer = this.getSessionStorageSendBuffer();
 
-                // act
-                var payload = "{ test: test }";
+                this.Test_CallBatchPayloadsWithOneElement(buffer);
+            }
+        });
 
-                buffer.enqueue(payload);
-                var batch = buffer.batchPayloads();
+        this.testCase({
+            name: "ArraySendBuffer: call batchPayloads when a buffer has two elements",
+            test: () => {
+                var buffer = this.getArraySendBuffer();
 
-                // verify
-                Assert.equal("[" + payload + "]", batch, "invalid batch");
+                this.Test_CallBatchPayloadsWithTwoElements(buffer);
             }
         });
 
         this.testCase({
             name: "SessionStorageSendBuffer: call batchPayloads when a buffer has two elements",
             test: () => {
-                // setup
                 var buffer = this.getSessionStorageSendBuffer();
 
-                // act
-                var payload1 = "{ test: test }";
-                var payload2 = "{ }";
+                this.Test_CallBatchPayloadsWithTwoElements(buffer);
+            }
+        });
 
-                buffer.enqueue(payload1);
-                buffer.enqueue(payload2);
-                var batch = buffer.batchPayloads();
+        this.testCase({
+            name: "ArraySendBuffer: call batchPayloads when a buffer has two elements - emitLineDelimitedJson",
+            test: () => {
+                var buffer = this.getArraySendBuffer(true);
 
-                // verify
-                Assert.equal("[" + payload1 + "," + payload2 + "]", batch, "invalid batch");
+                this.Test_CallBatchPayloadsWithTwoElements_EmitLineDelimitedJson(buffer);
             }
         });
 
         this.testCase({
             name: "SessionStorageSendBuffer: call batchPayloads when a buffer has two elements - emitLineDelimitedJson",
             test: () => {
-                // setup
                 var buffer = this.getSessionStorageSendBuffer(true);
 
-                // act
-                var payload1 = "{ test: test }";
-                var payload2 = "{ test: test }";
-
-                buffer.enqueue(payload1);
-                buffer.enqueue(payload2);
-                var batch = buffer.batchPayloads();
-
-                // verify
-                Assert.equal(payload1 + "\n" + payload2, batch, "invalid batch");
+                this.Test_CallBatchPayloadsWithTwoElements_EmitLineDelimitedJson(buffer);
             }
         });
 
@@ -415,6 +298,86 @@ class SendBufferTests extends TestClass {
         return [];
     }
 
+    private Test_Initialize(buffer: Microsoft.ApplicationInsights.ISendBuffer) {
+        // verify
+        Assert.equal(0, buffer.count(), "new buffer should be empty");
+    }
+
+    private Test_CanEnqueueAndClearTheBuffer(buffer: Microsoft.ApplicationInsights.ISendBuffer) {
+        // act
+        buffer.enqueue("");
+
+        // verify
+        Assert.equal(1, buffer.count(), "one item expected");
+
+        // act
+        buffer.enqueue("");
+
+        // verify
+        Assert.equal(2, buffer.count(), "two items expected");
+
+        //act
+        buffer.clear();
+
+        // verify
+        Assert.equal(0, buffer.count(), "buffer should be empty");
+    }
+
+    private Test_CanClearEmptyBuffer(buffer: Microsoft.ApplicationInsights.ISendBuffer) {
+        //verify
+        Assert.equal(0, buffer.count(), "buffer should be empty");
+
+        // act
+        buffer.clear();
+
+        // verify
+        Assert.equal(0, buffer.count(), "buffer should be empty");
+    }
+
+    private Test_CallBatchPayloadsWhenABufferIsEmpty(buffer: Microsoft.ApplicationInsights.ISendBuffer) {
+        // act
+        var batch = buffer.batchPayloads();
+
+        // verify
+        Assert.equal(null, batch, "expecting null");
+    }
+
+    private Test_CallBatchPayloadsWithOneElement(buffer: Microsoft.ApplicationInsights.ISendBuffer) {
+        // act
+        var payload = "{ test: test }";
+
+        buffer.enqueue(payload);
+        var batch = buffer.batchPayloads();
+
+        // verify
+        Assert.equal("[" + payload + "]", batch, "invalid batch");
+    }
+
+    private Test_CallBatchPayloadsWithTwoElements(buffer: Microsoft.ApplicationInsights.ISendBuffer) {
+        // act
+        var payload1 = "{ test: test }";
+        var payload2 = "{ }";
+
+        buffer.enqueue(payload1);
+        buffer.enqueue(payload2);
+        var batch = buffer.batchPayloads();
+
+        // verify
+        Assert.equal(['[', payload1, ',', payload2, ']'].join(''), batch, "invalid batch");
+    }
+
+    private Test_CallBatchPayloadsWithTwoElements_EmitLineDelimitedJson(buffer: Microsoft.ApplicationInsights.ISendBuffer) {
+        // act
+        var payload1 = "{ test: test }";
+        var payload2 = "{ test: test }";
+
+        buffer.enqueue(payload1);
+        buffer.enqueue(payload2);
+        var batch = buffer.batchPayloads();
+
+        // verify
+        Assert.equal(payload1 + "\n" + payload2, batch, "invalid batch");
+    }
 }
 
 new SendBufferTests().registerTests(); 

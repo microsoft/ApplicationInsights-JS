@@ -57,7 +57,7 @@ module Microsoft.ApplicationInsights {
         /**
          * Store a copy of a send buffer in the session storage
          */
-        storeSendBufferInSessionStorage: () => boolean;
+        enableSessionStorageBuffer: () => boolean;
     }
 
     export class Sender {
@@ -77,6 +77,7 @@ module Microsoft.ApplicationInsights {
         /**
          * A method which will cause data to be send to the url
          */
+
         public _sender: (payload: string[], isAsync: boolean, numberOfItemsInPayload: number) => void;
 
         /**
@@ -86,7 +87,7 @@ module Microsoft.ApplicationInsights {
             this._lastSend = 0;
             this._config = config;
             this._sender = null;
-            this._buffer = this._config.storeSendBufferInSessionStorage() ? new SessionStorageSendBuffer(config) : new ArraySendBuffer(config);
+            this._buffer = this._config.enableSessionStorageBuffer() ? new SessionStorageSendBuffer(config) : new ArraySendBuffer(config);
 
             if (typeof XMLHttpRequest != "undefined") {
                 var testXhr = new XMLHttpRequest();
@@ -208,15 +209,15 @@ module Microsoft.ApplicationInsights {
          * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
          */
         private _xhrSender(payload: string[], isAsync: boolean, countOfItemsInPayload: number) {
-            // compose an array of payloads
-            var batch = this._buffer.batchPayloads();
-
             var xhr = new XMLHttpRequest();
             xhr[AjaxMonitor.DisabledPropertyName] = true;
             xhr.open("POST", this._config.endpointUrl(), isAsync);
             xhr.setRequestHeader("Content-type", "application/json");
-            xhr.onreadystatechange = () => this._xhrReadyStateChange(xhr, payload, countOfItemsInPayload);
+            xhr.onreadystatechange = () => this._xhrReadyStateChange(xhr, payload, payload.length);
             xhr.onerror = (event: ErrorEvent) => this._onError(payload, xhr.responseText || xhr.response || "", event);
+
+            // compose an array of payloads
+            var batch = this._buffer.batchPayloads();
             xhr.send(batch);
 
             this._buffer.markAsSent(payload);
@@ -231,13 +232,13 @@ module Microsoft.ApplicationInsights {
          * to maintain consistency with the xhrSender's contract
          */
         private _xdrSender(payload: string[], isAsync: boolean) {
-            // compose an array of payloads
-            var batch = this._buffer.batchPayloads();
-
             var xdr = new XDomainRequest();
             xdr.onload = () => this._xdrOnLoad(xdr, payload);
             xdr.onerror = (event: ErrorEvent) => this._onError(payload, xdr.responseText || "", event);
             xdr.open('POST', this._config.endpointUrl());
+
+            // compose an array of payloads
+            var batch = this._buffer.batchPayloads();
             xdr.send(batch);
 
             this._buffer.markAsSent(payload);

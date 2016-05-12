@@ -497,7 +497,7 @@ class SessionContextTests extends TestClass {
             maxBatchSizeInBytes: () => null,
             maxBatchInterval: () => null,
             disableTelemetry: () => null,
-            storeSendBufferInSessionStorage: () => null
+            enableSessionStorageBuffer: () => null
         };
     }
 }

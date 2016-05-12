@@ -174,9 +174,9 @@ module Microsoft.ApplicationInsights {
                 Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload) :
                 false;
 
-            config.storeSendBufferInSessionStorage = (config.storeSendBufferInSessionStorage !== undefined && config.storeSendBufferInSessionStorage !== null) ?
-                Util.stringToBoolOrDefault(config.storeSendBufferInSessionStorage) :
-                false;;
+            config.enableSessionStorageBuffer = (config.enableSessionStorageBuffer !== undefined && config.enableSessionStorageBuffer !== null) ?
+                Util.stringToBoolOrDefault(config.enableSessionStorageBuffer) :
+                false;
            
             return config;
         }

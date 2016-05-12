@@ -418,7 +418,7 @@ class UserContextTests extends TestClass {
             maxBatchSizeInBytes: () => null,
             maxBatchInterval: () => null,
             disableTelemetry: () => null,
-            storeSendBufferInSessionStorage: () => null
+            enableSessionStorageBuffer: () => null
         };
     }
 }

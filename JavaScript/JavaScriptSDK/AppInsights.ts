@@ -37,7 +37,7 @@ module Microsoft.ApplicationInsights {
         disableDataLossAnalysis: boolean;
         disableCorrelationHeaders: boolean;
         disableFlushOnBeforeUnload: boolean;
-        storeSendBufferInSessionStorage: boolean;
+        enableSessionStorageBuffer: boolean;
         cookieDomain: string;
     }
 
@@ -100,7 +100,7 @@ module Microsoft.ApplicationInsights {
                 disableTelemetry: () => this.config.disableTelemetry,
                 sampleRate: () => this.config.samplingPercentage,
                 cookieDomain: () => this.config.cookieDomain,
-                storeSendBufferInSessionStorage: () => this.config.storeSendBufferInSessionStorage
+                enableSessionStorageBuffer: () => this.config.enableSessionStorageBuffer
             }
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);

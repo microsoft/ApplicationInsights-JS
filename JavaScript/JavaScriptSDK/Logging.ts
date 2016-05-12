@@ -56,6 +56,8 @@
         NONUSRACT_TrackPVFailedCalc,
         NONUSRACT_TrackTraceFailed,
         NONUSRACT_TransmissionFailed,
+        NONUSRACT_FailToSetStorageBuffer,
+        NONUSRACT_FailToRestoreStorageBuffer,
 
         USRACT_CannotSerializeObject,
         USRACT_CannotSerializeObjectNonSerializable,

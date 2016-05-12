@@ -32,6 +32,9 @@ module Microsoft.ApplicationInsights {
          */
         clear: () => void;
 
+        /**
+         * Returns items stored in the buffer
+         */
         getItems: () => string[];
 
         /**
@@ -41,7 +44,7 @@ module Microsoft.ApplicationInsights {
 
         /**
          * Moves items to the SENT_BUFFER.
-         * The buffer holds items which were sent, but we haven't received any response from the backend for them yet. 
+         * The buffer holds items which were sent, but we haven't received any response from the backend yet. 
          */
         markAsSent: (payload: string[]) => void;
 
@@ -77,7 +80,7 @@ module Microsoft.ApplicationInsights {
         }
 
         public getItems(): string[] {
-            return this._buffer;
+            return this._buffer.slice(0);
         }
 
         public batchPayloads(): string {
@@ -140,7 +143,7 @@ module Microsoft.ApplicationInsights {
         }
 
         public getItems(): string[] {
-            return this._buffer;
+            return this._buffer.slice(0)
         }
 
         public batchPayloads(): string {
@@ -166,7 +169,7 @@ module Microsoft.ApplicationInsights {
         }
 
         public clearSent(payload: string[]) {
-            var sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY); 
+            var sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
             sentElements = this.removePayloadsFromBuffer(payload, sentElements);
 
             this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
@@ -185,21 +188,34 @@ module Microsoft.ApplicationInsights {
         }
 
         private getBuffer(key: string): string[] {
-            var bufferJson = Util.getSessionStorage(key);
-
-            if (bufferJson) {
-                var buffer: string[] = JSON.parse(bufferJson);
-                if (buffer) {
-                    return buffer;
+            try {
+                var bufferJson = Util.getSessionStorage(key);
+                if (bufferJson) {
+                    var buffer: string[] = JSON.parse(bufferJson);
+                    if (buffer) {
+                        return buffer;
+                    }
                 }
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailToRestoreStorageBuffer,
+                        " storage key: " + key + ", " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }));
             }
 
             return [];
         }
 
         private setBuffer(key: string, buffer: string[]) {
-            var bufferJson = JSON.stringify(buffer);
-            Util.setSessionStorage(key, bufferJson);
+            try {
+                var bufferJson = JSON.stringify(buffer);
+                Util.setSessionStorage(key, bufferJson);
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailToSetStorageBuffer,
+                        " storage key: " + key + ", " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }));
+            }
         }
     }
 }

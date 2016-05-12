@@ -27,7 +27,7 @@ class AppInsightsTests extends TestClass {
             disableDataLossAnalysis: true,
             disableCorrelationHeaders: false,
             disableFlushOnBeforeUnload: false,
-            storeSendBufferInSessionStorage: false
+            enableSessionStorageBuffer: false
         };
 
         // set default values
