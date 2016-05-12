@@ -46,6 +46,8 @@ class SenderTests extends TestClass {
         this.successSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onSuccess");
         this.loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole");
         this.testTelemetry = { aiDataContract: true };
+
+        Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
     }
 
     public testCleanup() {
