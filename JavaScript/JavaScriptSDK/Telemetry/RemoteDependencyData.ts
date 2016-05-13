@@ -33,11 +33,11 @@ module Microsoft.ApplicationInsights.Telemetry {
         /**
          * Constructs a new instance of the RemoteDependencyData object
          */
-        constructor(id: string, name: string, commandName: string, value: number, success: boolean, resultCode: number) {
+        constructor(id: string, absoluteUrl: string, commandName: string, value: number, success: boolean, resultCode: number, method?: string) {
             super();
 
             this.id = id;
-            this.name = name;
+            this.name = this.formatDependencyName(method, absoluteUrl);
             this.commandName = Common.DataSanitizer.sanitizeUrl(commandName);
             this.value = value;
             this.success = success;  
@@ -45,6 +45,14 @@ module Microsoft.ApplicationInsights.Telemetry {
                       
             this.dependencyKind = AI.DependencyKind.Http;
             this.dependencyTypeName = "Ajax";
+        }
+
+        private formatDependencyName(method: string, absoluteUrl: string) {
+            if (method) {
+                return method.toUpperCase() + " " + absoluteUrl;
+            } else {
+                return absoluteUrl;
+            }
         }
     }
 }

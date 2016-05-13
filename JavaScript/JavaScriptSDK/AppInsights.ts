@@ -275,10 +275,10 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        public trackAjax(id: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
+        public trackAjax(id: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number, method?: string) {
             if (this.config.maxAjaxCallsPerView === -1 ||
                 this._trackAjaxAttempts < this.config.maxAjaxCallsPerView) {
-                var dependency = new Telemetry.RemoteDependencyData(id, absoluteUrl, pathName, totalTime, success, resultCode);
+                var dependency = new Telemetry.RemoteDependencyData(id, absoluteUrl, pathName, totalTime, success, resultCode, method);
                 var dependencyData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.RemoteDependencyData>(
                     Telemetry.RemoteDependencyData.dataType, dependency);
                 var envelope = new Telemetry.Common.Envelope(dependencyData, ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType);
