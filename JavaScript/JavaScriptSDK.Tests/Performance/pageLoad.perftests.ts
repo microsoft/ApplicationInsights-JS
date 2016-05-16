@@ -121,7 +121,7 @@ class PageLoadPerfTests extends PerformanceTestHelper {
     }
 
     private detectPlatformAndOs() {
-        // Get platform info but don't go crazy trying to recognize everything
+        // Get platform info but don't worry if you can't recognize everything
         // that's out there.  This is just for the major platforms and OSes.
         var platform = 'unknown platform', ua = navigator.userAgent;
 
