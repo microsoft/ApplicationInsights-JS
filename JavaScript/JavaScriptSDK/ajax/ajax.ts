@@ -209,7 +209,8 @@ module Microsoft.ApplicationInsights {
                     xhr.ajaxData.getPathName(),
                     xhr.ajaxData.ajaxTotalDuration,
                     (+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
-                    +xhr.ajaxData.status
+                    +xhr.ajaxData.status,
+                    xhr.ajaxData.method
                 );
 
                 xhr.ajaxData = null;

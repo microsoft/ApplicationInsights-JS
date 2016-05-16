@@ -1556,12 +1556,12 @@ class AppInsightsTests extends TestClass {
                 var resultCode = 404;
 
                 // Act
-                appInsights.trackAjax("0", name, url, duration, success, resultCode);
+                appInsights.trackAjax("0", name, url, duration, success, resultCode, "Get");
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
                 var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
-                Assert.equal(name, rdd.name);
+                Assert.equal("GET " + name, rdd.name);
                 Assert.equal(url, rdd.commandName);
                 Assert.equal(duration, rdd.value);
                 Assert.equal(success, rdd.success);
@@ -1591,7 +1591,7 @@ class AppInsightsTests extends TestClass {
                 };
 
                 // act
-                test(() => appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200), Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType,
+                test(() => appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "GET"), Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType,
                     Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.dataType);
             }
         });
@@ -1605,7 +1605,7 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "GET");
                 }
 
                 // Assert
@@ -1622,14 +1622,14 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "POST");
                 }
 
                 appInsights.sendPageViewInternal("asdf", "http://microsoft.com", 123);
                 trackStub.reset();
 
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "POST");
                 }
 
                 // Assert
@@ -1647,13 +1647,13 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < 20; ++i) {
-                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "POST");
                 }
                 
                 loggingSpy.reset();
 
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "POST");
                 }
 
                 // Assert
@@ -1673,7 +1673,7 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < ajaxCallsCount; ++i) {
-                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200);
+                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "POST");
                 }
 
                 // Assert
