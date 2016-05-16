@@ -98,7 +98,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             }
 
             this.url = Common.DataSanitizer.sanitizeUrl(url);
-            this.name = Common.DataSanitizer.sanitizeString(name || Util.NotSpecified);
+            this.name = Common.DataSanitizer.sanitizeString(name) || Util.NotSpecified;
 
             this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
             this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);
