@@ -17,7 +17,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
         constructor(data: Microsoft.Telemetry.Base, name: string) {
             super();
 
-            this.name = name || Util.NotSpecified;
+            this.name = Common.DataSanitizer.sanitizeString(name) || Util.NotSpecified;
             this.data = data;
             this.time = Util.toISOStringForIE8(new Date());
 
