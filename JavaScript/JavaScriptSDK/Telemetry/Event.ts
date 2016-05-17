@@ -23,7 +23,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             
             super();
 
-            this.name = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(name);
+            this.name = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(name) || Util.NotSpecified;
             this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
             this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);
         }
