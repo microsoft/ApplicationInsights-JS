@@ -163,8 +163,8 @@ class UtilTests extends TestClass {
                     }
 
                     test("testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
-                    test("other=foo; testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
-                    test("another=bar; ;a=testCookie=; testCookie=id|acq|renewal; other=foo|3|testCookie=", "testCookie", "id|acq|renewal");
+                    test("other=something; testCookie=id|acq|renewal", "testCookie", "id|acq|renewal");
+                    test("another=bar; ;a=testCookie=; testCookie=id|acq|renewal; other=something|3|testCookie=", "testCookie", "id|acq|renewal");
                     test("xtestCookiex=id|acq|renewal", "testCookie", "");
                     test("", "testCookie", "");
                 } finally {

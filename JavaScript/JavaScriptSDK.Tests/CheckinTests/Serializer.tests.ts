@@ -215,7 +215,7 @@ class SerializerTests extends TestClass {
                 // act
                 var obj = {
                     str: "str",
-                    notInContract: "foo",
+                    notInContract: "notInContract",
                     aiDataContract: {
                         str: Microsoft.ApplicationInsights.FieldType.Required,
                     }

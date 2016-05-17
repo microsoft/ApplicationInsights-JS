@@ -124,7 +124,7 @@
         public static enableDebugExceptions = () => false;
 
         /**
-         * When this is true the SDK will throw exceptions to aid in debugging.
+         * When this is true the SDK will log more messages to aid in debugging.
          */
         public static verboseLogging = () => false;
 
@@ -132,17 +132,17 @@
          * The internal logging queue
          */
         public static queue = [];
-        
+
         /**
          * The maximum number of internal messages allowed to be sent per page view
          */
         private static MAX_INTERNAL_MESSAGE_LIMIT = 25;
-        
+
         /**
          * Count of internal messages sent
          */
         private static _messageCount = 0;
-        
+
         /**
          * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
          * @param severity {LoggingSeverity} - The severity of the log message
@@ -155,7 +155,11 @@
                 if (typeof (message) !== "undefined" && !!message) {
                     if (typeof (message.message) !== "undefined") {
                         message.message = this.AiNonUserActionablePrefix + message.message;
-                        this.warnToConsole(message.message);
+
+                        // don't log internal AI traces in the console, unless the verbose logging is enabled
+                        if (this.verboseLogging()) {
+                            this.warnToConsole(message.message);
+                        }
                         this.logInternalMessage(severity, message);
                     }
                 }
@@ -195,7 +199,7 @@
                 }
             }
         }
-        
+
         /**
          * Resets the internal message count
          */
@@ -228,7 +232,7 @@
 
             this.MAX_INTERNAL_MESSAGE_LIMIT = limit;
         }
-        
+
         /**
          * Logs a message to the internal queue.
          * @param severity {LoggingSeverity} - The severity of the log message

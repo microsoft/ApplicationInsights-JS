@@ -26,7 +26,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             dataPoint.count = count > 0 ? count : undefined;
             dataPoint.max = isNaN(max) || max === null ? undefined : max;
             dataPoint.min = isNaN(min) || min === null ? undefined : min;
-            dataPoint.name = Common.DataSanitizer.sanitizeString(name);
+            dataPoint.name = Common.DataSanitizer.sanitizeString(name) || Util.NotSpecified;
             dataPoint.value = value;
 
             this.metrics = [dataPoint];

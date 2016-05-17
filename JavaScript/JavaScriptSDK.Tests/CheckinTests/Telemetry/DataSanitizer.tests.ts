@@ -170,6 +170,14 @@ class DataSanitizerTests extends TestClass {
                 Assert.equal("val", actual["prop2"]);
             }
         });
+
+        this.testCase({
+            name: "DataSanitizerTests: Validate sanitizeString handles null and undefined",
+            test: () => {
+                Assert.ok(null === Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(null));
+                Assert.ok(undefined === Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(undefined));
+            }
+        });
     }
 }
 

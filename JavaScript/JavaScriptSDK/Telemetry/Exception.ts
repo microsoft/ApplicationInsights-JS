@@ -77,8 +77,8 @@ module Microsoft.ApplicationInsights.Telemetry {
 
         constructor(exception: Error) {
             super();
-            this.typeName = Common.DataSanitizer.sanitizeString(exception.name || Util.NotSpecified);
-            this.message = Common.DataSanitizer.sanitizeMessage(exception.message || Util.NotSpecified);
+            this.typeName = Common.DataSanitizer.sanitizeString(exception.name) || Util.NotSpecified;
+            this.message = Common.DataSanitizer.sanitizeMessage(exception.message) || Util.NotSpecified;
             var stack = exception["stack"];
             this.parsedStack = this.parseStack(stack);
             this.stack = Common.DataSanitizer.sanitizeException(stack);

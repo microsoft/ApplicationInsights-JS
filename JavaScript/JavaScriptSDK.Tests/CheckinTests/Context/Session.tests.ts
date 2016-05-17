@@ -176,7 +176,7 @@ class SessionContextTests extends TestClass {
                 // Initialize our user and session cookies
                 var sessionId = "SESSID";
                 var curDate = +new Date();
-                cookies['ai_user'] = 'foo';
+                cookies['ai_user'] = 'user';
                 cookies['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
                 // Ensure session manager backs up properly
@@ -213,7 +213,7 @@ class SessionContextTests extends TestClass {
                 // Note there is no session cookie
                 var sessionId = "SESSID";
                 var curDate = +new Date();
-                cookies['ai_user'] = 'foo';
+                cookies['ai_user'] = 'user';
                 storage['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
                 // Initalize the session manager
@@ -293,7 +293,7 @@ class SessionContextTests extends TestClass {
                 // Initialize our user and session cookies
                 var sessionId = "SESSID";
                 var curDate = +new Date();
-                cookies['ai_user'] = 'foo';
+                cookies['ai_user'] = 'user';
                 cookies['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
                 // Back up the session
@@ -465,7 +465,7 @@ class SessionContextTests extends TestClass {
     private setFakeCookie(id, acqDate, renewalDate) {
         this.originalDocument = Microsoft.ApplicationInsights.Util["document"];
         Microsoft.ApplicationInsights.Util["document"] = <any>{
-            cookie: "ai_user=foo; ai_session="+this.generateFakeSessionCookieData(id, acqDate, renewalDate)
+            cookie: "ai_user=user; ai_session="+this.generateFakeSessionCookieData(id, acqDate, renewalDate)
         };
     }
 

@@ -8,6 +8,12 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
         super(() => new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0), "PageViewPerformanceTelemetryTests");
     }
 
+    public testCleanup() {
+
+        // Reset verboseLogging to the default value
+        Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => false;
+    }
+
     public registerTests() {
         super.registerTests();
         var name = this.name + ": ";
@@ -69,7 +75,6 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                     return timing;
                 });
 
-
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
                 Assert.equal(true, telemetry.getIsValid());
 
@@ -80,8 +85,6 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(19), data.sentRequest);
                 Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(12), data.receivedResponse);
                 Assert.equal(Microsoft.ApplicationInsights.Util.msToTimeSpan(18), data.domProcessing);
-
-                
             }
         });
 
@@ -102,6 +105,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 });
 
                 var actualLoggedMessage = null;
+                Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
                 var loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole", (m) => actualLoggedMessage = m);
 
 
@@ -117,10 +121,6 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 Assert.equal(undefined, data.domProcessing);
 
                 Assert.equal("AI (Internal): NONUSRACT_ClientPerformanceMathError message:\"client performance math error.\" props:\"{total:59,network:39,request:19,response:12,dom:18}\"", actualLoggedMessage);
-
-                
-                
-
             }
         });
 
