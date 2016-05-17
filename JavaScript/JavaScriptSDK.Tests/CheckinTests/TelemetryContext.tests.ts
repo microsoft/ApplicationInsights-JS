@@ -21,7 +21,8 @@ class TelemetryContextTests extends TestClass {
             maxBatchInterval: () => 1,
             disableTelemetry: () => false,
             sampleRate: () => 100,
-            cookieDomain: undefined
+            cookieDomain: undefined,
+            enableSessionStorageBuffer: () => false
         }
 
         this._telemetryContext = new Microsoft.ApplicationInsights.TelemetryContext(this._config);

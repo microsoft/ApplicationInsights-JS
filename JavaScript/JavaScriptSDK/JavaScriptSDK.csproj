@@ -123,6 +123,7 @@
     <TypeScriptCompile Include="ajax\ajaxRecord.ts" />
     <TypeScriptCompile Include="ajax\ajaxUtils.ts" />
     <TypeScriptCompile Include="HashCodeScoreGenerator.ts" />
+    <TypeScriptCompile Include="SendBuffer.ts" />
     <TypeScriptCompile Include="Sender.ts" />
     <TypeScriptCompile Include="SplitTest.ts" />
     <TypeScriptCompile Include="AppInsights.ts" />
