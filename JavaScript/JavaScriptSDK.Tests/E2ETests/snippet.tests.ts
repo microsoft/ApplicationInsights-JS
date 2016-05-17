@@ -80,7 +80,7 @@ class SnippetTests extends TestClass {
                     Assert.deepEqual("test", pv.url, "url was set correctly");
                     Assert.deepEqual({ property: "p1" }, pv.properties, "properties were set correctly");
                     Assert.deepEqual({ measurement: 5 }, pv.measurements, "measurements were set correctly");
-                    
+
                 }
             ]
         });
@@ -104,7 +104,7 @@ class SnippetTests extends TestClass {
                     var count = 2 + this.timingOffset;
                     Assert.equal(count, senderSpy66V2V1.sender.callCount, "v2 send called " + count + " times");
                     this.boilerPlateAsserts(senderSpy66V2V1);
-                    
+
                 }
             ]
         });
@@ -172,7 +172,7 @@ class SnippetTests extends TestClass {
                     var count = 5 + this.timingOffset;
                     Assert.equal(count, sender.sender.callCount, "send called " + count + " times");
                     this.boilerPlateAsserts(sender);
-                    
+
                 }
             ]
         });
@@ -216,8 +216,8 @@ class SnippetTests extends TestClass {
         window["appInsights"].maxBatchInterval = 1;
         var appIn = <Microsoft.ApplicationInsights.AppInsights>window[this.name];
         var sender = this.sandbox.spy(appIn.context._sender, "send");
-        var errorSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onError");
-        var successSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onSuccess");
+        var errorSpy = this.sandbox.spy(appIn.context._sender, "_onError");
+        var successSpy = this.sandbox.spy(appIn.context._sender, "_onSuccess");
         var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
 
         return {
@@ -226,10 +226,6 @@ class SnippetTests extends TestClass {
             successSpy: successSpy,
             loggingSpy: loggingSpy,
             restore: () => {
-                
-                
-                
-                
             }
         };
     }

@@ -13,7 +13,7 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "0.22.12";
+    export var Version = "0.22.14";
 
     export interface IConfig {
         instrumentationKey: string;
@@ -102,6 +102,9 @@ module Microsoft.ApplicationInsights {
                 cookieDomain: () => this.config.cookieDomain,
                 enableSessionStorageBuffer: () => this.config.enableSessionStorageBuffer
             }
+
+            // enable session storage buffer experiment
+            this.config.enableSessionStorageBuffer = new SplitTest().isEnabled(this.config.instrumentationKey, 10); ;
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
 
@@ -425,7 +428,7 @@ module Microsoft.ApplicationInsights {
         private SendCORSException(properties: any) {
             var exceptionData = Microsoft.ApplicationInsights.Telemetry.Exception.CreateSimpleException(
                 "Script error.", "Error", "unknown", "unknown",
-                "The browser’s same-origin policy prevents us from getting the details of this exception.The exception occurred in a script loaded from an origin different than the web page.For cross- domain error reporting you can use crossorigin attribute together with appropriate CORS HTTP headers.For more information please see http://www.w3.org/TR/cors/.",
+                "The browser's same-origin policy prevents us from getting the details of this exception.The exception occurred in a script loaded from an origin different than the web page.For cross- domain error reporting you can use crossorigin attribute together with appropriate CORS HTTP headers.For more information please see http://www.w3.org/TR/cors/.",
                 0, null);
             exceptionData.properties = properties;
 
