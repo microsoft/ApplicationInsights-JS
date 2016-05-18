@@ -26,7 +26,7 @@ if (-Not ($version -match "\d+\.\d+\.\d+")) {
 $packagesJson.version = $version
 $packagesJson = $packagesJson | ConvertTo-Json 
 $packagesJson = $packagesJson -replace "\\u0026", "&"
-$packagesJson | Out-File $packageJsonPath
+[System.IO.File]::WriteAllLines($packageJsonPath, $packagesJson)
 
 # update bower.json
 $bowerJsonPath = Join-Path $jsSdkDir -ChildPath "bower.json"
@@ -35,7 +35,7 @@ $bowerJson.version = $version
 $bowerJson = $bowerJson | ConvertTo-Json 
 $bowerJson = $bowerJson -replace "\\u003c", "<"
 $bowerJson = $bowerJson -replace "\\u003e", ">"
-$bowerJson | Out-File $bowerJsonPath
+[System.IO.File]::WriteAllLines($bowerJsonPath, $bowerJson)
 
 # update JavaScript\JavaScriptSDK\AppInsights.ts
 $appInsightsTsPath = Join-Path $jsSdkDir -ChildPath "JavaScript\JavaScriptSDK\AppInsights.ts"
@@ -46,7 +46,7 @@ if (-Not ($appInsightsTs -match "export var Version = `"\d+\.\d+\.\d+`"")) {
     # continue on error
 } else {
     $appInsightsTs = $appInsightsTs -replace "export var Version = `"\d+\.\d+\.\d+`"", "export var Version = `"$version`""
-    $appInsightsTs | Out-File $appInsightsTsPath
+    [System.IO.File]::WriteAllLines($appInsightsTsPath, $appInsightsTs)
 }
 
 # update global.props    

@@ -15,8 +15,20 @@ class DisableTelemetryTests extends TestClass {
         sinon.fakeServer["restore"]();
         this.useFakeTimers = false;
         this.clock.restore();
-        this.errorSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onError");
-        this.successSpy = this.sandbox.stub(Microsoft.ApplicationInsights.Sender, "_onSuccess");
+
+        var config = {
+            enableSessionStorageBuffer: () => false,
+            endpointUrl: () => null,
+            emitLineDelimitedJson: () => null,
+            maxBatchSizeInBytes: () => null,
+            maxBatchInterval: () => null,
+            disableTelemetry: () => null
+        };
+
+        var sender = new Microsoft.ApplicationInsights.Sender(config);
+        this.errorSpy = this.sandbox.spy(sender, "_onError");
+        this.successSpy = this.sandbox.stub(sender, "_onSuccess");
+
         this.loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
     }
 
@@ -59,7 +71,7 @@ class DisableTelemetryTests extends TestClass {
                 boilerPlateAsserts();
             }
         }
-        
+
         var assertNoMessages = () => {
             var message = "polling for no messages: " + new Date().toISOString();
             Assert.ok(true, message);

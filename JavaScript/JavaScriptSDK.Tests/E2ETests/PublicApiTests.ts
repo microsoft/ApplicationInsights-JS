@@ -4,9 +4,12 @@
 
 class PublicApiTests extends TestClass {
 
-    public errorSpy;
-    public successSpy;
-    public loggingSpy;
+    public errorSpy: SinonSpy;
+    public successSpy: SinonSpy;
+    public loggingSpy: SinonSpy;
+
+    private delay: number;
+    private testAi: Microsoft.ApplicationInsights.AppInsights;
 
     /** Method called before the start of each test method */
     public testInitialize() {
@@ -14,8 +17,9 @@ class PublicApiTests extends TestClass {
         sinon.fakeServer["restore"]();
         this.useFakeTimers = false;
         this.clock.restore();
-        this.errorSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Sender, "_onError");
-        this.successSpy = this.sandbox.stub(Microsoft.ApplicationInsights.Sender, "_onSuccess");
+
+        this.errorSpy = this.sandbox.spy(this.testAi.context._sender, "_onError");
+        this.successSpy = this.sandbox.stub(this.testAi.context._sender, "_onSuccess");
         this.loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
     }
 
@@ -31,8 +35,8 @@ class PublicApiTests extends TestClass {
         config.endpointUrl = "https://dc.services.visualstudio.com/v2/track";
         config.instrumentationKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46";
 
-        var delay = config.maxBatchInterval + 100;
-        var testAi = new Microsoft.ApplicationInsights.AppInsights(config);        
+        this.delay = config.maxBatchInterval + 100;
+        this.testAi = new Microsoft.ApplicationInsights.AppInsights(config);
 
         var boilerPlateAsserts = () => {
             Assert.ok(this.successSpy.called, "success");
@@ -68,17 +72,17 @@ class PublicApiTests extends TestClass {
 
         this.testCaseAsync({
             name: "TelemetryContext: track event",
-            stepDelay: delay,
+            stepDelay: this.delay,
             steps: [
                 () => {
-                    testAi.trackEvent("test");
+                    this.testAi.trackEvent("test");
                 }
             ].concat(asserts)
         });
 
         this.testCaseAsync({
             name: "TelemetryContext: track exception",
-            stepDelay: delay,
+            stepDelay: this.delay,
             steps: [
                 () => {
                     var exception = null;
@@ -86,7 +90,7 @@ class PublicApiTests extends TestClass {
                         window["a"]["b"]();
                     } catch (e) {
                         exception = e;
-                        testAi.trackException(e);
+                        this.testAi.trackException(e);
                     }
 
                     Assert.ok(exception);
@@ -96,12 +100,12 @@ class PublicApiTests extends TestClass {
 
         this.testCaseAsync({
             name: "TelemetryContext: track metric",
-            stepDelay: delay,
+            stepDelay: this.delay,
             steps: [
                 () => {
                     console.log("* calling trackMetric " + new Date().toISOString());
                     for (var i = 0; i < 100; i++) {
-                        testAi.trackMetric("test" + i, Math.round(100 * Math.random()));
+                        this.testAi.trackMetric("test" + i, Math.round(100 * Math.random()));
                     }
                     console.log("* done calling trackMetric " + new Date().toISOString());
                 }
@@ -110,27 +114,27 @@ class PublicApiTests extends TestClass {
 
         this.testCaseAsync({
             name: "TelemetryContext: track trace",
-            stepDelay: delay,
+            stepDelay: this.delay,
             steps: [
                 () => {
-                    testAi.trackTrace("test");
+                    this.testAi.trackTrace("test");
                 }
             ].concat(asserts)
         });
 
         this.testCaseAsync({
             name: "TelemetryContext: track page view",
-            stepDelay: delay,
+            stepDelay: this.delay,
             steps: [
                 () => {
-                    testAi.trackPageView();
+                    this.testAi.trackPageView();
                 }
             ].concat(asserts)
         });
 
         this.testCaseAsync({
             name: "TelemetryContext: track all types in batch",
-            stepDelay: delay,
+            stepDelay: this.delay,
             steps: [
                 () => {
                     var exception = null;
@@ -142,22 +146,22 @@ class PublicApiTests extends TestClass {
 
                     Assert.ok(exception);
 
-                    testAi.trackEvent("test");
-                    testAi.trackException(exception);
-                    testAi.trackMetric("test", Math.round(100 * Math.random()));
-                    testAi.trackTrace("test");
-                    testAi.trackPageView();
+                    this.testAi.trackEvent("test");
+                    this.testAi.trackException(exception);
+                    this.testAi.trackMetric("test", Math.round(100 * Math.random()));
+                    this.testAi.trackTrace("test");
+                    this.testAi.trackPageView();
                 }
             ].concat(asserts)
         });
 
         this.testCaseAsync({
             name: "TelemetryContext: track all types in a large batch",
-            stepDelay: delay,
+            stepDelay: this.delay,
             steps: [
                 () => {
                     for (var i = 0; i < 100; i++) {
-                        testAi.trackMetric("test", Math.round(100 * Math.random()));
+                        this.testAi.trackMetric("test", Math.round(100 * Math.random()));
                     }
                 }
             ].concat(asserts)
