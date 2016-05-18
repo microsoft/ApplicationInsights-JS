@@ -80,7 +80,6 @@ class SnippetTests extends TestClass {
                     Assert.deepEqual("test", pv.url, "url was set correctly");
                     Assert.deepEqual({ property: "p1" }, pv.properties, "properties were set correctly");
                     Assert.deepEqual({ measurement: 5 }, pv.measurements, "measurements were set correctly");
-
                 }
             ]
         });
@@ -104,7 +103,6 @@ class SnippetTests extends TestClass {
                     var count = 2 + this.timingOffset;
                     Assert.equal(count, senderSpy66V2V1.sender.callCount, "v2 send called " + count + " times");
                     this.boilerPlateAsserts(senderSpy66V2V1);
-
                 }
             ]
         });
@@ -172,7 +170,6 @@ class SnippetTests extends TestClass {
                     var count = 5 + this.timingOffset;
                     Assert.equal(count, sender.sender.callCount, "send called " + count + " times");
                     this.boilerPlateAsserts(sender);
-
                 }
             ]
         });
