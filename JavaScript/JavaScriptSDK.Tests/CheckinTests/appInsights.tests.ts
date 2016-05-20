@@ -106,9 +106,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-
-                // teardown
-
             }
         });
 
@@ -127,9 +124,6 @@ class AppInsightsTests extends TestClass {
 
                 // verify
                 Assert.ok(trackStub.calledTwice, "track was called");
-
-                // teardown
-
             }
         });
 
@@ -156,9 +150,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"), Microsoft.ApplicationInsights.Telemetry.Event.envelopeType, Microsoft.ApplicationInsights.Telemetry.Event.dataType);
-
-                // teardown
-
             }
         });
 
@@ -177,9 +168,6 @@ class AppInsightsTests extends TestClass {
                 // verify
                 var envelope = this.getFirstResult("track was called", trackStub);
                 Assert.equal(60000, new Date(envelope.time).getTime(), "envelope time");
-
-                // teardown
-
             }
         });
 
@@ -205,9 +193,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-
-                // teardown
-
             }
         });
 
@@ -253,9 +238,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-
-                // teardown
-
             }
         });
 
@@ -281,9 +263,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-
-                // teardown
-
             }
         });
 
@@ -307,9 +286,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-
-                // teardown
-
             }
         });
 
@@ -341,9 +317,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-
-                // teardown
-
             }
         });
 
@@ -367,9 +340,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-
-                // teardown
-
             }
         });
 
@@ -400,9 +370,6 @@ class AppInsightsTests extends TestClass {
                 test(() => { appInsights.trackPageView(); this.clock.tick(pageViewTimeout); });
                 test(() => appInsights.trackException(new Error()));
                 test(() => appInsights.trackTrace("testTrace"));
-
-                // teardown
-
             }
         });
 
@@ -428,9 +395,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-
-                // teardown
-
             }
         });
 
@@ -460,9 +424,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-
-                // teardown
-
             }
         });
 
@@ -489,9 +450,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-
-                // teardown
-
             }
         });
 
@@ -519,9 +477,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-
-                // teardown
-
             }
         });
 
@@ -548,9 +503,6 @@ class AppInsightsTests extends TestClass {
 
                 // act 
                 test(() => appInsights.trackEvent("testEvent"));
-
-                // teardown
-
             }
         });
 
@@ -579,9 +531,6 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-
-                // teardown
-
             }
         });
 
@@ -819,8 +768,6 @@ class AppInsightsTests extends TestClass {
 
                 // verify
                 Assert.equal(100, trackStub.callCount, "track was called 100 times");
-
-                // teardown
             }
         });
 
@@ -960,9 +907,6 @@ class AppInsightsTests extends TestClass {
             Assert.ok(stub.called);
             var data = stub.args[0];
             validateAction(data);
-
-            // teardown
-
         }
 
 
@@ -1109,9 +1053,6 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(spy.calledOnce, "stop track page view sent data");
                 var actualDuration = spy.args[0][2];
                 Assert.equal(testValues.duration, actualDuration, "duration is calculated and sent correctly");
-
-                // teardown                
-
             }
         });
 
@@ -1135,9 +1076,6 @@ class AppInsightsTests extends TestClass {
                 Assert.notEqual(testValues.url, telemetry.url);
                 Assert.notEqual(testValues.properties, telemetry.properties);
                 Assert.notEqual(testValues.measurements, telemetry.measurements);
-
-                // teardown
-
             }
         });
 
@@ -1175,9 +1113,6 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(testValues.url, telemetry.url);
                 Assert.deepEqual(testValues.properties, telemetry.properties);
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
-
-                // teardown
-
             }
         });
 
@@ -1216,9 +1151,6 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(testValues.url, telemetry.url);
                 Assert.deepEqual(testValues.properties, telemetry.properties);
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
-
-                // teardown
-
             }
         });
 
@@ -1237,9 +1169,6 @@ class AppInsightsTests extends TestClass {
 
                 // verify
                 Assert.ok(logStub.calledOnce, "calling start twice triggers warning to user");
-
-                // teardown
-
             }
         });
 
@@ -1257,9 +1186,6 @@ class AppInsightsTests extends TestClass {
 
                 // verify
                 Assert.ok(logStub.calledOnce, "calling stop without a corresponding start triggers warning to user");
-
-                // teardown
-
             }
         });
 
@@ -1295,9 +1221,6 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(testValues.name, telemetry.name);
                 Assert.deepEqual(testValues.properties, telemetry.properties);
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
-
-                // teardown
-
             }
         });
 
@@ -1337,9 +1260,6 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(testValues.name, telemetry.name);
                 Assert.deepEqual(testValues.properties, telemetry.properties);
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
-
-                // teardown
-
             }
         });
 
@@ -1358,9 +1278,6 @@ class AppInsightsTests extends TestClass {
 
                 // verify
                 Assert.ok(logStub.calledOnce, "calling startTrackEvent twice triggers warning to user");
-
-                // teardown
-
             }
         });
 
@@ -1378,9 +1295,6 @@ class AppInsightsTests extends TestClass {
 
                 // verify
                 Assert.ok(logStub.calledOnce, "calling stopTrackEvent without a corresponding start triggers warning to user");
-
-                // teardown
-
             }
         });
 
@@ -1422,9 +1336,6 @@ class AppInsightsTests extends TestClass {
                 telemetry = <Microsoft.ApplicationInsights.Telemetry.Event>trackStub.args[1][0].data.baseData;
                 Assert.equal(testValues2.name, telemetry.name);
                 Assert.equal(testValues2.duration, telemetry.measurements["duration"]);
-
-                // teardown
-
             }
         });
 
@@ -1459,9 +1370,6 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(testValues2.name, telemetry.name);
                 Assert.deepEqual(testValues2.properties, telemetry.properties);
                 Assert.deepEqual(testValues2.measurements, telemetry.measurements);
-
-                // teardown
-
             }
         });
 
@@ -1491,9 +1399,6 @@ class AppInsightsTests extends TestClass {
                 // verify
                 this.clock.tick(1);
                 Assert.ok(senderSpy.calledOnce, "data is sent after calling flush");
-
-                // teardown
-
             }
         });
 
@@ -1518,9 +1423,6 @@ class AppInsightsTests extends TestClass {
                 // verify
                 Assert.ok(resetInternalMessageCountStub.calledOnce, "Internal throttle was not reset even though Page View was tracked");
 
-                // restore
-
-
             }
         });
 
@@ -1544,10 +1446,6 @@ class AppInsightsTests extends TestClass {
 
                 // verify
                 Assert.ok(resetInternalMessageCountStub.notCalled, "Internal throttle was reset even though Page View was not tracked");
-
-                // restore
-
-
             }
         });
 
