@@ -59,3 +59,9 @@ foreach($file in $files) {
 }
 
 Write-Host "Files uploaded successfully to Azure Storage."
+
+# copying files to dist dir 
+Copy-Item (Join-Path $releaseFromDir -ChildPath "ai.js") (Join-Path $jsSdkDir -ChildPath "dist" | Join-Path -ChildPath "ai.js")
+Copy-Item (Join-Path $releaseFromDir -ChildPath "ai.0.js") (Join-Path $jsSdkDir -ChildPath "dist" | Join-Path -ChildPath "ai.0.js")
+
+Write-Host "Files copied to dist folder, don't forget to push them to GitHub"
