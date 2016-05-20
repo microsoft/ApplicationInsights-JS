@@ -302,8 +302,9 @@ module Microsoft.ApplicationInsights {
          * @param   exception   An Error from a catch clause, or the string error message.
          * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
+         * @param   severityLevel   AI.SeverityLevel - severity level
          */
-        public trackException(exception: Error, handledAt?: string, properties?: Object, measurements?: Object) {
+        public trackException(exception: Error, handledAt?: string, properties?: Object, measurements?: Object, severityLevel?: AI.SeverityLevel) {
             try {
                 if (!Util.isError(exception)) {
                     // ensure that we have an error object (user could pass a string/message)
@@ -314,7 +315,7 @@ module Microsoft.ApplicationInsights {
                     }
                 }
 
-                var exceptionTelemetry = new Telemetry.Exception(exception, handledAt, properties, measurements);
+                var exceptionTelemetry = new Telemetry.Exception(exception, handledAt, properties, measurements, severityLevel);
                 var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Exception>(Telemetry.Exception.dataType, exceptionTelemetry);
                 var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
                 this.context.track(envelope);

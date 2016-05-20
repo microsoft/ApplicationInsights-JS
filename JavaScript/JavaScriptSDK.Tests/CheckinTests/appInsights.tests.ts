@@ -95,7 +95,7 @@ class AppInsightsTests extends TestClass {
                 var senderStub = this.sandbox.stub(appInsights.context._sender, "_sender", () => {
                     console.log("GOT HERE");
                 });
-                
+
                 // verify
                 var test = (action) => {
                     action();
@@ -108,7 +108,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                
+
             }
         });
 
@@ -116,7 +116,7 @@ class AppInsightsTests extends TestClass {
             name: "AppInsightsTests: track page view performance",
             test: () => {
                 // setup
-                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());                
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
 
                 // act
@@ -129,10 +129,10 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(trackStub.calledTwice, "track was called");
 
                 // teardown
-                
+
             }
         });
-        
+
         this.testCase({
             name: "AppInsightsTests: envelope type, data type and ikey are correct",
             test: () => {
@@ -158,7 +158,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"), Microsoft.ApplicationInsights.Telemetry.Event.envelopeType, Microsoft.ApplicationInsights.Telemetry.Event.dataType);
 
                 // teardown
-                
+
             }
         });
 
@@ -177,9 +177,9 @@ class AppInsightsTests extends TestClass {
                 // verify
                 var envelope = this.getFirstResult("track was called", trackStub);
                 Assert.equal(60000, new Date(envelope.time).getTime(), "envelope time");
-                
+
                 // teardown
-                
+
             }
         });
 
@@ -207,7 +207,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                
+
             }
         });
 
@@ -255,7 +255,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                
+
             }
         });
 
@@ -283,7 +283,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                
+
             }
         });
 
@@ -309,7 +309,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                
+
             }
         });
 
@@ -343,7 +343,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                
+
             }
         });
 
@@ -369,7 +369,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                
+
             }
         });
 
@@ -393,7 +393,7 @@ class AppInsightsTests extends TestClass {
                     Assert.equal("asdf", envelope.tags[contextKeys.userId], "user.id");
                     trackSpy.reset();
                 };
-                
+
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
                 var pageViewTimeout = 100; // page views are sent with 100 ms delay (see trackPageView implementation).
@@ -402,7 +402,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackTrace("testTrace"));
 
                 // teardown
-                
+
             }
         });
 
@@ -430,7 +430,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                
+
             }
         });
 
@@ -462,7 +462,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                
+
             }
         });
 
@@ -489,9 +489,9 @@ class AppInsightsTests extends TestClass {
 
                 // act
                 test(() => appInsights.trackEvent("testEvent"));
-                
+
                 // teardown
-                
+
             }
         });
 
@@ -521,7 +521,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                
+
             }
         });
 
@@ -548,9 +548,9 @@ class AppInsightsTests extends TestClass {
 
                 // act 
                 test(() => appInsights.trackEvent("testEvent"));
-                
+
                 // teardown
-                
+
             }
         });
 
@@ -581,7 +581,7 @@ class AppInsightsTests extends TestClass {
                 test(() => appInsights.trackEvent("testEvent"));
 
                 // teardown
-                
+
             }
         });
 
@@ -730,10 +730,10 @@ class AppInsightsTests extends TestClass {
                     () => {
                         return { navigationStart: 0 };
                     });
-                
+
                 // act
                 appInsights.trackPageView();
-                
+
                 // 60+ seconds passed, page view is supposed to be sent                
                 this.clock.tick(65432);
                 Assert.ok(spy.calledOnce, "60 seconds passed, page view is supposed to be sent");
@@ -749,7 +749,7 @@ class AppInsightsTests extends TestClass {
                 var spy = this.sandbox.stub(appInsights, "sendPageViewInternal");
                 var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingSupported",
                     () => { return false; });
-                
+
                 // act
                 appInsights.trackPageView();
                 this.clock.tick(100);
@@ -771,8 +771,27 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(trackStub.calledOnce, "single exception is tracked");
                 appInsights.trackException(<any>[new Error()]);
                 Assert.ok(trackStub.calledTwice, "array of exceptions is tracked");
+            }
+        });
 
+        this.testCase({
+            name: "AppInsightsTests: trackException allows logging errors with different severity level",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var trackStub = this.sandbox.stub(appInsights.context, "track");
 
+                appInsights.trackException(new Error(), "test", null, null, AI.SeverityLevel.Critical);
+
+                Assert.ok(trackStub.calledOnce, "single exception is tracked");
+                Assert.equal(AI.SeverityLevel.Critical, trackStub.firstCall.args[0].data.baseData.severityLevel);
+
+                trackStub.reset();
+
+                appInsights.trackException(new Error(), "test", null, null, AI.SeverityLevel.Error);
+
+                Assert.ok(trackStub.calledOnce, "single exception is tracked");
+                Assert.equal(AI.SeverityLevel.Error, trackStub.firstCall.args[0].data.baseData.severityLevel);
             }
         });
 
@@ -802,7 +821,6 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(100, trackStub.callCount, "track was called 100 times");
 
                 // teardown
-                
             }
         });
 
@@ -844,8 +862,6 @@ class AppInsightsTests extends TestClass {
                 sut._onerror("any message", "any://url", 420, 42, new Error());
 
                 Assert.ok(dumpSpy.calledWith(unexpectedError));
-
-
             }
         });
 
@@ -862,9 +878,6 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(dumpSpy.returnValues[0].indexOf("stack: ") != -1);
                 Assert.ok(dumpSpy.returnValues[0].indexOf("message: 'my cool message'") != -1);
                 Assert.ok(dumpSpy.returnValues[0].indexOf("name: 'Error'") != -1);
-
-
-
             }
         });
 
@@ -882,9 +895,6 @@ class AppInsightsTests extends TestClass {
 
                 var logMessage: Microsoft.ApplicationInsights._InternalLogMessage = throwInternalNonUserActionableSpy.getCall(0).args[1];
                 Assert.notEqual(-1, logMessage.message.indexOf(expectedErrorName));
-
-
-
             }
         });
 
@@ -893,15 +903,13 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // prepare
                 var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var trackSpy = this.sandbox.spy(sut.context, "track");                
+                var trackSpy = this.sandbox.spy(sut.context, "track");
 
                 // act
                 sut._onerror("Script error.", "", 0, 0, null);
 
                 // assert
                 Assert.equal(document.URL, (<any>trackSpy.args[0][0]).data.baseData.properties.url);
-
-
             }
         });
 
@@ -910,7 +918,7 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 // prepare
                 var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var trackExceptionSpy = this.sandbox.spy(sut, "trackException");                
+                var trackExceptionSpy = this.sandbox.spy(sut, "trackException");
 
                 // act
                 // Last arg is not an error\null which will be treated as not CORS issue
@@ -919,8 +927,6 @@ class AppInsightsTests extends TestClass {
                 // assert
                 // properties are passed as a 3rd parameter
                 Assert.equal(document.URL, (<any>trackExceptionSpy.args[0][2]).url);
-
-
             }
         });
 
@@ -949,14 +955,14 @@ class AppInsightsTests extends TestClass {
 
             // act
             trackAction(appInsights);
-            
+
             // verify
             Assert.ok(stub.called);
             var data = stub.args[0];
             validateAction(data);
 
             // teardown
-            
+
         }
 
 
@@ -1105,7 +1111,7 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(testValues.duration, actualDuration, "duration is calculated and sent correctly");
 
                 // teardown                
-                
+
             }
         });
 
@@ -1131,7 +1137,7 @@ class AppInsightsTests extends TestClass {
                 Assert.notEqual(testValues.measurements, telemetry.measurements);
 
                 // teardown
-                
+
             }
         });
 
@@ -1171,7 +1177,7 @@ class AppInsightsTests extends TestClass {
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
 
                 // teardown
-                
+
             }
         });
 
@@ -1212,7 +1218,7 @@ class AppInsightsTests extends TestClass {
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
 
                 // teardown
-                
+
             }
         });
 
@@ -1224,7 +1230,7 @@ class AppInsightsTests extends TestClass {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
-                
+
                 // act
                 appInsights.startTrackPage();
                 appInsights.startTrackPage();
@@ -1233,7 +1239,7 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(logStub.calledOnce, "calling start twice triggers warning to user");
 
                 // teardown
-                
+
             }
         });
 
@@ -1253,7 +1259,7 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(logStub.calledOnce, "calling stop without a corresponding start triggers warning to user");
 
                 // teardown
-                
+
             }
         });
 
@@ -1291,7 +1297,7 @@ class AppInsightsTests extends TestClass {
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
 
                 // teardown
-                
+
             }
         });
 
@@ -1333,7 +1339,7 @@ class AppInsightsTests extends TestClass {
                 Assert.deepEqual(testValues.measurements, telemetry.measurements);
 
                 // teardown
-                
+
             }
         });
 
@@ -1354,7 +1360,7 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(logStub.calledOnce, "calling startTrackEvent twice triggers warning to user");
 
                 // teardown
-                
+
             }
         });
 
@@ -1374,7 +1380,7 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(logStub.calledOnce, "calling stopTrackEvent without a corresponding start triggers warning to user");
 
                 // teardown
-                
+
             }
         });
 
@@ -1405,7 +1411,7 @@ class AppInsightsTests extends TestClass {
                 appInsights.startTrackEvent(testValues2.name);
                 this.clock.tick(testValues2.duration);
                 appInsights.stopTrackEvent(testValues2.name);
-               
+
                 // verify
                 // TestValues1
                 var telemetry = <Microsoft.ApplicationInsights.Telemetry.Event>trackStub.args[0][0].data.baseData;
@@ -1418,7 +1424,7 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(testValues2.duration, telemetry.measurements["duration"]);
 
                 // teardown
-                
+
             }
         });
 
@@ -1440,7 +1446,7 @@ class AppInsightsTests extends TestClass {
 
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
-                this.clock.tick(10);       
+                this.clock.tick(10);
 
                 // act
                 appInsights.startTrackEvent(testValues2.name);
@@ -1455,7 +1461,7 @@ class AppInsightsTests extends TestClass {
                 Assert.deepEqual(testValues2.measurements, telemetry.measurements);
 
                 // teardown
-                
+
             }
         });
 
@@ -1487,7 +1493,7 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(senderSpy.calledOnce, "data is sent after calling flush");
 
                 // teardown
-                
+
             }
         });
 
@@ -1513,8 +1519,8 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(resetInternalMessageCountStub.calledOnce, "Internal throttle was not reset even though Page View was tracked");
 
                 // restore
-                
-                
+
+
             }
         });
 
@@ -1540,8 +1546,8 @@ class AppInsightsTests extends TestClass {
                 Assert.ok(resetInternalMessageCountStub.notCalled, "Internal throttle was reset even though Page View was not tracked");
 
                 // restore
-                
-                
+
+
             }
         });
 
@@ -1644,13 +1650,13 @@ class AppInsightsTests extends TestClass {
                 var snippet = this.getAppInsightsSnippet();
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
                 var trackStub = this.sandbox.stub(appInsights.context, "track");
-                var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");                
+                var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
 
                 // Act
                 for (var i = 0; i < 20; ++i) {
                     appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "POST");
                 }
-                
+
                 loggingSpy.reset();
 
                 for (var i = 0; i < 100; ++i) {
@@ -1681,7 +1687,7 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(ajaxCallsCount, trackStub.callCount, "Expected " + ajaxCallsCount + " invokations of trackAjax (no limit)");
             }
         });
-        
+
         this.testCase({
             name: "Ajax - root/parent id are set and passed correctly",
             test: () => {
@@ -1693,7 +1699,7 @@ class AppInsightsTests extends TestClass {
                 var trackStub = this.sandbox.spy(appInsights, "trackAjax");
                 var expectedRootId = appInsights.context.operation.id;
                 Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
-                
+
                 // Act
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "/bla");
@@ -1701,7 +1707,7 @@ class AppInsightsTests extends TestClass {
 
                 var expectedAjaxId = (<any>xhr).ajaxData.id;
                 Assert.ok(expectedAjaxId.length > 0, "ajax id was initialized");
-                
+
                 // Emulate response                               
                 (<any>xhr).respond("200", {}, "");
 
@@ -1722,12 +1728,12 @@ class AppInsightsTests extends TestClass {
                 var trackStub = this.sandbox.spy(appInsights, "trackAjax");
                 var expectedRootId = appInsights.context.operation.id;
                 Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
-                
+
                 // Act
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "/bla");
                 xhr.send();
-                                
+
                 // Emulate response                               
                 (<any>xhr).respond("200", {}, "");
 

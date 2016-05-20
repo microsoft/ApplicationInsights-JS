@@ -23,7 +23,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         /**
         * Constructs a new isntance of the ExceptionTelemetry object
         */
-        constructor(exception: Error, handledAt?: string, properties?: Object, measurements?: Object) {
+        constructor(exception: Error, handledAt?: string, properties?: Object, measurements?: Object, severityLevel?: AI.SeverityLevel) {
             super();
 
             this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
@@ -31,6 +31,10 @@ module Microsoft.ApplicationInsights.Telemetry {
 
             this.handledAt = handledAt || "unhandled";
             this.exceptions = [new _ExceptionDetails(exception)];
+
+            if (severityLevel) {
+                this.severityLevel = severityLevel;
+            }
         }
         
 
