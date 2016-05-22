@@ -29,6 +29,7 @@
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
     <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
     <EnableTypeScript>true</EnableTypeScript>
+    <TypeScriptCompilerPath>..\..\..\packages\Microsoft.TypeScript.Compiler.1.8.11\tools\tsc.exe</TypeScriptCompilerPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -256,13 +257,13 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeBuild">
     <Message Text="Compiling TypeScript files" />
-    <Exec Command="tsc --module amd @(SeleniumCheckinTests ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\checkinTests.js" />
-    <Exec Command="tsc --module amd @(SeleniumPerformance ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\performanceTests.js" />
-    <Exec Command="tsc --module amd @(AutoCollectionTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\autoCollection.tests.js" />
-    <Exec Command="tsc --module amd @(PublicApiTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\PublicApiTests.js" />
-    <Exec Command="tsc --module amd @(SanitizerE2ETests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\SanitizerE2E.tests.js" />
-    <Exec Command="tsc --module amd @(SnippetTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\snippet.tests.js" />
-    <Exec Command="tsc --module amd @(DisableTelemetryTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\DisableTelemetryTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --module amd @(SeleniumCheckinTests ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\checkinTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --module amd @(SeleniumPerformance ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\performanceTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --module amd @(AutoCollectionTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\autoCollection.tests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --module amd @(PublicApiTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\PublicApiTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --module amd @(SanitizerE2ETests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\SanitizerE2E.tests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --module amd @(SnippetTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\snippet.tests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --module amd @(DisableTelemetryTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\DisableTelemetryTests.js" />
     <Exec Command="Powershell.exe -ExecutionPolicy ByPass -File &quot;$(ProjectDir)E2ETests\PostBuild.ps1&quot; -projectDir $(ProjectDir)" />
   </Target>
   <PropertyGroup>
