@@ -8,6 +8,7 @@
 /// <reference path="./ajax/ajax.ts"/>
 /// <reference path="./DataLossAnalyzer.ts"/>
 /// <reference path="./SplitTest.ts"/>
+/// <reference path="./IAppInsights.ts"/>
 
 module Microsoft.ApplicationInsights {
 
@@ -54,7 +55,7 @@ module Microsoft.ApplicationInsights {
      * The main API that sends telemetry to Application Insights.
      * Learn more: http://go.microsoft.com/fwlink/?LinkID=401493
      */
-    export class AppInsights implements IAppInsightsInternal {
+    export class AppInsights implements IAppInsightsInternal, IAppInsights {
 
         // Counts number of trackAjax invokations.
         // By default we only monitor X ajax call per view to avoid too much load.
