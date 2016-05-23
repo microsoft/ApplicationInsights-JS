@@ -3,7 +3,6 @@
 
 class AppInsightsModule {
     private static appInsightsName = "appInsights";
-    public static appInsightsInstance: Microsoft.ApplicationInsights.IAppInsights;
 
     private static _createLazyMethod(name) {
         var aiObject = window[AppInsightsModule.appInsightsName];
@@ -22,8 +21,12 @@ class AppInsightsModule {
             }
         }
 
-        AppInsightsModule.appInsightsInstance[name] = aiObject[name];
+        //AppInsightsModule.appInsightsInstance[name] = aiObject[name];
     };
+
+    public static get appInsightsInstance():Microsoft.ApplicationInsights.IAppInsights {
+        return window[AppInsightsModule.appInsightsName];
+    }
 
     public static initialize(aiConfig: Microsoft.ApplicationInsights.IConfig) {
 

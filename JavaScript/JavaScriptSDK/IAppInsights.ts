@@ -52,7 +52,7 @@
 
         /**
         * Log an AJAX request
-        * @param
+        * @param ....
         */
         trackAjax(id: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number, method?: string);
     }
