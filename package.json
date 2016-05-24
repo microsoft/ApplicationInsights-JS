@@ -1,6 +1,6 @@
 {
     "name":  "applicationinsights-js",
-    "version":  "0.22.14",
+    "version":  "0.22.15",
     "description":  "[Application Insights](https://azure.microsoft.com/services/application-insights/) tells you about your app\u0027s performance and usage. By adding a few lines of code to your web pages, you get data about how many users you have, which pages are most popular, how fast pages load, whether they throw exceptions, and more. And you can add code to track more detailed user activity.",
     "main":  "dist/ai.0.js",
     "scripts":  {

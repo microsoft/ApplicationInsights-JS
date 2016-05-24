@@ -13,7 +13,7 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "0.22.14";
+    export var Version = "0.22.15";
 
     export interface IConfig {
         instrumentationKey: string;
@@ -104,9 +104,14 @@ module Microsoft.ApplicationInsights {
             }
 
             // enable session storage buffer experiment
-            this.config.enableSessionStorageBuffer = new SplitTest().isEnabled(this.config.instrumentationKey, 10); ;
+            var enableExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 10);
+            this.config.enableSessionStorageBuffer = enableExperiment;
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
+
+            DataLossAnalyzer.appInsights = this;
+            DataLossAnalyzer.enabled = enableExperiment;
+            DataLossAnalyzer.reportLostItems();
 
             this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
 
