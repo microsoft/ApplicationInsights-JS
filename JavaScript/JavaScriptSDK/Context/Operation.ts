@@ -1,9 +1,11 @@
 ﻿/// <reference path="../util.ts" />
+/// <reference path="IOperation.ts" />
 
 module Microsoft.ApplicationInsights.Context {
+
     "use strict";
 
-    export class Operation {
+    export class Operation implements IOperation {
 
         public id: string;
         public name: string;
@@ -12,7 +14,7 @@ module Microsoft.ApplicationInsights.Context {
         public syntheticSource: string;
 
         constructor() {
-            this.id = Util.newId();            
+            this.id = Util.newId();
             if (window && window.location && window.location.pathname) {
                 this.name = window.location.pathname;
             }

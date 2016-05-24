@@ -1,5 +1,20 @@
 ﻿module Microsoft.ApplicationInsights {
+
+    "use strict";
+
     export interface IAppInsights {
+
+        /*
+        * Config object used to initialize AppInsights
+        */
+        config: IConfig;
+
+        context: TelemetryContext;
+
+        /*
+        * Initialization queue. Contains functions to run when appInsights initializes
+        */
+        queue: (() => void)[];
 
         /**
         * Starts timing how long the user views a page or other item. Call this when the page opens. 
@@ -52,8 +67,74 @@
 
         /**
         * Log an AJAX request
-        * @param ....
+        * @param  id  Event id
+        * @param  absoluteUrl Full url
+        * @param  pathName Leave this parameter blank
+        * @param  totalTime Total time it took for AJAX request to complete
+        * @param  success Whether AJAX request succeeded or failed
+        * @param  resultCode Result code returned from AJAX call
+        * @param  method  HTTP verb that was used (GET, POST)
         */
         trackAjax(id: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number, method?: string);
+
+         /**
+         * Log an exception you have caught.
+         * @param   exception   An Error from a catch clause, or the string error message.
+         * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
+         * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
+         */
+        trackException(exception: Error, handledAt?: string, properties?: Object, measurements?: Object);
+
+        /**
+         * Log a numeric value that is not associated with a specific event. Typically used to send regular reports of performance indicators.
+         * To send a single measurement, use just the first two parameters. If you take measurements very frequently, you can reduce the 
+         * telemetry bandwidth by aggregating multiple measurements and sending the resulting average at intervals.
+         * @param   name    A string that identifies the metric.
+         * @param   average Number representing either a single measurement, or the average of several measurements.
+         * @param   sampleCount The number of measurements represented by the average. Defaults to 1.
+         * @param   min The smallest measurement in the sample. Defaults to the average.
+         * @param   max The largest measurement in the sample. Defaults to the average.
+         */
+        trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: Object);
+
+        /**
+        * Log a diagnostic message. 
+        * @param    message A message string 
+        * @param   properties  map[string, string] - additional data used to filter traces in the portal. Defaults to empty.
+        */
+        trackTrace(message: string, properties?: Object);
+
+
+        /**
+         * Immediately send all queued telemetry.
+         */
+        flush();
+
+
+         /**
+         * Sets the autheticated user id and the account id in this session.
+         * User auth id and account id should be of type string. They should not contain commas, semi-colons, equal signs, spaces, or vertical-bars.
+         *   
+         * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
+         * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
+         */
+        setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string);
+
+
+        /**
+         * Clears the authenticated user id and the account id from the user context.
+         */
+        clearAuthenticatedUserContext();
+
+        /**
+         * The custom error handler for Application Insights
+         * @param {string} message - The error message
+         * @param {string} url - The url where the error was raised
+         * @param {number} lineNumber - The line number where the error was raised
+         * @param {number} columnNumber - The column number for the line where the error was raised
+         * @param {Error}  error - The Error object
+         */
+        _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error);
+
     }
 }

@@ -2,6 +2,7 @@
 /// <reference path="Telemetry/Common/Envelope.ts"/>
 /// <reference path="Telemetry/Common/Base.ts" />
 /// <reference path="Contracts/Generated/ContextTagKeys.ts"/>
+/// <reference path="Contracts/Generated/Envelope.ts" />
 /// <reference path="Context/Application.ts"/>
 /// <reference path="Context/Device.ts"/>
 /// <reference path="Context/Internal.ts"/>
@@ -102,7 +103,7 @@ module Microsoft.ApplicationInsights {
         /**
          * Add a telemetry item to the send buffer
          */
-        public send(envelope: Telemetry.Common.Envelope) {
+        public send(envelope: Microsoft.Telemetry.Envelope) {
             try {
                 // if master off switch is set, don't send any data
                 if (this._config.disableTelemetry()) {
@@ -123,7 +124,7 @@ module Microsoft.ApplicationInsights {
                 }
 
                 // check if the incoming payload is too large, truncate if necessary
-                var payload: string = Serializer.serialize(envelope);
+                var payload: string = Serializer.serialize(<ISerializable><any>envelope);
 
                 // flush if we would exceet the max-size limit by adding this item
                 var batch = this._buffer.batchPayloads();

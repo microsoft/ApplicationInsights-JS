@@ -1,11 +1,13 @@
 /// <reference path="./AppInsights.ts"/>
 /// <reference path="./IAppInsights.ts"/>
 
+"use strict";
+
 class AppInsightsModule {
     private static appInsightsName = "appInsights";
 
     private static _createLazyMethod(name) {
-        var aiObject = window[AppInsightsModule.appInsightsName];
+        var aiObject = AppInsightsModule.appInsightsInstance;
 
         // Define a temporary method that queues-up a the real method call
         aiObject[name] = function () {
@@ -20,9 +22,8 @@ class AppInsightsModule {
                 aiObject[name].apply(aiObject, originalArguments);
             }
         }
-
-        //AppInsightsModule.appInsightsInstance[name] = aiObject[name];
     };
+
 
     public static get appInsightsInstance():Microsoft.ApplicationInsights.IAppInsights {
         return window[AppInsightsModule.appInsightsName];
@@ -31,7 +32,7 @@ class AppInsightsModule {
     public static initialize(aiConfig: Microsoft.ApplicationInsights.IConfig) {
 
 
-        if (!window[AppInsightsModule.appInsightsName]) {
+        if (!AppInsightsModule.appInsightsInstance) {
             window[AppInsightsModule.appInsightsName] = {
                 config: aiConfig
             };
@@ -40,10 +41,10 @@ class AppInsightsModule {
             scriptElement.src = "http://az416426.vo.msecnd.net/scripts/a/ai.0.js";
             document.head.appendChild(scriptElement);
 
-            var aiObject = window[AppInsightsModule.appInsightsName];
+            var aiObject = AppInsightsModule.appInsightsInstance;
 
             // capture initial cookie
-            aiObject.cookie = document.cookie;
+            (<any>aiObject).cookie = document.cookie;
             aiObject.queue = [];
 
             var method = ["trackEvent", "trackException", "trackMetric", "trackPageView", "trackTrace", "trackAjax", "setAuthenticatedUserContext", "clearAuthenticatedUserContext"];
