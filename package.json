@@ -2,7 +2,7 @@
     "name":  "applicationinsights-js",
     "version":  "0.22.14",
     "description":  "Microsoft Application Insights JavaScript SDK",
-    "main":  "dist/ai.0.js",
+    "main":  "JavaScriptSDK/AppInsightsModule",
     "keywords": [
         "browser performance monitoring",
         "script errors",

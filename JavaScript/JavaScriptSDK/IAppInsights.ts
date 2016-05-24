@@ -30,7 +30,7 @@
         * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
         * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
         */
-        stopTrackPage(name?: string, url?: string, properties?: Object, measurements?: Object);
+        stopTrackPage(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
 
         /**
          * Logs that a page or other item was viewed. 
@@ -40,7 +40,7 @@
          * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
          * @param   duration    number - the number of milliseconds it took to load the page. Defaults to undefined. If set to default value, page load time is calculated internally.
          */
-        trackPageView(name?: string, url?: string, properties?: Object, measurements?: Object, duration?: number);
+        trackPageView(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, duration?: number);
 
         /**
          * Start timing an extended event. Call {@link stopTrackEvent} to log the event when it ends.
@@ -55,7 +55,7 @@
          * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
          */
-        stopTrackEvent(name: string, properties?: Object, measurements?: Object);
+        stopTrackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
 
         /** 
         * Log a user action or other occurrence.
@@ -63,7 +63,7 @@
         * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
         * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
         */
-        trackEvent(name: string, properties?: Object, measurements?: Object);
+        trackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
 
         /**
         * Log an AJAX request
@@ -77,13 +77,13 @@
         */
         trackAjax(id: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number, method?: string);
 
-         /**
-         * Log an exception you have caught.
-         * @param   exception   An Error from a catch clause, or the string error message.
-         * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
-         * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
-         */
-        trackException(exception: Error, handledAt?: string, properties?: Object, measurements?: Object);
+        /**
+        * Log an exception you have caught.
+        * @param   exception   An Error from a catch clause, or the string error message.
+        * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
+        * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
+        */
+        trackException(exception: Error, handledAt?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
 
         /**
          * Log a numeric value that is not associated with a specific event. Typically used to send regular reports of performance indicators.
@@ -95,14 +95,14 @@
          * @param   min The smallest measurement in the sample. Defaults to the average.
          * @param   max The largest measurement in the sample. Defaults to the average.
          */
-        trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: Object);
+        trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: { [name: string]: string; });
 
         /**
         * Log a diagnostic message. 
         * @param    message A message string 
         * @param   properties  map[string, string] - additional data used to filter traces in the portal. Defaults to empty.
         */
-        trackTrace(message: string, properties?: Object);
+        trackTrace(message: string, properties?: { [name: string]: string; });
 
 
         /**
@@ -111,13 +111,13 @@
         flush();
 
 
-         /**
-         * Sets the autheticated user id and the account id in this session.
-         * User auth id and account id should be of type string. They should not contain commas, semi-colons, equal signs, spaces, or vertical-bars.
-         *   
-         * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
-         * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
-         */
+        /**
+        * Sets the autheticated user id and the account id in this session.
+        * User auth id and account id should be of type string. They should not contain commas, semi-colons, equal signs, spaces, or vertical-bars.
+        *   
+        * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
+        * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
+        */
         setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string);
 
 

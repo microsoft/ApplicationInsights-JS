@@ -9,7 +9,15 @@ If you don't have an Azure subscription and would like to try Application Insigh
 
 To use this SDK, you'll need a subscription to [Microsoft Azure](https://azure.com). (There's a free package.)
 
-In the [Azure Preview Portal](https://portal.azure.com), open an Application Insights resource. 
+In the [Azure Preview Portal](https://portal.azure.com), create new or open an existing Application Insights resource.
+
+### Initialize for MVC application
+
+### Import as a module
+* Obtain instrumentation key from your Application Insights resource  
+* Install appinsights-js with npm  
+`npm install applicationinsights-js` 
+
 
 Get "code to monitor my web pages" from the Quick Start page, and insert it in the head of your web pages. 
 
