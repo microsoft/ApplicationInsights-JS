@@ -3204,7 +3204,7 @@ var Microsoft;
     var ApplicationInsights;
     (function (ApplicationInsights) {
         "use strict";
-        ApplicationInsights.Version = "0.22.14";
+        ApplicationInsights.Version = "0.22.15";
         var AppInsights = (function () {
             function AppInsights(config) {
                 var _this = this;
@@ -3234,9 +3234,12 @@ var Microsoft;
                     cookieDomain: function () { return _this.config.cookieDomain; },
                     enableSessionStorageBuffer: function () { return _this.config.enableSessionStorageBuffer; }
                 };
-                this.config.enableSessionStorageBuffer = new ApplicationInsights.SplitTest().isEnabled(this.config.instrumentationKey, 10);
-                ;
+                var enableExperiment = new ApplicationInsights.SplitTest().isEnabled(this.config.instrumentationKey, 10);
+                this.config.enableSessionStorageBuffer = enableExperiment;
                 this.context = new ApplicationInsights.TelemetryContext(configGetters);
+                ApplicationInsights.DataLossAnalyzer.appInsights = this;
+                ApplicationInsights.DataLossAnalyzer.enabled = enableExperiment;
+                ApplicationInsights.DataLossAnalyzer.reportLostItems();
                 this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
                 this._eventTracking = new Timing("trackEvent");
                 this._eventTracking.action = function (name, url, duration, properties, measurements) {
