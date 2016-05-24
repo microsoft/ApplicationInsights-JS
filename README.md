@@ -7,24 +7,38 @@ If you don't have an Azure subscription and would like to try Application Insigh
 
 ## Get started
 
-To use this SDK, you'll need a subscription to [Microsoft Azure](https://azure.com). (There's a free package.)
-
+To use this SDK, you'll need a subscription to [Microsoft Azure](https://azure.com). Application Insights has a free subscription option.
 In the [Azure Preview Portal](https://portal.azure.com), create new or open an existing Application Insights resource.
 
 ### Initialize for MVC application
-
-### Import as a module
-* Obtain instrumentation key from your Application Insights resource  
-* Install appinsights-js with npm  
-`npm install applicationinsights-js` 
-
-
-Get "code to monitor my web pages" from the Quick Start page, and insert it in the head of your web pages. 
-
-Use your web pages, and then look for user and page view results in the Application Insights resource. 
-
+Get "code to monitor my web pages" from the Quick Start page, and insert it in the head of your web pages.  
 [Learn more.](https://azure.microsoft.com/documentation/articles/app-insights-javascript/)
 
+### Import as npm module
+* Obtain instrumentation key from your Application Insights resource  
+* Install applicationinsights-js with npm  
+`npm install applicationinsights-js` 
+
+* Import and use it
+```
+/* import AppInsights */
+import {AppInsights, initialize as initializeAppInsights} from "applicationinsights-js"
+
+/* initialize with instrumentation key. You only need to do it once. */
+initializeAppInsights({ instrumentationKey: "f2c1b11a-e3ec-4d3a-b96b-xxxxxxxx" });
+
+/* example: track page view */
+AppInsights.trackPageView(
+    "FirstPage", /* (optional) page name */
+    null, /* (optional) page url if available */
+    { prop1: "prop1", prop2: "prop2" }, /* (optional) dimension dictionary */
+    { measurement1: 1 }, /* (optional) metric dictionary */
+    123 /* page view duration in milliseconds */
+);
+
+/* example: track event */
+AppInsights.trackEvent("TestEvent", { prop1: "prop1", prop2: "prop2" }, { measurement1: 1 });
+```
 
 ## API reference
 
