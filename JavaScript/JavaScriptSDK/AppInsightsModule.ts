@@ -31,7 +31,6 @@ class AppInsightsModule {
 
     public static initialize(aiConfig: Microsoft.ApplicationInsights.IConfig) {
 
-
         if (!AppInsightsModule.appInsightsInstance) {
             window[AppInsightsModule.appInsightsName] = {
                 config: aiConfig
@@ -47,7 +46,22 @@ class AppInsightsModule {
             (<any>aiObject).cookie = document.cookie;
             aiObject.queue = [];
 
-            var method = ["trackEvent", "trackException", "trackMetric", "trackPageView", "trackTrace", "trackAjax", "setAuthenticatedUserContext", "clearAuthenticatedUserContext"];
+            var method = [
+                "clearAuthenticatedUserContext",
+                "flush",
+                "setAuthenticatedUserContext",
+                "startTrackEvent",
+                "startTrackPage",
+                "stopTrackEvent",           
+                "stopTrackPage",
+                "trackAjax",
+                "trackEvent",
+                "trackException",
+                "trackMetric",
+                "trackPageView",
+                "trackTrace"
+            ];
+
             while (method.length) {
                 AppInsightsModule._createLazyMethod(method.pop());
             }
