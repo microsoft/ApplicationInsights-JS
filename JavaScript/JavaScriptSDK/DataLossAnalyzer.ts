@@ -4,7 +4,8 @@
     export class DataLossAnalyzer {
         static enabled = false;
         static appInsights: Microsoft.ApplicationInsights.AppInsights;
-        static issuesReportedForThisSession;
+        static itemsRestoredFromSessionBuffer;
+        static itemsRestoredBySessionBuffer: number = 0;
         static LIMIT_PER_SESSION = 10;
         static ITEMS_QUEUED_KEY = "AI_itemsQueued";
         static ISSUES_REPORTED_KEY = "AI_lossIssuesReported";
@@ -12,6 +13,7 @@
         static reset() {
             if (DataLossAnalyzer.isEnabled()) {
                 Util.setSessionStorage(DataLossAnalyzer.ITEMS_QUEUED_KEY, "0");
+                DataLossAnalyzer.itemsRestoredFromSessionBuffer = 0;
             }
         }
 
@@ -72,8 +74,10 @@
                     DataLossAnalyzer.getIssuesReported() < DataLossAnalyzer.LIMIT_PER_SESSION &&
                     DataLossAnalyzer.getNumberOfLostItems() > 0) {
 
+                    var lostItems = DataLossAnalyzer.getNumberOfLostItems() - DataLossAnalyzer.itemsRestoredFromSessionBuffer;
+
                     DataLossAnalyzer.appInsights.trackTrace(
-                        "AI (Internal): Internal report DATALOSS:\"" + DataLossAnalyzer.getNumberOfLostItems() + "\"",
+                        "AI (Internal): Internal report DATALOSS:\"" + lostItems + "\"",
                         null);
                     DataLossAnalyzer.appInsights.flush();
 

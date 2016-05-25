@@ -124,6 +124,9 @@ module Microsoft.ApplicationInsights {
 
             this._buffer = bufferItems.concat(notDeliveredItems);
 
+            // update DataLossAnalyzer with the number of recovered items
+            DataLossAnalyzer.itemsRestoredFromSessionBuffer = this._buffer.length;
+
             this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
             this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
         }
