@@ -33,6 +33,23 @@ class ExceptionTelemetryTests extends ContractTestHelper {
         });
 
         this.testCase({
+            name: name + "Exception is initialized with undefined severityLevel",
+            test: () => {
+                var telemetry = new Microsoft.ApplicationInsights.Telemetry.Exception(new Error("test error"), "HA");
+                Assert.equal(undefined, telemetry.severityLevel, "Exception shouldn't have severity level by default");
+            }
+        });
+
+        this.testCase({
+            name: name + "User can override severityLevel",
+            test: () => {
+                var level = AI.SeverityLevel.Critical;
+                var telemetry = new Microsoft.ApplicationInsights.Telemetry.Exception(new Error("test error"), "HA", null, null, level);
+                Assert.equal(level, telemetry.severityLevel, "Exception has proper severity level");
+            }
+        });
+
+        this.testCase({
             name: name + "Exception stack is limited to 32kb",
             test: () => {
                 // setup
