@@ -4,8 +4,8 @@
     export class DataLossAnalyzer {
         static enabled = false;
         static appInsights: Microsoft.ApplicationInsights.AppInsights;
-        static itemsRestoredFromSessionBuffer;
-        static itemsRestoredBySessionBuffer: number = 0;
+        static issuesReportedForThisSession;
+        static itemsRestoredFromSessionBuffer: number = 0;
         static LIMIT_PER_SESSION = 10;
         static ITEMS_QUEUED_KEY = "AI_itemsQueued";
         static ISSUES_REPORTED_KEY = "AI_lossIssuesReported";
