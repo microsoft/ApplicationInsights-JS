@@ -1450,7 +1450,7 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "trackAjax passes ajax data correctly",
+            name: "trackDependency passes ajax data correctly",
             test: () => {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var trackStub = this.sandbox.stub(appInsights.context, "track");
@@ -1461,13 +1461,13 @@ class AppInsightsTests extends TestClass {
                 var resultCode = 404;
 
                 // Act
-                appInsights.trackAjax("0", name, url, duration, success, resultCode, "Get");
+                appInsights.trackDependency("0", "Get", url, name, duration, success, resultCode);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
                 var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
-                Assert.equal("GET " + name, rdd.name);
-                Assert.equal(url, rdd.commandName);
+                Assert.equal("GET " + url , rdd.name);
+                Assert.equal(name, rdd.commandName);
                 Assert.equal(duration, rdd.value);
                 Assert.equal(success, rdd.success);
                 Assert.equal(resultCode, rdd.resultCode);
@@ -1475,7 +1475,7 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "trackAjax includes instrumentation key into envelope name",
+            name: "trackDependency includes instrumentation key into envelope name",
             test: () => {
                 var iKey = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
                 var iKeyNoDash = "BDC8736DD8E84B69B19BB0CE6B66A456";
@@ -1496,13 +1496,13 @@ class AppInsightsTests extends TestClass {
                 };
 
                 // act
-                test(() => appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "GET"), Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType,
+                test(() => appInsights.trackDependency("0", "GET", "http://asdf", "test", 123, true, 200), Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType,
                     Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.dataType);
             }
         });
 
         this.testCase({
-            name: "trackAjax - by default no more than 20 ajaxes per view",
+            name: "trackDependency - by default no more than 20 ajaxes per view",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
@@ -1510,7 +1510,7 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "GET");
+                    appInsights.trackDependency("0", "GET", "http://asdf", "test", 123, true, 200);
                 }
 
                 // Assert
@@ -1519,7 +1519,7 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "trackAjax - trackPageView resets counter of sent ajaxes",
+            name: "trackDependency - trackPageView resets counter of sent ajaxes",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
@@ -1527,14 +1527,14 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "POST");
+                    appInsights.trackDependency("0", "POST", "http://asdf", "test", 123, true, 200);
                 }
 
                 appInsights.sendPageViewInternal("asdf", "http://microsoft.com", 123);
                 trackStub.reset();
 
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "POST");
+                    appInsights.trackDependency("0", "POST", "http://asdf", "test", 123, true, 200);
                 }
 
                 // Assert
@@ -1543,7 +1543,7 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "trackAjax - only 1 user actionable trace about ajaxes limit per view",
+            name: "trackDependency - only 1 user actionable trace about ajaxes limit per view",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
@@ -1552,13 +1552,13 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < 20; ++i) {
-                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "POST");
+                    appInsights.trackDependency("0", "POST", "http://asdf", "test", 123, true, 200);
                 }
 
                 loggingSpy.reset();
 
                 for (var i = 0; i < 100; ++i) {
-                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "POST");
+                    appInsights.trackDependency("0", "POST", "http://asdf", "test", 123, true, 200);
                 }
 
                 // Assert
@@ -1566,9 +1566,8 @@ class AppInsightsTests extends TestClass {
             }
         });
 
-
         this.testCase({
-            name: "trackAjax - '-1' means no ajax per view limit",
+            name: "trackDependency - '-1' means no ajax per view limit",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
                 snippet.maxAjaxCallsPerView = -1;
@@ -1578,11 +1577,36 @@ class AppInsightsTests extends TestClass {
 
                 // Act
                 for (var i = 0; i < ajaxCallsCount; ++i) {
-                    appInsights.trackAjax("0", "test", "http://asdf", 123, true, 200, "POST");
+                    appInsights.trackDependency("0", "POST", "http://asdf", "test", 123, true, 200);
                 }
 
                 // Assert
                 Assert.equal(ajaxCallsCount, trackStub.callCount, "Expected " + ajaxCallsCount + " invokations of trackAjax (no limit)");
+            }
+        });
+
+        this.testCase({
+            name: "trackAjax obsolete method is still supported",
+            test: () => {
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var trackStub = this.sandbox.stub(appInsights.context, "track");
+                var name = "test";
+                var url = "http://myurl.com";
+                var duration = 123;
+                var success = false;
+                var resultCode = 404;
+
+                // Act
+                appInsights.trackAjax("0", url, name, duration, success, resultCode);
+
+                // Assert
+                Assert.ok(trackStub.called, "Track should be called");
+                var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
+                Assert.equal(url, rdd.name);
+                Assert.equal(name, rdd.commandName);
+                Assert.equal(duration, rdd.value);
+                Assert.equal(success, rdd.success);
+                Assert.equal(resultCode, rdd.resultCode);
             }
         });
 
@@ -1594,7 +1618,7 @@ class AppInsightsTests extends TestClass {
                 snippet.disableCorrelationHeaders = false;
                 snippet.maxBatchInterval = 0;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
-                var trackStub = this.sandbox.spy(appInsights, "trackAjax");
+                var trackStub = this.sandbox.spy(appInsights, "trackDependency");
                 var expectedRootId = appInsights.context.operation.id;
                 Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
 
@@ -1623,7 +1647,7 @@ class AppInsightsTests extends TestClass {
                 snippet.disableCorrelationHeaders = true;
                 snippet.maxBatchInterval = 0;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
-                var trackStub = this.sandbox.spy(appInsights, "trackAjax");
+                var trackStub = this.sandbox.spy(appInsights, "trackDependency");
                 var expectedRootId = appInsights.context.operation.id;
                 Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
 

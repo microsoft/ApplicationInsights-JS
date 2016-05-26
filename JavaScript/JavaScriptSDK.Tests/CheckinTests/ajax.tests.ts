@@ -5,7 +5,7 @@
 class AjaxTests extends TestClass {
 
     private appInsightsMock = {
-        trackAjax: (id: string, absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) => { },
+        trackDependency: (id: string, method: string, absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) => { },
         context: {
             operation: {
                 id: "asdf"
@@ -15,14 +15,14 @@ class AjaxTests extends TestClass {
             disableCorrelationHeaders: false
         }
     }
-    private trackAjaxSpy;
+    private trackDependencySpy;
     private callbackSpy;
     private requests;
 
     public testInitialize() {
-        this.trackAjaxSpy = this.sandbox.spy(this.appInsightsMock, "trackAjax");
+        this.trackDependencySpy = this.sandbox.spy(this.appInsightsMock, "trackDependency");
         this.callbackSpy = this.sandbox.spy();
-        this.trackAjaxSpy.reset();
+        this.trackDependencySpy.reset();
         var xhr = sinon.useFakeXMLHttpRequest();
     }
 
@@ -58,11 +58,11 @@ class AjaxTests extends TestClass {
                 xhr.open("GET", "/bla");
                 xhr.send();
 
-                Assert.ok(!this.trackAjaxSpy.called, "TrackAjax should not be called yet");
+                Assert.ok(!this.trackDependencySpy.called, "TrackAjax should not be called yet");
 
                 // Emulate response
                 (<any>xhr).respond(200, { "Content-Type": "application/json" }, "bla");
-                Assert.ok(this.trackAjaxSpy.called, "TrackAjax is called");
+                Assert.ok(this.trackDependencySpy.called, "TrackAjax is called");
                                 
                 // Assert
                 var result = callback.args[0][0].target;
@@ -86,13 +86,13 @@ class AjaxTests extends TestClass {
                 xhr.open("GET", "/bla");
                 xhr.send();
 
-                Assert.ok(!this.trackAjaxSpy.called, "TrackAjax should not be called yet");
+                Assert.ok(!this.trackDependencySpy.called, "TrackAjax should not be called yet");
 
                 // Emulate response                
                 (<any>xhr).respond();
 
                 // Assert
-                Assert.ok(this.trackAjaxSpy.called, "TrackAjax is called");
+                Assert.ok(this.trackDependencySpy.called, "TrackAjax is called");
                 Assert.ok(onreadystatechangeSpy.called, "custom onreadystatechange should be called");
 
             }
@@ -111,7 +111,7 @@ class AjaxTests extends TestClass {
                 (<any>xhr).respond(200, {}, "");
 
                 // Assert
-                Assert.equal(true, this.trackAjaxSpy.args[0][4], "TrackAjax should receive true as a 'success' argument");
+                Assert.equal(true, this.trackDependencySpy.args[0][5], "TrackAjax should receive true as a 'success' argument");
 
             }
         });
@@ -130,7 +130,7 @@ class AjaxTests extends TestClass {
                 (<any>xhr).respond(404, {}, "");
 
                 // Assert
-                Assert.equal(false, this.trackAjaxSpy.args[0][4], "TrackAjax should receive false as a 'success' argument");
+                Assert.equal(false, this.trackDependencySpy.args[0][5], "TrackAjax should receive false as a 'success' argument");
 
             }
         });
@@ -177,13 +177,13 @@ class AjaxTests extends TestClass {
                 xhr.addEventListener("readystatechange", cb6);
                 xhr.addEventListener("readystatechange", cb7);
 
-                Assert.ok(!this.trackAjaxSpy.called, "TrackAjax should not be called yet");
+                Assert.ok(!this.trackDependencySpy.called, "TrackAjax should not be called yet");
 
                 // Emulate response                
                 (<any>xhr).respond(404, {}, "");
 
                 // Assert
-                Assert.ok(this.trackAjaxSpy.calledOnce, "TrackAjax should be called");
+                Assert.ok(this.trackDependencySpy.calledOnce, "TrackAjax should be called");
                 Assert.ok(cb1.called, "callback 1 should be called");
                 Assert.ok(cb2.called, "callback 2 should be called");
                 Assert.ok(cb3.called, "callback 3 should be called");
@@ -235,8 +235,8 @@ class AjaxTests extends TestClass {
                     (<any>xhr).respond(404, {}, "");
 
                     // Assert
-                    Assert.ok(this.trackAjaxSpy.calledOnce, "TrackAjax should be called");
-                    Assert.equal(expectedResponseDuration, this.trackAjaxSpy.args[0][3], "Ajax duration should match expected duration");
+                    Assert.ok(this.trackDependencySpy.calledOnce, "TrackAjax should be called");
+                    Assert.equal(expectedResponseDuration, this.trackDependencySpy.args[0][4], "Ajax duration should match expected duration");
                 } finally {
                     window.performance = initialPerformance;
                 }
@@ -297,7 +297,7 @@ class AjaxTests extends TestClass {
         (<any>xhr).respond(responseCode, {}, "");
 
         // Assert
-        Assert.equal(success, this.trackAjaxSpy.args[0][4], "TrackAjax should receive " + success + " as a 'success' argument");
+        Assert.equal(success, this.trackDependencySpy.args[0][5], "TrackAjax should receive " + success + " as a 'success' argument");
     }
 }
 new AjaxTests().registerTests();

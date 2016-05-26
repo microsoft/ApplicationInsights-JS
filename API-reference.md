@@ -155,6 +155,23 @@ In the portal, you can search on message content and [display individual trackTr
 (Unlike `trackEvent`, you can't filter on the message content in the portal.)
 
 
+### trackDependency
+
+    trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
+    
+Log an ajax dependency
+
+ | | 
+---|---|---
+`id` | 
+`method` | Represents request verb (GET, POST, etc.)
+`absoluteUrl` | Absolute url used to make the dependency request
+`pathName` | Path part of the absolute url
+`totalTime` | Total request time
+`success` | Indicates if the request was sessessful
+`resultCode` | Response code returned by the dependency request
+
+
 ### flush
 
     flush()

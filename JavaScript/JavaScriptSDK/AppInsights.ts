@@ -285,7 +285,17 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        public trackAjax(id: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number, method?: string) {
+        /**
+         * Log an ajax dependency
+         * @param id
+         * @param method    represents request verb (GET, POST, etc.)
+         * @param absoluteUrl   absolute url used to make the dependency request
+         * @param pathName  the path part of the absolute url
+         * @param totalTime total request time
+         * @param success   indicates if the request was sessessful
+         * @param resultCode    response code returned by the dependency request
+         */
+        public trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
             if (this.config.maxAjaxCallsPerView === -1 ||
                 this._trackAjaxAttempts < this.config.maxAjaxCallsPerView) {
                 var dependency = new Telemetry.RemoteDependencyData(id, absoluteUrl, pathName, totalTime, success, resultCode, method);
@@ -299,7 +309,14 @@ module Microsoft.ApplicationInsights {
                     "Maximum ajax per page view limit reached, ajax monitoring is paused until the next trackPageView(). In order to increase the limit set the maxAjaxCallsPerView configuration parameter."));
             }
 
-            ++this._trackAjaxAttempts;
+            ++this._trackAjaxAttempts;            
+        }
+
+        /**
+         * trackAjax method is obsolete, use trackDependency instead
+         */
+        public trackAjax(id: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number, method?: string) {
+            this.trackDependency(id, null, absoluteUrl, pathName, totalTime, success, resultCode);
         }
 
         /**
