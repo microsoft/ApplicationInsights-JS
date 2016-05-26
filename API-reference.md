@@ -163,7 +163,7 @@ Log an ajax dependency
 
  | | 
 ---|---|---
-`id` | 
+`id` | Unique id, this is used by the backend o correlate server requests. Use `Util.newId()` to generate a unique Id.
 `method` | Represents request verb (GET, POST, etc.)
 `absoluteUrl` | Absolute url used to make the dependency request
 `pathName` | Path part of the absolute url
