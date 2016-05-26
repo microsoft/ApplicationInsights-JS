@@ -9,14 +9,12 @@ class AppInsightsModuleTests extends TestClass {
             name: "AppInsightsModuleTests: downloadAndSetup",
             test: () => {
                 // setup
-                            
+                AppInsights.config = null;
                 // act
-                  
+
                 // Validate
                 Assert.ok(false);
             }
         });
     }
 }
-
-new AppInsightsModuleTests().registerTests();

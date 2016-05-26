@@ -1,5 +1,4 @@
 ﻿/// <reference path="../checkintests/appinsights.tests.ts" />
-/// <reference path="../checkintests/appinsightsmodule.tests.ts" />
 /// <reference path="../checkintests/context/HashCodeScoreGenerator.tests.ts" />
 /// <reference path="../checkintests/context/sample.tests.ts" />
 /// <reference path="../checkintests/context/user.tests.ts" />
@@ -24,3 +23,6 @@
 /// <reference path="../checkintests/initialization.tests.ts" />
 /// <reference path="../checkintests/ajax.tests.ts" />
 /// <reference path="../checkintests/SplitTest.tests.ts" />
+
+/// <reference path="../checkintests/AppInsightsModule.tests.ts" />
+import 
