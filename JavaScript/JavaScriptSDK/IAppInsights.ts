@@ -1,4 +1,6 @@
-﻿module Microsoft.ApplicationInsights {
+﻿/// <reference path="./IConfig.ts" />
+
+module Microsoft.ApplicationInsights {
 
     "use strict";
 
@@ -78,12 +80,13 @@
         trackAjax(id: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number, method?: string);
 
         /**
-        * Log an exception you have caught.
-        * @param   exception   An Error from a catch clause, or the string error message.
-        * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
-        * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
-        */
-        trackException(exception: Error, handledAt?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
+         * Log an exception you have caught.
+         * @param   exception   An Error from a catch clause, or the string error message.
+         * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
+         * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
+         * @param   severityLevel   AI.SeverityLevel - severity level
+         */
+        trackException(exception: Error, handledAt?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, severityLevel?: AI.SeverityLevel);
 
         /**
          * Log a numeric value that is not associated with a specific event. Typically used to send regular reports of performance indicators.
@@ -126,6 +129,11 @@
          */
         clearAuthenticatedUserContext();
 
+        /*
+        * Downloads and initializes AppInsights. You can override default script download location by specifying url property of `config`.
+        */
+        downloadAndSetup?(config: Microsoft.ApplicationInsights.IConfig);
+
         /**
          * The custom error handler for Application Insights
          * @param {string} message - The error message
@@ -135,6 +143,5 @@
          * @param {Error}  error - The Error object
          */
         _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error);
-
     }
 }

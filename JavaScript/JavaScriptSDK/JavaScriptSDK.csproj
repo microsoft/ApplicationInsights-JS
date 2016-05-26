@@ -135,6 +135,7 @@
     <TypeScriptCompile Include="HashCodeScoreGenerator.ts" />
     <TypeScriptCompile Include="AppInsightsModule.ts" />
     <TypeScriptCompile Include="IAppInsights.ts" />
+    <TypeScriptCompile Include="IConfig.ts" />
     <TypeScriptCompile Include="ITelemetryContext.ts" />
     <TypeScriptCompile Include="SendBuffer.ts" />
     <TypeScriptCompile Include="Sender.ts" />
