@@ -61,7 +61,24 @@ module Microsoft.ApplicationInsights {
     }
 
     export class Sender {
+        /**
+         * How many times in a row a retryable error condition has occurred.
+         */
+        private _consecutiveErrors: number;
+
+        /**
+         * The time to retry at in milliseconds from 1970/01/01 (this makes the timer calculation easy).
+         */
+        private _retryAt: number;
+
+        /**
+         * The time of the last send operation.
+         */
         private _lastSend: number;
+
+        /**
+         * Handle to the timer for delayed sending of batches of data.
+         */
         private _timeoutHandle: any;
 
         /**
@@ -84,6 +101,8 @@ module Microsoft.ApplicationInsights {
          * Constructs a new instance of the Sender class
          */
         constructor(config: ISenderConfig) {
+            this._consecutiveErrors = 0;
+            this._retryAt = null;
             this._lastSend = 0;
             this._config = config;
             this._sender = null;
@@ -125,7 +144,7 @@ module Microsoft.ApplicationInsights {
                 // check if the incoming payload is too large, truncate if necessary
                 var payload: string = Serializer.serialize(envelope);
 
-                // flush if we would exceet the max-size limit by adding this item
+                // flush if we would exceed the max-size limit by adding this item
                 var batch = this._buffer.batchPayloads();
                 if (batch && (batch.length + payload.length > this._config.maxBatchSizeInBytes())) {
                     this.triggerSend();
@@ -135,12 +154,7 @@ module Microsoft.ApplicationInsights {
                 this._buffer.enqueue(payload);
 
                 // ensure an invocation timeout is set
-                if (!this._timeoutHandle) {
-                    this._timeoutHandle = setTimeout(() => {
-                        this._timeoutHandle = null;
-                        this.triggerSend();
-                    }, this._config.maxBatchInterval());
-                }
+                this._setupTimer();
 
                 DataLossAnalyzer.incrementItemsQueued();
             } catch (e) {
@@ -150,6 +164,24 @@ module Microsoft.ApplicationInsights {
             }
         }
 
+        /**
+         * Sets up the timer which triggers actually sending the data.
+         */
+        private _setupTimer() {
+            if (!this._timeoutHandle) {
+                var timerValue = this._retryAt ? Math.max(this._config.maxBatchInterval(), Date.now() - this._retryAt) : this._config.maxBatchInterval();
+                this._timeoutHandle = setTimeout(() => {
+                    this._timeoutHandle = null;
+                    this._retryAt = null;
+                    this.triggerSend();
+                }, timerValue);
+            }
+        }
+
+        /**
+         * Gets the size of the list in bytes.
+         * @param list {string[]} - The list to get the size in bytes of.
+         */
         private _getSizeInBytes(list: string[]) {
             var size = 0;
             if (list && list.length) {
@@ -187,7 +219,7 @@ module Microsoft.ApplicationInsights {
                     }
 
                     // update lastSend time to enable throttling
-                    this._lastSend = +new Date;
+                    this._lastSend = +new Date; // TODO: Does anything use _lastSend?
                 } else {
                     this._buffer.clear();
                 }
@@ -201,6 +233,32 @@ module Microsoft.ApplicationInsights {
                         { exception: Util.dump(e) }));
                 }
             }
+        }
+
+        /** Calculates the time to wait before retrying in case of an error based on
+         * http://en.wikipedia.org/wiki/Exponential_backoff
+         * @param headerValue {string} - Optional header "Retry-After" response header value.
+         */
+        private _setRetryTime(headerValue?: string) {
+            var retryAfterTimeSpan = Date.parse(headerValue);
+            if (!(headerValue && retryAfterTimeSpan > 0)) {
+                const SlotDelayInSeconds = 10;
+                var delayInSeconds: number;
+
+                if (this._consecutiveErrors <= 1) {
+                    delayInSeconds = SlotDelayInSeconds;
+                } else {
+                    var backOffSlot = (Math.pow(2, this._consecutiveErrors) - 1) / 2;
+                    var backOffDelay = Math.floor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
+                    delayInSeconds = Math.max(Math.min(backOffDelay, 3600), SlotDelayInSeconds);
+                }
+
+                // TODO: Log the backoff time like the C# version does.
+                retryAfterTimeSpan = Date.now() + (delayInSeconds * 1000);
+            }
+
+            // TODO: Log the retry at time like the C# version does.
+            this._retryAt = retryAfterTimeSpan - Date.now();
         }
 
         /**
@@ -252,7 +310,13 @@ module Microsoft.ApplicationInsights {
                 if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
                     this._onError(payload, xhr.responseText || xhr.response || "");
                 } else {
-                    this._onSuccess(payload, countOfItemsInPayload);
+                    if (xhr.status === 206) {
+                        // TODO: check the results of the JSON.parse call and if there was an expected data object in the response.
+                        this._onPartialSuccess(payload, JSON.parse(xhr.responseText || xhr.response));
+                    } else {
+                        this._consecutiveErrors = 0;
+                        this._onSuccess(payload, countOfItemsInPayload);
+                    }
                 }
             }
         }
@@ -262,10 +326,56 @@ module Microsoft.ApplicationInsights {
          */
         public _xdrOnLoad(xdr: XDomainRequest, payload: string[]) {
             if (xdr && (xdr.responseText + "" === "200" || xdr.responseText === "")) {
+                this._consecutiveErrors = 0;
                 this._onSuccess(payload, 0);
             } else {
-                this._onError(payload, xdr && xdr.responseText || "");
+                var results = undefined;
+                try {
+                    results = JSON.parse(xdr.responseText);
+                } catch (e) {
+                    // TODO: Log something here?
+                }
+
+                if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted) {
+                    this._onPartialSuccess(payload, results);
+                } else {
+                    this._onError(payload, xdr && xdr.responseText || "");
+                }
             }
+        }
+
+        /**
+         * partial success handler
+         */
+        public _onPartialSuccess(payload: string[], results: any, retryAfterHeader?: string) {
+            var failed = [];
+            var retryableError = false;
+
+            // Iterate through the reversed array of errors so that splicing doesn't have invalid indexes after the first item.
+            var errors = results.errors.reverse();
+            for (var error of errors) {
+                var extracted = payload.splice(error.index, 1)[0];
+                if (error.statusCode == 408 // Timeout
+                    || error.statusCode == 429 // Too many requests.
+                    || error.statusCode == 439 // Too many requests over extended time.
+                    || error.statusCode == 500 // Internal server error.
+                    || error.statusCode == 503 // Service unavailable.
+                ) {
+                    retryableError = true;
+                    this._buffer.enqueue(extracted);
+                } else {
+                    failed.push(extracted);
+                }
+            }
+
+            this._onSuccess(payload, results.itemsAccepted);
+            this._onError(failed, ['partial success', results.itemsReceived, 'of', results.itemsAccepted].join(' '));
+            if (retryableError) {
+                this._consecutiveErrors++;
+            }
+
+            this._setRetryTime(retryAfterHeader); // TODO: Should I embed this in a _retry() method which internally sets up the timer?
+            this._setupTimer();
         }
 
         /**

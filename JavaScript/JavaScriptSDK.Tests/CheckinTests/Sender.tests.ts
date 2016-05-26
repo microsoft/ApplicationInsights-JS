@@ -566,6 +566,51 @@ class SenderTests extends TestClass {
                 Assert.equal(1, Microsoft.ApplicationInsights.DataLossAnalyzer.getNumberOfLostItems());
             }
         });
+
+        this.testCase({
+            name: "SenderTests: XDomain sender can handle partial success errors",
+            test: () => {
+                // setup
+                // pretend that you are IE8/IE9 browser which supports XDomainRequests
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    delete xhr.withCredentials;
+                    return xhr;
+                });
+
+                XDomainRequest = <any>(() => {
+                    var xdr = new this.xhr;
+                    xdr.onload = xdr.onreadystatechange;
+                    xdr.responseText = 200;
+                    return xdr;
+                });
+
+                // act
+                var sender = this.getSender();
+
+                // verify
+                Assert.ok(sender, "sender was constructed");
+
+                // act
+                this.fakeServer.requests.pop();
+                var data = new Microsoft.ApplicationInsights.Telemetry.Common.Data<string>('string', '[{ "time": "2016-05-23T01:46:28.456Z", "iKey": "56a5d7a1-1d3a-4e8c-b72b-949f7d4e8aa6", "name": "Microsoft.ApplicationInsights.56a5d7a11d3a4e8cb72b949f7d4e8aa6.Pageview", "tags": { "ai.session.id": "nkzq2", "ai.device.id": "browser", "ai.device.type": "Browser", "ai.internal.sdkVersion": "JavaScript:0.22.14", "ai.user.id": "JoO1+", "ai.operation.id": "eNJXm", "ai.operation.name": "/" }, "data": { "baseType": "PageviewData", "baseData": { "ver": 2, "name": "Home Page - DNDRampUp", "url": "http://localhost:3947/", "duration": "00:00:00.150" } } }, { "time": "2016-05-19T01:46:28.459Z", "iKey": "56a5d7a1-1d3a-4e8c-b72b-949f7d4e8aa6", "name": "Microsoft.ApplicationInsights.56a5d7a11d3a4e8cb72b949f7d4e8aa6.PageviewPerformance", "tags": { "ai.session.id": "nkzq2", "ai.device.id": "browser", "ai.device.type": "Browser", "ai.internal.sdkVersion": "JavaScript:0.22.14", "ai.user.id": "JoO1+", "ai.operation.id": "eNJXm", "ai.operation.name": "/" }, "data": { "baseType": "PageviewPerformanceData", "baseData": { "ver": 2, "name": "Home Page - DNDRampUp", "url": "http://localhost:3947/", "duration": "00:00:00.150", "perfTotal": "00:00:00.150", "networkConnect": "00:00:00.004", "sentRequest": "00:00:00.000", "receivedResponse": "00:00:00.002", "domProcessing": "00:00:00.126" } } }]');
+                var envelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(data, '');
+                sender.send(envelope);
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                // verify
+                // TODO: configure a sender that does not mock the onthe retry logic
+                requestAsserts();
+                this.fakeServer.requests[0].respond(
+                    206,
+                    { "itemsReceived": 2, "itemsAccepted": 1, "errors": [{ "index": 1, "statusCode": 400, "message": "103: Field 'time' on type 'Envelope' is older than the allowed min date. Expected: now - 172800000ms, Actual: now - 414962282ms" }] },
+                    '206');
+                successAsserts(sender);
+                logAsserts(0);
+                sender.successSpy.reset();
+                sender.errorSpy.reset();
+            }
+        });
     }
 }
 
