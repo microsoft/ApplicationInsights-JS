@@ -24,6 +24,7 @@ from CDN or you can override the script hosting location by specifying `url` par
 
     window.appInsights = appInsights;
     appInsights.trackPageView();
+</script>
 ```    
 [Learn more.](https://azure.microsoft.com/documentation/articles/app-insights-javascript/)
 
