@@ -1,4 +1,7 @@
 ﻿/// <reference path="./IConfig.ts" />
+/// <reference path="./ITelemetryContext.ts" />
+/// <reference path="./Contracts/Generated/SeverityLevel.ts" />
+
 
 module Microsoft.ApplicationInsights {
 
@@ -11,7 +14,7 @@ module Microsoft.ApplicationInsights {
         */
         config: IConfig;
 
-        context: TelemetryContext;
+        context: ITelemetryContext;
 
         /*
         * Initialization queue. Contains functions to run when appInsights initializes
@@ -132,7 +135,7 @@ module Microsoft.ApplicationInsights {
         /*
         * Downloads and initializes AppInsights. You can override default script download location by specifying url property of `config`.
         */
-        downloadAndSetup?(config: Microsoft.ApplicationInsights.IConfig);
+        downloadAndSetup?(config: Microsoft.ApplicationInsights.IConfig): void;
 
         /**
          * The custom error handler for Application Insights

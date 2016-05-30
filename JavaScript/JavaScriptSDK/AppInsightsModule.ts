@@ -1,4 +1,3 @@
-/// <reference path="./AppInsights.ts"/>
 /// <reference path="./IConfig.ts"/>
 /// <reference path="./IAppInsights.ts"/>
 
@@ -76,7 +75,7 @@ class AppInsightsModule {
     }
 
     public static get appInsightsInstance(): Microsoft.ApplicationInsights.IAppInsights {
-        if (window[AppInsightsModule.appInsightsName]) {
+        if (!window[AppInsightsModule.appInsightsName]) {
             window[AppInsightsModule.appInsightsName] = {
                 downloadAndSetup: AppInsightsModule._download
             };

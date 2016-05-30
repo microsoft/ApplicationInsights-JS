@@ -4,7 +4,7 @@
 # - Refresh Tests.html in the browser to run the JavaScript tests 
 
 $iisExpress = Join-Path ${Env:ProgramFiles(x86)} "IIS Express\iisexpress.exe"
-$testsPath = Join-Path (Get-Location) "JavaScript\JavaScriptSDK.Tests\Selenium"
+$testsPath = Join-Path (Get-Location) ""
 $port = (Get-NetTCPConnection | Where-Object {$_.LocalAddress -eq "127.0.0.1" -or $_.LocalAddress -eq "::" } | Measure-Object -property LocalPort -max).Maximum + 1
 Start-Process "$iisExpress" -Args ("/path:$testsPath", "/port:$port")
-Start-Process "http://localhost:$port/Tests.html"
+Start-Process "http://localhost:$port/JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html"

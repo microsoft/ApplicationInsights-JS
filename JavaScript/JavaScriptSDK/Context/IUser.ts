@@ -6,7 +6,7 @@
         /**
         * The telemetry configuration.
         */
-        config: ITelemetryConfig;
+        config: any;
 
         /**
          * The user ID.

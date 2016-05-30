@@ -24,5 +24,11 @@
 /// <reference path="../checkintests/ajax.tests.ts" />
 /// <reference path="../checkintests/SplitTest.tests.ts" />
 
-/// <reference path="../checkintests/AppInsightsModule.tests.ts" />
-import 
+/* import modules */
+import AppInsightsModuleTests from "../CheckinTests/AppInsightsModule.Tests"
+
+export default function registerTests() {
+    /* for every module call registerTests() */
+    new AppInsightsModuleTests().registerTests();
+}
+ 

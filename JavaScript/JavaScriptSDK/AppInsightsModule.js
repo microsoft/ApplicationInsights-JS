@@ -1,4 +1,3 @@
-/// <reference path="./AppInsights.ts"/>
 /// <reference path="./IConfig.ts"/>
 /// <reference path="./IAppInsights.ts"/>
 "use strict";
@@ -65,7 +64,7 @@ define(["require", "exports"], function (require, exports) {
         };
         Object.defineProperty(AppInsightsModule, "appInsightsInstance", {
             get: function () {
-                if (window[AppInsightsModule.appInsightsName]) {
+                if (!window[AppInsightsModule.appInsightsName]) {
                     window[AppInsightsModule.appInsightsName] = {
                         downloadAndSetup: AppInsightsModule._download
                     };
