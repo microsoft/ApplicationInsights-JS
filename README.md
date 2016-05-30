@@ -10,22 +10,22 @@ If you don't have an Azure subscription and would like to try Application Insigh
 To use this SDK, you'll need a subscription to [Microsoft Azure](https://azure.com). Application Insights has a free subscription option.
 In the [Azure Preview Portal](https://portal.azure.com), create new or open an existing Application Insights resource.
 
-### Initialize for MVC application
+### Initialize dynamically for MVC application using `snippet`
 Get "code to monitor my web pages" from the Quick Start page, and insert it in the head of your web pages.  
 [Learn more.](https://azure.microsoft.com/documentation/articles/app-insights-javascript/)
 
-### Import as npm module
+### Import as npm module and initialize dynamically
 * Obtain instrumentation key from your Application Insights resource  
 * Install applicationinsights-js with npm  
 `npm install applicationinsights-js` 
 
-* Import and use it
+* Import and call `downloadAndSetup` to initialize it. Note that you can override default CDN path of the script (for example, if you would like to host it locally) by specifying url parameter 
 ```
 /* import AppInsights */
-import {AppInsights, initialize as initializeAppInsights} from "applicationinsights-js"
+import {AppInsights} from "applicationinsights-js"
 
-/* initialize with instrumentation key. You only need to do it once. */
-initializeAppInsights({ instrumentationKey: "f2c1b11a-e3ec-4d3a-b96b-xxxxxxxx" });
+/* Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key */
+AppInsights.downloadAndSetup({ instrumentationKey: "f2c1b11a-e3ec-4d3a-b96b-xxxxxxxx" });
 
 /* example: track page view */
 AppInsights.trackPageView(
