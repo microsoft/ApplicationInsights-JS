@@ -1,6 +1,6 @@
 {
     "name":  "applicationinsights-js",
-    "version":  "0.22.15",
+    "version":  "0.22.16",
     "description":  "Microsoft Application Insights JavaScript SDK",
     "main":  "JavaScriptSDK/AppInsightsModule",
     "keywords": [
