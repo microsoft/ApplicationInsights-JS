@@ -1,4 +1,5 @@
 ﻿/// <reference path="./HashCodeScoreGenerator.ts" />
+/// <reference path="./Contracts/Generated/Envelope.ts" />
 
 module Microsoft.ApplicationInsights {
     export class SamplingScoreGenerator {
@@ -8,7 +9,7 @@ module Microsoft.ApplicationInsights {
             this.hashCodeGeneragor = new HashCodeScoreGenerator();
         }
 
-        public getSamplingScore(envelope: Telemetry.Common.Envelope): number {
+        public getSamplingScore(envelope: Microsoft.Telemetry.Envelope): number {
             var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
             var score: number = 0;
             if (envelope.tags[tagKeys.userId]) {

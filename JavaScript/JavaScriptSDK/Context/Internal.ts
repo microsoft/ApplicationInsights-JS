@@ -1,7 +1,10 @@
-﻿module Microsoft.ApplicationInsights.Context {
+﻿/// <reference path="IInternal.ts"/>
+
+module Microsoft.ApplicationInsights.Context {
+
     "use strict";
 
-    export class Internal {
+    export class Internal implements IInternal {
 
         /**
          * The SDK version used to create this telemetry item.

@@ -7,13 +7,28 @@
     <link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.18.0.css">
     <script src="http://code.jquery.com/qunit/qunit-1.18.0.js"></script>
     <script src="http://sinonjs.org/releases/sinon-1.17.2.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script>
     <script type="text/javascript">
         window.AIResults = [];
         QUnit.testDone(function(result) {
             window.AIResults.push(result);
         });
     </script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script>
     <script src="checkinTests.js"></script>
+    <script>
+        require.config({
+            baseUrl: "../../"
+        });
+
+        require(
+            ["JavaScriptSDK.Tests/Selenium/checkinTests"],
+            function (t) {
+                // register the tests.
+                t.default();
+            }
+        );
+    </script>
 </head>
 <body>
     <div id="qunit"></div>

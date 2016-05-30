@@ -8,38 +8,13 @@
 /// <reference path="./ajax/ajax.ts"/>
 /// <reference path="./DataLossAnalyzer.ts"/>
 /// <reference path="./SplitTest.ts"/>
+/// <reference path="./IAppInsights.ts"/>
 
 module Microsoft.ApplicationInsights {
 
     "use strict";
 
     export var Version = "0.22.16";
-
-    export interface IConfig {
-        instrumentationKey: string;
-        endpointUrl: string;
-        emitLineDelimitedJson: boolean;
-        accountId: string;
-        sessionRenewalMs: number;
-        sessionExpirationMs: number;
-        maxBatchSizeInBytes: number;
-        maxBatchInterval: number;
-        enableDebug: boolean;
-        disableExceptionTracking: boolean;
-        disableTelemetry: boolean;
-        verboseLogging: boolean;
-        diagnosticLogInterval: number;
-        samplingPercentage: number;
-        autoTrackPageVisitTime: boolean;
-        disableAjaxTracking: boolean;
-        overridePageViewDuration: boolean;
-        maxAjaxCallsPerView: number;
-        disableDataLossAnalysis: boolean;
-        disableCorrelationHeaders: boolean;
-        disableFlushOnBeforeUnload: boolean;
-        enableSessionStorageBuffer: boolean;
-        cookieDomain: string;
-    }
 
     /**
     * Internal interface to pass appInsights object to subcomponents without coupling 
@@ -54,7 +29,7 @@ module Microsoft.ApplicationInsights {
      * The main API that sends telemetry to Application Insights.
      * Learn more: http://go.microsoft.com/fwlink/?LinkID=401493
      */
-    export class AppInsights implements IAppInsightsInternal {
+    export class AppInsights implements IAppInsightsInternal, IAppInsights {
 
         // Counts number of trackAjax invokations.
         // By default we only monitor X ajax call per view to avoid too much load.
@@ -69,7 +44,7 @@ module Microsoft.ApplicationInsights {
 
         public config: IConfig;
         public context: TelemetryContext;
-
+        public queue: (() => void)[] = null;
         public static defaultConfig: IConfig;
 
         constructor(config: IConfig) {

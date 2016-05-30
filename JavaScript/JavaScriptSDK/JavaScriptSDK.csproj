@@ -24,8 +24,11 @@
     <VersionedOutFileBaseName>min\$(OutFileBaseName).$(AIVersionMajor)</VersionedOutFileBaseName>
     <TypeScriptOutFile>min\$(OutFileBaseName).js</TypeScriptOutFile>
     <TypeScriptGeneratesDeclarations>True</TypeScriptGeneratesDeclarations>
+    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
+    <TypeScriptTarget>ES5</TypeScriptTarget>
     <!-- Suppress the "CS2008: No source files specified" warning -->
     <NoWarn>2008</NoWarn>
+    <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
@@ -49,13 +52,13 @@
     </VisualStudio>
   </ProjectExtensions>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <TypeScriptTarget>ES3</TypeScriptTarget>
+    <TypeScriptTarget>ES5</TypeScriptTarget>
     <TypeScriptRemoveComments>false</TypeScriptRemoveComments>
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
     <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <TypeScriptTarget>ES3</TypeScriptTarget>
+    <TypeScriptTarget>ES5</TypeScriptTarget>
     <TypeScriptRemoveComments>true</TypeScriptRemoveComments>
     <TypeScriptSourceMap>false</TypeScriptSourceMap>
     <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
@@ -121,7 +124,19 @@
     <TypeScriptCompile Include="ajax\ajax.ts" />
     <TypeScriptCompile Include="ajax\ajaxRecord.ts" />
     <TypeScriptCompile Include="ajax\ajaxUtils.ts" />
+    <TypeScriptCompile Include="Context\IApplication.ts" />
+    <TypeScriptCompile Include="Context\IDevice.ts" />
+    <TypeScriptCompile Include="Context\IInternal.ts" />
+    <TypeScriptCompile Include="Context\ILocation.ts" />
+    <TypeScriptCompile Include="Context\IOperation.ts" />
+    <TypeScriptCompile Include="Context\ISample.ts" />
+    <TypeScriptCompile Include="Context\ISession.ts" />
+    <TypeScriptCompile Include="Context\IUser.ts" />
     <TypeScriptCompile Include="HashCodeScoreGenerator.ts" />
+    <TypeScriptCompile Include="AppInsightsModule.ts" />
+    <TypeScriptCompile Include="IAppInsights.ts" />
+    <TypeScriptCompile Include="IConfig.ts" />
+    <TypeScriptCompile Include="ITelemetryContext.ts" />
     <TypeScriptCompile Include="SendBuffer.ts" />
     <TypeScriptCompile Include="Sender.ts" />
     <TypeScriptCompile Include="SplitTest.ts" />

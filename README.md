@@ -7,16 +7,52 @@ If you don't have an Azure subscription and would like to try Application Insigh
 
 ## Get started
 
-To use this SDK, you'll need a subscription to [Microsoft Azure](https://azure.com). (There's a free package.)
+To use this SDK, you'll need a subscription to [Microsoft Azure](https://azure.com). Application Insights has a free subscription option.
+In the [Azure Preview Portal](https://portal.azure.com), create new or open an existing Application Insights resource.
 
-In the [Azure Preview Portal](https://portal.azure.com), open an Application Insights resource. 
+### Use JS `snippet` and initialize dynamically (download full Application Insights script from CDN)  
+Use this method for an MVC application. Get "code to monitor my web pages" from the Quick Start page, 
+and insert it in the head of your web pages. Application Insights script will be downloaded 
+from CDN or you can override the script hosting location by specifying `url` parameter in the config.   
+```
+<script type="text/javascript">
+    var appInsights = window.appInsights || function (config) {
+        function s(config) { t[config] = function () { var i = arguments; t.queue.push(function () { t[config].apply(t, i) }) } } var t = { config: config }, r = document, f = window, e = "script", o = r.createElement(e), i, u; for (o.src = config.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js", r.getElementsByTagName(e)[0].parentNode.appendChild(o), t.cookie = r.cookie, t.queue = [], i = ["Event", "Exception", "Metric", "PageView", "Trace"]; i.length;) s("track" + i.pop()); return config.disableExceptionTracking || (i = "onerror", s("_" + i), u = f[i], f[i] = function (config, r, f, e, o) { var s = u && u(config, r, f, e, o); return s !== !0 && t["_" + i](config, r, f, e, o), s }), t
+    }({
+        instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
+    });
 
-Get "code to monitor my web pages" from the Quick Start page, and insert it in the head of your web pages. 
-
-Use your web pages, and then look for user and page view results in the Application Insights resource. 
-
+    window.appInsights = appInsights;
+    appInsights.trackPageView();
+```    
 [Learn more.](https://azure.microsoft.com/documentation/articles/app-insights-javascript/)
 
+### Import as a module and initialize dynamically (download full Application Insights script from CDN)  
+Use this method for a modern JS application that is using modules. Just like in `snippet` scenario the full script will be downloaded from CDN.
+* Obtain instrumentation key from your Application Insights resource  
+* Install applicationinsights-js with npm  
+`npm install applicationinsights-js` 
+
+* Import and call `downloadAndSetup` to initialize it. You can override the script hosting location by specifying `url` parameter in the config 
+```
+/* import AppInsights */
+import {AppInsights} from "applicationinsights-js"
+
+/* Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key */
+AppInsights.downloadAndSetup({ instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx" });
+
+/* example: track page view */
+AppInsights.trackPageView(
+    "FirstPage", /* (optional) page name */
+    null, /* (optional) page url if available */
+    { prop1: "prop1", prop2: "prop2" }, /* (optional) dimension dictionary */
+    { measurement1: 1 }, /* (optional) metric dictionary */
+    123 /* page view duration in milliseconds */
+);
+
+/* example: track event */
+AppInsights.trackEvent("TestEvent", { prop1: "prop1", prop2: "prop2" }, { measurement1: 1 });
+```
 
 ## API reference
 
