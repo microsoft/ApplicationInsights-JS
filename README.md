@@ -10,6 +10,14 @@ If you don't have an Azure subscription and would like to try Application Insigh
 To use this SDK, you'll need a subscription to [Microsoft Azure](https://azure.com). Application Insights has a free subscription option.
 In the [Azure Preview Portal](https://portal.azure.com), create new or open an existing Application Insights resource.
 
+## Initializing Application Insights JS SDK script   
+There are several ways to initialize Aplication Insights.     
+
+|                                    | **Dynamic loading.** JS script tag is inserted in the head of the page. This is the recommended approach as our CDN is getting frequent updates.                                                                                                           | **Static loading.** You are responsible for including JS script tag or bundling the script with your other scripts. |
+|------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| **Using initialization `snippet`** | [Dynamic loading with snippet](README.md#use-js-snippet-and-initialize-dynamically-download-full-application-insights-script-from-cdn) This is default approach used in a new ASP.NET application created in Visual Studio. Use this for MVC applications. | TBD                                                                                                                 |
+| **Using module import**            | [Dynamic loading using module import](README.md#import-as-a-module-and-initialize-dynamically-download-full-application-insights-script-from-cdn). This is the recommended approach for modern modular applications.                                       | TBD                                                                                                                 |
+
 ### Use JS `snippet` and initialize dynamically (download full Application Insights script from CDN)  
 Use this method for an MVC application. Get "code to monitor my web pages" from the Quick Start page, 
 and insert it in the head of your web pages. Application Insights script will be downloaded 
