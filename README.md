@@ -62,7 +62,22 @@ AppInsights.trackPageView(
 /* example: track event */
 AppInsights.trackEvent("TestEvent", { prop1: "prop1", prop2: "prop2" }, { measurement1: 1 });
 ```
-
+### Include AI JS SDK script and initialize statically
+Use this approach if you would like to host AI JS SDK script on your endpoint or bundle it with other scripts. One popular example is Cordova applications (see [this blog post](http://www.teamfoundation.co.za/2016/02/application-insights-and-typescript/). After JS script has loaded, include the following snippet to initialize Application Insights:   
+```
+<!-- the snippet below assumes that JS SDK script has already loaded -->
+<script type="text/javascript" src="/pathToAIJSSDK.js"></script>   
+<script type="text/javascript">   
+    var snippet: any = {   
+        config: {   
+            instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"   
+        }   
+    };   
+    var init = new Microsoft.ApplicationInsights.Initialization(snippet);   
+    var appInsights = init.loadAppInsights();   
+    appInsights.trackPageView();   
+</script>   
+```  
 ## API reference
 
 Data on users, page views, and exceptions are provided out of the box. You can write your own code to track specific events and metrics.
