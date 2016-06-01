@@ -133,7 +133,7 @@
     <TypeScriptCompile Include="Context\ISession.ts" />
     <TypeScriptCompile Include="Context\IUser.ts" />
     <TypeScriptCompile Include="HashCodeScoreGenerator.ts" />
-    <TypeScriptCompile Include="AppInsightsModule.ts" />
+    <None Include="AppInsightsModule.ts" />
     <TypeScriptCompile Include="IAppInsights.ts" />
     <TypeScriptCompile Include="IConfig.ts" />
     <TypeScriptCompile Include="ITelemetryContext.ts" />
