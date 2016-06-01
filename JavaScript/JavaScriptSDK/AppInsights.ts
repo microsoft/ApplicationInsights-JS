@@ -44,7 +44,7 @@ module Microsoft.ApplicationInsights {
 
         public config: IConfig;
         public context: TelemetryContext;
-        public queue: (() => void)[] = null;
+        public queue: (() => void)[];
         public static defaultConfig: IConfig;
 
         constructor(config: IConfig) {
