@@ -1,15 +1,15 @@
 {
     "name":  "applicationinsights-js",
-    "version":  "0.22.16",
+    "version":  "0.22.17",
     "description":  "Microsoft Application Insights JavaScript SDK",
     "main":  "JavaScriptSDK/AppInsightsModule",
-    "keywords": [
-        "browser performance monitoring",
-        "script errors",
-        "application insights",
-        "microsoft",
-        "azure"
-    ],
+    "keywords":  [
+                     "browser performance monitoring",
+                     "script errors",
+                     "application insights",
+                     "microsoft",
+                     "azure"
+                 ],
     "scripts":  {
                     "test":  "echo \"Error: no test specified\" && exit 1"
                 },
