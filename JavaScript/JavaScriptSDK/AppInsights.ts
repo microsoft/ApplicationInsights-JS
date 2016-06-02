@@ -61,6 +61,11 @@ module Microsoft.ApplicationInsights {
                 }
             }
 
+            var tab = ["a", "b"];
+            tab.forEach((item) => {
+                console.log(item);
+            });
+
             _InternalLogging.verboseLogging = () => this.config.verboseLogging;
             _InternalLogging.enableDebugExceptions = () => this.config.enableDebug;
             var configGetters: ApplicationInsights.ITelemetryConfig = {
@@ -82,7 +87,7 @@ module Microsoft.ApplicationInsights {
             var enableExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 5);
             this.config.enableSessionStorageBuffer = enableExperiment;
 
-            this.context = new ApplicationInsights.TelemetryContext(configGetters); this.context = new ApplicationInsights.TelemetryContext(configGetters);
+            this.context = new ApplicationInsights.TelemetryContext(configGetters);
 
             DataLossAnalyzer.appInsights = this;
             DataLossAnalyzer.enabled = enableExperiment;
