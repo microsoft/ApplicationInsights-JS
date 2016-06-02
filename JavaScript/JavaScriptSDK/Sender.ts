@@ -88,7 +88,8 @@ module Microsoft.ApplicationInsights {
             this._lastSend = 0;
             this._config = config;
             this._sender = null;
-            this._buffer = this._config.enableSessionStorageBuffer() ? new SessionStorageSendBuffer(config) : new ArraySendBuffer(config);
+            this._buffer = (Util.canUseSessionStorage() && this._config.enableSessionStorageBuffer())
+                ? new SessionStorageSendBuffer(config) : new ArraySendBuffer(config);
 
             if (typeof XMLHttpRequest != "undefined") {
                 var testXhr = new XMLHttpRequest();
