@@ -1,14 +1,14 @@
 /// <reference path="telemetrycontext.ts" />
 /// <reference path="./Telemetry/Common/Data.ts"/>
 /// <reference path="./Util.ts"/>
-/// <reference path="./Contracts/Generated/SessionState.ts"/>
+/// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/SessionState.ts"/>
 /// <reference path="./Telemetry/PageViewManager.ts"/>
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
 /// <reference path="./ajax/ajax.ts"/>
 /// <reference path="./DataLossAnalyzer.ts"/>
 /// <reference path="./SplitTest.ts"/>
-/// <reference path="./IAppInsights.ts"/>
+/// <reference path="../JavaScriptSDK.Interfaces/IAppInsights.ts"/>
 
 module Microsoft.ApplicationInsights {
 

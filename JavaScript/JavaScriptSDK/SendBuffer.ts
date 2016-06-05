@@ -1,7 +1,7 @@
 ﻿/// <reference path="serializer.ts" />
 /// <reference path="Telemetry/Common/Envelope.ts"/>
 /// <reference path="Telemetry/Common/Base.ts" />
-/// <reference path="Contracts/Generated/ContextTagKeys.ts"/>
+/// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/ContextTagKeys.ts"/>
 /// <reference path="Context/Application.ts"/>
 /// <reference path="Context/Device.ts"/>
 /// <reference path="Context/Internal.ts"/>

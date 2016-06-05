@@ -1,5 +1,5 @@
-﻿/// <reference path="../Contracts/Generated/ExceptionData.ts" />
-/// <reference path="../Contracts/Generated/StackFrame.ts" />
+﻿/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/ExceptionData.ts" />
+/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/StackFrame.ts" />
 /// <reference path="./Common/DataSanitizer.ts"/>
 
 module Microsoft.ApplicationInsights.Telemetry {

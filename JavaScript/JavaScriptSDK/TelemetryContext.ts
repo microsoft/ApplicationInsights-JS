@@ -6,8 +6,8 @@
 /// <reference path="telemetry/pageview.ts" />
 /// <reference path="telemetry/pageviewperformance.ts" />
 /// <reference path="./Util.ts"/>
-/// <reference path="./Contracts/Generated/SessionState.ts"/>
-/// <reference path="ITelemetryContext.ts" />
+/// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/SessionState.ts"/>
+/// <reference path="../JavaScriptSDK.Interfaces/ITelemetryContext.ts" />
 
 module Microsoft.ApplicationInsights {
     "use strict";

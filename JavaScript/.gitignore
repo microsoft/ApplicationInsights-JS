@@ -26,3 +26,12 @@ _Chutzpah.*
 /*/E2ETests/*.js
 /*/E2ETests/*.html
 /*/Selenium/testPageWithAppInsights.html
+
+# Ignore map files
+*.map
+
+# Ignore JS files and d.ts files in Interfaces and Module project
+JavaScriptSDK.Interfaces/**/*.js
+JavaScriptSDK.Interfaces/**/*.d.ts
+JavaScriptSDK.Module/**/*.js
+JavaScriptSDK.Module/**/*.d.ts

@@ -1,4 +1,4 @@
-﻿/// <reference path="../Contracts/Generated/MessageData.ts" />
+﻿/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/MessageData.ts" />
 /// <reference path="./Common/DataSanitizer.ts"/>
 
 module Microsoft.ApplicationInsights.Telemetry {

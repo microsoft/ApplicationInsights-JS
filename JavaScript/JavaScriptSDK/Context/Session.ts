@@ -1,6 +1,6 @@
 ﻿/// <reference path="../util.ts" />
-/// <reference path="../Contracts/Generated/SessionState.ts"/>
-/// <reference path="ISession.ts" />
+/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/SessionState.ts"/>
+/// <reference path="../../JavaScriptSDK.Interfaces/Context/ISession.ts" />
 
 module Microsoft.ApplicationInsights.Context {
 

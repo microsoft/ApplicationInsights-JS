@@ -1,4 +1,4 @@
-﻿/// <reference path="IDevice.ts" />
+﻿/// <reference path="../../JavaScriptSDK.Interfaces/Context/IDevice.ts" />
 
 module Microsoft.ApplicationInsights.Context {
 

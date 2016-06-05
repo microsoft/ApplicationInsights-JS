@@ -1,6 +1,6 @@
 ﻿/// <reference path="..\TestFramework\Common.ts" />
 
-import {AppInsights} from "../../JavaScriptSDK/AppInsightsModule"
+import {AppInsights} from "../../JavaScriptSDK.Module/AppInsightsModule"
 
 export default class AppInsightsModuleTests extends TestClass {
 
