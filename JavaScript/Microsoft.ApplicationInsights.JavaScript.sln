@@ -11,6 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuGet.JavaScript", "NuGet.J
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{59A3A3F8-A4CA-48B7-91BB-B3F1DE661EB9}"
 	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
 		..\Global.props = ..\Global.props
 		..\package.json = ..\package.json
 		..\Package.targets = ..\Package.targets
