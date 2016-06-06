@@ -78,7 +78,15 @@ module Microsoft.ApplicationInsights {
                 enableSessionStorageBuffer: () => this.config.enableSessionStorageBuffer
             }
 
+            // enable session storage buffer experiment		
+            var enableExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 5);
+            this.config.enableSessionStorageBuffer = enableExperiment;
+
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
+
+            DataLossAnalyzer.appInsights = this;
+            DataLossAnalyzer.enabled = enableExperiment;
+            DataLossAnalyzer.reportLostItems();
 
             this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
 

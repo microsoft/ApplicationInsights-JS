@@ -143,6 +143,7 @@ module Microsoft.ApplicationInsights {
         public clear() {
             this._buffer.length = 0;
             this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, []);
+            this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
         }
 
         public getItems(): string[] {
@@ -179,15 +180,23 @@ module Microsoft.ApplicationInsights {
         }
 
         private removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
-            var cleared: string[] = [];
+            var remaining: string[] = [];
 
-            buffer.forEach((item) => {
-                if (!payloads.some(p => p == item)) {
-                    cleared.push(item);
+            for (var i in buffer) {
+                var contains = false;
+                for (var j in payloads) {
+                    if (payloads[j] === buffer[i]) {
+                        contains = true;
+                        break;
+                    }
                 }
-            });
 
-            return cleared;
+                if (!contains) {
+                    remaining.push(buffer[i]);
+                }
+            };
+
+            return remaining;
         }
 
         private getBuffer(key: string): string[] {
