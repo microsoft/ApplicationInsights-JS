@@ -61,11 +61,6 @@ module Microsoft.ApplicationInsights {
                 }
             }
 
-            var tab = ["a", "b"];
-            tab.forEach((item) => {
-                console.log(item);
-            });
-
             _InternalLogging.verboseLogging = () => this.config.verboseLogging;
             _InternalLogging.enableDebugExceptions = () => this.config.enableDebug;
             var configGetters: ApplicationInsights.ITelemetryConfig = {
@@ -92,7 +87,6 @@ module Microsoft.ApplicationInsights {
             DataLossAnalyzer.appInsights = this;
             DataLossAnalyzer.enabled = enableExperiment;
             DataLossAnalyzer.reportLostItems();
-
 
             this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
 
