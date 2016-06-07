@@ -38,9 +38,9 @@ module Microsoft.ApplicationInsights {
         getItems: () => string[];
 
         /**
-         * Build a batch of all queued elements
+         * Build a batch of all elements in the payload array
          */
-        batchPayloads: () => string;
+        batchPayloads: (payload: string[]) => string;
 
         /**
          * Moves items to the SENT_BUFFER.
@@ -83,11 +83,11 @@ module Microsoft.ApplicationInsights {
             return this._buffer.slice(0);
         }
 
-        public batchPayloads(): string {
-            if (this.count() > 0) {
+        public batchPayloads(payload: string[]): string {
+            if (payload && payload.length > 0) {
                 var batch = this._config.emitLineDelimitedJson() ?
-                    this._buffer.join("\n") :
-                    "[" + this._buffer.join(",") + "]";
+                    payload.join("\n") :
+                    "[" + payload.join(",") + "]";
 
                 return batch;
             }
@@ -100,7 +100,7 @@ module Microsoft.ApplicationInsights {
         }
 
         public clearSent(payload: string[]) {
-            // already cleared
+            this.clear();
         }
     }
 
@@ -150,11 +150,11 @@ module Microsoft.ApplicationInsights {
             return this._buffer.slice(0)
         }
 
-        public batchPayloads(): string {
-            if (this._buffer && this._buffer.length > 0) {
+        public batchPayloads(payload: string[]): string {
+            if (payload && payload.length > 0) {
                 var batch = this._config.emitLineDelimitedJson() ?
-                    this._buffer.join("\n") :
-                    "[" + this._buffer.join(",") + "]";
+                    payload.join("\n") :
+                    "[" + payload.join(",") + "]";
 
                 return batch;
             }

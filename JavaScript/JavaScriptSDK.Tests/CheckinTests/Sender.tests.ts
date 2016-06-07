@@ -490,8 +490,7 @@ class SenderTests extends TestClass {
             name: "SenderTests: data loss analyzer - send(item), queued, sent; result 0",
             test: () => {
                 // setup
-                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
+                this.setupDataLossAnaluzed();
                 var sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -510,8 +509,7 @@ class SenderTests extends TestClass {
             name: "SenderTests: data loss analyzer - send(item), queued, send(item), queued, sent; result 0",
             test: () => {
                 // setup
-                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
+                this.setupDataLossAnaluzed();
                 var sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -531,8 +529,7 @@ class SenderTests extends TestClass {
             name: "SenderTests: data loss analyzer - send(item), queued, sent, send(item), leave; result 1",
             test: () => {
                 // setup
-                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
+                this.setupDataLossAnaluzed();
                 var sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -552,8 +549,7 @@ class SenderTests extends TestClass {
             name: "SenderTests: data loss analyzer - send(item), queued, post failed; result 1",
             test: () => {
                 // setup
-                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
+                this.setupDataLossAnaluzed();
                 var sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -565,6 +561,26 @@ class SenderTests extends TestClass {
 
                 // Validate
                 Assert.equal(1, Microsoft.ApplicationInsights.DataLossAnalyzer.getNumberOfLostItems());
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: data loss analyzer is disabled for XDomainRequest",
+            test: () => {
+                // setup
+                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { }, context: { _sender: { _XMLHttpRequestSupported: false } } };
+                var sender = this.getSender();
+                this.fakeServer.requests.pop(); // xDomainRequest was created inside Sender's constructor, removing it to avoid confusion
+                var senderSpy = this.sandbox.spy(sender, "_sender");
+
+                // act
+                sender.send(this.testTelemetry);
+                sender.triggerSend();
+                this.fakeServer.requests[0].respond(400, {}, "");
+
+                // Validate
+                Assert.equal(0, Microsoft.ApplicationInsights.DataLossAnalyzer.getNumberOfLostItems());
             }
         });
 
@@ -639,6 +655,11 @@ class SenderTests extends TestClass {
                 Microsoft.ApplicationInsights.Util.canUseSessionStorage = utilCanUserSession;
             }
         });
+    }
+
+    private setupDataLossAnaluzed() {
+        Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
+        Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { }, context: { _sender: { _XMLHttpRequestSupported: true } } };
     }
 }
 

@@ -337,7 +337,7 @@ class SendBufferTests extends TestClass {
 
     private Test_CallBatchPayloadsWhenABufferIsEmpty(buffer: Microsoft.ApplicationInsights.ISendBuffer) {
         // act
-        var batch = buffer.batchPayloads();
+        var batch = buffer.batchPayloads(null);
 
         // verify
         Assert.equal(null, batch, "expecting null");
@@ -347,8 +347,7 @@ class SendBufferTests extends TestClass {
         // act
         var payload = "{ test: test }";
 
-        buffer.enqueue(payload);
-        var batch = buffer.batchPayloads();
+        var batch = buffer.batchPayloads([payload]);
 
         // verify
         Assert.equal("[" + payload + "]", batch, "invalid batch");
@@ -359,9 +358,7 @@ class SendBufferTests extends TestClass {
         var payload1 = "{ test: test }";
         var payload2 = "{ }";
 
-        buffer.enqueue(payload1);
-        buffer.enqueue(payload2);
-        var batch = buffer.batchPayloads();
+        var batch = buffer.batchPayloads([payload1, payload2]);
 
         // verify
         Assert.equal(['[', payload1, ',', payload2, ']'].join(''), batch, "invalid batch");
@@ -372,9 +369,7 @@ class SendBufferTests extends TestClass {
         var payload1 = "{ test: test }";
         var payload2 = "{ test: test }";
 
-        buffer.enqueue(payload1);
-        buffer.enqueue(payload2);
-        var batch = buffer.batchPayloads();
+        var batch = buffer.batchPayloads([payload1, payload2]);
 
         // verify
         Assert.equal(payload1 + "\n" + payload2, batch, "invalid batch");
