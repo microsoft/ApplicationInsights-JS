@@ -1,4 +1,4 @@
-﻿module Microsoft.ApplicationInsights {
+﻿ module Microsoft.ApplicationInsights {
 
     "use strict";
 

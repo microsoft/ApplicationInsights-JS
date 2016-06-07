@@ -1,7 +1,7 @@
 ﻿/// <reference path="../../testframework/common.ts" />
 /// <reference path="../../testframework/contracttesthelper.ts" />
 /// <reference path="../../../JavaScriptSDK/telemetry/exception.ts" />
-/// <reference path="../../../JavaScriptSDK/Contracts/Generated/SeverityLevel.ts" />
+/// <reference path="../../../JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts" />
 class ExceptionTelemetryTests extends ContractTestHelper {
 
     private exception;

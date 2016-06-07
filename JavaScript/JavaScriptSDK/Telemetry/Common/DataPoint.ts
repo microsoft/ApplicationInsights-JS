@@ -1,4 +1,4 @@
-﻿/// <reference path="../../Contracts/Generated/DataPoint.ts"/>
+﻿/// <reference path="../../../JavaScriptSDK.Interfaces/Contracts/Generated/DataPoint.ts"/>
 
 module Microsoft.ApplicationInsights.Telemetry.Common {
     "use strict";

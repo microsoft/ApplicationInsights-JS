@@ -1,6 +1,6 @@
 ﻿/// <reference path="../SamplingScoreGenerator.ts" />
-/// <reference path="../Contracts/Generated/Envelope.ts" />
-/// <reference path="ISample.ts" />
+/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/Envelope.ts" />
+/// <reference path="../../JavaScriptSDK.Interfaces/Context/ISample.ts" />
 
 module Microsoft.ApplicationInsights.Context {
 

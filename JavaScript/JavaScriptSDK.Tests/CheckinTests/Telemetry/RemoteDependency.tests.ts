@@ -1,7 +1,7 @@
 ﻿/// <reference path="../../testframework/common.ts" />
 /// <reference path="../../testframework/contracttesthelper.ts" />
 /// <reference path="../../../JavaScriptSDK/telemetry/RemoteDependencyData.ts" />
-/// <reference path="../../../JavaScriptSDK/Contracts/Generated/SeverityLevel.ts" />
+/// <reference path="../../../JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts" />
 class RemoteDependencyTests extends ContractTestHelper {
 
     private exception;

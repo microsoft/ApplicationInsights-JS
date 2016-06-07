@@ -1,5 +1,5 @@
 ﻿/// <reference path="./HashCodeScoreGenerator.ts" />
-/// <reference path="./Contracts/Generated/Envelope.ts" />
+/// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/Envelope.ts" />
 
 module Microsoft.ApplicationInsights {
     export class SamplingScoreGenerator {

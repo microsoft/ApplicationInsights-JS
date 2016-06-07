@@ -1,4 +1,4 @@
-﻿/// <reference path="IInternal.ts"/>
+﻿/// <reference path="../../JavaScriptSDK.Interfaces/Context/IInternal.ts"/>
 
 module Microsoft.ApplicationInsights.Context {
 

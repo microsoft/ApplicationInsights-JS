@@ -1,5 +1,5 @@
-/// <reference path="./IConfig.ts"/>
-/// <reference path="./IAppInsights.ts"/>
+/// <reference path="../JavaScriptSDK.Interfaces/IConfig.ts"/>
+/// <reference path="../JavaScriptSDK.Interfaces/IAppInsights.ts"/>
 
 "use strict";
 

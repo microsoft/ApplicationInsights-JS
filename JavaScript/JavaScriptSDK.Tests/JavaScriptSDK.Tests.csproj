@@ -160,6 +160,14 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\JavaScriptSDK.Interfaces\JavaScriptSDK.Interfaces.csproj">
+      <Project>{fad54375-9834-4265-baac-77b64a6aeec1}</Project>
+      <Name>JavaScriptSDK.Interfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\JavaScriptSDK.Module\JavaScriptSDK.Module.csproj">
+      <Project>{9efeed47-7841-4356-8a6f-ad16ff9a28e4}</Project>
+      <Name>JavaScriptSDK.Module</Name>
+    </ProjectReference>
     <ProjectReference Include="..\JavaScriptSDK\JavaScriptSDK.csproj">
       <Project>{49ECFE69-8C92-4FA7-A7C3-CDB957C71654}</Project>
       <Name>JavaScriptSDK</Name>
