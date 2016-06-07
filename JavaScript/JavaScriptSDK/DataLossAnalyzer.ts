@@ -20,6 +20,7 @@
         private static isEnabled(): boolean {
             return DataLossAnalyzer.enabled &&
                 DataLossAnalyzer.appInsights != null &&
+                DataLossAnalyzer.appInsights.context._sender._XMLHttpRequestSupported &&
                 Util.canUseSessionStorage()
         }
 
