@@ -20,7 +20,7 @@ module Microsoft.ApplicationInsights.Context {
          * Constructs a new instance of the internal telemetry data class.
          */
         constructor() {
-            this.sdkVersion = "JavaScript:" + Version;
+            this.sdkVersion = "javascript:" + Version;
         }
     }
 }
