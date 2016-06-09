@@ -59,9 +59,10 @@
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.ServiceProcess" />
-    <Reference Include="WebDriver, Version=2.48.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="WebDriver, Version=2.53.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\packages\Selenium.WebDriver.2.48.0\lib\net40\WebDriver.dll</HintPath>
+      <HintPath>..\..\..\packages\Selenium.WebDriver.2.53.0\lib\net40\WebDriver.dll</HintPath>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +128,12 @@
     <Content Include="E2ETests\autoCollectionTemplates\errorScriptNested.html" />
     <Content Include="E2ETests\autoCollectionTemplates\errorScriptSyntax.html" />
     <Content Include="E2ETests\policheck\task.xml" />
+    <Content Include="External\blanket-reporter.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="External\blanket-1.2.2.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="External\jquery-1.11.1.js" />
     <Content Include="E2ETests\standalone\readme.txt" />
     <Content Include="E2ETests\standalone\sprint66.html" />
@@ -253,6 +260,11 @@
       <DependentUpon>DisableTelemetryTests.ts</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <SeleniumAppInsightsSDK Include="Selenium\appInsightsSdk.ts" />
+    <Content Include="Selenium\appInsightsSdk.js">
+      <DependentUpon>appInsightsSdk.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <SeleniumCheckinTests Include="Selenium\checkinTests.ts" />
     <SeleniumPerformance Include="Selenium\performanceTests.ts" />
     <Content Include="Selenium\checkinTests.js">
@@ -272,6 +284,7 @@
   <Target Name="BeforeBuild">
     <Message Text="Compiling TypeScript files" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SeleniumCheckinTests ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\checkinTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SeleniumAppInsightsSDK ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\appInsightsSdk.js" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SeleniumPerformance ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\performanceTests.js" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(AutoCollectionTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\autoCollection.tests.js" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(PublicApiTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\PublicApiTests.js" />
