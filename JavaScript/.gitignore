@@ -33,5 +33,4 @@ _Chutzpah.*
 # Ignore JS files and d.ts files in Interfaces and Module project
 JavaScriptSDK.Interfaces/**/*.js
 JavaScriptSDK.Interfaces/**/*.d.ts
-JavaScriptSDK.Module/**/*.js
 JavaScriptSDK.Module/**/*.d.ts
