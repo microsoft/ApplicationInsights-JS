@@ -30,7 +30,7 @@ class AppInsightsModule {
         AppInsightsModule.appInsightsInstance.config = aiConfig;
 
         var scriptElement = document.createElement("script");
-        scriptElement.src = aiConfig.url || "http://az416426.vo.msecnd.net/scripts/a/ai.0.js";
+        scriptElement.src = aiConfig.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js";
         document.head.appendChild(scriptElement);
 
         var aiObject = AppInsightsModule.appInsightsInstance;
