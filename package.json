@@ -1,8 +1,15 @@
 {
     "name":  "applicationinsights-js",
-    "version":  "0.22.14",
-    "description":  "[Application Insights](https://azure.microsoft.com/services/application-insights/) tells you about your app\u0027s performance and usage. By adding a few lines of code to your web pages, you get data about how many users you have, which pages are most popular, how fast pages load, whether they throw exceptions, and more. And you can add code to track more detailed user activity.",
-    "main":  "dist/ai.0.js",
+    "version":  "0.22.19",
+    "description":  "Microsoft Application Insights JavaScript SDK",
+    "main":  "JavaScript/JavaScriptSDK.Module/AppInsightsModule.js",
+    "keywords":  [
+                     "browser performance monitoring",
+                     "script errors",
+                     "application insights",
+                     "microsoft",
+                     "azure"
+                 ],
     "scripts":  {
                     "test":  "echo \"Error: no test specified\" && exit 1"
                 },
@@ -10,7 +17,7 @@
                        "type":  "git",
                        "url":  "git+https://github.com/Microsoft/ApplicationInsights-JS.git"
                    },
-    "author":  "",
+    "author":  "Microsoft Application Insights Team",
     "license":  "MIT",
     "bugs":  {
                  "url":  "https://github.com/Microsoft/ApplicationInsights-JS/issues"

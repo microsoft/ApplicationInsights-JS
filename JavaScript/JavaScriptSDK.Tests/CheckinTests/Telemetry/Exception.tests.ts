@@ -1,7 +1,7 @@
 ﻿/// <reference path="../../testframework/common.ts" />
 /// <reference path="../../testframework/contracttesthelper.ts" />
 /// <reference path="../../../JavaScriptSDK/telemetry/exception.ts" />
-/// <reference path="../../../JavaScriptSDK/Contracts/Generated/SeverityLevel.ts" />
+/// <reference path="../../../JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts" />
 class ExceptionTelemetryTests extends ContractTestHelper {
 
     private exception;
@@ -29,6 +29,23 @@ class ExceptionTelemetryTests extends ContractTestHelper {
             test: () => {
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.Exception(new Error("test error"), "HA");
                 Assert.equal(telemetry.handledAt, "HA");
+            }
+        });
+
+        this.testCase({
+            name: name + "Exception is initialized with undefined severityLevel",
+            test: () => {
+                var telemetry = new Microsoft.ApplicationInsights.Telemetry.Exception(new Error("test error"), "HA");
+                Assert.equal(undefined, telemetry.severityLevel, "Exception shouldn't have severity level by default");
+            }
+        });
+
+        this.testCase({
+            name: name + "User can override severityLevel",
+            test: () => {
+                var level = AI.SeverityLevel.Critical;
+                var telemetry = new Microsoft.ApplicationInsights.Telemetry.Exception(new Error("test error"), "HA", null, null, level);
+                Assert.equal(level, telemetry.severityLevel, "Exception has proper severity level");
             }
         });
 

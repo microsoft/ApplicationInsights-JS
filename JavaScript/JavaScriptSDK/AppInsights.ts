@@ -1,45 +1,20 @@
 /// <reference path="telemetrycontext.ts" />
 /// <reference path="./Telemetry/Common/Data.ts"/>
 /// <reference path="./Util.ts"/>
-/// <reference path="./Contracts/Generated/SessionState.ts"/>
+/// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/SessionState.ts"/>
 /// <reference path="./Telemetry/PageViewManager.ts"/>
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
 /// <reference path="./ajax/ajax.ts"/>
 /// <reference path="./DataLossAnalyzer.ts"/>
 /// <reference path="./SplitTest.ts"/>
+/// <reference path="../JavaScriptSDK.Interfaces/IAppInsights.ts"/>
 
 module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "0.22.14";
-
-    export interface IConfig {
-        instrumentationKey: string;
-        endpointUrl: string;
-        emitLineDelimitedJson: boolean;
-        accountId: string;
-        sessionRenewalMs: number;
-        sessionExpirationMs: number;
-        maxBatchSizeInBytes: number;
-        maxBatchInterval: number;
-        enableDebug: boolean;
-        disableExceptionTracking: boolean;
-        disableTelemetry: boolean;
-        verboseLogging: boolean;
-        diagnosticLogInterval: number;
-        samplingPercentage: number;
-        autoTrackPageVisitTime: boolean;
-        disableAjaxTracking: boolean;
-        overridePageViewDuration: boolean;
-        maxAjaxCallsPerView: number;
-        disableDataLossAnalysis: boolean;
-        disableCorrelationHeaders: boolean;
-        disableFlushOnBeforeUnload: boolean;
-        enableSessionStorageBuffer: boolean;
-        cookieDomain: string;
-    }
+    export var Version = "0.22.19";
 
     /**
     * Internal interface to pass appInsights object to subcomponents without coupling 
@@ -54,7 +29,7 @@ module Microsoft.ApplicationInsights {
      * The main API that sends telemetry to Application Insights.
      * Learn more: http://go.microsoft.com/fwlink/?LinkID=401493
      */
-    export class AppInsights implements IAppInsightsInternal {
+    export class AppInsights implements IAppInsightsInternal, IAppInsights {
 
         // Counts number of trackAjax invokations.
         // By default we only monitor X ajax call per view to avoid too much load.
@@ -69,7 +44,7 @@ module Microsoft.ApplicationInsights {
 
         public config: IConfig;
         public context: TelemetryContext;
-
+        public queue: (() => void)[];
         public static defaultConfig: IConfig;
 
         constructor(config: IConfig) {
@@ -103,10 +78,15 @@ module Microsoft.ApplicationInsights {
                 enableSessionStorageBuffer: () => this.config.enableSessionStorageBuffer
             }
 
-            // enable session storage buffer experiment
-            this.config.enableSessionStorageBuffer = new SplitTest().isEnabled(this.config.instrumentationKey, 10); ;
+            // enable session storage buffer experiment		
+            var enableExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 5);
+            this.config.enableSessionStorageBuffer = enableExperiment;
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
+
+            DataLossAnalyzer.appInsights = this;
+            DataLossAnalyzer.enabled = enableExperiment;
+            DataLossAnalyzer.reportLostItems();
 
             this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
 
@@ -302,8 +282,9 @@ module Microsoft.ApplicationInsights {
          * @param   exception   An Error from a catch clause, or the string error message.
          * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
+         * @param   severityLevel   AI.SeverityLevel - severity level
          */
-        public trackException(exception: Error, handledAt?: string, properties?: Object, measurements?: Object) {
+        public trackException(exception: Error, handledAt?: string, properties?: Object, measurements?: Object, severityLevel?: AI.SeverityLevel) {
             try {
                 if (!Util.isError(exception)) {
                     // ensure that we have an error object (user could pass a string/message)
@@ -314,7 +295,7 @@ module Microsoft.ApplicationInsights {
                     }
                 }
 
-                var exceptionTelemetry = new Telemetry.Exception(exception, handledAt, properties, measurements);
+                var exceptionTelemetry = new Telemetry.Exception(exception, handledAt, properties, measurements, severityLevel);
                 var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Exception>(Telemetry.Exception.dataType, exceptionTelemetry);
                 var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
                 this.context.track(envelope);

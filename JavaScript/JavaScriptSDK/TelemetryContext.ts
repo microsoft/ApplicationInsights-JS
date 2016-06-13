@@ -6,7 +6,8 @@
 /// <reference path="telemetry/pageview.ts" />
 /// <reference path="telemetry/pageviewperformance.ts" />
 /// <reference path="./Util.ts"/>
-/// <reference path="./Contracts/Generated/SessionState.ts"/>
+/// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/SessionState.ts"/>
+/// <reference path="../JavaScriptSDK.Interfaces/ITelemetryContext.ts" />
 
 module Microsoft.ApplicationInsights {
     "use strict";
@@ -21,7 +22,7 @@ module Microsoft.ApplicationInsights {
         cookieDomain: () => string;
     }
 
-    export class TelemetryContext {
+    export class TelemetryContext implements ITelemetryContext {
         /**
          * The configuration for this telemetry context
          */
@@ -98,7 +99,7 @@ module Microsoft.ApplicationInsights {
         * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
         * before telemetry item is pushed for sending and in the order they were added.
         */
-        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => boolean) {
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.Telemetry.Envelope) => boolean) {
             this.telemetryInitializers = this.telemetryInitializers || [];
             this.telemetryInitializers.push(telemetryInitializer);
         }
@@ -106,7 +107,7 @@ module Microsoft.ApplicationInsights {
         /**
          * Use Sender.ts to send telemetry object to the endpoint
          */
-        public track(envelope: Telemetry.Common.Envelope) {
+        public track(envelope: Microsoft.Telemetry.Envelope) {
             if (!envelope) {
                 _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.USRACT_TrackArgumentsNotSpecified, "cannot call .track() with a null or undefined argument"));
             } else {
@@ -128,7 +129,7 @@ module Microsoft.ApplicationInsights {
             return envelope;
         }
 
-        private _track(envelope: Telemetry.Common.Envelope) {
+        private _track(envelope: Microsoft.Telemetry.Envelope) {
 
             if (this.session) {
                 // If customer set id, apply his context; otherwise apply context generated from cookies 
