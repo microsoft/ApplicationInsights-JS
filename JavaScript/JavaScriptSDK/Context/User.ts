@@ -1,9 +1,11 @@
 ﻿/// <reference path="../util.ts" />
+/// <reference path="../../JavaScriptSDK.Interfaces/Context/IUser.ts" />
 
 module Microsoft.ApplicationInsights.Context {
+
     "use strict";
 
-    export class User {
+    export class User implements IUser {
 
         static cookieSeparator: string = '|';
         static userCookieName: string = 'ai_user';

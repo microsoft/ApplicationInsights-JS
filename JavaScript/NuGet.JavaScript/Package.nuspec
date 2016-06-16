@@ -11,6 +11,7 @@
     <projectUrl>http://go.microsoft.com/fwlink/?LinkID=510710</projectUrl>
     <iconUrl>$image$</iconUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <summary>Application Insights API for JavaScript Applications</summary>
     <description>Application Insights API enables you to get insights into user behavior and monitor usage patterns for your JavaScript applications. Application Insights service collects the data, analyzes it and presents the results in the forms of graphs and reports in Application Insights portal in Microsoft Azure.</description>
     <tags>Analytics Insights Telemetry JavaScript MDD Multi-Device ApplicationInsights Cordova Web</tags>
     <copyright>Copyright © 2013-2022, Microsoft. All rights reserved.</copyright>

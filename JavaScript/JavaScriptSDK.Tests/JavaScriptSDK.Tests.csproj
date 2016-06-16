@@ -27,7 +27,8 @@
     <JavascriptSourceLocation Condition="'$(TF_Build_BINARIESDIRECTORY)' == ''">..\JavaScriptSDK</JavascriptSourceLocation>
     <JavascriptSourceLocation Condition="'$(TF_Build_BINARIESDIRECTORY)' != ''">$(TF_Build_BINARIESDIRECTORY)</JavascriptSourceLocation>
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
-    <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
+    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
+    <TypeScriptTarget>ES5</TypeScriptTarget>
     <EnableTypeScript>true</EnableTypeScript>
     <TypeScriptCompilerPath>..\..\..\packages\Microsoft.TypeScript.Compiler.1.8.11\tools\tsc.exe</TypeScriptCompilerPath>
   </PropertyGroup>
@@ -38,6 +39,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
+    <TypeScriptTarget>ES5</TypeScriptTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -45,6 +48,8 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
+    <TypeScriptTarget>ES5</TypeScriptTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsPublicBuild)' == 'true'">
     <DefineConstants>$(DefineConstants);IsPublicBuild</DefineConstants>
@@ -54,9 +59,10 @@
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.ServiceProcess" />
-    <Reference Include="WebDriver, Version=2.48.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="WebDriver, Version=2.53.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\packages\Selenium.WebDriver.2.48.0\lib\net40\WebDriver.dll</HintPath>
+      <HintPath>..\..\..\packages\Selenium.WebDriver.2.53.0\lib\net40\WebDriver.dll</HintPath>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -122,6 +128,12 @@
     <Content Include="E2ETests\autoCollectionTemplates\errorScriptNested.html" />
     <Content Include="E2ETests\autoCollectionTemplates\errorScriptSyntax.html" />
     <Content Include="E2ETests\policheck\task.xml" />
+    <Content Include="External\blanket-reporter.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="External\blanket-1.2.2.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="External\jquery-1.11.1.js" />
     <Content Include="E2ETests\standalone\readme.txt" />
     <Content Include="E2ETests\standalone\sprint66.html" />
@@ -155,6 +167,14 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\JavaScriptSDK.Interfaces\JavaScriptSDK.Interfaces.csproj">
+      <Project>{fad54375-9834-4265-baac-77b64a6aeec1}</Project>
+      <Name>JavaScriptSDK.Interfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\JavaScriptSDK.Module\JavaScriptSDK.Module.csproj">
+      <Project>{9efeed47-7841-4356-8a6f-ad16ff9a28e4}</Project>
+      <Name>JavaScriptSDK.Module</Name>
+    </ProjectReference>
     <ProjectReference Include="..\JavaScriptSDK\JavaScriptSDK.csproj">
       <Project>{49ECFE69-8C92-4FA7-A7C3-CDB957C71654}</Project>
       <Name>JavaScriptSDK</Name>
@@ -169,6 +189,7 @@
     <Content Include="TestFramework\TestClass.ts" />
     <TypeScriptCompile Include="CheckinTests\ajax.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\DataLossAnalyzer.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\AppInsightsModule.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\SendBuffer.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\SplitTest.tests.ts" />
     <TypeScriptCompile Include="CheckinTests\appInsights.tests.ts" />
@@ -239,6 +260,11 @@
       <DependentUpon>DisableTelemetryTests.ts</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <SeleniumAppInsightsSDK Include="Selenium\appInsightsSdk.ts" />
+    <Content Include="Selenium\appInsightsSdk.js">
+      <DependentUpon>appInsightsSdk.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <SeleniumCheckinTests Include="Selenium\checkinTests.ts" />
     <SeleniumPerformance Include="Selenium\performanceTests.ts" />
     <Content Include="Selenium\checkinTests.js">
@@ -257,13 +283,14 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeBuild">
     <Message Text="Compiling TypeScript files" />
-    <Exec Command="$(TypeScriptCompilerPath) --module amd @(SeleniumCheckinTests ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\checkinTests.js" />
-    <Exec Command="$(TypeScriptCompilerPath) --module amd @(SeleniumPerformance ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\performanceTests.js" />
-    <Exec Command="$(TypeScriptCompilerPath) --module amd @(AutoCollectionTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\autoCollection.tests.js" />
-    <Exec Command="$(TypeScriptCompilerPath) --module amd @(PublicApiTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\PublicApiTests.js" />
-    <Exec Command="$(TypeScriptCompilerPath) --module amd @(SanitizerE2ETests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\SanitizerE2E.tests.js" />
-    <Exec Command="$(TypeScriptCompilerPath) --module amd @(SnippetTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\snippet.tests.js" />
-    <Exec Command="$(TypeScriptCompilerPath) --module amd @(DisableTelemetryTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\DisableTelemetryTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SeleniumCheckinTests ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\checkinTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SeleniumAppInsightsSDK ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\appInsightsSdk.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SeleniumPerformance ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\performanceTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(AutoCollectionTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\autoCollection.tests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(PublicApiTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\PublicApiTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SanitizerE2ETests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\SanitizerE2E.tests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SnippetTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\snippet.tests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(DisableTelemetryTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\DisableTelemetryTests.js" />
     <Exec Command="Powershell.exe -ExecutionPolicy ByPass -File &quot;$(ProjectDir)E2ETests\PostBuild.ps1&quot; -projectDir $(ProjectDir)" />
   </Target>
   <PropertyGroup>

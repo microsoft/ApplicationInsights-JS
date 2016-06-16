@@ -1,7 +1,7 @@
 ﻿/// <reference path="serializer.ts" />
 /// <reference path="Telemetry/Common/Envelope.ts"/>
 /// <reference path="Telemetry/Common/Base.ts" />
-/// <reference path="Contracts/Generated/ContextTagKeys.ts"/>
+/// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/ContextTagKeys.ts"/>
 /// <reference path="Context/Application.ts"/>
 /// <reference path="Context/Device.ts"/>
 /// <reference path="Context/Internal.ts"/>
@@ -38,9 +38,9 @@ module Microsoft.ApplicationInsights {
         getItems: () => string[];
 
         /**
-         * Build a batch of all queued elements
+         * Build a batch of all elements in the payload array
          */
-        batchPayloads: () => string;
+        batchPayloads: (payload: string[]) => string;
 
         /**
          * Moves items to the SENT_BUFFER.
@@ -83,11 +83,11 @@ module Microsoft.ApplicationInsights {
             return this._buffer.slice(0);
         }
 
-        public batchPayloads(): string {
-            if (this.count() > 0) {
+        public batchPayloads(payload: string[]): string {
+            if (payload && payload.length > 0) {
                 var batch = this._config.emitLineDelimitedJson() ?
-                    this._buffer.join("\n") :
-                    "[" + this._buffer.join(",") + "]";
+                    payload.join("\n") :
+                    "[" + payload.join(",") + "]";
 
                 return batch;
             }
@@ -100,7 +100,7 @@ module Microsoft.ApplicationInsights {
         }
 
         public clearSent(payload: string[]) {
-            // already cleared
+            this.clear();
         }
     }
 
@@ -143,17 +143,18 @@ module Microsoft.ApplicationInsights {
         public clear() {
             this._buffer.length = 0;
             this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, []);
+            this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
         }
 
         public getItems(): string[] {
             return this._buffer.slice(0)
         }
 
-        public batchPayloads(): string {
-            if (this._buffer && this._buffer.length > 0) {
+        public batchPayloads(payload: string[]): string {
+            if (payload && payload.length > 0) {
                 var batch = this._config.emitLineDelimitedJson() ?
-                    this._buffer.join("\n") :
-                    "[" + this._buffer.join(",") + "]";
+                    payload.join("\n") :
+                    "[" + payload.join(",") + "]";
 
                 return batch;
             }
@@ -179,15 +180,23 @@ module Microsoft.ApplicationInsights {
         }
 
         private removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
-            var cleared: string[] = [];
+            var remaining: string[] = [];
 
-            buffer.forEach((item) => {
-                if (!payloads.some(p => p == item)) {
-                    cleared.push(item);
+            for (var i in buffer) {
+                var contains = false;
+                for (var j in payloads) {
+                    if (payloads[j] === buffer[i]) {
+                        contains = true;
+                        break;
+                    }
                 }
-            });
 
-            return cleared;
+                if (!contains) {
+                    remaining.push(buffer[i]);
+                }
+            };
+
+            return remaining;
         }
 
         private getBuffer(key: string): string[] {

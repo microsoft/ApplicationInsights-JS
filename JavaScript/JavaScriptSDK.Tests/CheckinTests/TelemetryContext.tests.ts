@@ -45,6 +45,18 @@ class TelemetryContextTests extends TestClass {
         });
 
         this.testCase({
+            name: "TelemtetryContext: constructor intialized with correct sdk version",
+            test: () => {
+                var tc = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
+
+                Assert.ok(tc.internal, "context.internal is initialized");
+
+                var expectedSdkVersion = "javascript:" + Microsoft.ApplicationInsights.Version;
+                Assert.equal(expectedSdkVersion, tc.internal.sdkVersion, "iKey is initialized");
+            }
+        });
+
+        this.testCase({
             name: "TelemtetryContext: calling track with null or undefined fails",
             test: () => {
                 var tc = new Microsoft.ApplicationInsights.TelemetryContext(this._config);

@@ -1,9 +1,12 @@
 ﻿/// <reference path="../SamplingScoreGenerator.ts" />
+/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/Envelope.ts" />
+/// <reference path="../../JavaScriptSDK.Interfaces/Context/ISample.ts" />
 
 module Microsoft.ApplicationInsights.Context {
+
     "use strict";
 
-    export class Sample {
+    export class Sample implements ISample {
         public sampleRate: number;
         private samplingScoreGenerator: SamplingScoreGenerator;
 
@@ -26,7 +29,7 @@ module Microsoft.ApplicationInsights.Context {
         /**
         * Determines if an envelope is sampled in (i.e. will be sent) or not (i.e. will be dropped).
         */
-        public isSampledIn(envelope: Telemetry.Common.Envelope): boolean {
+        public isSampledIn(envelope: Microsoft.Telemetry.Envelope): boolean {
             if (this.sampleRate == 100) return true;
 
             var score = this.samplingScoreGenerator.getSamplingScore(envelope);

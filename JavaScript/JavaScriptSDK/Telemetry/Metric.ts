@@ -1,4 +1,4 @@
-﻿/// <reference path="../Contracts/Generated/MetricData.ts" />
+﻿/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/MetricData.ts" />
 /// <reference path="./Common/DataSanitizer.ts" />
 /// <reference path="./Common/DataPoint.ts" />
 

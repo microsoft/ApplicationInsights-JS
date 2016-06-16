@@ -1,7 +1,8 @@
 ﻿/// <reference path="serializer.ts" />
 /// <reference path="Telemetry/Common/Envelope.ts"/>
 /// <reference path="Telemetry/Common/Base.ts" />
-/// <reference path="Contracts/Generated/ContextTagKeys.ts"/>
+/// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/ContextTagKeys.ts"/>
+/// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/Envelope.ts" />
 /// <reference path="Context/Application.ts"/>
 /// <reference path="Context/Device.ts"/>
 /// <reference path="Context/Internal.ts"/>
@@ -78,7 +79,12 @@ module Microsoft.ApplicationInsights {
          * A method which will cause data to be send to the url
          */
 
-        public _sender: (payload: string[], isAsync: boolean, numberOfItemsInPayload: number) => void;
+        public _sender: (payload: string[], isAsync: boolean) => void;
+
+        /**
+         * Whether XMLHttpRequest object is supported. Older version of IE (8,9) do not support it.
+         */
+        public _XMLHttpRequestSupported: boolean = false;
 
         /**
          * Constructs a new instance of the Sender class
@@ -87,12 +93,14 @@ module Microsoft.ApplicationInsights {
             this._lastSend = 0;
             this._config = config;
             this._sender = null;
-            this._buffer = this._config.enableSessionStorageBuffer() ? new SessionStorageSendBuffer(config) : new ArraySendBuffer(config);
+            this._buffer = (Util.canUseSessionStorage() && this._config.enableSessionStorageBuffer())
+                ? new SessionStorageSendBuffer(config) : new ArraySendBuffer(config);
 
             if (typeof XMLHttpRequest != "undefined") {
                 var testXhr = new XMLHttpRequest();
                 if ("withCredentials" in testXhr) {
                     this._sender = this._xhrSender;
+                    this._XMLHttpRequestSupported = true;
                 } else if (typeof XDomainRequest !== "undefined") {
                     this._sender = this._xdrSender; //IE 8 and 9
                 }
@@ -102,7 +110,7 @@ module Microsoft.ApplicationInsights {
         /**
          * Add a telemetry item to the send buffer
          */
-        public send(envelope: Telemetry.Common.Envelope) {
+        public send(envelope: Microsoft.Telemetry.Envelope) {
             try {
                 // if master off switch is set, don't send any data
                 if (this._config.disableTelemetry()) {
@@ -123,10 +131,12 @@ module Microsoft.ApplicationInsights {
                 }
 
                 // check if the incoming payload is too large, truncate if necessary
-                var payload: string = Serializer.serialize(envelope);
+                var payload: string = Serializer.serialize(<ISerializable><any>envelope);
 
                 // flush if we would exceet the max-size limit by adding this item
-                var batch = this._buffer.batchPayloads();
+                var bufferPayload = this._buffer.getItems();
+                var batch = this._buffer.batchPayloads(bufferPayload);
+
                 if (batch && (batch.length + payload.length > this._config.maxBatchSizeInBytes())) {
                     this.triggerSend();
                 }
@@ -182,8 +192,10 @@ module Microsoft.ApplicationInsights {
                 if (!this._config.disableTelemetry()) {
 
                     if (this._buffer.count() > 0) {
+                        var payload = this._buffer.getItems();
+
                         // invoke send
-                        this._sender(this._buffer.getItems(), isAsync, this._buffer.count());
+                        this._sender(payload, isAsync);
                     }
 
                     // update lastSend time to enable throttling
@@ -208,7 +220,7 @@ module Microsoft.ApplicationInsights {
          * @param payload {string} - The data payload to be sent.
          * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
          */
-        private _xhrSender(payload: string[], isAsync: boolean, countOfItemsInPayload: number) {
+        private _xhrSender(payload: string[], isAsync: boolean) {
             var xhr = new XMLHttpRequest();
             xhr[AjaxMonitor.DisabledPropertyName] = true;
             xhr.open("POST", this._config.endpointUrl(), isAsync);
@@ -217,7 +229,7 @@ module Microsoft.ApplicationInsights {
             xhr.onerror = (event: ErrorEvent) => this._onError(payload, xhr.responseText || xhr.response || "", event);
 
             // compose an array of payloads
-            var batch = this._buffer.batchPayloads();
+            var batch = this._buffer.batchPayloads(payload);
             xhr.send(batch);
 
             this._buffer.markAsSent(payload);
@@ -238,7 +250,7 @@ module Microsoft.ApplicationInsights {
             xdr.open('POST', this._config.endpointUrl());
 
             // compose an array of payloads
-            var batch = this._buffer.batchPayloads();
+            var batch = this._buffer.batchPayloads(payload);
             xdr.send(batch);
 
             this._buffer.markAsSent(payload);

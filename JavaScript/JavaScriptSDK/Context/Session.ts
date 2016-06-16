@@ -1,7 +1,9 @@
 ﻿/// <reference path="../util.ts" />
-/// <reference path="../Contracts/Generated/SessionState.ts"/>
+/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/SessionState.ts"/>
+/// <reference path="../../JavaScriptSDK.Interfaces/Context/ISession.ts" />
 
 module Microsoft.ApplicationInsights.Context {
+
     "use strict";
 
     export interface ISessionConfig {
@@ -10,7 +12,7 @@ module Microsoft.ApplicationInsights.Context {
         cookieDomain: () => string;
     }
 
-    export class Session {
+    export class Session implements ISession {
         /**
          * The session ID.
          */

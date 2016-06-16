@@ -1,5 +1,6 @@
 ﻿/// <reference path="..\TestFramework\Common.ts" />
 /// <reference path="../../JavaScriptSDK/sender.ts" />
+/// <reference path="../../JavaScriptSDK/SendBuffer.ts"/>
 /// <reference path="../../javascriptsdk/appinsights.ts" />
 
 class SenderWrapper extends Microsoft.ApplicationInsights.Sender {
@@ -489,8 +490,7 @@ class SenderTests extends TestClass {
             name: "SenderTests: data loss analyzer - send(item), queued, sent; result 0",
             test: () => {
                 // setup
-                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
+                this.setupDataLossAnaluzed();
                 var sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -509,8 +509,7 @@ class SenderTests extends TestClass {
             name: "SenderTests: data loss analyzer - send(item), queued, send(item), queued, sent; result 0",
             test: () => {
                 // setup
-                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
+                this.setupDataLossAnaluzed();
                 var sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -530,8 +529,7 @@ class SenderTests extends TestClass {
             name: "SenderTests: data loss analyzer - send(item), queued, sent, send(item), leave; result 1",
             test: () => {
                 // setup
-                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
+                this.setupDataLossAnaluzed();
                 var sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -551,8 +549,7 @@ class SenderTests extends TestClass {
             name: "SenderTests: data loss analyzer - send(item), queued, post failed; result 1",
             test: () => {
                 // setup
-                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { } };
+                this.setupDataLossAnaluzed();
                 var sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -566,6 +563,103 @@ class SenderTests extends TestClass {
                 Assert.equal(1, Microsoft.ApplicationInsights.DataLossAnalyzer.getNumberOfLostItems());
             }
         });
+
+        this.testCase({
+            name: "SenderTests: data loss analyzer is disabled for XDomainRequest",
+            test: () => {
+                // setup
+                Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
+                Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { }, context: { _sender: { _XMLHttpRequestSupported: false } } };
+                var sender = this.getSender();
+                this.fakeServer.requests.pop(); // xDomainRequest was created inside Sender's constructor, removing it to avoid confusion
+                var senderSpy = this.sandbox.spy(sender, "_sender");
+
+                // act
+                sender.send(this.testTelemetry);
+                sender.triggerSend();
+                this.fakeServer.requests[0].respond(400, {}, "");
+
+                // Validate
+                Assert.equal(0, Microsoft.ApplicationInsights.DataLossAnalyzer.getNumberOfLostItems());
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: use Array buffer by default",
+            test: () => {
+                // setup
+                var config: Microsoft.ApplicationInsights.ISenderConfig = {
+                    endpointUrl: () => this.endpointUrl,
+                    emitLineDelimitedJson: () => this.emitLineDelimitedJson,
+                    maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
+                    maxBatchInterval: () => this.maxBatchInterval,
+                    disableTelemetry: () => this.disableTelemetry,
+                    enableSessionStorageBuffer: () => false
+                };
+
+                // act
+                var sender = new Microsoft.ApplicationInsights.Sender(config);
+
+                // Validate
+                Assert.ok(sender._buffer instanceof Microsoft.ApplicationInsights.ArraySendBuffer, "sender should use Array buffer by default");
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: use SessionStorageBuffer when enableSessionStorageBuffer is true",
+            test: () => {
+                // setup
+                var config: Microsoft.ApplicationInsights.ISenderConfig = {
+                    endpointUrl: () => this.endpointUrl,
+                    emitLineDelimitedJson: () => this.emitLineDelimitedJson,
+                    maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
+                    maxBatchInterval: () => this.maxBatchInterval,
+                    disableTelemetry: () => this.disableTelemetry,
+                    enableSessionStorageBuffer: () => true
+                };
+                
+                // act
+                var sender = new Microsoft.ApplicationInsights.Sender(config);
+
+                // Validate
+                Assert.ok(sender._buffer instanceof Microsoft.ApplicationInsights.SessionStorageSendBuffer, "sender should use SessionStorage buffer");
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: does not use SessionStorageBuffer when enableSessionStorageBuffer is true and SessionStorage is not supported",
+            test: () => {
+                var utilCanUserSession = Microsoft.ApplicationInsights.Util.canUseSessionStorage;    
+
+                // setup
+                var config: Microsoft.ApplicationInsights.ISenderConfig = {
+                    endpointUrl: () => this.endpointUrl,
+                    emitLineDelimitedJson: () => this.emitLineDelimitedJson,
+                    maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
+                    maxBatchInterval: () => this.maxBatchInterval,
+                    disableTelemetry: () => this.disableTelemetry,
+                    enableSessionStorageBuffer: () => true
+                };
+
+                Microsoft.ApplicationInsights.Util.canUseSessionStorage = () => {
+                    return false;
+                };
+
+                // act
+                var sender = new Microsoft.ApplicationInsights.Sender(config);
+
+                // Validate
+                Assert.ok(sender._buffer instanceof Microsoft.ApplicationInsights.ArraySendBuffer, "sender should use Array buffer");
+
+                // clean up
+                Microsoft.ApplicationInsights.Util.canUseSessionStorage = utilCanUserSession;
+            }
+        });
+    }
+
+    private setupDataLossAnaluzed() {
+        Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
+        Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { }, context: { _sender: { _XMLHttpRequestSupported: true } } };
     }
 }
 

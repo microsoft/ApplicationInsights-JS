@@ -1,7 +1,10 @@
-﻿module Microsoft.ApplicationInsights.Context {
+﻿/// <reference path="../../JavaScriptSDK.Interfaces/Context/IDevice.ts" />
+
+module Microsoft.ApplicationInsights.Context {
+
     "use strict";
 
-    export class Device {
+    export class Device implements IDevice {
 
         /**
          * The type for the current device.
