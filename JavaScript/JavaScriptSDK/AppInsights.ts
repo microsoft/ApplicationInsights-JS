@@ -261,7 +261,7 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
-         * Log an ajax dependency
+         * Log a dependency call
          * @param id    unique id, this is used by the backend o correlate server requests. Use Util.newId() to generate a unique Id.
          * @param method    represents request verb (GET, POST, etc.)
          * @param absoluteUrl   absolute url used to make the dependency request

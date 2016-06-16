@@ -159,7 +159,7 @@ In the portal, you can search on message content and [display individual trackTr
 
     trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
     
-Log an ajax dependency
+Log a dependency call (for instance: ajax)
 
  | | 
 ---|---|---
