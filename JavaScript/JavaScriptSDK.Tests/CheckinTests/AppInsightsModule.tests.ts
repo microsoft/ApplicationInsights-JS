@@ -12,7 +12,8 @@ export default class AppInsightsModuleTests extends TestClass {
 
                 () => {
                     Assert.ok(!AppInsights.queue, "Initially, queue should be undefined");
-                    AppInsights.downloadAndSetup({ instrumentationKey: "test" });
+                    // need to override the url, otherwise file:// is used for local test runs.
+                    AppInsights.downloadAndSetup({ instrumentationKey: "test", url: "http://az416426.vo.msecnd.net/scripts/a/ai.0.js" });
                     Assert.ok(AppInsights.queue, "Queue should be defined after downloadAndSetup was called");
                 },
                 <() => void>
@@ -55,7 +56,7 @@ export default class AppInsightsModuleTests extends TestClass {
             steps: [
 
                 () => {
-                    AppInsights.downloadAndSetup({ instrumentationKey: "test" });
+                    AppInsights.downloadAndSetup({ instrumentationKey: "test", url: "http://az416426.vo.msecnd.net/scripts/a/ai.0.js" });
                     AppInsights.queue.push(() => this["queueFlushed"] = true);
                     this["queueFlushed"] = false;
                 },

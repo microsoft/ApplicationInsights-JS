@@ -29,7 +29,7 @@
         }
     };
 
-    var method = ["Event", "Exception", "Metric", "PageView", "Trace", "Ajax"];
+    var method = ["Event", "Exception", "Metric", "PageView", "Trace", "Dependency"];
     while (method.length) {
         createLazyMethod("track" + method.pop());
     }

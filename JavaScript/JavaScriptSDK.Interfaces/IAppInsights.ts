@@ -71,16 +71,16 @@ module Microsoft.ApplicationInsights {
         trackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
 
         /**
-        * Log an AJAX request
-        * @param  id  Event id
-        * @param  absoluteUrl Full url
-        * @param  pathName Leave this parameter blank
-        * @param  totalTime Total time it took for AJAX request to complete
-        * @param  success Whether AJAX request succeeded or failed
-        * @param  resultCode Result code returned from AJAX call
-        * @param  method  HTTP verb that was used (GET, POST)
-        */
-        trackAjax(id: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number, method?: string);
+         * Log a dependency call
+         * @param id    unique id, this is used by the backend o correlate server requests. Use Util.newId() to generate a unique Id.
+         * @param method    represents request verb (GET, POST, etc.)
+         * @param absoluteUrl   absolute url used to make the dependency request
+         * @param pathName  the path part of the absolute url
+         * @param totalTime total request time
+         * @param success   indicates if the request was sessessful
+         * @param resultCode    response code returned by the dependency request
+         */
+        trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number);
 
         /**
          * Log an exception you have caught.

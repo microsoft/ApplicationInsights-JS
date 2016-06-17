@@ -203,14 +203,14 @@ module Microsoft.ApplicationInsights {
                     }));
             }
             else {
-                this.appInsights.trackAjax(
+                this.appInsights.trackDependency(
                     xhr.ajaxData.id,
+                    xhr.ajaxData.method,
                     xhr.ajaxData.getAbsoluteUrl(),
                     xhr.ajaxData.getPathName(),
                     xhr.ajaxData.ajaxTotalDuration,
                     (+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
-                    +xhr.ajaxData.status,
-                    xhr.ajaxData.method
+                    +xhr.ajaxData.status
                 );
 
                 xhr.ajaxData = null;
