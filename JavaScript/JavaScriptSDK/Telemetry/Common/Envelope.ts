@@ -4,7 +4,7 @@
 
 module Microsoft.ApplicationInsights.Telemetry.Common {
     "use strict";
-    export class Envelope extends Microsoft.Telemetry.Envelope implements ISerializable {
+    export class Envelope extends Microsoft.Telemetry.Envelope implements IEnvelope {
 
         /**
          * The data contract for serializing this object.

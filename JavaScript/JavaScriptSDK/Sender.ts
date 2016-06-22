@@ -110,7 +110,7 @@ module Microsoft.ApplicationInsights {
         /**
          * Add a telemetry item to the send buffer
          */
-        public send(envelope: Microsoft.Telemetry.Envelope) {
+        public send(envelope: Microsoft.ApplicationInsights.IEnvelope) {
             try {
                 // if master off switch is set, don't send any data
                 if (this._config.disableTelemetry()) {
@@ -131,7 +131,7 @@ module Microsoft.ApplicationInsights {
                 }
 
                 // check if the incoming payload is too large, truncate if necessary
-                var payload: string = Serializer.serialize(<ISerializable><any>envelope);
+                var payload: string = Serializer.serialize(envelope);
 
                 // flush if we would exceet the max-size limit by adding this item
                 var bufferPayload = this._buffer.getItems();

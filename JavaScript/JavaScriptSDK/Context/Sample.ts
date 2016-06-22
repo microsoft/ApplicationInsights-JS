@@ -29,7 +29,7 @@ module Microsoft.ApplicationInsights.Context {
         /**
         * Determines if an envelope is sampled in (i.e. will be sent) or not (i.e. will be dropped).
         */
-        public isSampledIn(envelope: Microsoft.Telemetry.Envelope): boolean {
+        public isSampledIn(envelope: Microsoft.ApplicationInsights.IEnvelope): boolean {
             if (this.sampleRate == 100) return true;
 
             var score = this.samplingScoreGenerator.getSamplingScore(envelope);

@@ -56,6 +56,8 @@
     <TypeScriptCompile Include="IAppInsights.ts" />
     <TypeScriptCompile Include="IConfig.ts" />
     <TypeScriptCompile Include="ITelemetryContext.ts" />
+    <TypeScriptCompile Include="Telemetry\IEnvelope.ts" />
+    <TypeScriptCompile Include="Telemetry\ISerializable.ts" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">12.0</VisualStudioVersion>
