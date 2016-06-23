@@ -1,4 +1,5 @@
-﻿
+﻿/// <reference path="./ISerializable.ts" />
+
 module Microsoft.ApplicationInsights {
 
     "use strict";
