@@ -1,7 +1,8 @@
 /// <reference path="../../JavaScriptSDK/appInsights.ts" />
 
 // This file was copied from https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/applicationinsights-js/applicationinsights-js-tests.ts 
-// If you have to make changes here, plese update the DefinitelyTyped repo - https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/applicationinsights-js
+// and is used to validate ApplicationInsights-JS definition types. 
+// If you have to change this file, plese update the DefinitelyTyped repo too - https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/applicationinsights-js
 
 var config: Microsoft.ApplicationInsights.IConfig = {
     instrumentationKey: "<your iKey>",
@@ -40,7 +41,7 @@ var appInsights: Microsoft.ApplicationInsights.IAppInsights = {
     startTrackEvent(name: string) { return null },
     stopTrackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }) { return null },
     trackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }) { return null },
-    trackAjax(id: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number, method?: string) { return null },
+    trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) { return null },
     trackException(exception: Error, handledAt?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, severityLevel?: AI.SeverityLevel) { return null },
     trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: { [name: string]: string; }) { return null },
     trackTrace(message: string, properties?: { [name: string]: string; }) { return null },
@@ -117,43 +118,43 @@ context.track(envelope);
 context.addTelemetryInitializer((envelope) => false);
 
 // track event
-var eventObj = new Microsoft.Telemetry.Event("test", null, null);
-var eventData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.Telemetry.Event>(Microsoft.Telemetry.Event.dataType, eventObj);
-var eventEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(eventData, Microsoft.Telemetry.Event.envelopeType);
+var eventObj = new Microsoft.ApplicationInsights.Telemetry.Event("test", null, null);
+var eventData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.Event>(Microsoft.ApplicationInsights.Telemetry.Event.dataType, eventObj);
+var eventEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(eventData, Microsoft.ApplicationInsights.Telemetry.Event.envelopeType);
 context.track(eventEnvelope);
 
 // track exception
-var exceptionObj = new Microsoft.Telemetry.Exception(new Error(), "handledAt", null, null, AI.SeverityLevel.Critical);
-var exceptionData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.Telemetry.Exception>(Microsoft.Telemetry.Exception.dataType, exceptionObj);
-var exceptionEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(exceptionData, Microsoft.Telemetry.Exception.envelopeType);
+var exceptionObj = new Microsoft.ApplicationInsights.Telemetry.Exception(new Error(), "handledAt", null, null, AI.SeverityLevel.Critical);
+var exceptionData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.Exception>(Microsoft.ApplicationInsights.Telemetry.Exception.dataType, exceptionObj);
+var exceptionEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(exceptionData, Microsoft.ApplicationInsights.Telemetry.Exception.envelopeType);
 context.track(exceptionEnvelope);
 
 // track metric
-var metricObj = new Microsoft.Telemetry.Metric("name", 1234, 1, 0, 100, null);
-var metricData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.Telemetry.Metric>(Microsoft.Telemetry.Metric.dataType, metricObj);
-var metricEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(metricData, Microsoft.Telemetry.Metric.envelopeType);
+var metricObj = new Microsoft.ApplicationInsights.Telemetry.Metric("name", 1234, 1, 0, 100, null);
+var metricData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.Metric>(Microsoft.ApplicationInsights.Telemetry.Metric.dataType, metricObj);
+var metricEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(metricData, Microsoft.ApplicationInsights.Telemetry.Metric.envelopeType);
 context.track(metricEnvelope);
 
 // track page view
-var pageViewObj = new Microsoft.Telemetry.PageView("page name", "url", 999, null, null);
-var pageViewData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.Telemetry.PageView>(Microsoft.Telemetry.PageView.dataType, pageViewObj);
-var pageViewEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(pageViewData, Microsoft.Telemetry.PageView.envelopeType);
+var pageViewObj = new Microsoft.ApplicationInsights.Telemetry.PageView("page name", "url", 999, null, null);
+var pageViewData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.PageView>(Microsoft.ApplicationInsights.Telemetry.PageView.dataType, pageViewObj);
+var pageViewEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(pageViewData, Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType);
 context.track(pageViewEnvelope);
 
 // track page view performance
-var pageViewPerfObj = new Microsoft.Telemetry.PageViewPerformance("page name", "url", 999, null, null);
-var pageViewPerfData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.Telemetry.PageViewPerformance>(Microsoft.Telemetry.PageViewPerformance.dataType, pageViewPerfObj);
-var pageViewPerfEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(pageViewPerfData, Microsoft.Telemetry.PageViewPerformance.envelopeType);
+var pageViewPerfObj = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("page name", "url", 999, null, null);
+var pageViewPerfData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.PageViewPerformance>(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.dataType, pageViewPerfObj);
+var pageViewPerfEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(pageViewPerfData, Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.envelopeType);
 context.track(pageViewPerfEnvelope);
 
 // track remote dependency
-var remoteDepObj = new Microsoft.Telemetry.RemoteDependencyData("id", "url", "command", 1, true, 1234, "GET");
-var remoteDepData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.Telemetry.RemoteDependencyData>(Microsoft.Telemetry.RemoteDependencyData.dataType, remoteDepObj);
-var remoteDepEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(remoteDepData, Microsoft.Telemetry.RemoteDependencyData.envelopeType);
+var remoteDepObj = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData("id", "url", "command", 1, true, 1234, "GET");
+var remoteDepData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.dataType, remoteDepObj);
+var remoteDepEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(remoteDepData, Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType);
 context.track(pageViewPerfEnvelope);
 
 // track trace
-var traceObj = new Microsoft.Telemetry.Trace("message", null);
-var traceData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.Telemetry.Trace>(Microsoft.Telemetry.Trace.dataType, traceObj);
-var traceEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(traceData, Microsoft.Telemetry.Trace.envelopeType);
+var traceObj = new Microsoft.ApplicationInsights.Telemetry.Trace("message", null);
+var traceData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.Trace>(Microsoft.ApplicationInsights.Telemetry.Trace.dataType, traceObj);
+var traceEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(traceData, Microsoft.ApplicationInsights.Telemetry.Trace.envelopeType);
 context.track(traceEnvelope);
