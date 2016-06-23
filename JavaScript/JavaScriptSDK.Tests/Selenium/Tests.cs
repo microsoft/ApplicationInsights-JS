@@ -56,7 +56,7 @@ namespace ApplicationInsights.Javascript.Tests
         [TestMethod]
         public void Firefox()
         {
-            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver());
+            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), PATH_TO_TESTS);
         }
 
         [TestMethod]
@@ -67,8 +67,39 @@ namespace ApplicationInsights.Javascript.Tests
             ffProfile.SetPreference("browser.download.folderList", 2);
             ffProfile.SetPreference("browser.helperApps.neverAsk.saveToDisk", "text/plain");
 
-            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(ffProfile), true);
+            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(ffProfile), PATH_TO_TESTS, true);
         }
+
+        [TestMethod]
+        public void Firefox_E2E_DisableTelemetryTests()
+        {
+            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.DisableTelemetryTests.htm");
+        }
+
+        [TestMethod]
+        public void Firefox_E2E_PublicApiTests()
+        {
+            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.PublicApiTests.htm");
+        }
+
+        [TestMethod]
+        public void Firefox_E2E_SanitizerE2ETests()
+        {
+            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.SanitizerE2ETests.htm");
+        }
+
+        // Tests are failing, need to fix before we enable them.
+        /* [TestMethod]
+        public void Firefox_E2E_autoCollection()
+        {
+            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.autoCollection.tests.htm");
+        }
+
+        [TestMethod]
+        public void Firefox_E2E_snippetTests()
+        {
+            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.snippetTests.htm");
+        }*/
 
         #region Disabled - other browsers
         /**
@@ -91,13 +122,13 @@ namespace ApplicationInsights.Javascript.Tests
         //[TestMethod]
         public void Safari()
         {
-            RunTest(new OpenQA.Selenium.Safari.SafariDriver());
+            RunTest(new OpenQA.Selenium.Safari.SafariDriver(), PATH_TO_TESTS);
         }
 
         //[TestMethod]
         public void Chrome()
         {
-            RunTest(new OpenQA.Selenium.Chrome.ChromeDriver());
+            RunTest(new OpenQA.Selenium.Chrome.ChromeDriver(), PATH_TO_TESTS);
         }
 
         //[TestMethod]
@@ -125,7 +156,7 @@ namespace ApplicationInsights.Javascript.Tests
         /// the help of TestLogger.js (in the Javascript project).
         /// </summary>
         /// <param name="driver"></param>
-        private void RunTest(RemoteWebDriver driver, bool runCodeCoverage = false)
+        private void RunTest(RemoteWebDriver driver, string pathToTest, bool runCodeCoverage = false)
         {
             using (driver)
             {
@@ -133,7 +164,7 @@ namespace ApplicationInsights.Javascript.Tests
 
                 driver.Manage().Timeouts().SetScriptTimeout(new TimeSpan(0, 100, 0));
 
-                var testUrl = string.Format("http://localhost:{0}{1}", PORT, PATH_TO_TESTS);
+                var testUrl = string.Format("http://localhost:{0}{1}", PORT, pathToTest);
                 if (runCodeCoverage)
                 {
                     testUrl += "?coverage";
