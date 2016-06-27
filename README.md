@@ -2,9 +2,6 @@
 
 [Application Insights](https://azure.microsoft.com/services/application-insights/) tells you about your app's performance and usage. By adding a few lines of code to your web pages, you get data about how many users you have, which pages are most popular, how fast pages load, whether they throw exceptions, and more. And you can add code to track more detailed user activity.
 
-## Try Application Insights with JavaScript SDK - no Azure subscription required
-If you don't have an Azure subscription and would like to try Application Insights on one of your own web pages, visit [Try Application Insights Now](http://aka.ms/ainow). 
-
 ## Get started
 
 To use this SDK, you'll need a subscription to [Microsoft Azure](https://azure.com). Application Insights has a free subscription option.
