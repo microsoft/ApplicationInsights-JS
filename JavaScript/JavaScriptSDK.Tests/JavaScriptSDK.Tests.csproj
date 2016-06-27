@@ -214,6 +214,7 @@
     <TypeScriptCompile Include="Contracts\Generated\PageViewPerfData.unittests.ts" />
     <TypeScriptCompile Include="Contracts\Generated\SessionStateData.unittests.ts" />
     <TypeScriptCompile Include="Contracts\Generated\StackFrame.unittests.ts" />
+    <TypeScriptCompile Include="DefinitionTypes\applicationinsights-js-tests.ts" />
     <TypeScriptCompile Include="External\jquery.d.ts" />
     <TypeScriptCompile Include="Performance\api.perftests.ts" />
     <TypeScriptCompile Include="Performance\pageLoad.perftests.ts" />
