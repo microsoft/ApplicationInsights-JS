@@ -13,6 +13,7 @@
         static reset() {
             if (DataLossAnalyzer.isEnabled()) {
                 Util.setSessionStorage(DataLossAnalyzer.ITEMS_QUEUED_KEY, "0");
+                Util.setSessionStorage(DataLossAnalyzer.ISSUES_REPORTED_KEY, "0");
                 DataLossAnalyzer.itemsRestoredFromSessionBuffer = 0;
             }
         }
