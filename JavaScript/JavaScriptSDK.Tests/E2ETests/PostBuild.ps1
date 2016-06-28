@@ -4,6 +4,10 @@ Param(
     [parameter(Mandatory=$true, HelpMessage="The project directory.")]
     [string]$projectDir,
 
+	[ValidateNotNullOrEmpty()]
+    [parameter(Mandatory=$true, HelpMessage="The project build output directory.")]
+    [string]$outputDir,
+
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="The instrumentation key.")]
     [string]$iKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46", 
@@ -27,7 +31,8 @@ $content = gc $path
 $content | out-file "$($projectDir)\E2ETests\ai.js"
 
 # build ai path in file:// format
-$aiPath = "file:///" + ($projectDir -replace "\\", "/") + "/E2ETests/ai.js"
+# $aiPath = "file:///" + ($projectDir -replace "\\", "/") + "/E2ETests/ai.js"
+$aiPath = "/E2ETests/ai.js"
 
 # test the queue
 $queueTest = "var i = 100; while(i--){appInsights.queue.push(function() {window.queueTest('from the queue')})};"
@@ -93,3 +98,8 @@ foreach ($line in $edgePrefix) {
 
 $content = $content -replace '//PREFIX_PLACEHOLDER', $strSnippet
 $content | out-file "$($projectDir)\Selenium\testPageWithAppInsights.html"
+
+# copy E2E files
+Copy-Item "$($projectDir)\E2ETests\*.js" "$($outputDir)\E2ETests"
+Copy-Item "$($projectDir)\E2ETests\*.htm" "$($outputDir)\E2ETests"
+Copy-Item "$($projectDir)\E2ETests\*.html" "$($outputDir)\E2ETests"

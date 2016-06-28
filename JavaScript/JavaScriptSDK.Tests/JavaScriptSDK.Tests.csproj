@@ -292,7 +292,7 @@
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SanitizerE2ETests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\SanitizerE2E.tests.js" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SnippetTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\snippet.tests.js" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(DisableTelemetryTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\DisableTelemetryTests.js" />
-    <Exec Command="Powershell.exe -ExecutionPolicy ByPass -File &quot;$(ProjectDir)E2ETests\PostBuild.ps1&quot; -projectDir $(ProjectDir)" />
+    <Exec Command="Powershell.exe -ExecutionPolicy ByPass -File &quot;$(ProjectDir)E2ETests\PostBuild.ps1&quot; -projectDir $(ProjectDir) -outputDir $(OutputPath)" />
   </Target>
   <PropertyGroup>
     <PreBuildEvent>
