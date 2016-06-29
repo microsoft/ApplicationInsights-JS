@@ -10,9 +10,9 @@ class PollingAssert {
     * @param {number} pollIntervalMs - polling interval in milliseconds
     * @returns {(nextTestStep) => void} callback which will be invoked by the TestClass
     */
-    public static createPollingAssert(assertionFunctionReturnsBoolean: () => boolean, assertDescription: string, timeoutSeconds: number = 30, pollIntervalMs: number = 500) {
-        var timeout = new Date(new Date().getTime() + timeoutSeconds * 1000);
+    public static createPollingAssert(assertionFunctionReturnsBoolean: () => boolean, assertDescription: string, timeoutSeconds: number = 30, pollIntervalMs: number = 500): (nextTestStep) => void {
         var pollingAssert = (nextTestStep) => {
+            var timeout = new Date(new Date().getTime() + timeoutSeconds * 1000);
             var polling = () => {
                 if (assertionFunctionReturnsBoolean.apply(this)) {
                     Assert.ok(true, assertDescription);
