@@ -298,14 +298,16 @@ class SendBufferTests extends TestClass {
 
                 buffer.enqueue("I don't fit!");
 
-                Assert.equal(100, buffer.count(), "Buffer should should not enqueue 101th element");
+                Assert.equal(100, buffer.count(), "Buffer should not allow to enqueue 101th element");
             }
         });
 
         this.testCase({
-            name: "SessionStorageSendBuffer: logs ",
+            name: "SessionStorageSendBuffer: logs a warning if the buffer is full",
             test: () => {
                 var buffer = this.getSessionStorageSendBuffer();
+
+                var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
 
                 for (var i = 0; i < 100; i++) {
                     buffer.enqueue("i=" + i);
@@ -315,7 +317,11 @@ class SendBufferTests extends TestClass {
 
                 buffer.enqueue("I don't fit!");
 
-                Assert.equal(100, buffer.count(), "Buffer should should not enqueue 101th element");
+                Assert.ok(loggingSpy.calledOnce, "BufferFull warning logged to console");
+
+                buffer.enqueue("I don't fit!");
+
+                Assert.ok(loggingSpy.calledOnce, "BufferFull warning should be logged only once.");
             }
         });
     }
