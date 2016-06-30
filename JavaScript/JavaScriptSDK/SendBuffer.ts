@@ -139,7 +139,7 @@ module Microsoft.ApplicationInsights {
             if (this._buffer.length >= SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
                 // sent internal log only once per page view
                 if (!this._bufferFullMessageSent) {
-                    _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL,
+                    _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING,
                         new _InternalLogMessage(_InternalMessageId.USRACT_SessionStorageBufferFull,
                             "Maximum buffer size reached: " + this._buffer.length));
                     this._bufferFullMessageSent = true;
