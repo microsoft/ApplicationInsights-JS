@@ -1,9 +1,9 @@
 ﻿/// <reference path="./logging.ts" />
 module Microsoft.ApplicationInsights {
 
-         /**
-         * Type of storage to differentiate between local storage and session storage
-         */
+    /**
+    * Type of storage to differentiate between local storage and session storage
+    */
     enum StorageType {
         LocalStorage,
         SessionStorage
@@ -233,6 +233,23 @@ module Microsoft.ApplicationInsights {
             return false;
         }
 
+        /*
+         * helper method to tell if document.cookie object is available
+         */
+        public static canUseCookies(): any {
+            try {
+                return Util.document.cookie !== undefined;
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage(
+                    _InternalMessageId.USRACT_CannotAccessCookie,
+                    "Cannot access document.cookie - " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }
+                ));
+            };
+
+            return false;
+        }
+
         /**
          * helper method to set userId and sessionId cookie
          */
@@ -243,7 +260,9 @@ module Microsoft.ApplicationInsights {
                 domainAttrib = ";domain=" + domain;
             }
 
-            Util.document.cookie = name + "=" + value + domainAttrib + ";path=/";
+            if (Util.canUseCookies()) {
+                Util.document.cookie = name + "=" + value + domainAttrib + ";path=/";
+            }
         }
 
         public static stringToBoolOrDefault(str: any): boolean {
@@ -258,6 +277,10 @@ module Microsoft.ApplicationInsights {
          * helper method to access userId and sessionId cookie
          */
         public static getCookie(name) {
+            if (!Util.canUseCookies()) {
+                return;
+            }
+
             var value = "";
             if (name && name.length) {
                 var cookieName = name + "=";
@@ -280,8 +303,10 @@ module Microsoft.ApplicationInsights {
          * @param name - The name of the cookie to delete.
          */
         public static deleteCookie(name: string) {
-            // Setting the expiration date in the past immediately removes the cookie
-            Util.document.cookie = name + "=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+            if (Util.canUseCookies()) {
+                // Setting the expiration date in the past immediately removes the cookie
+                Util.document.cookie = name + "=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+            }
         }
 
         /**
@@ -322,7 +347,7 @@ module Microsoft.ApplicationInsights {
         public static isError(obj: any): boolean {
             return Object.prototype.toString.call(obj) === "[object Error]";
         }
-        
+
         /**
          * Check if an object is of type Date
          */
@@ -387,7 +412,7 @@ module Microsoft.ApplicationInsights {
 
             return hour + ":" + min + ":" + sec + "." + ms;
         }
-   
+
         /**		
         * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error		
         * happens in a script from other domain (cross origin, CORS).		
@@ -430,10 +455,10 @@ module Microsoft.ApplicationInsights {
             if (!window || typeof eventName !== 'string' || typeof callback !== 'function') {
                 return false;
             }
-            
+
             // Create verb for the event
             var verbEventName = 'on' + eventName;
-            
+
             // check if addEventListener is available
             if (window.addEventListener) {
                 window.addEventListener(eventName, callback, false);
@@ -453,7 +478,7 @@ module Microsoft.ApplicationInsights {
 
         public static parseUrl(url): HTMLAnchorElement {
             if (!UrlHelper.htmlAnchorElement) {
-                UrlHelper.htmlAnchorElement = !!UrlHelper.document.createElement ? UrlHelper.document.createElement('a'): {};
+                UrlHelper.htmlAnchorElement = !!UrlHelper.document.createElement ? UrlHelper.document.createElement('a') : {};
             }
 
             UrlHelper.htmlAnchorElement.href = url;
