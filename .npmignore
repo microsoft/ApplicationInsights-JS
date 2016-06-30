@@ -1,0 +1,12 @@
+# NPM Ignore
+
+# ignore everything
+*
+
+# ... but these files
+/package.json
+/README.md
+/API-reference.md
+/JavaScript/JavaScriptSDK.Module/AppInsightsModule.js
+/dist/ai.js
+/dist/ai.0.js
