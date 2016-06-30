@@ -284,6 +284,40 @@ class SendBufferTests extends TestClass {
                 Assert.equal(0, sentBuffer.length, "There should be 0 items in the sent buffer");
             }
         });
+
+        this.testCase({
+            name: "SessionStorageSendBuffer: does not store more than 100 elements",
+            test: () => {
+                var buffer = this.getSessionStorageSendBuffer();
+
+                for (var i = 0; i < 100; i++) {
+                    buffer.enqueue("i=" + i);
+                }
+
+                Assert.equal(100, buffer.count(), "Buffer has 100 elements");
+
+                buffer.enqueue("I don't fit!");
+
+                Assert.equal(100, buffer.count(), "Buffer should should not enqueue 101th element");
+            }
+        });
+
+        this.testCase({
+            name: "SessionStorageSendBuffer: logs ",
+            test: () => {
+                var buffer = this.getSessionStorageSendBuffer();
+
+                for (var i = 0; i < 100; i++) {
+                    buffer.enqueue("i=" + i);
+                }
+
+                Assert.equal(100, buffer.count(), "Buffer has 100 elements");
+
+                buffer.enqueue("I don't fit!");
+
+                Assert.equal(100, buffer.count(), "Buffer should should not enqueue 101th element");
+            }
+        });
     }
 
     private getBuffer(key: string): string[] {
