@@ -11,6 +11,7 @@ module Microsoft.ApplicationInsights {
 
     export class Util {
         private static document: any = typeof document !== "undefined" ? document : {};
+        private static _canUseCookies: boolean = undefined;
         public static NotSpecified = "not_specified";
 
         /**
@@ -237,17 +238,21 @@ module Microsoft.ApplicationInsights {
          * helper method to tell if document.cookie object is available
          */
         public static canUseCookies(): any {
-            try {
-                return Util.document.cookie !== undefined;
-            } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage(
-                    _InternalMessageId.USRACT_CannotAccessCookie,
-                    "Cannot access document.cookie - " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) }
-                ));
-            };
+            if (Util._canUseCookies === undefined) {
+                Util._canUseCookies = false;
 
-            return false;
+                try {
+                    Util._canUseCookies = Util.document.cookie !== undefined;
+                } catch (e) {
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage(
+                        _InternalMessageId.USRACT_CannotAccessCookie,
+                        "Cannot access document.cookie - " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }
+                    ));
+                };
+            }
+
+            return Util._canUseCookies;
         }
 
         /**
