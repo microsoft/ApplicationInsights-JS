@@ -176,7 +176,7 @@ module Microsoft.ApplicationInsights {
 
             config.enableSessionStorageBuffer = (config.enableSessionStorageBuffer !== undefined && config.enableSessionStorageBuffer !== null) ?
                 Util.stringToBoolOrDefault(config.enableSessionStorageBuffer) :
-                false;
+                true;
            
             return config;
         }
