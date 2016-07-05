@@ -112,7 +112,7 @@ module Microsoft.ApplicationInsights {
         static SENT_BUFFER_KEY = "AI_sentBuffer";
 
         // Maximum number of payloads stored in the buffer. If the buffer is full, new elements will be dropped. 
-        static MAX_BUFFER_SIZE = 100;
+        static MAX_BUFFER_SIZE = 2000;
         private _bufferFullMessageSent = false;
 
         // An in-memory copy of the buffer. A copy is saved to the session storage on enqueue() and clear(). 
@@ -159,6 +159,8 @@ module Microsoft.ApplicationInsights {
             this._buffer.length = 0;
             this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, []);
             this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
+
+            this._bufferFullMessageSent = false;
         }
 
         public getItems(): string[] {

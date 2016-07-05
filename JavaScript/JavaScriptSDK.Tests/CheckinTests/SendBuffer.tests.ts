@@ -286,19 +286,19 @@ class SendBufferTests extends TestClass {
         });
 
         this.testCase({
-            name: "SessionStorageSendBuffer: does not store more than 100 elements",
+            name: "SessionStorageSendBuffer: does not store more than 2000 elements",
             test: () => {
                 var buffer = this.getSessionStorageSendBuffer();
 
-                for (var i = 0; i < 100; i++) {
+                for (var i = 0; i < 2000; i++) {
                     buffer.enqueue("i=" + i);
                 }
 
-                Assert.equal(100, buffer.count(), "Buffer has 100 elements");
+                Assert.equal(2000, buffer.count(), "Buffer has 100 elements");
 
                 buffer.enqueue("I don't fit!");
 
-                Assert.equal(100, buffer.count(), "Buffer should not allow to enqueue 101th element");
+                Assert.equal(2000, buffer.count(), "Buffer should not allow to enqueue 101th element");
             }
         });
 
@@ -309,11 +309,11 @@ class SendBufferTests extends TestClass {
 
                 var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
 
-                for (var i = 0; i < 100; i++) {
+                for (var i = 0; i < 2000; i++) {
                     buffer.enqueue("i=" + i);
                 }
 
-                Assert.equal(100, buffer.count(), "Buffer has 100 elements");
+                Assert.equal(2000, buffer.count(), "Buffer has 100 elements");
 
                 buffer.enqueue("I don't fit!");
 
