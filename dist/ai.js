@@ -70,6 +70,7 @@ var Microsoft;
             _InternalMessageId[_InternalMessageId["USRACT_TrackArgumentsNotSpecified"] = 59] = "USRACT_TrackArgumentsNotSpecified";
             _InternalMessageId[_InternalMessageId["USRACT_UrlTooLong"] = 60] = "USRACT_UrlTooLong";
             _InternalMessageId[_InternalMessageId["USRACT_SessionStorageBufferFull"] = 61] = "USRACT_SessionStorageBufferFull";
+            _InternalMessageId[_InternalMessageId["USRACT_CannotAccessCookie"] = 62] = "USRACT_CannotAccessCookie";
         })(ApplicationInsights._InternalMessageId || (ApplicationInsights._InternalMessageId = {}));
         var _InternalMessageId = ApplicationInsights._InternalMessageId;
         var _InternalLogMessage = (function () {
@@ -327,12 +328,27 @@ var Microsoft;
                 }
                 return false;
             };
+            Util.canUseCookies = function () {
+                if (Util._canUseCookies === undefined) {
+                    Util._canUseCookies = false;
+                    try {
+                        Util._canUseCookies = Util.document.cookie !== undefined;
+                    }
+                    catch (e) {
+                        ApplicationInsights._InternalLogging.throwInternalNonUserActionable(ApplicationInsights.LoggingSeverity.WARNING, new ApplicationInsights._InternalLogMessage(ApplicationInsights._InternalMessageId.USRACT_CannotAccessCookie, "Cannot access document.cookie - " + Util.getExceptionName(e), { exception: Util.dump(e) }));
+                    }
+                    ;
+                }
+                return Util._canUseCookies;
+            };
             Util.setCookie = function (name, value, domain) {
                 var domainAttrib = "";
                 if (domain) {
                     domainAttrib = ";domain=" + domain;
                 }
-                Util.document.cookie = name + "=" + value + domainAttrib + ";path=/";
+                if (Util.canUseCookies()) {
+                    Util.document.cookie = name + "=" + value + domainAttrib + ";path=/";
+                }
             };
             Util.stringToBoolOrDefault = function (str) {
                 if (!str) {
@@ -341,6 +357,9 @@ var Microsoft;
                 return str.toString().toLowerCase() === "true";
             };
             Util.getCookie = function (name) {
+                if (!Util.canUseCookies()) {
+                    return;
+                }
                 var value = "";
                 if (name && name.length) {
                     var cookieName = name + "=";
@@ -357,7 +376,9 @@ var Microsoft;
                 return value;
             };
             Util.deleteCookie = function (name) {
-                Util.document.cookie = name + "=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                if (Util.canUseCookies()) {
+                    Util.document.cookie = name + "=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                }
             };
             Util.trim = function (str) {
                 if (typeof str !== "string")
@@ -462,6 +483,7 @@ var Microsoft;
                 return true;
             };
             Util.document = typeof document !== "undefined" ? document : {};
+            Util._canUseCookies = undefined;
             Util.NotSpecified = "not_specified";
             return Util;
         })();
@@ -3383,7 +3405,7 @@ var Microsoft;
     var ApplicationInsights;
     (function (ApplicationInsights) {
         "use strict";
-        ApplicationInsights.Version = "0.22.19";
+        ApplicationInsights.Version = "0.23.0";
         var AppInsights = (function () {
             function AppInsights(config) {
                 var _this = this;
@@ -3787,7 +3809,7 @@ var Microsoft;
                     false;
                 config.enableSessionStorageBuffer = (config.enableSessionStorageBuffer !== undefined && config.enableSessionStorageBuffer !== null) ?
                     ApplicationInsights.Util.stringToBoolOrDefault(config.enableSessionStorageBuffer) :
-                    false;
+                    true;
                 return config;
             };
             return Initialization;
