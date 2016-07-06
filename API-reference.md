@@ -261,6 +261,10 @@ Values that control how the telemetry data is sent.
         
         // Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains.
         cookieDomain: string;
+        
+        // If true, the buffer with all unsent telemetry is stored in a session storage. The buffer is resotered on page load.
+        // The feature is enable by default starting with v0.23.0. 
+        enableSessionStorageBuffer: boolean;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.
