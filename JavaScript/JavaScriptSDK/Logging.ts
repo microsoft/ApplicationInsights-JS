@@ -79,6 +79,7 @@
         USRACT_TrackArgumentsNotSpecified,
         USRACT_UrlTooLong,
         USRACT_SessionStorageBufferFull,
+        USRACT_CannotAccessCookie,
     }
 
     export class _InternalLogMessage {

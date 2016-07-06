@@ -12,7 +12,9 @@
     localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
 
     // capture initial cookie
-    appInsights.cookie = localDocument.cookie;
+    try {
+        appInsights.cookie = localDocument.cookie;
+    } catch (e) {}
 
     appInsights.queue = [];
 
