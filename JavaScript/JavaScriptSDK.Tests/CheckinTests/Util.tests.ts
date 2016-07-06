@@ -177,6 +177,7 @@ class UtilTests extends TestClass {
             name: "UtilTests: canUseCookies returns false if document.cookie is not available",
             test: () => {
                 var oldDocument = Util["document"];
+                (<any>Util)._canUseCookies = undefined;
 
                 Util["document"] = <any>{
                     cookie: undefined
@@ -186,6 +187,7 @@ class UtilTests extends TestClass {
 
                 // restore document object
                 Util["document"] = oldDocument;
+                (<any>Util)._canUseCookies = undefined;
             }
         });
 
@@ -193,6 +195,7 @@ class UtilTests extends TestClass {
             name: "UtilTests: cannot set/get/delete cookies if document.cookie is not available",
             test: () => {
                 var oldDocument = Util["document"];
+                (<any>Util)._canUseCookies = undefined;
 
                 Util["document"] = <any>{
                     cookie: undefined
@@ -208,6 +211,8 @@ class UtilTests extends TestClass {
 
                 // restore document object
                 Util["document"] = oldDocument;
+                (<any>Util)._canUseCookies = undefined;
+
             }
         });
 
