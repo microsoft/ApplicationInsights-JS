@@ -42,31 +42,16 @@ class Sanitizer2ETests extends TestClass {
 
     public registerTests() {
         this.config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
-        this.config.maxBatchInterval = 100;
+        this.config.maxBatchInterval = 1000;
         this.config.endpointUrl = "https://dc.services.visualstudio.com/v2/track";
         this.config.instrumentationKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46";
 
-        this.delay = this.config.maxBatchInterval + 500;
+        this.delay = 100;
 
         var boilerPlateAsserts = (mocks: any) => {
             Assert.ok(mocks.successSpy.called, "success");
             Assert.ok(!mocks.errorSpy.called, "no error sending");
         }
-
-        var asserts = (mocks: any) => {
-            var message = "polling: " + new Date().toISOString();
-            Assert.ok(true, message);
-            console.log(message);
-
-            if (mocks.successSpy.called) {
-                boilerPlateAsserts(mocks);
-                this.testCleanup();
-            } else if (mocks.errorSpy.called || mocks.loggingSpy.called) {
-                boilerPlateAsserts(mocks);
-            }
-
-            Assert.ok(mocks.successSpy.called, "success")
-        };
 
         var aiT1;
         this.testCaseAsync({
@@ -87,10 +72,13 @@ class Sanitizer2ETests extends TestClass {
 
                     aiT1.appInsights.trackMetric("test", 5);
                 },
-                () => {
-                    asserts(aiT1);
-                }
-            ]
+            ].concat(<any>PollingAssert.createPollingAssert(() => {
+                Assert.ok(true, "waiting for response " + new Date().toISOString());
+                return (aiT1.successSpy.called || aiT1.errorSpy.called || aiT1.loggingSpy.called);
+            }, "Wait for response", 5, 1000))
+                .concat(() => {
+                    boilerPlateAsserts(aiT1);
+                })
         });
 
         var aiT2;
@@ -112,10 +100,13 @@ class Sanitizer2ETests extends TestClass {
 
                     aiT2.appInsights.trackMetric("test", 5);
                 },
-                () => {
-                    asserts(aiT2);
-                }
-            ]
+            ].concat(<any>PollingAssert.createPollingAssert(() => {
+                Assert.ok(true, "waiting for response " + new Date().toISOString());
+                return (aiT2.successSpy.called || aiT2.errorSpy.called || aiT2.loggingSpy.called);
+            }, "Wait for response", 5, 1000))
+                .concat(() => {
+                    boilerPlateAsserts(aiT2);
+                })
         });
 
         var aiT3;
@@ -131,10 +122,13 @@ class Sanitizer2ETests extends TestClass {
 
                     aiT3.appInsights.trackMetric(name, 5);
                 },
-                () => {
-                    asserts(aiT3);
-                }
-            ]
+            ].concat(<any>PollingAssert.createPollingAssert(() => {
+                Assert.ok(true, "waiting for response " + new Date().toISOString());
+                return (aiT3.successSpy.called || aiT3.errorSpy.called || aiT3.loggingSpy.called);
+            }, "Wait for response", 5, 1000))
+                .concat(() => {
+                    boilerPlateAsserts(aiT3);
+                })
         });
 
         var aiT4;
@@ -154,10 +148,13 @@ class Sanitizer2ETests extends TestClass {
 
                     aiT4.appInsights.trackMetric("test", 5);
                 },
-                () => {
-                    asserts(aiT4);
-                }
-            ]
+            ].concat(<any>PollingAssert.createPollingAssert(() => {
+                Assert.ok(true, "waiting for response " + new Date().toISOString());
+                return (aiT4.successSpy.called || aiT4.errorSpy.called || aiT4.loggingSpy.called);
+            }, "Wait for response", 5, 1000))
+                .concat(() => {
+                    boilerPlateAsserts(aiT4);
+                })
         });
 
         var aiT5;
@@ -174,10 +171,13 @@ class Sanitizer2ETests extends TestClass {
 
                     aiT5.appInsights.trackPageView("test", url);
                 },
-                () => {
-                    asserts(aiT5);
-                }
-            ]
+            ].concat(<any>PollingAssert.createPollingAssert(() => {
+                Assert.ok(true, "waiting for response " + new Date().toISOString());
+                return (aiT5.successSpy.called || aiT5.errorSpy.called || aiT5.loggingSpy.called);
+            }, "Wait for response", 5, 1000))
+                .concat(() => {
+                    boilerPlateAsserts(aiT5);
+                })
         });
 
         var aiT6;
@@ -193,10 +193,13 @@ class Sanitizer2ETests extends TestClass {
 
                     aiT6.appInsights.trackTrace(message, 5);
                 },
-                () => {
-                    asserts(aiT6);
-                }
-            ]
+            ].concat(<any>PollingAssert.createPollingAssert(() => {
+                Assert.ok(true, "waiting for response " + new Date().toISOString());
+                return (aiT6.successSpy.called || aiT6.errorSpy.called || aiT6.loggingSpy.called);
+            }, "Wait for response", 5, 1000))
+                .concat(() => {
+                    boilerPlateAsserts(aiT6);
+                })
         });
     }
 }

@@ -12,7 +12,9 @@
     localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
 
     // capture initial cookie
-    appInsights.cookie = localDocument.cookie;
+    try {
+        appInsights.cookie = localDocument.cookie;
+    } catch (e) {}
 
     appInsights.queue = [];
 
@@ -29,7 +31,7 @@
         }
     };
 
-    var method = ["Event", "Exception", "Metric", "PageView", "Trace", "Ajax"];
+    var method = ["Event", "Exception", "Metric", "PageView", "Trace", "Dependency"];
     while (method.length) {
         createLazyMethod("track" + method.pop());
     }

@@ -111,6 +111,10 @@ module Microsoft.ApplicationInsights {
         static BUFFER_KEY = "AI_buffer";
         static SENT_BUFFER_KEY = "AI_sentBuffer";
 
+        // Maximum number of payloads stored in the buffer. If the buffer is full, new elements will be dropped. 
+        static MAX_BUFFER_SIZE = 2000;
+        private _bufferFullMessageSent = false;
+
         // An in-memory copy of the buffer. A copy is saved to the session storage on enqueue() and clear(). 
         // The buffer is restored in a constructor and contains unsent events from a previous page.
         private _buffer: string[];
@@ -132,6 +136,17 @@ module Microsoft.ApplicationInsights {
         }
 
         public enqueue(payload: string) {
+            if (this._buffer.length >= SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
+                // sent internal log only once per page view
+                if (!this._bufferFullMessageSent) {
+                    _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING,
+                        new _InternalLogMessage(_InternalMessageId.USRACT_SessionStorageBufferFull,
+                            "Maximum buffer size reached: " + this._buffer.length));
+                    this._bufferFullMessageSent = true;
+                }
+                return;
+            }
+
             this._buffer.push(payload);
             this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
         }
@@ -144,6 +159,8 @@ module Microsoft.ApplicationInsights {
             this._buffer.length = 0;
             this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, []);
             this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
+
+            this._bufferFullMessageSent = false;
         }
 
         public getItems(): string[] {

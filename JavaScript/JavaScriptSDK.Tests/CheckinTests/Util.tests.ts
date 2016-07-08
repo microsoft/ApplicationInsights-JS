@@ -5,19 +5,19 @@ class UtilTests extends TestClass {
 
     public registerTests() {
         var Util = Microsoft.ApplicationInsights.Util;
-        
+
         this.testCase({
             name: "UtilTests: getStorage with available storage",
             test: () => {
                 var storage = this.getMockStorage();
-                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject", () => storage);
 
                 storage["test"] = "A";
 
                 Assert.equal("A", Util.getStorage("test"), "getStorage should return value of getItem for known keys");
                 Assert.equal(undefined, Util.getStorage("another"), "getStorage should return value of getItem for unknown keys");
 
-                
+
             }
         });
 
@@ -25,11 +25,11 @@ class UtilTests extends TestClass {
             name: "UtilTests: getStorage with no storage support",
             test: () => {
                 var storage = undefined;
-                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject", () => storage);
 
                 Assert.equal(null, Util.getStorage("test"), "getStorage should return null when storage is unavailable");
 
-                
+
             }
         });
 
@@ -37,11 +37,11 @@ class UtilTests extends TestClass {
             name: "UtilTests: setStorage with available storage",
             test: () => {
                 var storage = this.getMockStorage();
-                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject", () => storage);
 
-                Assert.ok(Util.setStorage("test","A"), "setStorage should return true if storage is available for writes");
+                Assert.ok(Util.setStorage("test", "A"), "setStorage should return true if storage is available for writes");
 
-                
+
             }
         });
 
@@ -49,11 +49,11 @@ class UtilTests extends TestClass {
             name: "UtilTests: setStorage with no storage support",
             test: () => {
                 var storage = undefined;
-                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject", () => storage);
 
                 Assert.ok(!Util.setStorage("test", "A"), "setStorage should return false if storage is unavailable for writes");
 
-                
+
             }
         });
 
@@ -61,14 +61,14 @@ class UtilTests extends TestClass {
             name: "UtilTests: removeStorage with available storage",
             test: () => {
                 var storage = this.getMockStorage();
-                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject", () => storage);
 
                 storage["test"] = "A";
 
                 Assert.ok(Util.removeStorage("test"), "removeStorage should return true if storage is available for writes");
                 Assert.deepEqual(undefined, storage["test"], "removeStorage should remove items from storage");
 
-                
+
             }
         });
 
@@ -76,14 +76,14 @@ class UtilTests extends TestClass {
             name: "UtilTests: removeStorage with no storage support",
             test: () => {
                 var storage = undefined;
-                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject",() => storage);
+                var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject", () => storage);
 
                 Assert.ok(!Util.removeStorage("test"), "removeStorage should return false if storage is unavailable for writes");
 
-                
+
             }
         });
-        
+
         this.testCase({
             name: "UtilTests: isArray",
             test: () => {
@@ -113,14 +113,14 @@ class UtilTests extends TestClass {
                 // mock cookies
                 ((document) => {
                     var cookies = {};
-                    document.__defineGetter__('cookie',() => {
+                    document.__defineGetter__('cookie', () => {
                         var output = [];
                         for (var cookieName in cookies) {
                             output.push(cookieName + "=" + cookies[cookieName]);
                         }
                         return output.join(";");
                     });
-                    document.__defineSetter__('cookie',(s) => {
+                    document.__defineSetter__('cookie', (s) => {
                         var indexOfSeparator = s.indexOf("=");
                         var key = s.substr(0, indexOfSeparator);
                         var value = s.substring(indexOfSeparator + 1);
@@ -170,6 +170,49 @@ class UtilTests extends TestClass {
                 } finally {
                     Util["document"] = document;
                 }
+            }
+        });
+
+        this.testCase({
+            name: "UtilTests: canUseCookies returns false if document.cookie is not available",
+            test: () => {
+                var oldDocument = Util["document"];
+                (<any>Util)._canUseCookies = undefined;
+
+                Util["document"] = <any>{
+                    cookie: undefined
+                };
+
+                Assert.equal(false, Util.canUseCookies(), "cookie are not available");
+
+                // restore document object
+                Util["document"] = oldDocument;
+                (<any>Util)._canUseCookies = undefined;
+            }
+        });
+
+        this.testCase({
+            name: "UtilTests: cannot set/get/delete cookies if document.cookie is not available",
+            test: () => {
+                var oldDocument = Util["document"];
+                (<any>Util)._canUseCookies = undefined;
+
+                Util["document"] = <any>{
+                    cookie: undefined
+                };
+
+                var name = "test";
+                Util.setCookie(name, "value");
+                Assert.equal(undefined, Util.getCookie(name), "cookies are not supported");
+
+                Util.deleteCookie(name);
+
+                Assert.equal(undefined, Util.getCookie(name), "cookies are not supported");
+
+                // restore document object
+                Util["document"] = oldDocument;
+                (<any>Util)._canUseCookies = undefined;
+
             }
         });
 
@@ -292,7 +335,7 @@ class UtilTests extends TestClass {
                 Assert.notEqual(-1, result.indexOf(jsonRepresentation));
             }
         });
-        
+
         this.testCase({
             name: "Util.addEventHandler should attach the callback for the given event name",
             test: () => {
@@ -302,7 +345,7 @@ class UtilTests extends TestClass {
                 customEvent.initEvent(eventName, true, true);
 
                 var isCallbackExecuted = false;
-                var callback = function(e) {
+                var callback = function (e) {
                     isCallbackExecuted = true;
                 };
 
@@ -362,7 +405,7 @@ class UtilTests extends TestClass {
         this.testCase({
             name: "getIE function should return null for non-IE user agent string and IE version for IE",
             test: () => {
-                
+
                 // Assert
                 Assert.equal(null, Util.getIEVersion("Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36"), "Should return null for non-IE");
                 Assert.equal(8, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 10.0; Win64; x64; Trident/7.0; .NET4.0C; .NET4.0E; .NET CLR 2.0.50727; .NET CLR 3.0.30729; .NET CLR 3.5.30729"), "Should return IE version for IE browser");

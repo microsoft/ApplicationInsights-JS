@@ -9,7 +9,7 @@ module Microsoft.ApplicationInsights {
             this.hashCodeGeneragor = new HashCodeScoreGenerator();
         }
 
-        public getSamplingScore(envelope: Microsoft.Telemetry.Envelope): number {
+        public getSamplingScore(envelope: Microsoft.ApplicationInsights.IEnvelope): number {
             var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
             var score: number = 0;
             if (envelope.tags[tagKeys.userId]) {

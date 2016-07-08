@@ -155,6 +155,23 @@ In the portal, you can search on message content and [display individual trackTr
 (Unlike `trackEvent`, you can't filter on the message content in the portal.)
 
 
+### trackDependency
+
+    trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
+    
+Log a dependency call (for instance: ajax)
+
+ | | 
+---|---|---
+`id` | Unique id, this is used by the backend o correlate server requests. Use `Util.newId()` to generate a unique Id.
+`method` | Represents request verb (GET, POST, etc.)
+`absoluteUrl` | Absolute url used to make the dependency request
+`pathName` | Path part of the absolute url
+`totalTime` | Total request time
+`success` | Indicates if the request was sessessful
+`resultCode` | Response code returned by the dependency request
+
+
 ### flush
 
     flush()
@@ -244,6 +261,10 @@ Values that control how the telemetry data is sent.
         
         // Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains.
         cookieDomain: string;
+        
+        // If true, the buffer with all unsent telemetry is stored in a session storage. The buffer is resotered on page load.
+        // The feature is enable by default starting with v0.23.0. 
+        enableSessionStorageBuffer: boolean;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.

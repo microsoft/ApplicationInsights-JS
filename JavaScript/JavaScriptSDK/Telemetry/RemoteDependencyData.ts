@@ -1,6 +1,7 @@
-﻿/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/PageViewData.ts" />
-/// <reference path="./Common/DataSanitizer.ts"/>
+﻿/// <reference path="../../JavaScriptSDK.Interfaces/Telemetry/ISerializable.ts" />
+/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/PageViewData.ts" />
 /// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/RemoteDependencyData.ts"/>
+/// <reference path="./Common/DataSanitizer.ts"/>
 
 module Microsoft.ApplicationInsights.Telemetry {
     "use strict";

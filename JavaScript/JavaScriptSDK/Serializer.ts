@@ -1,4 +1,5 @@
-﻿/// <reference path="logging.ts" />
+﻿/// <reference path="../JavaScriptSDK.Interfaces/Telemetry/ISerializable.ts" />
+/// <reference path="logging.ts" />
 /// <reference path="util.ts" />
 
 module Microsoft.ApplicationInsights {
@@ -9,15 +10,6 @@ module Microsoft.ApplicationInsights {
      * For instance: (Fieldtype.Required | FieldType.Array) will mark the field as required and indicate it's an array
      */
     export enum FieldType { Default = 0, Required = 1, Array = 2, Hidden = 4 };
-
-    export interface ISerializable {
-        /**
-         * The set of fields for a serializeable object. 
-         * This defines the serialization order and a value of true/false
-         * for each field defines whether the field is required or not.
-         */
-        aiDataContract: any;
-    }
 
     export class Serializer {
 

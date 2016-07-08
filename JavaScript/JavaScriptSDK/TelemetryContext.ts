@@ -70,7 +70,7 @@ module Microsoft.ApplicationInsights {
         /**
         * The array of telemetry initializers to call before sending each telemetry item.
         */
-        private telemetryInitializers: { (envelope: Telemetry.Common.Envelope): boolean; }[];
+        private telemetryInitializers: { (envelope: Microsoft.ApplicationInsights.IEnvelope): boolean; }[];
 
         /**
          * The session manager that manages session on the base of cookies.
@@ -99,7 +99,7 @@ module Microsoft.ApplicationInsights {
         * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
         * before telemetry item is pushed for sending and in the order they were added.
         */
-        public addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.Telemetry.Envelope) => boolean) {
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.ApplicationInsights.IEnvelope) => boolean) {
             this.telemetryInitializers = this.telemetryInitializers || [];
             this.telemetryInitializers.push(telemetryInitializer);
         }
@@ -107,7 +107,7 @@ module Microsoft.ApplicationInsights {
         /**
          * Use Sender.ts to send telemetry object to the endpoint
          */
-        public track(envelope: Microsoft.Telemetry.Envelope) {
+        public track(envelope: Microsoft.ApplicationInsights.IEnvelope) {
             if (!envelope) {
                 _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.USRACT_TrackArgumentsNotSpecified, "cannot call .track() with a null or undefined argument"));
             } else {
@@ -129,7 +129,7 @@ module Microsoft.ApplicationInsights {
             return envelope;
         }
 
-        private _track(envelope: Microsoft.Telemetry.Envelope) {
+        private _track(envelope: Microsoft.ApplicationInsights.IEnvelope) {
 
             if (this.session) {
                 // If customer set id, apply his context; otherwise apply context generated from cookies 
@@ -185,7 +185,7 @@ module Microsoft.ApplicationInsights {
             return envelope;
         }
 
-        private _applyApplicationContext(envelope: Microsoft.Telemetry.Envelope, appContext: Microsoft.ApplicationInsights.Context.Application) {
+        private _applyApplicationContext(envelope: Microsoft.ApplicationInsights.IEnvelope, appContext: Microsoft.ApplicationInsights.Context.Application) {
             if (appContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
 
@@ -198,7 +198,7 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        private _applyDeviceContext(envelope: Microsoft.Telemetry.Envelope, deviceContext: Microsoft.ApplicationInsights.Context.Device) {
+        private _applyDeviceContext(envelope: Microsoft.ApplicationInsights.IEnvelope, deviceContext: Microsoft.ApplicationInsights.Context.Device) {
             var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
 
             if (deviceContext) {
@@ -238,7 +238,7 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        private _applyInternalContext(envelope: Microsoft.Telemetry.Envelope, internalContext: Microsoft.ApplicationInsights.Context.Internal) {
+        private _applyInternalContext(envelope: Microsoft.ApplicationInsights.IEnvelope, internalContext: Microsoft.ApplicationInsights.Context.Internal) {
             if (internalContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
                 if (typeof internalContext.agentVersion === "string") {
@@ -250,7 +250,7 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        private _applyLocationContext(envelope: Microsoft.Telemetry.Envelope, locationContext: Microsoft.ApplicationInsights.Context.Location) {
+        private _applyLocationContext(envelope: Microsoft.ApplicationInsights.IEnvelope, locationContext: Microsoft.ApplicationInsights.Context.Location) {
             if (locationContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
                 if (typeof locationContext.ip === "string") {
@@ -259,7 +259,7 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        private _applyOperationContext(envelope: Microsoft.Telemetry.Envelope, operationContext: Microsoft.ApplicationInsights.Context.Operation) {
+        private _applyOperationContext(envelope: Microsoft.ApplicationInsights.IEnvelope, operationContext: Microsoft.ApplicationInsights.Context.Operation) {
             if (operationContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
                 if (typeof operationContext.id === "string") {
@@ -280,13 +280,13 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        private _applySampleContext(envelope: Microsoft.Telemetry.Envelope, sampleContext: Microsoft.ApplicationInsights.Context.Sample) {
+        private _applySampleContext(envelope: Microsoft.ApplicationInsights.IEnvelope, sampleContext: Microsoft.ApplicationInsights.Context.Sample) {
             if (sampleContext) {
                 envelope.sampleRate = sampleContext.sampleRate;
             }
         }
 
-        private _applySessionContext(envelope: Microsoft.Telemetry.Envelope, sessionContext: Microsoft.ApplicationInsights.Context.Session) {
+        private _applySessionContext(envelope: Microsoft.ApplicationInsights.IEnvelope, sessionContext: Microsoft.ApplicationInsights.Context.Session) {
             if (sessionContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
                 if (typeof sessionContext.id === "string") {
@@ -298,7 +298,7 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        private _applyUserContext(envelope: Microsoft.Telemetry.Envelope, userContext: Microsoft.ApplicationInsights.Context.User) {
+        private _applyUserContext(envelope: Microsoft.ApplicationInsights.IEnvelope, userContext: Microsoft.ApplicationInsights.Context.User) {
             if (userContext) {
                 var tagKeys: AI.ContextTagKeys = new AI.ContextTagKeys();
                 if (typeof userContext.accountId === "string") {

@@ -2,9 +2,6 @@
 
 [Application Insights](https://azure.microsoft.com/services/application-insights/) tells you about your app's performance and usage. By adding a few lines of code to your web pages, you get data about how many users you have, which pages are most popular, how fast pages load, whether they throw exceptions, and more. And you can add code to track more detailed user activity.
 
-## Try Application Insights with JavaScript SDK - no Azure subscription required
-If you don't have an Azure subscription and would like to try Application Insights on one of your own web pages, visit [Try Application Insights Now](http://aka.ms/ainow). 
-
 ## Get started
 
 To use this SDK, you'll need a subscription to [Microsoft Azure](https://azure.com). Application Insights has a free subscription option.
@@ -68,7 +65,7 @@ Use this approach if you would like to host AI JS SDK script on your endpoint or
 <!-- the snippet below assumes that JS SDK script has already loaded -->
 <script type="text/javascript" src="/pathToAIJSSDK.js"></script>   
 <script type="text/javascript">   
-    var snippet: any = {   
+    var snippet = {   
         config: {   
             instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"   
         }   
@@ -106,6 +103,8 @@ https://github.com/Microsoft/ApplicationInsights-JS/wiki
 ## Contributing
 
 We strongly welcome and encourage contributions to this project. Please read the [contributor's guide][ContribGuide] located in the ApplicationInsights-Home repository. If making a large change we request that you open an [issue][GitHubIssue] first. We follow the [Git Flow][GitFlow] approach to branching. 
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
 [ContribGuide]: https://github.com/Microsoft/ApplicationInsights-Home/blob/master/CONTRIBUTING.md
 [GitFlow]: http://nvie.com/posts/a-successful-git-branching-model/

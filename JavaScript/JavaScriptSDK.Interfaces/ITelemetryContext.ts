@@ -7,6 +7,7 @@
 /// <reference path="./Context/ISample.ts"/>
 /// <reference path="./Context/IUser.ts"/>
 /// <reference path="./Context/ISession.ts"/>
+/// <reference path="./Telemetry/IEnvelope.ts"/>
 
 module Microsoft.ApplicationInsights {
 
@@ -57,11 +58,11 @@ module Microsoft.ApplicationInsights {
         * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
         * before telemetry item is pushed for sending and in the order they were added.
         */
-        addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.Telemetry.Envelope) => boolean);
+        addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.ApplicationInsights.IEnvelope) => boolean);
 
          /**
          * Tracks telemetry object.
          */
-        track(envelope: Microsoft.Telemetry.Envelope);
+        track(envelope: Microsoft.ApplicationInsights.IEnvelope);
     }
 }
