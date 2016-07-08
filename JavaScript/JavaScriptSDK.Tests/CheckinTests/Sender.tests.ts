@@ -617,7 +617,7 @@ class SenderTests extends TestClass {
                     disableTelemetry: () => this.disableTelemetry,
                     enableSessionStorageBuffer: () => true
                 };
-                
+
                 // act
                 var sender = new Microsoft.ApplicationInsights.Sender(config);
 
@@ -629,7 +629,7 @@ class SenderTests extends TestClass {
         this.testCase({
             name: "SenderTests: does not use SessionStorageBuffer when enableSessionStorageBuffer is true and SessionStorage is not supported",
             test: () => {
-                var utilCanUserSession = Microsoft.ApplicationInsights.Util.canUseSessionStorage;    
+                var utilCanUserSession = Microsoft.ApplicationInsights.Util.canUseSessionStorage;
 
                 // setup
                 var config: Microsoft.ApplicationInsights.ISenderConfig = {
@@ -655,6 +655,52 @@ class SenderTests extends TestClass {
                 Microsoft.ApplicationInsights.Util.canUseSessionStorage = utilCanUserSession;
             }
         });
+
+        this.testCase({
+            name: "SenderTests: XMLHttpRequest sender can handle partial success errors. Non-retryable",
+            test: () => {
+                // setup
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    return xhr;
+                });
+
+                // act
+                var sender = this.getSender();
+
+                // verify
+                Assert.ok(sender, "sender was constructed");
+
+                // act
+                var data = new Microsoft.ApplicationInsights.Telemetry.Common.Data<string>('string', '[{ "payload" : "1" }, { "payload" : "2" }]');
+                var envelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(data, '');
+                sender.send(envelope);
+
+                // TODO: send buffer has two items
+                
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                // verify
+                requestAsserts();
+                this.fakeServer.requests.pop().respond(
+                    206,
+                    { "Content-Type": "application/json" },
+                    // backend rejected 1 out of 2 payloads. First payload was too old and should be dropped.
+                    { "itemsReceived": 2, "itemsAccepted": 1, "errors": [{ "index": 0, "statusCode": 400, "message": "103: Field 'time' on type 'Envelope' is older than the allowed min date. Expected: now - 172800000ms, Actual: now - 31622528281ms" }] }
+                );
+                successAsserts(sender);
+                logAsserts(0);
+                sender.successSpy.reset();
+                sender.errorSpy.reset();
+
+                // TODO: the buffer is empty
+            }
+        });
+
+        // TODO: retryable - two payloads out of three
+        // 
+
 
         this.testCase({
             name: "SenderTests: XDomain sender can handle partial success errors",
