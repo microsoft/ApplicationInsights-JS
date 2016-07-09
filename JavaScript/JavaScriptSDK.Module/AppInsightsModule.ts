@@ -88,6 +88,7 @@ class AppInsightsModule {
         if (!window[AppInsightsModule.appInsightsName]) {
             window[AppInsightsModule.appInsightsName] = {
                 downloadAndSetup: AppInsightsModule._download,
+                // exposing it for unit tests only, not part of interface
                 _defineLazyMethods: AppInsightsModule._defineLazyMethods
             };
             AppInsightsModule._defineLazyMethods();
