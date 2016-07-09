@@ -4,6 +4,32 @@ import {AppInsights} from "../../JavaScriptSDK.Module/AppInsightsModule"
 
 export default class AppInsightsModuleTests extends TestClass {
 
+    private static expectedMethods = [
+        "clearAuthenticatedUserContext",
+        "flush",
+        "setAuthenticatedUserContext",
+        "startTrackEvent",
+        "startTrackPage",
+        "stopTrackEvent",
+        "stopTrackPage",
+        "trackAjax",
+        "trackDependency",
+        "trackEvent",
+        "trackException",
+        "trackMetric",
+        "trackPageView",
+        "trackTrace"
+    ];
+
+    private static getUncachedScriptUrl() {
+        return "https://az416426.vo.msecnd.net/scripts/a/ai.0.js?s=" + (new Date()).getTime().toString();
+    }
+
+    public testInitialize() {
+        // this is a workaround to force re-initialized of imported variable
+        AppInsights["_defineLazyMethods"]();
+    }
+
     public registerTests() {
         this.useFakeTimers = false;
         this.testCaseAsync({
@@ -11,10 +37,9 @@ export default class AppInsightsModuleTests extends TestClass {
             steps: [
 
                 () => {
-                    Assert.ok(!AppInsights.queue, "Initially, queue should be undefined");
+                    Assert.ok(AppInsights.queue, "Queue should initially be defined");
                     // need to override the url, otherwise file:// is used for local test runs.
-                    AppInsights.downloadAndSetup({ instrumentationKey: "test", url: "http://az416426.vo.msecnd.net/scripts/a/ai.0.js" });
-                    Assert.ok(AppInsights.queue, "Queue should be defined after downloadAndSetup was called");
+                    AppInsights.downloadAndSetup({ instrumentationKey: "test", url: AppInsightsModuleTests.getUncachedScriptUrl()});
                 },
                 <() => void>
                 PollingAssert.createPollingAssert(
@@ -29,24 +54,8 @@ export default class AppInsightsModuleTests extends TestClass {
             name: "AppInsightsModuleTests: verify methods are registered",
             test: () => {
                 AppInsights.downloadAndSetup({ instrumentationKey: "test" });
-                var expectedMethods = [
-                    "clearAuthenticatedUserContext",
-                    "flush",
-                    "setAuthenticatedUserContext",
-                    "startTrackEvent",
-                    "startTrackPage",
-                    "stopTrackEvent",
-                    "stopTrackPage",
-                    "trackAjax",
-                    "trackEvent",
-                    "trackException",
-                    "trackMetric",
-                    "trackPageView",
-                    "trackTrace"
-                ];
-
-                for (var i = 0; i < expectedMethods.length; i++) {
-                    Assert.ok(AppInsights[expectedMethods[i]], expectedMethods[i] + " should be defined");
+                for (var i = 0; i < AppInsightsModuleTests.expectedMethods.length; i++) {
+                    Assert.ok(AppInsights[AppInsightsModuleTests.expectedMethods[i]], AppInsightsModuleTests.expectedMethods[i] + " should be defined");
                 }
             }
         });
@@ -56,7 +65,7 @@ export default class AppInsightsModuleTests extends TestClass {
             steps: [
 
                 () => {
-                    AppInsights.downloadAndSetup({ instrumentationKey: "test", url: "http://az416426.vo.msecnd.net/scripts/a/ai.0.js" });
+                    AppInsights.downloadAndSetup({ instrumentationKey: "test", url: AppInsightsModuleTests.getUncachedScriptUrl() });
                     AppInsights.queue.push(() => this["queueFlushed"] = true);
                     this["queueFlushed"] = false;
                 },
@@ -67,6 +76,27 @@ export default class AppInsightsModuleTests extends TestClass {
 
             ],
             stepDelay: 0
+        });
+
+        this.testCase({
+            name: "AppInsightsModuleTests: verify track* methods are defined before calling downloadAndSetup",
+            test: () => {             
+                for (var i = 0; i < AppInsightsModuleTests.expectedMethods.length; i++) {
+                    Assert.ok(AppInsights[AppInsightsModuleTests.expectedMethods[i]], AppInsightsModuleTests.expectedMethods[i] + " should be defined");
+                }
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsModuleTests: verify track* method calls called before downloadAndSetup end up in the queue",
+            test: () => {
+                AppInsights.trackTrace("");
+                AppInsights.trackEvent("");
+                AppInsights.trackTrace("");
+                Assert.equal(3, AppInsights.queue.length);
+                AppInsights.downloadAndSetup({ instrumentationKey: "test", url: AppInsightsModuleTests.getUncachedScriptUrl() });
+                Assert.equal(3, AppInsights.queue.length);
+            }
         });
     }
 }
