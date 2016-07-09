@@ -65,7 +65,7 @@ class AppInsightsModule {
         }
 
         var scriptElement = document.createElement("script");
-        scriptElement.src = aiConfig.url || "https://az416426.vo.msecnd.net/scripts/a/ai.0.js";
+        scriptElement.src = aiConfig.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js";
         document.head.appendChild(scriptElement);
 
         // collect global errors
