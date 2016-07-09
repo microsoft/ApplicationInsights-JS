@@ -18,7 +18,11 @@ define(["require", "exports"], function (require, exports) {
         ;
         AppInsightsModule._defineLazyMethods = function () {
             var aiObject = window[AppInsightsModule.appInsightsName];
-            aiObject.cookie = document.cookie;
+            try {
+                aiObject.cookie = document.cookie;
+            }
+            catch (e) {
+            }
             aiObject.queue = [];
             var method = [
                 "clearAuthenticatedUserContext",

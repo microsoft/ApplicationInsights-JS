@@ -29,8 +29,13 @@ class AppInsightsModule {
     private static _defineLazyMethods() {
         var aiObject = window[AppInsightsModule.appInsightsName];
 
-        // capture initial cookie
-        (<any>aiObject).cookie = document.cookie;
+        // capture initial cookie if possible
+        try {
+            (<any>aiObject).cookie = document.cookie;
+        }
+        catch(e){
+        }
+
         aiObject.queue = [];
 
         var method = [
