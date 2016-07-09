@@ -284,6 +284,46 @@ class SendBufferTests extends TestClass {
                 Assert.equal(0, sentBuffer.length, "There should be 0 items in the sent buffer");
             }
         });
+
+        this.testCase({
+            name: "SessionStorageSendBuffer: does not store more than 2000 elements",
+            test: () => {
+                var buffer = this.getSessionStorageSendBuffer();
+
+                for (var i = 0; i < 2000; i++) {
+                    buffer.enqueue("i=" + i);
+                }
+
+                Assert.equal(2000, buffer.count(), "Buffer has 100 elements");
+
+                buffer.enqueue("I don't fit!");
+
+                Assert.equal(2000, buffer.count(), "Buffer should not allow to enqueue 101th element");
+            }
+        });
+
+        this.testCase({
+            name: "SessionStorageSendBuffer: logs a warning if the buffer is full",
+            test: () => {
+                var buffer = this.getSessionStorageSendBuffer();
+
+                var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+
+                for (var i = 0; i < 2000; i++) {
+                    buffer.enqueue("i=" + i);
+                }
+
+                Assert.equal(2000, buffer.count(), "Buffer has 100 elements");
+
+                buffer.enqueue("I don't fit!");
+
+                Assert.ok(loggingSpy.calledOnce, "BufferFull warning logged to console");
+
+                buffer.enqueue("I don't fit!");
+
+                Assert.ok(loggingSpy.calledOnce, "BufferFull warning should be logged only once.");
+            }
+        });
     }
 
     private getBuffer(key: string): string[] {

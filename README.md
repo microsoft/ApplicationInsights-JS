@@ -65,7 +65,7 @@ Use this approach if you would like to host AI JS SDK script on your endpoint or
 <!-- the snippet below assumes that JS SDK script has already loaded -->
 <script type="text/javascript" src="/pathToAIJSSDK.js"></script>   
 <script type="text/javascript">   
-    var snippet: any = {   
+    var snippet = {   
         config: {   
             instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"   
         }   
