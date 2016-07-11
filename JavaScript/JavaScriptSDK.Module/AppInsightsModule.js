@@ -32,7 +32,6 @@ define(["require", "exports"], function (require, exports) {
                 "startTrackPage",
                 "stopTrackEvent",
                 "stopTrackPage",
-                "trackAjax",
                 "trackDependency",
                 "trackEvent",
                 "trackException",
