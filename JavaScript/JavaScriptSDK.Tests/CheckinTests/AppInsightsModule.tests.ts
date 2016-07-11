@@ -12,7 +12,6 @@ export default class AppInsightsModuleTests extends TestClass {
         "startTrackPage",
         "stopTrackEvent",
         "stopTrackPage",
-        "trackAjax",
         "trackDependency",
         "trackEvent",
         "trackException",
