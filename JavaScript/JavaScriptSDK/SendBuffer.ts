@@ -128,6 +128,10 @@ module Microsoft.ApplicationInsights {
 
             this._buffer = bufferItems.concat(notDeliveredItems);
 
+            if (this._buffer.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
+                this._buffer.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
+            }
+
             // update DataLossAnalyzer with the number of recovered items
             DataLossAnalyzer.itemsRestoredFromSessionBuffer = this._buffer.length;
 
