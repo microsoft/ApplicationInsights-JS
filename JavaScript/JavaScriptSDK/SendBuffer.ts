@@ -128,6 +128,7 @@ module Microsoft.ApplicationInsights {
 
             this._buffer = bufferItems.concat(notDeliveredItems);
 
+            // If the buffer has too many items, drop items from the end.
             if (this._buffer.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
                 this._buffer.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
             }
