@@ -247,7 +247,10 @@ module Microsoft.ApplicationInsights {
             var xdr = new XDomainRequest();
             xdr.onload = () => this._xdrOnLoad(xdr, payload);
             xdr.onerror = (event: ErrorEvent) => this._onError(payload, xdr.responseText || "", event);
-            xdr.open('POST', this._config.endpointUrl());
+
+            // AI is sending all telemetry with HTTPS, but XDomainRequest requires the same scheme as the hosting page
+            var endpointUrl = this._config.endpointUrl().replace(/^(https?:)/, "");
+            xdr.open('POST', endpointUrl);
 
             // compose an array of payloads
             var batch = this._buffer.batchPayloads(payload);
