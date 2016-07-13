@@ -1,4 +1,5 @@
 ﻿/// <reference path="..\TestFramework\Common.ts" />
+/// <reference path="../../JavaScriptSDK/Util.ts"/>
 /// <reference path="../../JavaScriptSDK/sender.ts" />
 /// <reference path="../../JavaScriptSDK/SendBuffer.ts"/>
 /// <reference path="../../javascriptsdk/appinsights.ts" />
@@ -43,7 +44,7 @@ class SenderTests extends TestClass {
             maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
             maxBatchInterval: () => this.maxBatchInterval,
             disableTelemetry: () => this.disableTelemetry,
-            enableSessionStorageBuffer: () => false
+            enableSessionStorageBuffer: () => true
         };
 
         this.getSender = () => {
@@ -64,6 +65,10 @@ class SenderTests extends TestClass {
     public testCleanup() {
         // reset enableDebugger to a default value
         Microsoft.ApplicationInsights._InternalLogging.enableDebugExceptions = () => false;
+
+        // clear session storage buffers
+        Microsoft.ApplicationInsights.Util.setSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.BUFFER_KEY, null);
+        Microsoft.ApplicationInsights.Util.setSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.SENT_BUFFER_KEY, null);
     }
 
     public registerTests() {
@@ -696,11 +701,21 @@ class SenderTests extends TestClass {
                 // the buffer is empty. 
                 Assert.equal(0, sender._buffer.count(), "Buffer is empty");
 
+                // session storage buffers are also empty
+                var buffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.BUFFER_KEY));
+                var sentBuffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.SENT_BUFFER_KEY));
+
+                Assert.equal(0, buffer.length, "Session storage buffer is empty");
+                Assert.equal(0, sentBuffer.length, "Session storage sent buffer is empty");
+
                 // clean up
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
             }
         });
+
+        // TODO: parial response and sent_buffer. 
+        // TODO: exponential backoff
 
         this.testCase({
             name: "SenderTests: XMLHttpRequest sender can handle partial success errors. Retryable",
@@ -759,21 +774,27 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.ok(sender.successSpy.called, "success was invoked");
 
-                logAsserts(1);
-                Assert.equal('AI (Internal): NONUSRACT_OnError message:"Failed to send telemetry." props:"{message:partial success 1 of 6}"', this.loggingSpy.args[0][0], "Expecting one warning message");
+                // no warning messages
+                logAsserts(0);
 
-                // the buffer has 5 items - payload 1-5, payload 0 was accepted by the backend. 
+                // the buffer has 5 items - payloads 1-5, payload 0 was accepted by the backend and should not be re-send
                 Assert.equal(5, sender._buffer.count(), "Buffer has 5 items to re");
 
                 Assert.equal('{"payload":5}', sender._buffer.getItems()[0], "Invalid item in the buffer");
                 Assert.equal('{"payload":1}', sender._buffer.getItems()[4], "Invalid item in the buffer");
+
+                // validate session storage buffers
+                var buffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.BUFFER_KEY));
+                var sentBuffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.SENT_BUFFER_KEY));
+
+                Assert.equal(5, buffer.length, "Session storage buffer has 5 items");
+                Assert.equal(0, sentBuffer.length, "Session storage sent buffer is empty");
 
                 // clean up
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
             }
         });
-
 
         this.testCase({
             name: "SenderTests: XDomain sender can handle partial success errors",
@@ -819,6 +840,104 @@ class SenderTests extends TestClass {
                 sender.errorSpy.reset();
             }
         });
+
+        this.testCase({
+            name: "SenderTests: ParseResponse - invalid number of errors",
+            test: () => {
+                // setup
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    return xhr;
+                });
+
+                var sender = this.getSender();
+                Assert.ok(sender, "sender was constructed");
+
+                // too many errors
+                var response = '{ "itemsReceived": 2, "itemsAccepted": 1, "errors": [{ "index": 0, "statusCode": 408, "message": "error" }, { "index": 2, "statusCode": 429, "message": "error" }] }';
+                var result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
+
+                Assert.ok(!result, "Parse should fail when there are too many errors");
+
+                // no errors
+                response = '{ "itemsReceived": 2, "itemsAccepted": 1, "errors": [] }';
+                result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
+
+                Assert.ok(!result, "Parse should fail - there should be one error");
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: ParseResponse - invalid number of accepted items",
+            test: () => {
+                // setup
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    return xhr;
+                });
+
+                var sender = this.getSender();
+                Assert.ok(sender, "sender was constructed");
+
+                // too many items accepted
+                var response = '{ "itemsReceived": 1, "itemsAccepted": 2, "errors": [] }';
+                var result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
+
+                Assert.ok(!result, "Parse should fail - there are too itemsAccepted > itemsReceived");
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: ParseResponse - invalid response",
+            test: () => {
+                // setup
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    return xhr;
+                });
+
+                var sender = this.getSender();
+                Assert.ok(sender, "sender was constructed");
+
+                var response = '{}';
+                var result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
+                Assert.ok(!result, "Parse should fail for an empty response");
+
+                response = '{ "itemsReceived": 1, "itemsAccepted": 2, "errors": [] }';
+                result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
+                Assert.ok(!result, "Parse should fail - itemsAccepted field missing");
+
+                response = '{ "itemsAccepted": 2, "errors": [] }';
+                result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
+                Assert.ok(!result, "Parse should fail - itemsReceived field missing");
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: ParseResponse - parse error logs a NONUSRACT_InvalidBackendResponse error",
+            test: () => {
+                // setup
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    return xhr;
+                });
+
+                var sender = this.getSender();
+                Assert.ok(sender, "sender was constructed");
+
+                var response = '{ "itemsReceived: }';
+                var result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
+                Assert.ok(!result, "Parse should fail");
+
+                logAsserts(1);
+                Assert.equal('AI (Internal): NONUSRACT_InvalidBackendResponse message:"Cannot parse the response.SyntaxError"', this.loggingSpy.args[0][0], "Expecting one warning message");
+            }
+        });
+
     }
 
     private setupDataLossAnaluzed() {

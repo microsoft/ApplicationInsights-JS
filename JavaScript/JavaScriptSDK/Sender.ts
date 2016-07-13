@@ -61,6 +61,29 @@ module Microsoft.ApplicationInsights {
         enableSessionStorageBuffer: () => boolean;
     }
 
+    export interface IResponseError {
+        index: number;
+        statusCode: number;
+        message: string;
+    }
+
+    export interface IBackendResponse {
+        /**
+         * Number of items received by the backend
+         */
+        itemsReceived: number;
+
+        /**
+         * Number of items succesfuly accepted by the backend
+         */
+        itemsAccepted: number;
+
+        /**
+         * List of errors for items which were not accepted
+         */
+        errors: IResponseError[];
+    }
+
     export class Sender {
         /**
          * How many times in a row a retryable error condition has occurred.
@@ -274,6 +297,31 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
+         * Parses the response from the backend. 
+         * @param response - XMLHttpRequest or XDomainRequest response
+         */
+        private _parseResponse(response: any): IBackendResponse {
+            try {
+                // TODO: check the results of the JSON.parse call and if there was an expected data object in the response.
+                var result = JSON.parse(response);
+
+                if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
+                    result.itemsReceived - result.itemsAccepted == result.errors.length) {
+                    return {
+                        itemsReceived: result.itemsReceived,
+                        itemsAccepted: result.itemsAccepted,
+                        errors: result.errors
+                    };
+                }
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_InvalidBackendResponse, "Cannot parse the response. " + Util.getExceptionName(e)));
+            }
+
+            return null;
+        }
+
+        /**
          * Send XMLHttpRequest
          * @param payload {string} - The data payload to be sent.
          * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
@@ -305,7 +353,10 @@ module Microsoft.ApplicationInsights {
             var xdr = new XDomainRequest();
             xdr.onload = () => this._xdrOnLoad(xdr, payload);
             xdr.onerror = (event: ErrorEvent) => this._onError(payload, xdr.responseText || "", event);
-            xdr.open('POST', this._config.endpointUrl());
+
+            // AI is sending all telemetry with HTTPS, but XDomainRequest requires the same scheme as the hosting page
+            var endpointUrl = this._config.endpointUrl().replace(/^(https?:)/, "");
+            xdr.open('POST', endpointUrl);
 
             // compose an array of payloads
             var batch = this._buffer.batchPayloads(payload);
@@ -323,8 +374,13 @@ module Microsoft.ApplicationInsights {
                     this._onError(payload, xhr.responseText || xhr.response || "");
                 } else {
                     if (xhr.status === 206) {
-                        // TODO: check the results of the JSON.parse call and if there was an expected data object in the response.
-                        this._onPartialSuccess(payload, JSON.parse(xhr.responseText || xhr.response));
+                        var response = this._parseResponse(xhr.responseText || xhr.response);
+
+                        if (response) {
+                            this._onPartialSuccess(payload, response);
+                        } else {
+                            this._onError(payload, xhr.responseText || xhr.response || "");
+                        }
                     } else {
                         this._consecutiveErrors = 0;
                         this._onSuccess(payload, countOfItemsInPayload);
@@ -341,12 +397,7 @@ module Microsoft.ApplicationInsights {
                 this._consecutiveErrors = 0;
                 this._onSuccess(payload, 0);
             } else {
-                var results = undefined;
-                try {
-                    results = JSON.parse(xdr.responseText);
-                } catch (e) {
-                    // TODO: Log something here?
-                }
+                var results = this._parseResponse(xdr.responseText);
 
                 if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted) {
                     this._onPartialSuccess(payload, results);
@@ -359,9 +410,9 @@ module Microsoft.ApplicationInsights {
         /**
          * partial success handler
          */
-        public _onPartialSuccess(payload: string[], results: any, retryAfterHeader?: string) {
+        public _onPartialSuccess(payload: string[], results: IBackendResponse, retryAfterHeader?: string) {
             var failed = [];
-            var retryableError = false;
+            var retry = [];
 
             // Iterate through the reversed array of errors so that splicing doesn't have invalid indexes after the first item.
             var errors = results.errors.reverse();
@@ -373,16 +424,26 @@ module Microsoft.ApplicationInsights {
                     || error.statusCode == 500 // Internal server error.
                     || error.statusCode == 503 // Service unavailable.
                 ) {
-                    retryableError = true;
-                    this._buffer.enqueue(extracted);
+                    retry.push(extracted);
                 } else {
                     failed.push(extracted);
                 }
             }
 
-            this._onSuccess(payload, results.itemsAccepted);
-            this._onError(failed, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' '));
-            if (retryableError) {
+            if (payload.length > 0) {
+                this._onSuccess(payload, results.itemsAccepted);
+            }
+
+            if (failed.length > 0) {
+                this._onError(failed, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' '));
+            }
+
+            if (retry.length > 0) {
+                for (var item of retry) {
+                    this._buffer.enqueue(item);
+                }
+
+                this._buffer.clearSent(retry);
                 this._consecutiveErrors++;
             }
 

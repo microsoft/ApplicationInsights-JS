@@ -227,7 +227,7 @@ Values that control how the telemetry data is sent.
         // Default 200k
         maxPayloadSizeInBytes: number; 
         
-        //Default 100k
+        // Default 100k
         maxBatchSizeInBytes: number;
         
         // Default 15s
@@ -239,9 +239,10 @@ Values that control how the telemetry data is sent.
         // If true, telemetry data is not collected or sent. Default false.
         disableTelemetry: boolean; 
         
+        // Default false
         verboseLogging: boolean;
         
-        // Default 10s:
+        // Default 10s
         diagnosticLogInterval: number;
         
         // If true, exceptions are not monitored. 
@@ -262,9 +263,16 @@ Values that control how the telemetry data is sent.
         // Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains.
         cookieDomain: string;
         
+        // Default false. If true, flush method will not be called when onBeforeUnload event triggers.
+        disableFlushOnBeforeUnload: boolean;
+
         // If true, the buffer with all unsent telemetry is stored in a session storage. The buffer is resotered on page load.
         // The feature is enable by default starting with v0.23.0. 
         enableSessionStorageBuffer: boolean;
+
+        // The url from where the JS SDK will be downloaded. 
+        // Default '//az416426.vo.msecnd.net/scripts/a/ai.0.js'
+        url: string;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.

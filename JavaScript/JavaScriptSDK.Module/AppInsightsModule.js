@@ -6,7 +6,7 @@ define(["require", "exports"], function (require, exports) {
         function AppInsightsModule() {
         }
         AppInsightsModule._createLazyMethod = function (name) {
-            var aiObject = AppInsightsModule.appInsightsInstance;
+            var aiObject = window[AppInsightsModule.appInsightsName];
             // Define a temporary method that queues-up a the real method call
             aiObject[name] = function () {
                 // Capture the original arguments passed to the method
@@ -22,14 +22,14 @@ define(["require", "exports"], function (require, exports) {
             };
         };
         ;
-        AppInsightsModule._download = function (aiConfig) {
-            AppInsightsModule.appInsightsInstance.config = aiConfig;
-            var scriptElement = document.createElement("script");
-            scriptElement.src = aiConfig.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js";
-            document.head.appendChild(scriptElement);
-            var aiObject = AppInsightsModule.appInsightsInstance;
-            // capture initial cookie
-            aiObject.cookie = document.cookie;
+        AppInsightsModule._defineLazyMethods = function () {
+            var aiObject = window[AppInsightsModule.appInsightsName];
+            // capture initial cookie if possible
+            try {
+                aiObject.cookie = document.cookie;
+            }
+            catch (e) {
+            }
             aiObject.queue = [];
             var method = [
                 "clearAuthenticatedUserContext",
@@ -39,7 +39,7 @@ define(["require", "exports"], function (require, exports) {
                 "startTrackPage",
                 "stopTrackEvent",
                 "stopTrackPage",
-                "trackAjax",
+                "trackDependency",
                 "trackEvent",
                 "trackException",
                 "trackMetric",
@@ -49,6 +49,17 @@ define(["require", "exports"], function (require, exports) {
             while (method.length) {
                 AppInsightsModule._createLazyMethod(method.pop());
             }
+        };
+        AppInsightsModule._download = function (aiConfig) {
+            AppInsightsModule.appInsightsInstance.config = aiConfig;
+            var aiObject = window[AppInsightsModule.appInsightsName];
+            // if script was previously downloaded and initialized, queue will be deleted, reinitialize it
+            if (!aiObject.queue) {
+                aiObject.queue = [];
+            }
+            var scriptElement = document.createElement("script");
+            scriptElement.src = aiConfig.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js";
+            document.head.appendChild(scriptElement);
             // collect global errors
             if (!aiConfig.disableExceptionTracking) {
                 AppInsightsModule._createLazyMethod("_onerror");
@@ -66,8 +77,11 @@ define(["require", "exports"], function (require, exports) {
             get: function () {
                 if (!window[AppInsightsModule.appInsightsName]) {
                     window[AppInsightsModule.appInsightsName] = {
-                        downloadAndSetup: AppInsightsModule._download
+                        downloadAndSetup: AppInsightsModule._download,
+                        // exposing it for unit tests only, not part of interface
+                        _defineLazyMethods: AppInsightsModule._defineLazyMethods
                     };
+                    AppInsightsModule._defineLazyMethods();
                 }
                 return window[AppInsightsModule.appInsightsName];
             },
