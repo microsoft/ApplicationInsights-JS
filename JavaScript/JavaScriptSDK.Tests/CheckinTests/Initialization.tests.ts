@@ -84,7 +84,7 @@ class InitializationTests extends TestClass {
 
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
 
-                Assert.equal("//dc.services.visualstudio.com/v2/track", init.config.endpointUrl);
+                Assert.equal("https://dc.services.visualstudio.com/v2/track", init.config.endpointUrl);
                 Assert.equal(30 * 60 * 1000, init.config.sessionRenewalMs);
                 Assert.equal(24 * 60 * 60 * 1000, init.config.sessionExpirationMs);
                 Assert.equal(1000000, init.config.maxBatchSizeInBytes);
