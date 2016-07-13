@@ -9,7 +9,7 @@ class AppInsightsModule {
     private static appInsightsName = "appInsights";
 
     private static _createLazyMethod(name) {
-        var aiObject = AppInsightsModule.appInsightsInstance;
+        var aiObject = window[AppInsightsModule.appInsightsName];
 
         // Define a temporary method that queues-up a the real method call
         aiObject[name] = function () {
@@ -26,17 +26,16 @@ class AppInsightsModule {
         }
     };
 
-    private static _download(aiConfig: Microsoft.ApplicationInsights.IConfig) {
-        AppInsightsModule.appInsightsInstance.config = aiConfig;
+    private static _defineLazyMethods() {
+        var aiObject = window[AppInsightsModule.appInsightsName];
 
-        var scriptElement = document.createElement("script");
-        scriptElement.src = aiConfig.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js";
-        document.head.appendChild(scriptElement);
+        // capture initial cookie if possible
+        try {
+            (<any>aiObject).cookie = document.cookie;
+        }
+        catch(e){
+        }
 
-        var aiObject = AppInsightsModule.appInsightsInstance;
-
-        // capture initial cookie
-        (<any>aiObject).cookie = document.cookie;
         aiObject.queue = [];
 
         var method = [
@@ -47,7 +46,7 @@ class AppInsightsModule {
             "startTrackPage",
             "stopTrackEvent",
             "stopTrackPage",
-            "trackAjax",
+            "trackDependency",
             "trackEvent",
             "trackException",
             "trackMetric",
@@ -58,6 +57,20 @@ class AppInsightsModule {
         while (method.length) {
             AppInsightsModule._createLazyMethod(method.pop());
         }
+    }
+
+    private static _download(aiConfig: Microsoft.ApplicationInsights.IConfig) {
+        AppInsightsModule.appInsightsInstance.config = aiConfig;
+        var aiObject = window[AppInsightsModule.appInsightsName];
+
+        // if script was previously downloaded and initialized, queue will be deleted, reinitialize it
+        if (!aiObject.queue) {
+            aiObject.queue = [];
+        }
+
+        var scriptElement = document.createElement("script");
+        scriptElement.src = aiConfig.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js";
+        document.head.appendChild(scriptElement);
 
         // collect global errors
         if (!aiConfig.disableExceptionTracking) {
@@ -72,13 +85,17 @@ class AppInsightsModule {
                 return handled;
             };
         }
+
     }
 
     public static get appInsightsInstance(): Microsoft.ApplicationInsights.IAppInsights {
         if (!window[AppInsightsModule.appInsightsName]) {
             window[AppInsightsModule.appInsightsName] = {
-                downloadAndSetup: AppInsightsModule._download
+                downloadAndSetup: AppInsightsModule._download,
+                // exposing it for unit tests only, not part of interface
+                _defineLazyMethods: AppInsightsModule._defineLazyMethods
             };
+            AppInsightsModule._defineLazyMethods();
         }
         return window[AppInsightsModule.appInsightsName];
     }

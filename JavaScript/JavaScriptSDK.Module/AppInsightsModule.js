@@ -1,35 +1,28 @@
-/// <reference path="../JavaScriptSDK.Interfaces/IConfig.ts"/>
-/// <reference path="../JavaScriptSDK.Interfaces/IAppInsights.ts"/>
 define(["require", "exports"], function (require, exports) {
     "use strict";
     var AppInsightsModule = (function () {
         function AppInsightsModule() {
         }
         AppInsightsModule._createLazyMethod = function (name) {
-            var aiObject = AppInsightsModule.appInsightsInstance;
-            // Define a temporary method that queues-up a the real method call
+            var aiObject = window[AppInsightsModule.appInsightsName];
             aiObject[name] = function () {
-                // Capture the original arguments passed to the method
                 var originalArguments = arguments;
-                // If the queue is available, it means that the function wasn't yet replaced with actual function value
                 if (aiObject.queue) {
                     aiObject.queue.push(function () { return aiObject[name].apply(aiObject, originalArguments); });
                 }
                 else {
-                    // otheriwse execute the function
                     aiObject[name].apply(aiObject, originalArguments);
                 }
             };
         };
         ;
-        AppInsightsModule._download = function (aiConfig) {
-            AppInsightsModule.appInsightsInstance.config = aiConfig;
-            var scriptElement = document.createElement("script");
-            scriptElement.src = aiConfig.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js";
-            document.head.appendChild(scriptElement);
-            var aiObject = AppInsightsModule.appInsightsInstance;
-            // capture initial cookie
-            aiObject.cookie = document.cookie;
+        AppInsightsModule._defineLazyMethods = function () {
+            var aiObject = window[AppInsightsModule.appInsightsName];
+            try {
+                aiObject.cookie = document.cookie;
+            }
+            catch (e) {
+            }
             aiObject.queue = [];
             var method = [
                 "clearAuthenticatedUserContext",
@@ -39,7 +32,7 @@ define(["require", "exports"], function (require, exports) {
                 "startTrackPage",
                 "stopTrackEvent",
                 "stopTrackPage",
-                "trackAjax",
+                "trackDependency",
                 "trackEvent",
                 "trackException",
                 "trackMetric",
@@ -49,7 +42,16 @@ define(["require", "exports"], function (require, exports) {
             while (method.length) {
                 AppInsightsModule._createLazyMethod(method.pop());
             }
-            // collect global errors
+        };
+        AppInsightsModule._download = function (aiConfig) {
+            AppInsightsModule.appInsightsInstance.config = aiConfig;
+            var aiObject = window[AppInsightsModule.appInsightsName];
+            if (!aiObject.queue) {
+                aiObject.queue = [];
+            }
+            var scriptElement = document.createElement("script");
+            scriptElement.src = aiConfig.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js";
+            document.head.appendChild(scriptElement);
             if (!aiConfig.disableExceptionTracking) {
                 AppInsightsModule._createLazyMethod("_onerror");
                 var originalOnError = window["_onerror"];
@@ -66,8 +68,10 @@ define(["require", "exports"], function (require, exports) {
             get: function () {
                 if (!window[AppInsightsModule.appInsightsName]) {
                     window[AppInsightsModule.appInsightsName] = {
-                        downloadAndSetup: AppInsightsModule._download
+                        downloadAndSetup: AppInsightsModule._download,
+                        _defineLazyMethods: AppInsightsModule._defineLazyMethods
                     };
+                    AppInsightsModule._defineLazyMethods();
                 }
                 return window[AppInsightsModule.appInsightsName];
             },
@@ -80,4 +84,3 @@ define(["require", "exports"], function (require, exports) {
     }());
     exports.AppInsights = AppInsightsModule.appInsightsInstance;
 });
-//# sourceMappingURL=AppInsightsModule.js.map
