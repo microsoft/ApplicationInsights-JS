@@ -100,7 +100,7 @@ module Microsoft.ApplicationInsights {
         }
 
         public clearSent(payload: string[]) {
-            this.clear();
+            // not supported
         }
     }
 

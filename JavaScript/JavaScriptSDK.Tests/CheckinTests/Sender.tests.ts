@@ -666,40 +666,113 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                // act
                 var sender = this.getSender();
-
-                // verify
                 Assert.ok(sender, "sender was constructed");
 
-                // act
-                var data = new Microsoft.ApplicationInsights.Telemetry.Common.Data<string>('string', '[{ "payload" : "1" }, { "payload" : "2" }]');
-                var envelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(data, '');
-                sender.send(envelope);
+                // send two items
+                this.fakeServer.requests.pop();
+                sender.send(this.testTelemetry);
+                sender.send(this.testTelemetry);
 
-                // TODO: send buffer has two items
-                
+                Assert.equal(2, sender._buffer.count(), "Buffer has two items");
+
+                // trigger send
                 this.clock.tick(sender._config.maxBatchInterval());
 
-                // verify
                 requestAsserts();
                 this.fakeServer.requests.pop().respond(
                     206,
                     { "Content-Type": "application/json" },
-                    // backend rejected 1 out of 2 payloads. First payload was too old and should be dropped.
-                    { "itemsReceived": 2, "itemsAccepted": 1, "errors": [{ "index": 0, "statusCode": 400, "message": "103: Field 'time' on type 'Envelope' is older than the allowed min date. Expected: now - 172800000ms, Actual: now - 31622528281ms" }] }
+                    // backend rejected 1 out of 2 payloads. First payload was too old and should be dropped (non-retryable).
+                    '{ "itemsReceived": 2, "itemsAccepted": 1, "errors": [{ "index": 0, "statusCode": 400, "message": "103: Field time on type Envelope is older than the allowed min date. Expected: now - 172800000ms, Actual: now - 31622528281ms" }] }'
                 );
-                successAsserts(sender);
-                logAsserts(0);
+
+                // verify
+                Assert.ok(sender.successSpy.called, "success was invoked");
+
+                logAsserts(1);
+                Assert.equal('AI (Internal): NONUSRACT_OnError message:"Failed to send telemetry." props:"{message:partial success 1 of 2}"', this.loggingSpy.args[0][0], "Expecting one warning message");
+
+                // the buffer is empty. 
+                Assert.equal(0, sender._buffer.count(), "Buffer is empty");
+
+                // clean up
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
-
-                // TODO: the buffer is empty
             }
         });
 
-        // TODO: retryable - two payloads out of three
-        // 
+        this.testCase({
+            name: "SenderTests: XMLHttpRequest sender can handle partial success errors. Retryable",
+            test: () => {
+                // setup
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    return xhr;
+                });
+
+                var sender = this.getSender();
+                Assert.ok(sender, "sender was constructed");
+
+                // send six items
+                this.fakeServer.requests.pop();
+
+                for (var i = 0; i < 6; i++) {
+                    var payload = {
+                        aiDataContract: {
+                            payload: 0
+                        },
+                        ver: 0,
+                        name: null,
+                        time: null,
+                        sampleRate: null,
+                        seq: null,
+                        iKey: null,
+                        flags: null,
+                        deviceId: null,
+                        os: null,
+                        osVer: null,
+                        appId: null,
+                        appVer: null,
+                        userId: null,
+                        tags: null,
+                        payload: i
+                    };
+
+                    sender.send(payload);
+                }
+
+                Assert.equal(6, sender._buffer.count(), "Buffer has six items");
+
+                // trigger send
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                requestAsserts();
+                this.fakeServer.requests.pop().respond(
+                    206,
+                    { "Content-Type": "application/json" },
+                    // backend rejected 5 out of 6 payloads. Rejected payloads response codes: 408, 429, 439, 500, 503 (all retryable)
+                    '{ "itemsReceived": 6, "itemsAccepted": 1, "errors": [{ "index": 1, "statusCode": 408, "message": "error" }, { "index": 2, "statusCode": 429, "message": "error" }, { "index": 3, "statusCode": 439, "message": "error" }, { "index": 4, "statusCode": 500, "message": "error" }, { "index": 5, "statusCode": 503, "message": "error" }] }'
+                );
+
+                // verify
+                Assert.ok(sender.successSpy.called, "success was invoked");
+
+                logAsserts(1);
+                Assert.equal('AI (Internal): NONUSRACT_OnError message:"Failed to send telemetry." props:"{message:partial success 1 of 6}"', this.loggingSpy.args[0][0], "Expecting one warning message");
+
+                // the buffer has 5 items - payload 1-5, payload 0 was accepted by the backend. 
+                Assert.equal(5, sender._buffer.count(), "Buffer has 5 items to re");
+
+                Assert.equal('{"payload":5}', sender._buffer.getItems()[0], "Invalid item in the buffer");
+                Assert.equal('{"payload":1}', sender._buffer.getItems()[4], "Invalid item in the buffer");
+
+                // clean up
+                sender.successSpy.reset();
+                sender.errorSpy.reset();
+            }
+        });
 
 
         this.testCase({

@@ -381,7 +381,7 @@ module Microsoft.ApplicationInsights {
             }
 
             this._onSuccess(payload, results.itemsAccepted);
-            this._onError(failed, ['partial success', results.itemsReceived, 'of', results.itemsAccepted].join(' '));
+            this._onError(failed, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' '));
             if (retryableError) {
                 this._consecutiveErrors++;
             }
@@ -397,7 +397,6 @@ module Microsoft.ApplicationInsights {
             _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
                 new _InternalLogMessage(_InternalMessageId.NONUSRACT_OnError, "Failed to send telemetry.", { message: message }));
 
-            // TODO: add error handling
             this._buffer.clearSent(payload);
         }
 
