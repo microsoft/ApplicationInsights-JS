@@ -46,7 +46,6 @@ class AppInsightsModule {
             "startTrackPage",
             "stopTrackEvent",
             "stopTrackPage",
-            "trackAjax",
             "trackDependency",
             "trackEvent",
             "trackException",
