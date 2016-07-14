@@ -71,33 +71,33 @@ class SenderTests extends TestClass {
         Microsoft.ApplicationInsights.Util.setSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.SENT_BUFFER_KEY, null);
     }
 
-    public registerTests() {
+    private requestAsserts() {
+        Assert.ok(this.fakeServer.requests.length > 0, "request was sent");
+        var method = this.fakeServer.getHTTPMethod(this.fakeServer.requests[0]);
+        Assert.equal("POST", method, "requets method is 'POST'");
+    };
 
-        var requestAsserts = () => {
-            Assert.ok(this.fakeServer.requests.length > 0, "request was sent");
-            var method = this.fakeServer.getHTTPMethod(this.fakeServer.requests[0]);
-            Assert.equal("POST", method, "requets method is 'POST'");
-        }
-
-        var logAsserts = (expectedCount) => {
-            var isValidCallCount = this.loggingSpy.callCount === expectedCount;
-            Assert.ok(isValidCallCount, "logging spy was called " + expectedCount + " time(s)");
-            if (!isValidCallCount) {
-                for (var i = 0; i < this.loggingSpy.args.length; i++) {
-                    Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args[i]);
-                }
+    private logAsserts(expectedCount) {
+        var isValidCallCount = this.loggingSpy.callCount === expectedCount;
+        Assert.ok(isValidCallCount, "logging spy was called " + expectedCount + " time(s)");
+        if (!isValidCallCount) {
+            for (var i = 0; i < this.loggingSpy.args.length; i++) {
+                Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args[i]);
             }
         }
+    }
 
-        var successAsserts = (sender: any) => {
-            Assert.ok(sender.successSpy.called, "success was invoked");
-            Assert.ok(sender.errorSpy.notCalled, "no error");
-        }
+    private successAsserts(sender: any) {
+        Assert.ok(sender.successSpy.called, "success was invoked");
+        Assert.ok(sender.errorSpy.notCalled, "no error");
+    }
 
-        var errorAsserts = (sender: any) => {
-            Assert.ok(sender.errorSpy.called, "error was invoked");
-            Assert.ok(sender.successSpy.notCalled, "success was not invoked");
-        }
+    private errorAsserts(sender: any) {
+        Assert.ok(sender.errorSpy.called, "error was invoked");
+        Assert.ok(sender.successSpy.notCalled, "success was not invoked");
+    }
+
+    public registerTests() {
 
         this.testCase({
             name: "SenderTests: uninitialized sender throws a warning when invoked",
@@ -112,7 +112,7 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.ok(sender.successSpy.notCalled, "success handler was not invoked");
                 Assert.ok(sender.errorSpy.notCalled, "error handler was not invoked");
-                logAsserts(1);
+                this.logAsserts(1);
             }
         });
 
@@ -133,7 +133,7 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.ok(sender.successSpy.notCalled, "success handler was not invoked");
                 Assert.ok(sender.errorSpy.notCalled, "error handler was not invoked");
-                logAsserts(1);
+                this.logAsserts(1);
             }
         });
 
@@ -159,10 +159,10 @@ class SenderTests extends TestClass {
                 this.clock.tick(sender._config.maxBatchInterval());
 
                 // verify
-                requestAsserts();
+                this.requestAsserts();
                 this.fakeServer.requests.pop().respond(200, { "Content-Type": "application/json" }, '{"test":"success"}"');
-                successAsserts(sender);
-                logAsserts(0);
+                this.successAsserts(sender);
+                this.logAsserts(0);
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
 
@@ -172,10 +172,10 @@ class SenderTests extends TestClass {
                 this.clock.tick(sender._config.maxBatchInterval());
 
                 // verify
-                requestAsserts();
+                this.requestAsserts();
                 this.fakeServer.requests.pop().respond(404, { "Content-Type": "application/json" }, '{"test":"not found"}"');
-                errorAsserts(sender);
-                logAsserts(1);
+                this.errorAsserts(sender);
+                this.logAsserts(1);
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
             }
@@ -211,10 +211,10 @@ class SenderTests extends TestClass {
                 this.clock.tick(sender._config.maxBatchInterval());
 
                 // verify
-                requestAsserts();
+                this.requestAsserts();
                 this.fakeServer.requests[0].respond(200, { "Content-Type": "application/json" }, '200');
-                successAsserts(sender);
-                logAsserts(0);
+                this.successAsserts(sender);
+                this.logAsserts(0);
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
 
@@ -224,10 +224,10 @@ class SenderTests extends TestClass {
                 this.clock.tick(sender._config.maxBatchInterval());
 
                 // verify
-                requestAsserts();
+                this.requestAsserts();
                 this.fakeServer.requests[0].respond(404, { "Content-Type": "application/json" }, '400');
-                errorAsserts(sender);
-                logAsserts(1);
+                this.errorAsserts(sender);
+                this.logAsserts(1);
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
             }
@@ -251,7 +251,7 @@ class SenderTests extends TestClass {
                 xhr.onerror();
 
                 // verify
-                errorAsserts(sender);
+                this.errorAsserts(sender);
                 sender.errorSpy.reset();
 
                 // setup
@@ -270,7 +270,7 @@ class SenderTests extends TestClass {
                 xdr.onerror();
 
                 // verify
-                errorAsserts(sender);
+                this.errorAsserts(sender);
                 sender.errorSpy.reset();
             }
         });
@@ -299,7 +299,7 @@ class SenderTests extends TestClass {
 
                 // verify
                 Assert.ok(senderSpy.calledOnce, "sender was invoked a second time after maxInterval elapsed");
-                logAsserts(0);
+                this.logAsserts(0);
 
                 // act (make sure nothing more is sent when max interval is reached)
                 senderSpy.reset();
@@ -307,7 +307,7 @@ class SenderTests extends TestClass {
 
                 // verify
                 Assert.ok(senderSpy.notCalled, "sender was not invoked a third time after maxInterval elapsed");
-                logAsserts(0);
+                this.logAsserts(0);
 
 
             }
@@ -332,7 +332,7 @@ class SenderTests extends TestClass {
 
                 // verify
                 Assert.ok(senderSpy.calledOnce, "sender was invoked");
-                logAsserts(0);
+                this.logAsserts(0);
             }
         });
 
@@ -354,7 +354,7 @@ class SenderTests extends TestClass {
 
                 // verify
                 Assert.ok(senderSpy.calledTwice, "sender was invoked twice");
-                logAsserts(0);
+                this.logAsserts(0);
                 sender._buffer.clear();
 
                 // act (fill buffer, trigger send, refill buffer, wait)
@@ -370,7 +370,7 @@ class SenderTests extends TestClass {
 
                 // verify
                 Assert.ok(senderSpy.calledTwice, "sender was invoked twice");
-                logAsserts(0);
+                this.logAsserts(0);
 
 
             }
@@ -384,7 +384,7 @@ class SenderTests extends TestClass {
 
                 // verify
                 Assert.ok(!sender._config.disableTelemetry(), "default value for disable tracking is false");
-                logAsserts(0);
+                this.logAsserts(0);
             }
         });
 
@@ -403,7 +403,7 @@ class SenderTests extends TestClass {
 
                 // verify
                 Assert.ok(senderSpy.notCalled, "sender was not called");
-                logAsserts(0);
+                this.logAsserts(0);
 
 
             }
@@ -425,7 +425,7 @@ class SenderTests extends TestClass {
 
                 // verify
                 Assert.ok(senderSpy.notCalled, "sender was not called");
-                logAsserts(0);
+                this.logAsserts(0);
 
 
             }
@@ -671,50 +671,10 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                var sender = this.getSender();
-                Assert.ok(sender, "sender was constructed");
-
-                // send two items
-                this.fakeServer.requests.pop();
-                sender.send(this.testTelemetry);
-                sender.send(this.testTelemetry);
-
-                Assert.equal(2, sender._buffer.count(), "Buffer has two items");
-
-                // trigger send
-                this.clock.tick(sender._config.maxBatchInterval());
-
-                requestAsserts();
-                this.fakeServer.requests.pop().respond(
-                    206,
-                    { "Content-Type": "application/json" },
-                    // backend rejected 1 out of 2 payloads. First payload was too old and should be dropped (non-retryable).
-                    '{ "itemsReceived": 2, "itemsAccepted": 1, "errors": [{ "index": 0, "statusCode": 400, "message": "103: Field time on type Envelope is older than the allowed min date. Expected: now - 172800000ms, Actual: now - 31622528281ms" }] }'
-                );
-
-                // verify
-                Assert.ok(sender.successSpy.called, "success was invoked");
-
-                logAsserts(1);
-                Assert.equal('AI (Internal): NONUSRACT_OnError message:"Failed to send telemetry." props:"{message:partial success 1 of 2}"', this.loggingSpy.args[0][0], "Expecting one warning message");
-
-                // the buffer is empty. 
-                Assert.equal(0, sender._buffer.count(), "Buffer is empty");
-
-                // session storage buffers are also empty
-                var buffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.BUFFER_KEY));
-                var sentBuffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.SENT_BUFFER_KEY));
-
-                Assert.equal(0, buffer.length, "Session storage buffer is empty");
-                Assert.equal(0, sentBuffer.length, "Session storage sent buffer is empty");
-
-                // clean up
-                sender.successSpy.reset();
-                sender.errorSpy.reset();
+                this.validatePartialSuccess_NonRetryable();
             }
         });
 
-        // TODO: parial response and sent_buffer. 
         // TODO: exponential backoff
 
         this.testCase({
@@ -727,77 +687,12 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                var sender = this.getSender();
-                Assert.ok(sender, "sender was constructed");
-
-                // send six items
-                this.fakeServer.requests.pop();
-
-                for (var i = 0; i < 6; i++) {
-                    var payload = {
-                        aiDataContract: {
-                            payload: 0
-                        },
-                        ver: 0,
-                        name: null,
-                        time: null,
-                        sampleRate: null,
-                        seq: null,
-                        iKey: null,
-                        flags: null,
-                        deviceId: null,
-                        os: null,
-                        osVer: null,
-                        appId: null,
-                        appVer: null,
-                        userId: null,
-                        tags: null,
-                        payload: i
-                    };
-
-                    sender.send(payload);
-                }
-
-                Assert.equal(6, sender._buffer.count(), "Buffer has six items");
-
-                // trigger send
-                this.clock.tick(sender._config.maxBatchInterval());
-
-                requestAsserts();
-                this.fakeServer.requests.pop().respond(
-                    206,
-                    { "Content-Type": "application/json" },
-                    // backend rejected 5 out of 6 payloads. Rejected payloads response codes: 408, 429, 439, 500, 503 (all retryable)
-                    '{ "itemsReceived": 6, "itemsAccepted": 1, "errors": [{ "index": 1, "statusCode": 408, "message": "error" }, { "index": 2, "statusCode": 429, "message": "error" }, { "index": 3, "statusCode": 439, "message": "error" }, { "index": 4, "statusCode": 500, "message": "error" }, { "index": 5, "statusCode": 503, "message": "error" }] }'
-                );
-
-                // verify
-                Assert.ok(sender.successSpy.called, "success was invoked");
-
-                // no warning messages
-                logAsserts(0);
-
-                // the buffer has 5 items - payloads 1-5, payload 0 was accepted by the backend and should not be re-send
-                Assert.equal(5, sender._buffer.count(), "Buffer has 5 items to re");
-
-                Assert.equal('{"payload":5}', sender._buffer.getItems()[0], "Invalid item in the buffer");
-                Assert.equal('{"payload":1}', sender._buffer.getItems()[4], "Invalid item in the buffer");
-
-                // validate session storage buffers
-                var buffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.BUFFER_KEY));
-                var sentBuffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.SENT_BUFFER_KEY));
-
-                Assert.equal(5, buffer.length, "Session storage buffer has 5 items");
-                Assert.equal(0, sentBuffer.length, "Session storage sent buffer is empty");
-
-                // clean up
-                sender.successSpy.reset();
-                sender.errorSpy.reset();
+                this.validatePartialSuccess_Retryable();
             }
         });
 
         this.testCase({
-            name: "SenderTests: XDomain sender can handle partial success errors",
+            name: "SenderTests: XDomain sender can handle partial success errors. Non-retryable",
             test: () => {
                 // setup
                 // pretend that you are IE8/IE9 browser which supports XDomainRequests
@@ -810,34 +705,35 @@ class SenderTests extends TestClass {
                 XDomainRequest = <any>(() => {
                     var xdr = new this.xhr;
                     xdr.onload = xdr.onreadystatechange;
-                    xdr.responseText = 200;
+                    xdr.responseText = 206;
                     return xdr;
                 });
 
-                // act
-                var sender = this.getSender();
+                this.validatePartialSuccess_NonRetryable();
+            }
+        });
 
-                // verify
-                Assert.ok(sender, "sender was constructed");
+        // TODO: exponential backoff
 
-                // act
-                this.fakeServer.requests.pop();
-                var data = new Microsoft.ApplicationInsights.Telemetry.Common.Data<string>('string', '[{ "time": "2016-05-23T01:46:28.456Z", "iKey": "56a5d7a1-1d3a-4e8c-b72b-949f7d4e8aa6", "name": "Microsoft.ApplicationInsights.56a5d7a11d3a4e8cb72b949f7d4e8aa6.Pageview", "tags": { "ai.session.id": "nkzq2", "ai.device.id": "browser", "ai.device.type": "Browser", "ai.internal.sdkVersion": "JavaScript:0.22.14", "ai.user.id": "JoO1+", "ai.operation.id": "eNJXm", "ai.operation.name": "/" }, "data": { "baseType": "PageviewData", "baseData": { "ver": 2, "name": "Home Page - DNDRampUp", "url": "http://localhost:3947/", "duration": "00:00:00.150" } } }, { "time": "2016-05-19T01:46:28.459Z", "iKey": "56a5d7a1-1d3a-4e8c-b72b-949f7d4e8aa6", "name": "Microsoft.ApplicationInsights.56a5d7a11d3a4e8cb72b949f7d4e8aa6.PageviewPerformance", "tags": { "ai.session.id": "nkzq2", "ai.device.id": "browser", "ai.device.type": "Browser", "ai.internal.sdkVersion": "JavaScript:0.22.14", "ai.user.id": "JoO1+", "ai.operation.id": "eNJXm", "ai.operation.name": "/" }, "data": { "baseType": "PageviewPerformanceData", "baseData": { "ver": 2, "name": "Home Page - DNDRampUp", "url": "http://localhost:3947/", "duration": "00:00:00.150", "perfTotal": "00:00:00.150", "networkConnect": "00:00:00.004", "sentRequest": "00:00:00.000", "receivedResponse": "00:00:00.002", "domProcessing": "00:00:00.126" } } }]');
-                var envelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(data, '');
-                sender.send(envelope);
-                this.clock.tick(sender._config.maxBatchInterval());
+        this.testCase({
+            name: "SenderTests: XDomain sender can handle partial success errors. Retryable",
+            test: () => {
+                // setup
+                // pretend that you are IE8/IE9 browser which supports XDomainRequests
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    delete xhr.withCredentials;
+                    return xhr;
+                });
 
-                // verify
-                // TODO: configure a sender that does not mock the onthe retry logic
-                requestAsserts();
-                this.fakeServer.requests[0].respond(
-                    206,
-                    { "itemsReceived": 2, "itemsAccepted": 1, "errors": [{ "index": 1, "statusCode": 400, "message": "103: Field 'time' on type 'Envelope' is older than the allowed min date. Expected: now - 172800000ms, Actual: now - 414962282ms" }] },
-                    '206');
-                successAsserts(sender);
-                logAsserts(0);
-                sender.successSpy.reset();
-                sender.errorSpy.reset();
+                XDomainRequest = <any>(() => {
+                    var xdr = new this.xhr;
+                    xdr.onload = xdr.onreadystatechange;
+                    xdr.responseText = 206;
+                    return xdr;
+                });
+
+                this.validatePartialSuccess_Retryable();
             }
         });
 
@@ -865,6 +761,9 @@ class SenderTests extends TestClass {
                 result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
 
                 Assert.ok(!result, "Parse should fail - there should be one error");
+
+                // no warnings
+                this.logAsserts(0);
             }
         });
 
@@ -886,6 +785,9 @@ class SenderTests extends TestClass {
                 var result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
 
                 Assert.ok(!result, "Parse should fail - there are too itemsAccepted > itemsReceived");
+
+                // no warnings
+                this.logAsserts(0);
             }
         });
 
@@ -913,6 +815,9 @@ class SenderTests extends TestClass {
                 response = '{ "itemsAccepted": 2, "errors": [] }';
                 result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
                 Assert.ok(!result, "Parse should fail - itemsReceived field missing");
+
+                // no warnings
+                this.logAsserts(0);
             }
         });
 
@@ -933,16 +838,127 @@ class SenderTests extends TestClass {
                 var result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
                 Assert.ok(!result, "Parse should fail");
 
-                logAsserts(1);
-                Assert.equal('AI (Internal): NONUSRACT_InvalidBackendResponse message:"Cannot parse the response.SyntaxError"', this.loggingSpy.args[0][0], "Expecting one warning message");
+                this.logAsserts(1);
+                Assert.equal('AI (Internal): NONUSRACT_InvalidBackendResponse message:"Cannot parse the response. SyntaxError"', this.loggingSpy.args[0][0], "Expecting one warning message");
             }
         });
-
     }
 
     private setupDataLossAnaluzed() {
         Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
         Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { }, context: { _sender: { _XMLHttpRequestSupported: true } } };
+    }
+
+    private validatePartialSuccess_NonRetryable() {
+        var sender = this.getSender();
+        Assert.ok(sender, "sender was constructed");
+
+        // send two items
+        this.fakeServer.requests.pop();
+        sender.send(this.testTelemetry);
+        sender.send(this.testTelemetry);
+
+        Assert.equal(2, sender._buffer.count(), "Buffer has two items");
+
+        // trigger send
+        this.clock.tick(sender._config.maxBatchInterval());
+
+        this.requestAsserts();
+        this.fakeServer.requests.pop().respond(
+            206,
+            { "Content-Type": "application/json" },
+            // backend rejected 1 out of 2 payloads. First payload was too old and should be dropped (non-retryable).
+            '{ "itemsReceived": 2, "itemsAccepted": 1, "errors": [{ "index": 0, "statusCode": 400, "message": "103: Field time on type Envelope is older than the allowed min date. Expected: now - 172800000ms, Actual: now - 31622528281ms" }] }'
+        );
+
+        // verify
+        Assert.ok(sender.successSpy.called, "success was invoked");
+
+        this.logAsserts(1);
+        Assert.equal('AI (Internal): NONUSRACT_OnError message:"Failed to send telemetry." props:"{message:partial success 1 of 2}"', this.loggingSpy.args[0][0], "Expecting one warning message");
+
+        // the buffer is empty. 
+        Assert.equal(0, sender._buffer.count(), "Buffer is empty");
+
+        // session storage buffers are also empty
+        var buffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.BUFFER_KEY));
+        var sentBuffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.SENT_BUFFER_KEY));
+
+        Assert.equal(0, buffer.length, "Session storage buffer is empty");
+        Assert.equal(0, sentBuffer.length, "Session storage sent buffer is empty");
+
+        // clean up
+        sender.successSpy.reset();
+        sender.errorSpy.reset();
+    }
+
+    private validatePartialSuccess_Retryable() {
+        var sender = this.getSender();
+        Assert.ok(sender, "sender was constructed");
+
+        // send six items
+        this.fakeServer.requests.pop();
+
+        for (var i = 0; i < 6; i++) {
+            var payload = {
+                aiDataContract: {
+                    payload: 0
+                },
+                ver: 0,
+                name: null,
+                time: null,
+                sampleRate: null,
+                seq: null,
+                iKey: null,
+                flags: null,
+                deviceId: null,
+                os: null,
+                osVer: null,
+                appId: null,
+                appVer: null,
+                userId: null,
+                tags: null,
+                payload: i
+            };
+
+            sender.send(payload);
+        }
+
+        Assert.equal(6, sender._buffer.count(), "Buffer has six items");
+
+        // trigger send
+        this.clock.tick(sender._config.maxBatchInterval());
+
+        this.requestAsserts();
+        this.fakeServer.requests.pop().respond(
+            206,
+            { "Content-Type": "application/json" },
+            // backend rejected 5 out of 6 payloads. Rejected payloads response codes: 408, 429, 439, 500, 503 (all retryable)
+            '{ "itemsReceived": 6, "itemsAccepted": 1, "errors": [{ "index": 1, "statusCode": 408, "message": "error" }, { "index": 2, "statusCode": 429, "message": "error" }, { "index": 3, "statusCode": 439, "message": "error" }, { "index": 4, "statusCode": 500, "message": "error" }, { "index": 5, "statusCode": 503, "message": "error" }] }'
+        );
+
+        // verify
+        Assert.ok(sender.successSpy.called, "success was invoked");
+
+        // no warning messages
+        this.logAsserts(0);
+
+        // the buffer has 5 items - payloads 1-5, payload 0 was accepted by the backend and should not be re-send
+        Assert.equal(5, sender._buffer.count(), "Buffer has 5 items to re");
+
+        Assert.equal('{"payload":5}', sender._buffer.getItems()[0], "Invalid item in the buffer");
+        Assert.equal('{"payload":1}', sender._buffer.getItems()[4], "Invalid item in the buffer");
+
+        // validate session storage buffers
+        var buffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.BUFFER_KEY));
+        var sentBuffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.SENT_BUFFER_KEY));
+
+        Assert.equal(5, buffer.length, "Session storage buffer has 5 items");
+        Assert.equal(0, sentBuffer.length, "Session storage sent buffer is empty");
+
+        // clean up
+        sender.successSpy.reset();
+        sender.errorSpy.reset();
     }
 }
 
