@@ -100,6 +100,6 @@ $content = $content -replace '//PREFIX_PLACEHOLDER', $strSnippet
 $content | out-file "$($projectDir)\Selenium\testPageWithAppInsights.html"
 
 # copy E2E files
-Copy-Item "$($projectDir)\E2ETests\*.js" "$($outputDir)\E2ETests"
-Copy-Item "$($projectDir)\E2ETests\*.htm" "$($outputDir)\E2ETests"
-Copy-Item "$($projectDir)\E2ETests\*.html" "$($outputDir)\E2ETests"
+Copy-Item "$($projectDir)\E2ETests\*.js" "$($outputDir)\E2ETests\"
+Copy-Item "$($projectDir)\E2ETests\*.htm" "$($outputDir)\E2ETests\"
+Copy-Item "$($projectDir)\E2ETests\*.html" "$($outputDir)\E2ETests\"
