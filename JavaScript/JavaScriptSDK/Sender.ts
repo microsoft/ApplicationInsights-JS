@@ -62,7 +62,7 @@ module Microsoft.ApplicationInsights {
 
         /**
          * Disable partial resposne handler (206 response code)
-         */ 
+         */
         disablePartialResponseHandler: () => boolean;
     }
 
@@ -87,11 +87,6 @@ module Microsoft.ApplicationInsights {
          * List of errors for items which were not accepted
          */
         errors: IResponseError[];
-
-        /**
-         * Retry sending element not sooner than
-         */
-        retryAfter?: string;
     }
 
     export class Sender {
@@ -215,7 +210,7 @@ module Microsoft.ApplicationInsights {
                 var retryInterval = this._retryAt ? Math.max(0, this._retryAt - Date.now()) : 0;
                 var timerValue = Math.max(this._config.maxBatchInterval(), retryInterval);
 
-                this._timeoutHandle = setTimeout(() => {                    
+                this._timeoutHandle = setTimeout(() => {
                     this.triggerSend();
                 }, timerValue);
             }
@@ -283,35 +278,31 @@ module Microsoft.ApplicationInsights {
 
         /** Calculates the time to wait before retrying in case of an error based on
          * http://en.wikipedia.org/wiki/Exponential_backoff
-         * @param headerValue {string} - Optional header "Retry-After" response header value.
          */
-        private _setRetryTime(headerValue?: string) {
-            var retryAfterTimeSpan = Date.parse(headerValue);
-            if (!(headerValue && retryAfterTimeSpan > 0)) {
-                const SlotDelayInSeconds = 10;
-                var delayInSeconds: number;
+        private _setRetryTime() {
+            const SlotDelayInSeconds = 10;
+            var delayInSeconds: number;
 
-                if (this._consecutiveErrors <= 1) {
-                    delayInSeconds = SlotDelayInSeconds;
-                } else {
-                    var backOffSlot = (Math.pow(2, this._consecutiveErrors) - 1) / 2;
-                    var backOffDelay = Math.floor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
-                    delayInSeconds = Math.max(Math.min(backOffDelay, 3600), SlotDelayInSeconds);
-                }
-
-                // TODO: Log the backoff time like the C# version does.
-                retryAfterTimeSpan = Date.now() + (delayInSeconds * 1000);
+            if (this._consecutiveErrors <= 1) {
+                delayInSeconds = SlotDelayInSeconds;
+            } else {
+                var backOffSlot = (Math.pow(2, this._consecutiveErrors) - 1) / 2;
+                var backOffDelay = Math.floor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
+                delayInSeconds = Math.max(Math.min(backOffDelay, 3600), SlotDelayInSeconds);
             }
 
+            // TODO: Log the backoff time like the C# version does.
+            var retryAfterTimeSpan = Date.now() + (delayInSeconds * 1000);
+
             // TODO: Log the retry at time like the C# version does.
-            this._retryAt = retryAfterTimeSpan; 
+            this._retryAt = retryAfterTimeSpan;
         }
 
         /**
          * Parses the response from the backend. 
          * @param response - XMLHttpRequest or XDomainRequest response
          */
-        private _parseResponse(response: any, retryAfter?: string): IBackendResponse {
+        private _parseResponse(response: any): IBackendResponse {
             try {
                 var result = JSON.parse(response);
 
@@ -320,8 +311,7 @@ module Microsoft.ApplicationInsights {
                     return {
                         itemsReceived: result.itemsReceived,
                         itemsAccepted: result.itemsAccepted,
-                        errors: result.errors,
-                        retryAfter: retryAfter
+                        errors: result.errors
                     };
                 }
             } catch (e) {
@@ -385,7 +375,7 @@ module Microsoft.ApplicationInsights {
                     this._onError(payload, xhr.responseText || xhr.response || "");
                 } else {
                     if (xhr.status === 206) {
-                        var response = this._parseResponse(xhr.responseText || xhr.response, xhr.getResponseHeader("retry-after"));
+                        var response = this._parseResponse(xhr.responseText || xhr.response);
 
                         if (response && !this._config.disablePartialResponseHandler()) {
                             this._onPartialSuccess(payload, response);
@@ -459,12 +449,12 @@ module Microsoft.ApplicationInsights {
                 this._consecutiveErrors++;
 
                 // setup timer
-                this._setRetryTime(results.retryAfter);
+                this._setRetryTime();
                 this._setupTimer();
 
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
                     new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, "Partial success. " +
-                        "Delivered: " + payload.length + ", Failed: " + failed.length + 
+                        "Delivered: " + payload.length + ", Failed: " + failed.length +
                         ". Will retry to send " + retry.length + " our of " + results.itemsReceived + " items"));
             }
         }

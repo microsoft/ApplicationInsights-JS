@@ -710,54 +710,6 @@ class SenderTests extends TestClass {
         });
 
         this.testCase({
-            name: "SenderTests: handles retry-after value returned in the response header (XMLHttpRequest)",
-            test: () => {
-                // setup
-                XMLHttpRequest = <any>(() => {
-                    var xhr = new this.xhr;
-                    xhr.withCredentials = false;
-                    return xhr;
-                });
-
-                var sender = this.getSender();
-                Assert.ok(sender, "sender was constructed");
-
-                // send two items
-                this.fakeServer.requests.pop();
-                sender.send(this.testTelemetry);
-                sender.send(this.testTelemetry);
-
-                Assert.equal(2, sender._buffer.count(), "Buffer has two items");
-
-                // trigger send
-                this.clock.tick(sender._config.maxBatchInterval());
-
-                // retry after 777s. 
-                var now = 1468864738000;
-                this.clock.setSystemTime(now);
-
-                var delay = 77; 
-                var delayDate = new Date();
-                delayDate.setSeconds(delayDate.getSeconds() + delay);
-
-                this.requestAsserts();
-                this.fakeServer.requests.pop().respond(
-                    206,
-                    { "Content-Type": "application/json", "Retry-After": delayDate.toUTCString() },
-                    // backend rejected 1 out of 2 payloads. First payload was too old and should be dropped (non-retryable).
-                    '{ "itemsReceived": 2, "itemsAccepted": 1, "errors": [{ "index": 0, "statusCode": 408, "message": "nothing to look at..." }] }'
-                );
-
-                // verify
-                Assert.ok(sender.successSpy.called, "success was invoked");
-                Assert.ok(sender.partialSpy.called, "partialSpy was invoked");
-                Assert.ok(!sender.errorSpy.called, "error was invoked");
-
-                Assert.equal(now + 77 * 1000, (<any>sender)._retryAt, "Invalid retryAt value");
-            }
-        });
-
-        this.testCase({
             name: "SenderTests: XDomain sender can handle partial success errors. Non-retryable",
             test: () => {
                 // setup
@@ -962,25 +914,6 @@ class SenderTests extends TestClass {
                 // validate - exponential back = 1.5 * Random() * 10 + 1
                 Assert.ok((<any>sender)._retryAt >= now + 1 * 1000, "Invalid retry time.");
                 Assert.ok((<any>sender)._retryAt <= now + 16 * 1000, "Invalid retry time.");
-            }
-        });
-
-        this.testCase({
-            name: "SenderTests: setRetryTime sets correct _retryAt for a given Retry-After",
-            test: () => {
-                // setup
-                var sender = this.getSender();
-                Assert.ok(sender, "sender was constructed");
-                var now = 1468864738000;
-                this.clock.setSystemTime(now)
-
-                var delay = 27; // in seconds
-                var delayDate = new Date();
-                delayDate.setSeconds(delayDate.getSeconds() + delay);
-
-                (<any>sender)._setRetryTime(delayDate.toUTCString());
-
-                Assert.equal(now + delay * 1000, (<any>sender)._retryAt, "Invalid retry time.");
             }
         });
     }
