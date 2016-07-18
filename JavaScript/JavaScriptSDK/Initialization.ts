@@ -180,7 +180,7 @@ module Microsoft.ApplicationInsights {
 
             config.disablePartialResponseHandler = (config.disablePartialResponseHandler !== undefined && config.disablePartialResponseHandler !== null) ?
                 Util.stringToBoolOrDefault(config.disablePartialResponseHandler) :
-                false;
+                true;
            
             return config;
         }

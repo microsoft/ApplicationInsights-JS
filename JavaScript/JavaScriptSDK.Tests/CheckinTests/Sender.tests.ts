@@ -873,27 +873,28 @@ class SenderTests extends TestClass {
         });
 
         this.testCase({
-            name: "SenderTests: setRetryTime sets correct _retryAt with zero consecutive errors",
+            name: "SenderTests: setRetryTime sets correct _retryAt for zero and one consecutive errors",
             test: () => {
                 // setup
                 var sender = this.getSender();
                 Assert.ok(sender, "sender was constructed");
 
-                // no consecutive errors
+                // zero consecutive errors
                 (<any>sender)._consecutiveErrors = 0;
+                (<any>sender)._setRetryTime();
 
-                var delay = 100;
-                var delayDate = new Date();
-                delayDate.setSeconds(delayDate.getSeconds() + delay);
+                Assert.equal(10 * 1000, (<any>sender)._retryAt, "Invalid retry time.");
 
-                (<any>sender)._setRetryTime(delayDate.toDateString());
+                // one consecutive errors
+                (<any>sender)._consecutiveErrors = 1;
+                (<any>sender)._setRetryTime();
 
-                Assert.equal(delay, (<any>sender)._retryAt, "Invalid retry time.");
+                Assert.equal(10 * 1000, (<any>sender)._retryAt, "Invalid retry time.");
             }
         });
 
         this.testCase({
-            name: "SenderTests: setRetryTime sets correct _retryAt with two consecutive errors",
+            name: "SenderTests: setRetryTime sets correct _retryAt for two consecutive errors",
             test: () => {
                 // setup
                 var sender = this.getSender();
@@ -901,22 +902,33 @@ class SenderTests extends TestClass {
 
                 // act
                 (<any>sender)._consecutiveErrors = 2;
+                (<any>sender)._setRetryTime();
 
-                var delay = 20;
+                // validate - exponential back = 1.5 * Random() * 10 + 1
+                Assert.ok((<any>sender)._retryAt >= 1 * 1000, "Invalid retry time.");
+                Assert.ok((<any>sender)._retryAt <= 16 * 1000, "Invalid retry time.");
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: setRetryTime sets correct _retryAt for a given Retry-After",
+            test: () => {
+                // setup
+                var sender = this.getSender();
+                Assert.ok(sender, "sender was constructed");
+                var now = 1468864738000;
+                this.clock.setSystemTime(now)
+
+                var delay = 27; // in seconds
                 var delayDate = new Date();
                 delayDate.setSeconds(delayDate.getSeconds() + delay);
 
-                (<any>sender)._setRetryTime(delayDate.toDateString());
+                (<any>sender)._setRetryTime(delayDate.toUTCString());
 
-                // validate
-                var minDelay = new Date();
-                minDelay.setSeconds(minDelay.getSeconds() + 1000);
+                Assert.equal(now + delay * 1000, (<any>sender)._retryAt, "Invalid retry time.");
 
-                var maxDelay = new Date();
-                maxDelay.setSeconds(maxDelay.getSeconds() + 16000);
-
-                Assert.ok((<any>sender)._retryAt >= minDelay, "Invalid retry time.");
-                Assert.ok((<any>sender)._retryAt <= maxDelay, "Invalid retry time.");
+                // clean up
+                this.clock.reset();
             }
         });
     }
@@ -1017,8 +1029,8 @@ class SenderTests extends TestClass {
         // verify
         Assert.ok(sender.successSpy.called, "success was invoked");
 
-        // no warning messages
-        this.logAsserts(0);
+        // partial response warning
+        this.logAsserts(1);
 
         // the buffer has 5 items - payloads 1-5, payload 0 was accepted by the backend and should not be re-send
         Assert.equal(5, sender._buffer.count(), "Buffer has 5 items to re");
@@ -1076,12 +1088,12 @@ class SenderTests extends TestClass {
         );
 
         // verify
-        Assert.ok(sender.successSpy.called, "success was NOT invoked");
-        Assert.ok(sender.partialSpy.called, "partialSpy was NOT invoked");
+        Assert.ok(!sender.successSpy.called, "success was NOT invoked");
+        Assert.ok(!sender.partialSpy.called, "partialSpy was NOT invoked");
         Assert.ok(sender.errorSpy.called, "error was invoked");
 
         this.logAsserts(1);
-        Assert.equal('AI (Internal): NONUSRACT_OnError message:"Failed to send telemetry." props:"{message:partial success 1 of 2}"', this.loggingSpy.args[0][0], "Expecting one warning message");
+        Assert.ok((<string>this.loggingSpy.args[0][0]).concat('AI (Internal): NONUSRACT_OnError message:"Failed to send telemetry.'), "Expecting one warning message");
 
         // the buffer is empty. 
         Assert.equal(0, sender._buffer.count(), "Buffer is empty");

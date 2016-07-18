@@ -385,7 +385,7 @@ module Microsoft.ApplicationInsights {
                     if (xhr.status === 206) {
                         var response = this._parseResponse(xhr.responseText || xhr.response);
 
-                        if (response && !this._config.disablePartialResponseHandler) {
+                        if (response && !this._config.disablePartialResponseHandler()) {
                             this._onPartialSuccess(payload, response);
                         } else {
                             this._onError(payload, xhr.responseText || xhr.response || "");
@@ -409,7 +409,7 @@ module Microsoft.ApplicationInsights {
                 var results = this._parseResponse(xdr.responseText);
 
                 if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
-                    && !this._config.disablePartialResponseHandler) {
+                    && !this._config.disablePartialResponseHandler()) {
                     this._onPartialSuccess(payload, results);
                 } else {
                     this._onError(payload, xdr && xdr.responseText || "");
@@ -463,7 +463,7 @@ module Microsoft.ApplicationInsights {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
                     new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, "Partial success. " +
                         "Delivered: " + payload.length + ", Failed: " + failed.length + 
-                        "Will retry to send " + retry.length + " our of " + results.itemsReceived + " items"));
+                        ". Will retry to send " + retry.length + " our of " + results.itemsReceived + " items"));
             }
         }
 
