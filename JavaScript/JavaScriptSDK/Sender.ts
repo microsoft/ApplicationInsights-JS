@@ -91,7 +91,7 @@ module Microsoft.ApplicationInsights {
         /**
          * Retry sending element not sooner than
          */
-        retryAfterHeader?: string;
+        retryAfter?: string;
     }
 
     export class Sender {
@@ -214,6 +214,7 @@ module Microsoft.ApplicationInsights {
             if (!this._timeoutHandle) {
                 var retryInterval = this._retryAt ? Math.max(0, this._retryAt - Date.now()) : 0;
                 var timerValue = Math.max(this._config.maxBatchInterval(), retryInterval);
+
                 this._timeoutHandle = setTimeout(() => {                    
                     this.triggerSend();
                 }, timerValue);
@@ -310,7 +311,7 @@ module Microsoft.ApplicationInsights {
          * Parses the response from the backend. 
          * @param response - XMLHttpRequest or XDomainRequest response
          */
-        private _parseResponse(response: any): IBackendResponse {
+        private _parseResponse(response: any, retryAfter?: string): IBackendResponse {
             try {
                 var result = JSON.parse(response);
 
@@ -319,7 +320,8 @@ module Microsoft.ApplicationInsights {
                     return {
                         itemsReceived: result.itemsReceived,
                         itemsAccepted: result.itemsAccepted,
-                        errors: result.errors
+                        errors: result.errors,
+                        retryAfter: retryAfter
                     };
                 }
             } catch (e) {
@@ -383,7 +385,7 @@ module Microsoft.ApplicationInsights {
                     this._onError(payload, xhr.responseText || xhr.response || "");
                 } else {
                     if (xhr.status === 206) {
-                        var response = this._parseResponse(xhr.responseText || xhr.response);
+                        var response = this._parseResponse(xhr.responseText || xhr.response, xhr.getResponseHeader("retry-after"));
 
                         if (response && !this._config.disablePartialResponseHandler()) {
                             this._onPartialSuccess(payload, response);
@@ -457,7 +459,7 @@ module Microsoft.ApplicationInsights {
                 this._consecutiveErrors++;
 
                 // setup timer
-                this._setRetryTime(results.retryAfterHeader);
+                this._setRetryTime(results.retryAfter);
                 this._setupTimer();
 
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,

@@ -14,7 +14,7 @@ class SenderTests extends TestClass {
 
     private xhr;
     private xdr;
-    private fakeServer;
+    private fakeServer: SinonFakeServer;
     private getSender: () => SenderWrapper;
     private loggingSpy;
     private testTelemetry;
@@ -54,6 +54,7 @@ class SenderTests extends TestClass {
 
             sender.errorSpy = this.sandbox.spy(sender, "_onError");
             sender.successSpy = this.sandbox.spy(sender, "_onSuccess");
+            sender.partialSpy = this.sandbox.spy(sender, "_onPartialSuccess");
 
             return sender;
         }
@@ -704,7 +705,55 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                this.validatePartialSuccess_disaled();
+                this.validatePartialSuccess_disabled();
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: handles retry-after value returned in the response header (XMLHttpRequest)",
+            test: () => {
+                // setup
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    return xhr;
+                });
+
+                var sender = this.getSender();
+                Assert.ok(sender, "sender was constructed");
+
+                // send two items
+                this.fakeServer.requests.pop();
+                sender.send(this.testTelemetry);
+                sender.send(this.testTelemetry);
+
+                Assert.equal(2, sender._buffer.count(), "Buffer has two items");
+
+                // trigger send
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                // retry after 777s. 
+                var now = 1468864738000;
+                this.clock.setSystemTime(now);
+
+                var delay = 77; 
+                var delayDate = new Date();
+                delayDate.setSeconds(delayDate.getSeconds() + delay);
+
+                this.requestAsserts();
+                this.fakeServer.requests.pop().respond(
+                    206,
+                    { "Content-Type": "application/json", "Retry-After": delayDate.toUTCString() },
+                    // backend rejected 1 out of 2 payloads. First payload was too old and should be dropped (non-retryable).
+                    '{ "itemsReceived": 2, "itemsAccepted": 1, "errors": [{ "index": 0, "statusCode": 408, "message": "nothing to look at..." }] }'
+                );
+
+                // verify
+                Assert.ok(sender.successSpy.called, "success was invoked");
+                Assert.ok(sender.partialSpy.called, "partialSpy was invoked");
+                Assert.ok(!sender.errorSpy.called, "error was invoked");
+
+                Assert.equal(now + 77 * 1000, (<any>sender)._retryAt, "Invalid retryAt value");
             }
         });
 
@@ -762,7 +811,7 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                this.validatePartialSuccess_disaled();
+                this.validatePartialSuccess_disabled();
             }
         });
 
@@ -879,17 +928,20 @@ class SenderTests extends TestClass {
                 var sender = this.getSender();
                 Assert.ok(sender, "sender was constructed");
 
+                var now = 1468864738000;
+                this.clock.setSystemTime(now);
+
                 // zero consecutive errors
                 (<any>sender)._consecutiveErrors = 0;
                 (<any>sender)._setRetryTime();
 
-                Assert.equal(10 * 1000, (<any>sender)._retryAt, "Invalid retry time.");
+                Assert.equal(now + 10 * 1000, (<any>sender)._retryAt, "Invalid retry time.");
 
                 // one consecutive errors
                 (<any>sender)._consecutiveErrors = 1;
                 (<any>sender)._setRetryTime();
 
-                Assert.equal(10 * 1000, (<any>sender)._retryAt, "Invalid retry time.");
+                Assert.equal(now + 10 * 1000, (<any>sender)._retryAt, "Invalid retry time.");
             }
         });
 
@@ -900,13 +952,16 @@ class SenderTests extends TestClass {
                 var sender = this.getSender();
                 Assert.ok(sender, "sender was constructed");
 
+                var now = 1468864738000;
+                this.clock.setSystemTime(now);
+
                 // act
                 (<any>sender)._consecutiveErrors = 2;
                 (<any>sender)._setRetryTime();
 
                 // validate - exponential back = 1.5 * Random() * 10 + 1
-                Assert.ok((<any>sender)._retryAt >= 1 * 1000, "Invalid retry time.");
-                Assert.ok((<any>sender)._retryAt <= 16 * 1000, "Invalid retry time.");
+                Assert.ok((<any>sender)._retryAt >= now + 1 * 1000, "Invalid retry time.");
+                Assert.ok((<any>sender)._retryAt <= now + 16 * 1000, "Invalid retry time.");
             }
         });
 
@@ -926,9 +981,6 @@ class SenderTests extends TestClass {
                 (<any>sender)._setRetryTime(delayDate.toUTCString());
 
                 Assert.equal(now + delay * 1000, (<any>sender)._retryAt, "Invalid retry time.");
-
-                // clean up
-                this.clock.reset();
             }
         });
     }
@@ -1050,7 +1102,7 @@ class SenderTests extends TestClass {
         sender.errorSpy.reset();
     }
 
-    private validatePartialSuccess_disaled() {
+    private validatePartialSuccess_disabled() {
         var config: Microsoft.ApplicationInsights.ISenderConfig = {
             endpointUrl: () => this.endpointUrl,
             emitLineDelimitedJson: () => this.emitLineDelimitedJson,
