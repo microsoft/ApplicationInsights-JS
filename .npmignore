@@ -5,6 +5,7 @@
 
 # ... but these files
 !/package.json
+!/bower.json
 !/README.md
 !/API-reference.md
 !/JavaScript/JavaScriptSDK.Module/AppInsightsModule.js
