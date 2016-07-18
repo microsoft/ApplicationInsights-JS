@@ -22,7 +22,8 @@ class DisableTelemetryTests extends TestClass {
             emitLineDelimitedJson: () => null,
             maxBatchSizeInBytes: () => null,
             maxBatchInterval: () => null,
-            disableTelemetry: () => null
+            disableTelemetry: () => null,
+            disablePartialResponseHandler: () => null
         };
 
         var sender = new Microsoft.ApplicationInsights.Sender(config);

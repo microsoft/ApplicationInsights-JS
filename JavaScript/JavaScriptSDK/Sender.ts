@@ -59,6 +59,11 @@ module Microsoft.ApplicationInsights {
          * Store a copy of a send buffer in the session storage
          */
         enableSessionStorageBuffer: () => boolean;
+
+        /**
+         * Disable partial resposne handler (206 response code)
+         */ 
+        disablePartialResponseHandler: () => boolean;
     }
 
     export interface IResponseError {
@@ -82,6 +87,11 @@ module Microsoft.ApplicationInsights {
          * List of errors for items which were not accepted
          */
         errors: IResponseError[];
+
+        /**
+         * Retry sending element not sooner than
+         */
+        retryAfterHeader?: string;
     }
 
     export class Sender {
@@ -202,10 +212,9 @@ module Microsoft.ApplicationInsights {
          */
         private _setupTimer() {
             if (!this._timeoutHandle) {
-                var timerValue = this._retryAt ? Math.max(this._config.maxBatchInterval(), Date.now() - this._retryAt) : this._config.maxBatchInterval();
-                this._timeoutHandle = setTimeout(() => {
-                    this._timeoutHandle = null;
-                    this._retryAt = null;
+                var retryInterval = this._retryAt ? Math.max(0, this._retryAt - Date.now()) : 0;
+                var timerValue = Math.max(this._config.maxBatchInterval(), retryInterval);
+                this._timeoutHandle = setTimeout(() => {                    
                     this.triggerSend();
                 }, timerValue);
             }
@@ -261,6 +270,7 @@ module Microsoft.ApplicationInsights {
 
                 clearTimeout(this._timeoutHandle);
                 this._timeoutHandle = null;
+                this._retryAt = null;
             } catch (e) {
                 /* Ignore this error for IE under v10 */
                 if (!Util.getIEVersion() || Util.getIEVersion() > 9) {
@@ -293,7 +303,7 @@ module Microsoft.ApplicationInsights {
             }
 
             // TODO: Log the retry at time like the C# version does.
-            this._retryAt = retryAfterTimeSpan - Date.now();
+            this._retryAt = retryAfterTimeSpan; 
         }
 
         /**
@@ -302,7 +312,6 @@ module Microsoft.ApplicationInsights {
          */
         private _parseResponse(response: any): IBackendResponse {
             try {
-                // TODO: check the results of the JSON.parse call and if there was an expected data object in the response.
                 var result = JSON.parse(response);
 
                 if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
@@ -376,7 +385,7 @@ module Microsoft.ApplicationInsights {
                     if (xhr.status === 206) {
                         var response = this._parseResponse(xhr.responseText || xhr.response);
 
-                        if (response) {
+                        if (response && !this._config.disablePartialResponseHandler) {
                             this._onPartialSuccess(payload, response);
                         } else {
                             this._onError(payload, xhr.responseText || xhr.response || "");
@@ -399,7 +408,8 @@ module Microsoft.ApplicationInsights {
             } else {
                 var results = this._parseResponse(xdr.responseText);
 
-                if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted) {
+                if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
+                    && !this._config.disablePartialResponseHandler) {
                     this._onPartialSuccess(payload, results);
                 } else {
                     this._onError(payload, xdr && xdr.responseText || "");
@@ -410,7 +420,7 @@ module Microsoft.ApplicationInsights {
         /**
          * partial success handler
          */
-        public _onPartialSuccess(payload: string[], results: IBackendResponse, retryAfterHeader?: string) {
+        public _onPartialSuccess(payload: string[], results: IBackendResponse) {
             var failed = [];
             var retry = [];
 
@@ -445,10 +455,16 @@ module Microsoft.ApplicationInsights {
 
                 this._buffer.clearSent(retry);
                 this._consecutiveErrors++;
-            }
 
-            this._setRetryTime(retryAfterHeader); // TODO: Should I embed this in a _retry() method which internally sets up the timer?
-            this._setupTimer();
+                // setup timer
+                this._setRetryTime(results.retryAfterHeader);
+                this._setupTimer();
+
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, "Partial success. " +
+                        "Delivered: " + payload.length + ", Failed: " + failed.length + 
+                        "Will retry to send " + retry.length + " our of " + results.itemsReceived + " items"));
+            }
         }
 
         /**

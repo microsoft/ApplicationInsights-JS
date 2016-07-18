@@ -8,7 +8,7 @@ class TelemetryContextTests extends TestClass {
     private _telemetryContext: Microsoft.ApplicationInsights.TelemetryContext;
     private _config: Microsoft.ApplicationInsights.ITelemetryConfig;
 
-    /** Method called before the start 1of each test method */
+    /** Method called before the start of each test method */
     public testInitialize() {
         this._config = {
             instrumentationKey: () => "testKey",
@@ -22,7 +22,8 @@ class TelemetryContextTests extends TestClass {
             disableTelemetry: () => false,
             sampleRate: () => 100,
             cookieDomain: undefined,
-            enableSessionStorageBuffer: () => false
+            enableSessionStorageBuffer: () => false,
+            disablePartialResponseHandler: () => false
         }
 
         this._telemetryContext = new Microsoft.ApplicationInsights.TelemetryContext(this._config);

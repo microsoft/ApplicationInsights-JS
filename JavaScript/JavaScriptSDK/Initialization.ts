@@ -177,6 +177,10 @@ module Microsoft.ApplicationInsights {
             config.enableSessionStorageBuffer = (config.enableSessionStorageBuffer !== undefined && config.enableSessionStorageBuffer !== null) ?
                 Util.stringToBoolOrDefault(config.enableSessionStorageBuffer) :
                 true;
+
+            config.disablePartialResponseHandler = (config.disablePartialResponseHandler !== undefined && config.disablePartialResponseHandler !== null) ?
+                Util.stringToBoolOrDefault(config.disablePartialResponseHandler) :
+                false;
            
             return config;
         }
