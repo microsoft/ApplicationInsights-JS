@@ -784,7 +784,7 @@ class SenderTests extends TestClass {
                 var response = '{ "itemsReceived": 2, "itemsAccepted": 1, "errors": [{ "index": 0, "statusCode": 408, "message": "error" }, { "index": 2, "statusCode": 429, "message": "error" }] }';
                 var result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
 
-                Assert.ok(!result, "Parse should fail when there are too many errors");
+                Assert.ok(!result, "Parse should fail when there are too many errors (2 instead of 1)");
 
                 // no errors
                 response = '{ "itemsReceived": 2, "itemsAccepted": 1, "errors": [] }';
@@ -840,7 +840,7 @@ class SenderTests extends TestClass {
 
                 response = '{ "itemsReceived": 1, "itemsAccepted": 2, "errors": [] }';
                 result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
-                Assert.ok(!result, "Parse should fail - itemsAccepted field missing");
+                Assert.ok(!result, "Parse should fail - itemsAccepted grater than itemsReceived");
 
                 response = '{ "itemsAccepted": 2, "errors": [] }';
                 result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
@@ -1018,7 +1018,7 @@ class SenderTests extends TestClass {
         this.logAsserts(1);
 
         // the buffer has 5 items - payloads 1-5, payload 0 was accepted by the backend and should not be re-send
-        Assert.equal(5, sender._buffer.count(), "Buffer has 5 items to re");
+        Assert.equal(5, sender._buffer.count(), "Buffer has 5 items to retry.");
 
         Assert.equal('{"payload":5}', sender._buffer.getItems()[0], "Invalid item in the buffer");
         Assert.equal('{"payload":1}', sender._buffer.getItems()[4], "Invalid item in the buffer");
