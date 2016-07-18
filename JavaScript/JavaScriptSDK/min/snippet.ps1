@@ -18,7 +18,7 @@ Param(
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="The uri for production environment CDN content.")]
-    [string]$prodCDNPath="//az416426.vo.msecnd.net/scripts/a/ai.0.js",
+    [string]$prodCDNPath="https://az416426.vo.msecnd.net/scripts/a/ai.0.js",
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="The uri for integration environment CDN content.")]
