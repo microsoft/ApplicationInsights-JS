@@ -1810,6 +1810,9 @@ var Microsoft;
                 var bufferItems = this.getBuffer(SessionStorageSendBuffer.BUFFER_KEY);
                 var notDeliveredItems = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
                 this._buffer = bufferItems.concat(notDeliveredItems);
+                if (this._buffer.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
+                    this._buffer.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
+                }
                 ApplicationInsights.DataLossAnalyzer.itemsRestoredFromSessionBuffer = this._buffer.length;
                 this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
                 this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
@@ -1849,6 +1852,10 @@ var Microsoft;
             SessionStorageSendBuffer.prototype.markAsSent = function (payload) {
                 var sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
                 sentElements = sentElements.concat(payload);
+                if (sentElements.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
+                    ApplicationInsights._InternalLogging.throwInternalUserActionable(ApplicationInsights.LoggingSeverity.CRITICAL, new ApplicationInsights._InternalLogMessage(ApplicationInsights._InternalMessageId.USRACT_SessionStorageBufferFull, "Sent buffer reached its maximum size: " + sentElements.length));
+                    sentElements.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
+                }
                 this._buffer = this.removePayloadsFromBuffer(payload, this._buffer);
                 this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
                 this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
@@ -2035,7 +2042,8 @@ var Microsoft;
                 var xdr = new XDomainRequest();
                 xdr.onload = function () { return _this._xdrOnLoad(xdr, payload); };
                 xdr.onerror = function (event) { return _this._onError(payload, xdr.responseText || "", event); };
-                xdr.open('POST', this._config.endpointUrl());
+                var endpointUrl = this._config.endpointUrl().replace(/^(https?:)/, "");
+                xdr.open('POST', endpointUrl);
                 var batch = this._buffer.batchPayloads(payload);
                 xdr.send(batch);
                 this._buffer.markAsSent(payload);
@@ -3405,7 +3413,7 @@ var Microsoft;
     var ApplicationInsights;
     (function (ApplicationInsights) {
         "use strict";
-        ApplicationInsights.Version = "0.23.0";
+        ApplicationInsights.Version = "0.23.1";
         var AppInsights = (function () {
             function AppInsights(config) {
                 var _this = this;
@@ -3780,7 +3788,7 @@ var Microsoft;
                 if (!config) {
                     config = {};
                 }
-                config.endpointUrl = config.endpointUrl || "//dc.services.visualstudio.com/v2/track";
+                config.endpointUrl = config.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
                 config.sessionRenewalMs = 30 * 60 * 1000;
                 config.sessionExpirationMs = 24 * 60 * 60 * 1000;
                 config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 1000000;
