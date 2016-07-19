@@ -59,10 +59,55 @@ module Microsoft.ApplicationInsights {
          * Store a copy of a send buffer in the session storage
          */
         enableSessionStorageBuffer: () => boolean;
+
+        /**
+         * Disable partial resposne handler (206 response code)
+         */
+        disablePartialResponseHandler: () => boolean;
+    }
+
+    export interface IResponseError {
+        index: number;
+        statusCode: number;
+        message: string;
+    }
+
+    export interface IBackendResponse {
+        /**
+         * Number of items received by the backend
+         */
+        itemsReceived: number;
+
+        /**
+         * Number of items succesfuly accepted by the backend
+         */
+        itemsAccepted: number;
+
+        /**
+         * List of errors for items which were not accepted
+         */
+        errors: IResponseError[];
     }
 
     export class Sender {
+        /**
+         * How many times in a row a retryable error condition has occurred.
+         */
+        private _consecutiveErrors: number;
+
+        /**
+         * The time to retry at in milliseconds from 1970/01/01 (this makes the timer calculation easy).
+         */
+        private _retryAt: number;
+
+        /**
+         * The time of the last send operation.
+         */
         private _lastSend: number;
+
+        /**
+         * Handle to the timer for delayed sending of batches of data.
+         */
         private _timeoutHandle: any;
 
         /**
@@ -90,6 +135,8 @@ module Microsoft.ApplicationInsights {
          * Constructs a new instance of the Sender class
          */
         constructor(config: ISenderConfig) {
+            this._consecutiveErrors = 0;
+            this._retryAt = null;
             this._lastSend = 0;
             this._config = config;
             this._sender = null;
@@ -133,7 +180,7 @@ module Microsoft.ApplicationInsights {
                 // check if the incoming payload is too large, truncate if necessary
                 var payload: string = Serializer.serialize(envelope);
 
-                // flush if we would exceet the max-size limit by adding this item
+                // flush if we would exceed the max-size limit by adding this item
                 var bufferPayload = this._buffer.getItems();
                 var batch = this._buffer.batchPayloads(bufferPayload);
 
@@ -145,12 +192,7 @@ module Microsoft.ApplicationInsights {
                 this._buffer.enqueue(payload);
 
                 // ensure an invocation timeout is set
-                if (!this._timeoutHandle) {
-                    this._timeoutHandle = setTimeout(() => {
-                        this._timeoutHandle = null;
-                        this.triggerSend();
-                    }, this._config.maxBatchInterval());
-                }
+                this._setupTimer();
 
                 DataLossAnalyzer.incrementItemsQueued();
             } catch (e) {
@@ -160,6 +202,24 @@ module Microsoft.ApplicationInsights {
             }
         }
 
+        /**
+         * Sets up the timer which triggers actually sending the data.
+         */
+        private _setupTimer() {
+            if (!this._timeoutHandle) {
+                var retryInterval = this._retryAt ? Math.max(0, this._retryAt - Date.now()) : 0;
+                var timerValue = Math.max(this._config.maxBatchInterval(), retryInterval);
+
+                this._timeoutHandle = setTimeout(() => {
+                    this.triggerSend();
+                }, timerValue);
+            }
+        }
+
+        /**
+         * Gets the size of the list in bytes.
+         * @param list {string[]} - The list to get the size in bytes of.
+         */
         private _getSizeInBytes(list: string[]) {
             var size = 0;
             if (list && list.length) {
@@ -206,6 +266,7 @@ module Microsoft.ApplicationInsights {
 
                 clearTimeout(this._timeoutHandle);
                 this._timeoutHandle = null;
+                this._retryAt = null;
             } catch (e) {
                 /* Ignore this error for IE under v10 */
                 if (!Util.getIEVersion() || Util.getIEVersion() > 9) {
@@ -213,6 +274,48 @@ module Microsoft.ApplicationInsights {
                         { exception: Util.dump(e) }));
                 }
             }
+        }
+
+        /** Calculates the time to wait before retrying in case of an error based on
+         * http://en.wikipedia.org/wiki/Exponential_backoff
+         */
+        private _setRetryTime() {
+            const SlotDelayInSeconds = 10;
+            var delayInSeconds: number;
+
+            if (this._consecutiveErrors <= 1) {
+                delayInSeconds = SlotDelayInSeconds;
+            } else {
+                var backOffSlot = (Math.pow(2, this._consecutiveErrors) - 1) / 2;
+                var backOffDelay = Math.floor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
+                delayInSeconds = Math.max(Math.min(backOffDelay, 3600), SlotDelayInSeconds);
+            }
+
+            // TODO: Log the backoff time like the C# version does.
+            var retryAfterTimeSpan = Date.now() + (delayInSeconds * 1000);
+
+            // TODO: Log the retry at time like the C# version does.
+            this._retryAt = retryAfterTimeSpan;
+        }
+
+        /**
+         * Parses the response from the backend. 
+         * @param response - XMLHttpRequest or XDomainRequest response
+         */
+        private _parseResponse(response: any): IBackendResponse {
+            try {
+                var result = JSON.parse(response);
+
+                if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
+                    result.itemsReceived - result.itemsAccepted == result.errors.length) {
+                    return result;
+                }
+            } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_InvalidBackendResponse, "Cannot parse the response. " + Util.getExceptionName(e)));
+            }
+
+            return null;
         }
 
         /**
@@ -267,7 +370,18 @@ module Microsoft.ApplicationInsights {
                 if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
                     this._onError(payload, xhr.responseText || xhr.response || "");
                 } else {
-                    this._onSuccess(payload, countOfItemsInPayload);
+                    if (xhr.status === 206) {
+                        var response = this._parseResponse(xhr.responseText || xhr.response);
+
+                        if (response && !this._config.disablePartialResponseHandler()) {
+                            this._onPartialSuccess(payload, response);
+                        } else {
+                            this._onError(payload, xhr.responseText || xhr.response || "");
+                        }
+                    } else {
+                        this._consecutiveErrors = 0;
+                        this._onSuccess(payload, countOfItemsInPayload);
+                    }
                 }
             }
         }
@@ -277,9 +391,67 @@ module Microsoft.ApplicationInsights {
          */
         public _xdrOnLoad(xdr: XDomainRequest, payload: string[]) {
             if (xdr && (xdr.responseText + "" === "200" || xdr.responseText === "")) {
+                this._consecutiveErrors = 0;
                 this._onSuccess(payload, 0);
             } else {
-                this._onError(payload, xdr && xdr.responseText || "");
+                var results = this._parseResponse(xdr.responseText);
+
+                if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
+                    && !this._config.disablePartialResponseHandler()) {
+                    this._onPartialSuccess(payload, results);
+                } else {
+                    this._onError(payload, xdr && xdr.responseText || "");
+                }
+            }
+        }
+
+        /**
+         * partial success handler
+         */
+        public _onPartialSuccess(payload: string[], results: IBackendResponse) {
+            var failed = [];
+            var retry = [];
+
+            // Iterate through the reversed array of errors so that splicing doesn't have invalid indexes after the first item.
+            var errors = results.errors.reverse();
+            for (var error of errors) {
+                var extracted = payload.splice(error.index, 1)[0];
+                if (error.statusCode == 408 // Timeout
+                    || error.statusCode == 429 // Too many requests.
+                    || error.statusCode == 500 // Internal server error.
+                    || error.statusCode == 503 // Service unavailable.
+                ) {
+                    retry.push(extracted);
+                } else {
+                    // All other errors, including: 402 (Monthly quota exceeded) and 439 (Too many requests and refresh cache).
+                    failed.push(extracted);
+                }
+            }
+
+            if (payload.length > 0) {
+                this._onSuccess(payload, results.itemsAccepted);
+            }
+
+            if (failed.length > 0) {
+                this._onError(failed, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' '));
+            }
+
+            if (retry.length > 0) {
+                for (var item of retry) {
+                    this._buffer.enqueue(item);
+                }
+
+                this._buffer.clearSent(retry);
+                this._consecutiveErrors++;
+
+                // setup timer
+                this._setRetryTime();
+                this._setupTimer();
+
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, "Partial success. " +
+                        "Delivered: " + payload.length + ", Failed: " + failed.length +
+                        ". Will retry to send " + retry.length + " our of " + results.itemsReceived + " items"));
             }
         }
 
@@ -290,7 +462,6 @@ module Microsoft.ApplicationInsights {
             _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
                 new _InternalLogMessage(_InternalMessageId.NONUSRACT_OnError, "Failed to send telemetry.", { message: message }));
 
-            // TODO: add error handling
             this._buffer.clearSent(payload);
         }
 
