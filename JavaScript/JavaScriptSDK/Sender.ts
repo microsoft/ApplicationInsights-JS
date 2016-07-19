@@ -259,7 +259,7 @@ module Microsoft.ApplicationInsights {
                     }
 
                     // update lastSend time to enable throttling
-                    this._lastSend = +new Date; // TODO: Does anything use _lastSend?
+                    this._lastSend = +new Date;
                 } else {
                     this._buffer.clear();
                 }
@@ -308,11 +308,7 @@ module Microsoft.ApplicationInsights {
 
                 if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
                     result.itemsReceived - result.itemsAccepted == result.errors.length) {
-                    return {
-                        itemsReceived: result.itemsReceived,
-                        itemsAccepted: result.itemsAccepted,
-                        errors: result.errors
-                    };
+                    return result; 
                 }
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
@@ -420,9 +416,9 @@ module Microsoft.ApplicationInsights {
             var errors = results.errors.reverse();
             for (var error of errors) {
                 var extracted = payload.splice(error.index, 1)[0];
-                if (error.statusCode == 408 // Timeout
+                if (error.statusCode == 402 // Too many requests over extended time.
+                    || error.statusCode == 408 // Timeout
                     || error.statusCode == 429 // Too many requests.
-                    || error.statusCode == 439 // Too many requests over extended time.
                     || error.statusCode == 500 // Internal server error.
                     || error.statusCode == 503 // Service unavailable.
                 ) {

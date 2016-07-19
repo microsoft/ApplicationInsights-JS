@@ -1007,8 +1007,8 @@ class SenderTests extends TestClass {
         this.fakeServer.requests.pop().respond(
             206,
             { "Content-Type": "application/json" },
-            // backend rejected 5 out of 6 payloads. Rejected payloads response codes: 408, 429, 439, 500, 503 (all retryable)
-            '{ "itemsReceived": 6, "itemsAccepted": 1, "errors": [{ "index": 1, "statusCode": 408, "message": "error" }, { "index": 2, "statusCode": 429, "message": "error" }, { "index": 3, "statusCode": 439, "message": "error" }, { "index": 4, "statusCode": 500, "message": "error" }, { "index": 5, "statusCode": 503, "message": "error" }] }'
+            // backend rejected 5 out of 6 payloads. Rejected payloads response codes: 402, 408, 429, 500, 503 (all retryable)
+            '{ "itemsReceived": 6, "itemsAccepted": 1, "errors": [{ "index": 1, "statusCode": 408, "message": "error" }, { "index": 2, "statusCode": 429, "message": "error" }, { "index": 3, "statusCode": 402, "message": "error" }, { "index": 4, "statusCode": 500, "message": "error" }, { "index": 5, "statusCode": 503, "message": "error" }] }'
         );
 
         // verify
