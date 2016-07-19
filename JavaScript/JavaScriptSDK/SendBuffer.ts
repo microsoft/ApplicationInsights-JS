@@ -100,7 +100,7 @@ module Microsoft.ApplicationInsights {
         }
 
         public clearSent(payload: string[]) {
-            this.clear();
+            // not supported
         }
     }
 
@@ -136,8 +136,8 @@ module Microsoft.ApplicationInsights {
             // update DataLossAnalyzer with the number of recovered items
             DataLossAnalyzer.itemsRestoredFromSessionBuffer = this._buffer.length;
 
-            this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
             this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
+            this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
         }
 
         public enqueue(payload: string) {
@@ -242,7 +242,7 @@ module Microsoft.ApplicationInsights {
                 }
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
-                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailToRestoreStorageBuffer,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToRestoreStorageBuffer,
                         " storage key: " + key + ", " + Util.getExceptionName(e),
                         { exception: Util.dump(e) }));
             }
@@ -255,9 +255,13 @@ module Microsoft.ApplicationInsights {
                 var bufferJson = JSON.stringify(buffer);
                 Util.setSessionStorage(key, bufferJson);
             } catch (e) {
+                // if there was an error, clear the buffer
+                // telemetry is stored in the _buffer array so we won't loose any items
+                Util.setSessionStorage(key, JSON.stringify([]));
+
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
-                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailToSetStorageBuffer,
-                        " storage key: " + key + ", " + Util.getExceptionName(e),
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToSetStorageBuffer,
+                        " storage key: " + key + ", " + Util.getExceptionName(e) + ". Buffer cleared",
                         { exception: Util.dump(e) }));
             }
         }

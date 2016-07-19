@@ -75,7 +75,8 @@ module Microsoft.ApplicationInsights {
                 disableTelemetry: () => this.config.disableTelemetry,
                 sampleRate: () => this.config.samplingPercentage,
                 cookieDomain: () => this.config.cookieDomain,
-                enableSessionStorageBuffer: () => this.config.enableSessionStorageBuffer
+                enableSessionStorageBuffer: () => this.config.enableSessionStorageBuffer,
+                disablePartialResponseHandler: () => this.config.disablePartialResponseHandler
             }
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
