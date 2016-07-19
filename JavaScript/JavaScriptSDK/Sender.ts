@@ -308,7 +308,7 @@ module Microsoft.ApplicationInsights {
 
                 if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
                     result.itemsReceived - result.itemsAccepted == result.errors.length) {
-                    return result; 
+                    return result;
                 }
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
@@ -416,14 +416,14 @@ module Microsoft.ApplicationInsights {
             var errors = results.errors.reverse();
             for (var error of errors) {
                 var extracted = payload.splice(error.index, 1)[0];
-                if (error.statusCode == 402 // Too many requests over extended time.
-                    || error.statusCode == 408 // Timeout
+                if (error.statusCode == 408 // Timeout
                     || error.statusCode == 429 // Too many requests.
                     || error.statusCode == 500 // Internal server error.
                     || error.statusCode == 503 // Service unavailable.
                 ) {
                     retry.push(extracted);
                 } else {
+                    // All other errors, including: 402 (Monthly quota exceeded) and 439 (Too many requests and refresh cache).
                     failed.push(extracted);
                 }
             }
