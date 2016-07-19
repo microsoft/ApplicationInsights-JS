@@ -18,7 +18,7 @@ Param(
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="CDN URL -- NOTE this is only used to as a replacement index")]
-    [string]$cdnUrl = "//az416426.vo.msecnd.net/scripts/a/ai.0.js"
+    [string]$cdnUrl = "https://az416426.vo.msecnd.net/scripts/a/ai.0.js"
 )
 
 # copy ai full
