@@ -23,7 +23,7 @@ You add a short snippet of code to the page, which pulls in the rest of the SDK.
 
 * [How to set up web page tracking](https://azure.microsoft.com/documentation/articles/app-insights-javascript/)
 * [Overview of the API and examples](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/)
-* Non-minified built code: [ai.js](http://az416426.vo.msecnd.net/scripts/a/ai.js)
+* Non-minified built code: [ai.js](https://az416426.vo.msecnd.net/scripts/a/ai.js)
 
 ## class AppInsights
 
@@ -271,7 +271,7 @@ Values that control how the telemetry data is sent.
         enableSessionStorageBuffer: boolean;
 
         // The url from where the JS SDK will be downloaded. 
-        // Default '//az416426.vo.msecnd.net/scripts/a/ai.0.js'
+        // Default 'https://az416426.vo.msecnd.net/scripts/a/ai.0.js'
         url: string;
     }
 
