@@ -146,7 +146,10 @@
          */
         private static _messageCount = 0;
 
-       private static _messageLogged: { [type: string]: boolean } = {};
+        /**
+         * Holds information about what message types were already logged to console or sent to server.
+         */
+        private static _messageLogged: { [type: string]: boolean } = {};
 
         /**
          * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
@@ -183,7 +186,21 @@
                 if (typeof (message) !== "undefined" && !!message) {
                     if (typeof (message.message) !== "undefined") {
                         message.message = this.AiUserActionablePrefix + message.message;
-                        this.warnToConsole(message.message);
+
+                        // check if this message type was already logged to console for this page view and if so, don't log it again
+                        var logToConsole = true;
+
+                        var messageKey = _InternalMessageId[message.messageId];
+                        if (this._messageLogged[messageKey] && !this.verboseLogging()) {
+                            logToConsole = false;
+                        } else {
+                            this._messageLogged[messageKey] = true;
+                        }
+
+                        if (logToConsole) {
+                            this.warnToConsole(message.message);
+                        }
+
                         this.logInternalMessage(severity, message);
                     }
                 }

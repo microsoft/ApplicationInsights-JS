@@ -200,6 +200,64 @@ class LoggingTests extends TestClass {
         });
 
         this.testCase({
+            name: "LoggingTests: throwInternalUserActionable logs only one message of a given type to console (without verboseLogging)",
+            test: () => {
+                // setup
+                var throwSpy = null;
+                try {
+                    throwSpy = this.sandbox.spy(console, "warn");
+                    this.InternalLogging.enableDebugExceptions = () => false;
+                    this.InternalLogging.verboseLogging = () => false;
+
+                    var message1 = new this.InternalLoggingMessage(1, "error!");
+                    var message2 = new this.InternalLoggingMessage(2, "error 2!");
+
+                    // act
+                    // send 4 messages, with 2 distinct types
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+
+                    // verify
+                    Assert.ok(throwSpy.calledTwice, "console.warn was called only once per each message type");
+
+                } catch (e) {
+                    Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
+                }
+            }
+        });
+
+        this.testCase({
+            name: "LoggingTests: throwInternalUserActionable always log to console with verbose logging",
+            test: () => {
+                // setup
+                var throwSpy = null;
+                try {
+                    throwSpy = this.sandbox.spy(console, "warn");
+                    this.InternalLogging.enableDebugExceptions = () => false;
+                    this.InternalLogging.verboseLogging = () => true;
+
+                    var message1 = new this.InternalLoggingMessage(1, "error!");
+                    var message2 = new this.InternalLoggingMessage(2, "error 2!");
+
+                    // act
+                    // send 4 messages, with 2 distinct types
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+
+                    // verify
+                    Assert.equal(4, throwSpy.callCount, "console.warn was called for each message");
+
+                } catch (e) {
+                    Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
+                }
+            }
+        });
+
+        this.testCase({
             name: "LoggingTests: warnToConsole does not add to the queue ",
             test: () => {
                 // setup
