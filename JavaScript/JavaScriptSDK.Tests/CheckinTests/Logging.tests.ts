@@ -389,7 +389,7 @@ class LoggingTests extends TestClass {
                 var message2 = new this.InternalLoggingMessage(2, "2");
 
                 // disable session storage
-                var utilCanUserSession = Microsoft.ApplicationInsights.Util.canUseSessionStorage;
+                var utilCanUseSession = Microsoft.ApplicationInsights.Util.canUseSessionStorage;
                 Microsoft.ApplicationInsights.Util.canUseSessionStorage = () => {
                     return false;
                 };
@@ -413,7 +413,7 @@ class LoggingTests extends TestClass {
                 Assert.equal(this.InternalLogging.queue[1], message2);
 
                 // clean up - reset session storage
-                Microsoft.ApplicationInsights.Util.canUseSessionStorage = utilCanUserSession;
+                Microsoft.ApplicationInsights.Util.canUseSessionStorage = utilCanUseSession;
             }
         });
         

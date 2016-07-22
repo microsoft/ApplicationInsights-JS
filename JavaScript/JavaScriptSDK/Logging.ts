@@ -188,17 +188,11 @@
                         message.message = this.AiUserActionablePrefix + message.message;
 
                         // check if this message type was already logged to console for this page view and if so, don't log it again
-                        var logToConsole = true;
-
                         var messageKey = _InternalMessageId[message.messageId];
-                        if (this._messageLogged[messageKey] && !this.verboseLogging()) {
-                            logToConsole = false;
-                        } else {
-                            this._messageLogged[messageKey] = true;
-                        }
 
-                        if (logToConsole) {
+                        if (!this._messageLogged[messageKey] || this.verboseLogging()) {
                             this.warnToConsole(message.message);
+                            this._messageLogged[messageKey] = true;
                         }
 
                         this.logInternalMessage(severity, message);

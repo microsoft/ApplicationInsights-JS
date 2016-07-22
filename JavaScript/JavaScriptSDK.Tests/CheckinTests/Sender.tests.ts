@@ -639,7 +639,7 @@ class SenderTests extends TestClass {
         this.testCase({
             name: "SenderTests: does not use SessionStorageBuffer when enableSessionStorageBuffer is true and SessionStorage is not supported",
             test: () => {
-                var utilCanUserSession = Microsoft.ApplicationInsights.Util.canUseSessionStorage;
+                var utilCanUseSession = Microsoft.ApplicationInsights.Util.canUseSessionStorage;
 
                 // setup
                 var config: Microsoft.ApplicationInsights.ISenderConfig = {
@@ -663,7 +663,7 @@ class SenderTests extends TestClass {
                 Assert.ok(sender._buffer instanceof Microsoft.ApplicationInsights.ArraySendBuffer, "sender should use Array buffer");
 
                 // clean up
-                Microsoft.ApplicationInsights.Util.canUseSessionStorage = utilCanUserSession;
+                Microsoft.ApplicationInsights.Util.canUseSessionStorage = utilCanUseSession;
             }
         });
 
