@@ -302,7 +302,6 @@ class LoggingTests extends TestClass {
                 var maxAllowedInternalMessages = 2;
                 var message1 = new this.InternalLoggingMessage(1, "1");
                 var message2 = new this.InternalLoggingMessage(2, "2");
-               
 
                 // setup
                 this.InternalLogging.enableDebugExceptions = () => false;
@@ -321,6 +320,42 @@ class LoggingTests extends TestClass {
                 Assert.equal(2, this.InternalLogging.queue.length);
                 Assert.equal(this.InternalLogging.queue[0], message1);
                 Assert.equal(this.InternalLogging.queue[1], message2);              
+            }
+        });
+
+        this.testCase({
+            name: "LoggingTests: only single message of specific type can be sent within the same page view when session storage is not available",
+            test: () => {
+                var maxAllowedInternalMessages = 2;
+                var message1 = new this.InternalLoggingMessage(1, "1");
+                var message2 = new this.InternalLoggingMessage(2, "2");
+
+                // disable session storage
+                var utilCanUserSession = Microsoft.ApplicationInsights.Util.canUseSessionStorage;
+                Microsoft.ApplicationInsights.Util.canUseSessionStorage = () => {
+                    return false;
+                };
+
+                // setup
+                this.InternalLogging.enableDebugExceptions = () => false;
+                this.InternalLogging.resetInternalMessageCount();
+                this.InternalLogging.clearInternalMessageLoggedTypes();
+
+                // act
+                // send 4 messages, with 2 distinct types
+                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+
+                // verify
+                // only two messages should be in the queue, because we have to distinct types
+                Assert.equal(2, this.InternalLogging.queue.length);
+                Assert.equal(this.InternalLogging.queue[0], message1);
+                Assert.equal(this.InternalLogging.queue[1], message2);
+
+                // clean up - reset session storage
+                Microsoft.ApplicationInsights.Util.canUseSessionStorage = utilCanUserSession;
             }
         });
         

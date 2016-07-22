@@ -146,6 +146,8 @@
          */
         private static _messageCount = 0;
 
+       private static _messageLogged: { [type: string]: boolean } = {};
+
         /**
          * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
          * @param severity {LoggingSeverity} - The severity of the log message
@@ -166,7 +168,6 @@
                         this.logInternalMessage(severity, message);
                     }
                 }
-
             }
         }
 
@@ -208,6 +209,7 @@
          */
         public static resetInternalMessageCount(): void {
             this._messageCount = 0;
+            this._messageLogged = {};
         }
 
         /**
@@ -248,13 +250,21 @@
 
             // check if this message type was already logged for this session and if so, don't log it again
             var logMessage = true;
+            var messageKey = _InternalLogging.AIInternalMessagePrefix + _InternalMessageId[message.messageId];
+
             if (Util.canUseSessionStorage()) {
-                var storageMessageKey = _InternalLogging.AIInternalMessagePrefix + _InternalMessageId[message.messageId];
-                var internalMessageTypeLogRecord = Util.getSessionStorage(storageMessageKey);
+                var internalMessageTypeLogRecord = Util.getSessionStorage(messageKey);
                 if (internalMessageTypeLogRecord) {
                     logMessage = false;
                 } else {
-                    Util.setSessionStorage(storageMessageKey, "1");
+                    Util.setSessionStorage(messageKey, "1");
+                }
+            } else {
+                // if the session storage is not available, limit to only one message type per page view
+                if (this._messageLogged[messageKey]) {
+                    logMessage = false;
+                } else {
+                    this._messageLogged[messageKey] = true;
                 }
             }
 
