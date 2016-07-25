@@ -200,6 +200,64 @@ class LoggingTests extends TestClass {
         });
 
         this.testCase({
+            name: "LoggingTests: throwInternalUserActionable logs only one message of a given type to console (without verboseLogging)",
+            test: () => {
+                // setup
+                var throwSpy = null;
+                try {
+                    throwSpy = this.sandbox.spy(console, "warn");
+                    this.InternalLogging.enableDebugExceptions = () => false;
+                    this.InternalLogging.verboseLogging = () => false;
+
+                    var message1 = new this.InternalLoggingMessage(1, "error!");
+                    var message2 = new this.InternalLoggingMessage(2, "error 2!");
+
+                    // act
+                    // send 4 messages, with 2 distinct types
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+
+                    // verify
+                    Assert.ok(throwSpy.calledTwice, "console.warn was called only once per each message type");
+
+                } catch (e) {
+                    Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
+                }
+            }
+        });
+
+        this.testCase({
+            name: "LoggingTests: throwInternalUserActionable always log to console with verbose logging",
+            test: () => {
+                // setup
+                var throwSpy = null;
+                try {
+                    throwSpy = this.sandbox.spy(console, "warn");
+                    this.InternalLogging.enableDebugExceptions = () => false;
+                    this.InternalLogging.verboseLogging = () => true;
+
+                    var message1 = new this.InternalLoggingMessage(1, "error!");
+                    var message2 = new this.InternalLoggingMessage(2, "error 2!");
+
+                    // act
+                    // send 4 messages, with 2 distinct types
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+
+                    // verify
+                    Assert.equal(4, throwSpy.callCount, "console.warn was called for each message");
+
+                } catch (e) {
+                    Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
+                }
+            }
+        });
+
+        this.testCase({
             name: "LoggingTests: warnToConsole does not add to the queue ",
             test: () => {
                 // setup
@@ -302,7 +360,6 @@ class LoggingTests extends TestClass {
                 var maxAllowedInternalMessages = 2;
                 var message1 = new this.InternalLoggingMessage(1, "1");
                 var message2 = new this.InternalLoggingMessage(2, "2");
-               
 
                 // setup
                 this.InternalLogging.enableDebugExceptions = () => false;
@@ -321,6 +378,42 @@ class LoggingTests extends TestClass {
                 Assert.equal(2, this.InternalLogging.queue.length);
                 Assert.equal(this.InternalLogging.queue[0], message1);
                 Assert.equal(this.InternalLogging.queue[1], message2);              
+            }
+        });
+
+        this.testCase({
+            name: "LoggingTests: only single message of specific type can be sent within the same page view when session storage is not available",
+            test: () => {
+                var maxAllowedInternalMessages = 2;
+                var message1 = new this.InternalLoggingMessage(1, "1");
+                var message2 = new this.InternalLoggingMessage(2, "2");
+
+                // disable session storage
+                var utilCanUseSession = Microsoft.ApplicationInsights.Util.canUseSessionStorage;
+                Microsoft.ApplicationInsights.Util.canUseSessionStorage = () => {
+                    return false;
+                };
+
+                // setup
+                this.InternalLogging.enableDebugExceptions = () => false;
+                this.InternalLogging.resetInternalMessageCount();
+                this.InternalLogging.clearInternalMessageLoggedTypes();
+
+                // act
+                // send 4 messages, with 2 distinct types
+                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+
+                // verify
+                // only two messages should be in the queue, because we have to distinct types
+                Assert.equal(2, this.InternalLogging.queue.length);
+                Assert.equal(this.InternalLogging.queue[0], message1);
+                Assert.equal(this.InternalLogging.queue[1], message2);
+
+                // clean up - reset session storage
+                Microsoft.ApplicationInsights.Util.canUseSessionStorage = utilCanUseSession;
             }
         });
         
