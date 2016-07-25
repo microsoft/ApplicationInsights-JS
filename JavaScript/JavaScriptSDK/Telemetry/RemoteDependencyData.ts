@@ -11,6 +11,9 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static envelopeType = "Microsoft.ApplicationInsights.{0}.RemoteDependency";
         public static dataType = "RemoteDependencyData";
 
+        public static AjaxDependancyName = "Ajax";
+        public static ResourceDependancyName = "Resource";
+
         public aiDataContract = {
             id: FieldType.Required,
             ver: FieldType.Required,
@@ -34,7 +37,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         /**
          * Constructs a new instance of the RemoteDependencyData object
          */
-        constructor(id: string, absoluteUrl: string, commandName: string, value: number, success: boolean, resultCode: number, method?: string) {
+        constructor(id: string, absoluteUrl: string, commandName: string, value: number, success: boolean, resultCode: number, method?: string, dependencyTypeName?: string) {
             super();
 
             this.id = id;
@@ -43,9 +46,8 @@ module Microsoft.ApplicationInsights.Telemetry {
             this.value = value;
             this.success = success;  
             this.resultCode = resultCode + "";
-                      
-            this.dependencyKind = AI.DependencyKind.Http;
-            this.dependencyTypeName = "Ajax";
+
+            this.dependencyTypeName = dependencyTypeName || RemoteDependencyData.AjaxDependancyName;
         }
 
         private formatDependencyName(method: string, absoluteUrl: string) {

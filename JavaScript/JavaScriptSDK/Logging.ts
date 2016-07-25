@@ -59,6 +59,7 @@
         NONUSRACT_FailedToSetStorageBuffer,
         NONUSRACT_FailedToRestoreStorageBuffer,
         NONUSRACT_InvalidBackendResponse,
+        NONUSRACT_FailedToReportResourceTimingData,
 
         USRACT_CannotSerializeObject,
         USRACT_CannotSerializeObjectNonSerializable,

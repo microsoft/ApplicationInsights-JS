@@ -475,6 +475,20 @@ module Microsoft.ApplicationInsights {
 
             return true;
         }
+
+        /**
+         * Calculates time difference between two data points
+         * @param start
+         * @param end
+         */
+        public static getDuration(start: any, end: any): number {
+            var duration = 0;
+            if (!(isNaN(start) || isNaN(end))) {
+                duration = Math.max(end - start, 0);
+            }
+
+            return duration;
+        }
     }
 
     export class UrlHelper {

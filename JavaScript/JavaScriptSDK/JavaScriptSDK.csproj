@@ -144,6 +144,7 @@
     <TypeScriptCompile Include="Context\Internal.ts" />
     <TypeScriptCompile Include="Telemetry\PageViewPerformance.ts" />
     <TypeScriptCompile Include="Telemetry\RemoteDependencyData.ts" />
+    <TypeScriptCompile Include="Telemetry\ResourceTimingManager.ts" />
     <TypeScriptCompile Include="Util.ts" />
     <TypeScriptCompile Include="Logging.ts" />
     <TypeScriptCompile Include="DataLossAnalyzer.ts" />
