@@ -28,5 +28,12 @@
         cookieDomain?: string;
         disablePartialResponseHandler?: boolean;
         url?: string;
+        resourceTiming?: IResourceTimingConfig;
+    }
+
+    export interface IResourceTimingConfig {
+        enabled: boolean;
+        maxResourcesPerPage?: number;
+        reportIntervalDelay?: number;
     }
 }

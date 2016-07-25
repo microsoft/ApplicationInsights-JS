@@ -4,6 +4,7 @@
 /// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/SessionState.ts"/>
 /// <reference path="./Telemetry/PageViewManager.ts"/>
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
+/// <reference path="./Telemetry/ResourceTimingManager.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
 /// <reference path="./ajax/ajax.ts"/>
 /// <reference path="./DataLossAnalyzer.ts"/>
@@ -41,6 +42,8 @@ module Microsoft.ApplicationInsights {
         private _pageTracking: Timing;
         private _pageViewManager: Microsoft.ApplicationInsights.Telemetry.PageViewManager;
         private _pageVisitTimeManager: Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager;
+
+        private _resourceTimingManager: Microsoft.ApplicationInsights.Telemetry.ResourceTimingManager;
 
         public config: IConfig;
         public context: TelemetryContext;
@@ -112,12 +115,17 @@ module Microsoft.ApplicationInsights {
                 (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
             if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
+
+            this._resourceTimingManager = new ApplicationInsights.Telemetry.ResourceTimingManager(this);
         }
 
         public sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
+            // TODO: temporary hack!!!
+            var start = Telemetry.PageViewPerformance.getPerformanceTiming().navigationStart
+
             var pageView = new Telemetry.PageView(name, url, duration, properties, measurements);
             var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageView>(Telemetry.PageView.dataType, pageView);
-            var envelope = new Telemetry.Common.Envelope(data, Telemetry.PageView.envelopeType);
+            var envelope = new Telemetry.Common.Envelope(data, Telemetry.PageView.envelopeType, new Date(start));
 
             this.context.track(envelope);
 
@@ -497,7 +505,7 @@ module Microsoft.ApplicationInsights {
                         { name: this._name, key: name }));
             } else {
                 var end = +new Date;
-                var duration = Telemetry.PageViewPerformance.getDuration(start, end);
+                var duration = Util.getDuration(start, end);
                 this.action(name, url, duration, properties, measurements);
             }
 

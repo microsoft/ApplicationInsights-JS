@@ -46,7 +46,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
             if (Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
                 var start = Telemetry.PageViewPerformance.getPerformanceTiming().navigationStart;
-                customDuration = Telemetry.PageViewPerformance.getDuration(start, +new Date);
+                customDuration = Util.getDuration(start, +new Date);
             } else {
                 this.appInsights.sendPageViewInternal(
                     name,
@@ -103,7 +103,7 @@ module Microsoft.ApplicationInsights.Telemetry {
                             this.appInsights.flush();
                         }
                     }
-                    else if (Telemetry.PageViewPerformance.getDuration(start, +new Date) > maxDurationLimit) {
+                    else if (Util.getDuration(start, +new Date) > maxDurationLimit) {
                         clearInterval(handle);
                         if (!pageViewSent) {
                             this.appInsights.sendPageViewInternal(name, url, maxDurationLimit, properties, measurements);
