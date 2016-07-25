@@ -20,7 +20,7 @@ class AppInsightsModule {
                 aiObject.queue.push(() => aiObject[name].apply(aiObject, originalArguments));
             }
             else {
-                // otheriwse execute the function
+                // otherwise execute the function
                 aiObject[name].apply(aiObject, originalArguments);
             }
         }
