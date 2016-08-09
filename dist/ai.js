@@ -115,7 +115,11 @@ var Microsoft;
                     if (typeof (message) !== "undefined" && !!message) {
                         if (typeof (message.message) !== "undefined") {
                             message.message = this.AiUserActionablePrefix + message.message;
-                            this.warnToConsole(message.message);
+                            var messageKey = _InternalMessageId[message.messageId];
+                            if (!this._messageLogged[messageKey] || this.verboseLogging()) {
+                                this.warnToConsole(message.message);
+                                this._messageLogged[messageKey] = true;
+                            }
                             this.logInternalMessage(severity, message);
                         }
                     }
@@ -133,6 +137,7 @@ var Microsoft;
             };
             _InternalLogging.resetInternalMessageCount = function () {
                 this._messageCount = 0;
+                this._messageLogged = {};
             };
             _InternalLogging.clearInternalMessageLoggedTypes = function () {
                 if (ApplicationInsights.Util.canUseSessionStorage()) {
@@ -155,14 +160,22 @@ var Microsoft;
                     return;
                 }
                 var logMessage = true;
+                var messageKey = _InternalLogging.AIInternalMessagePrefix + _InternalMessageId[message.messageId];
                 if (ApplicationInsights.Util.canUseSessionStorage()) {
-                    var storageMessageKey = _InternalLogging.AIInternalMessagePrefix + _InternalMessageId[message.messageId];
-                    var internalMessageTypeLogRecord = ApplicationInsights.Util.getSessionStorage(storageMessageKey);
+                    var internalMessageTypeLogRecord = ApplicationInsights.Util.getSessionStorage(messageKey);
                     if (internalMessageTypeLogRecord) {
                         logMessage = false;
                     }
                     else {
-                        ApplicationInsights.Util.setSessionStorage(storageMessageKey, "1");
+                        ApplicationInsights.Util.setSessionStorage(messageKey, "1");
+                    }
+                }
+                else {
+                    if (this._messageLogged[messageKey]) {
+                        logMessage = false;
+                    }
+                    else {
+                        this._messageLogged[messageKey] = true;
                     }
                 }
                 if (logMessage) {
@@ -189,6 +202,7 @@ var Microsoft;
             _InternalLogging.queue = [];
             _InternalLogging.MAX_INTERNAL_MESSAGE_LIMIT = 25;
             _InternalLogging._messageCount = 0;
+            _InternalLogging._messageLogged = {};
             return _InternalLogging;
         })();
         ApplicationInsights._InternalLogging = _InternalLogging;
@@ -3505,7 +3519,7 @@ var Microsoft;
     var ApplicationInsights;
     (function (ApplicationInsights) {
         "use strict";
-        ApplicationInsights.Version = "0.23.4";
+        ApplicationInsights.Version = "1.0.0";
         var AppInsights = (function () {
             function AppInsights(config) {
                 var _this = this;
