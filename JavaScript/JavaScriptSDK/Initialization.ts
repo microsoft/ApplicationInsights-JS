@@ -178,8 +178,8 @@ module Microsoft.ApplicationInsights {
                 Util.stringToBoolOrDefault(config.enableSessionStorageBuffer) :
                 true;
 
-            config.disablePartialResponseHandler = (config.disablePartialResponseHandler !== undefined && config.disablePartialResponseHandler !== null) ?
-                Util.stringToBoolOrDefault(config.disablePartialResponseHandler) :
+            config.disableRetry = (config.disableRetry !== undefined && config.disableRetry !== null) ?
+                Util.stringToBoolOrDefault(config.disableRetry) :
                 true;
            
             return config;

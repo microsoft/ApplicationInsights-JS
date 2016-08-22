@@ -76,8 +76,12 @@ module Microsoft.ApplicationInsights {
                 sampleRate: () => this.config.samplingPercentage,
                 cookieDomain: () => this.config.cookieDomain,
                 enableSessionStorageBuffer: () => this.config.enableSessionStorageBuffer,
-                disablePartialResponseHandler: () => this.config.disablePartialResponseHandler
+                disableRetry: () => this.config.disableRetry
             }
+
+            // enable retry handler experiment
+            var enableExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 10);
+            this.config.disableRetry = !enableExperiment;
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
 

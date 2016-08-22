@@ -26,7 +26,7 @@
         disableFlushOnBeforeUnload?: boolean;
         enableSessionStorageBuffer?: boolean;
         cookieDomain?: string;
-        disablePartialResponseHandler?: boolean;
+        disableRetry?: boolean;
         url?: string;
     }
 }
