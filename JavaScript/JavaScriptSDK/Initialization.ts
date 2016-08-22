@@ -170,6 +170,10 @@ module Microsoft.ApplicationInsights {
                 Util.stringToBoolOrDefault(config.disableCorrelationHeaders) :
                 true;
 
+            config.enablePerfAnalyzer = (config.enablePerfAnalyzer !== undefined && config.enablePerfAnalyzer !== null) ?
+                Util.stringToBoolOrDefault(config.enablePerfAnalyzer) :
+                false;
+
             config.disableFlushOnBeforeUnload = (config.disableFlushOnBeforeUnload !== undefined && config.disableFlushOnBeforeUnload !== null) ?
                 Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload) :
                 false;

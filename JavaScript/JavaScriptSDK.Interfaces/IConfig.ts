@@ -22,6 +22,7 @@
         overridePageViewDuration?: boolean;
         maxAjaxCallsPerView?: number;
         disableDataLossAnalysis?: boolean;
+        enablePerfAnalyzer?: boolean;
         disableCorrelationHeaders?: boolean;
         disableFlushOnBeforeUnload?: boolean;
         enableSessionStorageBuffer?: boolean;
