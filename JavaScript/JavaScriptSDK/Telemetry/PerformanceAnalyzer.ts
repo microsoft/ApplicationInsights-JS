@@ -22,14 +22,22 @@
         }
 
         public Init() {
+            if (!this.enabled || !this.IsPerformanceApiSupported()) {
+                return;
+            }
+
             this.intervalHandler = setInterval(() => {
                 this.SendPerfData();
 
+                if (this.resourceFilters.length === Object.keys(this.resourcesLogged).length) {
+                    // nothing more to report
+                    clearInterval(this.intervalHandler);
+                }
             }, this.performanceSendInterval);
         }
 
         public IsPerformanceApiSupported(): boolean {
-            return ('performance' in window && 'getEntriesByType' in window.performance)
+            return ("performance" in window && "getEntriesByType" in window.performance);
         }
 
         public SendPerfData() {
@@ -37,38 +45,33 @@
                 return;
             }
 
-            if (this.resourceFilters.length === Object.keys(this.resourcesLogged).length) {
-                // nothing more to report
-                clearInterval(this.intervalHandler);
-            }
-
-            var resources = window.performance.getEntriesByType('resource');
+            var resources = window.performance.getEntriesByType("resource");
 
             if (resources === undefined || resources.length <= 0) {
                 return;
             }
 
-            for (var i = 0; i < resources.length; i++) {
+            for (var i: number = 0; i < resources.length; i++) {
                 var resource = resources[i];
 
-                var name = <string>resource.name;
+                var name: string = resource.name;
 
                 if (name && this.IsMatching(name) && !this.resourcesLogged[name]) {
                     var properties: { [name: string]: string; } = {
                         "url": name
-                    }
+                    };
 
                     // check if this resource has all timing information available
                     // see: https://www.w3.org/TR/resource-timing/#cross-origin-resources
-                    var measurements;
-                    if (resource.connectStart == 0 && resource.connectEnd == 0 && resource.requestStart == 0 && resource.responseStart == 0) {
+                    var measurements: { [name: string]: number; };
+                    if (resource.connectStart === 0 && resource.connectEnd === 0 &&
+                        resource.requestStart === 0 && resource.responseStart === 0) {
                         measurements = {
                             "duration": resource.duration,
                             "startTime": resource.startTime,
                             "responseEnd": resource.responseEnd
                         };
-                    }
-                    else {
+                    } else {
                         measurements = {
                             "duration": resource.duration,
                             "startTime": resource.startTime,
@@ -94,7 +97,7 @@
         }
 
         private IsMatching(name: string): boolean {
-            for (var i = 0; i < this.resourceFilters.length; i++) {
+            for (var i: number = 0; i < this.resourceFilters.length; i++) {
                 if (name.indexOf(this.resourceFilters[i]) !== -1) {
                     return true;
                 }

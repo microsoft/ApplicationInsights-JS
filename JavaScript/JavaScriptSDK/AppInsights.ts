@@ -82,7 +82,8 @@ module Microsoft.ApplicationInsights {
             }
 
             // enable performance analyzer experiment
-            this.config.enablePerfAnalyzer = true;
+            var enableExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 10);
+            this.config.enablePerfAnalyzer = enableExperiment;
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
 
