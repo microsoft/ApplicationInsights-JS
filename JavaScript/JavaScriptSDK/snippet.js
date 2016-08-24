@@ -17,7 +17,7 @@
     } catch (e) {}
 
     appInsights.queue = [];
-    appInsights.version = "snippet:1.0";
+    appInsights.version = "1.0";
 
     function createLazyMethod(name) {
         // Define a temporary method that queues-up a the real method call

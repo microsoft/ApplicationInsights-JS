@@ -486,7 +486,6 @@ class SessionContextTests extends TestClass {
 
     private getEmptyConfig(): Microsoft.ApplicationInsights.ITelemetryConfig {
         return {
-            snippetVersion: () => null,
             instrumentationKey: () => null,
             accountId: () => null,
             sessionRenewalMs: () => null,

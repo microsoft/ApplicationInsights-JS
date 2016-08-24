@@ -13,7 +13,6 @@ module Microsoft.ApplicationInsights {
     "use strict";
 
     export interface ITelemetryConfig extends ISenderConfig {
-        snippetVersion: () => string;
         instrumentationKey: () => string;
         accountId: () => string;
         sessionRenewalMs: () => number;
@@ -87,7 +86,7 @@ module Microsoft.ApplicationInsights {
                 this._sessionManager = new ApplicationInsights.Context._SessionManager(config);
                 this.application = new Context.Application();
                 this.device = new Context.Device();
-                this.internal = new Context.Internal(config);
+                this.internal = new Context.Internal();
                 this.location = new Context.Location();
                 this.user = new Context.User(config);
                 this.operation = new Context.Operation();

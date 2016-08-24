@@ -109,7 +109,7 @@ class SnippetTests extends TestClass {
 
         var sendSpy;
         this.testCaseAsync({
-            name: "SnippetTests: Snippet version is handled correctly",
+            name: "SnippetTests: SDK and Snippet versions are handled correctly",
             stepDelay: 250,
             steps: [
                 () => {
@@ -126,8 +126,12 @@ class SnippetTests extends TestClass {
                     this.boilerPlateAsserts(sendSpy);
 
                     // check url and properties
+                    var expectedSdk = "javascript:" + Microsoft.ApplicationInsights.Version;
+                    var expectedSnippet = "snippet:" + Microsoft.ApplicationInsights.SnippetVersion;
+
                     var data = <Microsoft.ApplicationInsights.Telemetry.Common.Envelope>sendSpy.sender.args[0][0];
-                    Assert.equal("snippet:1.0", data.tags["ai.internal.agentVersion"], "snippet version was set correctly");
+                    Assert.equal(expectedSnippet, data.tags["ai.internal.agentVersion"], "snippet version was set correctly");
+                    Assert.equal(expectedSdk, data.tags["ai.internal.sdkVersion"], "sdk version was set correctly");
                 }
             ]
         });

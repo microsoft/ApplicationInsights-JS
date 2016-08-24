@@ -15,6 +15,7 @@ module Microsoft.ApplicationInsights {
     "use strict";
 
     export var Version = "1.0.0";
+    export var SnippetVersion: string; 
 
     /**
     * Internal interface to pass appInsights object to subcomponents without coupling 
@@ -45,7 +46,6 @@ module Microsoft.ApplicationInsights {
         public config: IConfig;
         public context: TelemetryContext;
         public queue: (() => void)[];
-        public static snippetVersion: string;
         public static defaultConfig: IConfig;
 
         constructor(config: IConfig) {
@@ -65,7 +65,6 @@ module Microsoft.ApplicationInsights {
             _InternalLogging.verboseLogging = () => this.config.verboseLogging;
             _InternalLogging.enableDebugExceptions = () => this.config.enableDebug;
             var configGetters: ApplicationInsights.ITelemetryConfig = {
-                snippetVersion: () => AppInsights.snippetVersion,
                 instrumentationKey: () => this.config.instrumentationKey,
                 accountId: () => this.config.accountId,
                 sessionRenewalMs: () => this.config.sessionRenewalMs,

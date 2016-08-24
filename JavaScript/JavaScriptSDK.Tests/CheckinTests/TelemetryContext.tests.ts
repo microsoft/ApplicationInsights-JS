@@ -11,7 +11,6 @@ class TelemetryContextTests extends TestClass {
     /** Method called before the start of each test method */
     public testInitialize() {
         this._config = {
-            snippetVersion: () => "snippet:test",
             instrumentationKey: () => "testKey",
             accountId: () => undefined,
             sessionRenewalMs: () => 10,
@@ -61,12 +60,28 @@ class TelemetryContextTests extends TestClass {
         this.testCase({
             name: "TelemtetryContext: constructor intialized with correct snippet version",
             test: () => {
+                Microsoft.ApplicationInsights.SnippetVersion = "test";
                 var tc = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
 
                 Assert.ok(tc.internal, "context.internal is initialized");
 
-                var expectedSnippet = this._config.snippetVersion();
+                var expectedSnippet = "snippet:" + Microsoft.ApplicationInsights.SnippetVersion;
                 Assert.equal(expectedSnippet, tc.internal.agentVersion, "agentVersion is initialized with the snippet version");
+
+                // clean up
+                Microsoft.ApplicationInsights.SnippetVersion = undefined;
+            }
+        });
+
+        this.testCase({
+            name: "TelemtetryContext: constructor intialized correctly when snippet version is missing",
+            test: () => {
+                var tc = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
+
+                Assert.ok(tc.internal, "context.internal is initialized");
+
+                var expectedSnippet = undefined;
+                Assert.equal(expectedSnippet, tc.internal.agentVersion, "agentVersion is NOT initialized with the snippet version is missing");
             }
         });
 
