@@ -11,6 +11,7 @@ class TelemetryContextTests extends TestClass {
     /** Method called before the start of each test method */
     public testInitialize() {
         this._config = {
+            snippetVersion: () => "snippet:test",
             instrumentationKey: () => "testKey",
             accountId: () => undefined,
             sessionRenewalMs: () => 10,
@@ -53,7 +54,19 @@ class TelemetryContextTests extends TestClass {
                 Assert.ok(tc.internal, "context.internal is initialized");
 
                 var expectedSdkVersion = "javascript:" + Microsoft.ApplicationInsights.Version;
-                Assert.equal(expectedSdkVersion, tc.internal.sdkVersion, "iKey is initialized");
+                Assert.equal(expectedSdkVersion, tc.internal.sdkVersion, "sdkVersion is initialized");
+            }
+        });
+
+        this.testCase({
+            name: "TelemtetryContext: constructor intialized with correct snippet version",
+            test: () => {
+                var tc = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
+
+                Assert.ok(tc.internal, "context.internal is initialized");
+
+                var expectedSnippet = this._config.snippetVersion();
+                Assert.equal(expectedSnippet, tc.internal.agentVersion, "agentVersion is initialized with the snippet version");
             }
         });
 

@@ -31,8 +31,8 @@ $content = gc $path
 $content | out-file "$($projectDir)\E2ETests\ai.js"
 
 # build ai path in file:// format
-# $aiPath = "file:///" + ($projectDir -replace "\\", "/") + "/E2ETests/ai.js"
-$aiPath = "/E2ETests/ai.js"
+# $aiPath = "file:///" + ($projectDir -replace "\\", "/") + "ai.js"
+$aiPath = "ai.js"
 
 # test the queue
 $queueTest = "var i = 100; while(i--){appInsights.queue.push(function() {window.queueTest('from the queue')})};"

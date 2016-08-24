@@ -106,6 +106,31 @@ class SnippetTests extends TestClass {
                 }
             ]
         });
+
+        var sendSpy;
+        this.testCaseAsync({
+            name: "SnippetTests: Snippet version is handled correctly",
+            stepDelay: 250,
+            steps: [
+                () => {
+                    this.loadSnippet(path70);
+                },
+                () => {
+                    sendSpy = this.setAppInsights();
+
+                    window["appInsights"].trackPageView("test", { property: "p1" }, { measurement: 5 });
+                },
+                () => {
+                    Assert.equal(this.queueCallCount, this.queueSpy.callCount, "queue is emptied");
+                    Assert.equal(1, sendSpy.sender.callCount, "v2 send called");
+                    this.boilerPlateAsserts(sendSpy);
+
+                    // check url and properties
+                    var data = <Microsoft.ApplicationInsights.Telemetry.Common.Envelope>sendSpy.sender.args[0][0];
+                    Assert.equal("snippet:1.0", data.tags["ai.internal.agentVersion"], "snippet version was set correctly");
+                }
+            ]
+        });
     }
 
     private testSnippet(snippetPath) {
