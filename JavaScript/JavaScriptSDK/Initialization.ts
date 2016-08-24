@@ -178,8 +178,8 @@ module Microsoft.ApplicationInsights {
                 Util.stringToBoolOrDefault(config.enableSessionStorageBuffer) :
                 true;
 
-            config.disableRetry = (config.disableRetry !== undefined && config.disableRetry !== null) ?
-                Util.stringToBoolOrDefault(config.disableRetry) :
+            config.isRetryDisabled = (config.isRetryDisabled !== undefined && config.isRetryDisabled !== null) ?
+                Util.stringToBoolOrDefault(config.isRetryDisabled) :
                 true;
            
             return config;

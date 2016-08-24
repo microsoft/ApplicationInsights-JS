@@ -61,10 +61,10 @@ module Microsoft.ApplicationInsights {
         enableSessionStorageBuffer: () => boolean;
 
         /**
-         * Disable retry handler.
+         * Is retry handler disabled.
          * If enabled, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error) and 503 (service unavailable).
          */
-        disableRetry: () => boolean;
+        isRetryDisabled: () => boolean;
     }
 
     export interface IResponseError {
@@ -401,7 +401,7 @@ module Microsoft.ApplicationInsights {
         public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) {
             if (xhr.readyState === 4) {
                 if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
-                    if (!this._config.disableRetry() && this._isRetriable(xhr.status)) {
+                    if (!this._config.isRetryDisabled() && this._isRetriable(xhr.status)) {
                         this._resendPayload(payload);
 
                         _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
@@ -414,7 +414,7 @@ module Microsoft.ApplicationInsights {
                     if (xhr.status === 206) {
                         var response = this._parseResponse(xhr.responseText || xhr.response);
 
-                        if (response && !this._config.disableRetry()) {
+                        if (response && !this._config.isRetryDisabled()) {
                             this._onPartialSuccess(payload, response);
                         } else {
                             this._onError(payload, xhr.responseText || xhr.response || "");
@@ -438,7 +438,7 @@ module Microsoft.ApplicationInsights {
                 var results = this._parseResponse(xdr.responseText);
 
                 if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
-                    && !this._config.disableRetry()) {
+                    && !this._config.isRetryDisabled()) {
                     this._onPartialSuccess(payload, results);
                 } else {
                     this._onError(payload, xdr && xdr.responseText || "");

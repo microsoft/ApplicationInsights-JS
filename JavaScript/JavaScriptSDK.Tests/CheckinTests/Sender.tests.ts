@@ -1170,7 +1170,7 @@ class SenderTests extends TestClass {
         var config = this.getDefaultConfig();
 
         // disable partial response handling
-        config.disableRetry = () => true;
+        config.isRetryDisabled = () => true;
 
         var sender = <SenderWrapper>new Microsoft.ApplicationInsights.Sender(config);
 
@@ -1223,7 +1223,7 @@ class SenderTests extends TestClass {
             maxBatchInterval: () => this.maxBatchInterval,
             disableTelemetry: () => this.disableTelemetry,
             enableSessionStorageBuffer: () => true,
-            disableRetry: () => false
+            isRetryDisabled: () => false
         };
     }
 }

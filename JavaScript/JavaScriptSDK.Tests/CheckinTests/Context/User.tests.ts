@@ -419,7 +419,7 @@ class UserContextTests extends TestClass {
             maxBatchInterval: () => null,
             disableTelemetry: () => null,
             enableSessionStorageBuffer: () => null,
-            disableRetry: () => null
+            isRetryDisabled: () => null
         };
     }
 }
