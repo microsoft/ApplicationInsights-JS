@@ -1,4 +1,4 @@
-﻿ module Microsoft.ApplicationInsights {
+﻿module Microsoft.ApplicationInsights {
 
     "use strict";
 
@@ -27,6 +27,7 @@
         enableSessionStorageBuffer?: boolean;
         cookieDomain?: string;
         isRetryDisabled?: boolean;
+        isPerfAnalyzerEnabled?: boolean;
         url?: string;
     }
 }

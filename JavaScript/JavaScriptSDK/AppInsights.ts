@@ -4,6 +4,7 @@
 /// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/SessionState.ts"/>
 /// <reference path="./Telemetry/PageViewManager.ts"/>
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
+/// <reference path="./Telemetry/PerformanceAnalyzer.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
 /// <reference path="./ajax/ajax.ts"/>
 /// <reference path="./DataLossAnalyzer.ts"/>
@@ -41,6 +42,7 @@ module Microsoft.ApplicationInsights {
         private _pageTracking: Timing;
         private _pageViewManager: Microsoft.ApplicationInsights.Telemetry.PageViewManager;
         private _pageVisitTimeManager: Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager;
+        private _performanceAnalyzer: Microsoft.ApplicationInsights.PerformanceAnalyzer;
 
         public config: IConfig;
         public context: TelemetryContext;
@@ -79,9 +81,13 @@ module Microsoft.ApplicationInsights {
                 isRetryDisabled: () => this.config.isRetryDisabled
             }
 
+            // enable performance analyzer experiment
+            var enablePerfExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 10);
+            this.config.isPerfAnalyzerEnabled = enablePerfExperiment;
+
             // enable retry handler experiment
-            var enableExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 10);
-            this.config.isRetryDisabled = !enableExperiment;
+            var enableRetryExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 10);
+            this.config.isRetryDisabled = !enableRetryExperiment;
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
 
@@ -116,6 +122,10 @@ module Microsoft.ApplicationInsights {
                 (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
             if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
+
+            if (this.config.isPerfAnalyzerEnabled) {
+                this._performanceAnalyzer = new Microsoft.ApplicationInsights.PerformanceAnalyzer(this);
+            }
         }
 
         public sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
