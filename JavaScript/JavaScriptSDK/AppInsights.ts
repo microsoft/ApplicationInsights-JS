@@ -81,10 +81,6 @@ module Microsoft.ApplicationInsights {
                 isRetryDisabled: () => this.config.isRetryDisabled
             }
 
-            // enable performance analyzer experiment
-            var enablePerfExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 10);
-            this.config.isPerfAnalyzerEnabled = enablePerfExperiment;
-
             // enable retry handler experiment
             var enableRetryExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 10);
             this.config.isRetryDisabled = !enableRetryExperiment;
