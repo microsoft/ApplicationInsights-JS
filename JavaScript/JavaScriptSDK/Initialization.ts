@@ -171,6 +171,10 @@ module Microsoft.ApplicationInsights {
                 Util.stringToBoolOrDefault(config.disableCorrelationHeaders) :
                 true;
 
+            config.isPerfAnalyzerEnabled = (config.isPerfAnalyzerEnabled !== undefined && config.isPerfAnalyzerEnabled !== null) ?
+                Util.stringToBoolOrDefault(config.isPerfAnalyzerEnabled) :
+                false;
+
             config.disableFlushOnBeforeUnload = (config.disableFlushOnBeforeUnload !== undefined && config.disableFlushOnBeforeUnload !== null) ?
                 Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload) :
                 false;
@@ -179,8 +183,8 @@ module Microsoft.ApplicationInsights {
                 Util.stringToBoolOrDefault(config.enableSessionStorageBuffer) :
                 true;
 
-            config.disablePartialResponseHandler = (config.disablePartialResponseHandler !== undefined && config.disablePartialResponseHandler !== null) ?
-                Util.stringToBoolOrDefault(config.disablePartialResponseHandler) :
+            config.isRetryDisabled = (config.isRetryDisabled !== undefined && config.isRetryDisabled !== null) ?
+                Util.stringToBoolOrDefault(config.isRetryDisabled) :
                 true;
            
             return config;

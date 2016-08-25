@@ -23,7 +23,7 @@ class DisableTelemetryTests extends TestClass {
             maxBatchSizeInBytes: () => null,
             maxBatchInterval: () => null,
             disableTelemetry: () => null,
-            disablePartialResponseHandler: () => null
+            isRetryDisabled: () => null
         };
 
         var sender = new Microsoft.ApplicationInsights.Sender(config);
