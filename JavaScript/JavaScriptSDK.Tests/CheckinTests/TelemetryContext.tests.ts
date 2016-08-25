@@ -23,7 +23,7 @@ class TelemetryContextTests extends TestClass {
             sampleRate: () => 100,
             cookieDomain: undefined,
             enableSessionStorageBuffer: () => false,
-            disablePartialResponseHandler: () => false
+            isRetryDisabled: () => false
         }
 
         this._telemetryContext = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
