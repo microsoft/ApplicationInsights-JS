@@ -90,7 +90,7 @@
     -->
     <SemanticVersionMajor>1</SemanticVersionMajor>
     <SemanticVersionMinor>0</SemanticVersionMinor>
-    <SemanticVersionPatch>1</SemanticVersionPatch>
+    <SemanticVersionPatch>2</SemanticVersionPatch>
     <!-- 
       Date when Semantic Version was changed. 
       Update for every public release.

@@ -15,7 +15,7 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "1.0.1";
+    export var Version = "1.0.2";
 
     /**
     * Internal interface to pass appInsights object to subcomponents without coupling 
@@ -80,10 +80,6 @@ module Microsoft.ApplicationInsights {
                 enableSessionStorageBuffer: () => this.config.enableSessionStorageBuffer,
                 isRetryDisabled: () => this.config.isRetryDisabled
             }
-
-            // enable performance analyzer experiment
-            var enablePerfExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 10);
-            this.config.isPerfAnalyzerEnabled = enablePerfExperiment;
 
             // enable retry handler experiment
             var enableRetryExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 10);
