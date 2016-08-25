@@ -83,7 +83,7 @@ module Microsoft.ApplicationInsights {
 
             // enable performance analyzer experiment
             var enablePerfExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 10);
-            this.config.enablePerfAnalyzer = enablePerfExperiment;
+            this.config.isPerfAnalyzerEnabled = enablePerfExperiment;
 
             // enable retry handler experiment
             var enableRetryExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 10);
@@ -123,7 +123,7 @@ module Microsoft.ApplicationInsights {
 
             if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
 
-            if (this.config.enablePerfAnalyzer) {
+            if (this.config.isPerfAnalyzerEnabled) {
                 this._performanceAnalyzer = new Microsoft.ApplicationInsights.PerformanceAnalyzer(this);
             }
         }

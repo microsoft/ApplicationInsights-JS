@@ -1,4 +1,4 @@
-﻿ module Microsoft.ApplicationInsights {
+﻿module Microsoft.ApplicationInsights {
 
     "use strict";
 
@@ -22,12 +22,12 @@
         overridePageViewDuration?: boolean;
         maxAjaxCallsPerView?: number;
         disableDataLossAnalysis?: boolean;
-        enablePerfAnalyzer?: boolean;
         disableCorrelationHeaders?: boolean;
         disableFlushOnBeforeUnload?: boolean;
         enableSessionStorageBuffer?: boolean;
         cookieDomain?: string;
         isRetryDisabled?: boolean;
+        isPerfAnalyzerEnabled?: boolean;
         url?: string;
     }
 }

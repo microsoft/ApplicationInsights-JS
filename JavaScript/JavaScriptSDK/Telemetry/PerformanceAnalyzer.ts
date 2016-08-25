@@ -13,7 +13,7 @@
 
         constructor(appInsights: IAppInsights) {
             this.appInsights = appInsights;
-            this.enabled = this.appInsights.config.enablePerfAnalyzer;
+            this.enabled = this.appInsights.config.isPerfAnalyzerEnabled;
 
             // TODO: move to configuration so user can setup custom resource performance measurments.
             this.resourceFilters = ["/v2/track", "/ai.0.js"];
