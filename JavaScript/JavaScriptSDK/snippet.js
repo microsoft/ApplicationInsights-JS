@@ -7,6 +7,12 @@
     var localDocument = document;
     var localWindow = window;
     var scriptText = "script";
+    var userContext = "AuthenticatedUserContext";
+    var start = "start";
+    var stop = "stop";
+    var track = "Track";
+    var trackEvent = track + "Event";
+    var trackPage = track + "Page";
     var scriptElement = localDocument.createElement(scriptText);
     scriptElement.src = aiConfig.url || "CDN_PATH";
     localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
@@ -36,14 +42,14 @@
         createLazyMethod("track" + method.pop());
     }
 
-    createLazyMethod("setAuthenticatedUserContext");
-    createLazyMethod("clearAuthenticatedUserContext");
+    createLazyMethod("set" + userContext);
+    createLazyMethod("clear" + userContext);
 
-    createLazyMethod("startTrackEvent");
-    createLazyMethod("stopTrackEvent");
+    createLazyMethod(start + trackEvent);
+    createLazyMethod(stop + trackEvent);
 
-    createLazyMethod("startTrackPage");
-    createLazyMethod("stopTrackPage");
+    createLazyMethod(start + trackPage);
+    createLazyMethod(stop + trackPage);
 
     createLazyMethod("flush");
 

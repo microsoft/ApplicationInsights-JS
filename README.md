@@ -21,8 +21,8 @@ and insert it in the head of your web pages. Application Insights script will be
 from CDN or you can override the script hosting location by specifying `url` parameter in the config.   
 ```
 <script type="text/javascript">
-    var appInsights = window.appInsights || function (config) {
-        function r(config){t[config]=function(){var i=arguments;t.queue.push(function(){t[config].apply(t,i)})}}var t={config:config},u=document,e=window,o="script",s=u.createElement(o),i,f;s.src=config.url||"https://az416426.vo.msecnd.net/scripts/a/ai.0.js";u.getElementsByTagName(o)[0].parentNode.appendChild(s);try{t.cookie=u.cookie}catch(h){}for(t.queue=[],i=["Event","Exception","Metric","PageView","Trace","Dependency"];i.length;)r("track"+i.pop());return r("setAuthenticatedUserContext"),r("clearAuthenticatedUserContext"),r("startTrackEvent"),r("stopTrackEvent"),r("startTrackPage"),r("stopTrackPage"),r("flush"),config.disableExceptionTracking||(i="onerror",r("_"+i),f=e[i],e[i]=function(config,r,u,e,o){var s=f&&f(config,r,u,e,o);return s!==!0&&t["_"+i](config,r,u,e,o),s}),t
+    var appInsights = window.appInsights || function (n) {
+        function t(n){i[n]=function(){var t=arguments;i.queue.push(function(){i[n].apply(i,t)})}}var i={config:n},u=document,e=window,o="script",s="AuthenticatedUserContext",h="start",c="stop",l="Track",a=l+"Event",v=l+"Page",y=u.createElement(o),r,f;y.src=n.url||"CDN_PATH";u.getElementsByTagName(o)[0].parentNode.appendChild(y);try{i.cookie=u.cookie}catch(p){}for(i.queue=[],r=["Event","Exception","Metric","PageView","Trace","Dependency"];r.length;)t("track"+r.pop());return t("set"+s),t("clear"+s),t(h+a),t(c+a),t(h+v),t(c+v),t("flush"),n.disableExceptionTracking||(r="onerror",t("_"+r),f=e[r],e[r]=function(n,t,u,e,o){var s=f&&f(n,t,u,e,o);return s!==!0&&i["_"+r](n,t,u,e,o),s}),i
     }({
         instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
     });
