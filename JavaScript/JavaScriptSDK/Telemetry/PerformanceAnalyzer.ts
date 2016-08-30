@@ -80,7 +80,7 @@
                             "domainLookupStart": resource.domainLookupStart,
                             "domainLookupEnd": resource.domainLookupEnd,
                             "connectStart": resource.connectStart,
-                            "secureConnectionStart": resource.secureConnectionStart,
+                            "secureConnectionStart": resource.secureConnectionStart || "0",
                             "connectEnd": resource.connectEnd,
                             "requestStart": resource.requestStart,
                             "responseStart": resource.responseStart,
