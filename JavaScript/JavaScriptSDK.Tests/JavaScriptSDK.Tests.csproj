@@ -90,6 +90,7 @@
       <DependentUpon>PostBuild.ps1</DependentUpon>
     </Content>
     <Content Include="E2ETests\standalone\snippet_0.1.js" />
+    <Content Include="E2ETests\standalone\snippet_1.0.js" />
     <Content Include="E2ETests\standalone\sprint70.html" />
     <Content Include="E2ETests\standalone\testSnippet.js" />
     <Content Include="E2ETests\testSnippet.js">

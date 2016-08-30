@@ -8,6 +8,7 @@ class SnippetTests extends TestClass {
     private originalAppInsights;
     private queueSpy;
     private queueCallCount = 100;
+    private senderMocks;
 
     private loadSnippet(path) {
         // load ai via the snippet
@@ -50,16 +51,15 @@ class SnippetTests extends TestClass {
         var snippet_Latest = "/snippetLatest.js";
 
         // snippet version 1.0
-        var snippet_10 = "/snippet10.js";
+        var snippet_10 = "/snippet_1.0.js";
 
         // old snippet, before snippet versioning was implemented
-        var snippet_01 = "/snippet01.js";
+        var snippet_01 = "/snippet_0.1.js";
 
         this.testSnippet(snippet_Latest);
         this.testSnippet(snippet_10);
         this.testSnippet(snippet_01);
 
-        var senderSpy71V2;
         this.testCaseAsync({
             name: "SnippetTests: API version 0.10 and lower can send (url,prop,meas) and the url is set correctly",
             stepDelay: 250,
@@ -68,25 +68,24 @@ class SnippetTests extends TestClass {
                     this.loadSnippet(snippet_01);
                 },
                 () => {
-                    senderSpy71V2 = this.setAppInsights();
+                    this.senderMocks = this.setAppInsights();
 
                     window["appInsights"].trackPageView("test", { property: "p1" }, { measurement: 5 });
-                },
-                () => {
+                }]
+                .concat(this.waitForResponse())
+                .concat(() => {
                     Assert.equal(this.queueCallCount, this.queueSpy.callCount, "queue is emptied");
-                    Assert.equal(2, senderSpy71V2.sender.callCount, "v2 send called " + 2 + " times");
-                    this.boilerPlateAsserts(senderSpy71V2);
+                    Assert.equal(1, this.senderMocks.sender.callCount, "v2 send called 1 time");
+                    this.boilerPlateAsserts(this.senderMocks);
 
                     // check url and properties
-                    var pv = <Microsoft.ApplicationInsights.Telemetry.PageView>senderSpy71V2.sender.args[0][0].data.baseData;
+                    var pv = <Microsoft.ApplicationInsights.Telemetry.PageView>this.senderMocks.sender.args[0][0].data.baseData;
                     Assert.deepEqual("test", pv.url, "url was set correctly");
                     Assert.deepEqual({ property: "p1" }, pv.properties, "properties were set correctly");
                     Assert.deepEqual({ measurement: 5 }, pv.measurements, "measurements were set correctly");
-                }
-            ]
+                })
         });
 
-        var sendSpy;
         this.testCaseAsync({
             name: "SnippetTests: SDK and Snippet versions are handled correctly",
             stepDelay: 250,
@@ -95,24 +94,24 @@ class SnippetTests extends TestClass {
                     this.loadSnippet(snippet_Latest);
                 },
                 () => {
-                    sendSpy = this.setAppInsights();
+                    this.senderMocks = this.setAppInsights();
 
                     window["appInsights"].trackPageView("test", { property: "p1" }, { measurement: 5 });
-                },
-                () => {
+                }]
+                .concat(this.waitForResponse())
+                .concat(() => {
                     Assert.equal(this.queueCallCount, this.queueSpy.callCount, "queue is emptied");
-                    Assert.equal(1, sendSpy.sender.callCount, "v2 send called");
-                    this.boilerPlateAsserts(sendSpy);
+                    Assert.equal(1, this.senderMocks.sender.callCount, "v2 send called");
+                    this.boilerPlateAsserts(this.senderMocks);
 
                     // check url and properties
                     var expectedSdk = "javascript:" + Microsoft.ApplicationInsights.Version;
                     var expectedSnippet = "snippet:" + Microsoft.ApplicationInsights.SnippetVersion;
 
-                    var data = <Microsoft.ApplicationInsights.Telemetry.Common.Envelope>sendSpy.sender.args[0][0];
+                    var data = <Microsoft.ApplicationInsights.Telemetry.Common.Envelope>this.senderMocks.sender.args[0][0];
                     Assert.equal(expectedSnippet, data.tags["ai.internal.agentVersion"], "snippet version was set correctly");
                     Assert.equal(expectedSdk, data.tags["ai.internal.sdkVersion"], "sdk version was set correctly");
-                }
-            ]
+                })
         });
     }
 
@@ -156,7 +155,6 @@ class SnippetTests extends TestClass {
             ]
         });
 
-        var sender;
         this.testCaseAsync({
             name: "SnippetTests: " + snippetPath + " can send to v2 endpoint with V2 API",
             stepDelay: delay,
@@ -165,23 +163,27 @@ class SnippetTests extends TestClass {
                     this.loadSnippet(snippetPath);
                 },
                 () => {
-                    sender = this.setAppInsights();
+                    this.senderMocks = this.setAppInsights();
                     window[this.aiName].trackEvent("test");
                     window[this.aiName].trackException(new Error("oh no!"));
                     window[this.aiName].trackMetric("test", Math.round(100 * Math.random()));
                     window[this.aiName].trackTrace("test");
                     window[this.aiName].trackPageView("test page");
                 }]
-                .concat(<any>PollingAssert.createPollingAssert(() => {
-                    Assert.ok(true, "waiting for response " + new Date().toISOString());
-                    return (sender.successSpy.called || sender.errorSpy.called);
-                }, "Wait for response", 5, 1000))
+                .concat(this.waitForResponse())
                 .concat(() => {
                     Assert.equal(this.queueCallCount, this.queueSpy.callCount, "queue is emptied");
-                    Assert.equal(5, sender.sender.callCount, "send called 5 times");
-                    this.boilerPlateAsserts(sender);
+                    Assert.equal(5, this.senderMocks.sender.callCount, "send called 5 times");
+                    this.boilerPlateAsserts(this.senderMocks);
                 })
         });
+    }
+
+    private waitForResponse() {
+        return <any>PollingAssert.createPollingAssert(() => {
+            Assert.ok(true, "waiting for response " + new Date().toISOString());
+            return (this.senderMocks.successSpy.called || this.senderMocks.errorSpy.called);
+        }, "Wait for response", 5, 1000)
     }
 
     private checkConfig() {
