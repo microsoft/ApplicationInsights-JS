@@ -3,16 +3,15 @@
 /// <reference path="../../javascriptsdk/appinsights.ts" />
 
 class SnippetTests extends TestClass {
-    private name = "appInsights";
+    private aiName = "appInsights";
     private instrumentationKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46";
     private originalAppInsights;
-    private timingOffset = 0;
     private queueSpy;
     private queueCallCount = 100;
 
     private loadSnippet(path) {
         // load ai via the snippet
-        window["appInsights"] = undefined;
+        window[this.aiName] = undefined;
         var key = "E2ETests";
         var snippetPath = window.location.href.split(key)[0] + key + path;
         var scriptElement = document.createElement("script");
@@ -24,12 +23,11 @@ class SnippetTests extends TestClass {
     /** Method called before the start of each test method */
     public testInitialize() {
         var timingEnabled = typeof window != "undefined" && window.performance && window.performance.timing;
-        this.timingOffset = timingEnabled ? 1 : 0;
 
-        this.originalAppInsights = window[this.name];
-        window[this.name] = undefined;
+        this.originalAppInsights = window[this.aiName];
+        window[this.aiName] = undefined;
         try {
-            delete window[this.name];
+            delete window[this.aiName];
         } catch (e) {
         }
 
@@ -45,17 +43,21 @@ class SnippetTests extends TestClass {
     public testCleanup() {
         this.useFakeServer = true;
         this.useFakeTimers = true;
-        window[this.name] = this.originalAppInsights;
+        window[this.aiName] = this.originalAppInsights;
     }
 
     public registerTests() {
-        var path70 = "/sprint70Snippet.js";
-        var path69 = "/sprint69Snippet.js";
-        var path66 = "/sprint66Snippet.js";
+        var snippet_Latest = "/snippetLatest.js";
 
-        this.testSnippet(path70);
-        this.testSnippet(path69);
-        this.testSnippet(path66);
+        // snippet version 1.0
+        var snippet_10 = "/snippet10.js";
+
+        // old snippet, before snippet versioning was implemented
+        var snippet_01 = "/snippet01.js";
+
+        this.testSnippet(snippet_Latest);
+        this.testSnippet(snippet_10);
+        this.testSnippet(snippet_01);
 
         var senderSpy71V2;
         this.testCaseAsync({
@@ -63,7 +65,7 @@ class SnippetTests extends TestClass {
             stepDelay: 250,
             steps: [
                 () => {
-                    this.loadSnippet(path69);
+                    this.loadSnippet(snippet_01);
                 },
                 () => {
                     senderSpy71V2 = this.setAppInsights();
@@ -84,36 +86,13 @@ class SnippetTests extends TestClass {
             ]
         });
 
-        var senderSpy66V2V1;
-        this.testCaseAsync({
-            name: "SnippetTests: sprint 66 snippet sends to v2 endpoint with v1 API",
-            stepDelay: 250,
-            steps: [
-                () => {
-                    this.loadSnippet(path66);
-                },
-                () => {
-                    senderSpy66V2V1 = this.setAppInsights();
-
-                    window["appInsights"].logEvent("test");
-                    window["appInsights"].logPageView();
-                },
-                () => {
-                    Assert.equal(this.queueCallCount, this.queueSpy.callCount, "queue is emptied");
-                    var count = 2 + this.timingOffset;
-                    Assert.equal(count, senderSpy66V2V1.sender.callCount, "v2 send called " + count + " times");
-                    this.boilerPlateAsserts(senderSpy66V2V1);
-                }
-            ]
-        });
-
         var sendSpy;
         this.testCaseAsync({
             name: "SnippetTests: SDK and Snippet versions are handled correctly",
             stepDelay: 250,
             steps: [
                 () => {
-                    this.loadSnippet(path70);
+                    this.loadSnippet(snippet_Latest);
                 },
                 () => {
                     sendSpy = this.setAppInsights();
@@ -140,22 +119,21 @@ class SnippetTests extends TestClass {
     private testSnippet(snippetPath) {
         var delay = 250;
 
-
         this.testCaseAsync({
-            name: "SnippetTests: sprint " + snippetPath + " is loaded",
+            name: "SnippetTests: " + snippetPath + " is loaded",
             stepDelay: 50,
             steps: [
                 () => {
                     this.loadSnippet(snippetPath);
                 },
                 () => {
-                    Assert.ok(window[this.name], this.name + " is loaded");
+                    Assert.ok(window[this.aiName], this.aiName + " is loaded");
                 }
             ]
         });
 
         this.testCaseAsync({
-            name: "SnippetTests: sprint " + snippetPath + " drains the queue",
+            name: "SnippetTests: " + snippetPath + " drains the queue",
             stepDelay: 250,
             steps: [
                 () => {
@@ -168,7 +146,7 @@ class SnippetTests extends TestClass {
         });
 
         this.testCaseAsync({
-            name: "SnippetTests: sprint " + snippetPath + " configuration is read dynamically",
+            name: "SnippetTests: " + snippetPath + " configuration is read dynamically",
             stepDelay: delay,
             steps: [
                 () => {
@@ -180,7 +158,7 @@ class SnippetTests extends TestClass {
 
         var sender;
         this.testCaseAsync({
-            name: "SnippetTests: sprint " + snippetPath + " can send to v2 endpoint with V2 API",
+            name: "SnippetTests: " + snippetPath + " can send to v2 endpoint with V2 API",
             stepDelay: delay,
             steps: [
                 () => {
@@ -188,38 +166,40 @@ class SnippetTests extends TestClass {
                 },
                 () => {
                     sender = this.setAppInsights();
-                    window[this.name].trackEvent("test");
-                    window[this.name].trackException(new Error("oh no!"));
-                    window[this.name].trackMetric("test", Math.round(100 * Math.random()));
-                    window[this.name].trackTrace("test");
-                    window[this.name].trackPageView();
-                },
-                () => {
+                    window[this.aiName].trackEvent("test");
+                    window[this.aiName].trackException(new Error("oh no!"));
+                    window[this.aiName].trackMetric("test", Math.round(100 * Math.random()));
+                    window[this.aiName].trackTrace("test");
+                    window[this.aiName].trackPageView("test page");
+                }]
+                .concat(<any>PollingAssert.createPollingAssert(() => {
+                    Assert.ok(true, "waiting for response " + new Date().toISOString());
+                    return (sender.successSpy.called || sender.errorSpy.called);
+                }, "Wait for response", 5, 1000))
+                .concat(() => {
                     Assert.equal(this.queueCallCount, this.queueSpy.callCount, "queue is emptied");
-                    var count = 5 + this.timingOffset;
-                    Assert.equal(count, sender.sender.callCount, "send called " + count + " times");
+                    Assert.equal(5, sender.sender.callCount, "send called 5 times");
                     this.boilerPlateAsserts(sender);
-                }
-            ]
+                })
         });
     }
 
     private checkConfig() {
-        var initial = window[this.name];
+        var initial = window[this.aiName];
         var test = (expected, memberName, readFunction) => {
-            var appIn = <Microsoft.ApplicationInsights.AppInsights>window[this.name];
+            var appIn = <Microsoft.ApplicationInsights.AppInsights>window[this.aiName];
             appIn.config[memberName] = expected;
             var actual = readFunction();
             Assert.equal(expected, actual, memberName + ": value is read dynamically");
         };
 
         var testSenderValues = (expected, memberName) => {
-            var appIn = <Microsoft.ApplicationInsights.AppInsights>window[this.name];
+            var appIn = <Microsoft.ApplicationInsights.AppInsights>window[this.aiName];
             test(expected, memberName, appIn.context._sender._config[memberName]);
         };
 
         var testContextValues = (expected, memberName) => {
-            var appIn = <Microsoft.ApplicationInsights.AppInsights>window[this.name];
+            var appIn = <Microsoft.ApplicationInsights.AppInsights>window[this.aiName];
             test(expected, memberName, appIn.context._config[memberName]);
         };
 
@@ -240,7 +220,7 @@ class SnippetTests extends TestClass {
     private setAppInsights() {
         window["appInsights"].endpointUrl = "https://dc.services.visualstudio.com/v2/track";
         window["appInsights"].maxBatchInterval = 1;
-        var appIn = <Microsoft.ApplicationInsights.AppInsights>window[this.name];
+        var appIn = <Microsoft.ApplicationInsights.AppInsights>window[this.aiName];
         var sender = this.sandbox.spy(appIn.context._sender, "send");
         var errorSpy = this.sandbox.spy(appIn.context._sender, "_onError");
         var successSpy = this.sandbox.spy(appIn.context._sender, "_onSuccess");
