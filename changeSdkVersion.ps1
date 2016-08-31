@@ -1,9 +1,4 @@
-﻿$jsSdkDir = Read-Host "Please enter the JSSDK root dir";
-
-if (-Not (Test-Path $jsSdkDir)) {
-    Write-Warning "'$jssdkDir' directory doesn't exist.";
-    exit;
-}
+﻿$jsSdkDir = Split-Path $MyInvocation.MyCommand.Path; 
 
 $packageJsonPath =  Join-Path $jsSdkDir -ChildPath "package.json"
 if (-Not (Test-Path $packageJsonPath)) {
