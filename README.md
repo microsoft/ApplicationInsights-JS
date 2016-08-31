@@ -92,7 +92,7 @@ See:
 * Build solution in Visual Studio
 
 ## To run check-in tests
-* `powershell "& .\RunTestsInBrowser.ps1"` to run `Tests.html` in a browser (you might need to call Set-ExecutionPolicy to be able to execute the script)
+* `powershell "& .\scripts\RunTestsInBrowser.ps1"` to run `Tests.html` in a browser (you might need to call Set-ExecutionPolicy to be able to execute the script)
 * Don't forget to build the solution after changing TypeScript files
 * Refresh Tests.html in the browser to re-run tests
 

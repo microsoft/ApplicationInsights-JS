@@ -6,4 +6,4 @@ tasklist /FI "IMAGENAME eq iisexpress*" | find /I /N "iisexpress"
 if "%ERRORLEVEL%"=="0" taskkill /im iisexpress*
 
 rem Push the nupkg file to our private NuGet repository
-call %TF_BUILD_SOURCESDIRECTORY%\PushNugetPackages.cmd
+call %TF_BUILD_SOURCESDIRECTORY%\scripts\PushNugetPackages.cmd
