@@ -270,6 +270,10 @@ Values that control how the telemetry data is sent.
         // The feature is enable by default starting with v0.23.0. 
         enableSessionStorageBuffer: boolean;
 
+        // Is retry handler disabled. Default false.
+        // If enabled, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error) and 503 (service unavailable).
+        isRetryDisabled: boolean;
+
         // The url from where the JS SDK will be downloaded. 
         // Default 'https://az416426.vo.msecnd.net/scripts/a/ai.0.js'
         url: string;

@@ -82,10 +82,6 @@ module Microsoft.ApplicationInsights {
                 isRetryDisabled: () => this.config.isRetryDisabled
             }
 
-            // enable retry handler experiment
-            var enableRetryExperiment = new SplitTest().isEnabled(this.config.instrumentationKey, 10);
-            this.config.isRetryDisabled = !enableRetryExperiment;
-
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
 
             this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
