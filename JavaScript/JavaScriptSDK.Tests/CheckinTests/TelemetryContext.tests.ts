@@ -53,7 +53,35 @@ class TelemetryContextTests extends TestClass {
                 Assert.ok(tc.internal, "context.internal is initialized");
 
                 var expectedSdkVersion = "javascript:" + Microsoft.ApplicationInsights.Version;
-                Assert.equal(expectedSdkVersion, tc.internal.sdkVersion, "iKey is initialized");
+                Assert.equal(expectedSdkVersion, tc.internal.sdkVersion, "sdkVersion is initialized");
+            }
+        });
+
+        this.testCase({
+            name: "TelemtetryContext: constructor intialized with correct snippet version",
+            test: () => {
+                Microsoft.ApplicationInsights.SnippetVersion = "test";
+                var tc = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
+
+                Assert.ok(tc.internal, "context.internal is initialized");
+
+                var expectedSnippet = "snippet:" + Microsoft.ApplicationInsights.SnippetVersion;
+                Assert.equal(expectedSnippet, tc.internal.agentVersion, "agentVersion is initialized with the snippet version");
+
+                // clean up
+                Microsoft.ApplicationInsights.SnippetVersion = undefined;
+            }
+        });
+
+        this.testCase({
+            name: "TelemtetryContext: constructor intialized correctly when snippet version is missing",
+            test: () => {
+                var tc = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
+
+                Assert.ok(tc.internal, "context.internal is initialized");
+
+                var expectedSnippet = undefined;
+                Assert.equal(expectedSnippet, tc.internal.agentVersion, "agentVersion is NOT initialized with the snippet version is missing");
             }
         });
 

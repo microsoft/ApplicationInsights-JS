@@ -88,17 +88,17 @@ namespace ApplicationInsights.Javascript.Tests
             RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.SanitizerE2ETests.htm");
         }
 
+        [TestMethod]
+        public void Firefox_E2E_snippetTests()
+        {
+            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.snippetTests.htm");
+        }
+
         // Tests are failing, need to fix before we enable them.
         /* [TestMethod]
         public void Firefox_E2E_autoCollection()
         {
             RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.autoCollection.tests.htm");
-        }
-
-        [TestMethod]
-        public void Firefox_E2E_snippetTests()
-        {
-            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.snippetTests.htm");
         }*/
 
         #region Disabled - other browsers

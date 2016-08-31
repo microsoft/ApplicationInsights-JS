@@ -31,35 +31,35 @@ $content = gc $path
 $content | out-file "$($projectDir)\E2ETests\ai.js"
 
 # build ai path in file:// format
-# $aiPath = "file:///" + ($projectDir -replace "\\", "/") + "/E2ETests/ai.js"
-$aiPath = "/E2ETests/ai.js"
+# $aiPath = "file:///" + ($projectDir -replace "\\", "/") + "ai.js"
+$aiPath = "ai.js"
 
 # test the queue
 $queueTest = "var i = 100; while(i--){appInsights.queue.push(function() {window.queueTest('from the queue')})};"
 
 # copy snippet and convert protocol to file://
-$edgePrefix = gc "$($projectDir)\..\JavaScriptSDK\snippet.js"
-$edgePrefix = $edgePrefix -replace $cdnUrl, $aiPath
-$edgePrefix = $edgePrefix -replace "instrumentationKey: ""INSTRUMENTATION_KEY""", "instrumentationKey: ""$($iKey)"", endpointUrl: ""$($endpointUrl)"", maxBatchInterval: 1, disableAjaxTracking: false"
-$edgePrefix = $edgePrefix -replace 'CDN_PATH',$aiPath
-$edgePrefix += $queueTest
-$edgePrefix | out-file "$($projectDir)\E2ETests\sprint70Snippet.js"
+$snippetLatest = gc "$($projectDir)\..\JavaScriptSDK\snippet.js"
+$snippetLatest = $snippetLatest -replace $cdnUrl, $aiPath
+$snippetLatest = $snippetLatest -replace "instrumentationKey: ""INSTRUMENTATION_KEY""", "instrumentationKey: ""$($iKey)"", endpointUrl: ""$($endpointUrl)"", maxBatchInterval: 1"
+$snippetLatest = $snippetLatest -replace 'CDN_PATH',$aiPath
+$snippetLatest += $queueTest
+$snippetLatest | out-file "$($projectDir)\E2ETests\snippetLatest.js"
 
 # copy snippet and convert protocol to file://
-$sprint69Snippet = gc "$($projectDir)\E2ETests\standalone\legacySnippetSprint69.js"
-$sprint69Snippet = $sprint69Snippet -replace $cdnUrl, $aiPath
-$sprint69Snippet = $sprint69Snippet -replace "iKey: ""INSTRUMENTATION_KEY""", "iKey: ""$($iKey)"", endpointUrl: ""$($endpointUrl)"", maxBatchInterval: 1"
-$sprint69Snippet = $sprint69Snippet -replace 'CDN_PATH',$aiPath
-$sprint69Snippet += $queueTest
-$sprint69Snippet | out-file "$($projectDir)\E2ETests\sprint69Snippet.js"
+$snippet10 = gc "$($projectDir)\E2ETests\standalone\snippet_1.0.js"
+$snippet10 = $snippet10 -replace $cdnUrl, $aiPath
+$snippet10 = $snippet10 -replace "instrumentationKey: ""INSTRUMENTATION_KEY""", "instrumentationKey: ""$($iKey)"", endpointUrl: ""$($endpointUrl)"", maxBatchInterval: 1"
+$snippet10 = $snippet10 -replace 'CDN_PATH',$aiPath
+$snippet10 += $queueTest
+$snippet10 | out-file "$($projectDir)\E2ETests\snippet_1.0.js"
 
-# copy legacy snippet and convert protocol to file://
-$sprint66Snippet = gc "$($projectDir)\E2ETests\standalone\legacySnippet.js"
-$sprint66Snippet = $sprint66Snippet -replace $cdnUrl, $aiPath
-$sprint66Snippet = $sprint66Snippet -replace "appInsights.start\(\);", "appInsights.start(""$($iKey)"");"
-$sprint66Snippet += "appInsights.endpointUrl = ""$($endpointUrl)""; appInsights.maxBatchInterval = 1"
-$sprint66Snippet += $queueTest
-$sprint66Snippet | out-file "$($projectDir)\E2ETests\sprint66Snippet.js"
+# copy snippet and convert protocol to file://
+$snippet01 = gc "$($projectDir)\E2ETests\standalone\snippet_0.1.js"
+$snippet01 = $snippet01 -replace $cdnUrl, $aiPath
+$snippet01 = $snippet01 -replace "iKey: ""INSTRUMENTATION_KEY""", "iKey: ""$($iKey)"", endpointUrl: ""$($endpointUrl)"", maxBatchInterval: 1"
+$snippet01 = $snippet01 -replace 'CDN_PATH',$aiPath
+$snippet01 += $queueTest
+$snippet01 | out-file "$($projectDir)\E2ETests\snippet_0.1.js"
 
 $testSnippet = gc "$($projectDir)\E2ETests\standalone\testSnippet.js"
 $testSnippet = $testSnippet -replace "ENDPOINT_URL", $endpointUrl

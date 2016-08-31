@@ -1,4 +1,5 @@
-﻿/// <reference path="../../../JavaScriptSDK/context/session.ts" />
+﻿/// <reference path="../../../JavaScriptSDK/TelemetryContext.ts" />
+/// <reference path="../../../JavaScriptSDK/context/session.ts" />
 /// <reference path="../../../JavaScriptSDK/context/user.ts" />
 /// <reference path="../../testframework/common.ts" />
 /// <reference path="../Util.tests.ts"/>
@@ -483,14 +484,13 @@ class SessionContextTests extends TestClass {
         }
     }
 
-    private getEmptyConfig() {
+    private getEmptyConfig(): Microsoft.ApplicationInsights.ITelemetryConfig {
         return {
             instrumentationKey: () => null,
             accountId: () => null,
             sessionRenewalMs: () => null,
             sessionExpirationMs: () => null,
             sampleRate: () => null,
-            appUserId: () => null,
             endpointUrl: () => null,
             cookieDomain: () => null,
             emitLineDelimitedJson: () => null,
