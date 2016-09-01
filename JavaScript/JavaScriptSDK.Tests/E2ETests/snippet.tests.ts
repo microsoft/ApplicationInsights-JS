@@ -36,6 +36,8 @@ class SnippetTests extends TestClass {
         }
 
         window['queueTest'] = () => null;
+
+        // used to observe if events stored in the queue are executed when the AI is loaded
         this.queueSpy = this.sandbox.spy(window, "queueTest");
         this.useFakeTimers = false;
         this.clock.restore();
@@ -146,7 +148,7 @@ class SnippetTests extends TestClass {
                 }, "waiting for AI Init() to finish" + new Date().toISOString(), 5, 200))
                 .concat(() => {
                     Assert.ok(!window[this.aiName].hasOwnProperty("queue"), "queue was removed during the init");
-                    Assert.equal(this.queueCallCount, this.queueSpy.callCount, "element queued by the snippet are executed");
+                    Assert.equal(this.queueCallCount, this.queueSpy.callCount, "should drain the queue");
                 })
         });
 
@@ -157,7 +159,9 @@ class SnippetTests extends TestClass {
                 () => {
                     this.loadSnippet(snippetPath);
                 },
-                this.checkConfig
+                () => {
+                    this.checkConfig();
+                }
             ]
         });
 
