@@ -7,6 +7,9 @@ class SnippetTests extends TestClass {
     private instrumentationKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46";
     private originalAppInsights;
     private queueSpy;
+
+    // PostBuildScript adds an extra code to the snippet to push 100 tests events to the queue.
+    // Those events will be drained during AppInsights Init().
     private queueCallCount = 100;
     private senderMocks;
 
@@ -137,11 +140,14 @@ class SnippetTests extends TestClass {
             steps: [
                 () => {
                     this.loadSnippet(snippetPath);
-                },
-                () => {
-                    Assert.equal(this.queueCallCount, this.queueSpy.callCount, "queue is emptied");
-                }
-            ]
+                }]
+                .concat(<any>PollingAssert.createPollingAssert(() => {
+                    return (!window[this.aiName].hasOwnProperty("queue"))
+                }, "waiting for AI Init() to finish" + new Date().toISOString(), 5, 200))
+                .concat(() => {
+                    Assert.ok(!window[this.aiName].hasOwnProperty("queue"), "queue was removed during the init");
+                    Assert.equal(this.queueCallCount, this.queueSpy.callCount, "element queued by the snippet are executed");
+                })
         });
 
         this.testCaseAsync({
@@ -181,9 +187,8 @@ class SnippetTests extends TestClass {
 
     private waitForResponse() {
         return <any>PollingAssert.createPollingAssert(() => {
-            Assert.ok(true, "waiting for response " + new Date().toISOString());
             return (this.senderMocks.successSpy.called || this.senderMocks.errorSpy.called);
-        }, "Wait for response", 5, 1000)
+        }, "Wait for response" + new Date().toISOString(), 5, 1000)
     }
 
     private checkConfig() {
