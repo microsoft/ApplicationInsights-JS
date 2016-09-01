@@ -94,6 +94,12 @@ namespace ApplicationInsights.Javascript.Tests
             RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.snippetTests.htm");
         }
 
+        [TestMethod]
+        public void Firefox_E2E_ValidateApiTests()
+        {
+            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.ValidateApiTests.htm");
+        }
+
         // Tests are failing, need to fix before we enable them.
         /* [TestMethod]
         public void Firefox_E2E_autoCollection()
