@@ -53,14 +53,6 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
                 // Remove any leading or trailing whitepace
                 name = Util.trim(name.toString());
 
-                // Remove illegal chars
-                if (name.search(/[^0-9a-zA-Z-._()\/ ]/g) >= 0) {
-                    name = name.replace(/[^0-9a-zA-Z-._()\/ ]/g, "_");
-                    _InternalLogging.throwInternalUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.USRACT_IllegalCharsInName, "name contains illegal characters. Illegal characters have been replaced with '_'.",
-                            { newName: name }));
-                }
-
                 // truncate the string to 150 chars
                 if (name.length > DataSanitizer.MAX_NAME_LENGTH) {
                     name = name.substring(0, DataSanitizer.MAX_NAME_LENGTH);
