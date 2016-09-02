@@ -96,6 +96,7 @@ class ValidateTests extends TestClass {
                     var s4 = "妣 啊 僜刓嘰塡奬〉媆孿 偁偄偙 偁A偄E偆I偊O偍U";
                     var s5 = "ßüµ€ÄäÖö€ ερτυθιοπαδφγηξκλζχψωβνΔΦΓΗΞΚΛΨΩΘ რატომ";
                     var s6 = "йцуукенгшщзхъфываполджэс";
+                    var s7 = "\x0000\x0001\x0002\x0003\x0004\x0005\x0006\x0007\x0008\x009F";
 
                     // white spaces
                     this.testAi.trackEvent(" abcd efg   ", { " abc " : "value 1", " " : "value 2" });
@@ -103,7 +104,7 @@ class ValidateTests extends TestClass {
                     // international characters
                     this.testAi.trackEvent(s1, { p: s2 });
                     this.testAi.trackEvent(s3, { p: s4 });
-                    this.testAi.trackEvent(s5, { p: s6 });
+                    this.testAi.trackEvent(s5, { p: s6, p2: s7 });
                 }]
                 .concat(this.waitForResponse())
                 .concat(this.boilerPlateAsserts)
