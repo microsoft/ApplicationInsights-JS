@@ -185,7 +185,7 @@ module Microsoft.ApplicationInsights {
 
             config.isRetryDisabled = (config.isRetryDisabled !== undefined && config.isRetryDisabled !== null) ?
                 Util.stringToBoolOrDefault(config.isRetryDisabled) :
-                true;
+                false;
            
             return config;
         }
