@@ -82,7 +82,7 @@ module Microsoft.ApplicationInsights.Context {
                 this.automaticSession.isFirst = undefined;
                 this.renew();
             } else {
-                // do not updated the cookie more often than cookieUpdateInterval
+                // do not update the cookie more often than cookieUpdateInterval
                 if (!this.cookieUpdatedTimestamp || now - this.cookieUpdatedTimestamp > _SessionManager.cookieUpdateInterval) {
                     this.automaticSession.renewalDate = +new Date;
                     this.setCookie(this.automaticSession.id, this.automaticSession.acquisitionDate, this.automaticSession.renewalDate);

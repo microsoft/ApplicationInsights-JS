@@ -400,7 +400,7 @@ class SessionContextTests extends TestClass {
                 Assert.equal(1, setCookieSpy.callCount, "setCookie should be called only once");
                 Assert.equal(10, sessionManager.automaticSession.renewalDate, "cookie renewalDate was updated");
 
-                // update cookie before the cookieUpdateInterval elapsed
+                // try updating the cookie before the cookieUpdateInterval elapsed
                 this.clock.tick(cookieInterval - 1);
                 sessionManager.update();
 
