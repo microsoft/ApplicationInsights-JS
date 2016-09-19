@@ -364,6 +364,8 @@ module Microsoft.ApplicationInsights {
             xhr.onreadystatechange = () => this._xhrReadyStateChange(xhr, payload, payload.length);
             xhr.onerror = (event: ErrorEvent) => this._onError(payload, xhr.responseText || xhr.response || "", event);
 
+            console.log("XMLHttpRequest");
+
             // compose an array of payloads
             var batch = this._buffer.batchPayloads(payload);
             xhr.send(batch);
@@ -384,7 +386,18 @@ module Microsoft.ApplicationInsights {
             xdr.onload = () => this._xdrOnLoad(xdr, payload);
             xdr.onerror = (event: ErrorEvent) => this._onError(payload, xdr.responseText || "", event);
 
-            // AI is sending all telemetry with HTTPS, but XDomainRequest requires the same scheme as the hosting page
+            // XDomainRequest requires the same protocol as the hosting page. 
+            // If the protocol doesn't match, we can't send the telemetry :(. 
+            var hostingProtocol = window.location.protocol
+            if (this._config.endpointUrl().lastIndexOf(hostingProtocol, 0) !== 0) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, ". " +
+                        "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol."));
+
+                this._buffer.clear();
+                return;
+            }
+
             var endpointUrl = this._config.endpointUrl().replace(/^(https?:)/, "");
             xdr.open('POST', endpointUrl);
 
