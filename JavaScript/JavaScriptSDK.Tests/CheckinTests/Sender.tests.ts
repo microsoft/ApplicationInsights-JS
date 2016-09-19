@@ -197,6 +197,7 @@ class SenderTests extends TestClass {
 
                 // act
                 var sender = this.getSender();
+                sender._config.endpointUrl = () => "file://fakeEndpoint";
 
                 // verify
                 Assert.ok(sender, "sender was constructed");
@@ -226,6 +227,44 @@ class SenderTests extends TestClass {
                 this.logAsserts(1);
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: XDomain will drop the telemetry if the Endpoint protocol doesn't match the hosting page protocol",
+            test: () => {
+                // setup
+                // pretend that you are IE8/IE9 browser which supports XDomainRequests
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    delete xhr.withCredentials;
+                    return xhr;
+                });
+
+                XDomainRequest = <any>(() => {
+                    var xdr = new this.xhr;
+                    xdr.onload = xdr.onreadystatechange;
+                    xdr.responseText = 206;
+                    return xdr;
+                });
+
+                // act
+                var config = this.getDefaultConfig();
+                config.endpointUrl = () => "fake://example.com";
+
+                var sender = <SenderWrapper>new Microsoft.ApplicationInsights.Sender(config);
+
+                this.fakeServer.requests.pop();
+                sender.errorSpy = this.sandbox.spy(sender, "_onError");
+                sender.successSpy = this.sandbox.spy(sender, "_onSuccess");
+                sender.partialSpy = this.sandbox.spy(sender, "_onPartialSuccess");
+
+                Assert.equal(0, this.fakeServer.requests.length, "request was not sent");
+                Assert.ok(sender.errorSpy.notCalled, "error not called");
+                Assert.ok(sender.successSpy.notCalled, "success not called");
+                Assert.ok(sender.partialSpy.notCalled, "partial not called");
+
+                Assert.equal(sender._buffer.count(), 0, "buffer should be empty");
             }
         });
 
@@ -745,7 +784,8 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                this.validatePartialSuccess_NonRetryable();
+                var sender = this.getSender();
+                this.validatePartialSuccess_NonRetryable(sender);
             }
         });
 
@@ -759,7 +799,8 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                this.validatePartialSuccess_Retryable();
+                var sender = this.getSender();
+                this.validatePartialSuccess_Retryable(sender);
             }
         });
 
@@ -773,7 +814,11 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                this.validatePartialSuccess_disabled();
+                var sender = this.getSender();
+                // disable partial response handling
+                sender._config.isRetryDisabled = () => true;
+
+                this.validatePartialSuccess_disabled(sender);
             }
         });
 
@@ -795,7 +840,10 @@ class SenderTests extends TestClass {
                     return xdr;
                 });
 
-                this.validatePartialSuccess_NonRetryable();
+                var sender = this.getSender();
+                sender._config.endpointUrl = () => "file://fakeEndpoint";
+
+                this.validatePartialSuccess_NonRetryable(sender);
             }
         });
 
@@ -817,7 +865,10 @@ class SenderTests extends TestClass {
                     return xdr;
                 });
 
-                this.validatePartialSuccess_Retryable();
+                var sender = this.getSender();
+                sender._config.endpointUrl = () => "file://fakeEndpoint";
+
+                this.validatePartialSuccess_Retryable(sender);
             }
         });
 
@@ -831,7 +882,11 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                this.validatePartialSuccess_disabled();
+                var sender = this.getSender();
+                sender._config.endpointUrl = () => "file://fakeEndpoint";
+                sender._config.isRetryDisabled = () => true;
+
+                this.validatePartialSuccess_disabled(sender);
             }
         });
 
@@ -1054,8 +1109,7 @@ class SenderTests extends TestClass {
         Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { }, context: { _sender: { _XMLHttpRequestSupported: true } } };
     }
 
-    private validatePartialSuccess_NonRetryable() {
-        var sender = this.getSender();
+    private validatePartialSuccess_NonRetryable(sender) {
         Assert.ok(sender, "sender was constructed");
 
         // send two items
@@ -1097,8 +1151,7 @@ class SenderTests extends TestClass {
         sender.errorSpy.reset();
     }
 
-    private validatePartialSuccess_Retryable() {
-        var sender = this.getSender();
+    private validatePartialSuccess_Retryable(sender) {
         Assert.ok(sender, "sender was constructed");
 
         // send six items
@@ -1166,18 +1219,7 @@ class SenderTests extends TestClass {
         sender.errorSpy.reset();
     }
 
-    private validatePartialSuccess_disabled() {
-        var config = this.getDefaultConfig();
-
-        // disable partial response handling
-        config.isRetryDisabled = () => true;
-
-        var sender = <SenderWrapper>new Microsoft.ApplicationInsights.Sender(config);
-
-        sender.errorSpy = this.sandbox.spy(sender, "_onError");
-        sender.successSpy = this.sandbox.spy(sender, "_onSuccess");
-        sender.partialSpy = this.sandbox.spy(sender, "_onPartialSuccess");
-
+    private validatePartialSuccess_disabled(sender) {
         // send two items
         this.fakeServer.requests.pop();
         sender.send(this.testTelemetry);

@@ -364,8 +364,6 @@ module Microsoft.ApplicationInsights {
             xhr.onreadystatechange = () => this._xhrReadyStateChange(xhr, payload, payload.length);
             xhr.onerror = (event: ErrorEvent) => this._onError(payload, xhr.responseText || xhr.response || "", event);
 
-            console.log("XMLHttpRequest");
-
             // compose an array of payloads
             var batch = this._buffer.batchPayloads(payload);
             xhr.send(batch);
