@@ -15,7 +15,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             url: FieldType.Default,
             duration: FieldType.Default,
             properties: FieldType.Default,
-            measurements: FieldType.Default,
+            measurements: FieldType.Default
         }
 
         /**
