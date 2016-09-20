@@ -197,7 +197,7 @@ class SenderTests extends TestClass {
 
                 // act
                 var sender = this.getSender();
-                sender._config.endpointUrl = () => "file://fakeEndpoint";
+                sender._config.endpointUrl = () => window.location.protocol + "//fakeEndpoint";
 
                 // verify
                 Assert.ok(sender, "sender was constructed");
@@ -841,7 +841,7 @@ class SenderTests extends TestClass {
                 });
 
                 var sender = this.getSender();
-                sender._config.endpointUrl = () => "file://fakeEndpoint";
+                sender._config.endpointUrl = () => window.location.protocol + "//fakeEndpoint";
 
                 this.validatePartialSuccess_NonRetryable(sender);
             }
@@ -866,7 +866,7 @@ class SenderTests extends TestClass {
                 });
 
                 var sender = this.getSender();
-                sender._config.endpointUrl = () => "file://fakeEndpoint";
+                sender._config.endpointUrl = () => window.location.protocol + "//fakeEndpoint";
 
                 this.validatePartialSuccess_Retryable(sender);
             }
@@ -883,7 +883,7 @@ class SenderTests extends TestClass {
                 });
 
                 var sender = this.getSender();
-                sender._config.endpointUrl = () => "file://fakeEndpoint";
+                sender._config.endpointUrl = () => window.location.protocol + "//fakeEndpoint";
                 sender._config.isRetryDisabled = () => true;
 
                 this.validatePartialSuccess_disabled(sender);
