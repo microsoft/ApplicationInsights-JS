@@ -84,7 +84,7 @@
                             "connectEnd": resource.connectEnd,
                             "requestStart": resource.requestStart,
                             "responseStart": resource.responseStart,
-                            "responseEnd": resource.responseEnd,
+                            "responseEnd": resource.responseEnd
                         };
                     }
 
