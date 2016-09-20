@@ -1,5 +1,5 @@
 # This script starts IIS Express and opens the Tests.html in a browser to host QUnit test runner
-# - Run this script: > powershell "& .\RunTestsInBrowser.ps1"
+# - Run this script: > powershell "& .\scripts\RunTestsInBrowser.ps1"
 # - Build the solution after changing TypeScript source files to regenerate JavaScript 
 # - Refresh Tests.html in the browser to run the JavaScript tests 
 

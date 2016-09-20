@@ -17,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\Package.targets = ..\Package.targets
 		PostTestScript.cmd = PostTestScript.cmd
 		..\README.md = ..\README.md
-		..\RunTestsInBrowser.ps1 = ..\RunTestsInBrowser.ps1
+		..\scripts\RunTestsInBrowser.ps1 = ..\scripts\RunTestsInBrowser.ps1
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JavaScriptSDK", "JavaScriptSDK\JavaScriptSDK.csproj", "{49ECFE69-8C92-4FA7-A7C3-CDB957C71654}"

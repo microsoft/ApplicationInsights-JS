@@ -1,4 +1,6 @@
-﻿$jsSdkDir = Split-Path $MyInvocation.MyCommand.Path; 
+﻿# get js sdk directory
+$jsSdkDir = Split-Path (Split-Path $MyInvocation.MyCommand.Path) -Parent; 
+Write-Host "Releasing from $jsSdkDir";
 
 $packageJsonPath =  Join-Path $jsSdkDir -ChildPath "package.json"
 if (-Not (Test-Path $packageJsonPath)) {
