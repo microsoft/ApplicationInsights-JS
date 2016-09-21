@@ -242,6 +242,10 @@ Values that control how the telemetry data is sent.
         // Default false
         verboseLogging: boolean;
         
+        // Controls what percentage of events will be sent
+        // Default 100. 
+        samplingPercentage: boolean;
+        
         // Default 10s
         diagnosticLogInterval: number;
         
