@@ -65,8 +65,10 @@ class TelemetryContextTests extends TestClass {
 
                 Assert.ok(tc.internal, "context.internal is initialized");
 
-                var expectedSnippet = "snippet:" + Microsoft.ApplicationInsights.SnippetVersion;
-                Assert.equal(expectedSnippet, tc.internal.agentVersion, "agentVersion is initialized with the snippet version");
+                // expected format "javascript:1.0.0-s1.0"
+                var expectedSdkVersion = "javascript:" + Microsoft.ApplicationInsights.Version;
+                var snippet = "s" + Microsoft.ApplicationInsights.SnippetVersion;
+                Assert.equal(expectedSdkVersion + "-" + snippet, tc.internal.sdkVersion, "sdkVersion is initialized with the snippet version");
 
                 // clean up
                 Microsoft.ApplicationInsights.SnippetVersion = undefined;
