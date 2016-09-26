@@ -6,7 +6,8 @@ module Microsoft.ApplicationInsights {
     export interface Snippet {
         queue: Array<() => void>;
         config: IConfig;
-        version: string;
+        version?: string;
+        extensionName?: string;
     }
 
     export class Initialization {

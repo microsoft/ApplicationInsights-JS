@@ -110,11 +110,13 @@ class SnippetTests extends TestClass {
                     this.boilerPlateAsserts(this.senderMocks);
 
                     // check url and properties
-                    var expectedSdk = "javascript:" + Microsoft.ApplicationInsights.Version;
-                    var expectedSnippet = "snippet:" + Microsoft.ApplicationInsights.SnippetVersion;
+                    var expectedExtensionName;
+                    if (Microsoft.ApplicationInsights.ExtensionVersion) {
+                        expectedExtensionName= "-s." + Microsoft.ApplicationInsights.ExtensionVersion;
+                    }
+                    var expectedSdk = "javascript:" + Microsoft.ApplicationInsights.Version + expectedExtensionName;
 
                     var data = <Microsoft.ApplicationInsights.Telemetry.Common.Envelope>this.senderMocks.sender.args[0][0];
-                    Assert.equal(expectedSnippet, data.tags["ai.internal.agentVersion"], "snippet version was set correctly");
                     Assert.equal(expectedSdk, data.tags["ai.internal.sdkVersion"], "sdk version was set correctly");
                 })
         });

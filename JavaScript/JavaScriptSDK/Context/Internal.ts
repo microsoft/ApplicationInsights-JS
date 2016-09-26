@@ -21,7 +21,10 @@ module Microsoft.ApplicationInsights.Context {
          */
         constructor() {
             this.sdkVersion = "javascript:" + Version;
-            this.agentVersion = SnippetVersion ? "snippet:" + SnippetVersion : undefined;
+
+            if (ExtensionVersion) {
+                this.sdkVersion += "-" + ExtensionVersion;
+            }
         }
     }
 }
