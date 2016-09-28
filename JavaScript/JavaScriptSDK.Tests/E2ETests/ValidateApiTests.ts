@@ -113,6 +113,24 @@ class ValidateTests extends TestClass {
                     Assert.equal(4, acceptedItems, "backend should accept all four events");
                 })
         });
+
+        this.testCaseAsync({
+            name: "Validate that special characters are handled correctly",
+            stepDelay: this.delay,
+            steps: [
+                () => {
+                    var s1 = "[]{};,.)(*&^%$#@/\\";
+
+                    this.testAi.trackEvent(s1, { p: s1 });
+                    this.testAi.trackEvent("a", { "[]{};,.)(*&^%$#@/\\": "b" });
+                }]
+                .concat(this.waitForResponse())
+                .concat(this.boilerPlateAsserts)
+                .concat(() => {
+                    var acceptedItems = this.successSpy.args[0][1];
+                    Assert.equal(2, acceptedItems, "backend should accept the event");
+                })
+        });
     }
 
     private waitForResponse() {
