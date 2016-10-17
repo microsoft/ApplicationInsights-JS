@@ -25,6 +25,7 @@ module AI
         public commandName: string;
         public dependencyTypeName: string;
         public properties: any;
+        public measurements: any;
         
         constructor()
         {
@@ -36,6 +37,7 @@ module AI
             this.success = true;
             this.dependencySource = AI.DependencySourceType.Apmc;
             this.properties = {};
+            this.measurements = {};
             
             super();
         }

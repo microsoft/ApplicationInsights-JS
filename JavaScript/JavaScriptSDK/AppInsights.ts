@@ -269,11 +269,13 @@ module Microsoft.ApplicationInsights {
          * @param totalTime total request time
          * @param success   indicates if the request was sessessful
          * @param resultCode    response code returned by the dependency request
+         * @param properties    map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
+         * @param measurements  map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
          */
-        public trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
+        public trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number, properties?: Object, measurements?: Object) {
             if (this.config.maxAjaxCallsPerView === -1 ||
                 this._trackAjaxAttempts < this.config.maxAjaxCallsPerView) {
-                var dependency = new Telemetry.RemoteDependencyData(id, absoluteUrl, pathName, totalTime, success, resultCode, method);
+                var dependency = new Telemetry.RemoteDependencyData(id, absoluteUrl, pathName, totalTime, success, resultCode, method, properties, measurements);
                 var dependencyData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.RemoteDependencyData>(
                     Telemetry.RemoteDependencyData.dataType, dependency);
                 var envelope = new Telemetry.Common.Envelope(dependencyData, ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType);

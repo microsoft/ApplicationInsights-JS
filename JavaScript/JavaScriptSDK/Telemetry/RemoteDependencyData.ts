@@ -28,13 +28,14 @@ module Microsoft.ApplicationInsights.Telemetry {
             commandName: FieldType.Default,
             dependencyTypeName: FieldType.Default,
             properties: FieldType.Default,
-            resultCode: FieldType.Default
+            resultCode: FieldType.Default,
+            measurements: FieldType.Default
         }
 
         /**
          * Constructs a new instance of the RemoteDependencyData object
          */
-        constructor(id: string, absoluteUrl: string, commandName: string, value: number, success: boolean, resultCode: number, method?: string) {
+        constructor(id: string, absoluteUrl: string, commandName: string, value: number, success: boolean, resultCode: number, method?: string, properties?: Object, measurements?: Object) {
             super();
 
             this.id = id;
@@ -46,6 +47,9 @@ module Microsoft.ApplicationInsights.Telemetry {
                       
             this.dependencyKind = AI.DependencyKind.Http;
             this.dependencyTypeName = "Ajax";
+
+            this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
+            this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);
         }
 
         private formatDependencyName(method: string, absoluteUrl: string) {
