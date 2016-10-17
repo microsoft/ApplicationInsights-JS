@@ -1460,8 +1460,11 @@ class AppInsightsTests extends TestClass {
                 var success = false;
                 var resultCode = 404;
 
+                var properties = { "property1": 5 };
+                var measurements = { "duration": 777 };
+
                 // Act
-                appInsights.trackDependency("0", "Get", url, name, duration, success, resultCode);
+                appInsights.trackDependency("0", "Get", url, name, duration, success, resultCode, properties, measurements);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
@@ -1471,6 +1474,8 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(duration, rdd.value);
                 Assert.equal(success, rdd.success);
                 Assert.equal(resultCode, rdd.resultCode);
+                Assert.equal(properties, rdd.properties);
+                Assert.equal(measurements, rdd.measurements);
             }
         });
 
