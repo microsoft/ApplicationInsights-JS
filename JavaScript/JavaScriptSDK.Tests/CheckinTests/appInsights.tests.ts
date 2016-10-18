@@ -1474,8 +1474,8 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(duration, rdd.value);
                 Assert.equal(success, rdd.success);
                 Assert.equal(resultCode, rdd.resultCode);
-                Assert.equal(properties, rdd.properties);
-                Assert.equal(measurements, rdd.measurements);
+                Assert.deepEqual(properties, rdd.properties);
+                Assert.deepEqual(measurements, rdd.measurements);
             }
         });
 
