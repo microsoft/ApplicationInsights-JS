@@ -15,9 +15,14 @@ module Microsoft.ApplicationInsights {
             } else {
                 // this is the typical case for browser+snippet
                 var snippet: Microsoft.ApplicationInsights.Snippet = window[aiName] || <any>{};
-    
+                
+                if (snippet.version) {
+                    Microsoft.ApplicationInsights.ExtensionVersion = "s." + snippet.version;
+                } else if (snippet.extensionName) {
+                    Microsoft.ApplicationInsights.ExtensionVersion = snippet.extensionName;
+                }
+
                 // overwrite snippet with full appInsights
-                Microsoft.ApplicationInsights.SnippetVersion = snippet.version;
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
                 var appInsightsLocal = init.loadAppInsights();
 
