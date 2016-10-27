@@ -135,7 +135,9 @@ module Microsoft.ApplicationInsights {
 
         private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
             xhr.ajaxData.requestSentTime = dateTime.Now();
-            if (!this.appInsights.config.disableCorrelationHeaders && (UrlHelper.parseUrl(xhr.ajaxData.getAbsoluteUrl()).host == this.currentWindowHost)) {                
+            if (!this.appInsights.config.disableCorrelationHeaders) {
+                var rootId = this.appInsights.context.operation.id;
+                xhr.setRequestHeader("x-ms-request-root-id", rootId);
                 xhr.setRequestHeader("x-ms-request-id", xhr.ajaxData.id);
             }
             xhr.ajaxData.xhrMonitoringState.sendDone = true;
