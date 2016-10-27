@@ -150,6 +150,18 @@ class UtilTests extends TestClass {
         });
 
         this.testCase({
+            name: "UtilTests: can disable cookies",
+            test: () => {
+                Assert.ok(Util.canUseCookies(), "can user cookies by default");
+                Util.disableCookies();
+                Assert.ok(!Util.canUseCookies(), "cannot user cookies after they were disabled");
+
+                // reset
+                (<any>Util)._canUseCookies = undefined;
+            }
+        });
+
+        this.testCase({
             name: "UtilTests: parse cookie",
             test: () => {
                 try {

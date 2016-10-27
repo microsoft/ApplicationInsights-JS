@@ -29,5 +29,6 @@
         isRetryDisabled?: boolean;
         isPerfAnalyzerEnabled?: boolean;
         url?: string;
+        disableCookies?: boolean;
     }
 }

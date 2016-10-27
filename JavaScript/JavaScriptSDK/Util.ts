@@ -235,6 +235,13 @@ module Microsoft.ApplicationInsights {
         }
 
         /*
+         * Force the SDK not to store and read any data from cookies
+         */
+        public static disableCookies() {
+            Util._canUseCookies = false;
+        }
+
+        /*
          * helper method to tell if document.cookie object is available
          */
         public static canUseCookies(): any {

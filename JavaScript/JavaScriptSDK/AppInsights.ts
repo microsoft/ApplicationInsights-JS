@@ -82,6 +82,10 @@ module Microsoft.ApplicationInsights {
                 isRetryDisabled: () => this.config.isRetryDisabled
             }
 
+            if (this.config.disableCookies) {
+                Util.disableCookies();
+            }
+
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
 
             this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
