@@ -25,10 +25,11 @@
         disableCorrelationHeaders?: boolean;
         disableFlushOnBeforeUnload?: boolean;
         enableSessionStorageBuffer?: boolean;
+        isCookieUseDisabled?: boolean;
         cookieDomain?: string;
         isRetryDisabled?: boolean;
         isPerfAnalyzerEnabled?: boolean;
         url?: string;
-        disableCookies?: boolean;
+        isStorageUseDisabled?: boolean;
     }
 }
