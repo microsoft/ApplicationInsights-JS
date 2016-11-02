@@ -171,8 +171,8 @@ module Microsoft.ApplicationInsights {
                 Util.stringToBoolOrDefault(config.disableCorrelationHeaders) :
                 false;
 
-            config.isPerfAnalyzerEnabled = (config.isPerfAnalyzerEnabled !== undefined && config.isPerfAnalyzerEnabled !== null) ?
-                Util.stringToBoolOrDefault(config.isPerfAnalyzerEnabled) :
+            config.isResourceTimingEnabled = (config.isResourceTimingEnabled !== undefined && config.isResourceTimingEnabled !== null) ?
+                Util.stringToBoolOrDefault(config.isResourceTimingEnabled) :
                 false;
 
             config.disableFlushOnBeforeUnload = (config.disableFlushOnBeforeUnload !== undefined && config.disableFlushOnBeforeUnload !== null) ?

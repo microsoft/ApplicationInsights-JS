@@ -27,7 +27,7 @@
         enableSessionStorageBuffer?: boolean;
         cookieDomain?: string;
         isRetryDisabled?: boolean;
-        isPerfAnalyzerEnabled?: boolean;
+        isResourceTimingEnabled?: boolean;
         url?: string;
         resourceTiming?: IResourceTimingConfig;
     }
@@ -35,6 +35,6 @@
     export interface IResourceTimingConfig {
         enabled: boolean;
         maxResourcesPerPage?: number;
-        reportIntervalDelay?: number;
+        reportInterval?: number;
     }
 }

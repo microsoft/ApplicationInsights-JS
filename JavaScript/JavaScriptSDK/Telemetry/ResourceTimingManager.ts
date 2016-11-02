@@ -10,7 +10,8 @@ module Microsoft.ApplicationInsights.Telemetry {
         private enabled: boolean;
         private intervalHandler: number;
         private maxResourcesTrackedPerPage;
-        private sendInterval: number;
+        private reportInterval: number;
+        private reportDelay: number;
 
         // report each resource only once
         private resourcesLogged: { [name: string]: boolean } = {};
@@ -29,13 +30,14 @@ module Microsoft.ApplicationInsights.Telemetry {
 
             if (this.enabled) {
                 this.maxResourcesTrackedPerPage = config.maxResourcesPerPage || 50;
-                this.sendInterval = config.reportIntervalDelay || 15000; // 15s;
+                this.reportInterval = config.reportInterval || 15000; // 15s
+                this.reportDelay = 5000; // wait 5s before you start collecting any data
             }
 
             this.Init();
         }
 
-        public IsPerformanceApiSupported(): boolean {
+        private IsPerformanceApiSupported(): boolean {
             return ('performance' in window && 'getEntriesByType' in window.performance)
         }
 
@@ -44,20 +46,22 @@ module Microsoft.ApplicationInsights.Telemetry {
                 return;
             }
 
-            this.intervalHandler = setInterval(() => {
-                try {
-                    this.SendResourceTimingData();
-                } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(
-                        _InternalMessageId.NONUSRACT_FailedToReportResourceTimingData,
-                        "message: " + Util.getExceptionName(e), { exception: Util.dump(e) }));
+            setTimeout(() => {
+                this.intervalHandler = setInterval(() => {
+                    try {
+                        this.ReportResourceTimingData();
+                    } catch (e) {
+                        _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(
+                            _InternalMessageId.NONUSRACT_FailedToReportResourceTimingData,
+                            "message: " + Util.getExceptionName(e), { exception: Util.dump(e) }));
 
-                    clearInterval(this.intervalHandler);
-                }
-            }, this.sendInterval);
+                        clearInterval(this.intervalHandler);
+                    }
+                }, this.reportInterval);
+            }, this.reportDelay);
         }
 
-        public SendResourceTimingData() {
+        public ReportResourceTimingData() {
             if (!this.enabled || !this.IsPerformanceApiSupported()) {
                 return;
             }
@@ -80,24 +84,16 @@ module Microsoft.ApplicationInsights.Telemetry {
                 }
 
                 foundNewResources = true;
+                var eventData = null;
 
                 // check if this resource has all timing information available
                 // see: https://www.w3.org/TR/resource-timing/#cross-origin-resources
-                var eventData;
-                if (resource.connectStart == 0 && resource.connectEnd == 0 && resource.requestStart == 0 && resource.responseStart == 0) {
-                    var total = Util.getDuration(resource.startTime, resource.responseEnd);
-
-                    eventData = { "total": total };
-                }
-
-                else {
-
+                if (resource.connectStart !== 0 || resource.connectEnd !== 0 || resource.requestStart !== 0 || resource.responseStart == 0) {
                     var connection = Util.getDuration(resource.startTime, resource.connectEnd);
                     var ttfb = Util.getDuration(resource.requestStart, resource.responseStart);
                     var transfer = Util.getDuration(resource.responseStart, resource.responseEnd);
-                    var total = Util.getDuration(resource.startTime, resource.responseEnd);
 
-                    eventData = { "connection": connection, "ttfb": ttfb, "transfer": transfer, "total": total };
+                    eventData = { "connection": connection, "ttfb": ttfb, "transfer": transfer };
                 }
 
                 var start = Telemetry.PageViewPerformance.getPerformanceTiming().navigationStart;
@@ -116,7 +112,5 @@ module Microsoft.ApplicationInsights.Telemetry {
                 clearInterval(this.intervalHandler);
             }
         }
-
-        private 
     }
 }

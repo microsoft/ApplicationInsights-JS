@@ -4,7 +4,6 @@
 /// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/SessionState.ts"/>
 /// <reference path="./Telemetry/PageViewManager.ts"/>
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
-/// <reference path="./Telemetry/PerformanceAnalyzer.ts"/>
 /// <reference path="./Telemetry/ResourceTimingManager.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
 /// <reference path="./ajax/ajax.ts"/>
@@ -44,8 +43,6 @@ module Microsoft.ApplicationInsights {
         private _pageTracking: Timing;
         private _pageViewManager: Microsoft.ApplicationInsights.Telemetry.PageViewManager;
         private _pageVisitTimeManager: Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager;
-        private _performanceAnalyzer: Microsoft.ApplicationInsights.PerformanceAnalyzer;
-
         private _resourceTimingManager: Microsoft.ApplicationInsights.Telemetry.ResourceTimingManager;
 
         public config: IConfig;
@@ -86,7 +83,6 @@ module Microsoft.ApplicationInsights {
             }
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
-
             this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
 
             // initialize event timing
@@ -119,11 +115,9 @@ module Microsoft.ApplicationInsights {
 
             if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
 
-            if (this.config.isPerfAnalyzerEnabled) {
-                this._performanceAnalyzer = new Microsoft.ApplicationInsights.PerformanceAnalyzer(this);
+            if (this.config.isResourceTimingEnabled) {
+                this._resourceTimingManager = new ApplicationInsights.Telemetry.ResourceTimingManager(this);
             }
-
-            this._resourceTimingManager = new ApplicationInsights.Telemetry.ResourceTimingManager(this);
         }
 
         public sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
