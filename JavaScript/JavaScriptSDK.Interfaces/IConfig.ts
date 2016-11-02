@@ -27,14 +27,8 @@
         enableSessionStorageBuffer?: boolean;
         cookieDomain?: string;
         isRetryDisabled?: boolean;
-        isResourceTimingEnabled?: boolean;
         url?: string;
-        resourceTiming?: IResourceTimingConfig;
-    }
-
-    export interface IResourceTimingConfig {
-        enabled: boolean;
+        isResourceTimingEnabled?: boolean;
         maxResourcesPerPage?: number;
-        reportInterval?: number;
     }
 }

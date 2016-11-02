@@ -270,9 +270,9 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        public static stringToBoolOrDefault(str: any): boolean {
+        public static stringToBoolOrDefault(str: any, defaultValue = false): boolean {
             if (!str) {
-                return false;
+                return defaultValue;
             }
 
             return str.toString().toLowerCase() === "true";

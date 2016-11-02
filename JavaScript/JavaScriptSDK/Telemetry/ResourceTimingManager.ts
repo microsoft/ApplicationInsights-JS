@@ -9,32 +9,22 @@ module Microsoft.ApplicationInsights.Telemetry {
         private appInsights: AppInsights;
         private enabled: boolean;
         private intervalHandler: number;
-        private maxResourcesTrackedPerPage;
-        private reportInterval: number;
-        private reportDelay: number;
+
+        private maxResourcesPerPage;
+        private reportInterval = 15000; // 15s
+        private reportDelay = 5000; // 5s
 
         // report each resource only once
         private resourcesLogged: { [name: string]: boolean } = {};
 
         constructor(appInsights: AppInsights) {
             this.appInsights = appInsights;
-
-            var config = appInsights.config.resourceTiming;
-
-            if (!config) {
-                this.enabled = false;
-                return;
-            }
-
-            this.enabled = config.enabled
+            this.enabled = this.appInsights.config.isResourceTimingEnabled;
+            this.maxResourcesPerPage = this.appInsights.config.maxResourcesPerPage;
 
             if (this.enabled) {
-                this.maxResourcesTrackedPerPage = config.maxResourcesPerPage || 50;
-                this.reportInterval = config.reportInterval || 15000; // 15s
-                this.reportDelay = 5000; // wait 5s before you start collecting any data
+                this.Init();
             }
-
-            this.Init();
         }
 
         private IsPerformanceApiSupported(): boolean {
@@ -73,7 +63,7 @@ module Microsoft.ApplicationInsights.Telemetry {
                 return;
             }
 
-            for (var i = 0; i < Math.min(resources.length, this.maxResourcesTrackedPerPage); i++) {
+            for (var i = 0; i < Math.min(resources.length, this.maxResourcesPerPage); i++) {
                 var resource = resources[i];
 
                 // don't report ajax requests, send a timing data only once for each resource

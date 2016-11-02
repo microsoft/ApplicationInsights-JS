@@ -149,9 +149,7 @@ module Microsoft.ApplicationInsights {
             config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 1000000;
             config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
             config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
-            config.disableExceptionTracking = (config.disableExceptionTracking !== undefined && config.disableExceptionTracking !== null) ?
-                Util.stringToBoolOrDefault(config.disableExceptionTracking) :
-                false;
+            config.disableExceptionTracking = Util.stringToBoolOrDefault(config.disableExceptionTracking);
             config.disableTelemetry = Util.stringToBoolOrDefault(config.disableTelemetry);
             config.verboseLogging = Util.stringToBoolOrDefault(config.verboseLogging);
             config.emitLineDelimitedJson = Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
@@ -162,30 +160,18 @@ module Microsoft.ApplicationInsights {
                 config.samplingPercentage = 100;
             }
 
-            config.disableAjaxTracking = (config.disableAjaxTracking !== undefined && config.disableAjaxTracking !== null) ?
-                Util.stringToBoolOrDefault(config.disableAjaxTracking) :
-                false;
-
+            config.disableAjaxTracking = Util.stringToBoolOrDefault(config.disableAjaxTracking);
             config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
-            config.disableCorrelationHeaders = (config.disableCorrelationHeaders !== undefined && config.disableCorrelationHeaders !== null) ?
-                Util.stringToBoolOrDefault(config.disableCorrelationHeaders) :
-                false;
+            config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders);
 
-            config.isResourceTimingEnabled = (config.isResourceTimingEnabled !== undefined && config.isResourceTimingEnabled !== null) ?
-                Util.stringToBoolOrDefault(config.isResourceTimingEnabled) :
-                false;
+            config.disableFlushOnBeforeUnload = Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
+            config.enableSessionStorageBuffer = Util.stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
+            config.isRetryDisabled = Util.stringToBoolOrDefault(config.isRetryDisabled);
 
-            config.disableFlushOnBeforeUnload = (config.disableFlushOnBeforeUnload !== undefined && config.disableFlushOnBeforeUnload !== null) ?
-                Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload) :
-                false;
-
-            config.enableSessionStorageBuffer = (config.enableSessionStorageBuffer !== undefined && config.enableSessionStorageBuffer !== null) ?
-                Util.stringToBoolOrDefault(config.enableSessionStorageBuffer) :
-                true;
-
-            config.isRetryDisabled = (config.isRetryDisabled !== undefined && config.isRetryDisabled !== null) ?
-                Util.stringToBoolOrDefault(config.isRetryDisabled) :
-                false;
+            config.isResourceTimingEnabled = Util.stringToBoolOrDefault(config.isResourceTimingEnabled);
+            if (isNaN(config.maxResourcesPerPage) || config.maxResourcesPerPage < 0 || config.maxResourcesPerPage > 150) {
+                config.maxResourcesPerPage = 50;
+            }
            
             return config;
         }
