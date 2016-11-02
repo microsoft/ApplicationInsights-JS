@@ -12,14 +12,28 @@ module Microsoft.ApplicationInsights {
     export class Util {
         private static document: any = typeof document !== "undefined" ? document : {};
         private static _canUseCookies: boolean = undefined;
+        private static _canUseLocalStorage: boolean = undefined;
+        private static _canUseSessionStorage: boolean = undefined;
         public static NotSpecified = "not_specified";
+
+        /*
+         * Force the SDK not to use local and session storage
+        */
+        public static disableStorage() {
+            Util._canUseLocalStorage = false;
+            Util._canUseSessionStorage = false;
+        }
 
         /**
          * Gets the localStorage object if available
          * @return {Storage} - Returns the storage object if available else returns null
          */
         private static _getLocalStorageObject(): Storage {
-            return Util._getVerifiedStorageObject(StorageType.LocalStorage);
+            if (Util.canUseLocalStorage()) {
+                return Util._getVerifiedStorageObject(StorageType.LocalStorage);
+            }
+
+            return null;
         }
 
         /**
@@ -54,7 +68,11 @@ module Microsoft.ApplicationInsights {
          *  @returns {boolean} True if local storage is supported.
          */
         public static canUseLocalStorage(): boolean {
-            return !!Util._getLocalStorageObject();
+            if (Util._canUseLocalStorage === undefined) {
+                Util._canUseLocalStorage = !!Util._getVerifiedStorageObject(StorageType.LocalStorage);
+            }
+
+            return Util._canUseLocalStorage;
         }
 
         /**
@@ -134,7 +152,11 @@ module Microsoft.ApplicationInsights {
          * @return {Storage} - Returns the storage object if available else returns null
          */
         private static _getSessionStorageObject(): Storage {
-            return Util._getVerifiedStorageObject(StorageType.SessionStorage);
+            if (Util.canUseSessionStorage()) {
+                return Util._getVerifiedStorageObject(StorageType.SessionStorage);
+            }
+
+            return null;
         }
 
         /**
@@ -143,7 +165,11 @@ module Microsoft.ApplicationInsights {
          *  @returns {boolean} True if session storage is supported.
          */
         public static canUseSessionStorage(): boolean {
-            return !!Util._getSessionStorageObject();
+            if (Util._canUseSessionStorage === undefined) {
+                Util._canUseSessionStorage = !!Util._getVerifiedStorageObject(StorageType.SessionStorage);
+            }
+
+            return Util._canUseSessionStorage;
         }
 
         /**
@@ -232,6 +258,13 @@ module Microsoft.ApplicationInsights {
                 }
             }
             return false;
+        }
+
+        /*
+         * Force the SDK not to store and read any data from cookies
+         */
+        public static disableCookies() {
+            Util._canUseCookies = false;
         }
 
         /*

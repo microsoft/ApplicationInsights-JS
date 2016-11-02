@@ -186,6 +186,14 @@ module Microsoft.ApplicationInsights {
             config.isRetryDisabled = (config.isRetryDisabled !== undefined && config.isRetryDisabled !== null) ?
                 Util.stringToBoolOrDefault(config.isRetryDisabled) :
                 false;
+
+            config.isCookieUseDisabled = (config.isCookieUseDisabled !== undefined && config.isCookieUseDisabled !== null) ?
+                Util.stringToBoolOrDefault(config.isCookieUseDisabled) :
+                false;
+
+            config.isStorageUseDisabled = (config.isStorageUseDisabled !== undefined && config.isStorageUseDisabled !== null) ?
+                Util.stringToBoolOrDefault(config.isStorageUseDisabled) :
+                false;
            
             return config;
         }

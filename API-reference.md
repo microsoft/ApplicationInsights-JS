@@ -263,6 +263,10 @@ Values that control how the telemetry data is sent.
         // Default 500 - controls how many ajax calls will be monitored per page view.
         // Set to -1 to monitor all ajax calls on the page.
         maxAjaxCallsPerView: number;
+
+        // If true, the SDK will not store or read any data from cookies.
+        // Default: false
+        isCookieUseDisabled: boolean;
         
         // Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains.
         cookieDomain: string;
@@ -281,6 +285,10 @@ Values that control how the telemetry data is sent.
         // The url from where the JS SDK will be downloaded. 
         // Default 'https://az416426.vo.msecnd.net/scripts/a/ai.0.js'
         url: string;
+
+        // If true, the SDK will not store or read any data from local and session storage.
+        // Default: false
+        isStorageUseDisabled: boolean;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.
