@@ -1460,8 +1460,11 @@ class AppInsightsTests extends TestClass {
                 var success = false;
                 var resultCode = 404;
 
+                var properties = { "property1": 5 };
+                var measurements = { "duration": 777 };
+
                 // Act
-                appInsights.trackDependency("0", "Get", url, name, duration, success, resultCode);
+                appInsights.trackDependency("0", "Get", url, name, duration, success, resultCode, properties, measurements);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
@@ -1471,6 +1474,8 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(duration, rdd.value);
                 Assert.equal(success, rdd.success);
                 Assert.equal(resultCode, rdd.resultCode);
+                Assert.deepEqual(properties, rdd.properties);
+                Assert.deepEqual(measurements, rdd.measurements);
             }
         });
 
@@ -1634,6 +1639,8 @@ class AppInsightsTests extends TestClass {
                 (<any>xhr).respond("200", {}, "");
 
                 // Assert
+                Assert.equal(expectedRootId, (<any>xhr).requestHeaders['x-ms-request-root-id'], "x-ms-request-root-id id set correctly");
+
                 Assert.equal(expectedAjaxId, (<any>xhr).requestHeaders['x-ms-request-id'], "x-ms-request-id id set correctly");
                 Assert.equal(expectedAjaxId, trackStub.args[0][0], "ajax id passed to trackAjax correctly");
             }
@@ -1661,6 +1668,7 @@ class AppInsightsTests extends TestClass {
 
                 // Assert
                 Assert.equal(null, (<any>xhr).requestHeaders['x-ms-request-id'], "x-ms-request-id should not be set");
+                Assert.equal(null, (<any>xhr).requestHeaders['x-ms-request-root-id'], "x-ms-request-root-id should not be set");
             }
         });
     }

@@ -4,6 +4,7 @@
 /// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/SessionState.ts"/>
 /// <reference path="./Telemetry/PageViewManager.ts"/>
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
+/// <reference path="./Telemetry/PerformanceAnalyzer.ts"/>
 /// <reference path="./Telemetry/ResourceTimingManager.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
 /// <reference path="./ajax/ajax.ts"/>
@@ -15,7 +16,8 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "0.23.4";
+    export var Version = "1.0.4";
+    export var SnippetVersion: string; 
 
     /**
     * Internal interface to pass appInsights object to subcomponents without coupling 
@@ -42,6 +44,7 @@ module Microsoft.ApplicationInsights {
         private _pageTracking: Timing;
         private _pageViewManager: Microsoft.ApplicationInsights.Telemetry.PageViewManager;
         private _pageVisitTimeManager: Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager;
+        private _performanceAnalyzer: Microsoft.ApplicationInsights.PerformanceAnalyzer;
 
         private _resourceTimingManager: Microsoft.ApplicationInsights.Telemetry.ResourceTimingManager;
 
@@ -79,7 +82,7 @@ module Microsoft.ApplicationInsights {
                 sampleRate: () => this.config.samplingPercentage,
                 cookieDomain: () => this.config.cookieDomain,
                 enableSessionStorageBuffer: () => this.config.enableSessionStorageBuffer,
-                disablePartialResponseHandler: () => this.config.disablePartialResponseHandler
+                isRetryDisabled: () => this.config.isRetryDisabled
             }
 
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
@@ -115,6 +118,10 @@ module Microsoft.ApplicationInsights {
                 (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
             if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
+
+            if (this.config.isPerfAnalyzerEnabled) {
+                this._performanceAnalyzer = new Microsoft.ApplicationInsights.PerformanceAnalyzer(this);
+            }
 
             this._resourceTimingManager = new ApplicationInsights.Telemetry.ResourceTimingManager(this);
         }
@@ -270,11 +277,13 @@ module Microsoft.ApplicationInsights {
          * @param totalTime total request time
          * @param success   indicates if the request was sessessful
          * @param resultCode    response code returned by the dependency request
+         * @param properties    map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
+         * @param measurements  map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
          */
-        public trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
+        public trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number, properties?: Object, measurements?: Object) {
             if (this.config.maxAjaxCallsPerView === -1 ||
                 this._trackAjaxAttempts < this.config.maxAjaxCallsPerView) {
-                var dependency = new Telemetry.RemoteDependencyData(id, absoluteUrl, pathName, totalTime, success, resultCode, method);
+                var dependency = new Telemetry.RemoteDependencyData(id, absoluteUrl, pathName, totalTime, success, resultCode, method, properties, measurements);
                 var dependencyData = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.RemoteDependencyData>(
                     Telemetry.RemoteDependencyData.dataType, dependency);
                 var envelope = new Telemetry.Common.Envelope(dependencyData, ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType);

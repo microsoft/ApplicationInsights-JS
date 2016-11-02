@@ -21,7 +21,7 @@ module Microsoft.ApplicationInsights.Context {
         /**  
          * The true if this is the first session  
          */
-        public isFirst: boolean;  
+        public isFirst: boolean;
 
         /**
          * The date at which this guid was genereated.
@@ -41,9 +41,12 @@ module Microsoft.ApplicationInsights.Context {
 
         public static acquisitionSpan = 86400000; // 24 hours in ms
         public static renewalSpan = 1800000; // 30 minutes in ms
+        public static cookieUpdateInterval = 60000 // 1 minute in ms
         public automaticSession: Session;
         public config: ISessionConfig;
-        
+
+        private cookieUpdatedTimestamp: number;
+
         constructor(config: ISessionConfig) {
 
             if (!config) {
@@ -76,11 +79,14 @@ module Microsoft.ApplicationInsights.Context {
             // renew if acquisitionSpan or renewalSpan has ellapsed
             if (acquisitionExpired || renewalExpired) {
                 // update automaticSession so session state has correct id                
-                this.automaticSession.isFirst = undefined; 
+                this.automaticSession.isFirst = undefined;
                 this.renew();
             } else {
-                this.automaticSession.renewalDate = +new Date;
-                this.setCookie(this.automaticSession.id, this.automaticSession.acquisitionDate, this.automaticSession.renewalDate);
+                // do not update the cookie more often than cookieUpdateInterval
+                if (!this.cookieUpdatedTimestamp || now - this.cookieUpdatedTimestamp > _SessionManager.cookieUpdateInterval) {
+                    this.automaticSession.renewalDate = +new Date;
+                    this.setCookie(this.automaticSession.id, this.automaticSession.acquisitionDate, this.automaticSession.renewalDate);
+                }
             }
         }
 
@@ -113,7 +119,7 @@ module Microsoft.ApplicationInsights.Context {
             }
 
             if (!this.automaticSession.id) {
-                this.automaticSession.isFirst = true; 
+                this.automaticSession.isFirst = true;
                 this.renew();
             }
         }
@@ -190,6 +196,8 @@ module Microsoft.ApplicationInsights.Context {
             var cookieDomnain = this.config.cookieDomain ? this.config.cookieDomain() : null;
 
             Util.setCookie('ai_session', cookie.join('|') + ';expires=' + cookieExpiry.toUTCString(), cookieDomnain);
+
+            this.cookieUpdatedTimestamp = +new Date;
         }
 
         private setStorage(guid: string, acq: number, renewal: number) {

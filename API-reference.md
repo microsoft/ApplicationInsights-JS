@@ -242,6 +242,10 @@ Values that control how the telemetry data is sent.
         // Default false
         verboseLogging: boolean;
         
+        // Controls what percentage of events will be sent
+        // Default 100. 
+        samplingPercentage: boolean;
+        
         // Default 10s
         diagnosticLogInterval: number;
         
@@ -269,6 +273,10 @@ Values that control how the telemetry data is sent.
         // If true, the buffer with all unsent telemetry is stored in a session storage. The buffer is resotered on page load.
         // The feature is enable by default starting with v0.23.0. 
         enableSessionStorageBuffer: boolean;
+
+        // Is retry handler disabled. Default false.
+        // If enabled, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error) and 503 (service unavailable).
+        isRetryDisabled: boolean;
 
         // The url from where the JS SDK will be downloaded. 
         // Default 'https://az416426.vo.msecnd.net/scripts/a/ai.0.js'
@@ -395,10 +403,10 @@ Sends telemetry to the endpoint.
 
         public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => boolean)
 
-Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
-before telemetry item is pushed for sending and in the order they were added. 
-If one of telemetry initializers returns false then telemetry item will not be sent.
-If one of telemetry initializers throws an error then telemetry item will not be sent.
+Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one, in the order they were added,
+before the telemetry item is pushed for sending.
+If one of the telemetry initializers returns false then the telemetry item will not be sent.
+If one of the telemetry initializers throws an error then the telemetry item will not be sent.
 
 
 #### Example

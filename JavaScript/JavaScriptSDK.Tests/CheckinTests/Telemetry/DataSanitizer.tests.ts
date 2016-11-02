@@ -39,17 +39,6 @@ class DataSanitizerTests extends TestClass {
         });
 
         this.testCase({
-            name: "DataSanitizerTests: Validate key with illegal chars is sanitized",
-            test: () => {
-                var expectedName = "_________Hello()World/\ -0123456789_______";
-                var name = "~`@#$%^&*Hello()World/\ -0123456789_{}[]|=";
-
-                var validatedName = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeKey(name);
-                Assert.equal(expectedName, validatedName);
-            }
-        });
-
-        this.testCase({
             name: "DataSanitizerTests: Validate key is truncated after max length",
             test: () => {
                 Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer["MAX_NAME_LENGTH"] = 5;

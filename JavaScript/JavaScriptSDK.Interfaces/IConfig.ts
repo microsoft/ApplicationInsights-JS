@@ -1,4 +1,4 @@
-﻿ module Microsoft.ApplicationInsights {
+﻿module Microsoft.ApplicationInsights {
 
     "use strict";
 
@@ -26,7 +26,8 @@
         disableFlushOnBeforeUnload?: boolean;
         enableSessionStorageBuffer?: boolean;
         cookieDomain?: string;
-        disablePartialResponseHandler?: boolean;
+        isRetryDisabled?: boolean;
+        isPerfAnalyzerEnabled?: boolean;
         url?: string;
         resourceTiming?: IResourceTimingConfig;
     }

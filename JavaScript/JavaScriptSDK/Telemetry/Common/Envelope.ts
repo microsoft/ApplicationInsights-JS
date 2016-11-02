@@ -29,7 +29,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
                     return (this.sampleRate == 100) ? FieldType.Hidden : FieldType.Required;
                 },
                 tags: FieldType.Required,
-                data: FieldType.Required,
+                data: FieldType.Required
             };
         }
     }

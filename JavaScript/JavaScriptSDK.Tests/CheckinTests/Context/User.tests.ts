@@ -404,14 +404,13 @@ class UserContextTests extends TestClass {
         });
     }
 
-    private getEmptyConfig() {
+    private getEmptyConfig(): Microsoft.ApplicationInsights.ITelemetryConfig {
         return {
             instrumentationKey: () => null,
             accountId: () => null,
             sessionRenewalMs: () => null,
             sessionExpirationMs: () => null,
             sampleRate: () => null,
-            appUserId: () => null,
             endpointUrl: () => null,
             cookieDomain: () => null,
             emitLineDelimitedJson: () => null,
@@ -419,7 +418,7 @@ class UserContextTests extends TestClass {
             maxBatchInterval: () => null,
             disableTelemetry: () => null,
             enableSessionStorageBuffer: () => null,
-            disablePartialResponseHandler: () => null
+            isRetryDisabled: () => null
         };
     }
 }

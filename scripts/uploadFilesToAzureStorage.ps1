@@ -1,10 +1,6 @@
 ﻿# get js sdk directory
-$jsSdkDir = Read-Host "Please enter the JSSDK root dir";
-
-if (-Not (Test-Path $jsSdkDir)) {
-    Write-Warning "'$jssdkDir' directory doesn't exist.";
-    exit;
-}
+$jsSdkDir = Split-Path (Split-Path $MyInvocation.MyCommand.Path) -Parent; 
+Write-Host "Releasing from $jsSdkDir";
 
 # find version number
 $packageJsonPath =  Join-Path $jsSdkDir -ChildPath "package.json"
@@ -62,6 +58,8 @@ Write-Host "Files uploaded successfully to Azure Storage."
 
 # copying files to dist dir 
 Copy-Item (Join-Path $releaseFromDir -ChildPath "ai.js") (Join-Path $jsSdkDir -ChildPath "dist" | Join-Path -ChildPath "ai.js")
+Copy-Item (Join-Path $releaseFromDir -ChildPath "ai.js") (Join-Path $jsSdkDir -ChildPath "dist" | Join-Path -ChildPath ("ai." + $version + ".js"))
 Copy-Item (Join-Path $releaseFromDir -ChildPath "ai.0.js") (Join-Path $jsSdkDir -ChildPath "dist" | Join-Path -ChildPath "ai.0.js")
+Copy-Item (Join-Path $releaseFromDir -ChildPath "ai.0.js") (Join-Path $jsSdkDir -ChildPath "dist" | Join-Path -ChildPath ("ai." + $version + ".min.js"))
 
 Write-Host "Files copied to dist folder, don't forget to push them to GitHub"

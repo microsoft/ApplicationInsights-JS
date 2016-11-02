@@ -16,7 +16,7 @@ class SenderTests extends TestClass {
     private xdr;
     private fakeServer: SinonFakeServer;
     private getSender: () => SenderWrapper;
-    private loggingSpy;
+    private loggingSpy: SinonStub;
     private testTelemetry;
     private endpointUrl: string;
     private emitLineDelimitedJson: boolean;
@@ -39,15 +39,7 @@ class SenderTests extends TestClass {
         this.maxBatchInterval = 1;
         this.disableTelemetry = false;
 
-        var config: Microsoft.ApplicationInsights.ISenderConfig = {
-            endpointUrl: () => this.endpointUrl,
-            emitLineDelimitedJson: () => this.emitLineDelimitedJson,
-            maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
-            maxBatchInterval: () => this.maxBatchInterval,
-            disableTelemetry: () => this.disableTelemetry,
-            enableSessionStorageBuffer: () => true,
-            disablePartialResponseHandler: () => false
-        };
+        var config = this.getDefaultConfig();
 
         this.getSender = () => {
             var sender = <SenderWrapper>new Microsoft.ApplicationInsights.Sender(config);
@@ -68,6 +60,7 @@ class SenderTests extends TestClass {
     public testCleanup() {
         // reset enableDebugger to a default value
         Microsoft.ApplicationInsights._InternalLogging.enableDebugExceptions = () => false;
+        this.loggingSpy.reset();
 
         // clear session storage buffers
         Microsoft.ApplicationInsights.Util.setSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.BUFFER_KEY, null);
@@ -204,6 +197,7 @@ class SenderTests extends TestClass {
 
                 // act
                 var sender = this.getSender();
+                sender._config.endpointUrl = () => window.location.protocol + "//fakeEndpoint";
 
                 // verify
                 Assert.ok(sender, "sender was constructed");
@@ -233,6 +227,44 @@ class SenderTests extends TestClass {
                 this.logAsserts(1);
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: XDomain will drop the telemetry if the Endpoint protocol doesn't match the hosting page protocol",
+            test: () => {
+                // setup
+                // pretend that you are IE8/IE9 browser which supports XDomainRequests
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    delete xhr.withCredentials;
+                    return xhr;
+                });
+
+                XDomainRequest = <any>(() => {
+                    var xdr = new this.xhr;
+                    xdr.onload = xdr.onreadystatechange;
+                    xdr.responseText = 206;
+                    return xdr;
+                });
+
+                // act
+                var config = this.getDefaultConfig();
+                config.endpointUrl = () => "fake://example.com";
+
+                var sender = <SenderWrapper>new Microsoft.ApplicationInsights.Sender(config);
+
+                this.fakeServer.requests.pop();
+                sender.errorSpy = this.sandbox.spy(sender, "_onError");
+                sender.successSpy = this.sandbox.spy(sender, "_onSuccess");
+                sender.partialSpy = this.sandbox.spy(sender, "_onPartialSuccess");
+
+                Assert.equal(0, this.fakeServer.requests.length, "request was not sent");
+                Assert.ok(sender.errorSpy.notCalled, "error not called");
+                Assert.ok(sender.successSpy.notCalled, "success not called");
+                Assert.ok(sender.partialSpy.notCalled, "partial not called");
+
+                Assert.equal(sender._buffer.count(), 0, "buffer should be empty");
             }
         });
 
@@ -311,8 +343,6 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.ok(senderSpy.notCalled, "sender was not invoked a third time after maxInterval elapsed");
                 this.logAsserts(0);
-
-
             }
         });
 
@@ -374,8 +404,6 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.ok(senderSpy.calledTwice, "sender was invoked twice");
                 this.logAsserts(0);
-
-
             }
         });
 
@@ -407,8 +435,6 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.ok(senderSpy.notCalled, "sender was not called");
                 this.logAsserts(0);
-
-
             }
         });
 
@@ -429,8 +455,6 @@ class SenderTests extends TestClass {
                 // verify
                 Assert.ok(senderSpy.notCalled, "sender was not called");
                 this.logAsserts(0);
-
-
             }
         });
 
@@ -449,8 +473,6 @@ class SenderTests extends TestClass {
 
                 // verify
                 Assert.equal(true, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = true");
-
-
             }
         });
 
@@ -469,8 +491,6 @@ class SenderTests extends TestClass {
 
                 // verify
                 Assert.equal(false, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = false");
-
-
             }
         });
 
@@ -489,8 +509,6 @@ class SenderTests extends TestClass {
 
                 // verify
                 Assert.equal(true, senderSpy.getCall(0).args[1], "triggerSend should have called _send with async = true");
-
-
             }
         });
 
@@ -596,15 +614,8 @@ class SenderTests extends TestClass {
             name: "SenderTests: use Array buffer by default",
             test: () => {
                 // setup
-                var config: Microsoft.ApplicationInsights.ISenderConfig = {
-                    endpointUrl: () => this.endpointUrl,
-                    emitLineDelimitedJson: () => this.emitLineDelimitedJson,
-                    maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
-                    maxBatchInterval: () => this.maxBatchInterval,
-                    disableTelemetry: () => this.disableTelemetry,
-                    enableSessionStorageBuffer: () => false,
-                    disablePartialResponseHandler: () => false
-                };
+                var config = this.getDefaultConfig();
+                config.enableSessionStorageBuffer = () => false;
 
                 // act
                 var sender = new Microsoft.ApplicationInsights.Sender(config);
@@ -618,15 +629,8 @@ class SenderTests extends TestClass {
             name: "SenderTests: use SessionStorageBuffer when enableSessionStorageBuffer is true",
             test: () => {
                 // setup
-                var config: Microsoft.ApplicationInsights.ISenderConfig = {
-                    endpointUrl: () => this.endpointUrl,
-                    emitLineDelimitedJson: () => this.emitLineDelimitedJson,
-                    maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
-                    maxBatchInterval: () => this.maxBatchInterval,
-                    disableTelemetry: () => this.disableTelemetry,
-                    enableSessionStorageBuffer: () => true,
-                    disablePartialResponseHandler: () => false
-                };
+                var config = this.getDefaultConfig();
+                config.enableSessionStorageBuffer = () => true;
 
                 // act
                 var sender = new Microsoft.ApplicationInsights.Sender(config);
@@ -642,15 +646,8 @@ class SenderTests extends TestClass {
                 var utilCanUseSession = Microsoft.ApplicationInsights.Util.canUseSessionStorage;
 
                 // setup
-                var config: Microsoft.ApplicationInsights.ISenderConfig = {
-                    endpointUrl: () => this.endpointUrl,
-                    emitLineDelimitedJson: () => this.emitLineDelimitedJson,
-                    maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
-                    maxBatchInterval: () => this.maxBatchInterval,
-                    disableTelemetry: () => this.disableTelemetry,
-                    enableSessionStorageBuffer: () => true,
-                    disablePartialResponseHandler: () => false
-                };
+                var config = this.getDefaultConfig();
+                config.enableSessionStorageBuffer = () => true;
 
                 Microsoft.ApplicationInsights.Util.canUseSessionStorage = () => {
                     return false;
@@ -668,6 +665,116 @@ class SenderTests extends TestClass {
         });
 
         this.testCase({
+            name: "SenderTests: XMLHttpRequest sender retries on retriable response code from the backend.",
+            test: () => {
+                // setup
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    return xhr;
+                });
+
+                var retriableResponses = [408, 429, 500, 503]; 
+
+                retriableResponses.forEach(statusCode => {
+                    var sender = this.getSender();
+                    Assert.ok(sender, "sender was constructed. Testing response code: " + statusCode);
+
+                    // send two items
+                    this.fakeServer.requests.pop();
+                    sender.send(this.testTelemetry);
+                    sender.send(this.testTelemetry);
+
+                    Assert.equal(2, sender._buffer.count(), "Buffer has two items");
+
+                    // trigger send
+                    this.clock.tick(sender._config.maxBatchInterval());
+
+                    this.requestAsserts();
+                    this.fakeServer.requests.pop().respond(
+                        statusCode,
+                        { "Content-Type": "application/json" },
+                        // response with retriable status code
+                        '{ "itemsReceived": 2, "itemsAccepted": 0, "errors": [{ "index": 0, "statusCode": 408, "message": "error" }, { "index": 1, "statusCode": 408, "message": "error" }] }'
+                    );
+
+                    // verify
+                    Assert.ok(sender.successSpy.notCalled, "success was not invoked");
+                    Assert.ok(sender.errorSpy.notCalled, "error was not invoked");
+
+                    this.logAsserts(1);
+                    Assert.equal(2, sender._buffer.count(), "Buffer has 2 items to retry.");
+
+                    // validate session storage buffers
+                    var buffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.BUFFER_KEY));
+                    var sentBuffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.SENT_BUFFER_KEY));
+
+                    Assert.equal(2, buffer.length, "Session storage buffer has 2 items");
+                    Assert.equal(0, sentBuffer.length, "Session storage sent buffer is empty");
+
+                    // clean up
+                    this.testCleanup();
+                });
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: XMLHttpRequest sender does NOT retry on non-retriable response code from the backend.",
+            test: () => {
+                // setup
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    return xhr;
+                });
+
+                var retriableResponses = [300, 400, 404, 501];
+
+                retriableResponses.forEach(statusCode => {
+                    var sender = this.getSender();
+                    Assert.ok(sender, "sender was constructed. Testing response code: " + statusCode);
+
+                    // send two items
+                    this.fakeServer.requests.pop();
+                    sender.send(this.testTelemetry);
+                    sender.send(this.testTelemetry);
+
+                    Assert.equal(2, sender._buffer.count(), "Buffer has two items");
+
+                    // trigger send
+                    this.clock.tick(sender._config.maxBatchInterval());
+
+                    this.requestAsserts();
+                    this.fakeServer.requests.pop().respond(
+                        statusCode,
+                        { "Content-Type": "application/json" },
+                        // response with retriable status code
+                        '{ "itemsReceived": 2, "itemsAccepted": 0, "errors": [{ "index": 0, "statusCode": 408, "message": "error" }, { "index": 1, "statusCode": 408, "message": "error" }] }'
+                    );
+
+                    // verify
+                    Assert.ok(sender.successSpy.notCalled, "success was not invoked");
+                    Assert.ok(sender.errorSpy.called, "error was invoked");
+
+                    this.logAsserts(1);
+                    Assert.equal(0, sender._buffer.count(), "Buffer has 0 items - nothing to retry.");
+
+                    // validate session storage buffers
+                    var buffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.BUFFER_KEY));
+                    var sentBuffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.SENT_BUFFER_KEY));
+
+                    Assert.equal(0, buffer.length, "Session storage buffer is empty");
+                    Assert.equal(0, sentBuffer.length, "Session storage sent buffer is empty");
+
+                    // clean up
+                    this.testCleanup();
+                });
+            }
+        });
+
+
+
+        this.testCase({
             name: "SenderTests: XMLHttpRequest sender can handle partial success errors. Non-retryable",
             test: () => {
                 // setup
@@ -677,7 +784,8 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                this.validatePartialSuccess_NonRetryable();
+                var sender = this.getSender();
+                this.validatePartialSuccess_NonRetryable(sender);
             }
         });
 
@@ -691,7 +799,8 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                this.validatePartialSuccess_Retryable();
+                var sender = this.getSender();
+                this.validatePartialSuccess_Retryable(sender);
             }
         });
 
@@ -705,7 +814,11 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                this.validatePartialSuccess_disabled();
+                var sender = this.getSender();
+                // disable partial response handling
+                sender._config.isRetryDisabled = () => true;
+
+                this.validatePartialSuccess_disabled(sender);
             }
         });
 
@@ -727,7 +840,10 @@ class SenderTests extends TestClass {
                     return xdr;
                 });
 
-                this.validatePartialSuccess_NonRetryable();
+                var sender = this.getSender();
+                sender._config.endpointUrl = () => window.location.protocol + "//fakeEndpoint";
+
+                this.validatePartialSuccess_NonRetryable(sender);
             }
         });
 
@@ -749,7 +865,10 @@ class SenderTests extends TestClass {
                     return xdr;
                 });
 
-                this.validatePartialSuccess_Retryable();
+                var sender = this.getSender();
+                sender._config.endpointUrl = () => window.location.protocol + "//fakeEndpoint";
+
+                this.validatePartialSuccess_Retryable(sender);
             }
         });
 
@@ -759,11 +878,15 @@ class SenderTests extends TestClass {
                 // setup
                 XMLHttpRequest = <any>(() => {
                     var xhr = new this.xhr;
-                    xhr.withCredentials = false;
+                    delete xhr.withCredentials;
                     return xhr;
                 });
 
-                this.validatePartialSuccess_disabled();
+                var sender = this.getSender();
+                sender._config.endpointUrl = () => window.location.protocol + "//fakeEndpoint";
+                sender._config.isRetryDisabled = () => true;
+
+                this.validatePartialSuccess_disabled(sender);
             }
         });
 
@@ -916,6 +1039,69 @@ class SenderTests extends TestClass {
                 Assert.ok((<any>sender)._retryAt <= now + 16 * 1000, "Invalid retry time.");
             }
         });
+
+        this.testCase({
+            name: "SenderTests: XMLHttpRequest can send and process the resposne from Vortex",
+            test: () => {
+                // setup
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    return xhr;
+                });
+
+                var sender = this.getSender();
+                Assert.ok(sender, "sender was constructed");
+
+                // send sample telemetry
+                this.fakeServer.requests.pop();
+                sender.send(this.testTelemetry);
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                // handle 200 from the Vortex
+                this.requestAsserts();
+                this.fakeServer.requests.pop().respond(200, { "Content-Type": "application/json" }, '{"ipv":false,"pvm":null,"rej":0,"bln":0,"acc":1,"efi":[]}');
+                this.successAsserts(sender);
+                this.logAsserts(0);
+                sender.successSpy.reset();
+                sender.errorSpy.reset();
+
+                // send sample telemetry
+                this.fakeServer.requests.pop();
+                sender.send(this.testTelemetry);
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                // handle 404 from the Vortex
+                this.requestAsserts();
+                this.fakeServer.requests.pop().respond(404, { "Content-Type": "application/json" }, '{"ipv":false,"pvm":null,"rej":1,"bln":0,"acc":0,"efi":["404"]}');
+                this.errorAsserts(sender);
+                this.logAsserts(1);
+                sender.successSpy.reset();
+                sender.errorSpy.reset();
+
+                // cleanup
+                this.loggingSpy.reset();
+
+                // send sample telemetry
+                this.fakeServer.requests.pop();
+                sender.send(this.testTelemetry);
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                // handle 206 from the Vortex. We don't handle partial retries from Vortex. 
+                this.requestAsserts();
+                this.fakeServer.requests.pop().respond(206, { "Content-Type": "application/json" }, '{"ipv":false,"pvm":null,"rej":1,"bln":0,"acc":0,"efi":["206"]}');
+                this.errorAsserts(sender);
+                this.logAsserts(1);
+                sender.successSpy.reset();
+                sender.errorSpy.reset();
+
+                // nothing to retry - validate session storage buffers are empty 
+                var buffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.BUFFER_KEY));
+                var sentBuffer: string[] = JSON.parse(Microsoft.ApplicationInsights.Util.getSessionStorage(Microsoft.ApplicationInsights.SessionStorageSendBuffer.SENT_BUFFER_KEY));
+                Assert.equal(0, buffer.length, "Session storage buffer is empty");
+                Assert.equal(0, sentBuffer.length, "Session storage sent buffer is empty");
+            }
+        });
     }
 
     private setupDataLossAnaluzed() {
@@ -923,8 +1109,7 @@ class SenderTests extends TestClass {
         Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { }, context: { _sender: { _XMLHttpRequestSupported: true } } };
     }
 
-    private validatePartialSuccess_NonRetryable() {
-        var sender = this.getSender();
+    private validatePartialSuccess_NonRetryable(sender) {
         Assert.ok(sender, "sender was constructed");
 
         // send two items
@@ -966,8 +1151,7 @@ class SenderTests extends TestClass {
         sender.errorSpy.reset();
     }
 
-    private validatePartialSuccess_Retryable() {
-        var sender = this.getSender();
+    private validatePartialSuccess_Retryable(sender) {
         Assert.ok(sender, "sender was constructed");
 
         // send six items
@@ -1035,25 +1219,7 @@ class SenderTests extends TestClass {
         sender.errorSpy.reset();
     }
 
-    private validatePartialSuccess_disabled() {
-        var config: Microsoft.ApplicationInsights.ISenderConfig = {
-            endpointUrl: () => this.endpointUrl,
-            emitLineDelimitedJson: () => this.emitLineDelimitedJson,
-            maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
-            maxBatchInterval: () => this.maxBatchInterval,
-            disableTelemetry: () => this.disableTelemetry,
-            enableSessionStorageBuffer: () => true,
-
-            // disable partial response handling
-            disablePartialResponseHandler: () => true
-        };
-
-        var sender = <SenderWrapper>new Microsoft.ApplicationInsights.Sender(config);
-
-        sender.errorSpy = this.sandbox.spy(sender, "_onError");
-        sender.successSpy = this.sandbox.spy(sender, "_onSuccess");
-        sender.partialSpy = this.sandbox.spy(sender, "_onPartialSuccess");
-
+    private validatePartialSuccess_disabled(sender) {
         // send two items
         this.fakeServer.requests.pop();
         sender.send(this.testTelemetry);
@@ -1089,6 +1255,18 @@ class SenderTests extends TestClass {
 
         Assert.equal(0, buffer.length, "Session storage buffer is empty");
         Assert.equal(0, sentBuffer.length, "Session storage sent buffer is empty");
+    }
+
+    private getDefaultConfig(): Microsoft.ApplicationInsights.ISenderConfig {
+        return {
+            endpointUrl: () => this.endpointUrl,
+            emitLineDelimitedJson: () => this.emitLineDelimitedJson,
+            maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
+            maxBatchInterval: () => this.maxBatchInterval,
+            disableTelemetry: () => this.disableTelemetry,
+            enableSessionStorageBuffer: () => true,
+            isRetryDisabled: () => false
+        };
     }
 }
 

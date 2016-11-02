@@ -1,4 +1,5 @@
-﻿/// <reference path="../../../JavaScriptSDK/context/session.ts" />
+﻿/// <reference path="../../../JavaScriptSDK/TelemetryContext.ts" />
+/// <reference path="../../../JavaScriptSDK/context/session.ts" />
 /// <reference path="../../../JavaScriptSDK/context/user.ts" />
 /// <reference path="../../testframework/common.ts" />
 /// <reference path="../Util.tests.ts"/>
@@ -117,11 +118,6 @@ class SessionContextTests extends TestClass {
                 Assert.equal(true, expiration.substr(0, "expires=".length) === "expires=", "Cookie expiration part should start with expires=");
                 var expirationDate = new Date(expiration.substr("expires=".length));
                 Assert.equal(30, expirationDate.getTime() / 1000 / 60, "cookie expiration should be in 30 minutes");
-
-                // cleanup
-                
-                
-                
             }
         });
 
@@ -146,10 +142,6 @@ class SessionContextTests extends TestClass {
 
                     Assert.equal(3, localStorage["ai_session"].split('|').length, "Cookie value before expiration should include user id, acq date and renew date");
                     Assert.equal("newId", localStorage["ai_session"].split('|')[0], "First part of cookie value should be new user id guid");
-
-                    // cleanup
-                    
-                    
                     
                 } else {
                     // this might happen on IE when using a file:// url
@@ -185,12 +177,6 @@ class SessionContextTests extends TestClass {
                 sessionManager.update();
                 sessionManager.backup();
                 Assert.ok(storage['ai_session'], "session cookie should be backed up in local storage");
-
-                // cleanup
-                
-                
-                
-                
             }
         });
 
@@ -225,12 +211,6 @@ class SessionContextTests extends TestClass {
                 // We should recover
                 Assert.equal(sessionId, sessionManager.automaticSession.id, "session id should be consistent with value before losing session cookie");
                 Assert.ok(!sessionManager.automaticSession.isFirst, "the isFirst state should be conserved after losing the session cookie");
-
-                // cleanup
-                
-                
-                
-                
             }
         });
 
@@ -268,13 +248,6 @@ class SessionContextTests extends TestClass {
                 // Everything should be reset with the backup removed
                 Assert.notEqual(sessionId, sessionManager.automaticSession.id, "a new session id should be given after losing all ai cookies");
                 Assert.ok(sessionManager.automaticSession.isFirst, "the isFirst state should be reset after losing all ai cookies");
-
-                // cleanup
-                
-                
-                
-                
-                
             }
         });
 
@@ -312,12 +285,6 @@ class SessionContextTests extends TestClass {
                 // The lost cookie should not be recovered from
                 Assert.notEqual(sessionId, sessionManager.automaticSession.id, "a new session id should be given after losing the session cookie");
                 Assert.ok(sessionManager.automaticSession.isFirst, "the isFirst state should be reset after losing the session cookie");
-
-                // cleanup
-                
-                
-                
-                
             }
         });
 
@@ -411,6 +378,46 @@ class SessionContextTests extends TestClass {
         });
 
         this.testCase({
+            name: "SessionContext: the cookie is not updated more often than cookieUpdateInterval",
+            test: () => {
+                var cookieInterval = Microsoft.ApplicationInsights.Context._SessionManager.cookieUpdateInterval;
+
+                // setup
+                var testGuid = "00000000-0000-0000-0000-000000000000";
+                var acquisitionDate = +new Date();
+                var renewalDate = +new Date();
+
+                this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
+
+                // create session manager and call update to set the cookie
+                var sessionManager = new Microsoft.ApplicationInsights.Context._SessionManager(null);
+                var setCookieSpy = this.sandbox.spy(sessionManager, "setCookie");
+
+                this.clock.tick(10);
+                sessionManager.update();
+
+                // verify
+                Assert.equal(1, setCookieSpy.callCount, "setCookie should be called only once");
+                Assert.equal(10, sessionManager.automaticSession.renewalDate, "cookie renewalDate was updated");
+
+                // try updating the cookie before the cookieUpdateInterval elapsed
+                this.clock.tick(cookieInterval - 1);
+                sessionManager.update();
+
+                // verify
+                Assert.equal(1, setCookieSpy.callCount, "setCookie should not be colled before cookieUpdateInterval elapsed");
+                Assert.equal(10, sessionManager.automaticSession.renewalDate, "cookie renewalDate was NOT updated");
+
+                // wait few more milliseconds till the cookieUpdateInterval elapsed
+                this.clock.tick(2);
+                sessionManager.update();
+
+                Assert.equal(2, setCookieSpy.callCount, "setCookie should be called after the cookieUpdateInterval elapsed");
+                Assert.equal(cookieInterval + 10 + 1, sessionManager.automaticSession.renewalDate, "cookie renewalDate was updated");
+            }
+        });
+
+        this.testCase({
             name: "SessionContext: session manager updates renewal date when updated",
             test: () => {
                 // setup
@@ -483,14 +490,13 @@ class SessionContextTests extends TestClass {
         }
     }
 
-    private getEmptyConfig() {
+    private getEmptyConfig(): Microsoft.ApplicationInsights.ITelemetryConfig {
         return {
             instrumentationKey: () => null,
             accountId: () => null,
             sessionRenewalMs: () => null,
             sessionExpirationMs: () => null,
             sampleRate: () => null,
-            appUserId: () => null,
             endpointUrl: () => null,
             cookieDomain: () => null,
             emitLineDelimitedJson: () => null,
@@ -498,7 +504,7 @@ class SessionContextTests extends TestClass {
             maxBatchInterval: () => null,
             disableTelemetry: () => null,
             enableSessionStorageBuffer: () => null,
-            disablePartialResponseHandler: () => null
+            isRetryDisabled: () => null
         };
     }
 }

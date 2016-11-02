@@ -61,9 +61,10 @@ module Microsoft.ApplicationInsights {
         enableSessionStorageBuffer: () => boolean;
 
         /**
-         * Disable partial resposne handler (206 response code)
+         * Is retry handler disabled.
+         * If enabled, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error) and 503 (service unavailable).
          */
-        disablePartialResponseHandler: () => boolean;
+        isRetryDisabled: () => boolean;
     }
 
     export interface IResponseError {
@@ -319,6 +320,38 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
+         * Checks if the SDK should resend the payload after receiving this status code from the backend.
+         * @param statusCode
+         */
+        private _isRetriable(statusCode: number): boolean {
+            return statusCode == 408 // Timeout
+                || statusCode == 429 // Too many requests.
+                || statusCode == 500 // Internal server error.
+                || statusCode == 503; // Service unavailable.
+        }
+
+        /**
+         * Resend payload. Adds payload back to the send buffer and setup a send timer (with exponential backoff).
+         * @param payload
+         */
+        private _resendPayload(payload: string[]) {
+            if (!payload || payload.length === 0) {
+                return;
+            }
+
+            this._buffer.clearSent(payload);
+            this._consecutiveErrors++;
+
+            for (var item of payload) {
+                this._buffer.enqueue(item);
+            }
+
+            // setup timer
+            this._setRetryTime();
+            this._setupTimer();
+        }
+
+        /**
          * Send XMLHttpRequest
          * @param payload {string} - The data payload to be sent.
          * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
@@ -351,7 +384,18 @@ module Microsoft.ApplicationInsights {
             xdr.onload = () => this._xdrOnLoad(xdr, payload);
             xdr.onerror = (event: ErrorEvent) => this._onError(payload, xdr.responseText || "", event);
 
-            // AI is sending all telemetry with HTTPS, but XDomainRequest requires the same scheme as the hosting page
+            // XDomainRequest requires the same protocol as the hosting page. 
+            // If the protocol doesn't match, we can't send the telemetry :(. 
+            var hostingProtocol = window.location.protocol
+            if (this._config.endpointUrl().lastIndexOf(hostingProtocol, 0) !== 0) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, ". " +
+                        "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol."));
+
+                this._buffer.clear();
+                return;
+            }
+
             var endpointUrl = this._config.endpointUrl().replace(/^(https?:)/, "");
             xdr.open('POST', endpointUrl);
 
@@ -368,12 +412,20 @@ module Microsoft.ApplicationInsights {
         public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) {
             if (xhr.readyState === 4) {
                 if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
-                    this._onError(payload, xhr.responseText || xhr.response || "");
+                    if (!this._config.isRetryDisabled() && this._isRetriable(xhr.status)) {
+                        this._resendPayload(payload);
+
+                        _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
+                            new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, ". " +
+                                "Response code " + xhr.status + ". Will retry to send " + payload.length + " items."));
+                    } else {
+                        this._onError(payload, xhr.responseText || xhr.response || "");
+                    }
                 } else {
                     if (xhr.status === 206) {
                         var response = this._parseResponse(xhr.responseText || xhr.response);
 
-                        if (response && !this._config.disablePartialResponseHandler()) {
+                        if (response && !this._config.isRetryDisabled()) {
                             this._onPartialSuccess(payload, response);
                         } else {
                             this._onError(payload, xhr.responseText || xhr.response || "");
@@ -397,7 +449,7 @@ module Microsoft.ApplicationInsights {
                 var results = this._parseResponse(xdr.responseText);
 
                 if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
-                    && !this._config.disablePartialResponseHandler()) {
+                    && !this._config.isRetryDisabled()) {
                     this._onPartialSuccess(payload, results);
                 } else {
                     this._onError(payload, xdr && xdr.responseText || "");
@@ -416,11 +468,7 @@ module Microsoft.ApplicationInsights {
             var errors = results.errors.reverse();
             for (var error of errors) {
                 var extracted = payload.splice(error.index, 1)[0];
-                if (error.statusCode == 408 // Timeout
-                    || error.statusCode == 429 // Too many requests.
-                    || error.statusCode == 500 // Internal server error.
-                    || error.statusCode == 503 // Service unavailable.
-                ) {
+                if (this._isRetriable(error.statusCode)) {
                     retry.push(extracted);
                 } else {
                     // All other errors, including: 402 (Monthly quota exceeded) and 439 (Too many requests and refresh cache).
@@ -437,18 +485,9 @@ module Microsoft.ApplicationInsights {
             }
 
             if (retry.length > 0) {
-                for (var item of retry) {
-                    this._buffer.enqueue(item);
-                }
+                this._resendPayload(retry);
 
-                this._buffer.clearSent(retry);
-                this._consecutiveErrors++;
-
-                // setup timer
-                this._setRetryTime();
-                this._setupTimer();
-
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
                     new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, "Partial success. " +
                         "Delivered: " + payload.length + ", Failed: " + failed.length +
                         ". Will retry to send " + retry.length + " our of " + results.itemsReceived + " items"));

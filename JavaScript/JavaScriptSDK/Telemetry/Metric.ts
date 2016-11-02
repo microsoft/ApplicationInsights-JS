@@ -13,7 +13,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         public aiDataContract = {
             ver: FieldType.Required,
             metrics: FieldType.Required,
-            properties: FieldType.Default,
+            properties: FieldType.Default
         }
 
         /**

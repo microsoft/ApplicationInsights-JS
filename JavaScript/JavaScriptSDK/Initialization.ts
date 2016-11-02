@@ -6,6 +6,7 @@ module Microsoft.ApplicationInsights {
     export interface Snippet {
         queue: Array<() => void>;
         config: IConfig;
+        version: string;
     }
 
     export class Initialization {
@@ -155,7 +156,7 @@ module Microsoft.ApplicationInsights {
             config.verboseLogging = Util.stringToBoolOrDefault(config.verboseLogging);
             config.emitLineDelimitedJson = Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
             config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
-            config.autoTrackPageVisitTime = ApplicationInsights.Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
+            config.autoTrackPageVisitTime = Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
 
             if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
                 config.samplingPercentage = 100;
@@ -168,7 +169,11 @@ module Microsoft.ApplicationInsights {
             config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
             config.disableCorrelationHeaders = (config.disableCorrelationHeaders !== undefined && config.disableCorrelationHeaders !== null) ?
                 Util.stringToBoolOrDefault(config.disableCorrelationHeaders) :
-                true;
+                false;
+
+            config.isPerfAnalyzerEnabled = (config.isPerfAnalyzerEnabled !== undefined && config.isPerfAnalyzerEnabled !== null) ?
+                Util.stringToBoolOrDefault(config.isPerfAnalyzerEnabled) :
+                false;
 
             config.disableFlushOnBeforeUnload = (config.disableFlushOnBeforeUnload !== undefined && config.disableFlushOnBeforeUnload !== null) ?
                 Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload) :
@@ -178,9 +183,9 @@ module Microsoft.ApplicationInsights {
                 Util.stringToBoolOrDefault(config.enableSessionStorageBuffer) :
                 true;
 
-            config.disablePartialResponseHandler = (config.disablePartialResponseHandler !== undefined && config.disablePartialResponseHandler !== null) ?
-                Util.stringToBoolOrDefault(config.disablePartialResponseHandler) :
-                true;
+            config.isRetryDisabled = (config.isRetryDisabled !== undefined && config.isRetryDisabled !== null) ?
+                Util.stringToBoolOrDefault(config.isRetryDisabled) :
+                false;
            
             return config;
         }

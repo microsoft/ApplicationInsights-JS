@@ -80,26 +80,18 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="E2ETests\PostBuild.ps1" />
+    <Content Include="E2ETests\E2E.ValidateApiTests.htm" />
     <Content Include="E2ETests\E2E.snippetTests.htm" />
     <Content Include="E2ETests\E2E.DisableTelemetryTests.htm" />
     <Content Include="E2ETests\E2E.SanitizerE2ETests.htm" />
     <Content Include="E2ETests\E2E.PublicApiTests.htm" />
     <Content Include="E2ETests\E2E.autoCollection.tests.htm" />
     <Content Include="E2ETests\autoCollectionTemplates\instrumentation.js" />
-    <Content Include="E2ETests\standalone\legacySnippet.js" />
     <Content Include="E2ETests\ai.js">
       <DependentUpon>PostBuild.ps1</DependentUpon>
     </Content>
-    <Content Include="E2ETests\sprint66Snippet.js">
-      <DependentUpon>PostBuild.ps1</DependentUpon>
-    </Content>
-    <Content Include="E2ETests\sprint69Snippet.js">
-      <DependentUpon>PostBuild.ps1</DependentUpon>
-    </Content>
-    <Content Include="E2ETests\sprint70Snippet.js">
-      <DependentUpon>PostBuild.ps1</DependentUpon>
-    </Content>
-    <Content Include="E2ETests\standalone\legacySnippetSprint69.js" />
+    <Content Include="E2ETests\standalone\snippet_0.1.js" />
+    <Content Include="E2ETests\standalone\snippet_1.0.js" />
     <Content Include="E2ETests\standalone\sprint70.html" />
     <Content Include="E2ETests\standalone\testSnippet.js" />
     <Content Include="E2ETests\testSnippet.js">
@@ -118,6 +110,15 @@
       <DependentUpon>PostBuild.ps1</DependentUpon>
     </Content>
     <Content Include="E2ETests\errorScriptSyntax.html">
+      <DependentUpon>PostBuild.ps1</DependentUpon>
+    </Content>
+    <Content Include="E2ETests\snippet_0.1.js">
+      <DependentUpon>PostBuild.ps1</DependentUpon>
+    </Content>
+    <Content Include="E2ETests\snippet_1.0.js">
+      <DependentUpon>PostBuild.ps1</DependentUpon>
+    </Content>
+    <Content Include="E2ETests\snippetLatest.js">
       <DependentUpon>PostBuild.ps1</DependentUpon>
     </Content>
   </ItemGroup>
@@ -246,6 +247,11 @@
       <DependentUpon>PublicApiTests.ts</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <ValidateApiTests Include="E2ETests\ValidateApiTests.ts" />
+    <Content Include="E2ETests\ValidateApiTests.js">
+      <DependentUpon>ValidateApiTests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <SanitizerE2ETests Include="E2ETests\SanitizerE2E.tests.ts" />
     <Content Include="E2ETests\SanitizerE2E.tests.js">
       <DependentUpon>SanitizerE2E.tests.ts</DependentUpon>
@@ -289,6 +295,7 @@
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SeleniumPerformance ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\performanceTests.js" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(AutoCollectionTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\autoCollection.tests.js" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(PublicApiTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\PublicApiTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(ValidateApiTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\ValidateApiTests.js" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SanitizerE2ETests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\SanitizerE2E.tests.js" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SnippetTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\snippet.tests.js" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(DisableTelemetryTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\DisableTelemetryTests.js" />

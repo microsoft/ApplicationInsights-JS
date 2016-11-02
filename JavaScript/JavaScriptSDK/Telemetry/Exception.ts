@@ -17,7 +17,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             exceptions: FieldType.Required,
             severityLevel: FieldType.Default,
             properties: FieldType.Default,
-            measurements: FieldType.Default,
+            measurements: FieldType.Default
         }
 
         /**
@@ -76,7 +76,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             message: FieldType.Required,
             hasFullStack: FieldType.Default,
             stack: FieldType.Default,
-            parsedStack: FieldType.Array,
+            parsedStack: FieldType.Array
         };
 
         constructor(exception: Error) {
@@ -157,7 +157,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             method: FieldType.Required,
             assembly: FieldType.Default,
             fileName: FieldType.Default,
-            line: FieldType.Default,
+            line: FieldType.Default
         };
 
         constructor(frame: string, level: number) {

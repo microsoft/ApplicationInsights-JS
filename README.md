@@ -13,7 +13,7 @@ There are several ways to initialize Aplication Insights.
 |                                    | **Dynamic loading.** JS script tag is inserted in the head of the page. This is the recommended approach as our CDN is getting frequent updates.                                                                                                           | **Static loading.** You are responsible for including JS script tag or bundling the script with your other scripts. |
 |------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
 | **Using initialization `snippet`** | [Dynamic loading with snippet](README.md#use-js-snippet-and-initialize-dynamically-download-full-application-insights-script-from-cdn) This is default approach used in a new ASP.NET application created in Visual Studio. Use this for MVC applications. | [Host AI JS SDK and initialize statically](README.md#include-ai-js-sdk-script-and-initialize-statically). Cordova applications where you would like to embed scripts into your application for faster loading is an example of when you would use this approach.                                                                                                             |
-| **Using module import**            | [Dynamic loading using module import](README.md#import-as-a-module-and-initialize-dynamically-download-full-application-insights-script-from-cdn). This is the recommended approach for modern modular applications.                                       | [TBD](issues/213)                                                                                                                 |
+| **Using module import**            | [Dynamic loading using module import](README.md#import-as-a-module-and-initialize-dynamically-download-full-application-insights-script-from-cdn). This is the recommended approach for modern modular applications.                                       | [TBD](https://github.com/Microsoft/ApplicationInsights-JS/issues/213)                                                                                                                 |
 
 ### Use JS `snippet` and initialize dynamically (download full Application Insights script from CDN)  
 Use this method for an MVC application. Get "code to monitor my web pages" from the Quick Start page, 
@@ -21,8 +21,8 @@ and insert it in the head of your web pages. Application Insights script will be
 from CDN or you can override the script hosting location by specifying `url` parameter in the config.   
 ```
 <script type="text/javascript">
-    var appInsights = window.appInsights || function (config) {
-        function r(config){t[config]=function(){var i=arguments;t.queue.push(function(){t[config].apply(t,i)})}}var t={config:config},u=document,e=window,o="script",s=u.createElement(o),i,f;s.src=config.url||"https://az416426.vo.msecnd.net/scripts/a/ai.0.js";u.getElementsByTagName(o)[0].parentNode.appendChild(s);try{t.cookie=u.cookie}catch(h){}for(t.queue=[],i=["Event","Exception","Metric","PageView","Trace","Dependency"];i.length;)r("track"+i.pop());return r("setAuthenticatedUserContext"),r("clearAuthenticatedUserContext"),config.disableExceptionTracking||(i="onerror",r("_"+i),f=e[i],e[i]=function(config,r,u,e,o){var s=f&&f(config,r,u,e,o);return s!==!0&&t["_"+i](config,r,u,e,o),s}),t
+    var appInsights=window.appInsights||function(config){
+        function i(config){t[config]=function(){var i=arguments;t.queue.push(function(){t[config].apply(t,i)})}}var t={config:config},u=document,e=window,o="script",s="AuthenticatedUserContext",h="start",c="stop",l="Track",a=l+"Event",v=l+"Page",y=u.createElement(o),r,f;y.src=config.url||"https://az416426.vo.msecnd.net/scripts/a/ai.0.js";u.getElementsByTagName(o)[0].parentNode.appendChild(y);try{t.cookie=u.cookie}catch(p){}for(t.queue=[],t.version="1.0",r=["Event","Exception","Metric","PageView","Trace","Dependency"];r.length;)i("track"+r.pop());return i("set"+s),i("clear"+s),i(h+a),i(c+a),i(h+v),i(c+v),i("flush"),config.disableExceptionTracking||(r="onerror",i("_"+r),f=e[r],e[r]=function(config,i,u,e,o){var s=f&&f(config,i,u,e,o);return s!==!0&&t["_"+r](config,i,u,e,o),s}),t
     }({
         instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
     });
@@ -92,7 +92,7 @@ See:
 * Build solution in Visual Studio
 
 ## To run check-in tests
-* `powershell "& .\RunTestsInBrowser.ps1"` to run `Tests.html` in a browser (you might need to call Set-ExecutionPolicy to be able to execute the script)
+* `powershell "& .\scripts\RunTestsInBrowser.ps1"` to run `Tests.html` in a browser (you might need to call Set-ExecutionPolicy to be able to execute the script)
 * Don't forget to build the solution after changing TypeScript files
 * Refresh Tests.html in the browser to re-run tests
 
