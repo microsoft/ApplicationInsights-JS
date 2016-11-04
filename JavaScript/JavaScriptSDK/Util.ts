@@ -87,6 +87,8 @@ module Microsoft.ApplicationInsights {
                 try {
                     return storage.getItem(name);
                 } catch (e) {
+                    Util._canUseLocalStorage = false;
+
                     var message = new _InternalLogMessage(
                         _InternalMessageId.NONUSRACT_BrowserCannotReadLocalStorage,
                         "Browser failed read of local storage. " + Util.getExceptionName(e),
@@ -112,6 +114,8 @@ module Microsoft.ApplicationInsights {
                     storage.setItem(name, data);
                     return true;
                 } catch (e) {
+                    Util._canUseLocalStorage = false;
+
                     var message = new _InternalLogMessage(
                         _InternalMessageId.NONUSRACT_BrowserCannotWriteLocalStorage,
                         "Browser failed write to local storage. " + Util.getExceptionName(e),
@@ -136,6 +140,8 @@ module Microsoft.ApplicationInsights {
                     storage.removeItem(name);
                     return true;
                 } catch (e) {
+                    Util._canUseLocalStorage = false;
+
                     var message = new _InternalLogMessage(
                         _InternalMessageId.NONUSRACT_BrowserFailedRemovalFromLocalStorage,
                         "Browser failed removal of local storage item. " + Util.getExceptionName(e),
@@ -200,12 +206,14 @@ module Microsoft.ApplicationInsights {
                 try {
                     return storage.getItem(name);
                 } catch (e) {
+                    Util._canUseSessionStorage = false;
+
                     var message = new _InternalLogMessage(
                         _InternalMessageId.NONUSRACT_BrowserCannotReadSessionStorage,
                         "Browser failed read of session storage. " + Util.getExceptionName(e),
                         { exception: Util.dump(e) }
                     );
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, message);
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
                 }
             }
             return null;
@@ -225,12 +233,14 @@ module Microsoft.ApplicationInsights {
                     storage.setItem(name, data);
                     return true;
                 } catch (e) {
+                    Util._canUseSessionStorage = false;
+
                     var message = new _InternalLogMessage(
                         _InternalMessageId.NONUSRACT_BrowserCannotWriteSessionStorage,
                         "Browser failed write to session storage. " + Util.getExceptionName(e),
                         { exception: Util.dump(e) }
                     );
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, message);
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
                 }
             }
             return false;
@@ -249,12 +259,14 @@ module Microsoft.ApplicationInsights {
                     storage.removeItem(name);
                     return true;
                 } catch (e) {
+                    Util._canUseSessionStorage = false;
+
                     var message = new _InternalLogMessage(
                         _InternalMessageId.NONUSRACT_BrowserFailedRemovalFromSessionStorage,
                         "Browser failed removal of session storage item. " + Util.getExceptionName(e),
                         { exception: Util.dump(e) }
                     );
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, message);
+                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
                 }
             }
             return false;
