@@ -194,6 +194,10 @@ module Microsoft.ApplicationInsights {
             config.isStorageUseDisabled = (config.isStorageUseDisabled !== undefined && config.isStorageUseDisabled !== null) ?
                 Util.stringToBoolOrDefault(config.isStorageUseDisabled) :
                 false;
+
+            config.isBeaconApiDisabled = (config.isBeaconApiDisabled !== undefined && config.isBeaconApiDisabled !== null) ?
+                Util.stringToBoolOrDefault(config.isBeaconApiDisabled) :
+                true;
            
             return config;
         }

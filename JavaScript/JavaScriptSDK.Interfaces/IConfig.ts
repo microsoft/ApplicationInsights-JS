@@ -31,5 +31,6 @@
         isPerfAnalyzerEnabled?: boolean;
         url?: string;
         isStorageUseDisabled?: boolean;
+        isBeaconApiDisabled?: boolean;
     }
 }

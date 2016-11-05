@@ -1265,7 +1265,8 @@ class SenderTests extends TestClass {
             maxBatchInterval: () => this.maxBatchInterval,
             disableTelemetry: () => this.disableTelemetry,
             enableSessionStorageBuffer: () => true,
-            isRetryDisabled: () => false
+            isRetryDisabled: () => false,
+            isBeaconApiDisabled: () => true
         };
     }
 }
