@@ -224,9 +224,6 @@ Values that control how the telemetry data is sent.
         // A session is logged if it has continued for this time in milliseconds. Default 24h.
         sessionExpirationMs: number;
         
-        // Default 200k
-        maxPayloadSizeInBytes: number; 
-        
         // Default 100k
         maxBatchSizeInBytes: number;
         
