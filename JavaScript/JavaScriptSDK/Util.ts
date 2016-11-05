@@ -520,6 +520,13 @@ module Microsoft.ApplicationInsights {
 
             return true;
         }
+
+        /**
+         * Tells if a browser supports a Beacon API
+         */
+        public static IsBeaconApiSupported(): boolean {
+            return ('sendBeacon' in navigator);
+        }
     }
 
     export class UrlHelper {

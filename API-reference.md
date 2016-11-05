@@ -289,6 +289,11 @@ Values that control how the telemetry data is sent.
         // If true, the SDK will not store or read any data from local and session storage.
         // Default: false
         isStorageUseDisabled: boolean;
+        
+        // If true, the SDK will send all telemetry using [Beacon API](https://www.w3.org/TR/beacon/)
+        // When Beacon API is enabled, then SessionStorageBuffer cannot be used and maxBatchSizeInBytes is limit too 64kb
+        // Default: true
+        isBeaconApiDisabled: boolean;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.

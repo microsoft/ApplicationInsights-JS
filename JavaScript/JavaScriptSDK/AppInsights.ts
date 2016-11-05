@@ -73,13 +73,21 @@ module Microsoft.ApplicationInsights {
                 sessionExpirationMs: () => this.config.sessionExpirationMs,
                 endpointUrl: () => this.config.endpointUrl,
                 emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
-                maxBatchSizeInBytes: () => this.config.maxBatchSizeInBytes,
+                maxBatchSizeInBytes: () => {
+                    return (!this.config.isBeaconApiDisabled && Util.IsBeaconApiSupported()) ?
+                        Math.min(this.config.maxBatchSizeInBytes, Sender.MaxBeaconPayloadSize) :
+                        this.config.maxBatchSizeInBytes;
+                },
                 maxBatchInterval: () => this.config.maxBatchInterval,
                 disableTelemetry: () => this.config.disableTelemetry,
                 sampleRate: () => this.config.samplingPercentage,
                 cookieDomain: () => this.config.cookieDomain,
-                enableSessionStorageBuffer: () => this.config.enableSessionStorageBuffer,
-                isRetryDisabled: () => this.config.isRetryDisabled
+                enableSessionStorageBuffer: () => {
+                    // Disable Session Storage buffer if telemetry is sent using Beacon API
+                    return ((this.config.isBeaconApiDisabled || !Util.IsBeaconApiSupported()) && this.config.enableSessionStorageBuffer);
+                },
+                isRetryDisabled: () => this.config.isRetryDisabled,
+                isBeaconApiDisabled: () => this.config.isBeaconApiDisabled
             }
 
             if (this.config.isCookieUseDisabled) {
