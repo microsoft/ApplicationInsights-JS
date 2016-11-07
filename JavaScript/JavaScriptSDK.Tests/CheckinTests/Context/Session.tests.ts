@@ -9,7 +9,7 @@ class SessionContextTests extends TestClass {
 
     private originalDocument = Microsoft.ApplicationInsights.Util["document"];
     private results: any[];
-    private performanceNowObj = performance.now;
+    private dateTimeNowObj = Microsoft.ApplicationInsights.dateTime.Now;
 
     /** Method called before the start of each test method */
     public testInitialize() {
@@ -18,8 +18,8 @@ class SessionContextTests extends TestClass {
         this.restoreFakeCookie();
 
         // SinonFakeTimers doesn't mock "performance.now" - https://github.com/sinonjs/lolex/issues/82 
-        // workaround to mock the clock
-        window.performance.now = Date.now;
+        // this is a hack to mock the clock
+        Microsoft.ApplicationInsights.dateTime.Now = Date.now;
     }
 
     /** Method called after each test method has completed */
@@ -28,8 +28,8 @@ class SessionContextTests extends TestClass {
         this.resetStorage();
         this.restoreFakeCookie();
 
-        // restore original window.performance.now
-        window.performance.now = this.performanceNowObj;
+        // restore original dateTime.Now object
+        Microsoft.ApplicationInsights.dateTime.Now = this.dateTimeNowObj;
     }
 
     public registerTests() {

@@ -84,7 +84,7 @@ module Microsoft.ApplicationInsights.Context {
             } else {
                 // do not update the cookie more often than cookieUpdateInterval
                 if (!this.cookieUpdatedTimestamp || now - this.cookieUpdatedTimestamp > _SessionManager.cookieUpdateInterval) {
-                    this.automaticSession.renewalDate = +new Date(now);
+                    this.automaticSession.renewalDate = now;
                     this.setCookie(this.automaticSession.id, this.automaticSession.acquisitionDate, this.automaticSession.renewalDate);
                 }
             }
@@ -164,7 +164,7 @@ module Microsoft.ApplicationInsights.Context {
         }
 
         private renew() {
-            var now = +new Date;
+            var now = dateTime.Now();
 
             this.automaticSession.id = Util.newId();
             this.automaticSession.acquisitionDate = now;

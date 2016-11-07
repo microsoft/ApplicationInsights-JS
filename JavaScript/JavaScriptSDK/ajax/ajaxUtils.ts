@@ -31,9 +31,9 @@ module Microsoft.ApplicationInsights {
 
     export class dateTime {
         ///<summary>Return the number of milliseconds since 1970/01/01 in local timezon</summary>
-        public static Now = (window.performance && window.performance.now) ?
+        public static Now = (window.performance && window.performance.now && window.performance.timing) ?
             function () {
-                return performance.now();
+                return window.performance.now() + window.performance.timing.navigationStart;
             }
             :
             function () {
@@ -41,7 +41,7 @@ module Microsoft.ApplicationInsights {
             }
 
         ///<summary>Gets duration between two timestamps</summary>
-        public static GetDuration = function (start, end) {
+        public static GetDuration = function (start: number, end: number): number {
             var result = null;
             if (start !== 0 && end !== 0 && !extensions.IsNullOrUndefined(start) && !extensions.IsNullOrUndefined(end)) {
                 result = end - start;
