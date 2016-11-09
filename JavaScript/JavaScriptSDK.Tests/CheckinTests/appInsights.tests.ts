@@ -6,7 +6,7 @@ class AppInsightsTests extends TestClass {
     private getAppInsightsSnippet() {
         var snippet: Microsoft.ApplicationInsights.IConfig = {
             instrumentationKey: "",
-            endpointUrl: "//dc.services.visualstudio.com/v2/track",
+            endpointUrl: "https://dc.services.visualstudio.com/v2/track",
             emitLineDelimitedJson: false,
             accountId: undefined,
             sessionRenewalMs: 10,
