@@ -3,6 +3,13 @@
 
 class UtilTests extends TestClass {
 
+    public testCleanup() {
+
+        // reset storage cache
+        (<any>Microsoft.ApplicationInsights.Util)._canUseLocalStorage = undefined;
+        (<any>Microsoft.ApplicationInsights.Util)._canUseSessionStorage = undefined;
+    }
+
     public registerTests() {
         var Util = Microsoft.ApplicationInsights.Util;
 
@@ -16,8 +23,6 @@ class UtilTests extends TestClass {
 
                 Assert.equal("A", Util.getStorage("test"), "getStorage should return value of getItem for known keys");
                 Assert.equal(undefined, Util.getStorage("another"), "getStorage should return value of getItem for unknown keys");
-
-
             }
         });
 
@@ -28,8 +33,31 @@ class UtilTests extends TestClass {
                 var getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getLocalStorageObject", () => storage);
 
                 Assert.equal(null, Util.getStorage("test"), "getStorage should return null when storage is unavailable");
+            }
+        });
 
+        this.testCase({
+            name: "UtilTests: can disable local and session storage",
+            test: () => {
+                // can use local and session storage by default
+                Assert.ok(Util.canUseLocalStorage(), "can use local storage by default");
+                Assert.ok(Util.canUseSessionStorage(), "can use session storage by default");
 
+                Util.setStorage("key1", "value1");
+                Util.setSessionStorage("key2", "value2");
+
+                Assert.equal("value1", Util.getStorage("key1"), "can rad from local storage with it is enabled");
+                Assert.equal("value2", Util.getSessionStorage("key2"), "can rad from session storage with it is enabled");
+
+                // disable storages
+                Util.disableStorage();
+
+                // can't read 
+                Assert.ok(!Util.canUseLocalStorage(), "can use local storage after it was disabled");
+                Assert.ok(!Util.canUseSessionStorage(), "can use session storage after it was disabled");
+
+                Assert.equal(null, Util.getStorage("key1"), "can't read from local storage when disabled");
+                Assert.equal(null, Util.getSessionStorage("key2"), "can't read from session storage when disabled");
             }
         });
 
@@ -146,6 +174,18 @@ class UtilTests extends TestClass {
                     actualValue = Util.getCookie("");
                     Assert.equal("", actualValue, "cookie content was set and retrieved");
                 }
+            }
+        });
+
+        this.testCase({
+            name: "UtilTests: can disable cookies",
+            test: () => {
+                Assert.ok(Util.canUseCookies(), "can use cookies by default");
+                Util.disableCookies();
+                Assert.ok(!Util.canUseCookies(), "cannot use cookies after they were disabled");
+
+                // reset
+                (<any>Util)._canUseCookies = undefined;
             }
         });
 

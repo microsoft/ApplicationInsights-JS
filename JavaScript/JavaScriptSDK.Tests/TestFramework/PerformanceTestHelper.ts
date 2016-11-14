@@ -56,7 +56,7 @@ class PerformanceTestHelper extends TestClass {
         this.appInsights = new Microsoft.ApplicationInsights.AppInsights(<any>{
             instrumentationKey: "3e6a441c-b52b-4f39-8944-f81dd6c2dc46",
             url: "file:///C:/src/sdk/src/JavaScript/JavaScriptSDK.Tests//E2ETests/ai.js",
-            endpointUrl: "http://dc.services.visualstudio.com/v2/track",
+            endpointUrl: "https://dc.services.visualstudio.com/v2/track",
             maxBatchInterval: 0
         });
 

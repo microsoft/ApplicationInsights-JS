@@ -14,7 +14,7 @@ Param(
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="The endpoinoint URL. (dev: datacollection-devred.cloudapp.net, int: dc-int.services.visualstudio.com, prod: dc.services.visualstudio.com")]
-    [string]$endpointUrl = "http://dc.services.visualstudio.com/v2/track",
+    [string]$endpointUrl = "https://dc.services.visualstudio.com/v2/track",
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="CDN URL -- NOTE this is only used to as a replacement index")]

@@ -82,6 +82,14 @@ module Microsoft.ApplicationInsights {
                 isRetryDisabled: () => this.config.isRetryDisabled
             }
 
+            if (this.config.isCookieUseDisabled) {
+                Util.disableCookies();
+            }
+
+            if (this.config.isStorageUseDisabled) {
+                Util.disableStorage();
+            }
+
             this.context = new ApplicationInsights.TelemetryContext(configGetters);
             this._pageViewManager = new Microsoft.ApplicationInsights.Telemetry.PageViewManager(this, this.config.overridePageViewDuration);
 
@@ -115,7 +123,7 @@ module Microsoft.ApplicationInsights {
 
             if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
 
-            if (this.config.isResourceTimingEnabled) {
+            if (!this.config.isResourceTimingDisabled) {
                 this._resourceTimingManager = new ApplicationInsights.Telemetry.ResourceTimingManager(this);
             }
         }

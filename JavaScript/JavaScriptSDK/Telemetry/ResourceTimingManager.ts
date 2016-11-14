@@ -19,7 +19,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
         constructor(appInsights: AppInsights) {
             this.appInsights = appInsights;
-            this.enabled = this.appInsights.config.isResourceTimingEnabled;
+            this.enabled = !this.appInsights.config.isResourceTimingDisabled;
             this.maxResourcesPerPage = this.appInsights.config.maxResourcesPerPage;
 
             if (this.enabled) {

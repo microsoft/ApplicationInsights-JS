@@ -41,7 +41,7 @@ class AutoCollectionTests extends TestClass {
                         dependencySource: 2
                     },
                     {
-                        name: "http://dc.services.visualstudio.com/v2/track",
+                        name: "https://dc.services.visualstudio.com/v2/track",
                         success: false,
                         commandName: "/v2/track",
                         dependencyTypeName: "Ajax",
@@ -49,7 +49,7 @@ class AutoCollectionTests extends TestClass {
                         dependencySource: 2
                     },
                     {
-                        name: "http://dc.services.visualstudio.com/v2/track",
+                        name: "https://dc.services.visualstudio.com/v2/track",
                         commandName: "/v2/track",
                         success: false,
                         dependencyTypeName: "Ajax",
@@ -57,7 +57,7 @@ class AutoCollectionTests extends TestClass {
                         dependencySource: 2
                     },
                     {
-                        name: "http://dc.services.visualstudio.com/v2/track",
+                        name: "https://dc.services.visualstudio.com/v2/track",
                         commandName: "/v2/track",
                         success: false,
                         dependencyTypeName: "Ajax",

@@ -125,7 +125,7 @@ Log an exception you have caught. (Exceptions caught by the browser are also log
 `handledAt` | Defaults to "unhandled".
 `properties` | Map of string to string: Additional data used to [filter exceptions](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 `measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
-`severityLevel` | Supported values: [SeverityLevel.ts](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK/Contracts/Generated/SeverityLevel.ts)
+`severityLevel` | Supported values: [SeverityLevel.ts](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts)
 
 In the portal, you can [search on exception type and view](https://azure.microsoft.com/documentation/articles/app-insights-diagnostic-search/) the type, message, and stack trace of individual instances. 
 
@@ -224,9 +224,6 @@ Values that control how the telemetry data is sent.
         // A session is logged if it has continued for this time in milliseconds. Default 24h.
         sessionExpirationMs: number;
         
-        // Default 200k
-        maxPayloadSizeInBytes: number; 
-        
         // Default 100k
         maxBatchSizeInBytes: number;
         
@@ -263,6 +260,10 @@ Values that control how the telemetry data is sent.
         // Default 500 - controls how many ajax calls will be monitored per page view.
         // Set to -1 to monitor all ajax calls on the page.
         maxAjaxCallsPerView: number;
+
+        // If true, the SDK will not store or read any data from cookies.
+        // Default: false
+        isCookieUseDisabled: boolean;
         
         // Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains.
         cookieDomain: string;
@@ -281,6 +282,10 @@ Values that control how the telemetry data is sent.
         // The url from where the JS SDK will be downloaded. 
         // Default 'https://az416426.vo.msecnd.net/scripts/a/ai.0.js'
         url: string;
+
+        // If true, the SDK will not store or read any data from local and session storage.
+        // Default: false
+        isStorageUseDisabled: boolean;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.

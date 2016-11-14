@@ -71,7 +71,7 @@ module Microsoft.ApplicationInsights.Context {
                 this.initializeAutomaticSession();
             }
 
-            var now = +new Date;
+            var now = dateTime.Now();
 
             var acquisitionExpired = now - this.automaticSession.acquisitionDate > this.config.sessionExpirationMs();
             var renewalExpired = now - this.automaticSession.renewalDate > this.config.sessionRenewalMs();
@@ -84,7 +84,7 @@ module Microsoft.ApplicationInsights.Context {
             } else {
                 // do not update the cookie more often than cookieUpdateInterval
                 if (!this.cookieUpdatedTimestamp || now - this.cookieUpdatedTimestamp > _SessionManager.cookieUpdateInterval) {
-                    this.automaticSession.renewalDate = +new Date;
+                    this.automaticSession.renewalDate = now;
                     this.setCookie(this.automaticSession.id, this.automaticSession.acquisitionDate, this.automaticSession.renewalDate);
                 }
             }
@@ -164,7 +164,7 @@ module Microsoft.ApplicationInsights.Context {
         }
 
         private renew() {
-            var now = +new Date;
+            var now = dateTime.Now();
 
             this.automaticSession.id = Util.newId();
             this.automaticSession.acquisitionDate = now;
@@ -197,7 +197,7 @@ module Microsoft.ApplicationInsights.Context {
 
             Util.setCookie('ai_session', cookie.join('|') + ';expires=' + cookieExpiry.toUTCString(), cookieDomnain);
 
-            this.cookieUpdatedTimestamp = +new Date;
+            this.cookieUpdatedTimestamp = dateTime.Now();
         }
 
         private setStorage(guid: string, acq: number, renewal: number) {

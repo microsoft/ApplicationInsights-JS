@@ -146,7 +146,7 @@ module Microsoft.ApplicationInsights {
             config.endpointUrl = config.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
             config.sessionRenewalMs = 30 * 60 * 1000;
             config.sessionExpirationMs = 24 * 60 * 60 * 1000;
-            config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 1000000;
+            config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 102400; // 100kb
             config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
             config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
             config.disableExceptionTracking = Util.stringToBoolOrDefault(config.disableExceptionTracking);
@@ -168,7 +168,14 @@ module Microsoft.ApplicationInsights {
             config.enableSessionStorageBuffer = Util.stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
             config.isRetryDisabled = Util.stringToBoolOrDefault(config.isRetryDisabled);
 
-            config.isResourceTimingEnabled = Util.stringToBoolOrDefault(config.isResourceTimingEnabled);
+            config.isRetryDisabled = Util.stringToBoolOrDefault(config.isRetryDisabled); 
+
+            config.isCookieUseDisabled = Util.stringToBoolOrDefault(config.isCookieUseDisabled);
+
+            config.isStorageUseDisabled = Util.stringToBoolOrDefault(config.isStorageUseDisabled);
+           
+            config.isResourceTimingDisabled = Util.stringToBoolOrDefault(config.isResourceTimingDisabled, true);
+
             if (isNaN(config.maxResourcesPerPage) || config.maxResourcesPerPage < 0 || config.maxResourcesPerPage > 150) {
                 config.maxResourcesPerPage = 50;
             }
