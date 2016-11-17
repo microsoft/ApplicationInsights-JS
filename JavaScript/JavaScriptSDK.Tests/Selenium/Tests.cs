@@ -213,6 +213,33 @@ namespace ApplicationInsights.Javascript.Tests
                     }
                 }
 
+                // Log QUnit execution details
+                Console.WriteLine("=== QUnit execution details ===");
+                var tests = driver.FindElementById("qunit-tests").FindElements(OpenQA.Selenium.By.XPath("./li"));
+
+                foreach(var test in tests)
+                {
+                    var testName = test.FindElement(OpenQA.Selenium.By.XPath("./strong/span"));
+                    Console.WriteLine(testName.GetAttribute("innerHTML"));
+
+                    var steps = test.FindElements(OpenQA.Selenium.By.XPath("./ol/li"));
+
+                    foreach(var step in steps)
+                    {
+                        Console.Write(step.GetAttribute("class")+ " : ");
+                        
+                        var stepDetails = step.FindElements(OpenQA.Selenium.By.XPath("./span"));
+                        foreach(var details in stepDetails)
+                        {
+                            Console.Write(details.GetAttribute("innerHTML")+ " ");
+                        }
+
+                        Console.WriteLine();
+                    }
+
+                    Console.WriteLine("===");
+                }
+
                 if (runCodeCoverage)
                 {
                     AttachCodeCoverageReport();
