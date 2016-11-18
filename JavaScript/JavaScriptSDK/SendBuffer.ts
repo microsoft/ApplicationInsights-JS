@@ -259,7 +259,7 @@ module Microsoft.ApplicationInsights {
                 // telemetry is stored in the _buffer array so we won't loose any items
                 Util.setSessionStorage(key, JSON.stringify([]));
 
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
                     new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToSetStorageBuffer,
                         " storage key: " + key + ", " + Util.getExceptionName(e) + ". Buffer cleared",
                         { exception: Util.dump(e) }));
