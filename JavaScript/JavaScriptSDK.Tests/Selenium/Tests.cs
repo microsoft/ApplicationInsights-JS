@@ -5,6 +5,7 @@ using System.ServiceProcess;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OpenQA.Selenium.Remote;
+using OpenQA.Selenium.Firefox;
 
 namespace ApplicationInsights.Javascript.Tests
 {
@@ -16,6 +17,7 @@ namespace ApplicationInsights.Javascript.Tests
     public class Tests
     {
         public TestContext TestContext { get; set; }
+        private static RemoteWebDriver driver { get; set; }
 
         #region IIS express stuff
 
@@ -23,6 +25,7 @@ namespace ApplicationInsights.Javascript.Tests
         private static IISExpress iisExpress;
         private const string PATH_TO_TESTS = "/Selenium/Tests.html";
         private const string PATH_TO_PERF_TESTS = "/Selenium/PerfTests.html";
+        private const int RETRY_COUNT = 3;
 
         // We run tests with IsPublicBuild on our build server to maintain public history of perf results (to be shared for each release).
         // For anything but master perf results are supposed to be written locally enabling people to compare
@@ -42,6 +45,8 @@ namespace ApplicationInsights.Javascript.Tests
             string localPath = System.IO.Path.GetDirectoryName(typeof(Tests).Assembly.Location);
             iisExpress = new IISExpress(localPath, PORT);
             Assert.IsTrue(iisExpress.Start(), "IIS Express failed to start");
+
+            Tests.driver = Tests.GetWebDriver();
         }
 
         [ClassCleanup]
@@ -49,55 +54,61 @@ namespace ApplicationInsights.Javascript.Tests
         {
             iisExpress.Stop();
             iisExpress = null;
+
+            driver.Quit();
         }
 
         #endregion
 
-        [TestMethod]
-        public void Firefox()
-        {
-            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), PATH_TO_TESTS);
-        }
-
-        [TestMethod]
-        public void Firefox_CodeCoverage()
+        private static RemoteWebDriver GetWebDriver()
         {
             var ffProfile = new OpenQA.Selenium.Firefox.FirefoxProfile();
-            ffProfile.SetPreference("browser.download.dir", TestContext.TestRunResultsDirectory);
             ffProfile.SetPreference("browser.download.folderList", 2);
             ffProfile.SetPreference("browser.helperApps.neverAsk.saveToDisk", "text/plain");
 
-            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(ffProfile), PATH_TO_TESTS, true);
+            return new FirefoxDriver(ffProfile);
+        }
+
+        [TestMethod]
+        public void Firefox()
+        {
+            RunTest(PATH_TO_TESTS);
+        }
+
+        // [TestMethod]
+        public void Firefox_CodeCoverage()
+        {
+            RunTest(PATH_TO_TESTS, true);
         }
 
         [TestMethod]
         public void Firefox_E2E_DisableTelemetryTests()
         {
-            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.DisableTelemetryTests.htm");
+            RunTest("/E2ETests/E2E.DisableTelemetryTests.htm");
         }
 
         [TestMethod]
         public void Firefox_E2E_PublicApiTests()
         {
-            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.PublicApiTests.htm");
+            RunTest("/E2ETests/E2E.PublicApiTests.htm");
         }
 
         [TestMethod]
         public void Firefox_E2E_SanitizerE2ETests()
         {
-            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.SanitizerE2ETests.htm");
+            RunTest("/E2ETests/E2E.SanitizerE2ETests.htm");
         }
 
         [TestMethod]
         public void Firefox_E2E_snippetTests()
         {
-            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.snippetTests.htm");
+            RunTest("/E2ETests/E2E.snippetTests.htm");
         }
 
         [TestMethod]
         public void Firefox_E2E_ValidateApiTests()
         {
-            RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), "/E2ETests/E2E.ValidateApiTests.htm");
+            RunTest("/E2ETests/E2E.ValidateApiTests.htm");
         }
 
         // Tests are failing, need to fix before we enable them.
@@ -128,13 +139,13 @@ namespace ApplicationInsights.Javascript.Tests
         //[TestMethod]
         public void Safari()
         {
-            RunTest(new OpenQA.Selenium.Safari.SafariDriver(), PATH_TO_TESTS);
+            //RunTest(new OpenQA.Selenium.Safari.SafariDriver(), PATH_TO_TESTS);
         }
 
         //[TestMethod]
         public void Chrome()
         {
-            RunTest(new OpenQA.Selenium.Chrome.ChromeDriver(), PATH_TO_TESTS);
+            //RunTest(new OpenQA.Selenium.Chrome.ChromeDriver(), PATH_TO_TESTS);
         }
 
         //[TestMethod]
@@ -162,9 +173,11 @@ namespace ApplicationInsights.Javascript.Tests
         /// the help of TestLogger.js (in the Javascript project).
         /// </summary>
         /// <param name="driver"></param>
-        private void RunTest(RemoteWebDriver driver, string pathToTest, bool runCodeCoverage = false)
+        private void RunTest(string pathToTest, bool runCodeCoverage = false)
         {
-            using (driver)
+            bool testRunPassed = false;
+
+            for (int retry = 0; retry < RETRY_COUNT; retry++)
             {
                 var navigator = driver.Navigate();
 
@@ -197,6 +210,38 @@ namespace ApplicationInsights.Javascript.Tests
                 Console.WriteLine("{0} tests executed", response.Count);
                 Assert.IsTrue(response.Count > 0, "no tests executed");
 
+                // Log QUnit execution details
+                Console.WriteLine("=== QUnit execution details ===");
+                var tests = driver.FindElementById("qunit-tests").FindElements(OpenQA.Selenium.By.XPath("./li"));
+
+                foreach (var test in tests)
+                {
+                    var result = test.GetAttribute("class");
+                    var testName = test.FindElement(OpenQA.Selenium.By.XPath("./strong/span"));
+
+                    Console.WriteLine(string.Format("{0}: {1}", result, testName.GetAttribute("innerHTML")));
+
+                    if (result != "pass")
+                    {
+                        var steps = test.FindElements(OpenQA.Selenium.By.XPath("./ol/li"));
+
+                        foreach (var step in steps)
+                        {
+                            Console.Write("   > " + step.GetAttribute("class") + " : ");
+
+                            var stepDetails = step.FindElements(OpenQA.Selenium.By.XPath("./span"));
+                            foreach (var details in stepDetails)
+                            {
+                                Console.Write(details.GetAttribute("innerHTML") + " ");
+                            }
+
+                            Console.WriteLine();
+                        }
+                    }
+
+                    Console.WriteLine("===");
+                }
+
                 foreach (dynamic testResult in response)
                 {
                     string name = testResult["name"];
@@ -209,42 +254,30 @@ namespace ApplicationInsights.Javascript.Tests
                     // 4 tests are failing when CC is enabled, need to fix that. 
                     if (!runCodeCoverage)
                     {
-                        Assert.IsTrue(passed == total, name);
-                    }
-                }
-
-                // Log QUnit execution details
-                Console.WriteLine("=== QUnit execution details ===");
-                var tests = driver.FindElementById("qunit-tests").FindElements(OpenQA.Selenium.By.XPath("./li"));
-
-                foreach(var test in tests)
-                {
-                    var testName = test.FindElement(OpenQA.Selenium.By.XPath("./strong/span"));
-                    Console.WriteLine(testName.GetAttribute("innerHTML"));
-
-                    var steps = test.FindElements(OpenQA.Selenium.By.XPath("./ol/li"));
-
-                    foreach(var step in steps)
-                    {
-                        Console.Write(step.GetAttribute("class")+ " : ");
-                        
-                        var stepDetails = step.FindElements(OpenQA.Selenium.By.XPath("./span"));
-                        foreach(var details in stepDetails)
+                        if (passed == total)
                         {
-                            Console.Write(details.GetAttribute("innerHTML")+ " ");
+                            testRunPassed = true;
                         }
-
-                        Console.WriteLine();
                     }
-
-                    Console.WriteLine("===");
                 }
 
                 if (runCodeCoverage)
                 {
                     AttachCodeCoverageReport();
+                    testRunPassed = true;
+                }
+
+                if (testRunPassed)
+                {
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine(string.Format("=== RETRY {0} ===", retry));
                 }
             }
+
+            Assert.IsTrue(testRunPassed, pathToTest);
         }
 
         private void AttachCodeCoverageReport()
