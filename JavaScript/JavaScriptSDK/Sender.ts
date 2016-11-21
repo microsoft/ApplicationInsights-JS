@@ -197,7 +197,7 @@ module Microsoft.ApplicationInsights {
 
                 DataLossAnalyzer.incrementItemsQueued();
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
                     new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedAddingTelemetryToBuffer, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.getExceptionName(e),
                         { exception: Util.dump(e) }));
             }
