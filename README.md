@@ -84,21 +84,24 @@ See:
 * [JavaScript API reference](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/API-reference.md)
 * [API overview with portal examples](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/)
 
-## To build:
+## Links
 
-* Visual Studio 2013 Ultimate with Update 4 or later
-* Clone the Git repository 
-* Open Visual Studio solution (devenv JavaScript\Microsoft.ApplicationInsights.JavaScript.sln)
-* Build solution in Visual Studio
+* Check out our [Wiki](https://github.com/Microsoft/ApplicationInsights-JS/wiki) for other useful info. 
+* Follow latest Application Insights changes and announcements on [ApplicationInsights Announcements](https://github.com/Microsoft/ApplicationInsights-Announcements)
 
-## To run check-in tests
-* `powershell "& .\scripts\RunTestsInBrowser.ps1"` to run `Tests.html` in a browser (you might need to call Set-ExecutionPolicy to be able to execute the script)
-* Don't forget to build the solution after changing TypeScript files
-* Refresh Tests.html in the browser to re-run tests
 
-## Check out the Wiki for other useful info
+## Build and run check-in tests:
 
-https://github.com/Microsoft/ApplicationInsights-JS/wiki
+* Build
+  * Visual Studio 2013 Ultimate with Update 4 or later
+  * Clone the Git repository 
+  * Open Visual Studio solution (devenv JavaScript\Microsoft.ApplicationInsights.JavaScript.sln)
+  * Build solution in Visual Studio
+
+* Run check-in tests
+  * `powershell "& .\scripts\RunTestsInBrowser.ps1"` to run `Tests.html` in a browser (you might need to call Set-ExecutionPolicy to be able to execute the script)
+  * Don't forget to build the solution after changing TypeScript files
+  * Refresh Tests.html in the browser to re-run tests
 
 ## Contributing
 
