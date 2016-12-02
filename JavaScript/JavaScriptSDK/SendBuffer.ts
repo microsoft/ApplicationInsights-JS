@@ -185,23 +185,25 @@ module Microsoft.ApplicationInsights {
         }
 
         public markAsSent(payload: string[]) {
-            var sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
-            sentElements = sentElements.concat(payload);
-
-            if (sentElements.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
-                // We send telemetry normally. If the SENT_BUFFER is too big we don't add new elements
-                // until we receive a response from the backend and the buffer has free space again (see clearSent method)
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL,
-                    new _InternalLogMessage(_InternalMessageId.USRACT_SessionStorageBufferFull,
-                        "Sent buffer reached its maximum size: " + sentElements.length));
-
-                sentElements.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
-            }
-
             this._buffer = this.removePayloadsFromBuffer(payload, this._buffer);
-
             this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
-            this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
+
+            var sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+            if (sentElements instanceof Array && payload instanceof Array) {
+                sentElements = sentElements.concat(payload);
+
+                if (sentElements.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
+                    // We send telemetry normally. If the SENT_BUFFER is too big we don't add new elements
+                    // until we receive a response from the backend and the buffer has free space again (see clearSent method)
+                    _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL,
+                        new _InternalLogMessage(_InternalMessageId.USRACT_SessionStorageBufferFull,
+                            "Sent buffer reached its maximum size: " + sentElements.length));
+
+                    sentElements.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
+                }
+
+                this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
+            }
         }
 
         public clearSent(payload: string[]) {
