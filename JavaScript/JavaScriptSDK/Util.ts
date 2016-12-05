@@ -315,9 +315,9 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        public static stringToBoolOrDefault(str: any): boolean {
+        public static stringToBoolOrDefault(str: any, defaultValue = false): boolean {
             if (!str) {
-                return false;
+                return defaultValue;
             }
 
             return str.toString().toLowerCase() === "true";
@@ -519,6 +519,20 @@ module Microsoft.ApplicationInsights {
             }
 
             return true;
+        }
+
+        /**
+         * Calculates time difference between two data points
+         * @param start
+         * @param end
+         */
+        public static getDuration(start: any, end: any): number {
+            var duration = 0;
+            if (!(isNaN(start) || isNaN(end))) {
+                duration = Math.max(end - start, 0);
+            }
+
+            return duration;
         }
     }
 

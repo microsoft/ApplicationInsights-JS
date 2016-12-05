@@ -14,12 +14,12 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
         /**
          * Constructs a new instance of telemetry data.
          */
-        constructor(data: Microsoft.Telemetry.Base, name: string) {
+        constructor(data: Microsoft.Telemetry.Base, name: string, time?: Date) {
             super();
 
             this.name = Common.DataSanitizer.sanitizeString(name) || Util.NotSpecified;
             this.data = data;
-            this.time = Util.toISOStringForIE8(new Date());
+            this.time = Util.toISOStringForIE8(time || new Date());
 
             this.aiDataContract = {
                 time: FieldType.Required,

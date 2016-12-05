@@ -149,9 +149,7 @@ module Microsoft.ApplicationInsights {
             config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 102400; // 100kb
             config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
             config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
-            config.disableExceptionTracking = (config.disableExceptionTracking !== undefined && config.disableExceptionTracking !== null) ?
-                Util.stringToBoolOrDefault(config.disableExceptionTracking) :
-                false;
+            config.disableExceptionTracking = Util.stringToBoolOrDefault(config.disableExceptionTracking);
             config.disableTelemetry = Util.stringToBoolOrDefault(config.disableTelemetry);
             config.verboseLogging = Util.stringToBoolOrDefault(config.verboseLogging);
             config.emitLineDelimitedJson = Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
@@ -162,38 +160,25 @@ module Microsoft.ApplicationInsights {
                 config.samplingPercentage = 100;
             }
 
-            config.disableAjaxTracking = (config.disableAjaxTracking !== undefined && config.disableAjaxTracking !== null) ?
-                Util.stringToBoolOrDefault(config.disableAjaxTracking) :
-                false;
-
+            config.disableAjaxTracking = Util.stringToBoolOrDefault(config.disableAjaxTracking);
             config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
-            config.disableCorrelationHeaders = (config.disableCorrelationHeaders !== undefined && config.disableCorrelationHeaders !== null) ?
-                Util.stringToBoolOrDefault(config.disableCorrelationHeaders) :
-                false;
+            config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders);
 
-            config.isPerfAnalyzerEnabled = (config.isPerfAnalyzerEnabled !== undefined && config.isPerfAnalyzerEnabled !== null) ?
-                Util.stringToBoolOrDefault(config.isPerfAnalyzerEnabled) :
-                false;
+            config.disableFlushOnBeforeUnload = Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
+            config.enableSessionStorageBuffer = Util.stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
+            config.isRetryDisabled = Util.stringToBoolOrDefault(config.isRetryDisabled);
 
-            config.disableFlushOnBeforeUnload = (config.disableFlushOnBeforeUnload !== undefined && config.disableFlushOnBeforeUnload !== null) ?
-                Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload) :
-                false;
+            config.isRetryDisabled = Util.stringToBoolOrDefault(config.isRetryDisabled); 
 
-            config.enableSessionStorageBuffer = (config.enableSessionStorageBuffer !== undefined && config.enableSessionStorageBuffer !== null) ?
-                Util.stringToBoolOrDefault(config.enableSessionStorageBuffer) :
-                true;
+            config.isCookieUseDisabled = Util.stringToBoolOrDefault(config.isCookieUseDisabled);
 
-            config.isRetryDisabled = (config.isRetryDisabled !== undefined && config.isRetryDisabled !== null) ?
-                Util.stringToBoolOrDefault(config.isRetryDisabled) :
-                false;
+            config.isStorageUseDisabled = Util.stringToBoolOrDefault(config.isStorageUseDisabled);
+           
+            config.isResourceTimingDisabled = Util.stringToBoolOrDefault(config.isResourceTimingDisabled, true);
 
-            config.isCookieUseDisabled = (config.isCookieUseDisabled !== undefined && config.isCookieUseDisabled !== null) ?
-                Util.stringToBoolOrDefault(config.isCookieUseDisabled) :
-                false;
-
-            config.isStorageUseDisabled = (config.isStorageUseDisabled !== undefined && config.isStorageUseDisabled !== null) ?
-                Util.stringToBoolOrDefault(config.isStorageUseDisabled) :
-                false;
+            if (isNaN(config.maxResourcesPerPage) || config.maxResourcesPerPage < 0 || config.maxResourcesPerPage > 150) {
+                config.maxResourcesPerPage = 50;
+            }
            
             return config;
         }

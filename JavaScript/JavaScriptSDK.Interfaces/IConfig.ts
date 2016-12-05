@@ -28,8 +28,9 @@
         isCookieUseDisabled?: boolean;
         cookieDomain?: string;
         isRetryDisabled?: boolean;
-        isPerfAnalyzerEnabled?: boolean;
         url?: string;
         isStorageUseDisabled?: boolean;
+        isResourceTimingDisabled?: boolean;
+        maxResourcesPerPage?: number;
     }
 }

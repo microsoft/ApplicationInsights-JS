@@ -67,11 +67,11 @@ module Microsoft.ApplicationInsights.Telemetry {
              */
             var timing = PageViewPerformance.getPerformanceTiming();
             if (timing) {
-                var total = PageViewPerformance.getDuration(timing.navigationStart, timing.loadEventEnd);
-                var network = PageViewPerformance.getDuration(timing.navigationStart, timing.connectEnd);
-                var request = PageViewPerformance.getDuration(timing.requestStart, timing.responseStart);
-                var response = PageViewPerformance.getDuration(timing.responseStart, timing.responseEnd);
-                var dom = PageViewPerformance.getDuration(timing.responseEnd, timing.loadEventEnd);
+                var total = Util.getDuration(timing.navigationStart, timing.loadEventEnd);
+                var network = Util.getDuration(timing.navigationStart, timing.connectEnd);
+                var request = Util.getDuration(timing.requestStart, timing.responseStart);
+                var response = Util.getDuration(timing.responseStart, timing.responseEnd);
+                var dom = Util.getDuration(timing.responseEnd, timing.loadEventEnd);
 
                 if (total == 0) {
                     _InternalLogging.throwInternalNonUserActionable(
@@ -134,15 +134,6 @@ module Microsoft.ApplicationInsights.Telemetry {
                 && timing.responseEnd > 0
                 && timing.connectEnd > 0
                 && timing.domLoading > 0;
-        }
-
-        public static getDuration(start: any, end: any): number {
-            var duration = 0;
-            if (!(isNaN(start) || isNaN(end))) {
-                duration = Math.max(end - start, 0);
-            }
-
-            return duration;
         }
     }
 }

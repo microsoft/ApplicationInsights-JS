@@ -125,7 +125,6 @@
     <TypeScriptCompile Include="ajax\ajaxRecord.ts" />
     <TypeScriptCompile Include="ajax\ajaxUtils.ts" />
     <TypeScriptCompile Include="HashCodeScoreGenerator.ts" />
-    <TypeScriptCompile Include="Telemetry\PerformanceAnalyzer.ts" />
     <TypeScriptCompile Include="SendBuffer.ts" />
     <TypeScriptCompile Include="Sender.ts" />
     <TypeScriptCompile Include="SplitTest.ts" />
@@ -145,6 +144,7 @@
     <TypeScriptCompile Include="Context\Internal.ts" />
     <TypeScriptCompile Include="Telemetry\PageViewPerformance.ts" />
     <TypeScriptCompile Include="Telemetry\RemoteDependencyData.ts" />
+    <TypeScriptCompile Include="Telemetry\ResourceTimingManager.ts" />
     <TypeScriptCompile Include="Util.ts" />
     <TypeScriptCompile Include="Logging.ts" />
     <TypeScriptCompile Include="DataLossAnalyzer.ts" />
