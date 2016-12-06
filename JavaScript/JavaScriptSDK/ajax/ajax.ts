@@ -135,7 +135,10 @@ module Microsoft.ApplicationInsights {
 
         private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
             xhr.ajaxData.requestSentTime = dateTime.Now();
-            if (!this.appInsights.config.disableCorrelationHeaders) {
+
+            // Add correlation headers only for requests within the same domain
+            // For cross- origin requests we need to ensure that x- ms -* headers are present in `Access-Control-Allow-Headers` header (OPTIONS response)
+            if (!this.appInsights.config.disableCorrelationHeaders && (UrlHelper.parseUrl(xhr.ajaxData.getAbsoluteUrl()).host == this.currentWindowHost)) {
                 var rootId = this.appInsights.context.operation.id;
                 xhr.setRequestHeader("x-ms-request-root-id", rootId);
                 xhr.setRequestHeader("x-ms-request-id", xhr.ajaxData.id);

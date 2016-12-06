@@ -169,7 +169,7 @@ module Microsoft.ApplicationInsights {
             config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
             config.disableCorrelationHeaders = (config.disableCorrelationHeaders !== undefined && config.disableCorrelationHeaders !== null) ?
                 Util.stringToBoolOrDefault(config.disableCorrelationHeaders) :
-                false;
+                true;
 
             config.isPerfAnalyzerEnabled = (config.isPerfAnalyzerEnabled !== undefined && config.isPerfAnalyzerEnabled !== null) ?
                 Util.stringToBoolOrDefault(config.isPerfAnalyzerEnabled) :
