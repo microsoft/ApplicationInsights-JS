@@ -1454,8 +1454,10 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var trackStub = this.sandbox.stub(appInsights.context, "track");
-                var name = "test";
-                var url = "http://myurl.com";
+                var pathName = "https://tempurl.net/api/temp/ABCD";
+                var commandName = "GET https://tempurl.net/api/temp/ABCD?param1=test&param2=test";
+                var url = "https://tempurl.net/api/temp/ABCD?param1=test&param2=test";
+                var target = "tempurl.net"
                 var duration = 123;
                 var success = false;
                 var resultCode = 404;
@@ -1464,13 +1466,14 @@ class AppInsightsTests extends TestClass {
                 var measurements = { "duration": 777 };
 
                 // Act
-                appInsights.trackDependency("0", "Get", url, name, duration, success, resultCode, properties, measurements);
+                appInsights.trackDependency("0", "Get", url, pathName, duration, success, resultCode, properties, measurements);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
                 var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
-                Assert.equal("GET " + url , rdd.name);
-                Assert.equal(name, rdd.commandName);
+                Assert.equal("GET " + pathName, rdd.name);
+                Assert.equal(commandName, rdd.commandName);
+                Assert.equal(target, rdd.target);
                 Assert.equal(duration, rdd.value);
                 Assert.equal(success, rdd.success);
                 Assert.equal(resultCode, rdd.resultCode);
@@ -1595,8 +1598,9 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var trackStub = this.sandbox.stub(appInsights.context, "track");
-                var name = "test";
-                var url = "http://myurl.com";
+                var pathName = "http://myurl.com/test";
+                var url = "http://myurl.com/test";
+                var target = "myurl.com"
                 var duration = 123;
                 var success = false;
                 var resultCode = 404;
@@ -1607,8 +1611,9 @@ class AppInsightsTests extends TestClass {
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
                 var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
-                Assert.equal(url, rdd.name);
-                Assert.equal(name, rdd.commandName);
+                Assert.equal(pathName, rdd.name);
+                Assert.equal(url, rdd.commandName);
+                Assert.equal(target, rdd.target);
                 Assert.equal(duration, rdd.value);
                 Assert.equal(success, rdd.success);
                 Assert.equal(resultCode, rdd.resultCode);

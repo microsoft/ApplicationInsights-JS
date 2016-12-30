@@ -26,6 +26,7 @@ module AI
         public dependencyTypeName: string;
         public properties: any;
         public measurements: any;
+        public target: string;
         
         constructor()
         {

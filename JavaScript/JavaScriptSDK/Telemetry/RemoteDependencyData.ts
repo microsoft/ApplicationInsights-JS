@@ -27,6 +27,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             dependencySource: FieldType.Default,
             commandName: FieldType.Default,
             dependencyTypeName: FieldType.Default,
+            target: FieldType.Default,
             properties: FieldType.Default,
             resultCode: FieldType.Default,
             measurements: FieldType.Default
@@ -39,8 +40,10 @@ module Microsoft.ApplicationInsights.Telemetry {
             super();
 
             this.id = id;
-            this.name = this.formatDependencyName(method, absoluteUrl);
-            this.commandName = Common.DataSanitizer.sanitizeUrl(commandName);
+            this.target = UrlHelper.parseUrl(absoluteUrl).hostname;
+            this.commandName = this.formatDependencyName(method, absoluteUrl);
+            var indexOfSearchString: number = this.commandName.indexOf("?");
+            this.name = this.commandName.substr(0, indexOfSearchString < 0 ? this.commandName.length : indexOfSearchString);
             this.value = value;
             this.success = success;  
             this.resultCode = resultCode + "";
