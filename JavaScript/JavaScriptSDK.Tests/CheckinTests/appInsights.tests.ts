@@ -1455,8 +1455,8 @@ class AppInsightsTests extends TestClass {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var trackStub = this.sandbox.stub(appInsights.context, "track");
                 var pathName = "https://tempurl.net/api/temp/ABCD";
-                var commandName = "GET https://tempurl.net/api/temp/ABCD?param1=test&param2=test";
-                var url = "https://tempurl.net/api/temp/ABCD?param1=test&param2=test";
+                var url = pathName + "?param1=test&param2=test";
+                var commandName = "GET " + url;
                 var target = "tempurl.net"
                 var duration = 123;
                 var success = false;
