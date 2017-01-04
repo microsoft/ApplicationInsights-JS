@@ -44,7 +44,8 @@ module Microsoft.ApplicationInsights.Telemetry {
             super();
 
             this.id = id;
-            this.target = UrlHelper.parseUrl(absoluteUrl).hostname;
+            var parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)
+            this.target = parsedUrl.host;
             this.duration = Util.getDurationString(value);
             this.success = success;  
             this.resultCode = resultCode + "";
@@ -53,9 +54,9 @@ module Microsoft.ApplicationInsights.Telemetry {
             this.type = "Ajax";
             this.data = Common.DataSanitizer.sanitizeUrl(commandName);
 
-            if (this.data != null) {
-                var indexOfSearchString: number = this.data.indexOf("?");
-                this.name = Common.DataSanitizer.sanitizeString(this.data.substr(0, indexOfSearchString < 0 ? this.data.length : indexOfSearchString));
+            if (parsedUrl.pathname != null) {
+                var pathName = (parsedUrl.pathname.length === 0 && absoluteUrl.length > 0) ? "/" : parsedUrl.pathname;
+                this.name = Common.DataSanitizer.sanitizeString(method ? method + " " + pathName : pathName);
             } else {
                 this.name = Common.DataSanitizer.sanitizeString(absoluteUrl);
             }

@@ -1454,10 +1454,10 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var trackStub = this.sandbox.stub(appInsights.context, "track");
-                var pathName = "https://tempurl.net/api/temp/ABCD";
-                var url = pathName + "?param1=test&param2=test";
+                var pathName = "api/temp/ABCD";
+                var url = "https://tempurl.net/api/temp/ABCD?param1=test&param2=test";
                 var commandName = "GET " + url;
-                var target = "tempurl.net"
+                var target = "tempurl.net:443"
                 var duration = 123;
                 var success = false;
                 var resultCode = 404;
@@ -1466,7 +1466,7 @@ class AppInsightsTests extends TestClass {
                 var measurements = { "duration": 777 };
 
                 // Act
-                appInsights.trackDependency("0", "Get", url, commandName, duration, success, resultCode, properties, measurements);
+                appInsights.trackDependency("0", "GET", url, commandName, duration, success, resultCode, properties, measurements);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
@@ -1600,7 +1600,7 @@ class AppInsightsTests extends TestClass {
                 var trackStub = this.sandbox.stub(appInsights.context, "track");
                 var pathName = "http://myurl.com/test";
                 var url = "http://myurl.com/test";
-                var target = "myurl.com"
+                var target = "myurl.com:80"
                 var duration = 123;
                 var success = false;
                 var resultCode = 404;
@@ -1611,7 +1611,7 @@ class AppInsightsTests extends TestClass {
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
                 var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
-                Assert.equal(pathName, rdd.name);
+                Assert.equal("test", rdd.name);
                 Assert.equal(url, rdd.data);
                 Assert.equal(target, rdd.target);
                 Assert.equal("0.0:0:0.123", rdd.duration);

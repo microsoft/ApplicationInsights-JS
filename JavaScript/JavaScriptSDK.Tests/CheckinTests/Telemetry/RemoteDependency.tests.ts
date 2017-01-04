@@ -8,8 +8,8 @@ class RemoteDependencyTests extends ContractTestHelper {
     private static id = "someid";
     private static method = "GET";
     private static name = "testName"
-    private static url = "http://myurl.com"
-    private static hostName = "myurl.com";
+    private static url = "http://myurl.com/"
+    private static hostName = "myurl.com:80";
     private static totalTime = 123;
     private static success = false;
     private static resultCode = 404;
@@ -34,7 +34,7 @@ class RemoteDependencyTests extends ContractTestHelper {
                 Assert.equal("0.0:0:0.123", telemetry.duration, "value should be set correctly");
                 Assert.equal(RemoteDependencyTests.success, telemetry.success, "success should be set correctly");
                 Assert.equal(RemoteDependencyTests.resultCode, telemetry.resultCode, "resultCode should be set correctly");
-                Assert.equal(RemoteDependencyTests.name, telemetry.name, "name gets correct value");
+                Assert.equal("GET /", telemetry.name, "name gets correct value");
                 Assert.equal(RemoteDependencyTests.hostName, telemetry.target, "target gets correct value");
                 Assert.equal(RemoteDependencyTests.name, telemetry.data, "data should be set correctly");
             }
