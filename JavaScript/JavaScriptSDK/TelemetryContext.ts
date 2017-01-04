@@ -331,6 +331,9 @@ module Microsoft.ApplicationInsights {
                     }
                 }
             } catch (e) {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToFixDepricatedValues, "Failed to parse the base data object, to fix the depricated values " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }));
             }
         }
 
