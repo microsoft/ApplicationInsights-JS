@@ -92,7 +92,7 @@ class RemoteDependencyTests extends ContractTestHelper {
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData("", "", "", 0, false, 0, null);
                 
                 Assert.equal("Ajax", telemetry.type, "dependencyTypeName gets correct default value");
-                Assert.equal("", telemetry.name, "name gets correct default value");
+                Assert.equal("/", telemetry.name, "name gets correct default value");
             }
         });
     }

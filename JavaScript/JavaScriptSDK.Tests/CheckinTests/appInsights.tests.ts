@@ -1454,7 +1454,7 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var trackStub = this.sandbox.stub(appInsights.context, "track");
-                var pathName = "api/temp/ABCD";
+                var pathName = "/api/temp/ABCD";
                 var url = "https://tempurl.net/api/temp/ABCD?param1=test&param2=test";
                 var commandName = "GET " + url;
                 var target = "tempurl.net:443"
@@ -1611,7 +1611,7 @@ class AppInsightsTests extends TestClass {
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
                 var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
-                Assert.equal("test", rdd.name);
+                Assert.equal("/test", rdd.name);
                 Assert.equal(url, rdd.data);
                 Assert.equal(target, rdd.target);
                 Assert.equal("0.0:0:0.123", rdd.duration);

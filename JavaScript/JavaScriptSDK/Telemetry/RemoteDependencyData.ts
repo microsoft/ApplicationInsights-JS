@@ -55,7 +55,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             this.data = Common.DataSanitizer.sanitizeUrl(commandName);
 
             if (parsedUrl.pathname != null) {
-                var pathName = (parsedUrl.pathname.length === 0 && absoluteUrl.length > 0) ? "/" : parsedUrl.pathname;
+                var pathName = "/" + parsedUrl.pathname;
                 this.name = Common.DataSanitizer.sanitizeString(method ? method + " " + pathName : pathName);
             } else {
                 this.name = Common.DataSanitizer.sanitizeString(absoluteUrl);
