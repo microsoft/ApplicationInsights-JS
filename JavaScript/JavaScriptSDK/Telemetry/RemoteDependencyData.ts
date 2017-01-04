@@ -67,6 +67,7 @@ module Microsoft.ApplicationInsights.Telemetry {
                     this.name = Common.DataSanitizer.sanitizeString(absoluteUrl);
                 }
             } else {
+                this.target = commandName;
                 this.name = commandName;
             }
 
