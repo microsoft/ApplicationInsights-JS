@@ -1466,15 +1466,15 @@ class AppInsightsTests extends TestClass {
                 var measurements = { "duration": 777 };
 
                 // Act
-                appInsights.trackDependency("0", "Get", url, pathName, duration, success, resultCode, properties, measurements);
+                appInsights.trackDependency("0", "Get", url, commandName, duration, success, resultCode, properties, measurements);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
                 var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
                 Assert.equal("GET " + pathName, rdd.name);
-                Assert.equal(commandName, rdd.commandName);
+                Assert.equal(commandName, rdd.data);
                 Assert.equal(target, rdd.target);
-                Assert.equal(duration, rdd.value);
+                Assert.equal("0.0:0:0.123", rdd.duration);
                 Assert.equal(success, rdd.success);
                 Assert.equal(resultCode, rdd.resultCode);
                 Assert.deepEqual(properties, rdd.properties);
@@ -1606,17 +1606,16 @@ class AppInsightsTests extends TestClass {
                 var resultCode = 404;
 
                 // Act
-                appInsights.trackAjax("0", url, name, duration, success, resultCode);
+                appInsights.trackAjax("0", url, pathName, duration, success, resultCode);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
                 var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
                 Assert.equal(pathName, rdd.name);
-                Assert.equal(url, rdd.commandName);
+                Assert.equal(url, rdd.data);
                 Assert.equal(target, rdd.target);
-                Assert.equal(duration, rdd.value);
+                Assert.equal("0.0:0:0.123", rdd.duration);
                 Assert.equal(success, rdd.success);
-                Assert.equal(resultCode, rdd.resultCode);
             }
         });
 

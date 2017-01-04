@@ -520,6 +520,15 @@ module Microsoft.ApplicationInsights {
 
             return true;
         }
+
+        public static getDurationString(valueInMS: number): string {
+            if (valueInMS >= 0) {
+                var date = new Date(valueInMS);
+                return (date.getUTCDate() - 1) + "." + date.getUTCHours() + ":" + date.getUTCMinutes() + ":" + date.getUTCSeconds() + "." + date.getUTCMilliseconds();
+            } else {
+                return "0.0:0:0.0";
+            }
+        }
     }
 
     export class UrlHelper {
@@ -554,6 +563,14 @@ module Microsoft.ApplicationInsights {
             }
 
             return result;
+        }
+
+        public static getCompleteUrl(method: string, absoluteUrl: string) {
+            if (method) {
+                return method.toUpperCase() + " " + absoluteUrl;
+            } else {
+                return absoluteUrl;
+            }
         }
     }
 }

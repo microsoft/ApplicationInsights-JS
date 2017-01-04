@@ -171,6 +171,8 @@ module Microsoft.ApplicationInsights {
             }
 
             if (!doNotSendItem) {
+                this._fixDepricatedValues(envelope);
+
                 if (envelope.name === Telemetry.Metric.envelopeType ||
                     this.sample.isSampledIn(envelope)) {
                     var iKeyNoDashes = this._config.instrumentationKey().replace(/-/g, "");
@@ -316,6 +318,68 @@ module Microsoft.ApplicationInsights {
                 if (typeof userContext.storeRegion === "string") {
                     envelope.tags[tagKeys.userStoreRegion] = userContext.storeRegion;
                 }
+            }
+        }
+
+        private _fixDepricatedValues(envelope: Microsoft.ApplicationInsights.IEnvelope) {
+            try {
+                var data = (<any>envelope).data;
+                if (data && data.baseType === Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.dataType) {
+                    var rddData = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>data.baseData);
+                    if (rddData) {
+                        this._fixRDDDepricatedValues(rddData);
+                    }
+                }
+            } catch (e) {
+            }
+        }
+
+        private _fixRDDDepricatedValues(rddData: Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData) {
+            if (rddData.commandName) {
+                rddData.data = rddData.commandName;
+                rddData.commandName = undefined;
+            }
+
+            if (rddData.dependencyTypeName) {
+                rddData.type = rddData.dependencyTypeName;
+                rddData.dependencyTypeName = undefined;
+            }
+
+            if (rddData.value && rddData.value !== 0) {
+                rddData.duration = Util.getDurationString(rddData.value);
+                rddData.value = undefined;
+            }
+
+            if (rddData.kind) {
+                rddData.kind = undefined;
+            }
+
+            if (rddData.dependencySource) {
+                rddData.dependencySource = undefined;
+            }
+
+            if (rddData.async) {
+                rddData.async = undefined;
+            }
+
+            if (rddData.count) {
+                rddData.count = undefined;
+            }
+
+            if (rddData.min) {
+                rddData.min = undefined;
+            }
+
+            if (rddData.max) {
+                rddData.max = undefined;
+            }
+
+            if (rddData.stdDev) {
+                rddData.stdDev = undefined;
+            }
+
+            if (rddData.dependencyKind) {
+                rddData.dependencyKind = undefined;
             }
         }
     }

@@ -45,32 +45,23 @@ module Microsoft.ApplicationInsights.Telemetry {
 
             this.id = id;
             this.target = UrlHelper.parseUrl(absoluteUrl).hostname;
-            this.value = value;
-            this.duration = value + "";
+            this.duration = Util.getDurationString(value);
             this.success = success;  
             this.resultCode = resultCode + "";
             this.dependencyKind = AI.DependencyKind.Http;
 
-            this.type = this.dependencyTypeName = "Ajax";
-            this.data = this.commandName = Common.DataSanitizer.sanitizeUrl(this.formatDependencyName(method, absoluteUrl));
+            this.type = "Ajax";
+            this.data = Common.DataSanitizer.sanitizeUrl(commandName);
 
-            if (this.commandName != null) {
-                var indexOfSearchString: number = this.commandName.indexOf("?");
-                this.name = this.commandName.substr(0, indexOfSearchString < 0 ? this.commandName.length : indexOfSearchString);
+            if (this.data != null) {
+                var indexOfSearchString: number = this.data.indexOf("?");
+                this.name = Common.DataSanitizer.sanitizeString(this.data.substr(0, indexOfSearchString < 0 ? this.data.length : indexOfSearchString));
             } else {
-                this.name = absoluteUrl;
+                this.name = Common.DataSanitizer.sanitizeString(absoluteUrl);
             }
 
             this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
             this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);
-        }
-
-        private formatDependencyName(method: string, absoluteUrl: string) {
-            if (method) {
-                return method.toUpperCase() + " " + absoluteUrl;
-            } else {
-                return absoluteUrl;
-            }
         }
     }
 }
