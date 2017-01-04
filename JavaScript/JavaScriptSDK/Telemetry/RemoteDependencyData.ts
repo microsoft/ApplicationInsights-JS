@@ -44,8 +44,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             super();
 
             this.id = id;
-            var parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)
-            this.target = parsedUrl.host;
+
             this.duration = Util.getDurationString(value);
             this.success = success;  
             this.resultCode = resultCode + "";
@@ -54,11 +53,21 @@ module Microsoft.ApplicationInsights.Telemetry {
             this.type = "Ajax";
             this.data = Common.DataSanitizer.sanitizeUrl(commandName);
 
-            if (parsedUrl.pathname != null) {
-                var pathName = "/" + parsedUrl.pathname;
-                this.name = Common.DataSanitizer.sanitizeString(method ? method + " " + pathName : pathName);
+            if (absoluteUrl && absoluteUrl.length > 0) {
+                var parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)
+                this.target = parsedUrl.host;
+                if (parsedUrl.pathname != null) {
+                    var pathName: string = (parsedUrl.pathname.length === 0) ? "/" : parsedUrl.pathname;
+                    if (pathName.charAt(0) !== '/') {
+                        pathName = "/" + pathName;
+                    }
+
+                    this.name = Common.DataSanitizer.sanitizeString(method ? method + " " + pathName : pathName);
+                } else {
+                    this.name = Common.DataSanitizer.sanitizeString(absoluteUrl);
+                }
             } else {
-                this.name = Common.DataSanitizer.sanitizeString(absoluteUrl);
+                this.name = commandName;
             }
 
             this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);

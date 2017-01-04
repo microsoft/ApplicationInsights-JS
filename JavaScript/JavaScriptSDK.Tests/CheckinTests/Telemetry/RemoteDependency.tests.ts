@@ -9,7 +9,7 @@ class RemoteDependencyTests extends ContractTestHelper {
     private static method = "GET";
     private static name = "testName"
     private static url = "http://myurl.com/"
-    private static hostName = "myurl.com:80";
+    private static hostName = "myurl.com";
     private static totalTime = 123;
     private static success = false;
     private static resultCode = 404;
@@ -92,7 +92,7 @@ class RemoteDependencyTests extends ContractTestHelper {
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData("", "", "", 0, false, 0, null);
                 
                 Assert.equal("Ajax", telemetry.type, "dependencyTypeName gets correct default value");
-                Assert.equal("/", telemetry.name, "name gets correct default value");
+                Assert.equal("", telemetry.name, "name gets correct default value");
             }
         });
     }

@@ -1457,7 +1457,7 @@ class AppInsightsTests extends TestClass {
                 var pathName = "/api/temp/ABCD";
                 var url = "https://tempurl.net/api/temp/ABCD?param1=test&param2=test";
                 var commandName = "GET " + url;
-                var target = "tempurl.net:443"
+                var target = "tempurl.net"
                 var duration = 123;
                 var success = false;
                 var resultCode = 404;
@@ -1600,7 +1600,7 @@ class AppInsightsTests extends TestClass {
                 var trackStub = this.sandbox.stub(appInsights.context, "track");
                 var pathName = "http://myurl.com/test";
                 var url = "http://myurl.com/test";
-                var target = "myurl.com:80"
+                var target = "myurl.com"
                 var duration = 123;
                 var success = false;
                 var resultCode = 404;
