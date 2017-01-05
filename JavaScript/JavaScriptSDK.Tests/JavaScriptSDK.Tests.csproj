@@ -140,6 +140,9 @@
     <Content Include="E2ETests\standalone\sprint69.html" />
     <Content Include="E2ETests\standalone\test.html" />
     <Content Include="E2ETests\standalone\tests.js" />
+    <Content Include="geckodriver.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Performance\readme.txt" />
     <Content Include="Selenium\testPageNoAppInsights.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
