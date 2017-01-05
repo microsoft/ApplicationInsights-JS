@@ -24,7 +24,7 @@ module Microsoft.ApplicationInsights.Telemetry {
             properties: FieldType.Default,
             measurements: FieldType.Default,
 
-            kind: FieldType.Required,
+            kind: FieldType.Default,
             value: FieldType.Default,
             count: FieldType.Default,
             min: FieldType.Default,
