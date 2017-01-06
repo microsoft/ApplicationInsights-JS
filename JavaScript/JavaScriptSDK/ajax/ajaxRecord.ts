@@ -67,7 +67,7 @@ module Microsoft.ApplicationInsights {
         }
 
         public getPathName() {
-            return this.requestUrl ? UrlHelper.getPathName(this.requestUrl) : null;
+            return this.requestUrl ? Telemetry.Common.DataSanitizer.sanitizeUrl(UrlHelper.getCompleteUrl(this.method, this.requestUrl)): null;
         }
 
         public CalculateMetrics = function () {
