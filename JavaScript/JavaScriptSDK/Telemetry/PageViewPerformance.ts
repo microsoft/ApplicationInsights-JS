@@ -10,6 +10,8 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static envelopeType = "Microsoft.ApplicationInsights.{0}.PageviewPerformance";
         public static dataType = "PageviewPerformanceData";
 
+        private static MAX_DURATION_ALLOWED = 300000; // 5 mins
+
         public aiDataContract = {
             ver: FieldType.Required,
             name: FieldType.Default,
@@ -28,7 +30,7 @@ module Microsoft.ApplicationInsights.Telemetry {
          * Field indicating whether this instance of PageViewPerformance is valid and should be sent
          */
         private isValid: boolean;
-                
+
         /**
          * Indicates whether this instance of PageViewPerformance is valid and should be sent
          */
@@ -77,12 +79,19 @@ module Microsoft.ApplicationInsights.Telemetry {
                     _InternalLogging.throwInternalNonUserActionable(
                         LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_ErrorPVCalc, "error calculating page view performance.",
                             { total: total, network: network, request: request, response: response, dom: dom }));
+
+                } else if (PageViewPerformance.maxDurationExceeded(total, network, request, response, dom)) {
+                    _InternalLogging.throwInternalNonUserActionable(
+                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_MaxDurationExceeded, "exceeded maximum duration value (5min). Browser perf data won't be sent.",
+                            { total: total, network: network, request: request, response: response, dom: dom }));
+
                 } else if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
                     // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
                     // in this case, don't report client performance from this page
                     _InternalLogging.throwInternalNonUserActionable(
                         LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_ClientPerformanceMathError, "client performance math error.",
                             { total: total, network: network, request: request, response: response, dom: dom }));
+
                 } else {
                     this.durationMs = total;
 
@@ -105,7 +114,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         }
 
         public static getPerformanceTiming(): PerformanceTiming {
-            if (typeof window != "undefined" && window.performance && window.performance.timing) {
+            if (PageViewPerformance.isPerformanceTimingSupported()) {
                 return window.performance.timing;
             }
 
@@ -123,7 +132,7 @@ module Microsoft.ApplicationInsights.Telemetry {
          * As page loads different parts of performance timing numbers get set. When all of them are set we can report it.
          * Returns true if ready, false otherwise.
          */
-            public static isPerformanceTimingDataReady() {
+        public static isPerformanceTimingDataReady() {
             var timing = window.performance.timing;
 
             return timing.domainLookupStart > 0
@@ -137,12 +146,22 @@ module Microsoft.ApplicationInsights.Telemetry {
         }
 
         public static getDuration(start: any, end: any): number {
-            var duration = 0;
+            var duration = undefined;
             if (!(isNaN(start) || isNaN(end))) {
                 duration = Math.max(end - start, 0);
             }
 
             return duration;
+        }
+
+        public static maxDurationExceeded(...durations: number[]): boolean {
+            for (var i = 0; i < durations.length; i++) {
+                if (durations[i] >= PageViewPerformance.MAX_DURATION_ALLOWED) {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

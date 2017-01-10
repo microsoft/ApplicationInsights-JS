@@ -645,6 +645,33 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
+            name: "AppInsightsTests: if in 'override page view duration' mode, trackPageView won't report duration if it exceeded max duration",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var spy = this.sandbox.stub(appInsights, "sendPageViewInternal");
+                var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",
+                    () => { return true; });
+                var getIsValidStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.prototype, "getIsValid",
+                    () => { return false; });
+                var stub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",
+                    () => {
+                        return { navigationStart: 0 };
+                    });
+
+                this.clock.tick(300000);
+
+                // act
+                appInsights.trackPageView();
+
+                // Data not available yet - should not send events
+                this.clock.tick(100);
+                Assert.ok(spy.called, "Page view should not be sent since the timing data is invalid");
+                Assert.equal(undefined, spy.args[0][2], "Page view duration should be undefined if it exceeded max value (5min)");
+            }
+        });
+
+        this.testCase({
             name: "AppInsightsTests: trackPageView sends base data and performance data when available",
             test: () => {
                 // setup
@@ -691,7 +718,7 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "AppInsightsTests: a page view is sent with 0 duration if navigation timing API is not supported",
+            name: "AppInsightsTests: a page view is sent with undefined duration if navigation timing API is not supported",
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
@@ -705,7 +732,7 @@ class AppInsightsTests extends TestClass {
 
                 // assert
                 Assert.ok(spy.calledOnce, "sendPageViewInternal should be called even if navigation timing is not supported");
-                Assert.equal(0, spy.args[0][2], "Page view duration should be 0");
+                Assert.equal(undefined, spy.args[0][2], "Page view duration should be `undefined`");
             }
         });
 
