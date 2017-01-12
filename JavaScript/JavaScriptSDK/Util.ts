@@ -305,13 +305,18 @@ module Microsoft.ApplicationInsights {
          */
         public static setCookie(name, value, domain?) {
             var domainAttrib = "";
+            var secureAttrib = "";
 
             if (domain) {
                 domainAttrib = ";domain=" + domain;
             }
 
+            if (Util.document.location.protocol === "https:") {
+                secureAttrib = ";secure";
+            }
+
             if (Util.canUseCookies()) {
-                Util.document.cookie = name + "=" + value + domainAttrib + ";path=/";
+                Util.document.cookie = name + "=" + value + domainAttrib + ";path=/" + secureAttrib;
             }
         }
 
