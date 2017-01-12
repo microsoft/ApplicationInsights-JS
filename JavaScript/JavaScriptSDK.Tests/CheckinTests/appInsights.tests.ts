@@ -659,7 +659,13 @@ class AppInsightsTests extends TestClass {
                         return { navigationStart: 0 };
                     });
 
-                this.clock.tick(300000);
+                this.clock.tick(3600000);
+
+                // mock user agent
+                let originalNavigator = navigator;
+                (<any>navigator).__defineGetter__('userAgent', function () {
+                    return '"Googlebot/2.1'
+                });
 
                 // act
                 appInsights.trackPageView();
@@ -667,7 +673,10 @@ class AppInsightsTests extends TestClass {
                 // Data not available yet - should not send events
                 this.clock.tick(100);
                 Assert.ok(spy.called, "Page view should not be sent since the timing data is invalid");
-                Assert.equal(undefined, spy.args[0][2], "Page view duration should be undefined if it exceeded max value (5min)");
+                Assert.equal(undefined, spy.args[0][2], "Page view duration should be undefined if it's coming from GoogleBot and is >=1h");
+
+                // restore original user agent
+                navigator = originalNavigator;
             }
         });
 

@@ -151,15 +151,21 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
         });
 
         this.testCase({
-            name: name + "PageViewPerformanceTelemetry checks if any duration exceeds 5 minutes",
+            name: name + "PageViewPerformanceTelemetry checks if any duration exceeds 1h and is comming from a Googlebot",
             test: () => {
                 // see comment PageViewPerformance constructor on how timing data is calculated
-                // here we set values, so each metric will be exactly 300000 (5min).
-                let timingModifiers = [(timing) => timing.loadEventEnd = 300001,
-                    (timing) => timing.connectEnd = 300001,
-                    (timing) => timing.responseStart = 300003,
-                    (timing) => timing.responseEnd = 300030,
-                    (timing) => timing.loadEventEnd = 300042];
+                // here we set values, so each metric will be exactly 3600000 (1h).
+                let timingModifiers = [(timing) => timing.loadEventEnd = 3600001,
+                    (timing) => timing.connectEnd = 3600001,
+                    (timing) => timing.responseStart = 3600003,
+                    (timing) => timing.responseEnd = 3600030,
+                    (timing) => timing.loadEventEnd = 3600042];
+
+                // mock user agent
+                let originalNavigator = navigator;
+                (<any>navigator).__defineGetter__('userAgent', function () {
+                    return '"Googlebot/2.1'
+                });
 
                 for (var i = 0; i < timingModifiers.length; i++) {
 
@@ -195,14 +201,17 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
 
                     if (i === 0) {
                         // check props only for the first timingModifier
-                        Assert.equal("AI (Internal): NONUSRACT_MaxDurationExceeded message:\"exceeded maximum duration value (5min). Browser perf data won't be sent.\" props:\"{total:300000,network:1,request:27,response:12,dom:299959}\"", actualLoggedMessage);
+                        Assert.equal("AI (Internal): NONUSRACT_InvalidDurationValue message:\"Invalid page load duration value. Browser perf data won't be sent.\" props:\"{total:3600000,network:1,request:27,response:12,dom:3599959}\"", actualLoggedMessage);
                     } else {
-                        Assert.ok(actualLoggedMessage.lastIndexOf("AI (Internal): NONUSRACT_MaxDurationExceeded message:\"exceeded maximum duration value (5min)", 0) === 0);
+                        Assert.ok(actualLoggedMessage.lastIndexOf("AI (Internal): NONUSRACT_InvalidDurationValue message:\"Invalid page load duration value. Browser perf data won't be sent.", 0) === 0);
                     }
 
                     timingSpy.restore();
                     loggingSpy.restore();
                 }
+
+                // restore original user agent
+                navigator = originalNavigator;
             }
         });
     }

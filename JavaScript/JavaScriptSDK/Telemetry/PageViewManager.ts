@@ -48,7 +48,7 @@ module Microsoft.ApplicationInsights.Telemetry {
                 var start = Telemetry.PageViewPerformance.getPerformanceTiming().navigationStart;
                 customDuration = Telemetry.PageViewPerformance.getDuration(start, +new Date);
 
-                if (Telemetry.PageViewPerformance.maxDurationExceeded(customDuration)) {
+                if (!Telemetry.PageViewPerformance.shouldCollectDuration(customDuration)) {
                     customDuration = undefined;
                 }
             } else {

@@ -60,7 +60,7 @@
         NONUSRACT_FailedToRestoreStorageBuffer,
         NONUSRACT_InvalidBackendResponse,
         NONUSRACT_FailedToFixDepricatedValues,
-        NONUSRACT_MaxDurationExceeded,
+        NONUSRACT_InvalidDurationValue,
 
         USRACT_CannotSerializeObject,
         USRACT_CannotSerializeObjectNonSerializable,

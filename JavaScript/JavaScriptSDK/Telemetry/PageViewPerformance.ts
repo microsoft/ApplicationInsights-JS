@@ -10,7 +10,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static envelopeType = "Microsoft.ApplicationInsights.{0}.PageviewPerformance";
         public static dataType = "PageviewPerformanceData";
 
-        private static MAX_DURATION_ALLOWED = 300000; // 5 mins
+        private static MAX_DURATION_ALLOWED = 3600000; // 1h
 
         public aiDataContract = {
             ver: FieldType.Required,
@@ -80,9 +80,9 @@ module Microsoft.ApplicationInsights.Telemetry {
                         LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_ErrorPVCalc, "error calculating page view performance.",
                             { total: total, network: network, request: request, response: response, dom: dom }));
 
-                } else if (PageViewPerformance.maxDurationExceeded(total, network, request, response, dom)) {
+                } else if (!PageViewPerformance.shouldCollectDuration(total, network, request, response, dom)) {
                     _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_MaxDurationExceeded, "exceeded maximum duration value (5min). Browser perf data won't be sent.",
+                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_InvalidDurationValue, "Invalid page load duration value. Browser perf data won't be sent.",
                             { total: total, network: network, request: request, response: response, dom: dom }));
 
                 } else if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
@@ -154,14 +154,23 @@ module Microsoft.ApplicationInsights.Telemetry {
             return duration;
         }
 
-        public static maxDurationExceeded(...durations: number[]): boolean {
-            for (var i = 0; i < durations.length; i++) {
-                if (durations[i] >= PageViewPerformance.MAX_DURATION_ALLOWED) {
-                    return true;
+        /**
+         * GoogleBot is returning invalid values in performance.timing API.
+         * This method tells if given durations should be excluded from collection.
+         */
+        public static shouldCollectDuration(...durations: number[]): boolean {
+            let userAgent = navigator.userAgent;
+            let isGoogleBot = userAgent ? userAgent.toLowerCase().indexOf("googlebot") !== -1 : false;
+
+            if (isGoogleBot) {
+                for (var i = 0; i < durations.length; i++) {
+                    if (durations[i] >= PageViewPerformance.MAX_DURATION_ALLOWED) {
+                        return false;
+                    }
                 }
             }
 
-            return false;
+            return true;
         }
     }
 }
