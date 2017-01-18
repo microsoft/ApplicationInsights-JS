@@ -9,7 +9,6 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
     }
 
     public testCleanup() {
-
         // Reset verboseLogging to the default value
         Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => false;
     }
@@ -17,6 +16,34 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
     public registerTests() {
         super.registerTests();
         var name = this.name + ": ";
+
+        this.testCase({
+            name: name + "getDuration() calculates a correct duration",
+            test: () => {
+                var duration = Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.getDuration(10, 20);
+                Assert.equal(10, duration, "20 - 10 == 10");
+
+                duration = Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.getDuration(1, 1);
+                Assert.equal(0, duration, "1 - 1 == 0");
+
+                duration = Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.getDuration(100, 99);
+                Assert.equal(0, duration, "99 - 100 -> 0");
+            }
+        });
+
+        this.testCase({
+            name: name + "getDuration() returns undefined for invalid inputs",
+            test: () => {
+                var duration = Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.getDuration(10, undefined);
+                Assert.equal(undefined, duration);
+
+                duration = Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.getDuration("ab", 123);
+                Assert.equal(undefined, duration);
+
+                duration = Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.getDuration(undefined, null);
+                Assert.equal(undefined, duration);
+            }
+        });
 
         this.testCase({
             name: name + "PageViewPerformanceTelemetry correct timing data",
@@ -57,7 +84,6 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 }
             }
         });
-
 
         this.testCase({
             name: name + "PageViewPerformanceTelemetry measurements are correct",
@@ -124,6 +150,70 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
             }
         });
 
+        this.testCase({
+            name: name + "PageViewPerformanceTelemetry checks if any duration exceeds 1h and is comming from a Googlebot",
+            test: () => {
+                // see comment PageViewPerformance constructor on how timing data is calculated
+                // here we set values, so each metric will be exactly 3600000 (1h).
+                let timingModifiers = [(timing) => timing.loadEventEnd = 3600001,
+                    (timing) => timing.connectEnd = 3600001,
+                    (timing) => timing.responseStart = 3600003,
+                    (timing) => timing.responseEnd = 3600030,
+                    (timing) => timing.loadEventEnd = 3600042];
+
+                // mock user agent
+                let originalNavigator = navigator;
+                (<any>navigator).__defineGetter__('userAgent', function () {
+                    return '"Googlebot/2.1'
+                });
+
+                for (var i = 0; i < timingModifiers.length; i++) {
+
+                    var timing = <PerformanceTiming>{};
+                    timing.navigationStart = 1;
+                    timing.connectEnd = 2;
+                    timing.requestStart = 3;
+                    timing.responseStart = 30;
+                    timing.responseEnd = 42;
+                    timing.loadEventEnd = 60;
+
+                    // change perf timing value
+                    timingModifiers[i](timing);
+
+                    var timingSpy = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
+                        return timing;
+                    });
+
+                    var actualLoggedMessage: string = "";
+                    Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
+                    var loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole", (m) => actualLoggedMessage = m);
+
+                    var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
+                    Assert.equal(false, telemetry.getIsValid());
+
+                    var data = telemetry;
+
+                    Assert.equal(undefined, data.perfTotal);
+                    Assert.equal(undefined, data.networkConnect);
+                    Assert.equal(undefined, data.sentRequest);
+                    Assert.equal(undefined, data.receivedResponse);
+                    Assert.equal(undefined, data.domProcessing);
+
+                    if (i === 0) {
+                        // check props only for the first timingModifier
+                        Assert.equal("AI (Internal): NONUSRACT_InvalidDurationValue message:\"Invalid page load duration value. Browser perf data won't be sent.\" props:\"{total:3600000,network:1,request:27,response:12,dom:3599959}\"", actualLoggedMessage);
+                    } else {
+                        Assert.ok(actualLoggedMessage.lastIndexOf("AI (Internal): NONUSRACT_InvalidDurationValue message:\"Invalid page load duration value. Browser perf data won't be sent.", 0) === 0);
+                    }
+
+                    timingSpy.restore();
+                    loggingSpy.restore();
+                }
+
+                // restore original user agent
+                navigator = originalNavigator;
+            }
+        });
     }
 }
 new PageViewPerformanceTelemetryTests().registerTests();
