@@ -5,7 +5,7 @@ using System.ServiceProcess;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OpenQA.Selenium.Remote;
-using OpenQA.Selenium.Firefox;
+using OpenQA.Selenium.Chrome;
 
 namespace ApplicationInsights.Javascript.Tests
 {
@@ -62,51 +62,41 @@ namespace ApplicationInsights.Javascript.Tests
 
         private static RemoteWebDriver GetWebDriver()
         {
-            var ffProfile = new OpenQA.Selenium.Firefox.FirefoxProfile();
-            ffProfile.SetPreference("browser.download.folderList", 2);
-            ffProfile.SetPreference("browser.helperApps.neverAsk.saveToDisk", "text/plain");
-
-            return new FirefoxDriver(ffProfile);
+            return new ChromeDriver();
         }
 
         [TestMethod]
-        public void Firefox()
+        public void Chrome()
         {
             RunTest(PATH_TO_TESTS);
         }
 
-        // [TestMethod]
-        public void Firefox_CodeCoverage()
-        {
-            RunTest(PATH_TO_TESTS, true);
-        }
-
         [TestMethod]
-        public void Firefox_E2E_DisableTelemetryTests()
+        public void Chrome_E2E_DisableTelemetryTests()
         {
             RunTest("/E2ETests/E2E.DisableTelemetryTests.htm");
         }
 
         [TestMethod]
-        public void Firefox_E2E_PublicApiTests()
+        public void Chrome_E2E_PublicApiTests()
         {
             RunTest("/E2ETests/E2E.PublicApiTests.htm");
         }
 
         [TestMethod]
-        public void Firefox_E2E_SanitizerE2ETests()
+        public void Chrome_E2E_SanitizerE2ETests()
         {
             RunTest("/E2ETests/E2E.SanitizerE2ETests.htm");
         }
 
         [TestMethod]
-        public void Firefox_E2E_snippetTests()
+        public void Chrome_E2E_snippetTests()
         {
             RunTest("/E2ETests/E2E.snippetTests.htm");
         }
 
         [TestMethod]
-        public void Firefox_E2E_ValidateApiTests()
+        public void Chrome_E2E_ValidateApiTests()
         {
             RunTest("/E2ETests/E2E.ValidateApiTests.htm");
         }
@@ -119,6 +109,13 @@ namespace ApplicationInsights.Javascript.Tests
         }*/
 
         #region Disabled - other browsers
+
+        /* [TestMethod]
+        public void Firefox_CodeCoverage()
+        {
+            RunTest(PATH_TO_TESTS, true);
+        }*/
+
         /**
          * Removing IE tests until they fix this bug which prevents selenium from working:
          * https://code.google.com/p/selenium/issues/detail?id=8302
@@ -143,9 +140,9 @@ namespace ApplicationInsights.Javascript.Tests
         }
 
         //[TestMethod]
-        public void Chrome()
+        public void Firefox()
         {
-            //RunTest(new OpenQA.Selenium.Chrome.ChromeDriver(), PATH_TO_TESTS);
+            //RunTest(new OpenQA.Selenium.Firefox.FirefoxDriver(), PATH_TO_TESTS);
         }
 
         //[TestMethod]
@@ -190,7 +187,6 @@ namespace ApplicationInsights.Javascript.Tests
                 }
 
                 navigator.GoToUrl(testUrl);
-                navigator.Refresh();
 
                 // log test results
                 var testStart = DateTime.Now;
