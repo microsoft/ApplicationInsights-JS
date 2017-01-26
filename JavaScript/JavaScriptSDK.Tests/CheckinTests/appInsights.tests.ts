@@ -662,10 +662,8 @@ class AppInsightsTests extends TestClass {
                 this.clock.tick(3600000);
 
                 // mock user agent
-                let originalNavigator = navigator;
-                (<any>navigator).__defineGetter__('userAgent', function () {
-                    return '"Googlebot/2.1'
-                });
+                let originalUserAgent = navigator.userAgent;
+                this.setUserAgent("Googlebot/2.1");
 
                 // act
                 appInsights.trackPageView();
@@ -676,7 +674,7 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(undefined, spy.args[0][2], "Page view duration should be undefined if it's coming from GoogleBot and is >=1h");
 
                 // restore original user agent
-                navigator = originalNavigator;
+                this.setUserAgent(originalUserAgent);
             }
         });
 

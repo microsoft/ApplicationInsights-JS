@@ -155,7 +155,6 @@ module Microsoft.ApplicationInsights.Telemetry {
         }
 
         /**
-         * GoogleBot is returning invalid values in performance.timing API.
          * This method tells if given durations should be excluded from collection.
          */
         public static shouldCollectDuration(...durations: number[]): boolean {
@@ -163,6 +162,10 @@ module Microsoft.ApplicationInsights.Telemetry {
             let isGoogleBot = userAgent ? userAgent.toLowerCase().indexOf("googlebot") !== -1 : false;
 
             if (isGoogleBot) {
+                // Don't report durations for GoogleBot, it is returning invalid values in performance.timing API. 
+                return false;
+            } else {
+                // for other page views, don't report if it's outside of a reasonable range
                 for (var i = 0; i < durations.length; i++) {
                     if (durations[i] >= PageViewPerformance.MAX_DURATION_ALLOWED) {
                         return false;
