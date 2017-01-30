@@ -19,7 +19,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         /**
          * Constructs a new instance of the MetricTelemetry object
          */
-        constructor(name: string, value: number, count?: number, min?: number, max?: number, properties?: Object) {
+        constructor(name: string, value: number, count?: number, min?: number, max?: number, properties?: any) {
             super();
 
             var dataPoint = new Microsoft.ApplicationInsights.Telemetry.Common.DataPoint();
