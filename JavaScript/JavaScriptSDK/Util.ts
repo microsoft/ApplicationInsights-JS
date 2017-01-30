@@ -311,7 +311,7 @@ module Microsoft.ApplicationInsights {
                 domainAttrib = ";domain=" + domain;
             }
 
-            if (Util.document.location.protocol === "https:") {
+            if (Util.document.location && Util.document.location.protocol === "https:") {
                 secureAttrib = ";secure";
             }
 

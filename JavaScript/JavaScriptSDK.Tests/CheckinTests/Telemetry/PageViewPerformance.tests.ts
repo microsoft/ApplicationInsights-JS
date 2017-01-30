@@ -151,7 +151,49 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
         });
 
         this.testCase({
-            name: name + "PageViewPerformanceTelemetry checks if any duration exceeds 1h and is comming from a Googlebot",
+            name: name + "PageViewPerformanceTelemetry is not reporting duration if a request is comming from a Googlebot",
+            test: () => {
+                // mock user agent
+                let originalUserAgent = navigator.userAgent;
+                this.setUserAgent("Googlebot/2.1");
+
+                var timing = <PerformanceTiming>{};
+                timing.navigationStart = 1;
+                timing.connectEnd = 2;
+                timing.requestStart = 3;
+                timing.responseStart = 30;
+                timing.responseEnd = 42;
+                timing.loadEventEnd = 60;
+
+                var timingSpy = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
+                    return timing;
+                });
+
+                var actualLoggedMessage: string = "";
+                Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
+                var loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole", (m) => actualLoggedMessage = m);
+
+                var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
+                Assert.equal(false, telemetry.getIsValid());
+
+                var data = telemetry;
+
+                Assert.equal(undefined, data.perfTotal);
+                Assert.equal(undefined, data.networkConnect);
+                Assert.equal(undefined, data.sentRequest);
+                Assert.equal(undefined, data.receivedResponse);
+                Assert.equal(undefined, data.domProcessing);
+
+                timingSpy.restore();
+                loggingSpy.restore();
+
+                // restore original user agent
+                this.setUserAgent(originalUserAgent);
+            }
+        });
+
+        this.testCase({
+            name: name + "PageViewPerformanceTelemetry checks if any duration exceeds 1h and don't send it",
             test: () => {
                 // see comment PageViewPerformance constructor on how timing data is calculated
                 // here we set values, so each metric will be exactly 3600000 (1h).
@@ -160,12 +202,6 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                     (timing) => timing.responseStart = 3600003,
                     (timing) => timing.responseEnd = 3600030,
                     (timing) => timing.loadEventEnd = 3600042];
-
-                // mock user agent
-                let originalNavigator = navigator;
-                (<any>navigator).__defineGetter__('userAgent', function () {
-                    return '"Googlebot/2.1'
-                });
 
                 for (var i = 0; i < timingModifiers.length; i++) {
 
@@ -209,9 +245,6 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                     timingSpy.restore();
                     loggingSpy.restore();
                 }
-
-                // restore original user agent
-                navigator = originalNavigator;
             }
         });
     }
