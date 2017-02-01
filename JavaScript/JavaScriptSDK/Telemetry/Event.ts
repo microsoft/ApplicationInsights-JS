@@ -19,7 +19,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         /**
          * Constructs a new instance of the EventTelemetry object
          */
-        constructor(name: string, properties?: Object, measurements?: Object) {
+        constructor(name: string, properties?: any, measurements?: any) {
             
             super();
 

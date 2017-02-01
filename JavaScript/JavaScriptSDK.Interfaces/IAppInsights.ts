@@ -19,7 +19,7 @@ module Microsoft.ApplicationInsights {
         /*
         * Initialization queue. Contains functions to run when appInsights initializes
         */
-        queue: (() => void)[];
+        queue: Array<() => void>;
 
         /**
         * Starts timing how long the user views a page or other item. Call this when the page opens. 

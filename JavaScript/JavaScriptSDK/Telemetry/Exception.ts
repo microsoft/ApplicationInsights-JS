@@ -23,7 +23,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         /**
         * Constructs a new isntance of the ExceptionTelemetry object
         */
-        constructor(exception: Error, handledAt?: string, properties?: Object, measurements?: Object, severityLevel?: AI.SeverityLevel) {
+        constructor(exception: Error, handledAt?: string, properties?: any, measurements?: any, severityLevel?: AI.SeverityLevel) {
             super();
 
             this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
