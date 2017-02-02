@@ -824,31 +824,20 @@ class AppInsightsTests extends TestClass {
 
                 // verify
                 test("instrumentationKey");
-                test("endpointUrl");
-                test("emitLineDelimitedJson");
                 test("accountId");
                 test("sessionRenewalMs");
                 test("sessionExpirationMs");
+                test("cookieDomain");
                 test("maxBatchSizeInBytes");
                 test("maxBatchInterval");
-                test("enableDebug");
-                test("disableExceptionTracking");
+
+                test("endpointUrl");
+                test("emitLineDelimitedJson");
+                test("maxBatchSizeInBytes");
+                test("maxBatchInterval");
                 test("disableTelemetry");
-                test("verboseLogging");
-                test("diagnosticLogInterval");
-                test("autoTrackPageVisitTime");
-                test("samplingPercentage");
-                test("disableAjaxTracking");
-                test("overridePageViewDuration");
-                test("maxAjaxCallsPerView");
-                test("cookieDomain");
-                test("disableDataLossAnalysis");
-                test("disableCorrelationHeaders");
-                test("disableFlushOnBeforeUnload");
                 test("enableSessionStorageBuffer");
-                test("isCookieUseDisabled");
                 test("isRetryDisabled");
-                test("isStorageUseDisabled");
                 test("isBeaconApiDisabled");
 
                 Assert.equal(snippet.enableDebug, Microsoft.ApplicationInsights._InternalLogging.enableDebugExceptions(), "enableDebugExceptions is set and correct");

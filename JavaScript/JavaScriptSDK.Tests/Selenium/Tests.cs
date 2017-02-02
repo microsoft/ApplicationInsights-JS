@@ -101,6 +101,12 @@ namespace ApplicationInsights.Javascript.Tests
             RunTest("/E2ETests/E2E.ValidateApiTests.htm");
         }
 
+        [TestMethod]
+        public void Chrome_E2E_SenderTests()
+        {
+            RunTest("/E2ETests/E2E.Sender.htm");
+        }
+
         // Tests are failing, need to fix before we enable them.
         /* [TestMethod]
         public void Firefox_E2E_autoCollection()

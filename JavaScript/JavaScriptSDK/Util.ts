@@ -533,7 +533,7 @@ module Microsoft.ApplicationInsights {
          * Tells if a browser supports a Beacon API
          */
         public static IsBeaconApiSupported(): boolean {
-            return ('sendBeacon' in navigator);
+            return ('sendBeacon' in navigator && (<any>navigator).sendBeacon);
         }
     }
 
