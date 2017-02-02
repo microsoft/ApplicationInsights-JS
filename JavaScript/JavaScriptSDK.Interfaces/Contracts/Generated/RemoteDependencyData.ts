@@ -12,6 +12,15 @@ module AI
         public name: string;
         public id: string;
         public resultCode: string;
+        public duration: string;
+        public success: boolean;
+        public data: string;
+        public target: string;
+        public type: string;
+        public properties: any;
+        public measurements: any;
+
+        /* Following fields should be marked as depricated in the next release, and must be removed in the subsequent breaking release */
         public kind: AI.DataPointType;
         public value: number;
         public count: number;
@@ -19,14 +28,11 @@ module AI
         public max: number;
         public stdDev: number;
         public dependencyKind: AI.DependencyKind;
-        public success: boolean;
         public async: boolean;
         public dependencySource: AI.DependencySourceType;
         public commandName: string;
         public dependencyTypeName: string;
-        public properties: any;
-        public measurements: any;
-        
+
         constructor()
         {
             super();

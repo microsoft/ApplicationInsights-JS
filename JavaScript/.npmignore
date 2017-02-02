@@ -4,3 +4,4 @@
 
 # ... but these files
 !/JavaScriptSDK.Module/AppInsightsModule.js
+!/JavaScriptSDK/snippet.js

@@ -305,13 +305,18 @@ module Microsoft.ApplicationInsights {
          */
         public static setCookie(name, value, domain?) {
             var domainAttrib = "";
+            var secureAttrib = "";
 
             if (domain) {
                 domainAttrib = ";domain=" + domain;
             }
 
+            if (Util.document.location && Util.document.location.protocol === "https:") {
+                secureAttrib = ";secure";
+            }
+
             if (Util.canUseCookies()) {
-                Util.document.cookie = name + "=" + value + domainAttrib + ";path=/";
+                Util.document.cookie = name + "=" + value + domainAttrib + ";path=/" + secureAttrib;
             }
         }
 
@@ -527,6 +532,15 @@ module Microsoft.ApplicationInsights {
         public static IsBeaconApiSupported(): boolean {
             return ('sendBeacon' in navigator);
         }
+
+        public static getDurationString(valueInMS: number): string {
+            if (valueInMS >= 0) {
+                var date = new Date(valueInMS);
+                return (date.getUTCDate() - 1) + "." + date.getUTCHours() + ":" + date.getUTCMinutes() + ":" + date.getUTCSeconds() + "." + date.getUTCMilliseconds();
+            } else {
+                return "0.0:0:0.0";
+            }
+        }
     }
 
     export class UrlHelper {
@@ -561,6 +575,14 @@ module Microsoft.ApplicationInsights {
             }
 
             return result;
+        }
+
+        public static getCompleteUrl(method: string, absoluteUrl: string) {
+            if (method) {
+                return method.toUpperCase() + " " + absoluteUrl;
+            } else {
+                return absoluteUrl;
+            }
         }
     }
 }

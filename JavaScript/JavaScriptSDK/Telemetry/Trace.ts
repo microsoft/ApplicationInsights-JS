@@ -20,7 +20,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         /**
          * Constructs a new instance of the MetricTelemetry object
          */
-        constructor(message: string, properties?: Object) {
+        constructor(message: string, properties?: any) {
             super();
             message = message || Util.NotSpecified;
             this.message = Common.DataSanitizer.sanitizeMessage(message);

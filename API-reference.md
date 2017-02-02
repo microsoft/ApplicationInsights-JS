@@ -125,7 +125,7 @@ Log an exception you have caught. (Exceptions caught by the browser are also log
 `handledAt` | Defaults to "unhandled".
 `properties` | Map of string to string: Additional data used to [filter exceptions](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 `measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
-`severityLevel` | Supported values: [SeverityLevel.ts](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK/Contracts/Generated/SeverityLevel.ts)
+`severityLevel` | Supported values: [SeverityLevel.ts](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts)
 
 In the portal, you can [search on exception type and view](https://azure.microsoft.com/documentation/articles/app-insights-diagnostic-search/) the type, message, and stack trace of individual instances. 
 
@@ -163,7 +163,7 @@ Log a dependency call (for instance: ajax)
 
  | | 
 ---|---|---
-`id` | Unique id, this is used by the backend o correlate server requests. Use `Util.newId()` to generate a unique Id.
+`id` | Unique id, this is used by the backend to correlate server requests. Use `Util.newId()` to generate a unique Id.
 `method` | Represents request verb (GET, POST, etc.)
 `absoluteUrl` | Absolute url used to make the dependency request
 `pathName` | Path part of the absolute url
@@ -223,9 +223,6 @@ Values that control how the telemetry data is sent.
         
         // A session is logged if it has continued for this time in milliseconds. Default 24h.
         sessionExpirationMs: number;
-        
-        // Default 200k
-        maxPayloadSizeInBytes: number; 
         
         // Default 100k
         maxBatchSizeInBytes: number;

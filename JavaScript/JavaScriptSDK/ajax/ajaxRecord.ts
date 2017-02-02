@@ -67,12 +67,13 @@ module Microsoft.ApplicationInsights {
         }
 
         public getPathName() {
-            return this.requestUrl ? UrlHelper.getPathName(this.requestUrl) : null;
+            return this.requestUrl ? Telemetry.Common.DataSanitizer.sanitizeUrl(UrlHelper.getCompleteUrl(this.method, this.requestUrl)): null;
         }
 
         public CalculateMetrics = function () {
             var self = this;
-            self.ajaxTotalDuration = dateTime.GetDuration(self.requestSentTime, self.responseFinishedTime);
+            // round to 3 decimal points
+            self.ajaxTotalDuration = Math.round(dateTime.GetDuration(self.requestSentTime, self.responseFinishedTime)*1000)/1000;
         }
     };
 };           

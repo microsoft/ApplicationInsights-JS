@@ -146,7 +146,7 @@ module Microsoft.ApplicationInsights {
             config.endpointUrl = config.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
             config.sessionRenewalMs = 30 * 60 * 1000;
             config.sessionExpirationMs = 24 * 60 * 60 * 1000;
-            config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 1000000;
+            config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 102400; // 100kb
             config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
             config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
             config.disableExceptionTracking = (config.disableExceptionTracking !== undefined && config.disableExceptionTracking !== null) ?
@@ -169,7 +169,7 @@ module Microsoft.ApplicationInsights {
             config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
             config.disableCorrelationHeaders = (config.disableCorrelationHeaders !== undefined && config.disableCorrelationHeaders !== null) ?
                 Util.stringToBoolOrDefault(config.disableCorrelationHeaders) :
-                false;
+                true;
 
             config.isPerfAnalyzerEnabled = (config.isPerfAnalyzerEnabled !== undefined && config.isPerfAnalyzerEnabled !== null) ?
                 Util.stringToBoolOrDefault(config.isPerfAnalyzerEnabled) :

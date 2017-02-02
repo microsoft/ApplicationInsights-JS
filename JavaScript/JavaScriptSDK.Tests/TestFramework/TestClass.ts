@@ -5,7 +5,7 @@
 
 class TestClass {
 
-    constructor(name? : string) {
+    constructor(name?: string) {
         QUnit.module(name);
     }
 
@@ -77,7 +77,7 @@ class TestClass {
                             if (step[TestClass.isPollingStepFlag]) {
                                 step.call(this, nextTestStepTrigger);
                             } else {
-                            step.call(this);
+                                step.call(this);
                                 nextTestStepTrigger.call(this);
                             }
                         } catch (e) {
@@ -221,6 +221,15 @@ class TestClass {
             JSON.stringify(data));
     }
 
+    protected setUserAgent(userAgent: string) {
+        Object.defineProperty(window.navigator, 'userAgent',
+            {
+                configurable: true,
+                get: function () {
+                    return userAgent;
+                }
+            });
+    }
 }
 
 // Configure Sinon

@@ -1,6 +1,7 @@
 ﻿/// <reference path="../../../JavaScriptSDK/TelemetryContext.ts" />
 /// <reference path="../../../JavaScriptSDK/context/session.ts" />
 /// <reference path="../../../JavaScriptSDK/context/user.ts" />
+/// <reference path="../../../JavaScriptSDK/ajax/ajaxUtils.ts" />
 /// <reference path="../../testframework/common.ts" />
 /// <reference path="../Util.tests.ts"/>
 
@@ -8,12 +9,17 @@ class SessionContextTests extends TestClass {
 
     private originalDocument = Microsoft.ApplicationInsights.Util["document"];
     private results: any[];
+    private dateTimeNowObj = Microsoft.ApplicationInsights.dateTime.Now;
 
     /** Method called before the start of each test method */
     public testInitialize() {
         this.results = [];
         this.resetStorage();
         this.restoreFakeCookie();
+
+        // SinonFakeTimers doesn't mock "performance.now" - https://github.com/sinonjs/lolex/issues/82 
+        // this is a hack to mock the clock
+        Microsoft.ApplicationInsights.dateTime.Now = Date.now;
     }
 
     /** Method called after each test method has completed */
@@ -21,6 +27,9 @@ class SessionContextTests extends TestClass {
         this.results = [];
         this.resetStorage();
         this.restoreFakeCookie();
+
+        // restore original dateTime.Now object
+        Microsoft.ApplicationInsights.dateTime.Now = this.dateTimeNowObj;
     }
 
     public registerTests() {
@@ -167,7 +176,7 @@ class SessionContextTests extends TestClass {
 
                 // Initialize our user and session cookies
                 var sessionId = "SESSID";
-                var curDate = +new Date();
+                var curDate = Microsoft.ApplicationInsights.dateTime.Now();
                 cookies['ai_user'] = 'user';
                 cookies['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
@@ -198,7 +207,7 @@ class SessionContextTests extends TestClass {
                 // Initialize our user cookie and local storage
                 // Note there is no session cookie
                 var sessionId = "SESSID";
-                var curDate = +new Date();
+                var curDate = Microsoft.ApplicationInsights.dateTime.Now();
                 cookies['ai_user'] = 'user';
                 storage['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
@@ -234,7 +243,7 @@ class SessionContextTests extends TestClass {
                 // Initialize our local storage
                 // Note no cookies are available
                 var sessionId = "SESSID";
-                var curDate = +new Date();
+                var curDate = Microsoft.ApplicationInsights.dateTime.Now();
                 storage['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
                 // Initialize the session manager
@@ -265,7 +274,7 @@ class SessionContextTests extends TestClass {
 
                 // Initialize our user and session cookies
                 var sessionId = "SESSID";
-                var curDate = +new Date();
+                var curDate = Microsoft.ApplicationInsights.dateTime.Now();
                 cookies['ai_user'] = 'user';
                 cookies['ai_session'] = this.generateFakeSessionCookieData(sessionId, curDate, curDate);
 
@@ -297,8 +306,8 @@ class SessionContextTests extends TestClass {
                 };
 
                 var testGuid = "00000000-0000-0000-0000-000000000000";
-                var acquisitionDate = +new Date();
-                var renewalDate = +new Date();
+                var acquisitionDate = Microsoft.ApplicationInsights.dateTime.Now();
+                var renewalDate = Microsoft.ApplicationInsights.dateTime.Now();
 
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
@@ -313,8 +322,8 @@ class SessionContextTests extends TestClass {
             test: () => {
                 // setup
                 var testGuid = "00000000-0000-0000-0000-000000000000";
-                var acquisitionDate = +new Date();
-                var renewalDate = +new Date();
+                var acquisitionDate = Microsoft.ApplicationInsights.dateTime.Now();
+                var renewalDate = Microsoft.ApplicationInsights.dateTime.Now();
 
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
@@ -362,7 +371,7 @@ class SessionContextTests extends TestClass {
                 this.clock.tick(delta); // safari crashes without this
                 var cookieTime = +new Date - delta;
                 var acquisitionDate = +new Date(cookieTime);
-                var renewalDate = +new Date();
+                var renewalDate = Microsoft.ApplicationInsights.dateTime.Now();
 
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
@@ -384,8 +393,8 @@ class SessionContextTests extends TestClass {
 
                 // setup
                 var testGuid = "00000000-0000-0000-0000-000000000000";
-                var acquisitionDate = +new Date();
-                var renewalDate = +new Date();
+                var acquisitionDate = Microsoft.ApplicationInsights.dateTime.Now();
+                var renewalDate = Microsoft.ApplicationInsights.dateTime.Now();
 
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 
@@ -422,8 +431,8 @@ class SessionContextTests extends TestClass {
             test: () => {
                 // setup
                 var testGuid = "00000000-0000-0000-0000-000000000000";
-                var acquisitionDate = +new Date();
-                var renewalDate = +new Date();
+                var acquisitionDate = Microsoft.ApplicationInsights.dateTime.Now();
+                var renewalDate = Microsoft.ApplicationInsights.dateTime.Now();
 
                 this.setFakeCookie(testGuid, acquisitionDate, renewalDate);
 

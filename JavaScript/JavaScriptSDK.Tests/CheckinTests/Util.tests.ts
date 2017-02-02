@@ -3,6 +3,13 @@
 
 class UtilTests extends TestClass {
 
+    public testCleanup() {
+
+        // reset storage cache
+        (<any>Microsoft.ApplicationInsights.Util)._canUseLocalStorage = undefined;
+        (<any>Microsoft.ApplicationInsights.Util)._canUseSessionStorage = undefined;
+    }
+
     public registerTests() {
         var Util = Microsoft.ApplicationInsights.Util;
 
@@ -51,10 +58,6 @@ class UtilTests extends TestClass {
 
                 Assert.equal(null, Util.getStorage("key1"), "can't read from local storage when disabled");
                 Assert.equal(null, Util.getSessionStorage("key2"), "can't read from session storage when disabled");
-
-                // reset
-                (<any>Util)._canUseLocalStorage = undefined;
-                (<any>Util)._canUseSessionStorage = undefined;
             }
         });
 

@@ -6,7 +6,7 @@ class AppInsightsTests extends TestClass {
     private getAppInsightsSnippet() {
         var snippet: Microsoft.ApplicationInsights.IConfig = {
             instrumentationKey: "",
-            endpointUrl: "//dc.services.visualstudio.com/v2/track",
+            endpointUrl: "https://dc.services.visualstudio.com/v2/track",
             emitLineDelimitedJson: false,
             accountId: undefined,
             sessionRenewalMs: 10,
@@ -649,6 +649,40 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
+            name: "AppInsightsTests: if in 'override page view duration' mode, trackPageView won't report duration if it exceeded max duration",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var spy = this.sandbox.stub(appInsights, "sendPageViewInternal");
+                var checkPageLoadStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "isPerformanceTimingDataReady",
+                    () => { return true; });
+                var getIsValidStub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.prototype, "getIsValid",
+                    () => { return false; });
+                var stub = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming",
+                    () => {
+                        return { navigationStart: 0 };
+                    });
+
+                this.clock.tick(3600000);
+
+                // mock user agent
+                let originalUserAgent = navigator.userAgent;
+                this.setUserAgent("Googlebot/2.1");
+
+                // act
+                appInsights.trackPageView();
+
+                // Data not available yet - should not send events
+                this.clock.tick(100);
+                Assert.ok(spy.called, "Page view should not be sent since the timing data is invalid");
+                Assert.equal(undefined, spy.args[0][2], "Page view duration should be undefined if it's coming from GoogleBot and is >=1h");
+
+                // restore original user agent
+                this.setUserAgent(originalUserAgent);
+            }
+        });
+
+        this.testCase({
             name: "AppInsightsTests: trackPageView sends base data and performance data when available",
             test: () => {
                 // setup
@@ -695,7 +729,7 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "AppInsightsTests: a page view is sent with 0 duration if navigation timing API is not supported",
+            name: "AppInsightsTests: a page view is sent with undefined duration if navigation timing API is not supported",
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
@@ -709,7 +743,7 @@ class AppInsightsTests extends TestClass {
 
                 // assert
                 Assert.ok(spy.calledOnce, "sendPageViewInternal should be called even if navigation timing is not supported");
-                Assert.equal(0, spy.args[0][2], "Page view duration should be 0");
+                Assert.equal(undefined, spy.args[0][2], "Page view duration should be `undefined`");
             }
         });
 
@@ -1495,8 +1529,10 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var trackStub = this.sandbox.stub(appInsights.context, "track");
-                var name = "test";
-                var url = "http://myurl.com";
+                var pathName = "/api/temp/ABCD";
+                var url = "https://tempurl.net/api/temp/ABCD?param1=test&param2=test";
+                var commandName = "GET " + url;
+                var target = "tempurl.net"
                 var duration = 123;
                 var success = false;
                 var resultCode = 404;
@@ -1505,14 +1541,15 @@ class AppInsightsTests extends TestClass {
                 var measurements = { "duration": 777 };
 
                 // Act
-                appInsights.trackDependency("0", "Get", url, name, duration, success, resultCode, properties, measurements);
+                appInsights.trackDependency("0", "GET", url, commandName, duration, success, resultCode, properties, measurements);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
                 var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
-                Assert.equal("GET " + url , rdd.name);
-                Assert.equal(name, rdd.commandName);
-                Assert.equal(duration, rdd.value);
+                Assert.equal("GET " + pathName, rdd.name);
+                Assert.equal(commandName, rdd.data);
+                Assert.equal(target, rdd.target);
+                Assert.equal("0.0:0:0.123", rdd.duration);
                 Assert.equal(success, rdd.success);
                 Assert.equal(resultCode, rdd.resultCode);
                 Assert.deepEqual(properties, rdd.properties);
@@ -1636,23 +1673,24 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 var trackStub = this.sandbox.stub(appInsights.context, "track");
-                var name = "test";
-                var url = "http://myurl.com";
+                var pathName = "http://myurl.com/test";
+                var url = "http://myurl.com/test";
+                var target = "myurl.com"
                 var duration = 123;
                 var success = false;
                 var resultCode = 404;
 
                 // Act
-                appInsights.trackAjax("0", url, name, duration, success, resultCode);
+                appInsights.trackAjax("0", url, pathName, duration, success, resultCode);
 
                 // Assert
                 Assert.ok(trackStub.called, "Track should be called");
                 var rdd = <Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(<any>trackStub.args[0][0]).data.baseData;
-                Assert.equal(url, rdd.name);
-                Assert.equal(name, rdd.commandName);
-                Assert.equal(duration, rdd.value);
+                Assert.equal("/test", rdd.name);
+                Assert.equal(url, rdd.data);
+                Assert.equal(target, rdd.target);
+                Assert.equal("0.0:0:0.123", rdd.duration);
                 Assert.equal(success, rdd.success);
-                Assert.equal(resultCode, rdd.resultCode);
             }
         });
 

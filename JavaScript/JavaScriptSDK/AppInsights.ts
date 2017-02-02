@@ -15,7 +15,7 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "1.0.4";
+    export var Version = "1.0.7";
     export var SnippetVersion: string; 
 
     /**
