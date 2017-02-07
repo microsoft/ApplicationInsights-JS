@@ -286,6 +286,10 @@ Values that control how the telemetry data is sent.
         // If true, the SDK will not store or read any data from local and session storage.
         // Default: false
         isStorageUseDisabled: boolean;
+	
+	// Default true. If false, the SDK will add two headers ('x-ms-request-root-id' and 'x-ms-request-id) 
+	// to all dependency requests (within the same domain) to correlate them with corresponding requests on the server side. 
+	disableCorrelationHeaders: boolean;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.
