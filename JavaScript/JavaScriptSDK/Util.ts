@@ -455,17 +455,20 @@ module Microsoft.ApplicationInsights {
                 totalms = 0;
             }
 
+            totalms = Math.round(totalms);
+
             var ms = "" + totalms % 1000;
             var sec = "" + Math.floor(totalms / 1000) % 60;
             var min = "" + Math.floor(totalms / (1000 * 60)) % 60;
             var hour = "" + Math.floor(totalms / (1000 * 60 * 60)) % 24;
+            var days = Math.floor(totalms / (1000 * 60 * 60 * 24));
 
             ms = ms.length === 1 ? "00" + ms : ms.length === 2 ? "0" + ms : ms;
             sec = sec.length < 2 ? "0" + sec : sec;
             min = min.length < 2 ? "0" + min : min;
             hour = hour.length < 2 ? "0" + hour : hour;
 
-            return hour + ":" + min + ":" + sec + "." + ms;
+            return (days > 0 ? days + "." : "") + hour + ":" + min + ":" + sec + "." + ms;
         }
 
         /**		
@@ -524,15 +527,6 @@ module Microsoft.ApplicationInsights {
             }
 
             return true;
-        }
-
-        public static getDurationString(valueInMS: number): string {
-            if (valueInMS >= 0) {
-                var date = new Date(valueInMS);
-                return (date.getUTCDate() - 1) + "." + date.getUTCHours() + ":" + date.getUTCMinutes() + ":" + date.getUTCSeconds() + "." + date.getUTCMilliseconds();
-            } else {
-                return "0.0:0:0.0";
-            }
         }
     }
 

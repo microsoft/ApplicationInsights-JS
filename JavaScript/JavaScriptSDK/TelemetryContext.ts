@@ -349,7 +349,7 @@ module Microsoft.ApplicationInsights {
             }
 
             if (rddData.value && rddData.value !== 0) {
-                rddData.duration = Util.getDurationString(rddData.value);
+                rddData.duration = Util.msToTimeSpan(rddData.value);
                 rddData.value = undefined;
             }
 

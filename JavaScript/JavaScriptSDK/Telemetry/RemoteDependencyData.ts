@@ -45,7 +45,7 @@ module Microsoft.ApplicationInsights.Telemetry {
 
             this.id = id;
 
-            this.duration = Util.getDurationString(value);
+            this.duration = Util.msToTimeSpan(value);
             this.success = success;  
             this.resultCode = resultCode + "";
             this.dependencyKind = AI.DependencyKind.Http;

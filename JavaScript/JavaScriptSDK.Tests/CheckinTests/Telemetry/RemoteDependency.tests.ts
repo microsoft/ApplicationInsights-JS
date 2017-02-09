@@ -31,7 +31,7 @@ class RemoteDependencyTests extends ContractTestHelper {
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData(
                     RemoteDependencyTests.id, RemoteDependencyTests.url, RemoteDependencyTests.name, RemoteDependencyTests.totalTime, RemoteDependencyTests.success, RemoteDependencyTests.resultCode, RemoteDependencyTests.method);
 
-                Assert.equal("0.0:0:0.123", telemetry.duration, "value should be set correctly");
+                Assert.equal("00:00:00.123", telemetry.duration, "value should be set correctly");
                 Assert.equal(RemoteDependencyTests.success, telemetry.success, "success should be set correctly");
                 Assert.equal(RemoteDependencyTests.resultCode, telemetry.resultCode, "resultCode should be set correctly");
                 Assert.equal("GET /", telemetry.name, "name gets correct value");
@@ -78,11 +78,11 @@ class RemoteDependencyTests extends ContractTestHelper {
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData(
                     RemoteDependencyTests.id, RemoteDependencyTests.url, RemoteDependencyTests.name, 86400000, RemoteDependencyTests.success, RemoteDependencyTests.resultCode, RemoteDependencyTests.method);
 
-                Assert.equal("1.0:0:0.0", telemetry.duration, "value should be set correctly");
+                Assert.equal("1.00:00:00.000", telemetry.duration, "value should be set correctly");
                 telemetry = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData(
                     RemoteDependencyTests.id, RemoteDependencyTests.url, RemoteDependencyTests.name, 86400026, RemoteDependencyTests.success, RemoteDependencyTests.resultCode, RemoteDependencyTests.method);
 
-                Assert.equal("1.0:0:0.26", telemetry.duration, "value should be set correctly");
+                Assert.equal("1.00:00:00.026", telemetry.duration, "value should be set correctly");
             }
         });
 
