@@ -318,10 +318,12 @@ class UtilTests extends TestClass {
                 test(10 * 60 * 1000, "00:10:00.000", "minutes digit 2");
                 test(1 * 60 * 60 * 1000, "01:00:00.000", "hours digit 1");
                 test(10 * 60 * 60 * 1000, "10:00:00.000", "hours digit 2");
-                test(24 * 60 * 60 * 1000, "00:00:00.000", "hours overflow");
+                test(24 * 60 * 60 * 1000, "1.00:00:00.000", "a full day")
+                test(10 * 24 * 60 * 60 * 1000 + 123.444, "10.00:00:00.123", "ten days and 123ms")
                 test(11 * 3600000 + 11 * 60000 + 11111, "11:11:11.111", "all digits");
                 test(11 * 3600000 + 11 * 60000 + 11111 + 0.33333, "11:11:11.111", "all digits with high precision");
                 test(7 * 3600000 + 59 * 60000 + 59999 + 0.999, "08:00:00.000", "all digits with high precision, rounded to a full hour");
+                test(23 * 3600000 + 59 * 60000 + 59999 + 0.556, "1.00:00:00.000", "all digits with high precision, rounded to a full day");
 
                 test("", "00:00:00.000", "invalid input");
                 test("'", "00:00:00.000", "invalid input");

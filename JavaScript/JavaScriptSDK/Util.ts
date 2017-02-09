@@ -461,13 +461,14 @@ module Microsoft.ApplicationInsights {
             var sec = "" + Math.floor(totalms / 1000) % 60;
             var min = "" + Math.floor(totalms / (1000 * 60)) % 60;
             var hour = "" + Math.floor(totalms / (1000 * 60 * 60)) % 24;
+            var days = Math.floor(totalms / (1000 * 60 * 60 * 24));
 
             ms = ms.length === 1 ? "00" + ms : ms.length === 2 ? "0" + ms : ms;
             sec = sec.length < 2 ? "0" + sec : sec;
             min = min.length < 2 ? "0" + min : min;
             hour = hour.length < 2 ? "0" + hour : hour;
 
-            return hour + ":" + min + ":" + sec + "." + ms;
+            return (days > 0 ? days + "." : "") + hour + ":" + min + ":" + sec + "." + ms;
         }
 
         /**		

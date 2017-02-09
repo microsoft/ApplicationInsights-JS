@@ -1508,7 +1508,7 @@ class AppInsightsTests extends TestClass {
                 Assert.equal("GET " + pathName, rdd.name);
                 Assert.equal(commandName, rdd.data);
                 Assert.equal(target, rdd.target);
-                Assert.equal("0.0:0:0.123", rdd.duration);
+                Assert.equal("00:00:00.123", rdd.duration);
                 Assert.equal(success, rdd.success);
                 Assert.equal(resultCode, rdd.resultCode);
                 Assert.deepEqual(properties, rdd.properties);
@@ -1648,7 +1648,7 @@ class AppInsightsTests extends TestClass {
                 Assert.equal("/test", rdd.name);
                 Assert.equal(url, rdd.data);
                 Assert.equal(target, rdd.target);
-                Assert.equal("0.0:0:0.123", rdd.duration);
+                Assert.equal("00:00:00.123", rdd.duration);
                 Assert.equal(success, rdd.success);
             }
         });
