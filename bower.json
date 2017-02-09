@@ -1,7 +1,7 @@
 {
     "name":  "applicationinsights-js",
     "main":  "dist/ai.0.js",
-    "version":  "1.0.7",
+    "version":  "1.0.8",
     "homepage":  "https://github.com/Microsoft/ApplicationInsights-JS",
     "authors":  [
                     "Application Insights <appinsights@microsoft.com>"
