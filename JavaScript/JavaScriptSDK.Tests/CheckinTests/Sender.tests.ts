@@ -3,6 +3,7 @@
 /// <reference path="../../JavaScriptSDK/sender.ts" />
 /// <reference path="../../JavaScriptSDK/SendBuffer.ts"/>
 /// <reference path="../../javascriptsdk/appinsights.ts" />
+/// <reference path="../../javascriptsdk/DataLossAnalyzer.ts" />
 
 class SenderWrapper extends Microsoft.ApplicationInsights.Sender {
     errorSpy: SinonSpy;

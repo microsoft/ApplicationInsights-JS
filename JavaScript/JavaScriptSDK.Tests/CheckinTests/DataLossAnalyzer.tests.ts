@@ -89,4 +89,5 @@ class DataLossAnalyzerTests extends TestClass {
     }
 }
 
-new DataLossAnalyzerTests().registerTests(); 
+// Uncomment if you want to use DataLossanalyzer
+// new DataLossAnalyzerTests().registerTests(); 

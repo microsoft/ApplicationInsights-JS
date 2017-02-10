@@ -12,7 +12,6 @@
 /// <reference path="Context/Session.ts"/>
 /// <reference path="Context/User.ts"/>
 /// <reference path="ajax/ajax.ts"/>
-/// <reference path="DataLossAnalyzer.ts"/>
 /// <reference path="SendBuffer.ts"/>
 
 interface XDomainRequest extends XMLHttpRequestEventTarget {
@@ -195,7 +194,8 @@ module Microsoft.ApplicationInsights {
                 // ensure an invocation timeout is set
                 this._setupTimer();
 
-                DataLossAnalyzer.incrementItemsQueued();
+                // Uncomment if you want to use DataLossanalyzer
+                // DataLossAnalyzer.incrementItemsQueued();
             } catch (e) {
                 _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
                     new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedAddingTelemetryToBuffer, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.getExceptionName(e),
@@ -508,7 +508,9 @@ module Microsoft.ApplicationInsights {
          * success handler
          */
         public _onSuccess(payload: string[], countOfItemsInPayload: number) {
-            DataLossAnalyzer.decrementItemsQueued(countOfItemsInPayload);
+            // Uncomment if you want to use DataLossanalyzer
+            // DataLossAnalyzer.decrementItemsQueued(countOfItemsInPayload);
+
             this._buffer.clearSent(payload);
         }
     }

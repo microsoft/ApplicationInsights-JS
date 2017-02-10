@@ -11,7 +11,6 @@
 /// <reference path="Context/Session.ts"/>
 /// <reference path="Context/User.ts"/>
 /// <reference path="ajax/ajax.ts"/>
-/// <reference path="DataLossAnalyzer.ts"/>
 
 module Microsoft.ApplicationInsights {
     "use strict";
@@ -134,7 +133,8 @@ module Microsoft.ApplicationInsights {
             }
 
             // update DataLossAnalyzer with the number of recovered items
-            DataLossAnalyzer.itemsRestoredFromSessionBuffer = this._buffer.length;
+            // Uncomment if you want to use DataLossanalyzer
+            // DataLossAnalyzer.itemsRestoredFromSessionBuffer = this._buffer.length;
 
             this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
             this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
