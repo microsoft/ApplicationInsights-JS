@@ -89,12 +89,11 @@ module Microsoft.ApplicationInsights {
                 } catch (e) {
                     Util._canUseLocalStorage = false;
 
-                    var message = new _InternalLogMessage(
-                        _InternalMessageId.NONUSRACT_BrowserCannotReadLocalStorage,
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.BrowserCannotReadLocalStorage,
                         "Browser failed read of local storage. " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) }
-                    );
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
+                        { exception: Util.dump(e) });
                 }
             }
             return null;
@@ -116,12 +115,11 @@ module Microsoft.ApplicationInsights {
                 } catch (e) {
                     Util._canUseLocalStorage = false;
 
-                    var message = new _InternalLogMessage(
-                        _InternalMessageId.NONUSRACT_BrowserCannotWriteLocalStorage,
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.BrowserCannotWriteLocalStorage,
                         "Browser failed write to local storage. " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) }
-                    );
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
+                        { exception: Util.dump(e) });
                 }
             }
             return false;
@@ -142,12 +140,11 @@ module Microsoft.ApplicationInsights {
                 } catch (e) {
                     Util._canUseLocalStorage = false;
 
-                    var message = new _InternalLogMessage(
-                        _InternalMessageId.NONUSRACT_BrowserFailedRemovalFromLocalStorage,
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.BrowserFailedRemovalFromLocalStorage,
                         "Browser failed removal of local storage item. " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) }
-                    );
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
+                        { exception: Util.dump(e) });
                 }
             }
             return false;
@@ -208,12 +205,11 @@ module Microsoft.ApplicationInsights {
                 } catch (e) {
                     Util._canUseSessionStorage = false;
 
-                    var message = new _InternalLogMessage(
-                        _InternalMessageId.NONUSRACT_BrowserCannotReadSessionStorage,
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.BrowserCannotReadSessionStorage,
                         "Browser failed read of session storage. " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) }
-                    );
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
+                        { exception: Util.dump(e) });
                 }
             }
             return null;
@@ -235,12 +231,11 @@ module Microsoft.ApplicationInsights {
                 } catch (e) {
                     Util._canUseSessionStorage = false;
 
-                    var message = new _InternalLogMessage(
-                        _InternalMessageId.NONUSRACT_BrowserCannotWriteSessionStorage,
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.BrowserCannotWriteSessionStorage,
                         "Browser failed write to session storage. " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) }
-                    );
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
+                        { exception: Util.dump(e) });
                 }
             }
             return false;
@@ -261,12 +256,11 @@ module Microsoft.ApplicationInsights {
                 } catch (e) {
                     Util._canUseSessionStorage = false;
 
-                    var message = new _InternalLogMessage(
-                        _InternalMessageId.NONUSRACT_BrowserFailedRemovalFromSessionStorage,
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.BrowserFailedRemovalFromSessionStorage,
                         "Browser failed removal of session storage item. " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) }
-                    );
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
+                        { exception: Util.dump(e) });
                 }
             }
             return false;
@@ -289,11 +283,11 @@ module Microsoft.ApplicationInsights {
                 try {
                     Util._canUseCookies = Util.document.cookie !== undefined;
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage(
-                        _InternalMessageId.USRACT_CannotAccessCookie,
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.CannotAccessCookie,
                         "Cannot access document.cookie - " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) }
-                    ));
+                        { exception: Util.dump(e) });
                 };
             }
 
@@ -320,9 +314,9 @@ module Microsoft.ApplicationInsights {
             }
         }
 
-        public static stringToBoolOrDefault(str: any): boolean {
-            if (!str) {
-                return false;
+        public static stringToBoolOrDefault(str: any, defaultValue = false): boolean {
+            if (str === undefined || str === null) {
+                return defaultValue;
             }
 
             return str.toString().toLowerCase() === "true";

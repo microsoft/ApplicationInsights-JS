@@ -866,7 +866,7 @@ class AppInsightsTests extends TestClass {
             name: "AppInsights._onerror logs name of unexpected error thrown by trackException for diagnostics",
             test: () => {
                 var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var throwInternalNonUserActionableSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
+                var throwInternal = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
                 var nameStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "getExceptionName");
                 var stub = this.sandbox.stub(sut, "trackException").throws(new Error());
                 var expectedErrorName: string = "test error";
@@ -874,8 +874,8 @@ class AppInsightsTests extends TestClass {
 
                 sut._onerror("any message", "any://url", 420, 42, new Error());
 
-                var logMessage: Microsoft.ApplicationInsights._InternalLogMessage = throwInternalNonUserActionableSpy.getCall(0).args[1];
-                Assert.notEqual(-1, logMessage.message.indexOf(expectedErrorName));
+                var logMessage: string = throwInternal.getCall(0).args[2];
+                Assert.notEqual(-1, logMessage.indexOf(expectedErrorName));
             }
         });
 
@@ -1194,7 +1194,7 @@ class AppInsightsTests extends TestClass {
             () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
 
                 // act
@@ -1212,7 +1212,7 @@ class AppInsightsTests extends TestClass {
             () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
 
                 // act
@@ -1303,7 +1303,7 @@ class AppInsightsTests extends TestClass {
             () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
 
                 // act
@@ -1321,7 +1321,7 @@ class AppInsightsTests extends TestClass {
             () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
 
                 // act
@@ -1590,7 +1590,7 @@ class AppInsightsTests extends TestClass {
                 var snippet = this.getAppInsightsSnippet();
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
                 var trackStub = this.sandbox.stub(appInsights.context, "track");
-                var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
 
                 // Act
                 for (var i = 0; i < 20; ++i) {

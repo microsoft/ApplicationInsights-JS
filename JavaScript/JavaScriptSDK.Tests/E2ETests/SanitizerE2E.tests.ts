@@ -27,7 +27,7 @@ class Sanitizer2ETests extends TestClass {
         var sender = this.sandbox.spy(testAi.context._sender, "send");
         var errorSpy = this.sandbox.spy(testAi.context._sender, "_onError");
         var successSpy = this.sandbox.spy(testAi.context._sender, "_onSuccess");
-        var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+        var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
 
         return {
             appInsights: testAi,

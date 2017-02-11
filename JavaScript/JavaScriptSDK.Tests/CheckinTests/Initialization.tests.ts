@@ -1,5 +1,4 @@
-﻿
-/// <reference path="..\TestFramework\Common.ts" />
+﻿/// <reference path="..\TestFramework\Common.ts" />
 /// <reference path="../../javascriptsdk/initialization.ts" />
 /// <reference path="../../javascriptsdk/appinsights.ts" />
 
@@ -77,10 +76,10 @@ class InitializationTests extends TestClass {
                     maxAjaxCallsPerView: undefined
                 };
 
-                var snippet = <Microsoft.ApplicationInsights.Snippet> {
+                var snippet = <Microsoft.ApplicationInsights.Snippet>{
                     config: emptyConfig,
                     queue: []
-                    }
+                }
 
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
 
@@ -104,7 +103,7 @@ class InitializationTests extends TestClass {
             test: () => {
                 var userConfig = this.getAppInsightsSnippet();
 
-                var snippet = <Microsoft.ApplicationInsights.Snippet> {
+                var snippet = <Microsoft.ApplicationInsights.Snippet>{
                     config: userConfig,
                     queue: []
                 }
@@ -128,30 +127,30 @@ class InitializationTests extends TestClass {
 
         this.testCase({
             name: "InitializationTests: invalid sampling values are treated as sampling OFF (sampling percentage gets set to 100)",
-            test: () => {                
-                var res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: 0 });
+            test: () => {
+                var res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>{ samplingPercentage: 0 });
                 Assert.equal(100, res.samplingPercentage);
 
-                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: "" });
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>{ samplingPercentage: "" });
                 Assert.equal(100, res.samplingPercentage);
 
-                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: null });
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>{ samplingPercentage: null });
                 Assert.equal(100, res.samplingPercentage);
 
-                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: undefined });
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>{ samplingPercentage: undefined });
                 Assert.equal(100, res.samplingPercentage);
 
-                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: false });
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>{ samplingPercentage: false });
                 Assert.equal(100, res.samplingPercentage);
 
-                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: -123 });
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>{ samplingPercentage: -123 });
                 Assert.equal(100, res.samplingPercentage);
 
-                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: 123 });
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>{ samplingPercentage: 123 });
                 Assert.equal(100, res.samplingPercentage);
 
                 // "50" is treated as correct number and doesn't reset sampling percentage to 100.
-                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any> { samplingPercentage: "50" });
+                res = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>{ samplingPercentage: "50" });
                 Assert.equal(50, res.samplingPercentage);
             }
         });
@@ -160,7 +159,7 @@ class InitializationTests extends TestClass {
             name: "InitializationTests: polling for log messages",
             test: () => {
                 var userConfig = this.getAppInsightsSnippet();
-                var snippet = <Microsoft.ApplicationInsights.Snippet> {
+                var snippet = <Microsoft.ApplicationInsights.Snippet>{
                     config: userConfig,
                     queue: []
                 }
@@ -189,8 +188,8 @@ class InitializationTests extends TestClass {
 
                 clearInterval(poller);
 
-                
-                
+
+
             }
         });
 
@@ -238,23 +237,23 @@ class InitializationTests extends TestClass {
                 Assert.ok(config.emitLineDelimitedJson);
             }
         });
-        
+
         this.testCase({
             name: "InitializationTests: beforeunload handler is appropriately added",
             test: () => {
                 // Assemble
                 var userConfig = this.getAppInsightsSnippet();
-                var snippet = <Microsoft.ApplicationInsights.Snippet> {
+                var snippet = <Microsoft.ApplicationInsights.Snippet>{
                     config: userConfig,
                     queue: []
                 };
                 var addEventHandlerStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, 'addEventHandler').returns(true);
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
                 var appInsightsLocal = init.loadAppInsights();
-                
+
                 // Act
                 init.addHousekeepingBeforeUnload(appInsightsLocal);
-                
+
                 // Assert
                 Assert.ok(addEventHandlerStub.calledOnce);
                 Assert.equal(addEventHandlerStub.getCall(0).args[0], 'beforeunload');
@@ -275,12 +274,12 @@ class InitializationTests extends TestClass {
                 var addEventHandlerStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, 'addEventHandler').returns(true);
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
                 var appInsightsLocal = init.loadAppInsights();
-                
+
                 // Act
                 init.addHousekeepingBeforeUnload(appInsightsLocal);
-                
+
                 // Assert
-                Assert.ok(addEventHandlerStub.notCalled);                
+                Assert.ok(addEventHandlerStub.notCalled);
             }
         });
     }

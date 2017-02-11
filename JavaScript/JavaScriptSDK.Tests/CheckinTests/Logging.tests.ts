@@ -61,7 +61,7 @@ class LoggingTests extends TestClass {
                 Assert.ok(!this.InternalLogging.enableDebugExceptions(), "enableDebugExceptions is false by default");
 
                 // act
-                this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new this.InternalLoggingMessage(++i, "error!"));
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, ++i, "error!", null, true);
 
                 // verify
                 Assert.ok(!throwSpy || throwSpy.calledOnce, "console.warn was called instead of throwing while enableDebugExceptions is false");
@@ -71,7 +71,7 @@ class LoggingTests extends TestClass {
 
                 // verify
                 Assert.throws(() =>
-                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new this.InternalLoggingMessage(++i, "error!")),
+                    this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, ++i, "error!", null, true),
                     "error is thrown when enableDebugExceptions is true");
                 Assert.ok(!throwSpy || throwSpy.calledOnce, "console.warn was not called when the error was thrown");
             }
@@ -86,17 +86,17 @@ class LoggingTests extends TestClass {
 
                 var i = 2;
                 // act
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new this.InternalLoggingMessage(++i, "error!"));
-                this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new this.InternalLoggingMessage(++i, "error!"));
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new this.InternalLoggingMessage(++i, "error!"));
-                this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new this.InternalLoggingMessage(++i, "error!"));
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, ++i, "error!");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, ++i, "error!", null, true);
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, ++i, "error!");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, ++i, "error!", null, true);
 
                 //verify
                 Assert.equal(4, this.InternalLogging.queue.length);
-                Assert.equal("AI (Internal): " + "NONUSRACT_BrowserCannotWriteLocalStorage message:\"error!\"", this.InternalLogging.queue[0].message);
-                Assert.equal("AI: " + "NONUSRACT_BrowserCannotWriteSessionStorage message:\"error!\"", this.InternalLogging.queue[1].message);
-                Assert.equal("AI (Internal): " + "NONUSRACT_BrowserFailedRemovalFromLocalStorage message:\"error!\"", this.InternalLogging.queue[2].message);
-                Assert.equal("AI: " + "NONUSRACT_BrowserFailedRemovalFromSessionStorage message:\"error!\"", this.InternalLogging.queue[3].message);
+                Assert.equal("AI (Internal): " + "BrowserCannotWriteLocalStorage message:\"error!\"", this.InternalLogging.queue[0].message);
+                Assert.equal("AI: " + "BrowserCannotWriteSessionStorage message:\"error!\"", this.InternalLogging.queue[1].message);
+                Assert.equal("AI (Internal): " + "BrowserFailedRemovalFromLocalStorage message:\"error!\"", this.InternalLogging.queue[2].message);
+                Assert.equal("AI: " + "BrowserFailedRemovalFromSessionStorage message:\"error!\"", this.InternalLogging.queue[3].message);
             }
         });
 
@@ -108,23 +108,23 @@ class LoggingTests extends TestClass {
 
                 var i = 0;
                 // act
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new this.InternalLoggingMessage(++i, "error!"));
-                this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, new this.InternalLoggingMessage(++i, "error!"));
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, ++i, "error!");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.WARNING, ++i, "error!", null, true);
 
                 Assert.equal(0, this.InternalLogging.queue.length);
-                
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new this.InternalLoggingMessage(++i, "error!"));
-                this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new this.InternalLoggingMessage(++i, "error!"));
+
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, ++i, "error!");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, ++i, "error!", null, true);
 
                 //verify
                 Assert.equal(2, this.InternalLogging.queue.length);
-                Assert.equal("AI (Internal): " + "NONUSRACT_BrowserCannotWriteLocalStorage message:\"error!\"", this.InternalLogging.queue[0].message);
-                Assert.equal("AI: " + "NONUSRACT_BrowserCannotWriteSessionStorage message:\"error!\"", this.InternalLogging.queue[1].message);
+                Assert.equal("AI (Internal): " + "BrowserCannotWriteLocalStorage message:\"error!\"", this.InternalLogging.queue[0].message);
+                Assert.equal("AI: " + "BrowserCannotWriteSessionStorage message:\"error!\"", this.InternalLogging.queue[1].message);
             }
         });
 
         this.testCase({
-            name: "LoggingTests: throwInternalUserActionable adds to the queue and calls console.warn",
+            name: "LoggingTests: throwInternal adds to the queue and calls console.warn",
             test: () => {
                 // setup
                 var throwSpy = null;
@@ -132,15 +132,14 @@ class LoggingTests extends TestClass {
                     throwSpy = this.sandbox.spy(console, "warn");
 
                     // act
-                    var message = new this.InternalLoggingMessage(1, "error!");
                     this.InternalLogging.enableDebugExceptions = () => false;
-                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                    this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 1, "error!", null, true);
 
                     // verify
                     Assert.ok(throwSpy.calledOnce, "console.warn was not called while debug mode was false");
                     Assert.equal(1, this.InternalLogging.queue.length);
-                    Assert.equal("AI: " + "NONUSRACT_BrowserCannotReadLocalStorage message:\"error!\"", this.InternalLogging.queue[0].message);
-                    
+                    Assert.equal("AI: " + "BrowserCannotReadLocalStorage message:\"error!\"", this.InternalLogging.queue[0].message);
+
                 } catch (e) {
                     Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
                 }
@@ -148,7 +147,7 @@ class LoggingTests extends TestClass {
         });
 
         this.testCase({
-            name: "LoggingTests: throwInternalNonUserActionable adds to the queue and calls console.warn",
+            name: "LoggingTests: throwInternal adds to the queue and calls console.warn",
             test: () => {
                 // setup
                 var throwSpy = null;
@@ -156,16 +155,15 @@ class LoggingTests extends TestClass {
                     throwSpy = this.sandbox.spy(console, "warn");
 
                     // act
-                    var message = new this.InternalLoggingMessage(1, "error!");
                     this.InternalLogging.enableDebugExceptions = () => false;
                     this.InternalLogging.verboseLogging = () => true;
-                    this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                    this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 1, "error!");
 
                     // verify
                     Assert.ok(throwSpy.calledOnce, "console.warn was not called while debug mode was false");
 
                     Assert.equal(1, this.InternalLogging.queue.length);
-                    Assert.equal("AI (Internal): " + "NONUSRACT_BrowserCannotReadLocalStorage message:\"error!\"", this.InternalLogging.queue[0].message);
+                    Assert.equal("AI (Internal): " + "BrowserCannotReadLocalStorage message:\"error!\"", this.InternalLogging.queue[0].message);
 
                 } catch (e) {
                     Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
@@ -174,7 +172,7 @@ class LoggingTests extends TestClass {
         });
 
         this.testCase({
-            name: "LoggingTests: throwInternalNonUserActionable does not call console.warn without verboseLogging",
+            name: "LoggingTests: throwInternal does not call console.warn without verboseLogging",
             test: () => {
                 // setup
                 var throwSpy = null;
@@ -182,16 +180,15 @@ class LoggingTests extends TestClass {
                     throwSpy = this.sandbox.spy(console, "warn");
 
                     // act
-                    var message = new this.InternalLoggingMessage(1, "error!");
                     this.InternalLogging.enableDebugExceptions = () => false;
                     this.InternalLogging.verboseLogging = () => false;
-                    this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                    this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 1, "error!");
 
                     // verify
                     Assert.ok(throwSpy.notCalled, "console.warn was called while verboseLogging mode was false");
 
                     Assert.equal(1, this.InternalLogging.queue.length);
-                    Assert.equal("AI (Internal): " + "NONUSRACT_BrowserCannotReadLocalStorage message:\"error!\"", this.InternalLogging.queue[0].message);
+                    Assert.equal("AI (Internal): " + "BrowserCannotReadLocalStorage message:\"error!\"", this.InternalLogging.queue[0].message);
 
                 } catch (e) {
                     Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
@@ -200,7 +197,7 @@ class LoggingTests extends TestClass {
         });
 
         this.testCase({
-            name: "LoggingTests: throwInternalUserActionable logs only one message of a given type to console (without verboseLogging)",
+            name: "LoggingTests: throwInternal (userActionable) logs only one message of a given type to console (without verboseLogging)",
             test: () => {
                 // setup
                 var throwSpy = null;
@@ -209,15 +206,12 @@ class LoggingTests extends TestClass {
                     this.InternalLogging.enableDebugExceptions = () => false;
                     this.InternalLogging.verboseLogging = () => false;
 
-                    var message1 = new this.InternalLoggingMessage(1, "error!");
-                    var message2 = new this.InternalLoggingMessage(2, "error 2!");
-
                     // act
                     // send 4 messages, with 2 distinct types
-                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
-                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
-                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
-                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+                    this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 1, "error!", null, true);
+                    this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 2, "error 2!", null, true);
+                    this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 1, "error!", null, true);
+                    this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 2, "error 2!", null, true);
 
                     // verify
                     Assert.ok(throwSpy.calledTwice, "console.warn was called only once per each message type");
@@ -229,7 +223,7 @@ class LoggingTests extends TestClass {
         });
 
         this.testCase({
-            name: "LoggingTests: throwInternalUserActionable always log to console with verbose logging",
+            name: "LoggingTests: throwInternal (userActionable) always log to console with verbose logging",
             test: () => {
                 // setup
                 var throwSpy = null;
@@ -238,15 +232,12 @@ class LoggingTests extends TestClass {
                     this.InternalLogging.enableDebugExceptions = () => false;
                     this.InternalLogging.verboseLogging = () => true;
 
-                    var message1 = new this.InternalLoggingMessage(1, "error!");
-                    var message2 = new this.InternalLoggingMessage(2, "error 2!");
-
                     // act
                     // send 4 messages, with 2 distinct types
-                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
-                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
-                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
-                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+                    this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 1, "error!", null, true);
+                    this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 2, "error 2!", null, true);
+                    this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 1, "error!", null, true);
+                    this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 2, "error 2!", null, true);
 
                     // verify
                     Assert.equal(4, throwSpy.callCount, "console.warn was called for each message");
@@ -272,7 +263,7 @@ class LoggingTests extends TestClass {
                     // verify
                     Assert.ok(throwSpy.calledOnce, "console.warn was called once");
                     Assert.equal(0, this.InternalLogging.queue.length);
-                    
+
                 } catch (e) {
                     Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
                 }
@@ -291,11 +282,11 @@ class LoggingTests extends TestClass {
 
                     // act
                     this.InternalLogging.enableDebugExceptions = () => false;
-                    this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, new this.InternalLoggingMessage(1, "error!"));
+                    this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 1, "error!", null, true);
 
                     // verify
                     Assert.ok(throwSpy.calledOnce, "console.log was called when console.warn was not present");
-                    
+
                 } catch (e) {
                     Assert.ok(true, "IE8 breaks sinon spies on window objects\n" + e.toString());
                 } finally {
@@ -308,37 +299,31 @@ class LoggingTests extends TestClass {
             name: "LoggingTests: logInternalMessage throttles messages when the throttle limit is reached",
             test: () => {
 
-                var i = 0;
                 var maxAllowedInternalMessages = 2;
-                var message1 = new this.InternalLoggingMessage(++i, "");
-                var message2 = new this.InternalLoggingMessage(++i, "");
-                var message3 = new this.InternalLoggingMessage(++i, "");
-                var message4 = new this.InternalLoggingMessage(++i, "");
-             
+
                 // setup
                 this.InternalLogging.enableDebugExceptions = () => false;
                 this.InternalLogging.setMaxInternalMessageLimit(maxAllowedInternalMessages);
                 this.InternalLogging.resetInternalMessageCount();
 
                 // act
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message3);
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message4);
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, Microsoft.ApplicationInsights._InternalMessageId.BrowserCannotReadLocalStorage, "");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, Microsoft.ApplicationInsights._InternalMessageId.BrowserCannotReadSessionStorage, "");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, Microsoft.ApplicationInsights._InternalMessageId.BrowserCannotWriteLocalStorage, "");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, Microsoft.ApplicationInsights._InternalMessageId.BrowserCannotWriteSessionStorage, "");
 
                 // verify
                 Assert.equal(maxAllowedInternalMessages + 1, this.InternalLogging.queue.length); // Since we always send one "extra" event to denote that limit was reached
-                Assert.equal(this.InternalLogging.queue[0], message1);
-                Assert.equal(this.InternalLogging.queue[1], message2);
-                Assert.equal(this.InternalLogging.queue[2].message, "NONUSRACT_MessageLimitPerPVExceeded message:\"Internal events throttle limit per PageView reached for this app.\"");
+                Assert.equal(this.InternalLogging.queue[0].message, "AI (Internal): BrowserCannotReadLocalStorage");
+                Assert.equal(this.InternalLogging.queue[1].message, "AI (Internal): BrowserCannotReadSessionStorage");
+                Assert.equal(this.InternalLogging.queue[2].message, "AI (Internal): MessageLimitPerPVExceeded message:\"Internal events throttle limit per PageView reached for this app.\"");
             }
         });
 
         this.testCase({
-            name: "LoggingTests: throwInternalNonUserActionable should call logInternalMessage",
+            name: "LoggingTests: throwInternal should call logInternalMessage",
             test: () => {
                 var maxAllowedInternalMessages = 2;
-                var message1 = new this.InternalLoggingMessage(1, "");
                 var logInternalMessageStub = this.sandbox.stub(this.InternalLogging, 'logInternalMessage');
 
                 // setup
@@ -346,11 +331,11 @@ class LoggingTests extends TestClass {
                 this.InternalLogging.resetInternalMessageCount();
 
                 // act
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, 1, "");
 
                 // verify
-                Assert.ok(logInternalMessageStub.calledOnce, 'logInternalMessage was not called by throwInternalNonUserActionable');
-                
+                Assert.ok(logInternalMessageStub.calledOnce, 'logInternalMessage was not called by throwInternal');
+
             }
         });
 
@@ -358,26 +343,27 @@ class LoggingTests extends TestClass {
             name: "LoggingTests: only single message of specific type can be sent within the same session",
             test: () => {
                 var maxAllowedInternalMessages = 2;
-                var message1 = new this.InternalLoggingMessage(1, "1");
-                var message2 = new this.InternalLoggingMessage(2, "2");
 
                 // setup
                 this.InternalLogging.enableDebugExceptions = () => false;
                 this.InternalLogging.resetInternalMessageCount();
                 this.InternalLogging.clearInternalMessageLoggedTypes();
 
+                var id1 = Microsoft.ApplicationInsights._InternalMessageId.BrowserCannotReadLocalStorage;
+                var id2 = Microsoft.ApplicationInsights._InternalMessageId.BrowserCannotReadSessionStorage;
+
                 // act
                 // send 4 messages, with 2 distinct types
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id1, "1");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id2, "2");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id1, "1");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id2, "2");
 
                 // verify
                 // only two messages should be in the queue, because we have to distinct types
                 Assert.equal(2, this.InternalLogging.queue.length);
-                Assert.equal(this.InternalLogging.queue[0], message1);
-                Assert.equal(this.InternalLogging.queue[1], message2);              
+                Assert.equal(this.InternalLogging.queue[0].message, "AI (Internal): BrowserCannotReadLocalStorage message:\"1\"");
+                Assert.equal(this.InternalLogging.queue[1].message, "AI (Internal): BrowserCannotReadSessionStorage message:\"2\"");
             }
         });
 
@@ -385,8 +371,8 @@ class LoggingTests extends TestClass {
             name: "LoggingTests: only single message of specific type can be sent within the same page view when session storage is not available",
             test: () => {
                 var maxAllowedInternalMessages = 2;
-                var message1 = new this.InternalLoggingMessage(1, "1");
-                var message2 = new this.InternalLoggingMessage(2, "2");
+                var id1 = Microsoft.ApplicationInsights._InternalMessageId.BrowserCannotReadLocalStorage;
+                var id2 = Microsoft.ApplicationInsights._InternalMessageId.BrowserCannotReadSessionStorage;
 
                 // disable session storage
                 var utilCanUseSession = Microsoft.ApplicationInsights.Util.canUseSessionStorage;
@@ -401,39 +387,39 @@ class LoggingTests extends TestClass {
 
                 // act
                 // send 4 messages, with 2 distinct types
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id1, "1");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id2, "2");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id1, "1");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id2, "2");
 
                 // verify
                 // only two messages should be in the queue, because we have to distinct types
                 Assert.equal(2, this.InternalLogging.queue.length);
-                Assert.equal(this.InternalLogging.queue[0], message1);
-                Assert.equal(this.InternalLogging.queue[1], message2);
+                Assert.equal(this.InternalLogging.queue[0].message, "AI (Internal): BrowserCannotReadLocalStorage message:\"1\"");
+                Assert.equal(this.InternalLogging.queue[1].message, "AI (Internal): BrowserCannotReadSessionStorage message:\"2\"");
 
                 // clean up - reset session storage
                 Microsoft.ApplicationInsights.Util.canUseSessionStorage = utilCanUseSession;
             }
         });
-        
+
         this.testCase({
-            name: "LoggingTests: throwInternalUserActionable should call logInternalMessage",
+            name: "LoggingTests: throwInternal (user actionable) should call logInternalMessage",
             test: () => {
                 var maxAllowedInternalMessages = 2;
-                var message = new this.InternalLoggingMessage(1, "Internal Test Event");
                 var logInternalMessageStub = this.sandbox.stub(this.InternalLogging, 'logInternalMessage');
+                var id1 = Microsoft.ApplicationInsights._InternalMessageId.BrowserCannotReadLocalStorage;
 
                 // setup
                 this.InternalLogging.enableDebugExceptions = () => false;
                 this.InternalLogging.resetInternalMessageCount();
 
                 // act
-                this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message);
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id1, "Internal Test Event", null, true);
 
                 // verify
-                Assert.ok(logInternalMessageStub.calledOnce, 'logInternalMessage was not called by throwInternalUserActionable');
-                
+                Assert.ok(logInternalMessageStub.calledOnce, 'logInternalMessage was not called by throwInternal');
+
             }
         });
 
@@ -441,11 +427,10 @@ class LoggingTests extends TestClass {
             name: "LoggingTests: logInternalMessage will log events when the throttle is reset",
             test: () => {
                 var maxAllowedInternalMessages = 2;
-                var i = 0;
-                var message1 = new this.InternalLoggingMessage(++i, "1");
-                var message2 = new this.InternalLoggingMessage(++i, "2");
-                var message3 = new this.InternalLoggingMessage(++i, "3");
-                var message4 = new this.InternalLoggingMessage(++i, "4");
+                var id1 = Microsoft.ApplicationInsights._InternalMessageId.BrowserCannotReadLocalStorage;
+                var id2 = Microsoft.ApplicationInsights._InternalMessageId.BrowserCannotReadSessionStorage;
+                var id3 = Microsoft.ApplicationInsights._InternalMessageId.BrowserCannotWriteLocalStorage;
+                var id4 = Microsoft.ApplicationInsights._InternalMessageId.BrowserCannotWriteSessionStorage;
 
                 // setup
                 this.InternalLogging.enableDebugExceptions = () => false;
@@ -454,10 +439,10 @@ class LoggingTests extends TestClass {
                 this.InternalLogging.clearInternalMessageLoggedTypes();
 
                 // act
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
-                this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message3);
-                this.InternalLogging.throwInternalUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message4);
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id1, "1");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id2, "2", null, true);
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id3, "3");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id4, "4", null, true);
 
                 // verify that internal events are throttled
                 Assert.equal(this.InternalLogging.queue.length, maxAllowedInternalMessages + 1); // Since we always send one "extra" event to denote that limit was reached
@@ -468,13 +453,13 @@ class LoggingTests extends TestClass {
                 this.InternalLogging.resetInternalMessageCount();
                 this.InternalLogging.clearInternalMessageLoggedTypes();
                 // Send some internal messages
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message1);
-                this.InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, message2);
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id1, "1");
+                this.InternalLogging.throwInternal(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL, id2, "2");
 
                 // verify again
                 Assert.equal(this.InternalLogging.queue.length, maxAllowedInternalMessages + 1); // Since we always send one "extra" event to denote that limit was reached
-                Assert.equal(this.InternalLogging.queue[0], message1);
-                Assert.equal(this.InternalLogging.queue[1], message2);
+                Assert.equal(this.InternalLogging.queue[0].message, "AI (Internal): BrowserCannotReadLocalStorage message:\"1\"");
+                Assert.equal(this.InternalLogging.queue[1].message, "AI (Internal): BrowserCannotReadSessionStorage message:\"2\"");
             }
         });
     }

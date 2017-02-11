@@ -308,7 +308,7 @@ class SendBufferTests extends TestClass {
             test: () => {
                 var buffer = this.getSessionStorageSendBuffer();
 
-                var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
 
                 for (var i = 0; i < 2000; i++) {
                     buffer.enqueue("i=" + i);

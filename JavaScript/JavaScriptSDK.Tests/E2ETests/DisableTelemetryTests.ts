@@ -30,7 +30,7 @@ class DisableTelemetryTests extends TestClass {
         this.errorSpy = this.sandbox.spy(sender, "_onError");
         this.successSpy = this.sandbox.stub(sender, "_onSuccess");
 
-        this.loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+        this.loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
     }
 
     /** Method called after each test method has completed */

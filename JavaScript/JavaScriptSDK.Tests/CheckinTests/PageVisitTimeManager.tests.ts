@@ -2,8 +2,7 @@
 /// <reference path="../../JavaScriptSDK/Telemetry/PageVisitTimeManager.ts" />
 class PageVisitTimeManagerTests extends TestClass {
 
-    private throwInternalNonUserActionableSpy;
-    private throwInternalUserActionableSpy;
+    private throwInternal;
     private getStorageObjectStub;
 
     /** Method called before the start of each test method */
@@ -11,10 +10,8 @@ class PageVisitTimeManagerTests extends TestClass {
         var storage = this.getMockStorage();
         this.getStorageObjectStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "_getSessionStorageObject",() => storage);
 
-        this.throwInternalNonUserActionableSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
-        this.throwInternalUserActionableSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+        this.throwInternal = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
     }
-
 
     public registerTests() {
 

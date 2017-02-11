@@ -77,12 +77,14 @@ module Microsoft.ApplicationInsights {
                         ajaxMonitorInstance.openHandler(this, method, url, async);
                     }
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(
+                    _InternalLogging.throwInternal(
                         LoggingSeverity.CRITICAL,
-                        new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedMonitorAjaxOpen, "Failed to monitor XMLHttpRequest.open, monitoring data for this ajax call may be incorrect.", {
+                        _InternalMessageId.FailedMonitorAjaxOpen,
+                        "Failed to monitor XMLHttpRequest.open, monitoring data for this ajax call may be incorrect.",
+                        {
                             ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(this),
                             exception: Microsoft.ApplicationInsights.Util.dump(e)
-                        }));
+                        });
                 }
 
                 return originalOpen.apply(this, arguments);
@@ -121,12 +123,14 @@ module Microsoft.ApplicationInsights {
                         ajaxMonitorInstance.sendHandler(this, content);
                     }
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(
+                    _InternalLogging.throwInternal(
                         LoggingSeverity.CRITICAL,
-                        new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedMonitorAjaxSend, "Failed to monitor XMLHttpRequest, monitoring data for this ajax call may be incorrect.", {
+                        _InternalMessageId.FailedMonitorAjaxSend,
+                        "Failed to monitor XMLHttpRequest, monitoring data for this ajax call may be incorrect.",
+                        {
                             ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(this),
                             exception: Microsoft.ApplicationInsights.Util.dump(e)
-                        }));
+                        });
                 }
 
                 return originalSend.apply(this, arguments);
@@ -156,12 +160,14 @@ module Microsoft.ApplicationInsights {
                         (<XMLHttpRequestInstrumented>this).ajaxData.xhrMonitoringState.abortDone = true;
                     }
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(
+                    _InternalLogging.throwInternal(
                         LoggingSeverity.CRITICAL,
-                        new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedMonitorAjaxAbort, "Failed to monitor XMLHttpRequest.abort, monitoring data for this ajax call may be incorrect.", {
+                        _InternalMessageId.FailedMonitorAjaxAbort,
+                        "Failed to monitor XMLHttpRequest.abort, monitoring data for this ajax call may be incorrect.",
+                        {
                             ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(this),
                             exception: Microsoft.ApplicationInsights.Util.dump(e)
-                        }));
+                        });
                 }
 
                 return originalAbort.apply(this, arguments);
@@ -182,12 +188,14 @@ module Microsoft.ApplicationInsights {
 
                     // ignore messages with c00c023f, as this a known IE9 XHR abort issue
                     if (!exceptionText || exceptionText.toLowerCase().indexOf("c00c023f") == -1) {
-                        _InternalLogging.throwInternalNonUserActionable(
+                        _InternalLogging.throwInternal(
                             LoggingSeverity.CRITICAL,
-                            new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedMonitorAjaxRSC, "Failed to monitor XMLHttpRequest 'readystatechange' event handler, monitoring data for this ajax call may be incorrect.", {
+                            _InternalMessageId.FailedMonitorAjaxRSC,
+                            "Failed to monitor XMLHttpRequest 'readystatechange' event handler, monitoring data for this ajax call may be incorrect.",
+                            {
                                 ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr),
                                 exception: Microsoft.ApplicationInsights.Util.dump(e)
-                            }));
+                            });
                     }
                 }
             });
@@ -199,13 +207,15 @@ module Microsoft.ApplicationInsights {
             xhr.ajaxData.CalculateMetrics();
 
             if (xhr.ajaxData.ajaxTotalDuration < 0) {
-                _InternalLogging.throwInternalNonUserActionable(
+                _InternalLogging.throwInternal(
                     LoggingSeverity.WARNING,
-                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedMonitorAjaxDur, "Failed to calculate the duration of the ajax call, monitoring data for this ajax call won't be sent.", {
+                    _InternalMessageId.FailedMonitorAjaxDur,
+                    "Failed to calculate the duration of the ajax call, monitoring data for this ajax call won't be sent.",
+                    {
                         ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr),
                         requestSentTime: xhr.ajaxData.requestSentTime,
                         responseFinishedTime: xhr.ajaxData.responseFinishedTime
-                    }));
+                    });
             }
             else {
                 this.appInsights.trackDependency(

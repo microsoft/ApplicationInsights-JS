@@ -37,7 +37,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
 
             // validation truncated the length.  We need to add uniqueness
             if (field.length !== origLength) {
-                var i = 0;                
+                var i = 0;
                 var uniqueField = field;
                 while (map[uniqueField] !== undefined) {
                     i++;
@@ -56,9 +56,11 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
                 // truncate the string to 150 chars
                 if (name.length > DataSanitizer.MAX_NAME_LENGTH) {
                     name = name.substring(0, DataSanitizer.MAX_NAME_LENGTH);
-                    _InternalLogging.throwInternalUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.USRACT_NameTooLong, "name is too long.  It has been truncated to " + DataSanitizer.MAX_NAME_LENGTH + " characters.",
-                            { name: name }));
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.NameTooLong,
+                        "name is too long.  It has been truncated to " + DataSanitizer.MAX_NAME_LENGTH + " characters.",
+                        { name: name }, true);
                 }
             }
 
@@ -70,9 +72,11 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
                 value = Util.trim(value);
                 if (value.toString().length > DataSanitizer.MAX_STRING_LENGTH) {
                     value = value.toString().substring(0, DataSanitizer.MAX_STRING_LENGTH);
-                    _InternalLogging.throwInternalUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.USRACT_StringValueTooLong, "string value is too long. It has been truncated to " + DataSanitizer.MAX_STRING_LENGTH + " characters.",
-                            { value: value }));
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.StringValueTooLong,
+                        "string value is too long. It has been truncated to " + DataSanitizer.MAX_STRING_LENGTH + " characters.",
+                        { value: value }, true);
                 }
             }
 
@@ -84,9 +88,12 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
                 url = Util.trim(url);
                 if (url.length > DataSanitizer.MAX_URL_LENGTH) {
                     url = url.substring(0, DataSanitizer.MAX_URL_LENGTH);
-                    _InternalLogging.throwInternalUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.USRACT_UrlTooLong, "url is too long, it has been truncated to " + DataSanitizer.MAX_URL_LENGTH + " characters.",
-                            { url: url }));
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.UrlTooLong,
+                        "url is too long, it has been truncated to " + DataSanitizer.MAX_URL_LENGTH + " characters.",
+                        { url: url },
+                        true);
                 }
             }
 
@@ -97,9 +104,11 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
             if (message) {
                 if (message.length > DataSanitizer.MAX_MESSAGE_LENGTH) {
                     message = message.substring(0, DataSanitizer.MAX_MESSAGE_LENGTH);
-                    _InternalLogging.throwInternalUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.USRACT_MessageTruncated, "message is too long, it has been truncated to " + DataSanitizer.MAX_MESSAGE_LENGTH + " characters.",
-                            { message: message }));
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING, _InternalMessageId.MessageTruncated,
+                        "message is too long, it has been truncated to " + DataSanitizer.MAX_MESSAGE_LENGTH + " characters.",
+                        { message: message },
+                        true);
                 }
             }
 
@@ -110,9 +119,9 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
             if (exception) {
                 if (exception.length > DataSanitizer.MAX_EXCEPTION_LENGTH) {
                     exception = exception.substring(0, DataSanitizer.MAX_EXCEPTION_LENGTH);
-                    _InternalLogging.throwInternalUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.USRACT_ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizer.MAX_EXCEPTION_LENGTH + " characters.",
-                            { exception: exception }));
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING, _InternalMessageId.ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizer.MAX_EXCEPTION_LENGTH + " characters.",
+                        { exception: exception }, true);
                 }
             }
 
