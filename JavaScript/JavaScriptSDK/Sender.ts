@@ -433,11 +433,9 @@ module Microsoft.ApplicationInsights {
             if (queued) {
                 this._buffer.markAsSent(payload);
             } else {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
                     new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, ". " +
                         "Failed to send telemetry with Beacon API."));
-
-                // consider switching back to XHR
             }
         }
 
