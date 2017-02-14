@@ -144,9 +144,11 @@ module Microsoft.ApplicationInsights {
             if (this._buffer.length >= SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
                 // sent internal log only once per page view
                 if (!this._bufferFullMessageSent) {
-                    _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING,
-                        new _InternalLogMessage(_InternalMessageId.USRACT_SessionStorageBufferFull,
-                            "Maximum buffer size reached: " + this._buffer.length));
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.SessionStorageBufferFull,
+                        "Maximum buffer size reached: " + this._buffer.length,
+                        true);
                     this._bufferFullMessageSent = true;
                 }
                 return;
@@ -195,9 +197,11 @@ module Microsoft.ApplicationInsights {
                 if (sentElements.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
                     // We send telemetry normally. If the SENT_BUFFER is too big we don't add new elements
                     // until we receive a response from the backend and the buffer has free space again (see clearSent method)
-                    _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL,
-                        new _InternalLogMessage(_InternalMessageId.USRACT_SessionStorageBufferFull,
-                            "Sent buffer reached its maximum size: " + sentElements.length));
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.CRITICAL,
+                        _InternalMessageId.SessionStorageBufferFull,
+                        "Sent buffer reached its maximum size: " + sentElements.length,
+                        true);
 
                     sentElements.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
                 }
@@ -243,10 +247,10 @@ module Microsoft.ApplicationInsights {
                     }
                 }
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
-                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToRestoreStorageBuffer,
+                _InternalLogging.throwInternal(LoggingSeverity.CRITICAL,
+                    _InternalMessageId.FailedToRestoreStorageBuffer,
                         " storage key: " + key + ", " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) }));
+                        { exception: Util.dump(e) });
             }
 
             return [];
@@ -261,10 +265,10 @@ module Microsoft.ApplicationInsights {
                 // telemetry is stored in the _buffer array so we won't loose any items
                 Util.setSessionStorage(key, JSON.stringify([]));
 
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
-                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToSetStorageBuffer,
+                _InternalLogging.throwInternal(LoggingSeverity.WARNING,
+                    _InternalMessageId.FailedToSetStorageBuffer,
                         " storage key: " + key + ", " + Util.getExceptionName(e) + ". Buffer cleared",
-                        { exception: Util.dump(e) }));
+                        { exception: Util.dump(e) });
             }
         }
     }

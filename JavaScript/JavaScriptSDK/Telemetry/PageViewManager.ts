@@ -60,7 +60,7 @@ module Microsoft.ApplicationInsights.Telemetry {
                     measurements);
                 this.appInsights.flush();
                 pageViewSent = true;
-            }                     
+            }
 
             if (!pageViewSent && (this.overridePageViewDuration || !isNaN(duration))) {
                 // 1, 2, 4 cases
@@ -78,9 +78,10 @@ module Microsoft.ApplicationInsights.Telemetry {
 
             if (!Telemetry.PageViewPerformance.isPerformanceTimingSupported()) {
                 // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage(
-                    _InternalMessageId.NONUSRACT_NavigationTimingNotSupported,
-                    "trackPageView: navigation timing API used for calculation of page duration is not supported in this browser. This page view will be collected without duration and timing info."));
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.NavigationTimingNotSupported,
+                    "trackPageView: navigation timing API used for calculation of page duration is not supported in this browser. This page view will be collected without duration and timing info.");
                 return;
             }
 
@@ -115,9 +116,11 @@ module Microsoft.ApplicationInsights.Telemetry {
                         }
                     }
                 } catch (e) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(
-                        _InternalMessageId.NONUSRACT_TrackPVFailedCalc,
-                        "trackPageView failed on page load calculation: " + Util.getExceptionName(e), { exception: Util.dump(e) }));
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.CRITICAL,
+                        _InternalMessageId.TrackPVFailedCalc,
+                        "trackPageView failed on page load calculation: " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) });
                 }
             }, 100);
         }

@@ -235,7 +235,7 @@ class SnippetTests extends TestClass {
         var sender = this.sandbox.spy(appIn.context._sender, "send");
         var errorSpy = this.sandbox.spy(appIn.context._sender, "_onError");
         var successSpy = this.sandbox.spy(appIn.context._sender, "_onSuccess");
-        var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+        var loggingSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
 
         return {
             sender: sender,

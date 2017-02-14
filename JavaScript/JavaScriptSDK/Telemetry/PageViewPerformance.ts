@@ -76,21 +76,27 @@ module Microsoft.ApplicationInsights.Telemetry {
                 var dom = PageViewPerformance.getDuration(timing.responseEnd, timing.loadEventEnd);
 
                 if (total == 0) {
-                    _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_ErrorPVCalc, "error calculating page view performance.",
-                            { total: total, network: network, request: request, response: response, dom: dom }));
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.ErrorPVCalc,
+                        "error calculating page view performance.",
+                        { total: total, network: network, request: request, response: response, dom: dom });
 
                 } else if (!PageViewPerformance.shouldCollectDuration(total, network, request, response, dom)) {
-                    _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_InvalidDurationValue, "Invalid page load duration value. Browser perf data won't be sent.",
-                            { total: total, network: network, request: request, response: response, dom: dom }));
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.InvalidDurationValue,
+                        "Invalid page load duration value. Browser perf data won't be sent.",
+                        { total: total, network: network, request: request, response: response, dom: dom });
 
                 } else if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
                     // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
                     // in this case, don't report client performance from this page
-                    _InternalLogging.throwInternalNonUserActionable(
-                        LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_ClientPerformanceMathError, "client performance math error.",
-                            { total: total, network: network, request: request, response: response, dom: dom }));
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.ClientPerformanceMathError,
+                        "client performance math error.",
+                        { total: total, network: network, request: request, response: response, dom: dom });
 
                 } else {
                     this.durationMs = total;
