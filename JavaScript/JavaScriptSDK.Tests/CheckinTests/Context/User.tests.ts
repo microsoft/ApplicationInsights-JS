@@ -241,7 +241,7 @@ class UserContextTests extends TestClass {
                 // setup
                 var cookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie");
                 var user = new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
-                var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
                 cookieStub.reset();
 
                 // act
@@ -263,7 +263,7 @@ class UserContextTests extends TestClass {
                 // setup
                 var cookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie");
                 var user = new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
-                var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
 
                 // act
                 user.setAuthenticatedUserContext(undefined, undefined);
@@ -284,7 +284,7 @@ class UserContextTests extends TestClass {
                 // setup
                 var cookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie");
                 var user = new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
-                var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
 
                 // act
                 user.setAuthenticatedUserContext(undefined, '1234');
@@ -306,7 +306,7 @@ class UserContextTests extends TestClass {
                 var authAndAccountId = ['my|||special;id', '1234'];
                 var user = new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
                 var cookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie");
-                var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
 
                 // act
                 user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
@@ -329,7 +329,7 @@ class UserContextTests extends TestClass {
                 var user = new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
                 user.clearAuthenticatedUserContext();
                 var cookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie");
-                var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
 
                 // act
                 user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
@@ -351,7 +351,7 @@ class UserContextTests extends TestClass {
                 var authAndAccountId = ["\u05D0", "\u05D1"]; // Hebrew characters
                 var user = new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
                 var cookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie");
-                var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
 
                 // act
                 user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);

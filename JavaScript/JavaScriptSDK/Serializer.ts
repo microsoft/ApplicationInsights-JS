@@ -26,14 +26,12 @@ module Microsoft.ApplicationInsights {
             var output = {};
 
             if (!source) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL,
-                    new _InternalLogMessage(_InternalMessageId.USRACT_CannotSerializeObject, "cannot serialize object because it is null or undefined", { name: name }));
+                _InternalLogging.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSerializeObject, "cannot serialize object because it is null or undefined", { name: name }, true);
                 return output;
             }
 
             if (source[circularReferenceCheck]) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING,
-                    new _InternalLogMessage(_InternalMessageId.USRACT_CircularReferenceDetected, "Circular reference detected while serializing object", { name: name }));
+                _InternalLogging.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.CircularReferenceDetected, "Circular reference detected while serializing object", { name: name }, true);
                 return output;
             }
 
@@ -48,8 +46,7 @@ module Microsoft.ApplicationInsights {
                 } else if (Util.isArray(source)) {
                     output = Serializer._serializeArray(<any>source, name);
                 } else {
-                    _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING,
-                        new _InternalLogMessage(_InternalMessageId.USRACT_CannotSerializeObjectNonSerializable, "Attempting to serialize an object which does not implement ISerializable", { name: name }));
+                    _InternalLogging.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.CannotSerializeObjectNonSerializable, "Attempting to serialize an object which does not implement ISerializable", { name: name }, true);
 
                     try {
                         // verify that the object can be stringified
@@ -57,7 +54,7 @@ module Microsoft.ApplicationInsights {
                         output = source;
                     } catch (e) {
                         // if serialization fails return an empty string
-                        _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, e && typeof e.toString === 'function' ? e.toString() : "Error serializing object");
+                        _InternalLogging.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSerializeObject, (e && typeof e.toString === 'function') ? e.toString() : "Error serializing object", null, true);
                     }
                 }
 
@@ -76,10 +73,11 @@ module Microsoft.ApplicationInsights {
                 var isObject = typeof source[field] === "object" && source[field] !== null;
 
                 if (isRequired && !isPresent && !isArray) {
-                    _InternalLogging.throwInternalNonUserActionable(
+                    _InternalLogging.throwInternal(
                         LoggingSeverity.CRITICAL,
-                        new _InternalLogMessage(_InternalMessageId.NONUSRACT_MissingRequiredFieldSpecification, "Missing required field specification. The field is required but not present on source",
-                            { field: field, name: name }));
+                        _InternalMessageId.MissingRequiredFieldSpecification,
+                        "Missing required field specification. The field is required but not present on source",
+                        { field: field, name: name });
 
                     // If not in debug mode, continue and hope the error is permissible
                     continue;
@@ -119,10 +117,11 @@ module Microsoft.ApplicationInsights {
 
             if (!!sources) {
                 if (!Util.isArray(sources)) {
-                    _InternalLogging.throwInternalUserActionable(
+                    _InternalLogging.throwInternal(
                         LoggingSeverity.CRITICAL,
-                        new _InternalLogMessage(_InternalMessageId.USRACT_ItemNotInArray, "This field was specified as an array in the contract but the item is not an array.\r\n",
-                            { name: name }));
+                        _InternalMessageId.ItemNotInArray,
+                        "This field was specified as an array in the contract but the item is not an array.\r\n",
+                        { name: name }, true);
                 } else {
                     output = [];
                     for (var i = 0; i < sources.length; i++) {
@@ -171,7 +170,7 @@ module Microsoft.ApplicationInsights {
                     }
                     else {
                         output[field] = "invalid field: " + name + " is of unknown type.";
-                        _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, output[field]);
+                        _InternalLogging.throwInternal(LoggingSeverity.CRITICAL, output[field], null, true);
                     }
                 }
             }

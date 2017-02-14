@@ -3,13 +3,11 @@
 
 class SerializerTests extends TestClass {
 
-    private throwInternalNonUserActionableSpy;
-    private throwInternalUserActionableSpy;
+    private throwInternal;
 
     /** Method called before the start of each test method */
     public testInitialize() {
-        this.throwInternalNonUserActionableSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalNonUserActionable");
-        this.throwInternalUserActionableSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+        this.throwInternal = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
     }
 
     public registerTests() {
@@ -22,7 +20,7 @@ class SerializerTests extends TestClass {
                 Microsoft.ApplicationInsights.Serializer.serialize(null);
 
                 // verify
-                Assert.ok(this.throwInternalUserActionableSpy.calledOnce, "throw internal when input is null");
+                Assert.ok(this.throwInternal.calledOnce, "throw internal when input is null");
             }
         });
 
@@ -47,7 +45,7 @@ class SerializerTests extends TestClass {
 
                 // verify
                 Assert.equal(expected, actual, "Object is serialized correctly");
-                Assert.ok(this.throwInternalUserActionableSpy.calledOnce, "warning when contract is omitted");
+                Assert.ok(this.throwInternal.calledOnce, "warning when contract is omitted");
             }
         });
 
@@ -67,7 +65,7 @@ class SerializerTests extends TestClass {
 
                 // verify
                 Assert.equal(expected, actual, "Object is serialized correctly");
-                Assert.ok(this.throwInternalNonUserActionableSpy.calledOnce, "broken contracts throw");
+                Assert.ok(this.throwInternal.calledOnce, "broken contracts throw");
             }
         });
 
@@ -90,8 +88,7 @@ class SerializerTests extends TestClass {
 
                 // verify
                 Assert.equal(expected, actual, "Object is serialized correctly");
-                Assert.ok(this.throwInternalNonUserActionableSpy.notCalled, "no non user actionable errors");
-                Assert.ok(this.throwInternalUserActionableSpy.notCalled, "no user actionable errors");
+                Assert.ok(this.throwInternal.notCalled, "no errors");
             }
         });
 
@@ -108,8 +105,7 @@ class SerializerTests extends TestClass {
                 Microsoft.ApplicationInsights.Serializer.serialize(obj);
 
                 // verify
-                Assert.ok(this.throwInternalNonUserActionableSpy.notCalled, "no non user actionable errors");
-                Assert.ok(this.throwInternalUserActionableSpy.calledOnce, "got user actionable errors");
+                Assert.ok(this.throwInternal.calledOnce, "one error");
             }
         });
 
@@ -179,9 +175,9 @@ class SerializerTests extends TestClass {
                 Microsoft.ApplicationInsights.Serializer.serialize(obj);
 
                 // verify
-                Assert.ok(this.throwInternalUserActionableSpy.calledTwice, "user actionable error is thrown");
-                var error = this.throwInternalUserActionableSpy.args[0][1].message.toLowerCase();
-                Assert.equal("ai: usract_cannotserializeobjectnonserializable message:\"attempting to serialize an object which does not implement iserializable\" props:\"{name:nocontractwithcycle}\"", error);
+                Assert.ok(this.throwInternal.calledTwice, "user actionable error is thrown");
+                var error = this.throwInternal.args[0][2];
+                Assert.equal("Attempting to serialize an object which does not implement ISerializable", error);
             }
         });
 
@@ -202,9 +198,9 @@ class SerializerTests extends TestClass {
                 Microsoft.ApplicationInsights.Serializer.serialize(obj);
 
                 // verify
-                Assert.ok(this.throwInternalUserActionableSpy.calledOnce, "error is thrown");
-                var error = this.throwInternalUserActionableSpy.args[0][1].message.toLowerCase();
-                Assert.ok(error.indexOf("circular") >= 0 || error.indexOf("cyclic") >= 0, "error message");
+                Assert.ok(this.throwInternal.calledOnce, "error is thrown");
+                var error = this.throwInternal.args[0][2];
+                Assert.equal("Circular reference detected while serializing object", error, "invalid error message");
             }
         });
 
@@ -255,8 +251,7 @@ class SerializerTests extends TestClass {
 
                 // verify
                 Assert.equal(expected, actual, "Object is serialized correctly");
-                Assert.ok(this.throwInternalNonUserActionableSpy.notCalled, "no non user actionable errors");
-                Assert.ok(this.throwInternalUserActionableSpy.notCalled, "no user actionable errors");
+                Assert.ok(this.throwInternal.notCalled, "no errors");
             }
         });
 
@@ -279,11 +274,11 @@ class SerializerTests extends TestClass {
                         }
                     };
 
-                    this.throwInternalUserActionableSpy.reset();
+                    this.throwInternal.reset();
                     var result = Microsoft.ApplicationInsights.Serializer.serialize(obj);
 
                     Assert.ok(result.indexOf("invalid field") < 0, message);
-                    Assert.ok(this.throwInternalUserActionableSpy.notCalled, "no user actionable errors");
+                    Assert.ok(this.throwInternal.notCalled, "no errors");
                 };
 
                 test(goodProperties, goodMeasurements, "properties and measurements");
@@ -313,11 +308,11 @@ class SerializerTests extends TestClass {
                         }
                     };
 
-                    this.throwInternalUserActionableSpy.reset();
+                    this.throwInternal.reset();
                     var result = Microsoft.ApplicationInsights.Serializer.serialize(obj);
 
                     Assert.equal(expectedOutput, result);
-                    Assert.ok(this.throwInternalUserActionableSpy.notCalled, "no user actionable errors");
+                    Assert.ok(this.throwInternal.notCalled, "no user actionable errors");
                 };
 
                 test({ "p1": null, "p2": undefined }, { "m1": null, "m2": undefined, "m3": "notanumber" }, "{\"properties\":{\"p1\":\"null\",\"p2\":\"undefined\"},\"measurements\":{\"m1\":\"null\",\"m2\":\"undefined\",\"m3\":\"NaN\"}}");

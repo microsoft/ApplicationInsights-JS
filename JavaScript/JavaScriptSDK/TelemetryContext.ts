@@ -108,7 +108,10 @@ module Microsoft.ApplicationInsights {
          */
         public track(envelope: Microsoft.ApplicationInsights.IEnvelope) {
             if (!envelope) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.USRACT_TrackArgumentsNotSpecified, "cannot call .track() with a null or undefined argument"));
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.CRITICAL,
+                    _InternalMessageId.TrackArgumentsNotSpecified,
+                    "cannot call .track() with a null or undefined argument", null, true);
             } else {
                 // If the envelope is PageView, reset the internal message count so that we can send internal telemetry for the new page.
                 if (envelope.name === Telemetry.PageView.envelopeType) {
@@ -164,9 +167,9 @@ module Microsoft.ApplicationInsights {
                 }
             } catch (e) {
                 doNotSendItem = true;
-                _InternalLogging.throwInternalUserActionable(
-                    LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.USRACT_TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) }));
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) }, true);
             }
 
             if (!doNotSendItem) {
@@ -178,8 +181,8 @@ module Microsoft.ApplicationInsights {
                     envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
                     this._sender.send(envelope);
                 } else {
-                    _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage(_InternalMessageId.NONUSRACT_TelemetrySampledAndNotSent,
-                        "Telemetry is sampled and not sent to the AI service.", { SampleRate: this.sample.sampleRate }));
+                    _InternalLogging.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TelemetrySampledAndNotSent,
+                        "Telemetry is sampled and not sent to the AI service.", { SampleRate: this.sample.sampleRate }, true);
                 }
             }
 
@@ -330,9 +333,11 @@ module Microsoft.ApplicationInsights {
                     }
                 }
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
-                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToFixDepricatedValues, "Failed to parse the base data object, to fix the depricated values " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) }));
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.FailedToFixDepricatedValues,
+                    "Failed to parse the base data object, to fix the depricated values " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) });
             }
         }
 

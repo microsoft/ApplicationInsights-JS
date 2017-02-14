@@ -90,7 +90,7 @@ class TelemetryContextTests extends TestClass {
             name: "TelemtetryContext: calling track with null or undefined fails",
             test: () => {
                 var tc = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
-                var logSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+                var logSpy = this.sandbox.spy(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
                 tc.track(undefined);
                 Assert.ok(logSpy.calledOnce, "sender throws with undefined");
                 tc.track(null);
