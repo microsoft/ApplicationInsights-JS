@@ -134,7 +134,6 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
                 var loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "warnToConsole", (m) => actualLoggedMessage = m);
 
-
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageViewPerformance("name", "url", 0);
                 Assert.equal(false, telemetry.getIsValid());
 
@@ -146,7 +145,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 Assert.equal(undefined, data.receivedResponse);
                 Assert.equal(undefined, data.domProcessing);
 
-                Assert.equal("AI (Internal): NONUSRACT_ClientPerformanceMathError message:\"client performance math error.\" props:\"{total:59,network:39,request:19,response:12,dom:18}\"", actualLoggedMessage);
+                Assert.equal("AI (Internal): ClientPerformanceMathError message:\"client performance math error.\" props:\"{total:59,network:39,request:19,response:12,dom:18}\"", actualLoggedMessage);
             }
         });
 
@@ -237,9 +236,9 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
 
                     if (i === 0) {
                         // check props only for the first timingModifier
-                        Assert.equal("AI (Internal): NONUSRACT_InvalidDurationValue message:\"Invalid page load duration value. Browser perf data won't be sent.\" props:\"{total:3600000,network:1,request:27,response:12,dom:3599959}\"", actualLoggedMessage);
+                        Assert.equal("AI (Internal): InvalidDurationValue message:\"Invalid page load duration value. Browser perf data won't be sent.\" props:\"{total:3600000,network:1,request:27,response:12,dom:3599959}\"", actualLoggedMessage);
                     } else {
-                        Assert.ok(actualLoggedMessage.lastIndexOf("AI (Internal): NONUSRACT_InvalidDurationValue message:\"Invalid page load duration value. Browser perf data won't be sent.", 0) === 0);
+                        Assert.ok(actualLoggedMessage.lastIndexOf("AI (Internal): InvalidDurationValue message:\"Invalid page load duration value. Browser perf data won't be sent.", 0) === 0);
                     }
 
                     timingSpy.restore();

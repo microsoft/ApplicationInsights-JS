@@ -32,7 +32,7 @@ class ValidateTests extends TestClass {
 
         this.errorSpy = this.sandbox.spy(this.testAi.context._sender, "_onError");
         this.successSpy = this.sandbox.stub(this.testAi.context._sender, "_onSuccess");
-        this.loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternalUserActionable");
+        this.loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
     }
 
     public testCleanup() {

@@ -167,13 +167,13 @@ module Microsoft.ApplicationInsights {
 
                 // validate input
                 if (!envelope) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.NONUSRACT_CannotSendEmptyTelemetry, "Cannot send empty telemetry"));
+                    _InternalLogging.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
                     return;
                 }
 
                 // ensure a sender was constructed
                 if (!this._sender) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.NONUSRACT_SenderNotInitialized, "Sender was not initialized"));
+                    _InternalLogging.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.SenderNotInitialized, "Sender was not initialized");
                     return;
                 }
 
@@ -197,9 +197,11 @@ module Microsoft.ApplicationInsights {
                 // Uncomment if you want to use DataLossanalyzer
                 // DataLossAnalyzer.incrementItemsQueued();
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
-                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedAddingTelemetryToBuffer, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) }));
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.FailedAddingTelemetryToBuffer,
+                    "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) });
             }
         }
 
@@ -271,8 +273,11 @@ module Microsoft.ApplicationInsights {
             } catch (e) {
                 /* Ignore this error for IE under v10 */
                 if (!Util.getIEVersion() || Util.getIEVersion() > 9) {
-                    _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL, new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, "Telemetry transmission failed, some telemetry will be lost: " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) }));
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.CRITICAL,
+                        _InternalMessageId.TransmissionFailed,
+                        "Telemetry transmission failed, some telemetry will be lost: " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) });
                 }
             }
         }
@@ -312,8 +317,10 @@ module Microsoft.ApplicationInsights {
                     return result;
                 }
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
-                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_InvalidBackendResponse, "Cannot parse the response. " + Util.getExceptionName(e)));
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.CRITICAL,
+                    _InternalMessageId.InvalidBackendResponse,
+                    "Cannot parse the response. " + Util.getExceptionName(e));
             }
 
             return null;
@@ -388,9 +395,10 @@ module Microsoft.ApplicationInsights {
             // If the protocol doesn't match, we can't send the telemetry :(. 
             var hostingProtocol = window.location.protocol
             if (this._config.endpointUrl().lastIndexOf(hostingProtocol, 0) !== 0) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
-                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, ". " +
-                        "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol."));
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.TransmissionFailed, ". " +
+                    "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol.");
 
                 this._buffer.clear();
                 return;
@@ -415,9 +423,10 @@ module Microsoft.ApplicationInsights {
                     if (!this._config.isRetryDisabled() && this._isRetriable(xhr.status)) {
                         this._resendPayload(payload);
 
-                        _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
-                            new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, ". " +
-                                "Response code " + xhr.status + ". Will retry to send " + payload.length + " items."));
+                        _InternalLogging.throwInternal(
+                            LoggingSeverity.WARNING,
+                            _InternalMessageId.TransmissionFailed, ". " +
+                            "Response code " + xhr.status + ". Will retry to send " + payload.length + " items.");
                     } else {
                         this._onError(payload, xhr.responseText || xhr.response || "");
                     }
@@ -487,10 +496,11 @@ module Microsoft.ApplicationInsights {
             if (retry.length > 0) {
                 this._resendPayload(retry);
 
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
-                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, "Partial success. " +
-                        "Delivered: " + payload.length + ", Failed: " + failed.length +
-                        ". Will retry to send " + retry.length + " our of " + results.itemsReceived + " items"));
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.TransmissionFailed, "Partial success. " +
+                    "Delivered: " + payload.length + ", Failed: " + failed.length +
+                    ". Will retry to send " + retry.length + " our of " + results.itemsReceived + " items");
             }
         }
 
@@ -498,8 +508,11 @@ module Microsoft.ApplicationInsights {
          * error handler
          */
         public _onError(payload: string[], message: string, event?: ErrorEvent) {
-            _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING,
-                new _InternalLogMessage(_InternalMessageId.NONUSRACT_OnError, "Failed to send telemetry.", { message: message }));
+            _InternalLogging.throwInternal(
+                LoggingSeverity.WARNING,
+                _InternalMessageId.OnError,
+                "Failed to send telemetry.",
+                { message: message });
 
             this._buffer.clearSent(payload);
         }

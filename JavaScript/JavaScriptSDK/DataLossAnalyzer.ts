@@ -91,8 +91,11 @@
                     Util.setSessionStorage(DataLossAnalyzer.ISSUES_REPORTED_KEY, issuesReported.toString());
                 }
             } catch (e) {
-                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
-                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToReportDataLoss, "Failed to report data loss: " + Util.getExceptionName(e), { exception: Util.dump(e) }));
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.CRITICAL,
+                    _InternalMessageId.FailedToReportDataLoss,
+                    "Failed to report data loss: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) });
             }
             finally {
                 try {

@@ -976,7 +976,7 @@ class SenderTests extends TestClass {
         });
 
         this.testCase({
-            name: "SenderTests: ParseResponse - parse error logs a NONUSRACT_InvalidBackendResponse error",
+            name: "SenderTests: ParseResponse - parse error logs a InvalidBackendResponse error",
             test: () => {
                 // setup
                 XMLHttpRequest = <any>(() => {
@@ -993,7 +993,7 @@ class SenderTests extends TestClass {
                 Assert.ok(!result, "Parse should fail");
 
                 this.logAsserts(1);
-                Assert.equal('AI (Internal): NONUSRACT_InvalidBackendResponse message:"Cannot parse the response. SyntaxError"', this.loggingSpy.args[0][0], "Expecting one warning message");
+                Assert.equal('AI (Internal): InvalidBackendResponse message:"Cannot parse the response. SyntaxError"', this.loggingSpy.args[0][0], "Expecting one warning message");
             }
         });
 
@@ -1135,7 +1135,7 @@ class SenderTests extends TestClass {
         Assert.ok(sender.successSpy.called, "success was invoked");
 
         this.logAsserts(1);
-        Assert.equal('AI (Internal): NONUSRACT_OnError message:"Failed to send telemetry." props:"{message:partial success 1 of 2}"', this.loggingSpy.args[0][0], "Expecting one warning message");
+        Assert.equal('AI (Internal): OnError message:"Failed to send telemetry." props:"{message:partial success 1 of 2}"', this.loggingSpy.args[0][0], "Expecting one warning message");
 
         // the buffer is empty. 
         Assert.equal(0, sender._buffer.count(), "Buffer is empty");
@@ -1245,7 +1245,7 @@ class SenderTests extends TestClass {
         Assert.ok(sender.errorSpy.called, "error was invoked");
 
         this.logAsserts(1);
-        Assert.ok((<string>this.loggingSpy.args[0][0]).concat('AI (Internal): NONUSRACT_OnError message:"Failed to send telemetry.'), "Expecting one warning message");
+        Assert.ok((<string>this.loggingSpy.args[0][0]).concat('AI (Internal): OnError message:"Failed to send telemetry.'), "Expecting one warning message");
 
         // the buffer is empty. 
         Assert.equal(0, sender._buffer.count(), "Buffer is empty");

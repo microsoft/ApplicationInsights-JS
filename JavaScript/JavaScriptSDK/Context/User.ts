@@ -9,7 +9,7 @@ module Microsoft.ApplicationInsights.Context {
 
         static cookieSeparator: string = '|';
         static userCookieName: string = 'ai_user';
-        static authUserCookieName: string = 'ai_authUser'; 
+        static authUserCookieName: string = 'ai_authUser';
 
         /**
          * The telemetry configuration.
@@ -40,12 +40,12 @@ module Microsoft.ApplicationInsights.Context {
          * The user agent string.
          */
         public agent: string;
-        
+
         /**
          * The store region.
          */
         public storeRegion: string;
-        
+
         /**
         * Sets the autheticated user id and the account id in this session.
         *   
@@ -57,11 +57,12 @@ module Microsoft.ApplicationInsights.Context {
             // Validate inputs to ensure no cookie control characters.
             var isInvalidInput = !this.validateUserInput(authenticatedUserId) || (accountId && !this.validateUserInput(accountId));
             if (isInvalidInput) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING,
-                    new _InternalLogMessage(
-                        _InternalMessageId.USRACT_SetAuthContextFailedAccountName,
-                        "Setting auth user context failed. " +
-                        "User auth/account id should be of type string, and not contain commas, semi-colons, equal signs, spaces, or vertical-bars."));
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.SetAuthContextFailedAccountName,
+                    "Setting auth user context failed. " +
+                    "User auth/account id should be of type string, and not contain commas, semi-colons, equal signs, spaces, or vertical-bars.",
+                    true);
                 return;
             }
 
@@ -72,7 +73,7 @@ module Microsoft.ApplicationInsights.Context {
                 this.accountId = accountId;
                 authCookie = [this.authenticatedId, this.accountId].join(User.cookieSeparator);
             }
-            
+
             // Set the cookie. No expiration date because this is a session cookie (expires when browser closed).
             // Encoding the cookie to handle unexpected unicode characters.
             Util.setCookie(User.authUserCookieName, encodeURI(authCookie), this.config.cookieDomain());
@@ -89,7 +90,7 @@ module Microsoft.ApplicationInsights.Context {
         }
 
         constructor(config: ITelemetryConfig) {
-            
+
             //get userId or create new one if none exists
             var cookie = Util.getCookie(User.userCookieName);
             if (cookie) {

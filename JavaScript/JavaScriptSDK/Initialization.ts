@@ -94,10 +94,11 @@ module Microsoft.ApplicationInsights {
                 if (exception && typeof exception.toString === "function") {
                     properties.exception = exception.toString();
                 }
-                var message = new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToSendQueuedTelemetry, "Failed to send queued telemetry", properties);
-
-
-                Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(LoggingSeverity.WARNING, message);
+                Microsoft.ApplicationInsights._InternalLogging.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.FailedToSendQueuedTelemetry,
+                    "Failed to send queued telemetry",
+                    properties);
             }
         }
 
@@ -131,8 +132,10 @@ module Microsoft.ApplicationInsights {
                 };
 
                 if (!Microsoft.ApplicationInsights.Util.addEventHandler('beforeunload', performHousekeeping)) {
-                    Microsoft.ApplicationInsights._InternalLogging.throwInternalNonUserActionable(Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL,
-                        new _InternalLogMessage(_InternalMessageId.NONUSRACT_FailedToAddHandlerForOnBeforeUnload, 'Could not add handler for beforeunload'));
+                    Microsoft.ApplicationInsights._InternalLogging.throwInternal(
+                        Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL,
+                        Microsoft.ApplicationInsights._InternalMessageId.FailedToAddHandlerForOnBeforeUnload,
+                        'Could not add handler for beforeunload');
                 }
             }
         }
@@ -149,9 +152,7 @@ module Microsoft.ApplicationInsights {
             config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 102400; // 100kb
             config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
             config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
-            config.disableExceptionTracking = (config.disableExceptionTracking !== undefined && config.disableExceptionTracking !== null) ?
-                Util.stringToBoolOrDefault(config.disableExceptionTracking) :
-                false;
+            config.disableExceptionTracking = Util.stringToBoolOrDefault(config.disableExceptionTracking);
             config.disableTelemetry = Util.stringToBoolOrDefault(config.disableTelemetry);
             config.verboseLogging = Util.stringToBoolOrDefault(config.verboseLogging);
             config.emitLineDelimitedJson = Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
@@ -162,34 +163,14 @@ module Microsoft.ApplicationInsights {
                 config.samplingPercentage = 100;
             }
 
-            config.disableAjaxTracking = (config.disableAjaxTracking !== undefined && config.disableAjaxTracking !== null) ?
-                Util.stringToBoolOrDefault(config.disableAjaxTracking) :
-                false;
-
+            config.disableAjaxTracking = Util.stringToBoolOrDefault(config.disableAjaxTracking)
             config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
-            config.disableCorrelationHeaders = (config.disableCorrelationHeaders !== undefined && config.disableCorrelationHeaders !== null) ?
-                Util.stringToBoolOrDefault(config.disableCorrelationHeaders) :
-                true;
-
-            config.disableFlushOnBeforeUnload = (config.disableFlushOnBeforeUnload !== undefined && config.disableFlushOnBeforeUnload !== null) ?
-                Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload) :
-                false;
-
-            config.enableSessionStorageBuffer = (config.enableSessionStorageBuffer !== undefined && config.enableSessionStorageBuffer !== null) ?
-                Util.stringToBoolOrDefault(config.enableSessionStorageBuffer) :
-                true;
-
-            config.isRetryDisabled = (config.isRetryDisabled !== undefined && config.isRetryDisabled !== null) ?
-                Util.stringToBoolOrDefault(config.isRetryDisabled) :
-                false;
-
-            config.isCookieUseDisabled = (config.isCookieUseDisabled !== undefined && config.isCookieUseDisabled !== null) ?
-                Util.stringToBoolOrDefault(config.isCookieUseDisabled) :
-                false;
-
-            config.isStorageUseDisabled = (config.isStorageUseDisabled !== undefined && config.isStorageUseDisabled !== null) ?
-                Util.stringToBoolOrDefault(config.isStorageUseDisabled) :
-                false;
+            config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders, true);
+            config.disableFlushOnBeforeUnload = Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
+            config.enableSessionStorageBuffer = Util.stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
+            config.isRetryDisabled = Util.stringToBoolOrDefault(config.isRetryDisabled);
+            config.isCookieUseDisabled = Util.stringToBoolOrDefault(config.isCookieUseDisabled);
+            config.isStorageUseDisabled = Util.stringToBoolOrDefault(config.isStorageUseDisabled);
            
             return config;
         }

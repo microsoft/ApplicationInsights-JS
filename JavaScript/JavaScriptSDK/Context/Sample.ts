@@ -15,13 +15,13 @@ module Microsoft.ApplicationInsights.Context {
 
         constructor(sampleRate: number) {
             if (sampleRate > 100 || sampleRate < 0) {
-                _InternalLogging.throwInternalUserActionable(LoggingSeverity.WARNING, new _InternalLogMessage(
-                    _InternalMessageId.USRACT_SampleRateOutOfRange,
+                _InternalLogging.throwInternal(LoggingSeverity.WARNING,
+                    _InternalMessageId.SampleRateOutOfRange,
                     "Sampling rate is out of range (0..100). Sampling will be disabled, you may be sending too much data which may affect your AI service level.",
-                    { samplingRate: sampleRate }));
+                    { samplingRate: sampleRate }, true);
                 this.sampleRate = 100;
             }
-                        
+
             this.sampleRate = sampleRate;
             this.samplingScoreGenerator = new SamplingScoreGenerator();
         }

@@ -16,83 +16,97 @@
      * Internal message ID. Please create a new one for every conceptually different message. Please keep alphabetically ordered
      */
     export enum _InternalMessageId {
-        NONUSRACT_BrowserDoesNotSupportLocalStorage,
-        NONUSRACT_BrowserCannotReadLocalStorage,
-        NONUSRACT_BrowserCannotReadSessionStorage,
-        NONUSRACT_BrowserCannotWriteLocalStorage,
-        NONUSRACT_BrowserCannotWriteSessionStorage,
-        NONUSRACT_BrowserFailedRemovalFromLocalStorage,
-        NONUSRACT_BrowserFailedRemovalFromSessionStorage,
-        NONUSRACT_CannotSendEmptyTelemetry,
-        NONUSRACT_ClientPerformanceMathError,
-        NONUSRACT_ErrorParsingAISessionCookie,
-        NONUSRACT_ErrorPVCalc,
-        NONUSRACT_ExceptionWhileLoggingError,
-        NONUSRACT_FailedAddingTelemetryToBuffer,
-        NONUSRACT_FailedMonitorAjaxAbort,
-        NONUSRACT_FailedMonitorAjaxDur,
-        NONUSRACT_FailedMonitorAjaxOpen,
-        NONUSRACT_FailedMonitorAjaxRSC,
-        NONUSRACT_FailedMonitorAjaxSend,
-        NONUSRACT_FailedToAddHandlerForOnBeforeUnload,
-        NONUSRACT_FailedToSendQueuedTelemetry,
-        NONUSRACT_FailedToReportDataLoss,
-        NONUSRACT_FlushFailed,
-        NONUSRACT_MessageLimitPerPVExceeded,
-        NONUSRACT_MissingRequiredFieldSpecification,
-        NONUSRACT_NavigationTimingNotSupported,
-        NONUSRACT_OnError,
-        NONUSRACT_SessionRenewalDateIsZero,
-        NONUSRACT_SenderNotInitialized,
-        NONUSRACT_StartTrackEventFailed,
-        NONUSRACT_StopTrackEventFailed,
-        NONUSRACT_StartTrackFailed,
-        NONUSRACT_StopTrackFailed,
-        NONUSRACT_TelemetrySampledAndNotSent,
-        NONUSRACT_TrackEventFailed,
-        NONUSRACT_TrackExceptionFailed,
-        NONUSRACT_TrackMetricFailed,
-        NONUSRACT_TrackPVFailed,
-        NONUSRACT_TrackPVFailedCalc,
-        NONUSRACT_TrackTraceFailed,
-        NONUSRACT_TransmissionFailed,
-        NONUSRACT_FailedToSetStorageBuffer,
-        NONUSRACT_FailedToRestoreStorageBuffer,
-        NONUSRACT_InvalidBackendResponse,
-        NONUSRACT_FailedToFixDepricatedValues,
-        NONUSRACT_InvalidDurationValue,
+        // Non user actionable
+        BrowserDoesNotSupportLocalStorage,
+        BrowserCannotReadLocalStorage,
+        BrowserCannotReadSessionStorage,
+        BrowserCannotWriteLocalStorage,
+        BrowserCannotWriteSessionStorage,
+        BrowserFailedRemovalFromLocalStorage,
+        BrowserFailedRemovalFromSessionStorage,
+        CannotSendEmptyTelemetry,
+        ClientPerformanceMathError,
+        ErrorParsingAISessionCookie,
+        ErrorPVCalc,
+        ExceptionWhileLoggingError,
+        FailedAddingTelemetryToBuffer,
+        FailedMonitorAjaxAbort,
+        FailedMonitorAjaxDur,
+        FailedMonitorAjaxOpen,
+        FailedMonitorAjaxRSC,
+        FailedMonitorAjaxSend,
+        FailedToAddHandlerForOnBeforeUnload,
+        FailedToSendQueuedTelemetry,
+        FailedToReportDataLoss,
+        FlushFailed,
+        MessageLimitPerPVExceeded,
+        MissingRequiredFieldSpecification,
+        NavigationTimingNotSupported,
+        OnError,
+        SessionRenewalDateIsZero,
+        SenderNotInitialized,
+        StartTrackEventFailed,
+        StopTrackEventFailed,
+        StartTrackFailed,
+        StopTrackFailed,
+        TelemetrySampledAndNotSent,
+        TrackEventFailed,
+        TrackExceptionFailed,
+        TrackMetricFailed,
+        TrackPVFailed,
+        TrackPVFailedCalc,
+        TrackTraceFailed,
+        TransmissionFailed,
+        FailedToSetStorageBuffer,
+        FailedToRestoreStorageBuffer,
+        InvalidBackendResponse,
+        FailedToFixDepricatedValues,
+        InvalidDurationValue,
 
-        USRACT_CannotSerializeObject,
-        USRACT_CannotSerializeObjectNonSerializable,
-        USRACT_CircularReferenceDetected,
-        USRACT_ClearAuthContextFailed,
-        USRACT_ExceptionTruncated,
-        USRACT_IllegalCharsInName,
-        USRACT_ItemNotInArray,
-        USRACT_MaxAjaxPerPVExceeded,
-        USRACT_MessageTruncated,
-        USRACT_NameTooLong,
-        USRACT_SampleRateOutOfRange,
-        USRACT_SetAuthContextFailed,
-        USRACT_SetAuthContextFailedAccountName,
-        USRACT_StringValueTooLong,
-        USRACT_StartCalledMoreThanOnce,
-        USRACT_StopCalledWithoutStart,
-        USRACT_TelemetryInitializerFailed,
-        USRACT_TrackArgumentsNotSpecified,
-        USRACT_UrlTooLong,
-        USRACT_SessionStorageBufferFull,
-        USRACT_CannotAccessCookie,
+        // User actionable
+        CannotSerializeObject,
+        CannotSerializeObjectNonSerializable,
+        CircularReferenceDetected,
+        ClearAuthContextFailed,
+        ExceptionTruncated,
+        IllegalCharsInName,
+        ItemNotInArray,
+        MaxAjaxPerPVExceeded,
+        MessageTruncated,
+        NameTooLong,
+        SampleRateOutOfRange,
+        SetAuthContextFailed,
+        SetAuthContextFailedAccountName,
+        StringValueTooLong,
+        StartCalledMoreThanOnce,
+        StopCalledWithoutStart,
+        TelemetryInitializerFailed,
+        TrackArgumentsNotSpecified,
+        UrlTooLong,
+        SessionStorageBufferFull,
+        CannotAccessCookie,
     }
 
     export class _InternalLogMessage {
         public message: string;
         public messageId: _InternalMessageId;
 
-        constructor(msgId: _InternalMessageId, msg: string, properties?: Object) {
+        /**
+         * For user non actionable traces use AI Internal prefix.
+         */
+        private static AiNonUserActionablePrefix = "AI (Internal): ";
 
-            this.message = _InternalMessageId[msgId].toString();
+        /**
+         * Prefix of the traces in portal.
+         */
+        private static AiUserActionablePrefix = "AI: ";
+
+        constructor(msgId: _InternalMessageId, msg: string, isUserAct = false, properties?: Object) {
+
             this.messageId = msgId;
+            this.message =
+                (isUserAct ? _InternalLogMessage.AiUserActionablePrefix : _InternalLogMessage.AiNonUserActionablePrefix) +
+                _InternalMessageId[msgId].toString();
 
             var diagnosticText =
                 (msg ? " message:" + _InternalLogMessage.sanitizeDiagnosticText(msg) : "") +
@@ -109,19 +123,9 @@
     export class _InternalLogging {
 
         /**
-         * Prefix of the traces in portal.
-         */
-        private static AiUserActionablePrefix = "AI: ";
-
-        /**
         *  Session storage key for the prefix for the key indicating message type already logged
         */
         private static AIInternalMessagePrefix: string = "AITR_";
-
-        /**
-         * For user non actionable traces use AI Internal prefix.
-         */
-        private static AiNonUserActionablePrefix = "AI (Internal): ";
 
         /**
          * When this is true the SDK will throw exceptions to aid in debugging.
@@ -136,7 +140,7 @@
         /**
          * The internal logging queue
          */
-        public static queue = [];
+        public static queue: Array<_InternalLogMessage> = [];
 
         /**
          * The maximum number of internal messages allowed to be sent per page view
@@ -158,43 +162,27 @@
          * @param severity {LoggingSeverity} - The severity of the log message
          * @param message {_InternalLogMessage} - The log message.
          */
-        public static throwInternalNonUserActionable(severity: LoggingSeverity, message: _InternalLogMessage) {
+        public static throwInternal(severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) {
+            let message = new _InternalLogMessage(msgId, msg, isUserAct, properties);
+
             if (this.enableDebugExceptions()) {
                 throw message;
             } else {
                 if (typeof (message) !== "undefined" && !!message) {
                     if (typeof (message.message) !== "undefined") {
-                        message.message = this.AiNonUserActionablePrefix + message.message;
+                        if (isUserAct) {
+                            // check if this message type was already logged to console for this page view and if so, don't log it again
+                            var messageKey = _InternalMessageId[message.messageId];
 
-                        // don't log internal AI traces in the console, unless the verbose logging is enabled
-                        if (this.verboseLogging()) {
-                            this.warnToConsole(message.message);
-                        }
-                        this.logInternalMessage(severity, message);
-                    }
-                }
-            }
-        }
-
-        /**
-         * This method will throw exceptions in debug mode or attempt to log the error as a console warning.
-         * @param severity {LoggingSeverity} - The severity of the log message
-         * @param message {_InternalLogMessage} - The log message.
-         */
-        public static throwInternalUserActionable(severity: LoggingSeverity, message: _InternalLogMessage) {
-            if (this.enableDebugExceptions()) {
-                throw message;
-            } else {
-                if (typeof (message) !== "undefined" && !!message) {
-                    if (typeof (message.message) !== "undefined") {
-                        message.message = this.AiUserActionablePrefix + message.message;
-
-                        // check if this message type was already logged to console for this page view and if so, don't log it again
-                        var messageKey = _InternalMessageId[message.messageId];
-
-                        if (!this._messageLogged[messageKey] || this.verboseLogging()) {
-                            this.warnToConsole(message.message);
-                            this._messageLogged[messageKey] = true;
+                            if (!this._messageLogged[messageKey] || this.verboseLogging()) {
+                                this.warnToConsole(message.message);
+                                this._messageLogged[messageKey] = true;
+                            }
+                        } else {
+                            // don't log internal AI traces in the console, unless the verbose logging is enabled
+                            if (this.verboseLogging()) {
+                                this.warnToConsole(message.message);
+                            }
                         }
 
                         this.logInternalMessage(severity, message);
@@ -291,7 +279,7 @@
                 // When throttle limit reached, send a special event
                 if (this._messageCount == this.MAX_INTERNAL_MESSAGE_LIMIT) {
                     var throttleLimitMessage = "Internal events throttle limit per PageView reached for this app.";
-                    var throttleMessage = new _InternalLogMessage(_InternalMessageId.NONUSRACT_MessageLimitPerPVExceeded, throttleLimitMessage);
+                    var throttleMessage = new _InternalLogMessage(_InternalMessageId.MessageLimitPerPVExceeded, throttleLimitMessage, false);
 
                     this.queue.push(throttleMessage);
                     this.warnToConsole(throttleLimitMessage);
