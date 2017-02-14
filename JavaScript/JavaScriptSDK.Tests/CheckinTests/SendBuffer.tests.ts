@@ -19,7 +19,8 @@ class SendBufferTests extends TestClass {
             maxBatchSizeInBytes: () => null,
             maxBatchInterval: () => null,
             disableTelemetry: () => null,
-            isRetryDisabled: () => null
+            isRetryDisabled: () => null,
+            isBeaconApiDisabled: () => true
         };
 
         this.getArraySendBuffer = (emitLineDelimitedJson?: boolean) => {

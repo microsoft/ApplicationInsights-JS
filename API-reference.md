@@ -287,9 +287,14 @@ Values that control how the telemetry data is sent.
         // Default: false
         isStorageUseDisabled: boolean;
 	
-	// Default true. If false, the SDK will add two headers ('x-ms-request-root-id' and 'x-ms-request-id) 
-	// to all dependency requests (within the same domain) to correlate them with corresponding requests on the server side. 
-	disableCorrelationHeaders: boolean;
+        // Default true. If false, the SDK will add two headers ('x-ms-request-root-id' and 'x-ms-request-id) 
+        // to all dependency requests (within the same domain) to correlate them with corresponding requests on the server side. 
+        disableCorrelationHeaders: boolean;
+        
+        // If true, the SDK will send all telemetry using [Beacon API](https://www.w3.org/TR/beacon/)
+        // When Beacon API is enabled, then SessionStorageBuffer cannot be used and maxBatchSizeInBytes is limit too 64kb
+        // Default: true
+        isBeaconApiDisabled: boolean;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.

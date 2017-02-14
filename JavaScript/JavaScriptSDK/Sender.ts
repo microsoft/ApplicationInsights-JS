@@ -64,6 +64,8 @@ module Microsoft.ApplicationInsights {
          * If enabled, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error) and 503 (service unavailable).
          */
         isRetryDisabled: () => boolean;
+
+        isBeaconApiDisabled: () => boolean;
     }
 
     export interface IResponseError {
@@ -132,6 +134,12 @@ module Microsoft.ApplicationInsights {
         public _XMLHttpRequestSupported: boolean = false;
 
         /**
+         * The maximum Beacon API payload size.
+         * WC3 documentation allows browsers to set the limit. Chrome current has a limit of 64kb. 
+         */
+        public static MaxBeaconPayloadSize = 65536; // 64kb
+
+        /**
          * Constructs a new instance of the Sender class
          */
         constructor(config: ISenderConfig) {
@@ -143,13 +151,17 @@ module Microsoft.ApplicationInsights {
             this._buffer = (Util.canUseSessionStorage() && this._config.enableSessionStorageBuffer())
                 ? new SessionStorageSendBuffer(config) : new ArraySendBuffer(config);
 
-            if (typeof XMLHttpRequest != "undefined") {
-                var testXhr = new XMLHttpRequest();
-                if ("withCredentials" in testXhr) {
-                    this._sender = this._xhrSender;
-                    this._XMLHttpRequestSupported = true;
-                } else if (typeof XDomainRequest !== "undefined") {
-                    this._sender = this._xdrSender; //IE 8 and 9
+            if (!this._config.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
+                this._sender = this._beaconSender;
+            } else {
+                if (typeof XMLHttpRequest != "undefined") {
+                    var testXhr = new XMLHttpRequest();
+                    if ("withCredentials" in testXhr) {
+                        this._sender = this._xhrSender;
+                        this._XMLHttpRequestSupported = true;
+                    } else if (typeof XDomainRequest !== "undefined") {
+                        this._sender = this._xdrSender; //IE 8 and 9
+                    }
                 }
             }
         }
@@ -412,6 +424,27 @@ module Microsoft.ApplicationInsights {
             xdr.send(batch);
 
             this._buffer.markAsSent(payload);
+        }
+
+        /**
+         * Send Beacon API request
+         * @param payload {string} - The data payload to be sent.
+         * @param isAsync {boolean} - not used
+         */
+        private _beaconSender(payload: string[], isAsync: boolean) {
+            var url = this._config.endpointUrl();
+            var batch = this._buffer.batchPayloads(payload);
+
+            // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
+            var queued = (<any>navigator).sendBeacon(url, batch);
+
+            if (queued) {
+                this._buffer.markAsSent(payload);
+            } else {
+                _InternalLogging.throwInternalNonUserActionable(LoggingSeverity.CRITICAL,
+                    new _InternalLogMessage(_InternalMessageId.NONUSRACT_TransmissionFailed, ". " +
+                        "Failed to send telemetry with Beacon API."));
+            }
         }
 
         /**

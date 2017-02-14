@@ -165,13 +165,15 @@ module Microsoft.ApplicationInsights {
 
             config.disableAjaxTracking = Util.stringToBoolOrDefault(config.disableAjaxTracking)
             config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
+          
+            config.isBeaconApiDisabled = Util.stringToBoolOrDefault(config.isBeaconApiDisabled, true);
             config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders, true);
             config.disableFlushOnBeforeUnload = Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
             config.enableSessionStorageBuffer = Util.stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
             config.isRetryDisabled = Util.stringToBoolOrDefault(config.isRetryDisabled);
             config.isCookieUseDisabled = Util.stringToBoolOrDefault(config.isCookieUseDisabled);
             config.isStorageUseDisabled = Util.stringToBoolOrDefault(config.isStorageUseDisabled);
-           
+ 
             return config;
         }
     }
