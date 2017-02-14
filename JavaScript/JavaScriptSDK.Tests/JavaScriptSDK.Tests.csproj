@@ -85,6 +85,7 @@
     <Content Include="E2ETests\E2E.SanitizerE2ETests.htm" />
     <Content Include="E2ETests\E2E.PublicApiTests.htm" />
     <Content Include="E2ETests\E2E.autoCollection.tests.htm" />
+    <Content Include="E2ETests\E2E.Sender.tests.htm" />
     <Content Include="E2ETests\autoCollectionTemplates\instrumentation.js" />
     <Content Include="E2ETests\ai.js">
       <DependentUpon>PostBuild.ps1</DependentUpon>
@@ -269,6 +270,12 @@
       <DependentUpon>DisableTelemetryTests.ts</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <SenderTests Include="E2ETests\SenderE2E.tests.ts" />
+    <Content Include="E2ETests\SenderE2E.tests.js">
+      <DependentUpon>DisableTelemetryTests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+      
     <SeleniumAppInsightsSDK Include="Selenium\appInsightsSdk.ts" />
     <Content Include="Selenium\appInsightsSdk.js">
       <DependentUpon>appInsightsSdk.ts</DependentUpon>
@@ -301,6 +308,8 @@
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SanitizerE2ETests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\SanitizerE2E.tests.js" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SnippetTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\snippet.tests.js" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(DisableTelemetryTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\DisableTelemetryTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SenderTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\SenderE2E.tests.js" />
+  
     <Exec Command="Powershell.exe -ExecutionPolicy ByPass -File &quot;$(ProjectDir)E2ETests\PostBuild.ps1&quot; -projectDir $(ProjectDir) -outputDir $(OutputPath)" />
   </Target>
   <PropertyGroup>

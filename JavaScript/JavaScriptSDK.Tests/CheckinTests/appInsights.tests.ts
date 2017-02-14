@@ -27,7 +27,11 @@ class AppInsightsTests extends TestClass {
             disableDataLossAnalysis: true,
             disableCorrelationHeaders: false,
             disableFlushOnBeforeUnload: false,
-            enableSessionStorageBuffer: false
+            enableSessionStorageBuffer: false,
+            isCookieUseDisabled: false,
+            isRetryDisabled: false,
+            isStorageUseDisabled: false,
+            isBeaconApiDisabled: true
         };
 
         // set default values
@@ -823,12 +827,38 @@ class AppInsightsTests extends TestClass {
                 test("accountId");
                 test("sessionRenewalMs");
                 test("sessionExpirationMs");
-                test("endpointUrl");
+                test("cookieDomain");
                 test("maxBatchSizeInBytes");
                 test("maxBatchInterval");
-                test("cookieDomain");
+
+                test("endpointUrl");
+                test("emitLineDelimitedJson");
+                test("maxBatchSizeInBytes");
+                test("maxBatchInterval");
+                test("disableTelemetry");
+                test("enableSessionStorageBuffer");
+                test("isRetryDisabled");
+                test("isBeaconApiDisabled");
 
                 Assert.equal(snippet.enableDebug, Microsoft.ApplicationInsights._InternalLogging.enableDebugExceptions(), "enableDebugExceptions is set and correct");
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: disabled session storage and change the max payload size if Beacon API is enabled",
+            test: () => {
+                // setup
+                var snippet = this.getAppInsightsSnippet();
+
+                snippet.isBeaconApiDisabled = false;
+                snippet.enableSessionStorageBuffer = true;
+                snippet.maxBatchSizeInBytes = 1000000;
+
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+
+                Assert.equal(false, appInsights.context._config.isBeaconApiDisabled(), "Beacon API enabled");
+                Assert.equal(false, appInsights.context._config.enableSessionStorageBuffer(), "Session storage disabled");
+                Assert.equal(65536, appInsights.context._config.maxBatchSizeInBytes(), "Max batch size overriden by Beacon API payload limitation");
             }
         });
 

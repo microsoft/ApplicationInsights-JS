@@ -2,12 +2,15 @@
 /// <reference path="../../JavaScriptSDK/Util.ts"/>
 /// <reference path="../../JavaScriptSDK/sender.ts" />
 /// <reference path="../../JavaScriptSDK/SendBuffer.ts"/>
-/// <reference path="../../javascriptsdk/appinsights.ts" />
+/// <reference path="../../JavaScriptSDK/appinsights.ts" />
+/// <reference path="../../JavaScriptSDK/util.ts" />
 
 class SenderWrapper extends Microsoft.ApplicationInsights.Sender {
     errorSpy: SinonSpy;
     successSpy: SinonSpy;
     partialSpy: SinonSpy;
+
+    beaconStub: SinonStub;
 }
 
 class SenderTests extends TestClass {
@@ -674,7 +677,7 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                var retriableResponses = [408, 429, 500, 503]; 
+                var retriableResponses = [408, 429, 500, 503];
 
                 retriableResponses.forEach(statusCode => {
                     var sender = this.getSender();
@@ -771,8 +774,6 @@ class SenderTests extends TestClass {
                 });
             }
         });
-
-
 
         this.testCase({
             name: "SenderTests: XMLHttpRequest sender can handle partial success errors. Non-retryable",
@@ -1102,6 +1103,52 @@ class SenderTests extends TestClass {
                 Assert.equal(0, sentBuffer.length, "Session storage sent buffer is empty");
             }
         });
+
+        this.testCase({
+            name: "SenderTests: send() is using BeaconAPI sender if the BeaconAPI is enabled",
+            test: () => {
+                // enable beacon API and mock sender
+                var config = this.getDefaultConfig();
+                config.isBeaconApiDisabled = () => false;
+
+                var sender = <SenderWrapper>new Microsoft.ApplicationInsights.Sender(config);
+                sender.beaconStub = this.sandbox.stub((<any>navigator), "sendBeacon");
+
+                Assert.ok(sender, "sender was constructed");
+                Assert.ok(Microsoft.ApplicationInsights.Util.IsBeaconApiSupported(), "Beacon API is supported");
+                Assert.ok(sender.beaconStub.notCalled, "Beacon API was not called before");
+
+                // send telemetry
+                sender.send(this.testTelemetry);
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                // verify that beaconSender was used
+                Assert.ok(sender.beaconStub.calledOnce, "Beacon API was called once");
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: send() is not using BeaconAPI sender if the BeaconAPI is disabled",
+            test: () => {
+                // enable beacon API and mock sender
+                var config = this.getDefaultConfig();
+                config.isBeaconApiDisabled = () => true;
+
+                var sender = <SenderWrapper>new Microsoft.ApplicationInsights.Sender(config);
+                sender.beaconStub = this.sandbox.stub((<any>navigator), "sendBeacon");
+
+                Assert.ok(sender, "sender was constructed");
+                Assert.ok(Microsoft.ApplicationInsights.Util.IsBeaconApiSupported(), "Beacon API is supported");
+                Assert.ok(sender.beaconStub.notCalled, "Beacon API was not called before");
+
+                // send telemetry
+                sender.send(this.testTelemetry);
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                // verify that beaconSender was used
+                Assert.ok(sender.beaconStub.notCalled, "Beacon API was not called before");
+            }
+        });
     }
 
     private setupDataLossAnaluzed() {
@@ -1265,7 +1312,8 @@ class SenderTests extends TestClass {
             maxBatchInterval: () => this.maxBatchInterval,
             disableTelemetry: () => this.disableTelemetry,
             enableSessionStorageBuffer: () => true,
-            isRetryDisabled: () => false
+            isRetryDisabled: () => false,
+            isBeaconApiDisabled: () => true
         };
     }
 }
