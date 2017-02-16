@@ -104,7 +104,7 @@ namespace ApplicationInsights.Javascript.Tests
         [TestMethod]
         public void Chrome_E2E_SenderTests()
         {
-            RunTest("/E2ETests/E2E.Sender.htm");
+            RunTest("/E2ETests/E2E.Sender.tests.htm");
         }
 
         // Tests are failing, need to fix before we enable them.
