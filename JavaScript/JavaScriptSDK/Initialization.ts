@@ -168,7 +168,6 @@ module Microsoft.ApplicationInsights {
           
             config.isBeaconApiDisabled = Util.stringToBoolOrDefault(config.isBeaconApiDisabled, true);
             config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders, true);
-            config.isPerfAnalyzerEnabled = Util.stringToBoolOrDefault(config.isPerfAnalyzerEnabled);
             config.disableFlushOnBeforeUnload = Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
             config.enableSessionStorageBuffer = Util.stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
             config.isRetryDisabled = Util.stringToBoolOrDefault(config.isRetryDisabled);

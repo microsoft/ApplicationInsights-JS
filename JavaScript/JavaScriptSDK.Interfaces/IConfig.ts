@@ -28,7 +28,6 @@
         isCookieUseDisabled?: boolean;
         cookieDomain?: string;
         isRetryDisabled?: boolean;
-        isPerfAnalyzerEnabled?: boolean;
         url?: string;
         isStorageUseDisabled?: boolean;
         isBeaconApiDisabled?: boolean;

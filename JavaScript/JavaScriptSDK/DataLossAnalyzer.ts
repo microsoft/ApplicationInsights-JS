@@ -1,6 +1,9 @@
 ﻿module Microsoft.ApplicationInsights {
     "use strict";
 
+    /* Data loss analyzer is disabled by default.
+     * Uncomment code in Sender, SendBuffer and unit tests if you want to enable it
+     */
     export class DataLossAnalyzer {
         static enabled = false;
         static appInsights: Microsoft.ApplicationInsights.AppInsights;

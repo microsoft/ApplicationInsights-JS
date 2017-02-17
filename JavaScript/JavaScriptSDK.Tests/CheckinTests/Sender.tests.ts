@@ -2,7 +2,7 @@
 /// <reference path="../../JavaScriptSDK/Util.ts"/>
 /// <reference path="../../JavaScriptSDK/sender.ts" />
 /// <reference path="../../JavaScriptSDK/SendBuffer.ts"/>
-/// <reference path="../../JavaScriptSDK/appinsights.ts" />
+/// <reference path="../../javascriptsdk/appinsights.ts" />
 /// <reference path="../../JavaScriptSDK/util.ts" />
 
 class SenderWrapper extends Microsoft.ApplicationInsights.Sender {
