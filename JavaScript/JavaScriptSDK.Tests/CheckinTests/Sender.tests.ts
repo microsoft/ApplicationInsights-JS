@@ -515,11 +515,12 @@ class SenderTests extends TestClass {
             }
         });
 
-        this.testCase({
+        // TODO: move DataLossAnalyzer tests to a separate class
+        /*this.testCase({
             name: "SenderTests: data loss analyzer - send(item), queued, sent; result 0",
             test: () => {
                 // setup
-                this.setupDataLossAnaluzed();
+                this.setupDataLossAnalyzer();
                 var sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -538,7 +539,7 @@ class SenderTests extends TestClass {
             name: "SenderTests: data loss analyzer - send(item), queued, send(item), queued, sent; result 0",
             test: () => {
                 // setup
-                this.setupDataLossAnaluzed();
+                this.setupDataLossAnalyzer();
                 var sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -558,7 +559,7 @@ class SenderTests extends TestClass {
             name: "SenderTests: data loss analyzer - send(item), queued, sent, send(item), leave; result 1",
             test: () => {
                 // setup
-                this.setupDataLossAnaluzed();
+                this.setupDataLossAnalyzer();
                 var sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -578,7 +579,7 @@ class SenderTests extends TestClass {
             name: "SenderTests: data loss analyzer - send(item), queued, post failed; result 1",
             test: () => {
                 // setup
-                this.setupDataLossAnaluzed();
+                this.setupDataLossAnalyzer();
                 var sender = this.getSender();
                 this.fakeServer.requests.pop(); // xhr was created inside Sender's constructor, removing it to avoid confusion
                 var senderSpy = this.sandbox.spy(sender, "_sender");
@@ -611,7 +612,7 @@ class SenderTests extends TestClass {
                 // Validate
                 Assert.equal(0, Microsoft.ApplicationInsights.DataLossAnalyzer.getNumberOfLostItems());
             }
-        });
+        });*/
 
         this.testCase({
             name: "SenderTests: use Array buffer by default",
@@ -1151,9 +1152,10 @@ class SenderTests extends TestClass {
         });
     }
 
-    private setupDataLossAnaluzed() {
-        Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
-        Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { }, context: { _sender: { _XMLHttpRequestSupported: true } } };
+    private setupDataLossAnalyzer() {
+        // TODO: move DataLossAnalyzer tests to a separate class
+        // Microsoft.ApplicationInsights.DataLossAnalyzer.enabled = true;
+        // Microsoft.ApplicationInsights.DataLossAnalyzer.appInsights = <any>{ trackTrace: (message) => { }, flush: () => { }, context: { _sender: { _XMLHttpRequestSupported: true } } };
     }
 
     private validatePartialSuccess_NonRetryable(sender) {
