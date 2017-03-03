@@ -41,6 +41,7 @@ module Microsoft.ApplicationInsights {
         private _pageTracking: Timing;
         private _pageViewManager: Microsoft.ApplicationInsights.Telemetry.PageViewManager;
         private _pageVisitTimeManager: Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager;
+        private _ajaxMonitor: Microsoft.ApplicationInsights.AjaxMonitor;
 
         public config: IConfig;
         public context: TelemetryContext;
@@ -127,7 +128,9 @@ module Microsoft.ApplicationInsights {
             this._pageVisitTimeManager = new ApplicationInsights.Telemetry.PageVisitTimeManager(
                 (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
-            if (!this.config.disableAjaxTracking) { new Microsoft.ApplicationInsights.AjaxMonitor(this); }
+            if (!this.config.disableAjaxTracking) {
+                this._ajaxMonitor = new Microsoft.ApplicationInsights.AjaxMonitor(this);
+            }
         }
 
         public sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {

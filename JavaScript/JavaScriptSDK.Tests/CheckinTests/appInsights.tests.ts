@@ -1715,6 +1715,41 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
+            name: "Ajax - root/parent id are set only for dependency calls within the same domain",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.disableAjaxTracking = false;
+                snippet.disableCorrelationHeaders = false;
+                snippet.maxBatchInterval = 0;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.spy(appInsights, "trackDependency");
+                var expectedRootId = appInsights.context.operation.id;
+                Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+
+                // override currentWindowHost
+                var sampleHost = "api.applicationinsights.io";
+                (<any>appInsights)._ajaxMonitor.currentWindowHost = sampleHost;
+
+                // Act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "https://" + sampleHost + ":888/test");
+                xhr.send();
+
+                var expectedAjaxId = (<any>xhr).ajaxData.id;
+                Assert.ok(expectedAjaxId.length > 0, "ajax id was initialized");
+
+                // Emulate response                               
+                (<any>xhr).respond("200", {}, "");
+
+                // Assert
+                Assert.equal(expectedRootId, (<any>xhr).requestHeaders['x-ms-request-root-id'], "x-ms-request-root-id id set correctly");
+
+                Assert.equal(expectedAjaxId, (<any>xhr).requestHeaders['x-ms-request-id'], "x-ms-request-id id set correctly");
+                Assert.equal(expectedAjaxId, trackStub.args[0][0], "ajax id passed to trackAjax correctly");
+            }
+        });
+
+        this.testCase({
             name: "Ajax - disableCorrelationHeaders disables x-ms-request-id headers",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();

@@ -17,7 +17,7 @@ module Microsoft.ApplicationInsights {
         private currentWindowHost;
 
         constructor(appInsights: Microsoft.ApplicationInsights.AppInsights) {
-            this.currentWindowHost = window.location.host;
+            this.currentWindowHost = window.location.hostname;
             this.appInsights = appInsights;
             this.initialized = false;
             this.Init();
@@ -140,9 +140,9 @@ module Microsoft.ApplicationInsights {
         private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
             xhr.ajaxData.requestSentTime = dateTime.Now();
 
-            // Add correlation headers only for requests within the same domain
+            // Add correlation headers only for requests within the same domain (ignore the port number)
             // For cross- origin requests we need to ensure that x- ms -* headers are present in `Access-Control-Allow-Headers` header (OPTIONS response)
-            if (!this.appInsights.config.disableCorrelationHeaders && (UrlHelper.parseUrl(xhr.ajaxData.getAbsoluteUrl()).host == this.currentWindowHost)) {
+            if (!this.appInsights.config.disableCorrelationHeaders && (UrlHelper.parseUrl(xhr.ajaxData.getAbsoluteUrl()).hostname == this.currentWindowHost)) {
                 var rootId = this.appInsights.context.operation.id;
                 xhr.setRequestHeader("x-ms-request-root-id", rootId);
                 xhr.setRequestHeader("x-ms-request-id", xhr.ajaxData.id);
