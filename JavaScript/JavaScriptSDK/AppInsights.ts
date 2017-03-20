@@ -457,8 +457,9 @@ module Microsoft.ApplicationInsights {
         */
         private SendCORSException(properties: any) {
             var exceptionData = Microsoft.ApplicationInsights.Telemetry.Exception.CreateSimpleException(
-                "Script error.", "Error", "unknown", "unknown",
-                "The browser's same-origin policy prevents us from getting the details of this exception.The exception occurred in a script loaded from an origin different than the web page.For cross- domain error reporting you can use crossorigin attribute together with appropriate CORS HTTP headers.For more information please see http://www.w3.org/TR/cors/.",
+                "Script error.",
+                "Error", "unknown", "unknown",
+                "The browser's same-origin policy prevents us from getting the details of this exception. Consider using 'crossorigin' attribute.",
                 0, null);
             exceptionData.properties = properties;
 

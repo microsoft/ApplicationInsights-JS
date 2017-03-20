@@ -51,16 +51,7 @@ module Microsoft.ApplicationInsights.Telemetry {
                         hasFullStack: true,
                         message: message,
                         stack: details,
-                        typeName: typeName,
-                        parsedStack: [
-                            <AI.StackFrame> {
-                                level: 0,
-                                assembly: assembly,
-                                fileName: fileName,
-                                line: line,
-                                method: "unknown"
-                            }
-                        ]
+                        typeName: typeName
                     }
                 ]
             };
