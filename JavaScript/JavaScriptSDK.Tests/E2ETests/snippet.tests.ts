@@ -118,6 +118,32 @@ class SnippetTests extends TestClass {
                     Assert.equal(expectedSdk, data.tags["ai.internal.sdkVersion"], "sdk version was set correctly");
                 })
         });
+
+        this.testCaseAsync({
+            name: "SnippetTests: SDK sends an Exception when an Error is thrown",
+            stepDelay: 250,
+            steps: [
+                () => {
+                    this.loadSnippet(snippet_Latest);
+                },
+                () => {
+                    this.senderMocks = this.setAppInsights();
+
+                    // we can't simply throw because it will fail the test
+                    // this will only validate that if the _onError is called it sends the Exception to AI
+                    window["appInsights"]._onerror("upps!");
+                }]
+                .concat(this.waitForResponse())
+                .concat(() => {
+                    Assert.equal(this.queueCallCount, this.queueSpy.callCount, "queue is emptied");
+                    Assert.equal(1, this.senderMocks.sender.callCount, "sender called");
+                    this.boilerPlateAsserts(this.senderMocks);
+
+                    var data = <Microsoft.ApplicationInsights.Telemetry.Common.Envelope>this.senderMocks.sender.args[0][0];
+                    Assert.ok(data.name.indexOf(".Exception") !== -1, "Exception event recorded");
+                    Assert.equal("upps!", (<any>data.data).baseData.exceptions[0].message, "error has correct message");
+                })
+        });
     }
 
     private testSnippet(snippetPath) {

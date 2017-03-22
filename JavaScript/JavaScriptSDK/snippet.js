@@ -13,9 +13,11 @@
     var track = "Track";
     var trackEvent = track + "Event";
     var trackPage = track + "Page";
-    var scriptElement = localDocument.createElement(scriptText);
-    scriptElement.src = aiConfig.url || "CDN_PATH";
-    localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
+    setTimeout(function () {
+        var scriptElement = localDocument.createElement(scriptText);
+        scriptElement.src = aiConfig.url || "CDN_PATH";
+        localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
+    });
 
     // capture initial cookie
     try {
