@@ -86,7 +86,7 @@ See:
 
 ## Links
 
-* Check out our [Wiki](https://github.com/Microsoft/ApplicationInsights-JS/wiki) for other useful info. 
+* Check out our [Wiki](https://github.com/Microsoft/ApplicationInsights-JS/wiki) and [FAQ](https://github.com/Microsoft/ApplicationInsights-JS/wiki/FAQ) for other useful info. 
 * Follow latest Application Insights changes and announcements on [ApplicationInsights Announcements](https://github.com/Microsoft/ApplicationInsights-Announcements)
 * [Application Insights Home](https://github.com/Microsoft/ApplicationInsights-Home). The main repository for documentation of overall SDK offerings for all platforms.
 * [SDK Release Schedule](https://github.com/Microsoft/ApplicationInsights-Home/wiki/SDK-Release-Schedule)
