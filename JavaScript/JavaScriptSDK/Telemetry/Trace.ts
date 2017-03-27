@@ -18,13 +18,17 @@ module Microsoft.ApplicationInsights.Telemetry {
         };
 
         /**
-         * Constructs a new instance of the MetricTelemetry object
+         * Constructs a new instance of the TraceTelemetry object
          */
-        constructor(message: string, properties?: any) {
+        constructor(message: string, properties?: any, severityLevel?: AI.SeverityLevel) {
             super();
             message = message || Util.NotSpecified;
             this.message = Common.DataSanitizer.sanitizeMessage(message);
             this.properties = Common.DataSanitizer.sanitizeProperties(properties);
+
+            if (severityLevel) {
+                this.severityLevel = severityLevel;
+            }
         }
     }
 }

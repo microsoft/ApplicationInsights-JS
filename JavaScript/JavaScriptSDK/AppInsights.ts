@@ -377,10 +377,11 @@ module Microsoft.ApplicationInsights {
         * Log a diagnostic message. 
         * @param    message A message string 
         * @param   properties  map[string, string] - additional data used to filter traces in the portal. Defaults to empty.
+        * @param   severityLevel   AI.SeverityLevel - severity level
         */
-        public trackTrace(message: string, properties?: Object) {
+        public trackTrace(message: string, properties?: Object, severityLevel?: AI.SeverityLevel) {
             try {
-                var telemetry = new Telemetry.Trace(message, properties);
+                var telemetry = new Telemetry.Trace(message, properties, severityLevel);
                 var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Trace>(Telemetry.Trace.dataType, telemetry);
                 var envelope = new Telemetry.Common.Envelope(data, Telemetry.Trace.envelopeType);
 
