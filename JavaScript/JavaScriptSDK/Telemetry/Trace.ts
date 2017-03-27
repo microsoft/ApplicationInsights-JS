@@ -13,7 +13,6 @@ module Microsoft.ApplicationInsights.Telemetry {
             ver: FieldType.Required,
             message: FieldType.Required,
             severityLevel: FieldType.Default,
-            measurements: FieldType.Default,
             properties: FieldType.Default
         };
 
