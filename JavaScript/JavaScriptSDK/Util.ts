@@ -412,7 +412,7 @@ module Microsoft.ApplicationInsights {
                 if (Date.prototype.toISOString) {
                     return date.toISOString();
                 } else {
-                    function pad(number) {
+                    const pad = function(number) {
                         var r = String(number);
                         if (r.length === 1) {
                             r = "0" + r;
