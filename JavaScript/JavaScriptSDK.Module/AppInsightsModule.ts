@@ -68,18 +68,21 @@ class AppInsightsModule {
             aiObject.queue = [];
         }
 
-        var scriptElement = document.createElement("script");
-        scriptElement.src = aiConfig.url || "https://az416426.vo.msecnd.net/scripts/a/ai.0.js";
-        document.head.appendChild(scriptElement);
+        setTimeout(function () {
+            var scriptElement = document.createElement("script");
+            scriptElement.src = aiConfig.url || "https://az416426.vo.msecnd.net/scripts/a/ai.0.js";
+            document.head.appendChild(scriptElement);
+        });
 
-        // collect global errors
+        // collect global errors by wrapping the window.onerror method
         if (!aiConfig.disableExceptionTracking) {
-            AppInsightsModule._createLazyMethod("_onerror");
-            var originalOnError = window["_onerror"];
-            window["_onerror"] = function (message, url, lineNumber, columnNumber, error) {
+            let method = "onerror";
+            AppInsightsModule._createLazyMethod("_" + method);
+            var originalOnError = window[method];
+            window[method] = function (message, url, lineNumber, columnNumber, error) {
                 var handled = originalOnError && originalOnError(message, url, lineNumber, columnNumber, error);
                 if (handled !== true) {
-                    aiObject["_onerror"](message, url, lineNumber, columnNumber, error);
+                    aiObject["_" + method](message, url, lineNumber, columnNumber, error);
                 }
 
                 return handled;
