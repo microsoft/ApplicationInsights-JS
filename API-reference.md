@@ -236,7 +236,7 @@ Values that control how the telemetry data is sent.
         // If true, telemetry data is not collected or sent. Default false.
         disableTelemetry: boolean; 
         
-        // Default false
+        // If true, the SDK will log all internal errors (any severity) to the console. Default false
         verboseLogging: boolean;
         
         // Controls what percentage of events will be sent
