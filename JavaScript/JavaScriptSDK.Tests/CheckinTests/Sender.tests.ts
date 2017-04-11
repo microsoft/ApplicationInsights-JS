@@ -1,9 +1,9 @@
 ﻿/// <reference path="..\TestFramework\Common.ts" />
 /// <reference path="../../JavaScriptSDK/Util.ts"/>
-/// <reference path="../../JavaScriptSDK/sender.ts" />
+/// <reference path="../../JavaScriptSDK/Sender.ts" />
 /// <reference path="../../JavaScriptSDK/SendBuffer.ts"/>
-/// <reference path="../../javascriptsdk/appinsights.ts" />
-/// <reference path="../../JavaScriptSDK/util.ts" />
+/// <reference path="../../JavaScriptSDK/Appinsights.ts" />
+/// <reference path="../../JavaScriptSDK/Util.ts" />
 
 class SenderWrapper extends Microsoft.ApplicationInsights.Sender {
     errorSpy: SinonSpy;

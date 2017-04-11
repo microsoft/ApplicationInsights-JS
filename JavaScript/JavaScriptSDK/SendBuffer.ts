@@ -1,4 +1,4 @@
-﻿/// <reference path="serializer.ts" />
+﻿/// <reference path="Serializer.ts" />
 /// <reference path="Telemetry/Common/Envelope.ts"/>
 /// <reference path="Telemetry/Common/Base.ts" />
 /// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/ContextTagKeys.ts"/>

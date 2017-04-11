@@ -1,4 +1,4 @@
-﻿/// <reference path="./logging.ts" />
+﻿/// <reference path="./Logging.ts" />
 module Microsoft.ApplicationInsights {
 
     /**

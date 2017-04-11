@@ -1,4 +1,4 @@
-﻿/// <reference path="../../logging.ts" />
+﻿/// <reference path="../../Logging.ts" />
 /// <reference path="../../Util.ts"/>
 
 module Microsoft.ApplicationInsights.Telemetry.Common {

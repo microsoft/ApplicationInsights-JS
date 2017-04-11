@@ -1,6 +1,6 @@
 ﻿/// <reference path="../JavaScriptSDK.Interfaces/Telemetry/ISerializable.ts" />
-/// <reference path="logging.ts" />
-/// <reference path="util.ts" />
+/// <reference path="Logging.ts" />
+/// <reference path="Util.ts" />
 
 module Microsoft.ApplicationInsights {
     "use strict";

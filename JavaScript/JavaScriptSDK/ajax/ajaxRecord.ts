@@ -1,5 +1,5 @@
-﻿/// <reference path="../logging.ts" />
-/// <reference path="../util.ts" />
+﻿/// <reference path="../Logging.ts" />
+/// <reference path="../Util.ts" />
 /// <reference path="./ajaxUtils.ts" />
 
 module Microsoft.ApplicationInsights {
