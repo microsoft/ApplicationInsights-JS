@@ -26,6 +26,7 @@
     <TypeScriptGeneratesDeclarations>True</TypeScriptGeneratesDeclarations>
     <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
     <TypeScriptTarget>ES5</TypeScriptTarget>
+    <TypeScriptInlineSources>True</TypeScriptInlineSources>
     <!-- Suppress the "CS2008: No source files specified" warning -->
     <NoWarn>2008</NoWarn>
     <UseGlobalApplicationHostFile />
@@ -56,15 +57,6 @@
     <TypeScriptRemoveComments>false</TypeScriptRemoveComments>
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
     <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
-    <TypeScriptJSXEmit>None</TypeScriptJSXEmit>
-    <TypeScriptCompileOnSaveEnabled>True</TypeScriptCompileOnSaveEnabled>
-    <TypeScriptNoImplicitAny>False</TypeScriptNoImplicitAny>
-    <TypeScriptOutFile>min\$(OutFileBaseName).js</TypeScriptOutFile>
-    <TypeScriptOutDir />
-    <TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
-    <TypeScriptMapRoot>
-    </TypeScriptMapRoot>
-    <TypeScriptSourceRoot>https://raw.githubusercontent.com/Microsoft/ApplicationInsights-JS/master/JavaScript</TypeScriptSourceRoot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <TypeScriptTarget>ES5</TypeScriptTarget>
