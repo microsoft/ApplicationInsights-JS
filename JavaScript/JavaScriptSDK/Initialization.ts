@@ -1,4 +1,4 @@
-﻿/// <reference path="appinsights.ts" />
+﻿/// <reference path="AppInsights.ts" />
 
 module Microsoft.ApplicationInsights {
     "use strict";

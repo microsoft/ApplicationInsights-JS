@@ -1,10 +1,10 @@
-﻿/// <reference path="sender.ts"/>
-/// <reference path="telemetry/trace.ts" />
-/// <reference path="telemetry/event.ts" />
-/// <reference path="telemetry/exception.ts" />
-/// <reference path="telemetry/metric.ts" />
-/// <reference path="telemetry/pageview.ts" />
-/// <reference path="telemetry/pageviewperformance.ts" />
+﻿/// <reference path="Sender.ts"/>
+/// <reference path="Telemetry/Trace.ts" />
+/// <reference path="Telemetry/Event.ts" />
+/// <reference path="Telemetry/Exception.ts" />
+/// <reference path="Telemetry/Metric.ts" />
+/// <reference path="Telemetry/PageView.ts" />
+/// <reference path="Telemetry/PageViewPerformance.ts" />
 /// <reference path="./Util.ts"/>
 /// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/SessionState.ts"/>
 /// <reference path="../JavaScriptSDK.Interfaces/ITelemetryContext.ts" />

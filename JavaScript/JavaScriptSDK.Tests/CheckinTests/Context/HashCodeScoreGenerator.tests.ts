@@ -1,5 +1,5 @@
 ﻿/// <reference path="../../../JavaScriptSDK/appInsights.ts" />
-/// <reference path="../../../JavaScriptSDK/util.ts" />
+/// <reference path="../../../JavaScriptSDK/Util.ts" />
 /// <reference path="../../../JavaScriptSDK/HashCodeScoreGenerator.ts" />
 /// <reference path="../../testframework/common.ts" />
 

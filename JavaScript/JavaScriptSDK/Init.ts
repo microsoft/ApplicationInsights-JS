@@ -1,4 +1,4 @@
-﻿/// <reference path="initialization.ts" />
+﻿/// <reference path="Initialization.ts" />
 
 module Microsoft.ApplicationInsights {
     "use strict";

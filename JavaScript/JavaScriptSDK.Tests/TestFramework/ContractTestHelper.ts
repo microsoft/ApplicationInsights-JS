@@ -1,4 +1,4 @@
-﻿/// <reference path="../../JavaScriptSDK/serializer.ts" />
+﻿/// <reference path="../../JavaScriptSDK/Serializer.ts" />
 /// <reference path="./TestClass.ts"/>
 
 class ContractTestHelper extends TestClass {
