@@ -40,9 +40,8 @@ In a web page where you have [set up web page tracking](https://azure.microsoft.
 
 Logs that a page or similar container was displayed to the user. 
 
-
- | |
----|---|---
+Parameter | Description
+---|---
 `name` | The name used to identify the page in the portal. Defaults to the document title.
 `url` |  A relative or absolute URL that identifies the page or similar item. Defaults to the window location.
 `properties` | Map of string to string: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
@@ -59,8 +58,8 @@ tabs, and you want to log a page view when each tab opens.
     
 Starts the timer for tracking a page view. Use this instead of ```trackPageView``` if you want to control when the page view timer starts and stops, but don't want to calculate the duration yourself. This method doesn't send any telemetry. Call ```stopTrackPage``` to log the end of the page view and send the event.
 
- | |
----|---|---
+Parameter | Description
+---|---
 `name` | The name used to identify the page in the portal. Defaults to the document title.
 
 ### stopTrackPage
@@ -69,8 +68,8 @@ Starts the timer for tracking a page view. Use this instead of ```trackPageView`
 
 Stops the timer that was started by calling ```startTrackPage``` and sends the page view telemetry with the specified properties and measurements. The duration of the page view will be the time between calling ```startTrackPage``` and ```stopTrackPage```.
 
- | |
----|---|---
+Parameter | Description
+---|---
 `name` | The name used to identify the page in the portal. Defaults to the document title.
 `url` |  A relative or absolute URL that identifies the page or similar item. Defaults to the window location.
 `properties` | Map of string to string: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
@@ -82,8 +81,8 @@ Stops the timer that was started by calling ```startTrackPage``` and sends the p
 
 Log a user action or other occurrence.
 
- | | 
----|---|---
+Parameter | Description
+---|---
  `name` | Identifies the event. Events with the same name are counted and can be charted in [Metric Explorer](https://azure.microsoft.com/documentation/articles/app-insights-metrics-explorer/).
 `properties` | Map of string to string: Additional data used to [filter events](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 `measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
@@ -99,8 +98,8 @@ You can also search and [display individual events](https://azure.microsoft.com/
 
 Log a positive numeric value that is not associated with a specific event. Typically used to send regular reports of performance indicators. 
 
- | | 
----|---|---
+Parameter | Description
+---|---
 `name` | A string that identifies the metric. In the portal, you can select metrics for display by name.
 `average` | Either a single measurement, or the average of several measurements. Should be >=0 to be correctly displayed.
 `sampleCount` | Count of measurements represented by the average. Defaults to 1. Should be >=1.
@@ -119,8 +118,8 @@ To send a single measurement, use just the first two parameters. If you take mea
 
 Log an exception you have caught. (Exceptions caught by the browser are also logged.)
 
- | | 
----|---|---
+Parameter | Description
+---|---
 `exception` | An Error from a catch clause.  
 `handledAt` | Defaults to "unhandled".
 `properties` | Map of string to string: Additional data used to [filter exceptions](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
@@ -144,8 +143,8 @@ By default, uncaught browser exceptions are caught by the SDK and reported to th
 
 Log a diagnostic event such as entering or leaving a method.
 
- | | 
----|---|---
+ Parameter | Description
+---|---
 `message` | Diagnostic data. Can be much longer than a name.
 `properties` | Map of string to string: Additional data used to [filter exceptions](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 `measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
@@ -161,8 +160,8 @@ In the portal, you can search on message content and [display individual trackTr
     
 Log a dependency call (for instance: ajax)
 
- | | 
----|---|---
+ Parameter | Description
+---|---
 `id` | Unique id, this is used by the backend to correlate server requests. Use `Util.newId()` to generate a unique Id.
 `method` | Represents request verb (GET, POST, etc.)
 `absoluteUrl` | Absolute url used to make the dependency request
@@ -187,8 +186,8 @@ You don't usually have to use this, as it happens automatically on window closin
 
 Set the authenticated user id and the account id in this session. Use this when you have identified a specific signed-in user. Parameters must not contain spaces or ,;=|
 
- | | 
----|---|---
+ Parameter | Description
+---|---
 `authenticatedUserId` | An id that uniquely identifies a user of your app. No spaces, comma, semicolon, equals or vertical bar.
 `accountId` | An optional account id, if your app groups users into accounts. No spaces, comma, semicolon, equals or vertical bar.
     
@@ -306,7 +305,7 @@ Look for this line, and add more items:
 
 You can also read or write them dynamically:
 
-   appInsights.config.disableTelemetry = true;
+    appInsights.config.disableTelemetry = true;
 
 ### context
 
@@ -336,8 +335,8 @@ Details of the app you're monitoring.
     
  The device the app is running on.
  
-    |   |
----|---|---
+    Property | Description
+    ---|---
     device.type  | Type of device
     device.id	| unique ID
     device.oemName |
@@ -357,8 +356,8 @@ Details of the app you're monitoring.
 Data about the current user. Users are identified by cookie, so one person can look like 
 more than one user if they use different machines or browsers, or delete cookies.
 
-   |   |
----|---|---
+Property | Description
+---|---
 `user.id` | Unique, cookie-based user id, automatically assigned.
 `user.authenticatedId` | Id set by your app using [`setAuthenticatedUserContext`](#setAuthenticatedUserContext) when the user signs in.
 `user.accountId` | Set by your app when the user signs in, if your app groups users into accounts.
@@ -374,8 +373,8 @@ more than one user if they use different machines or browsers, or delete cookies
 The user session. A session represents a series of user actions. A session starts with a user action.
 It ends at the last user activity when there is no more activity for sessionRenewalMs, or if it lasts longer than sessionExpirationMs.
 
-   |   | 
----|---|---
+Property | Description
+---|---
 `session.id` | Automatically assigned id
 `session.isFirst` | Boolean. True if this is the first session for this user.
 `session.acquisitionDate` | Number. The dateTime when this session was created.
@@ -388,8 +387,8 @@ It ends at the last user activity when there is no more activity for sessionRene
 
 Data from which the geographical location of the user's device can be guessed.
 
-   |   | 
----|---|---
+Property | Description
+---|---
 `location.ip` | IP address
 
 ### context.operation
@@ -398,8 +397,8 @@ Data from which the geographical location of the user's device can be guessed.
         
 Represents the user request. Operation id is used to tie together related events in diagnostic search.
 
-   |   | 
----|---|---
+Property | Description
+---|---
 `id` | Unique id
 `name` | 
 `parentId` |
