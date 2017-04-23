@@ -155,14 +155,16 @@ module Microsoft.ApplicationInsights {
          * Starts timing how long the user views a page or other item. Call this when the page opens. 
          * This method doesn't send any telemetry. Call {@link stopTrackTelemetry} to log the page when it closes.
          * @param   name  A string that idenfities this item, unique within this HTML document. Defaults to the document title.
+         * @param StartDate A date that identifies the original start date that will override the current date. Defaults to the current date.
          */
-        public startTrackPage(name?: string) {
+        public startTrackPage(name?: string, StartDate?: Date) {
             try {
                 if (typeof name !== "string") {
                     name = window.document && window.document.title || "";
                 }
 
-                this._pageTracking.start(name);
+                this._pageTracking.start(name, StartDate);
+                
             } catch (e) {
                 _InternalLogging.throwInternal(
                     LoggingSeverity.CRITICAL,
@@ -178,8 +180,9 @@ module Microsoft.ApplicationInsights {
          * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
          * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+         * @param   EndDate A date that identifies the original end date that will override the current date. Defaults to the current date.
          */
-        public stopTrackPage(name?: string, url?: string, properties?: Object, measurements?: Object) {
+        public stopTrackPage(name?: string, url?: string, properties?: Object, measurements?: Object, EndDate?: Date) {
             try {
                 if (typeof name !== "string") {
                     name = window.document && window.document.title || "";
@@ -189,7 +192,7 @@ module Microsoft.ApplicationInsights {
                     url = window.location && window.location.href || "";
                 }
 
-                this._pageTracking.stop(name, url, properties, measurements);
+                this._pageTracking.stop(name, url, properties, measurements, EndDate);
 
                 if (this.config.autoTrackPageVisitTime) {
                     this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
@@ -519,24 +522,38 @@ module Microsoft.ApplicationInsights {
             this._events = {};
         }
 
-        public start(name: string) {
+        public start(name: string , StartDate? : Date) {
             if (typeof this._events[name] !== "undefined") {
                 _InternalLogging.throwInternal(
                     LoggingSeverity.WARNING, _InternalMessageId.StartCalledMoreThanOnce, "start was called more than once for this event without calling stop.",
                     { name: this._name, key: name }, true);
             }
-
-            this._events[name] = +new Date;
+            if (StartDate) {
+                this._events[name] = + StartDate;
+            }
+            else
+            {
+                this._events[name] = + new Date;
+            }
+            
         }
 
-        public stop(name: string, url: string, properties?: Object, measurements?: Object) {
+        public stop(name: string, url: string, properties?: Object, measurements?: Object, endDate? : Date) {
             var start = this._events[name];
             if (isNaN(start)) {
                 _InternalLogging.throwInternal(
                     LoggingSeverity.WARNING, _InternalMessageId.StopCalledWithoutStart, "stop was called without a corresponding start.",
                     { name: this._name, key: name }, true);
             } else {
-                var end = +new Date;
+                var end;
+                if (endDate) {
+                    end = + endDate;
+                }
+                else
+                {
+                    end = +new Date;
+                }
+
                 var duration = Telemetry.PageViewPerformance.getDuration(start, end);
                 this.action(name, url, duration, properties, measurements);
             }
