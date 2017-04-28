@@ -28,6 +28,7 @@
     <TypeScriptTarget>ES5</TypeScriptTarget>
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
     <TypeScriptInlineSources>True</TypeScriptInlineSources>
+    <TypeScriptAlwaysStrict>True</TypeScriptAlwaysStrict>
     <!-- Suppress the "CS2008: No source files specified" warning -->
     <NoWarn>2008</NoWarn>
     <UseGlobalApplicationHostFile />
