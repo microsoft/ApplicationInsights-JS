@@ -1121,6 +1121,73 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
+            name: "Timing Tests: Stubbed Start/StopPageView pass correct duration sending StartDate to StartTrackPage",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+
+                var ActualTime = new Date();
+                this.clock.tick(testValues.duration);
+                var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
+
+                // act
+                appInsights.startTrackPage(null, ActualTime);
+                this.clock.tick(testValues.duration);
+                appInsights.stopTrackPage();
+
+                // verify
+                Assert.ok(spy.calledOnce, "stop track page view sent data");
+                var actualDuration = spy.args[0][2];
+                Assert.equal(testValues.duration*2, actualDuration, "duration is calculated and sent correctly");
+            }
+        });
+
+        this.testCase({
+            name: "Timing Tests: Start/StopPageView tracks single page view with no parameters",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
+                this.clock.tick(10);        // Needed to ensure the duration calculation works
+
+                // act
+                appInsights.startTrackPage();
+                this.clock.tick(testValues.duration);
+                appInsights.stopTrackPage();
+                Assert.ok(trackStub.calledOnce, "single page view tracking stopped");
+
+                // verify
+                var telemetry = <Microsoft.ApplicationInsights.Telemetry.PageView>trackStub.args[0][0].data.baseData;
+                Assert.notEqual(testValues.name, telemetry.name);
+                Assert.notEqual(testValues.url, telemetry.url);
+                Assert.notEqual(testValues.properties, telemetry.properties);
+                Assert.notEqual(testValues.measurements, telemetry.measurements);
+            }
+        });
+
+        this.testCase({
+            name: "Timing Tests: Stubbed Start/StopPageView pass correct duration sending EndDate to StopTrackPage",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+
+                var StartTime = new Date();
+                this.clock.tick(testValues.duration);
+                var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
+                var StopTime = new Date();
+
+                // act
+                appInsights.startTrackPage(null, StartTime);
+                appInsights.stopTrackPage(null, null, null, null, StopTime);
+
+                // verify
+                Assert.ok(spy.calledOnce, "stop track page view sent data");
+                var actualDuration = spy.args[0][2];
+                Assert.equal(testValues.duration , actualDuration, "duration is calculated and sent correctly");
+            }
+        });
+
+        this.testCase({
             name: "Timing Tests: Start/StopPageView tracks single page view with no parameters",
             test: () => {
                 // setup
