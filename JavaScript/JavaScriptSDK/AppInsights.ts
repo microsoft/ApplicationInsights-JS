@@ -155,7 +155,7 @@ module Microsoft.ApplicationInsights {
          * Starts timing how long the user views a page or other item. Call this when the page opens. 
          * This method doesn't send any telemetry. Call {@link stopTrackTelemetry} to log the page when it closes.
          * @param   name  A string that idenfities this item, unique within this HTML document. Defaults to the document title.
-         * @param StartDate The date that identifies the original start date that will override the current date. Defaults to the current date.
+         * @param StartDate A date that identifies the original start date that will override the current date. Defaults to the current date.
          */
         public startTrackPage(name?: string, StartDate?: Date) {
             try {
@@ -180,7 +180,7 @@ module Microsoft.ApplicationInsights {
          * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
          * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
-         * @param   EndDate The date that identifies the original end date that will override the current date. Defaults to the current date.
+         * @param   EndDate A date that identifies the original end date that will override the current date. Defaults to the current date.
          */
         public stopTrackPage(name?: string, url?: string, properties?: Object, measurements?: Object, EndDate?: Date) {
             try {
