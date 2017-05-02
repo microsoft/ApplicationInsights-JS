@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    // "outDir": "bundle",
+    "outFile": "ai.js",
+    "sourceMap": true,
+    "inlineSourceMap": true,
+    // "noImplicitAny": true,
+    "noImplicitAny": false,
+    "module": "amd",
+    "target": "es5",
+    "allowJs": true,
+    "alwaysStrict": true
+  }
+}
