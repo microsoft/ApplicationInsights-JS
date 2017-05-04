@@ -7,7 +7,8 @@ module.exports = function (grunt) {
           '!node_modules/**',
           '!bundle/**',
           '!dist/**',
-          '!JavaScript/JavaScriptSDK.Tests/**'],
+          '!JavaScript/JavaScriptSDK.Tests/**',
+          '!JavaScript/JavaScriptSDK/min/**'], // this was the old build drop location
         out: 'bundle/ai.js',
         comments: true
       }
