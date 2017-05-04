@@ -32,6 +32,7 @@
             var originalArguments = arguments;
             // Queue-up a call to the real method
             appInsights.queue.push(function() {
+                
                 // Invoke the real method with the captured original arguments
                 appInsights[name].apply(appInsights, originalArguments);
             });
@@ -49,8 +50,9 @@
     createLazyMethod(start + trackEvent);
     createLazyMethod(stop + trackEvent);
 
-    createLazyMethod(start + trackPage);
-    createLazyMethod(stop + trackPage);
+    //Record the current time for the methods startTrackPage and stopTrackPage
+    createLazyMethod(start + trackPage, new Date());
+    createLazyMethod(stop + trackPage, new Date());
 
     createLazyMethod("flush");
 
