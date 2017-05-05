@@ -31,7 +31,7 @@
             // Capture the original arguments passed to the method
             var originalArguments = arguments;
             if (name.indexOf(trackPage) >= 0) {
-                [].push.call(originalArguments, new Date());⁠⁠⁠⁠
+                [].push.call(originalArguments, new Date().getTime());
             }
             // Queue-up a call to the real method
             appInsights.queue.push(function() {
