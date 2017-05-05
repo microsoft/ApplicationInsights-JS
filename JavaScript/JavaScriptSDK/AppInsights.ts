@@ -157,13 +157,13 @@ module Microsoft.ApplicationInsights {
          * @param   name  A string that idenfities this item, unique within this HTML document. Defaults to the document title.
          * @param StartDate A date that identifies the original start date that will override the current date. Defaults to the current date.
          */
-        public startTrackPage(name?: string, StartDate?: Date) {
+        public startTrackPage(name?: string, startDate?: Date) {
             try {
                 if (typeof name !== "string") {
                     name = window.document && window.document.title || "";
                 }
 
-                this._pageTracking.start(name, StartDate);
+                this._pageTracking.start(name, startDate);
                 
             } catch (e) {
                 _InternalLogging.throwInternal(
@@ -182,7 +182,7 @@ module Microsoft.ApplicationInsights {
          * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
          * @param   EndDate A date that identifies the original end date that will override the current date. Defaults to the current date.
          */
-        public stopTrackPage(name?: string, url?: string, properties?: Object, measurements?: Object, EndDate?: Date) {
+        public stopTrackPage(name?: string, url?: string, properties?: Object, measurements?: Object, endDate?: Date) {
             try {
                 if (typeof name !== "string") {
                     name = window.document && window.document.title || "";
@@ -192,7 +192,7 @@ module Microsoft.ApplicationInsights {
                     url = window.location && window.location.href || "";
                 }
 
-                this._pageTracking.stop(name, url, properties, measurements, EndDate);
+                this._pageTracking.stop(name, url, properties, measurements, endDate);
 
                 if (this.config.autoTrackPageVisitTime) {
                     this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
@@ -522,14 +522,14 @@ module Microsoft.ApplicationInsights {
             this._events = {};
         }
 
-        public start(name: string , StartDate? : Date) {
+        public start(name: string , startDate? : Date) {
             if (typeof this._events[name] !== "undefined") {
                 _InternalLogging.throwInternal(
                     LoggingSeverity.WARNING, _InternalMessageId.StartCalledMoreThanOnce, "start was called more than once for this event without calling stop.",
                     { name: this._name, key: name }, true);
             }
-            if (StartDate) {
-                this._events[name] = + StartDate;
+            if (startDate) {
+                this._events[name] = + startDate;
             }
             else
             {

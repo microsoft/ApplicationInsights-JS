@@ -1126,12 +1126,12 @@ class AppInsightsTests extends TestClass {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
 
-                var ActualTime = new Date();
+                var actualTime = new Date();
                 this.clock.tick(testValues.duration);
                 var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
 
                 // act
-                appInsights.startTrackPage(null, ActualTime);
+                appInsights.startTrackPage(null, actualTime);
                 this.clock.tick(testValues.duration);
                 appInsights.stopTrackPage();
 
@@ -1166,19 +1166,19 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "Timing Tests: Stubbed Start/StopPageView pass correct duration sending EndDate to StopTrackPage",
+            name: "Timing Tests: Stubbed Start/StopPageView pass correct duration sending endDate to StopTrackPage",
             test: () => {
                 // setup
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
 
-                var StartTime = new Date();
+                var startTime = new Date();
                 this.clock.tick(testValues.duration);
                 var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
-                var StopTime = new Date();
+                var stopTime = new Date();
 
                 // act
-                appInsights.startTrackPage(null, StartTime);
-                appInsights.stopTrackPage(null, null, null, null, StopTime);
+                appInsights.startTrackPage(null, startTime);
+                appInsights.stopTrackPage(null, null, null, null, stopTime);
 
                 // verify
                 Assert.ok(spy.calledOnce, "stop track page view sent data");

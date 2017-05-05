@@ -30,6 +30,9 @@
         appInsights[name] = function() {
             // Capture the original arguments passed to the method
             var originalArguments = arguments;
+            if (name.indexOf(trackPage) >= 0) {
+                [].push.call(originalArguments, new Date());⁠⁠⁠⁠
+            }
             // Queue-up a call to the real method
             appInsights.queue.push(function() {
                 
@@ -50,9 +53,8 @@
     createLazyMethod(start + trackEvent);
     createLazyMethod(stop + trackEvent);
 
-    //Record the current time for the methods startTrackPage and stopTrackPage
-    createLazyMethod(start + trackPage, new Date());
-    createLazyMethod(stop + trackPage, new Date());
+    createLazyMethod(start + trackPage);
+    createLazyMethod(stop + trackPage);
 
     createLazyMethod("flush");
 
