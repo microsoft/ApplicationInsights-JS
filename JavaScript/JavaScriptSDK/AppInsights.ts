@@ -155,16 +155,40 @@ module Microsoft.ApplicationInsights {
          * Starts timing how long the user views a page or other item. Call this when the page opens. 
          * This method doesn't send any telemetry. Call {@link stopTrackTelemetry} to log the page when it closes.
          * @param   name  A string that idenfities this item, unique within this HTML document. Defaults to the document title.
-         * @param StartDate A date that identifies the original start date that will override the current date. Defaults to the current date.
+         * @param startDate A date that identifies the original start date that will override the current date. Defaults to the current date.
          */
-        public startTrackPage(name?: string, startDate?: Date) {
+        public startTrackPage(startDate?: Date); //Method firm with date
+        public startTrackPage(name?: string, startDate?: Date); //Method firm with name and date
+        public startTrackPage(param1?: (string | Date), param2?: Date) {
+
+            var name: string;
+            var startDate: Date;
+
             try {
-                if (typeof name !== "string") {
+
+                if (param2 != null) {
+                    name = <string>param1;
+                    startDate = param2;
+                }
+
+                else if (param1 != null) {
+                    if (typeof param1 === "string") {
+                        name = param1;
+                        startDate = null;
+                    }
+
+                    else {
+                        name = window.document && window.document.title || "";
+                        startDate = param1;
+                    }
+                }
+
+                else if (typeof param1 !== "string") {
                     name = window.document && window.document.title || "";
                 }
 
                 this._pageTracking.start(name, startDate);
-                
+
             } catch (e) {
                 _InternalLogging.throwInternal(
                     LoggingSeverity.CRITICAL,

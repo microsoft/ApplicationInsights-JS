@@ -1131,7 +1131,7 @@ class AppInsightsTests extends TestClass {
                 var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
 
                 // act
-                appInsights.startTrackPage(null, actualTime);
+                appInsights.startTrackPage(actualTime);
                 this.clock.tick(testValues.duration);
                 appInsights.stopTrackPage();
 
@@ -1177,7 +1177,7 @@ class AppInsightsTests extends TestClass {
                 var stopTime = new Date();
 
                 // act
-                appInsights.startTrackPage(null, startTime);
+                appInsights.startTrackPage(startTime);
                 appInsights.stopTrackPage(null, null, null, null, stopTime);
 
                 // verify
