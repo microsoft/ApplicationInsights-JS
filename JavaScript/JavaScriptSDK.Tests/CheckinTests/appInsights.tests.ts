@@ -1121,28 +1121,6 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "Timing Tests: Stubbed Start/StopPageView pass correct duration sending StartDate to StartTrackPage",
-            test: () => {
-                // setup
-                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-
-                var actualTime = new Date();
-                this.clock.tick(testValues.duration);
-                var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
-
-                // act
-                appInsights.startTrackPage(actualTime);
-                this.clock.tick(testValues.duration);
-                appInsights.stopTrackPage();
-
-                // verify
-                Assert.ok(spy.calledOnce, "stop track page view sent data");
-                var actualDuration = spy.args[0][2];
-                Assert.equal(testValues.duration*2, actualDuration, "duration is calculated and sent correctly");
-            }
-        });
-
-        this.testCase({
             name: "Timing Tests: Start/StopPageView tracks single page view with no parameters",
             test: () => {
                 // setup
@@ -1162,28 +1140,6 @@ class AppInsightsTests extends TestClass {
                 Assert.notEqual(testValues.url, telemetry.url);
                 Assert.notEqual(testValues.properties, telemetry.properties);
                 Assert.notEqual(testValues.measurements, telemetry.measurements);
-            }
-        });
-
-        this.testCase({
-            name: "Timing Tests: Stubbed Start/StopPageView pass correct duration sending endDate to StopTrackPage",
-            test: () => {
-                // setup
-                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-
-                var startTime = new Date();
-                this.clock.tick(testValues.duration);
-                var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
-                var stopTime = new Date();
-
-                // act
-                appInsights.startTrackPage(startTime);
-                appInsights.stopTrackPage(null, null, null, null, stopTime);
-
-                // verify
-                Assert.ok(spy.calledOnce, "stop track page view sent data");
-                var actualDuration = spy.args[0][2];
-                Assert.equal(testValues.duration , actualDuration, "duration is calculated and sent correctly");
             }
         });
 
