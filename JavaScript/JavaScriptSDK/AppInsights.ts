@@ -236,7 +236,7 @@ module Microsoft.ApplicationInsights {
          * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
          * @param   EndDate A date that identifies the original end date that will override the current date. Defaults to the current date.
          */
-        public stopTrackPageInternal(name?: string, url?: string, properties?: Object, measurements?: Object, endTime?: number) {
+        private stopTrackPageInternal(name?: string, url?: string, properties?: Object, measurements?: Object, endTime?: number) {
             try {
                 if (typeof name !== "string") {
                     name = window.document && window.document.title || "";
