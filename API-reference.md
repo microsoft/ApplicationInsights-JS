@@ -64,7 +64,7 @@ Parameter | Description
 
 ### stopTrackPage
 
-    stopTrackPage(name?: string, url?: string, properties?: Object, measurements?: Object)
+    stopTrackPage(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
 
 Stops the timer that was started by calling ```startTrackPage``` and sends the page view telemetry with the specified properties and measurements. The duration of the page view will be the time between calling ```startTrackPage``` and ```stopTrackPage```.
 
@@ -139,7 +139,7 @@ By default, uncaught browser exceptions are caught by the SDK and reported to th
 
 ### trackTrace
 
-    trackTrace(message: string, properties?: {[string]:string}, measurements?: {[string]:number})
+    trackTrace(message: string, properties?: {[string]:string}, severityLevel?: AI.SeverityLevel)
 
 Log a diagnostic event such as entering or leaving a method.
 
@@ -147,7 +147,7 @@ Log a diagnostic event such as entering or leaving a method.
 ---|---
 `message` | Diagnostic data. Can be much longer than a name.
 `properties` | Map of string to string: Additional data used to [filter exceptions](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
-`measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+`severityLevel` | Supported values: [SeverityLevel.ts](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts)
 
 
 In the portal, you can search on message content and [display individual trackTrace events](https://azure.microsoft.com/documentation/articles/app-insights-diagnostic-search/).

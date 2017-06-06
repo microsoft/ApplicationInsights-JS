@@ -375,7 +375,7 @@ module Microsoft.ApplicationInsights {
 
         /**
         * Log a diagnostic message. 
-        * @param    message A message string 
+        * @param   message A message string 
         * @param   properties  map[string, string] - additional data used to filter traces in the portal. Defaults to empty.
         * @param   severityLevel   AI.SeverityLevel - severity level
         */
