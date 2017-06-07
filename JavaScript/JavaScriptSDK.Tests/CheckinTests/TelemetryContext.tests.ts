@@ -302,10 +302,11 @@ class TelemetryContextTests extends TestClass {
         });
 
         this.testCase({
-            name: "TelemetryContext: telemetryInitializers array is null (not initialized) means envelope goes straight to the sender",
+            name: "TelemetryContext: telemetryInitializers array is empty means envelope goes straight to the sender",
             test: () => {
                 var eventEnvelope = this.getTestEventEnvelope();
                 var stub = this.sandbox.stub(this._telemetryContext._sender, "send");
+                var defaultInitsStub = this.sandbox.stub(this._telemetryContext, "_addDefaultTelemetryInitializers");
                     
                 // act
                 (<any>this._telemetryContext)._track(eventEnvelope);
@@ -313,9 +314,41 @@ class TelemetryContextTests extends TestClass {
                 // verify
                 Assert.ok(stub.calledOnce, "sender was called");
                 Assert.ok(eventEnvelope === stub.args[0][0]);
+            }
+        });
 
-                // teardown
-                
+        this.testCase({
+            name: "TelemetryContext: telemetryInitializers array is populated with the default initializers",
+            test: () => {
+                var eventEnvelope = this.getTestEventEnvelope();
+
+                // has one initializer to remove browserLinks
+                Assert.equal((<any>this._telemetryContext).telemetryInitializers.length, 1);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: default initializers will reject BrowserLink Ajax requests",
+            test: () => {
+                var stub = this.sandbox.stub(this._telemetryContext._sender, "send");
+
+                let getRequestEnvelope = (url: string, name: string) => {
+                    let browserLinkRequest = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData('id_1', url, name, 1, true, 200);
+                    let requestData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.dataType, browserLinkRequest);
+                    let requestEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(requestData, Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType);
+
+                    return requestEnvelope;
+                }
+
+                let request1 = getRequestEnvelope('http://localhost/__browserLink/test/test?testarg=1', 'GET /__browserLink/test/test');
+                let request2 = getRequestEnvelope('http://localhost/browserLinkSignalR/test/test?testarg=1', 'GET /browserLinkSignalR/test/test');
+                (<any>this._telemetryContext)._track(request1);
+                (<any>this._telemetryContext)._track(request2);
+                Assert.ok(stub.notCalled);
+
+                let request3 = getRequestEnvelope('http://localhost/__browser', 'GET /__browser');
+                (<any>this._telemetryContext)._track(request3);
+                Assert.ok(stub.calledOnce);
             }
         });
 
@@ -349,10 +382,6 @@ class TelemetryContextTests extends TestClass {
                 Assert.equal("my device id", (<any>stub.args[0][0]).deviceId);
                 Assert.equal("my name", (<any>stub.args[0][0]).data.baseData.name);
                 Assert.equal("val1", (<any>stub.args[0][0]).data.baseData.properties["prop1"]);
-                
-                // teardown
-                
-                
             }
         });
 
