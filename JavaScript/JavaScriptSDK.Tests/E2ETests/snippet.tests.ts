@@ -92,7 +92,7 @@ class SnippetTests extends TestClass {
         });
 
         this.testCaseAsync({
-            name: "SnippetTests: SDK and Snippet versions are handled correctly",
+            name: "SnippetTests: SDK are handled correctly",
             stepDelay: 250,
             steps: [
                 () => {
@@ -111,10 +111,8 @@ class SnippetTests extends TestClass {
 
                     // check url and properties
                     var expectedSdk = "javascript:" + Microsoft.ApplicationInsights.Version;
-                    var expectedSnippet = "snippet:" + Microsoft.ApplicationInsights.SnippetVersion;
 
                     var data = <Microsoft.ApplicationInsights.Telemetry.Common.Envelope>this.senderMocks.sender.args[0][0];
-                    Assert.equal(expectedSnippet, data.tags["ai.internal.agentVersion"], "snippet version was set correctly");
                     Assert.equal(expectedSdk, data.tags["ai.internal.sdkVersion"], "sdk version was set correctly");
                 })
         });

@@ -19,6 +19,7 @@ module Microsoft.ApplicationInsights {
         sessionExpirationMs: () => number;
         sampleRate: () => number;
         cookieDomain: () => string;
+        sdkExtension: () => string;
     }
 
     export class TelemetryContext implements ITelemetryContext {
@@ -85,7 +86,7 @@ module Microsoft.ApplicationInsights {
                 this._sessionManager = new ApplicationInsights.Context._SessionManager(config);
                 this.application = new Context.Application();
                 this.device = new Context.Device();
-                this.internal = new Context.Internal();
+                this.internal = new Context.Internal(config);
                 this.location = new Context.Location();
                 this.user = new Context.User(config);
                 this.operation = new Context.Operation();

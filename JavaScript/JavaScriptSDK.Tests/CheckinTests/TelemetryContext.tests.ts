@@ -24,7 +24,8 @@ class TelemetryContextTests extends TestClass {
             cookieDomain: undefined,
             enableSessionStorageBuffer: () => false,
             isRetryDisabled: () => false,
-            isBeaconApiDisabled: () => true
+            isBeaconApiDisabled: () => true,
+            sdkExtension: () => null
         }
 
         this._telemetryContext = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
@@ -59,18 +60,18 @@ class TelemetryContextTests extends TestClass {
         });
 
         this.testCase({
-            name: "TelemtetryContext: constructor intialized with correct snippet version",
+            name: "TelemtetryContext: constructor intialized with correct sdk version and sdk extension name",
             test: () => {
-                Microsoft.ApplicationInsights.SnippetVersion = "test";
+                this._config.sdkExtension = () => "abc";
                 var tc = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
 
                 Assert.ok(tc.internal, "context.internal is initialized");
 
-                var expectedSnippet = "snippet:" + Microsoft.ApplicationInsights.SnippetVersion;
-                Assert.equal(expectedSnippet, tc.internal.agentVersion, "agentVersion is initialized with the snippet version");
+                var expectedSdkVersion = "abc_javascript:" + Microsoft.ApplicationInsights.Version;
+                Assert.equal(expectedSdkVersion, tc.internal.sdkVersion, "sdkVersion is initialized");
 
                 // clean up
-                Microsoft.ApplicationInsights.SnippetVersion = undefined;
+                this._config.sdkExtension = () => null;
             }
         });
 
