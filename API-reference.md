@@ -414,7 +414,7 @@ Sends telemetry to the endpoint.
 
 ### addTelemetryInitializer
 
-        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => boolean)
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => boolean | void)
 
 Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one, in the order they were added,
 before the telemetry item is pushed for sending.
