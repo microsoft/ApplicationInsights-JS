@@ -419,7 +419,8 @@ class UserContextTests extends TestClass {
             disableTelemetry: () => null,
             enableSessionStorageBuffer: () => null,
             isRetryDisabled: () => null,
-            isBeaconApiDisabled: () => null
+            isBeaconApiDisabled: () => null,
+            sdkExtension: () => null
         };
     }
 }

@@ -31,5 +31,6 @@
         url?: string;
         isStorageUseDisabled?: boolean;
         isBeaconApiDisabled?: boolean;
+        sdkExtension?: string;
     }
 }

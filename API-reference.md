@@ -294,6 +294,11 @@ Values that control how the telemetry data is sent.
         // When Beacon API is enabled, then SessionStorageBuffer cannot be used and maxBatchSizeInBytes is limit too 64kb
         // Default: true
         isBeaconApiDisabled: boolean;
+
+        // Sets the sdk extension name. Only alphabetic characters are allowed. 
+        // The extension name is added as a prefix to 'ai.internal.sdkVersion' tag (for instance 'ext_javascript:1.0.5')
+        // Default: null
+        sdkExtension: string;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.
