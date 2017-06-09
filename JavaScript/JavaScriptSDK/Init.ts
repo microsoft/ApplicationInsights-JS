@@ -17,7 +17,6 @@ module Microsoft.ApplicationInsights {
                 var snippet: Microsoft.ApplicationInsights.Snippet = window[aiName] || <any>{};
     
                 // overwrite snippet with full appInsights
-                Microsoft.ApplicationInsights.SnippetVersion = snippet.version;
                 var init = new Microsoft.ApplicationInsights.Initialization(snippet);
                 var appInsightsLocal = init.loadAppInsights();
 

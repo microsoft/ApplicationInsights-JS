@@ -24,7 +24,9 @@ class TelemetryContextTests extends TestClass {
             cookieDomain: undefined,
             enableSessionStorageBuffer: () => false,
             isRetryDisabled: () => false,
-            isBeaconApiDisabled: () => true
+            isBeaconApiDisabled: () => true,
+            sdkExtension: () => null,
+            isBrowserLinkTrackingEnabled: () => false
         }
 
         this._telemetryContext = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
@@ -59,18 +61,18 @@ class TelemetryContextTests extends TestClass {
         });
 
         this.testCase({
-            name: "TelemtetryContext: constructor intialized with correct snippet version",
+            name: "TelemtetryContext: constructor intialized with correct sdk version and sdk extension name",
             test: () => {
-                Microsoft.ApplicationInsights.SnippetVersion = "test";
+                this._config.sdkExtension = () => "abc";
                 var tc = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
 
                 Assert.ok(tc.internal, "context.internal is initialized");
 
-                var expectedSnippet = "snippet:" + Microsoft.ApplicationInsights.SnippetVersion;
-                Assert.equal(expectedSnippet, tc.internal.agentVersion, "agentVersion is initialized with the snippet version");
+                var expectedSdkVersion = "abc_javascript:" + Microsoft.ApplicationInsights.Version;
+                Assert.equal(expectedSdkVersion, tc.internal.sdkVersion, "sdkVersion is initialized");
 
                 // clean up
-                Microsoft.ApplicationInsights.SnippetVersion = undefined;
+                this._config.sdkExtension = () => null;
             }
         });
 
@@ -349,6 +351,33 @@ class TelemetryContextTests extends TestClass {
                 let request3 = getRequestEnvelope('http://localhost/__browser', 'GET /__browser');
                 (<any>this._telemetryContext)._track(request3);
                 Assert.ok(stub.calledOnce);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: can enable the BrowserLink tracking",
+            test: () => {
+                this._config.isBrowserLinkTrackingEnabled = () => true;
+                this._telemetryContext = new Microsoft.ApplicationInsights.TelemetryContext(this._config);
+
+                var stub = this.sandbox.stub(this._telemetryContext._sender, "send");
+
+                let getRequestEnvelope = (url: string, name: string) => {
+                    let browserLinkRequest = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData('id_1', url, name, 1, true, 200);
+                    let requestData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>(Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.dataType, browserLinkRequest);
+                    let requestEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(requestData, Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType);
+
+                    return requestEnvelope;
+                }
+
+                let request1 = getRequestEnvelope('http://localhost/__browserLink/test/test?testarg=1', 'GET /__browserLink/test/test');
+                let request2 = getRequestEnvelope('http://localhost/browserLinkSignalR/test/test?testarg=1', 'GET /browserLinkSignalR/test/test');
+                (<any>this._telemetryContext)._track(request1);
+                (<any>this._telemetryContext)._track(request2);
+                Assert.equal(2, stub.callCount);
+
+                // reset
+                this._config.isBrowserLinkTrackingEnabled = () => false;
             }
         });
 

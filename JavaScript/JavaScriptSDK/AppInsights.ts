@@ -14,7 +14,6 @@ module Microsoft.ApplicationInsights {
     "use strict";
 
     export var Version = "1.0.9";
-    export var SnippetVersion: string;
 
     /**
     * Internal interface to pass appInsights object to subcomponents without coupling 
@@ -85,7 +84,9 @@ module Microsoft.ApplicationInsights {
                     return ((this.config.isBeaconApiDisabled || !Util.IsBeaconApiSupported()) && this.config.enableSessionStorageBuffer);
                 },
                 isRetryDisabled: () => this.config.isRetryDisabled,
-                isBeaconApiDisabled: () => this.config.isBeaconApiDisabled
+                isBeaconApiDisabled: () => this.config.isBeaconApiDisabled,
+                sdkExtension: () => this.config.sdkExtension,
+                isBrowserLinkTrackingEnabled: () => this.config.isBrowserLinkTrackingEnabled
             }
 
             if (this.config.isCookieUseDisabled) {

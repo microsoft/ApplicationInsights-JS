@@ -294,6 +294,15 @@ Values that control how the telemetry data is sent.
         // When Beacon API is enabled, then SessionStorageBuffer cannot be used and maxBatchSizeInBytes is limit too 64kb
         // Default: true
         isBeaconApiDisabled: boolean;
+
+        // Sets the sdk extension name. Only alphabetic characters are allowed. 
+        // The extension name is added as a prefix to 'ai.internal.sdkVersion' tag (for instance 'ext_javascript:1.0.5')
+        // Default: null
+        sdkExtension: string;
+
+        // If true, the SDK will track all [Browser Link](https://docs.microsoft.com/en-us/aspnet/core/client-side/using-browserlink) requests. 
+        // Default: false
+        isBrowserLinkTrackingEnabled: boolean;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.
@@ -414,7 +423,7 @@ Sends telemetry to the endpoint.
 
 ### addTelemetryInitializer
 
-        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => boolean)
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => boolean | void)
 
 Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one, in the order they were added,
 before the telemetry item is pushed for sending.

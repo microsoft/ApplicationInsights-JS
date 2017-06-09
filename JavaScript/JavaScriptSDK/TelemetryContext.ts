@@ -19,6 +19,8 @@ module Microsoft.ApplicationInsights {
         sessionExpirationMs: () => number;
         sampleRate: () => number;
         cookieDomain: () => string;
+        sdkExtension: () => string;
+        isBrowserLinkTrackingEnabled: () => boolean;
     }
 
     export class TelemetryContext implements ITelemetryContext {
@@ -69,7 +71,7 @@ module Microsoft.ApplicationInsights {
         /**
         * The array of telemetry initializers to call before sending each telemetry item.
         */
-        private telemetryInitializers: { (envelope: Microsoft.ApplicationInsights.IEnvelope): boolean; }[];
+        private telemetryInitializers: { (envelope: Microsoft.ApplicationInsights.IEnvelope): boolean | void; }[];
 
         /**
          * The session manager that manages session on the base of cookies.
@@ -86,7 +88,7 @@ module Microsoft.ApplicationInsights {
                 this._sessionManager = new ApplicationInsights.Context._SessionManager(config);
                 this.application = new Context.Application();
                 this.device = new Context.Device();
-                this.internal = new Context.Internal();
+                this.internal = new Context.Internal(config);
                 this.location = new Context.Location();
                 this.user = new Context.User(config);
                 this.operation = new Context.Operation();
@@ -101,7 +103,7 @@ module Microsoft.ApplicationInsights {
         * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
         * before telemetry item is pushed for sending and in the order they were added.
         */
-        public addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.ApplicationInsights.IEnvelope) => boolean) {
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.ApplicationInsights.IEnvelope) => boolean | void) {
             this.telemetryInitializers.push(telemetryInitializer);
         }
 
@@ -134,24 +136,25 @@ module Microsoft.ApplicationInsights {
         }
 
         private _addDefaultTelemetryInitializers() {
-            const browserLinkPaths = ['/browserLinkSignalR/', '/__browserLink/'];
-
-            let dropBrowserLinkRequests = (envelope: Microsoft.ApplicationInsights.IEnvelope) => {
-                if (envelope.name === Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType) {
-                    let remoteData = envelope.data as Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>;
-                    if (remoteData && remoteData.baseData) {
-                        for (let i = 0; i < browserLinkPaths.length; i++) {
-                            if (remoteData.baseData.name.indexOf(browserLinkPaths[i]) >= 0) {
-                                return false;
+            if (!this._config.isBrowserLinkTrackingEnabled) {
+                const browserLinkPaths = ['/browserLinkSignalR/', '/__browserLink/'];
+                let dropBrowserLinkRequests = (envelope: Microsoft.ApplicationInsights.IEnvelope) => {
+                    if (envelope.name === Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType) {
+                        let remoteData = envelope.data as Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>;
+                        if (remoteData && remoteData.baseData) {
+                            for (let i = 0; i < browserLinkPaths.length; i++) {
+                                if (remoteData.baseData.name.indexOf(browserLinkPaths[i]) >= 0) {
+                                    return false;
+                                }
                             }
                         }
                     }
+
+                    return true;
                 }
 
-                return true;
+                this.addTelemetryInitializer(dropBrowserLinkRequests)
             }
-
-            this.addTelemetryInitializer(dropBrowserLinkRequests)
         }
 
         private _track(envelope: Microsoft.ApplicationInsights.IEnvelope) {
