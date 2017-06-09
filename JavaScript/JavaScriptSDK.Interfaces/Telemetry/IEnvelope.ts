@@ -19,5 +19,6 @@ module Microsoft.ApplicationInsights {
         appVer: string;
         userId: string;
         tags: { [name: string]: any };
+        data: any;
     }
 }

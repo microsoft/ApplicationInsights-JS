@@ -70,7 +70,7 @@ module Microsoft.ApplicationInsights {
         /**
         * The array of telemetry initializers to call before sending each telemetry item.
         */
-        private telemetryInitializers: { (envelope: Microsoft.ApplicationInsights.IEnvelope): boolean; }[];
+        private telemetryInitializers: { (envelope: Microsoft.ApplicationInsights.IEnvelope): boolean | void; }[];
 
         /**
          * The session manager that manages session on the base of cookies.
@@ -99,7 +99,7 @@ module Microsoft.ApplicationInsights {
         * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
         * before telemetry item is pushed for sending and in the order they were added.
         */
-        public addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.ApplicationInsights.IEnvelope) => boolean) {
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.ApplicationInsights.IEnvelope) => boolean | void) {
             this.telemetryInitializers = this.telemetryInitializers || [];
             this.telemetryInitializers.push(telemetryInitializer);
         }
