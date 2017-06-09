@@ -136,7 +136,7 @@ module Microsoft.ApplicationInsights {
         }
 
         private _addDefaultTelemetryInitializers() {
-            if (!this._config.isBrowserLinkTrackingEnabled) {
+            if (!this._config.isBrowserLinkTrackingEnabled()) {
                 const browserLinkPaths = ['/browserLinkSignalR/', '/__browserLink/'];
                 let dropBrowserLinkRequests = (envelope: Microsoft.ApplicationInsights.IEnvelope) => {
                     if (envelope.name === Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType) {
