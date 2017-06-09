@@ -370,11 +370,15 @@ module Microsoft.ApplicationInsights {
             this._setupTimer();
         }
 
-        private _formatErrorMessage(xhr: XMLHttpRequest, xdr: XDomainRequest, message?: string): string {
+        private _formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
             if (xhr) {
                 return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + xhr.responseText || xhr.response || "";
             }
 
+            return message;
+        }
+
+        private _formatErrorMessageXdr(xdr: XDomainRequest, message?: string): string {
             if (xdr) {
                 return "XDomainRequest,Response:" + xdr.responseText || "";
             }
@@ -393,7 +397,7 @@ module Microsoft.ApplicationInsights {
             xhr.open("POST", this._config.endpointUrl(), isAsync);
             xhr.setRequestHeader("Content-type", "application/json");
             xhr.onreadystatechange = () => this._xhrReadyStateChange(xhr, payload, payload.length);
-            xhr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessage(xhr,null), event);
+            xhr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessageXhr(xhr), event);
 
             // compose an array of payloads
             var batch = this._buffer.batchPayloads(payload);
@@ -413,7 +417,7 @@ module Microsoft.ApplicationInsights {
         private _xdrSender(payload: string[], isAsync: boolean) {
             var xdr = new XDomainRequest();
             xdr.onload = () => this._xdrOnLoad(xdr, payload);
-            xdr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessage(null, xdr), event);
+            xdr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessageXdr(xdr), event);
 
             // XDomainRequest requires the same protocol as the hosting page. 
             // If the protocol doesn't match, we can't send the telemetry :(. 
@@ -471,7 +475,7 @@ module Microsoft.ApplicationInsights {
                             _InternalMessageId.TransmissionFailed, ". " +
                             "Response code " + xhr.status + ". Will retry to send " + payload.length + " items.");
                     } else {
-                        this._onError(payload, this._formatErrorMessage(xhr, null));
+                        this._onError(payload, this._formatErrorMessageXhr(xhr));
                     }
                 } else {
                     if (xhr.status === 206) {
@@ -480,7 +484,7 @@ module Microsoft.ApplicationInsights {
                         if (response && !this._config.isRetryDisabled()) {
                             this._onPartialSuccess(payload, response);
                         } else {
-                            this._onError(payload, this._formatErrorMessage(xhr, null));
+                            this._onError(payload, this._formatErrorMessageXhr(xhr));
                         }
                     } else {
                         this._consecutiveErrors = 0;
@@ -504,7 +508,7 @@ module Microsoft.ApplicationInsights {
                     && !this._config.isRetryDisabled()) {
                     this._onPartialSuccess(payload, results);
                 } else {
-                    this._onError(payload, this._formatErrorMessage(null, xdr));
+                    this._onError(payload, this._formatErrorMessageXdr(xdr));
                 }
             }
         }
@@ -533,7 +537,7 @@ module Microsoft.ApplicationInsights {
             }
 
             if (failed.length > 0) {
-                this._onError(failed, this._formatErrorMessage(null,null, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' ')));
+                this._onError(failed, this._formatErrorMessageXhr(null, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' ')));
             }
 
             if (retry.length > 0) {
