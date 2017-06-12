@@ -1715,7 +1715,7 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "Ajax - root/parent id are set only for dependency calls within the same domain",
+            name: "Ajax - root/parent id are not set for dependency calls with different port number",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
                 snippet.disableAjaxTracking = false;
@@ -1742,9 +1742,9 @@ class AppInsightsTests extends TestClass {
                 (<any>xhr).respond("200", {}, "");
 
                 // Assert
-                Assert.equal(expectedRootId, (<any>xhr).requestHeaders['x-ms-request-root-id'], "x-ms-request-root-id id set correctly");
+                Assert.equal(undefined, (<any>xhr).requestHeaders['x-ms-request-root-id'], "x-ms-request-root-id is not set");
+                Assert.equal(undefined, (<any>xhr).requestHeaders['x-ms-request-id'], "x-ms-request-id id not set");
 
-                Assert.equal(expectedAjaxId, (<any>xhr).requestHeaders['x-ms-request-id'], "x-ms-request-id id set correctly");
                 Assert.equal(expectedAjaxId, trackStub.args[0][0], "ajax id passed to trackAjax correctly");
             }
         });
