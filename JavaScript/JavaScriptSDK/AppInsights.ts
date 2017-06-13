@@ -85,7 +85,8 @@ module Microsoft.ApplicationInsights {
                 },
                 isRetryDisabled: () => this.config.isRetryDisabled,
                 isBeaconApiDisabled: () => this.config.isBeaconApiDisabled,
-                sdkExtension: () => this.config.sdkExtension
+                sdkExtension: () => this.config.sdkExtension,
+                isBrowserLinkTrackingEnabled: () => this.config.isBrowserLinkTrackingEnabled
             }
 
             if (this.config.isCookieUseDisabled) {

@@ -172,6 +172,7 @@ module Microsoft.ApplicationInsights {
             config.isRetryDisabled = Util.stringToBoolOrDefault(config.isRetryDisabled);
             config.isCookieUseDisabled = Util.stringToBoolOrDefault(config.isCookieUseDisabled);
             config.isStorageUseDisabled = Util.stringToBoolOrDefault(config.isStorageUseDisabled);
+            config.isBrowserLinkTrackingEnabled = Util.stringToBoolOrDefault(config.isBrowserLinkTrackingEnabled);
  
             return config;
         }

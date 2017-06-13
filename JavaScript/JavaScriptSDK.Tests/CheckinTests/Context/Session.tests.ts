@@ -515,7 +515,8 @@ class SessionContextTests extends TestClass {
             enableSessionStorageBuffer: () => null,
             isRetryDisabled: () => null,
             isBeaconApiDisabled: () => null,
-            sdkExtension: () => null
+            sdkExtension: () => null,
+            isBrowserLinkTrackingEnabled: () => null
         };
     }
 }

@@ -299,6 +299,10 @@ Values that control how the telemetry data is sent.
         // The extension name is added as a prefix to 'ai.internal.sdkVersion' tag (for instance 'ext_javascript:1.0.5')
         // Default: null
         sdkExtension: string;
+
+        // If true, the SDK will track all [Browser Link](https://docs.microsoft.com/en-us/aspnet/core/client-side/using-browserlink) requests. 
+        // Default: false
+        isBrowserLinkTrackingEnabled: boolean;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.
