@@ -35,7 +35,7 @@ $content | out-file "$($projectDir)\E2ETests\ai.js"
 $aiPath = "ai.js"
 
 # test the queue
-$queueTest = "var i = 100; while(i--){appInsights.queue.push(function() {window.queueTest('from the queue')})};"
+$queueTest = "var i = 100; while(i--){appInsights.queue && appInsights.queue.push(function() {window.queueTest('from the queue')})};"
 
 # copy snippet and convert protocol to file://
 $snippetLatest = gc "$($projectDir)\..\JavaScriptSDK\snippet.js"
