@@ -251,17 +251,9 @@ module Microsoft.ApplicationInsights {
 
         /**
          * Immediately send buffered data
-         * @param async {boolean} - Indicates if the events should be sent asynchronously (Optional, Defaults to true)
+         * @param async {boolean} - Indicates if the events should be sent asynchronously
          */
-        public triggerSend(async?: boolean) {
-            // We are async by default
-            var isAsync = true;
-
-            // Respect the parameter passed to the func
-            if (typeof async === 'boolean') {
-                isAsync = async;
-            }
-
+        public triggerSend(async = true) {
             try {
                 // Send data only if disableTelemetry is false
                 if (!this._config.disableTelemetry()) {
@@ -270,7 +262,7 @@ module Microsoft.ApplicationInsights {
                         var payload = this._buffer.getItems();
 
                         // invoke send
-                        this._sender(payload, isAsync);
+                        this._sender(payload, async);
                     }
 
                     // update lastSend time to enable throttling

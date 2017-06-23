@@ -116,7 +116,7 @@ module Microsoft.ApplicationInsights {
          * Immediately send all queued telemetry.
          * @param {boolean} async - If flush should be call asynchronously
          */
-        flush(async?: boolean);
+        flush(async = true);
 
 
         /**

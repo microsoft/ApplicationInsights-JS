@@ -409,17 +409,9 @@ module Microsoft.ApplicationInsights {
          * Immediately send all queued telemetry.
          * @param {boolean} async - If flush should be call asynchronously
          */
-        public flush(async?: boolean) {
-            // We are async by default
-            var isAsync = true;
-
-            // Respect the parameter passed to the func
-            if (typeof async === 'boolean') {
-                isAsync = async;
-            }
-
+        public flush(async = true) {
             try {
-                this.context._sender.triggerSend(isAsync);
+                this.context._sender.triggerSend(async);
             } catch (e) {
                 _InternalLogging.throwInternal(LoggingSeverity.CRITICAL,
                     _InternalMessageId.FlushFailed,
