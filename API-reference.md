@@ -167,7 +167,7 @@ Log a dependency call (for instance: ajax)
 `absoluteUrl` | Absolute url used to make the dependency request
 `pathName` | Path part of the absolute url
 `totalTime` | Total request time
-`success` | Indicates if the request was sessessful
+`success` | Indicates if the request was successful
 `resultCode` | Response code returned by the dependency request
 
 
