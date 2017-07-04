@@ -270,7 +270,7 @@ Values that control how the telemetry data is sent.
         // Default false. If true, flush method will not be called when onBeforeUnload event triggers.
         disableFlushOnBeforeUnload: boolean;
 
-        // If true, the buffer with all unsent telemetry is stored in a session storage. The buffer is resotered on page load.
+        // If true, the buffer with all unsent telemetry is stored in a session storage. The buffer is restored on page load.
         // The feature is enable by default starting with v0.23.0. 
         enableSessionStorageBuffer: boolean;
 
