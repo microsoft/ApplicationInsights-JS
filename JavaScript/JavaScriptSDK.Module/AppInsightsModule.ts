@@ -92,6 +92,9 @@ class AppInsightsModule {
     }
 
     public static get appInsightsInstance(): Microsoft.ApplicationInsights.IAppInsights {
+        if (typeof window === 'undefined') {
+            return;
+        }
         if (!window[AppInsightsModule.appInsightsName]) {
             window[AppInsightsModule.appInsightsName] = {
                 downloadAndSetup: AppInsightsModule._download,
