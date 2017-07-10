@@ -13,8 +13,7 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "1.0.8";
-    export var SnippetVersion: string;
+    export var Version = "1.0.10";
 
     /**
     * Internal interface to pass appInsights object to subcomponents without coupling 
@@ -85,7 +84,9 @@ module Microsoft.ApplicationInsights {
                     return ((this.config.isBeaconApiDisabled || !Util.IsBeaconApiSupported()) && this.config.enableSessionStorageBuffer);
                 },
                 isRetryDisabled: () => this.config.isRetryDisabled,
-                isBeaconApiDisabled: () => this.config.isBeaconApiDisabled
+                isBeaconApiDisabled: () => this.config.isBeaconApiDisabled,
+                sdkExtension: () => this.config.sdkExtension,
+                isBrowserLinkTrackingEnabled: () => this.config.isBrowserLinkTrackingEnabled
             }
 
             if (this.config.isCookieUseDisabled) {
@@ -375,7 +376,7 @@ module Microsoft.ApplicationInsights {
 
         /**
         * Log a diagnostic message. 
-        * @param    message A message string 
+        * @param   message A message string 
         * @param   properties  map[string, string] - additional data used to filter traces in the portal. Defaults to empty.
         * @param   severityLevel   AI.SeverityLevel - severity level
         */
@@ -406,10 +407,11 @@ module Microsoft.ApplicationInsights {
 
         /**
          * Immediately send all queued telemetry.
+         * @param {boolean} async - If flush should be call asynchronously
          */
-        public flush() {
+        public flush(async = true) {
             try {
-                this.context._sender.triggerSend();
+                this.context._sender.triggerSend(async);
             } catch (e) {
                 _InternalLogging.throwInternal(LoggingSeverity.CRITICAL,
                     _InternalMessageId.FlushFailed,

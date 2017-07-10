@@ -25,7 +25,6 @@
     } catch (e) {}
 
     appInsights.queue = [];
-    appInsights.version = "1.0";
 
     function createLazyMethod(name) {
         // Define a temporary method that queues-up a the real method call
@@ -78,4 +77,8 @@
 
 // global instance must be set in this order to mitigate issues in ie8 and lower
 window.appInsights = appInsights;
-appInsights.trackPageView();
+
+// if somebody calls the snippet twice, don't report page view again
+if (appInsights.queue && appInsights.queue.length === 0) {
+    appInsights.trackPageView();
+}

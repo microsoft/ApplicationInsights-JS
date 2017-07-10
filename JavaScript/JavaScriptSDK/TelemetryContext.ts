@@ -19,6 +19,8 @@ module Microsoft.ApplicationInsights {
         sessionExpirationMs: () => number;
         sampleRate: () => number;
         cookieDomain: () => string;
+        sdkExtension: () => string;
+        isBrowserLinkTrackingEnabled: () => boolean;
     }
 
     export class TelemetryContext implements ITelemetryContext {
@@ -69,7 +71,7 @@ module Microsoft.ApplicationInsights {
         /**
         * The array of telemetry initializers to call before sending each telemetry item.
         */
-        private telemetryInitializers: { (envelope: Microsoft.ApplicationInsights.IEnvelope): boolean; }[];
+        private telemetryInitializers: { (envelope: Microsoft.ApplicationInsights.IEnvelope): boolean | void; }[];
 
         /**
          * The session manager that manages session on the base of cookies.
@@ -79,27 +81,29 @@ module Microsoft.ApplicationInsights {
         constructor(config: ITelemetryConfig) {
             this._config = config;
             this._sender = new Sender(config);
+            this.telemetryInitializers = [];
 
             // window will be undefined in node.js where we do not want to initialize contexts
             if (typeof window !== 'undefined') {
                 this._sessionManager = new ApplicationInsights.Context._SessionManager(config);
                 this.application = new Context.Application();
                 this.device = new Context.Device();
-                this.internal = new Context.Internal();
+                this.internal = new Context.Internal(config);
                 this.location = new Context.Location();
                 this.user = new Context.User(config);
                 this.operation = new Context.Operation();
                 this.session = new Context.Session();
                 this.sample = new Context.Sample(config.sampleRate());
             }
+
+            this._addDefaultTelemetryInitializers();
         }
 
         /**
         * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
         * before telemetry item is pushed for sending and in the order they were added.
         */
-        public addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.ApplicationInsights.IEnvelope) => boolean) {
-            this.telemetryInitializers = this.telemetryInitializers || [];
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.ApplicationInsights.IEnvelope) => boolean | void) {
             this.telemetryInitializers.push(telemetryInitializer);
         }
 
@@ -131,6 +135,28 @@ module Microsoft.ApplicationInsights {
             return envelope;
         }
 
+        private _addDefaultTelemetryInitializers() {
+            if (!this._config.isBrowserLinkTrackingEnabled()) {
+                const browserLinkPaths = ['/browserLinkSignalR/', '/__browserLink/'];
+                let dropBrowserLinkRequests = (envelope: Microsoft.ApplicationInsights.IEnvelope) => {
+                    if (envelope.name === Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType) {
+                        let remoteData = envelope.data as Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData>;
+                        if (remoteData && remoteData.baseData) {
+                            for (let i = 0; i < browserLinkPaths.length; i++) {
+                                if (remoteData.baseData.name.indexOf(browserLinkPaths[i]) >= 0) {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+
+                    return true;
+                }
+
+                this.addTelemetryInitializer(dropBrowserLinkRequests)
+            }
+        }
+
         private _track(envelope: Microsoft.ApplicationInsights.IEnvelope) {
 
             if (this.session) {
@@ -154,7 +180,6 @@ module Microsoft.ApplicationInsights {
 
             var doNotSendItem = false;
             try {
-                this.telemetryInitializers = this.telemetryInitializers || [];
                 var telemetryInitializersCount = this.telemetryInitializers.length;
                 for (var i = 0; i < telemetryInitializersCount; ++i) {
                     var telemetryInitializer = this.telemetryInitializers[i];

@@ -64,7 +64,7 @@ Parameter | Description
 
 ### stopTrackPage
 
-    stopTrackPage(name?: string, url?: string, properties?: Object, measurements?: Object)
+    stopTrackPage(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
 
 Stops the timer that was started by calling ```startTrackPage``` and sends the page view telemetry with the specified properties and measurements. The duration of the page view will be the time between calling ```startTrackPage``` and ```stopTrackPage```.
 
@@ -139,7 +139,7 @@ By default, uncaught browser exceptions are caught by the SDK and reported to th
 
 ### trackTrace
 
-    trackTrace(message: string, properties?: {[string]:string}, measurements?: {[string]:number})
+    trackTrace(message: string, properties?: {[string]:string}, severityLevel?: AI.SeverityLevel)
 
 Log a diagnostic event such as entering or leaving a method.
 
@@ -147,7 +147,7 @@ Log a diagnostic event such as entering or leaving a method.
 ---|---
 `message` | Diagnostic data. Can be much longer than a name.
 `properties` | Map of string to string: Additional data used to [filter exceptions](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
-`measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+`severityLevel` | Supported values: [SeverityLevel.ts](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts)
 
 
 In the portal, you can search on message content and [display individual trackTrace events](https://azure.microsoft.com/documentation/articles/app-insights-diagnostic-search/).
@@ -167,7 +167,7 @@ Log a dependency call (for instance: ajax)
 `absoluteUrl` | Absolute url used to make the dependency request
 `pathName` | Path part of the absolute url
 `totalTime` | Total request time
-`success` | Indicates if the request was sessessful
+`success` | Indicates if the request was successful
 `resultCode` | Response code returned by the dependency request
 
 
@@ -270,7 +270,7 @@ Values that control how the telemetry data is sent.
         // Default false. If true, flush method will not be called when onBeforeUnload event triggers.
         disableFlushOnBeforeUnload: boolean;
 
-        // If true, the buffer with all unsent telemetry is stored in a session storage. The buffer is resotered on page load.
+        // If true, the buffer with all unsent telemetry is stored in a session storage. The buffer is restored on page load.
         // The feature is enable by default starting with v0.23.0. 
         enableSessionStorageBuffer: boolean;
 
@@ -294,6 +294,15 @@ Values that control how the telemetry data is sent.
         // When Beacon API is enabled, then SessionStorageBuffer cannot be used and maxBatchSizeInBytes is limit too 64kb
         // Default: true
         isBeaconApiDisabled: boolean;
+
+        // Sets the sdk extension name. Only alphabetic characters are allowed. 
+        // The extension name is added as a prefix to 'ai.internal.sdkVersion' tag (for instance 'ext_javascript:1.0.5')
+        // Default: null
+        sdkExtension: string;
+
+        // If true, the SDK will track all [Browser Link](https://docs.microsoft.com/en-us/aspnet/core/client-side/using-browserlink) requests. 
+        // Default: false
+        isBrowserLinkTrackingEnabled: boolean;
     }
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.
@@ -414,7 +423,7 @@ Sends telemetry to the endpoint.
 
 ### addTelemetryInitializer
 
-        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => boolean)
+        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => boolean | void)
 
 Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one, in the order they were added,
 before the telemetry item is pushed for sending.

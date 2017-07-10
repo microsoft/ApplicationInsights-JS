@@ -76,13 +76,16 @@ class SenderTests extends TestClass {
         Assert.equal("POST", method, "requets method is 'POST'");
     };
 
-    private logAsserts(expectedCount) {
+    private logAsserts(expectedCount, expectedMessage?: string) {
         var isValidCallCount = this.loggingSpy.callCount === expectedCount;
         Assert.ok(isValidCallCount, "logging spy was called " + expectedCount + " time(s)");
         if (!isValidCallCount) {
             for (var i = 0; i < this.loggingSpy.args.length; i++) {
                 Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args[i]);
             }
+        }
+        if (expectedMessage) {
+            Assert.ok(this.loggingSpy.args[0][0].indexOf(expectedMessage) !== -1);
         }
     }
 
@@ -159,7 +162,7 @@ class SenderTests extends TestClass {
 
                 // verify
                 this.requestAsserts();
-                this.fakeServer.requests.pop().respond(200, { "Content-Type": "application/json" }, '{"test":"success"}"');
+                this.fakeServer.requests.pop().respond(200, { "Content-Type": "application/json" }, '{"test":"success"}');
                 this.successAsserts(sender);
                 this.logAsserts(0);
                 sender.successSpy.reset();
@@ -172,9 +175,9 @@ class SenderTests extends TestClass {
 
                 // verify
                 this.requestAsserts();
-                this.fakeServer.requests.pop().respond(404, { "Content-Type": "application/json" }, '{"test":"not found"}"');
+                this.fakeServer.requests.pop().respond(404, { "Content-Type": "application/json" }, 'some_error');
                 this.errorAsserts(sender);
-                this.logAsserts(1);
+                this.logAsserts(1, "message:XMLHttpRequest,Status:404,Response:some_error");
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
             }
@@ -227,7 +230,7 @@ class SenderTests extends TestClass {
                 this.requestAsserts();
                 this.fakeServer.requests[0].respond(404, { "Content-Type": "application/json" }, '400');
                 this.errorAsserts(sender);
-                this.logAsserts(1);
+                this.logAsserts(1, "message:XDomainRequest,Response:400");
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
             }

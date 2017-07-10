@@ -13,9 +13,11 @@ class SnippetTests extends TestClass {
     private queueCallCount = 100;
     private senderMocks;
 
-    private loadSnippet(path) {
+    private loadSnippet(path, resetWindow = true) {
         // load ai via the snippet
-        window[this.aiName] = undefined;
+        if (resetWindow) {
+            window[this.aiName] = undefined;
+        }
         var key = "E2ETests";
         var snippetPath = window.location.href.split(key)[0] + key + path;
         var scriptElement = document.createElement("script");
@@ -92,7 +94,7 @@ class SnippetTests extends TestClass {
         });
 
         this.testCaseAsync({
-            name: "SnippetTests: SDK and Snippet versions are handled correctly",
+            name: "SnippetTests: SDK are handled correctly",
             stepDelay: 250,
             steps: [
                 () => {
@@ -111,10 +113,8 @@ class SnippetTests extends TestClass {
 
                     // check url and properties
                     var expectedSdk = "javascript:" + Microsoft.ApplicationInsights.Version;
-                    var expectedSnippet = "snippet:" + Microsoft.ApplicationInsights.SnippetVersion;
 
                     var data = <Microsoft.ApplicationInsights.Telemetry.Common.Envelope>this.senderMocks.sender.args[0][0];
-                    Assert.equal(expectedSnippet, data.tags["ai.internal.agentVersion"], "snippet version was set correctly");
                     Assert.equal(expectedSdk, data.tags["ai.internal.sdkVersion"], "sdk version was set correctly");
                 })
         });
@@ -143,6 +143,24 @@ class SnippetTests extends TestClass {
                     Assert.ok(data.name.indexOf(".Exception") !== -1, "Exception event recorded");
                     Assert.equal("upps!", (<any>data.data).baseData.exceptions[0].message, "error has correct message");
                 })
+        });
+
+        var trackPageSpy: SinonSpy;
+
+        this.testCaseAsync({
+            name: "SnippetTests: it's safe to initialize the snippet twice, but it should report only one pageView",
+            stepDelay: 250,
+            steps: [
+                () => {
+                    this.loadSnippet(snippet_Latest);
+                },
+                () => {
+                    trackPageSpy = this.sandbox.spy(window["appInsights"], "trackPageView");
+                    this.loadSnippet(snippet_Latest, false);
+                },
+                () => {
+                    Assert.equal(trackPageSpy.callCount, 0);
+                }]
         });
     }
 
