@@ -27,6 +27,6 @@
     "grunt": "^1.0.1",
     "grunt-contrib-uglify": "^2.3.0",
     "grunt-ts": "^6.0.0-beta.15",
-    "typescript": "1.8.10"
+    "typescript": "2.4.1"
   }
 }

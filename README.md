@@ -95,21 +95,14 @@ See:
 ## Build and run check-in tests:
 
 * Build
-  * Visual Studio 2013 Ultimate with Update 4 or later
-  * Clone the Git repository 
-  * Open Visual Studio solution (devenv JavaScript\Microsoft.ApplicationInsights.JavaScript.sln)
-  * Build solution in Visual Studio
+  * `npm install -g grunt-cli`
+  * `npm install`
+  * `grunt` or Ctrl+Shift+B in VisualStudio Code
 
 * Run check-in tests
   * `powershell "& .\scripts\RunTestsInBrowser.ps1"` to run `Tests.html` in a browser (you might need to call Set-ExecutionPolicy to be able to execute the script)
   * Don't forget to build the solution after changing TypeScript files
   * Refresh Tests.html in the browser to re-run tests
-
-* New build process
-  * npm install -g grunt-cli
-  * npm install
-  
-  * Ctrl+Shift+B to build in VS Code
 
 ## Contributing
 

@@ -1,4 +1,7 @@
 ﻿/// <reference path="./ISerializable.ts" />
+// import * as ISerializable from './ISerializable';
+// import { ISerializable } from './ISerializable';
+// import ISerializable = require('./ISerializable');
 
 module Microsoft.ApplicationInsights {
 

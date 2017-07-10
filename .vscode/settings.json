@@ -1,4 +1,8 @@
 {
     // Use Typescript from node_modules instead of builtin to VSCode
-    "typescript.tsdk": "./node_modules/typescript/lib"
+    "typescript.tsdk": "./node_modules/typescript/lib",
+    "files.exclude": {
+        "**/dist": true,
+        "**/.tscache": true
+    }
 }
