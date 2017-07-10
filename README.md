@@ -105,6 +105,12 @@ See:
   * Don't forget to build the solution after changing TypeScript files
   * Refresh Tests.html in the browser to re-run tests
 
+* New build process
+  * npm install -g grunt-cli
+  * npm install
+  
+  * Ctrl+Shift+B to build in VS Code
+
 ## Contributing
 
 We strongly welcome and encourage contributions to this project. Please read the [contributor's guide][ContribGuide] located in the ApplicationInsights-Home repository. If making a large change we request that you open an [issue][GitHubIssue] first. We follow the [Git Flow][GitFlow] approach to branching. 

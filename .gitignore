@@ -165,3 +165,6 @@ JavaScript/.vs
 # Temp directories
 bundle/
 node_modules/
+
+# Grunt
+.tscache
