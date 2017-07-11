@@ -34,6 +34,19 @@ module.exports = function (grunt) {
           alwaysStrict: true,
           noImplicitAny: false // TODO: true
         }
+      },
+      test: {
+        src: [
+          'JavaScript/JavaScriptSDK.Tests/Selenium/*.ts',
+          '!node_modules/**',
+          '!bundle/**',
+          '!dist/**',
+          '!JavaScript/JavaScriptSDK/min/**'],
+        out: 'bundle/test/ai.tests.js',
+        comments: true,
+        options: {
+          module: 'amd'
+        }
       }
     },
     uglify: {
@@ -53,4 +66,5 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.registerTask("default", ["ts:default", "uglify"]);
   grunt.registerTask("module", ["ts:module"]);
+  grunt.registerTask("test", ["ts:test"]);
 };

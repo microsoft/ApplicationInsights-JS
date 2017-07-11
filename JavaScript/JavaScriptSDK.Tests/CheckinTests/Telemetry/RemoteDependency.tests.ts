@@ -7,7 +7,7 @@ class RemoteDependencyTests extends ContractTestHelper {
     private exception;
     private static id = "someid";
     private static method = "GET";
-    private static name = "testName"
+    private static testName = "testName"
     private static url = "http://myurl.com/"
     private static hostName = "myurl.com";
     private static totalTime = 123;
@@ -17,7 +17,7 @@ class RemoteDependencyTests extends ContractTestHelper {
     constructor() {
         super(
             () => new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData(
-                RemoteDependencyTests.id, RemoteDependencyTests.name, RemoteDependencyTests.url, RemoteDependencyTests.totalTime, RemoteDependencyTests.success, RemoteDependencyTests.resultCode, RemoteDependencyTests.method),
+                RemoteDependencyTests.id, RemoteDependencyTests.testName, RemoteDependencyTests.url, RemoteDependencyTests.totalTime, RemoteDependencyTests.success, RemoteDependencyTests.resultCode, RemoteDependencyTests.method),
             "RemoteDependencyTelemetryTests");
     }
 
@@ -29,14 +29,14 @@ class RemoteDependencyTests extends ContractTestHelper {
             name: name + "Constructor parameters are set correctly",
             test: () => {
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData(
-                    RemoteDependencyTests.id, RemoteDependencyTests.url, RemoteDependencyTests.name, RemoteDependencyTests.totalTime, RemoteDependencyTests.success, RemoteDependencyTests.resultCode, RemoteDependencyTests.method);
+                    RemoteDependencyTests.id, RemoteDependencyTests.url, RemoteDependencyTests.testName, RemoteDependencyTests.totalTime, RemoteDependencyTests.success, RemoteDependencyTests.resultCode, RemoteDependencyTests.method);
 
                 Assert.equal("00:00:00.123", telemetry.duration, "value should be set correctly");
                 Assert.equal(RemoteDependencyTests.success, telemetry.success, "success should be set correctly");
                 Assert.equal(RemoteDependencyTests.resultCode, telemetry.resultCode, "resultCode should be set correctly");
                 Assert.equal("GET /", telemetry.name, "name gets correct value");
                 Assert.equal(RemoteDependencyTests.hostName, telemetry.target, "target gets correct value");
-                Assert.equal(RemoteDependencyTests.name, telemetry.data, "data should be set correctly");
+                Assert.equal(RemoteDependencyTests.testName, telemetry.data, "data should be set correctly");
             }
         });
 
@@ -76,11 +76,11 @@ class RemoteDependencyTests extends ContractTestHelper {
             name: name + "Duration field is populated as expected",
             test: () => {
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData(
-                    RemoteDependencyTests.id, RemoteDependencyTests.url, RemoteDependencyTests.name, 86400000, RemoteDependencyTests.success, RemoteDependencyTests.resultCode, RemoteDependencyTests.method);
+                    RemoteDependencyTests.id, RemoteDependencyTests.url, RemoteDependencyTests.testName, 86400000, RemoteDependencyTests.success, RemoteDependencyTests.resultCode, RemoteDependencyTests.method);
 
                 Assert.equal("1.00:00:00.000", telemetry.duration, "value should be set correctly");
                 telemetry = new Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData(
-                    RemoteDependencyTests.id, RemoteDependencyTests.url, RemoteDependencyTests.name, 86400026, RemoteDependencyTests.success, RemoteDependencyTests.resultCode, RemoteDependencyTests.method);
+                    RemoteDependencyTests.id, RemoteDependencyTests.url, RemoteDependencyTests.testName, 86400026, RemoteDependencyTests.success, RemoteDependencyTests.resultCode, RemoteDependencyTests.method);
 
                 Assert.equal("1.00:00:00.026", telemetry.duration, "value should be set correctly");
             }
