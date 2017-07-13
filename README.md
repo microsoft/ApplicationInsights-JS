@@ -98,6 +98,7 @@ See:
   * `npm install -g grunt-cli`
   * `npm install`
   * `grunt` or Ctrl+Shift+B in VisualStudio Code
+  * `grunt module` to build the npm module
 
 * Run check-in tests
   * `grunt test` to build tests

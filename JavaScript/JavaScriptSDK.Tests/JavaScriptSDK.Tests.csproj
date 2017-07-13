@@ -261,11 +261,6 @@
       <DependentUpon>DisableTelemetryTests.ts</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <SeleniumAppInsightsSDK Include="Selenium\appInsightsSdk.ts" />
-    <Content Include="Selenium\appInsightsSdk.js">
-      <DependentUpon>appInsightsSdk.ts</DependentUpon>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <SeleniumCheckinTests Include="Selenium\checkinTests.ts" />
     <SeleniumPerformance Include="Selenium\performanceTests.ts" />
     <Content Include="Selenium\checkinTests.js">

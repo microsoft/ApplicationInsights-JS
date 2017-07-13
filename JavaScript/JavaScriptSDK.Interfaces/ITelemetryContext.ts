@@ -58,7 +58,7 @@ module Microsoft.ApplicationInsights {
         * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
         * before telemetry item is pushed for sending and in the order they were added.
         */
-        addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.ApplicationInsights.IEnvelope) => boolean);
+        addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.ApplicationInsights.IEnvelope) => boolean | void);
 
          /**
          * Tracks telemetry object.

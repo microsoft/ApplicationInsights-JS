@@ -202,7 +202,7 @@ class AjaxTests extends TestClass {
                 try {
                     // Mocking window performance (sinon doesn't have it).
                     // tick() is similar to sinon's clock.tick()
-                    (<any>window.performance).performance = <any>{
+                    (<any>window).performance = <any>{
                         current: 0,
 
                         now: function () {

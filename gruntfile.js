@@ -5,11 +5,7 @@ module.exports = function (grunt) {
         src: [
           'JavaScript/JavaScriptSDK.Interfaces/*.ts',
           'JavaScript/JavaScriptSDK/*.ts',
-          '!node_modules/**',
-          '!bundle/**',
-          '!dist/**',
-          '!JavaScript/JavaScriptSDK.Tests/**',
-          '!JavaScript/JavaScriptSDK/min/**'],
+        ],
         out: 'bundle/ai.js',
         comments: true,
         options: {
@@ -22,11 +18,7 @@ module.exports = function (grunt) {
         src: [
           'JavaScript/JavaScriptSDK.Interfaces/*.ts',
           'JavaScript/JavaScriptSDK.Module/*.ts',
-          '!node_modules/**',
-          '!bundle/**',
-          '!dist/**',
-          '!JavaScript/JavaScriptSDK.Tests/**',
-          '!JavaScript/JavaScriptSDK/min/**'],
+        ],
         out: 'bundle/ai.module.js',
         comments: true,
         options: {
@@ -37,13 +29,18 @@ module.exports = function (grunt) {
       },
       test: {
         src: [
-          'JavaScript/JavaScriptSDK.Tests/Selenium/*.ts',
-          '!node_modules/**',
-          '!bundle/**',
-          '!dist/**',
-          '!JavaScript/JavaScriptSDK/min/**'],
-        out: 'bundle/test/ai.tests.js',
-        comments: true,
+          'JavaScript/JavaScriptSDK.Tests/Selenium/*.ts'
+        ],
+        out: 'JavaScript/JavaScriptSDK.Tests/Selenium/ai.tests.js',
+        options: {
+          module: 'amd'
+        }
+      },
+      types: {
+        src: [
+          'JavaScript/JavaScriptSDK.Tests/DefinitionTypes/*.ts'
+        ],
+        out: 'bundle/DefinitionTypes/ai.types.js',
         options: {
           module: 'amd'
         }
@@ -66,5 +63,5 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.registerTask("default", ["ts:default", "uglify"]);
   grunt.registerTask("module", ["ts:module"]);
-  grunt.registerTask("test", ["ts:test"]);
+  grunt.registerTask("test", ["ts:test", "ts:types"]);
 };
