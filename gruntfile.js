@@ -57,11 +57,39 @@ module.exports = function (grunt) {
           sourceMapIn: 'bundle/ai.js.map'
         },
       }
+    },
+    connect: {
+      server: {
+        options: {
+          port: 8000,
+          base: '.'
+        }
+      }
+    },
+    qunit: {
+      all: {
+        options: {
+          urls: [
+            'http://localhost:8000/JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html',
+            // 'JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html'
+          ],
+          timeout: 15 * 1000,
+          console: false,
+          summaryOnly: true,
+        }
+      }
     }
   });
+
+  grunt.event.on('qunit.testStart', function (name) {
+    grunt.log.ok('Running test: ' + name);
+  });
+
   grunt.loadNpmTasks("grunt-ts");
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-contrib-qunit');
   grunt.registerTask("default", ["ts:default", "uglify"]);
   grunt.registerTask("module", ["ts:module"]);
-  grunt.registerTask("test", ["ts:test", "ts:types"]);
+  grunt.registerTask("test", ["ts:test", "ts:types", "connect", "qunit"]);
 };
