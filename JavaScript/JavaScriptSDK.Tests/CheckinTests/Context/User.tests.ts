@@ -64,11 +64,6 @@ class UserContextTests extends TestClass {
                 Assert.equal(true, expiration.substr(0, "expires=".length) === "expires=", "ai_user cookie expiration part should start with expires=");
                 var expirationDate = new Date(expiration.substr("expires=".length));
                 Assert.equal(true, expirationDate > (new Date), "ai_user cookie expiration should be in the future");
-
-                // cleanup
-                
-                
-                
             }
         });
 
@@ -102,11 +97,6 @@ class UserContextTests extends TestClass {
                 Assert.equal(true, expiration.substr(0, "expires=".length) === "expires=", "ai_user cookie expiration part should start with expires=");
                 var expirationDate = new Date(expiration.substr("expires=".length));
                 Assert.equal(true, expirationDate > (new Date), "ai_user cookie expiration should be in the future");
-
-                // cleanup
-                
-                
-                
             }
         });
 
@@ -126,7 +116,6 @@ class UserContextTests extends TestClass {
                 // verify
                 Assert.equal(authId, user.authenticatedId, "user auth id was set from cookie");
                 Assert.equal(accountId, user.accountId, "user account id was not set from cookie");
-
             }
         });
 
@@ -142,7 +131,6 @@ class UserContextTests extends TestClass {
 
                 // verify
                 Assert.equal(authId, user.authenticatedId, "user auth id was set from cookie");
-
             }
         });
 
@@ -158,7 +146,6 @@ class UserContextTests extends TestClass {
                 // verify
                 Assert.equal(undefined, user.authenticatedId, "user auth id was not set");
                 Assert.equal(undefined, user.accountId, "user account id was not set");
-
             }
         });
 
@@ -176,7 +163,6 @@ class UserContextTests extends TestClass {
 
                 // verify
                 Assert.equal(config.accountId(), user.accountId, "user account id was set from back compat");
-
             }
         });
 
@@ -194,7 +180,6 @@ class UserContextTests extends TestClass {
                 // verify
                 Assert.equal(authAndAccountId[0], user.authenticatedId, "user auth id was set");
                 Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId.join('|')), null), true, "user auth id and account id cookie was set");
-
             }
         });
 
@@ -212,7 +197,6 @@ class UserContextTests extends TestClass {
                 // verify
                 Assert.equal(authAndAccountId[0], user.authenticatedId, "user auth id was set");
                 Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId.join('|')), null), true, "user auth id cookie was set");
-
             }
         });
 
@@ -231,7 +215,6 @@ class UserContextTests extends TestClass {
                 Assert.equal(authAndAccountId[0], user.authenticatedId, "user auth id was set");
                 Assert.equal(null, user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId[0]), null), true, "user auth id cookie was set");
-
             }
         });
 
@@ -243,6 +226,7 @@ class UserContextTests extends TestClass {
                 var user = new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
                 var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
                 cookieStub.reset();
+                loggingStub.reset();
 
                 // act
                 user.setAuthenticatedUserContext(null);
@@ -252,8 +236,6 @@ class UserContextTests extends TestClass {
                 Assert.equal(undefined, user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.notCalled, true, "cookie was not set");
                 Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
-
-
             }
         });
 
@@ -264,6 +246,8 @@ class UserContextTests extends TestClass {
                 var cookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie");
                 var user = new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
                 var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
+                cookieStub.reset();
+                loggingStub.reset();
 
                 // act
                 user.setAuthenticatedUserContext(undefined, undefined);
@@ -273,8 +257,6 @@ class UserContextTests extends TestClass {
                 Assert.equal(undefined, user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.notCalled, true, "cookie was not set");
                 Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
-
-
             }
         });
 
@@ -285,6 +267,8 @@ class UserContextTests extends TestClass {
                 var cookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie");
                 var user = new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
                 var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
+                cookieStub.reset();
+                loggingStub.reset();
 
                 // act
                 user.setAuthenticatedUserContext(undefined, '1234');
@@ -294,8 +278,6 @@ class UserContextTests extends TestClass {
                 Assert.equal(undefined, user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.notCalled, true, "cookie was not set");
                 Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
-
-
             }
         });
 
@@ -316,8 +298,6 @@ class UserContextTests extends TestClass {
                 Assert.equal(undefined, user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.notCalled, true, "cookie was not set");
                 Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
-
-
             }
         });
 
@@ -339,8 +319,6 @@ class UserContextTests extends TestClass {
                 Assert.equal(undefined, user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.notCalled, true, "cookie was not set");
                 Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
-
-
             }
         });
 
@@ -361,8 +339,6 @@ class UserContextTests extends TestClass {
                 Assert.equal(authAndAccountId[1], user.accountId, "user account id was set");
                 Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId.join('|')), null), true, "user auth id cookie was set");
                 Assert.equal(loggingStub.notCalled, true, "No warnings");
-
-
             }
         });
 
@@ -381,7 +357,6 @@ class UserContextTests extends TestClass {
                 Assert.equal(undefined, user.authenticatedId, "user auth id was cleared");
                 Assert.equal(undefined, user.accountId, "user account id was cleared");
                 Assert.equal(cookieStub.calledWithExactly('ai_authUser'), true, "cookie was deleted");
-
             }
         });
 
@@ -399,7 +374,6 @@ class UserContextTests extends TestClass {
                 Assert.equal(undefined, user.authenticatedId, "user auth id was cleared");
                 Assert.equal(undefined, user.accountId, "user account id was cleared");
                 Assert.equal(cookieStub.calledWithExactly('ai_authUser'), true, "cookie was deleted");
-
             }
         });
     }

@@ -40,7 +40,7 @@ module.exports = function (grunt) {
         src: [
           'JavaScript/JavaScriptSDK.Tests/DefinitionTypes/*.ts'
         ],
-        out: 'bundle/DefinitionTypes/ai.types.js',
+        out: 'bundle/test/ai.types.js',
         options: {
           module: 'amd'
         }
@@ -70,8 +70,8 @@ module.exports = function (grunt) {
       all: {
         options: {
           urls: [
-            'http://localhost:8000/JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html',
-            // 'JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html'
+            // 'http://localhost:8000/JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html',
+            'JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html'
           ],
           timeout: 15 * 1000,
           console: false,
@@ -89,7 +89,8 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-contrib-qunit');
+
   grunt.registerTask("default", ["ts:default", "uglify"]);
   grunt.registerTask("module", ["ts:module"]);
-  grunt.registerTask("test", ["ts:test", "ts:types", "connect", "qunit"]);
+  grunt.registerTask("test", ["ts:test", "ts:types", /*"connect"*/ "qunit"]);
 };

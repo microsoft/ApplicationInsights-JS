@@ -1111,6 +1111,10 @@ class SenderTests extends TestClass {
         this.testCase({
             name: "SenderTests: send() is using BeaconAPI sender if the BeaconAPI is enabled",
             test: () => {
+                if (!(<any>navigator).sendBeacon) {
+                    (<any>navigator)['sendBeacon'] = (url: any, data: any) => {};
+                }
+
                 // enable beacon API and mock sender
                 var config = this.getDefaultConfig();
                 config.isBeaconApiDisabled = () => false;
@@ -1134,6 +1138,10 @@ class SenderTests extends TestClass {
         this.testCase({
             name: "SenderTests: send() is not using BeaconAPI sender if the BeaconAPI is disabled",
             test: () => {
+                if (!(<any>navigator).sendBeacon) {
+                    (<any>navigator)['sendBeacon'] = (url: any, data: any) => {};
+                }
+
                 // enable beacon API and mock sender
                 var config = this.getDefaultConfig();
                 config.isBeaconApiDisabled = () => true;
