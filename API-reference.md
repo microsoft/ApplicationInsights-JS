@@ -229,7 +229,7 @@ Values that control how the telemetry data is sent.
         // Default 15s
         maxBatchInterval: number;
         
-        // If true, data is sent immediately and not batched.
+        // If true, debugging data is thrown as an exception by the logger. Default false.
         enableDebug: boolean;
                 
         // If true, telemetry data is not collected or sent. Default false.
