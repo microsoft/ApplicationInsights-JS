@@ -4,6 +4,7 @@
     };
 
     // Assigning these to local variables allows them to be minified to save space:
+    var internal = "Internal";
     var localDocument = document;
     var localWindow = window;
     var scriptText = "script";
@@ -31,8 +32,15 @@
         appInsights[name] = function() {
             // Capture the original arguments passed to the method
             var originalArguments = arguments;
+            if (name.indexOf(trackPage) > 0) {
+                if (originalArguments.length == 0) {
+                    [].push.call(originalArguments, null);
+                }
+                [].push.call(originalArguments, new Date().getTime());
+            }
             // Queue-up a call to the real method
             appInsights.queue.push(function() {
+                
                 // Invoke the real method with the captured original arguments
                 appInsights[name].apply(appInsights, originalArguments);
             });
@@ -50,8 +58,8 @@
     createLazyMethod(start + trackEvent);
     createLazyMethod(stop + trackEvent);
 
-    createLazyMethod(start + trackPage);
-    createLazyMethod(stop + trackPage);
+    createLazyMethod(start + trackPage + internal);
+    createLazyMethod(stop + trackPage + internal);
 
     createLazyMethod("flush");
 

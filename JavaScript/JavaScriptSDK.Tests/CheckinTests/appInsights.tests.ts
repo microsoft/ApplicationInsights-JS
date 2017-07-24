@@ -1144,6 +1144,29 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
+            name: "Timing Tests: Start/StopPageView tracks single page view with no parameters",
+            test: () => {
+                // setup
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
+                this.clock.tick(10);        // Needed to ensure the duration calculation works
+
+                // act
+                appInsights.startTrackPage();
+                this.clock.tick(testValues.duration);
+                appInsights.stopTrackPage();
+                Assert.ok(trackStub.calledOnce, "single page view tracking stopped");
+
+                // verify
+                var telemetry = <Microsoft.ApplicationInsights.Telemetry.PageView>trackStub.args[0][0].data.baseData;
+                Assert.notEqual(testValues.name, telemetry.name);
+                Assert.notEqual(testValues.url, telemetry.url);
+                Assert.notEqual(testValues.properties, telemetry.properties);
+                Assert.notEqual(testValues.measurements, telemetry.measurements);
+            }
+        });
+
+        this.testCase({
             name: "Timing Tests: Start/StopPageView tracks single page view with all parameters",
             test: () => {
                 // setup
