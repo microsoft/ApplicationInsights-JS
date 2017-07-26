@@ -69,10 +69,16 @@ module.exports = function(grunt) {
             all: {
                 options: {
                     urls: [
-                        // 'http://localhost:8000/JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html',
-                        'JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html'
+                        'JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html',
+                        // FIX: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.autoCollection.tests.htm'
+                        // phantom: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.DisableTelemetryTests.htm'
+                        // phantom: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.PublicApiTests.htm'
+                        // phantom: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.SanitizerE2ETests.htm'
+                        // phantom: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.Sender.tests.htm'
+                        // phantom: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.snippetTests.htm'
+                        // FIX: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.ValidateApiTests.htm'
                     ],
-                    timeout: 15 * 1000,
+                    timeout: 120 * 1000,
                     console: false,
                     summaryOnly: true,
                 }

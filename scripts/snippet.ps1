@@ -1,8 +1,8 @@
 ﻿# build snippet.html from minified javascript snippet
 Param(
-    # [ValidateNotNullOrEmpty()]
-    # [parameter(Mandatory=$true, HelpMessage="The project directory.")]
-    # [string]$projectDir,
+    [ValidateNotNullOrEmpty()]
+    [parameter(Mandatory=$true, HelpMessage="The project directory.")]
+    [string]$projectDir,
 
     [ValidateNotNullOrEmpty()]
     [parameter(Mandatory=$false, HelpMessage="The relative output path/format.")]
@@ -37,7 +37,7 @@ Param(
  #>
 function Get-OutputPath($flavor) {
     $path = $outputPath -replace "\.", "$($flavor)."
-    return ".\bundle\snippet\$($path)"
+    return "$($projectDir)\bundle\snippet\$($path)"
 }
 
  <# 
@@ -51,7 +51,7 @@ function Get-OutputPath($flavor) {
 function Read-MinifiedSnippet()
 {
     # find the file path with preference for release build
-    $snippetPath = ".\bundle\snippet\snippet.min.js"
+    $snippetPath = "$($projectDir)\bundle\snippet\snippet.min.js"
 
     # read the minified snippet
     $snippet = gc $snippetPath

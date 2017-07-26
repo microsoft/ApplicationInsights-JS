@@ -1,13 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuGet.JavaScript", "NuGet.JavaScript\NuGet.JavaScript.csproj", "{7C2662E9-96D3-473A-B0DD-55A80343A237}"
-	ProjectSection(ProjectDependencies) = postProject
-		{49ECFE69-8C92-4FA7-A7C3-CDB957C71654} = {49ECFE69-8C92-4FA7-A7C3-CDB957C71654}
-		{C6CA61F8-4855-4C77-B199-A56BAD047ADB} = {C6CA61F8-4855-4C77-B199-A56BAD047ADB}
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{59A3A3F8-A4CA-48B7-91BB-B3F1DE661EB9}"
 	ProjectSection(SolutionItems) = preProject
@@ -20,24 +16,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\scripts\RunTestsInBrowser.ps1 = ..\scripts\RunTestsInBrowser.ps1
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JavaScriptSDK", "JavaScriptSDK\JavaScriptSDK.csproj", "{49ECFE69-8C92-4FA7-A7C3-CDB957C71654}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JavaScriptSDK.Tests", "JavaScriptSDK.Tests\JavaScriptSDK.Tests.csproj", "{C6CA61F8-4855-4C77-B199-A56BAD047ADB}"
-	ProjectSection(ProjectDependencies) = postProject
-		{49ECFE69-8C92-4FA7-A7C3-CDB957C71654} = {49ECFE69-8C92-4FA7-A7C3-CDB957C71654}
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{6437E05C-5120-4E44-B696-61F19B0FD73A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuGet.TypeScript", "NuGet.TypeScript\NuGet.TypeScript.csproj", "{314B90F5-0E04-456A-AF38-914F520C3BF3}"
 	ProjectSection(ProjectDependencies) = postProject
 		{7C2662E9-96D3-473A-B0DD-55A80343A237} = {7C2662E9-96D3-473A-B0DD-55A80343A237}
-		{C6CA61F8-4855-4C77-B199-A56BAD047ADB} = {C6CA61F8-4855-4C77-B199-A56BAD047ADB}
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JavaScriptSDK.Interfaces", "JavaScriptSDK.Interfaces\JavaScriptSDK.Interfaces.csproj", "{FAD54375-9834-4265-BAAC-77B64A6AEEC1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JavaScriptSDK.Module", "JavaScriptSDK.Module\JavaScriptSDK.Module.csproj", "{9EFEED47-7841-4356-8A6F-AD16FF9A28E4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,26 +32,10 @@ Global
 		{7C2662E9-96D3-473A-B0DD-55A80343A237}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7C2662E9-96D3-473A-B0DD-55A80343A237}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C2662E9-96D3-473A-B0DD-55A80343A237}.Release|Any CPU.Build.0 = Release|Any CPU
-		{49ECFE69-8C92-4FA7-A7C3-CDB957C71654}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{49ECFE69-8C92-4FA7-A7C3-CDB957C71654}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{49ECFE69-8C92-4FA7-A7C3-CDB957C71654}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{49ECFE69-8C92-4FA7-A7C3-CDB957C71654}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C6CA61F8-4855-4C77-B199-A56BAD047ADB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C6CA61F8-4855-4C77-B199-A56BAD047ADB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C6CA61F8-4855-4C77-B199-A56BAD047ADB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C6CA61F8-4855-4C77-B199-A56BAD047ADB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{314B90F5-0E04-456A-AF38-914F520C3BF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{314B90F5-0E04-456A-AF38-914F520C3BF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{314B90F5-0E04-456A-AF38-914F520C3BF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{314B90F5-0E04-456A-AF38-914F520C3BF3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FAD54375-9834-4265-BAAC-77B64A6AEEC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FAD54375-9834-4265-BAAC-77B64A6AEEC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FAD54375-9834-4265-BAAC-77B64A6AEEC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FAD54375-9834-4265-BAAC-77B64A6AEEC1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9EFEED47-7841-4356-8A6F-AD16FF9A28E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9EFEED47-7841-4356-8A6F-AD16FF9A28E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9EFEED47-7841-4356-8A6F-AD16FF9A28E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9EFEED47-7841-4356-8A6F-AD16FF9A28E4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -31,7 +31,6 @@ class SenderE2ETests extends TestClass {
         config.maxBatchInterval = this.maxBatchInterval;
         config.endpointUrl = "https://dc.services.visualstudio.com/v2/track";
         config.instrumentationKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46";
-
         
         return new Microsoft.ApplicationInsights.AppInsights(config);
     }
@@ -44,6 +43,10 @@ class SenderE2ETests extends TestClass {
             stepDelay: this.delay,
             steps: [
                 () => {
+                    if (!(<any>navigator).sendBeacon) {
+                        (<any>navigator)['sendBeacon'] = (url: any, data: any) => { };
+                    }
+
                     var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
                     config.isBeaconApiDisabled = false;
 
