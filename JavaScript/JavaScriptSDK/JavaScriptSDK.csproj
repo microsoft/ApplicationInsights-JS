@@ -65,43 +65,8 @@
     <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
   </PropertyGroup>
   <ItemGroup>
-    <AjaxMinManifests Include="min\appInsights.ajaxmin.in">
-      <SubType>Designer</SubType>
-    </AjaxMinManifests>
-    <Content Include="min\ai.min.js">
-      <DependentUpon>appInsights.ajaxmin.in</DependentUpon>
-    </Content>
-    <Content Include="min\snippet.min.js">
-      <DependentUpon>appInsights.ajaxmin.in</DependentUpon>
-    </Content>
-    <Content Include="min\ai.js">
-      <DependentUpon>appInsights.ajaxmin.in</DependentUpon>
-    </Content>
-    <Content Include="min\ai.d.ts">
-      <DependentUpon>appInsights.ajaxmin.in</DependentUpon>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="min\snippet.ps1" />
-    <Content Include="min\snippet.html">
-      <DependentUpon>snippet.ps1</DependentUpon>
-    </Content>
-    <Content Include="min\snippet_int.html">
-      <DependentUpon>snippet.ps1</DependentUpon>
-    </Content>
-    <Content Include="min\snippet_vsix.html">
-      <DependentUpon>snippet.ps1</DependentUpon>
-    </Content>
-    <Content Include="min\snippet_vsixint.html">
-      <DependentUpon>snippet.ps1</DependentUpon>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="snippet.js" />
     <Content Include="web.config" />
-    <Content Include="min\ai.min.js.map">
-      <DependentUpon>ai.min.js</DependentUpon>
-    </Content>
     <Content Include="packages.config">
       <SubType>Designer</SubType>
     </Content>
@@ -276,10 +241,6 @@
   <Target Name="EnsureAjaxMinBuildImported" BeforeTargets="BeforeBuild" Condition="'$(AjaxMinOutputFolder)' == ''">
     <Error Condition="!Exists('..\..\..\packages\AjaxMin.5.14.5506.26202\tools\net40\AjaxMin.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." />
     <Error Condition="Exists('..\..\..\packages\AjaxMin.5.14.5506.26202\tools\net40\AjaxMin.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." />
-  </Target>
-  <Target Name="AfterBuild" DependsOnTargets="BuildAjaxMinManifests">
-    <Message Text="Build snippet.html" />
-    <Exec Command="Powershell.exe -ExecutionPolicy ByPass -File &quot;$(ProjectDir)min\snippet.ps1&quot; -projectDir $(ProjectDir)" />
   </Target>
   <PropertyGroup>
     <PostBuildEvent>

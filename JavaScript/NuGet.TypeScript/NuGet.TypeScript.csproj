@@ -23,7 +23,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
     <None Include="Package.nuspec" />
-    <Content Include="..\JavaScriptSDK\min\ai.d.ts">
+    <Content Include="..\..\bundle\ai.d.ts">
       <Link>ai.d.ts</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

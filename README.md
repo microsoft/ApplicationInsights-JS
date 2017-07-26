@@ -105,7 +105,7 @@ See:
   * `grunt test` to build and run tests
   * You can also open `JavaScriptSDK.Tests/Selenium/Tests.html` directly in your browser to debug failing tests.
   
-To debug tests in PhantomJS use a remote debugger: `phantomjs.exe --remote-debugger-port=9000 \JavaScript\JavaScriptSDK.Tests\phantomJS.debug.js`. If webkit console isn't working execute the following code in the browser's console: `function isEnterKey(event) { return (event.keyCode !== 229 && event.keyIdentifier === "Enter") || event.keyCode === 13; }`. 
+To debug tests in PhantomJS use a remote debugger: `phantomjs.exe --remote-debugger-port=9000 \JavaScript\JavaScriptSDK.Tests\phantomJS.debug.js`. If webkit console isn't working execute the following script in a browser's console: `function isEnterKey(event) { return (event.keyCode !== 229 && event.keyIdentifier === "Enter") || event.keyCode === 13; }`. 
 
 ## Contributing
 
