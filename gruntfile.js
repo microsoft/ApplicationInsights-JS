@@ -106,18 +106,18 @@ module.exports = function (grunt) {
                 options: {
                     urls: [
                         'JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html',
-                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.DisableTelemetryTests.htm',
-                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.PublicApiTests.htm',
-                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.SanitizerE2ETests.htm',
+                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.DisableTelemetry.tests.htm',
+                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.PublicApi.tests.htm',
+                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.SanitizerE2E.tests.htm',
                         'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.Sender.tests.htm',
                         'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.snippetTests.htm',
-                        // FIX: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.ValidateApiTests.htm'
-                        // FIX: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.autoCollection.tests.htm'
+                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.ValidateApi.tests.htm',
+                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.AutoCollection.tests.htm'
                     ],
-                    timeout: 120 * 1000,
+                    timeout: 300 * 1000, // 5 min
                     console: false,
                     summaryOnly: true,
-                    '--web-security': 'false'
+                    '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
             }
         }

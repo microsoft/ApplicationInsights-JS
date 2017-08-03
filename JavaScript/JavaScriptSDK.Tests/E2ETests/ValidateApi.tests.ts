@@ -1,6 +1,6 @@
-﻿/// <reference path="..\TestFramework\Common.ts" />
-/// <reference path="../../javascriptsdk/appinsights.ts" />
-/// <reference path="../../javascriptsdk/initialization.ts" />
+﻿/// <reference path="../TestFramework/Common.ts" />
+/// <reference path="../../JavaScriptSDK/AppInsights.ts" />
+/// <reference path="../../JavaScriptSDK/Initialization.ts" />
 
 class ValidateTests extends TestClass {
 
@@ -71,7 +71,10 @@ class ValidateTests extends TestClass {
                     Assert.ok(!this.successSpy.called, "success not called");
                     Assert.ok(this.errorSpy.called, "error called");
 
-                    var result = JSON.parse(this.errorSpy.args[0][1]);
+                    let response = this.errorSpy.args[0][1] as string;
+                    response = response.replace("XMLHttpRequest,Status:400,Response:", "");
+
+                    var result = JSON.parse(response);
 
                     Assert.equal(1, result.itemsReceived, "backend received wrong number of elements");
                     Assert.equal(0, result.itemsAccepted, "backend accepted invalid number of events");

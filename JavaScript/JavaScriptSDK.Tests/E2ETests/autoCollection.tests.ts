@@ -1,6 +1,6 @@
-﻿/// <reference path="../../javascriptsdk/telemetry/exception.ts" />
-/// <reference path="..\TestFramework\Common.ts" />
-/// <reference path="../../javascriptsdk/appinsights.ts" />
+﻿/// <reference path="../../JavaScriptSDK/Telemetry/Exception.ts" />
+/// <reference path="../../JavaScriptSDK/AppInsights.ts" />
+/// <reference path="../TestFramework/Common.ts" />
 
 class AutoCollectionTests extends TestClass {
 
