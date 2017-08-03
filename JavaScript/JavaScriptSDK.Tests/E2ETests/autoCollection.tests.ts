@@ -4,7 +4,7 @@
 
 class AutoCollectionTests extends TestClass {
 
-    /** Turns on/off sinon's syncronous implementation of setTimeout. On by default. */
+    /** Turns on/off sinon's synchronous implementation of setTimeout. On by default. */
     public errorSpy: SinonSpy;
 
     /** Method called before the start of each test method */

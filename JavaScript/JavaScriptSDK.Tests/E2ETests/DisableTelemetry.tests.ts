@@ -16,21 +16,6 @@ class DisableTelemetryTests extends TestClass {
         this.useFakeTimers = false;
         this.clock.restore();
 
-        var config = {
-            enableSessionStorageBuffer: () => false,
-            endpointUrl: () => null,
-            emitLineDelimitedJson: () => null,
-            maxBatchSizeInBytes: () => null,
-            maxBatchInterval: () => null,
-            disableTelemetry: () => null,
-            isRetryDisabled: () => null,
-            isBeaconApiDisabled: () => null
-        };
-
-        var sender = new Microsoft.ApplicationInsights.Sender(config);
-        this.errorSpy = this.sandbox.spy(sender, "_onError");
-        this.successSpy = this.sandbox.stub(sender, "_onSuccess");
-
         this.loggingSpy = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
     }
 
@@ -96,6 +81,9 @@ class DisableTelemetryTests extends TestClass {
                     var testAiNoMessages = new Microsoft.ApplicationInsights.AppInsights(config);
                     testAiNoMessages.config.disableTelemetry = true;
 
+                    this.errorSpy = this.sandbox.stub(testAiNoMessages.context._sender, "_onError");
+                    this.successSpy = this.sandbox.stub(testAiNoMessages.context._sender, "_onSuccess");
+
                     var exception = null;
                     try {
                         window["a"]["b"]();
@@ -122,6 +110,9 @@ class DisableTelemetryTests extends TestClass {
                     var testAiNoMessages = new Microsoft.ApplicationInsights.AppInsights(config);
                     testAiNoMessages.config.disableTelemetry = true;
 
+                    this.errorSpy = this.sandbox.stub(testAiNoMessages.context._sender, "_onError");
+                    this.successSpy = this.sandbox.stub(testAiNoMessages.context._sender, "_onSuccess");
+
                     var exception = null;
                     try {
                         window["a"]["b"]();
@@ -141,6 +132,9 @@ class DisableTelemetryTests extends TestClass {
                 () => {
                     var testAi = new Microsoft.ApplicationInsights.AppInsights(config);
                     testAi.config.disableTelemetry = false;
+
+                    this.errorSpy = this.sandbox.stub(testAi.context._sender, "_onError");
+                    this.successSpy = this.sandbox.stub(testAi.context._sender, "_onSuccess");
 
                     var exception = null;
                     try {

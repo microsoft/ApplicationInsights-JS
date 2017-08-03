@@ -1,4 +1,4 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
     grunt.initConfig({
         ts: {
             default: {
@@ -29,6 +29,15 @@ module.exports = function(grunt) {
                     noImplicitAny: false // TODO: true
                 }
             },
+            types: {
+                src: [
+                    'JavaScript/JavaScriptSDK.Tests/DefinitionTypes/*.ts'
+                ],
+                out: 'bundle/test/ai.types.js',
+                options: {
+                    module: 'amd'
+                }
+            },
             test: {
                 src: [
                     'JavaScript/JavaScriptSDK.Tests/Selenium/*.ts'
@@ -38,11 +47,38 @@ module.exports = function(grunt) {
                     module: 'amd'
                 }
             },
-            types: {
-                src: [
-                    'JavaScript/JavaScriptSDK.Tests/DefinitionTypes/*.ts'
+            testE2E: {
+                files: [
+                    {
+                        src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/DisableTelemetry.tests.ts',
+                        dest: 'bundle/test/e2e/DisableTelemetry.tests.js'
+                    },
+                    {
+                        src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/PublicApi.tests.ts',
+                        dest: 'bundle/test/e2e/PublicApiTests.tests.js'
+                    },
+                    {
+                        src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/SanitizerE2E.tests.ts',
+                        dest: 'bundle/test/e2e/SanitizerE2E.tests.js'
+                    },
+                    {
+                        src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/SenderE2E.tests.ts',
+                        dest: 'bundle/test/e2e/SenderE2E.tests.js'
+                    },
+                    {
+                        src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/Snippet.tests.ts',
+                        dest: 'bundle/test/e2e/Snippet.tests.js'
+                    },
+                    {
+                        src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/ValidateApi.tests.ts',
+                        dest: 'bundle/test/e2e/ValidateApi.tests.js'
+                    },
+                    {
+                        src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/AutoCollection.tests.ts',
+                        dest: 'bundle/test/e2e/AutoCollection.tests.js'
+                    }
                 ],
-                out: 'bundle/test/ai.types.js',
+                outDir: 'bundle/test/e2e',
                 options: {
                     module: 'amd'
                 }
@@ -70,23 +106,24 @@ module.exports = function(grunt) {
                 options: {
                     urls: [
                         'JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html',
-                        // FIX: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.autoCollection.tests.htm'
-                        // phantom: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.DisableTelemetryTests.htm'
-                        // phantom: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.PublicApiTests.htm'
-                        // phantom: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.SanitizerE2ETests.htm'
-                        // phantom: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.Sender.tests.htm'
-                        // phantom: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.snippetTests.htm'
+                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.DisableTelemetryTests.htm',
+                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.PublicApiTests.htm',
+                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.SanitizerE2ETests.htm',
+                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.Sender.tests.htm',
+                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.snippetTests.htm',
                         // FIX: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.ValidateApiTests.htm'
+                        // FIX: 'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.autoCollection.tests.htm'
                     ],
                     timeout: 120 * 1000,
                     console: false,
                     summaryOnly: true,
+                    '--web-security': 'false'
                 }
             }
         }
     });
 
-    grunt.event.on('qunit.testStart', function(name) {
+    grunt.event.on('qunit.testStart', function (name) {
         grunt.log.ok('Running test: ' + name);
     });
 
@@ -96,5 +133,5 @@ module.exports = function(grunt) {
 
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("module", ["ts:module"]);
-    grunt.registerTask("test", ["ts:test", "ts:types", "qunit"]);
+    grunt.registerTask("test", ["ts:test", "ts:testE2E", "ts:types", "qunit"]);
 };
