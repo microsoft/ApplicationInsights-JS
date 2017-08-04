@@ -1,5 +1,5 @@
 page = require('webpage').create();
-page.open('file:///E:/Dev/ApplicationInsights-JS/JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html?hidepassed', function () {
+page.open('file:///E:/Dev/ApplicationInsights-JS/JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.DisableTelemetryTests.htm?hidepassed', function () {
   debugger;
   page.evaluateAsync(function () {
     debugger; // wait here in the second web browser tab

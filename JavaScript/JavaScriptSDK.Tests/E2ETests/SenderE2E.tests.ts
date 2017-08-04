@@ -1,6 +1,6 @@
 ﻿/// <reference path="..\TestFramework\Common.ts" />
-/// <reference path="../../javascriptsdk/appinsights.ts" />
-/// <reference path="../../javascriptsdk/initialization.ts" />
+/// <reference path="../../JavaScriptsdk/appinsights.ts" />
+/// <reference path="../../JavaScriptsdk/initialization.ts" />
 
 class SenderE2ETests extends TestClass {
 

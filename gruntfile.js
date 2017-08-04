@@ -111,8 +111,7 @@ module.exports = function (grunt) {
                         'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.SanitizerE2E.tests.htm',
                         'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.Sender.tests.htm',
                         'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.snippetTests.htm',
-                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.ValidateApi.tests.htm',
-                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.AutoCollection.tests.htm'
+                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.ValidateApi.tests.htm'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -133,5 +132,5 @@ module.exports = function (grunt) {
 
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("module", ["ts:module"]);
-    grunt.registerTask("test", ["ts:test", "ts:testE2E", "ts:types", "qunit"]);
+    grunt.registerTask("test", ["ts:default", "ts:test", "ts:testE2E", "ts:types", "qunit"]);
 };
