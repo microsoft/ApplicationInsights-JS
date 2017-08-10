@@ -194,7 +194,7 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                XDomainRequest = <any>(() => {
+                window["XDomainRequest"] = <any>(() => {
                     var xdr = new this.xhr;
                     xdr.onload = xdr.onreadystatechange;
                     xdr.responseText = 200;
@@ -247,7 +247,7 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                XDomainRequest = <any>(() => {
+                window["XDomainRequest"] = <any>(() => {
                     var xdr = new this.xhr;
                     xdr.onload = xdr.onreadystatechange;
                     xdr.responseText = 206;
@@ -298,7 +298,7 @@ class SenderTests extends TestClass {
                 // setup
                 var xdr = new this.xhr;
                 XMLHttpRequest = <any>(() => { });
-                XDomainRequest = <any>(() => {
+                window["XDomainRequest"] = <any>(() => {
                     xdr.onload = xdr.onreadystatechange;
                     xdr.responseText = 200;
                     return xdr;
@@ -838,7 +838,7 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                XDomainRequest = <any>(() => {
+                window["XDomainRequest"] = <any>(() => {
                     var xdr = new this.xhr;
                     xdr.onload = xdr.onreadystatechange;
                     xdr.responseText = 206;
@@ -863,7 +863,7 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                XDomainRequest = <any>(() => {
+                window["XDomainRequest"] = <any>(() => {
                     var xdr = new this.xhr;
                     xdr.onload = xdr.onreadystatechange;
                     xdr.responseText = 206;
