@@ -1,51 +1,35 @@
 module.exports = function (grunt) {
     grunt.initConfig({
         ts: {
+            tsconfig: true,
+            options: {
+                comments: true
+            },
             default: {
                 src: [
                     'JavaScript/JavaScriptSDK.Interfaces/*.ts',
                     'JavaScript/JavaScriptSDK/*.ts',
                 ],
                 out: 'bundle/ai.js',
-                comments: true,
-                options: {
-                    module: 'amd',
-                    alwaysStrict: true,
-                    declaration: true,
-                    noImplicitAny: false // TODO: true
-                }
             },
             module: {
                 src: [
                     'JavaScript/JavaScriptSDK.Interfaces/*.ts',
                     'JavaScript/JavaScriptSDK.Module/*.ts',
                 ],
-                out: 'bundle/ai.module.js',
-                comments: true,
-                options: {
-                    module: 'amd',
-                    alwaysStrict: true,
-                    declaration: true,
-                    noImplicitAny: false // TODO: true
-                }
+                out: 'bundle/ai.module.js'
             },
             types: {
                 src: [
                     'JavaScript/JavaScriptSDK.Tests/DefinitionTypes/*.ts'
                 ],
-                out: 'bundle/test/ai.types.js',
-                options: {
-                    module: 'amd'
-                }
+                out: 'bundle/test/ai.types.js'
             },
             test: {
                 src: [
                     'JavaScript/JavaScriptSDK.Tests/Selenium/*.ts'
                 ],
-                out: 'JavaScript/JavaScriptSDK.Tests/Selenium/ai.tests.js',
-                options: {
-                    module: 'amd'
-                }
+                out: 'JavaScript/JavaScriptSDK.Tests/Selenium/ai.tests.js'
             },
             testE2E: {
                 files: [
@@ -72,22 +56,15 @@ module.exports = function (grunt) {
                     {
                         src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/ValidateApi.tests.ts',
                         dest: 'bundle/test/e2e/ValidateApi.tests.js'
-                    },
-                    {
-                        src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/AutoCollection.tests.ts',
-                        dest: 'bundle/test/e2e/AutoCollection.tests.js'
                     }
                 ],
-                outDir: 'bundle/test/e2e',
-                options: {
-                    module: 'amd'
-                }
+                outDir: 'bundle/test/e2e'
             }
         },
         uglify: {
             ai: {
                 files: {
-                    'bundle/ai.min.js': ['bundle/ai.js'],
+                    'bundle/ai.0.js': ['bundle/ai.js'],
                 },
                 options: {
                     sourceMap: true,

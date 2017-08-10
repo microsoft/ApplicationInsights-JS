@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    "outFile": "ai.js",
     "sourceMap": true,
     "noImplicitAny": false,
     "module": "amd",
     "target": "es5",
-    "allowJs": true,
-    "alwaysStrict": true
-  }
+    "alwaysStrict": true,
+    "declaration": true
+  },
+  "files": [
+  ]
 }

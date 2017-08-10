@@ -1111,8 +1111,8 @@ class SenderTests extends TestClass {
         this.testCase({
             name: "SenderTests: send() is using BeaconAPI sender if the BeaconAPI is enabled",
             test: () => {
-                if (!(<any>navigator).sendBeacon) {
-                    (<any>navigator)['sendBeacon'] = (url: any, data: any) => {};
+                if (!navigator.sendBeacon) {
+                    navigator['sendBeacon'] = (url: string, data?: any) => { return true; };
                 }
 
                 // enable beacon API and mock sender
@@ -1120,7 +1120,8 @@ class SenderTests extends TestClass {
                 config.isBeaconApiDisabled = () => false;
 
                 var sender = <SenderWrapper>new Microsoft.ApplicationInsights.Sender(config);
-                sender.beaconStub = this.sandbox.stub((<any>navigator), "sendBeacon");
+                sender.beaconStub = this.sandbox.stub((
+                    navigator), "sendBeacon");
 
                 Assert.ok(sender, "sender was constructed");
                 Assert.ok(Microsoft.ApplicationInsights.Util.IsBeaconApiSupported(), "Beacon API is supported");
@@ -1138,8 +1139,8 @@ class SenderTests extends TestClass {
         this.testCase({
             name: "SenderTests: send() is not using BeaconAPI sender if the BeaconAPI is disabled",
             test: () => {
-                if (!(<any>navigator).sendBeacon) {
-                    (<any>navigator)['sendBeacon'] = (url: any, data: any) => {};
+                if (!navigator.sendBeacon) {
+                    navigator['sendBeacon'] = (url: string, data?: any) => { return true; };
                 }
 
                 // enable beacon API and mock sender
@@ -1147,7 +1148,7 @@ class SenderTests extends TestClass {
                 config.isBeaconApiDisabled = () => true;
 
                 var sender = <SenderWrapper>new Microsoft.ApplicationInsights.Sender(config);
-                sender.beaconStub = this.sandbox.stub((<any>navigator), "sendBeacon");
+                sender.beaconStub = this.sandbox.stub((navigator), "sendBeacon");
 
                 Assert.ok(sender, "sender was constructed");
                 Assert.ok(Microsoft.ApplicationInsights.Util.IsBeaconApiSupported(), "Beacon API is supported");

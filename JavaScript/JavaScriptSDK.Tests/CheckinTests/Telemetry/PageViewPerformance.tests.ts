@@ -89,13 +89,14 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
             name: name + "PageViewPerformanceTelemetry measurements are correct",
             test: () => {
 
-                var timing = <PerformanceTiming>{};
-                (<any>timing).navigationStart = 1;
-                (<any>timing).connectEnd = 10;
-                (<any>timing).requestStart = 11;
-                (<any>timing).responseStart = 30;
-                (<any>timing).responseEnd = 42;
-                (<any>timing).loadEventEnd = 60;
+                var timing = {
+                    navigationStart: 1,
+                    connectEnd: 10,
+                    requestStart: 11,
+                    responseStart: 30,
+                    responseEnd: 42,
+                    loadEventEnd: 60,
+                };
 
                 var timingSpy = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
                     return timing;
@@ -118,13 +119,14 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
             name: name + "PageViewPerformanceTelemetry detects when perf data is sent by the browser incorrectly and doesn't send it",
             test: () => {
 
-                var timing = <PerformanceTiming>{};
-                (<any>timing).navigationStart = 1;
-                (<any>timing).connectEnd = 40;
-                (<any>timing).requestStart = 11;
-                (<any>timing).responseStart = 30;
-                (<any>timing).responseEnd = 42;
-                (<any>timing).loadEventEnd = 60;
+                var timing = {
+                    navigationStart: 1,
+                    connectEnd: 40,
+                    requestStart: 11,
+                    responseStart: 30,
+                    responseEnd: 42,
+                    loadEventEnd: 60,
+                };
 
                 var timingSpy = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
                     return timing;
@@ -161,13 +163,14 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                     return;
                 }
 
-                var timing = <PerformanceTiming>{};
-                (<any>timing).navigationStart = 1;
-                (<any>timing).connectEnd = 2;
-                (<any>timing).requestStart = 3;
-                (<any>timing).responseStart = 30;
-                (<any>timing).responseEnd = 42;
-                (<any>timing).loadEventEnd = 60;
+                var timing = {
+                    navigationStart: 1,
+                    connectEnd: 2,
+                    requestStart: 3,
+                    responseStart: 30,
+                    responseEnd: 42,
+                    loadEventEnd: 60,
+                };
 
                 var timingSpy = this.sandbox.stub(Microsoft.ApplicationInsights.Telemetry.PageViewPerformance, "getPerformanceTiming", () => {
                     return timing;
@@ -202,20 +205,21 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 // see comment PageViewPerformance constructor on how timing data is calculated
                 // here we set values, so each metric will be exactly 3600000 (1h).
                 let timingModifiers = [(timing) => timing.loadEventEnd = 3600001,
-                    (timing) => timing.connectEnd = 3600001,
-                    (timing) => timing.responseStart = 3600003,
-                    (timing) => timing.responseEnd = 3600030,
-                    (timing) => timing.loadEventEnd = 3600042];
+                (timing) => timing.connectEnd = 3600001,
+                (timing) => timing.responseStart = 3600003,
+                (timing) => timing.responseEnd = 3600030,
+                (timing) => timing.loadEventEnd = 3600042];
 
                 for (var i = 0; i < timingModifiers.length; i++) {
 
-                    var timing = <PerformanceTiming>{};
-                    (<any>timing).navigationStart = 1;
-                    (<any>timing).connectEnd = 2;
-                    (<any>timing).requestStart = 3;
-                    (<any>timing).responseStart = 30;
-                    (<any>timing).responseEnd = 42;
-                    (<any>timing).loadEventEnd = 60;
+                    var timing = {
+                        navigationStart: 1,
+                        connectEnd: 2,
+                        requestStart: 3,
+                        responseStart: 30,
+                        responseEnd: 42,
+                        loadEventEnd: 60,
+                    };
 
                     // change perf timing value
                     timingModifiers[i](timing);
