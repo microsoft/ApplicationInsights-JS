@@ -1,6 +1,6 @@
-﻿/// <reference path="..\TestFramework\Common.ts" />
-/// <reference path="../../javascriptsdk/appinsights.ts" />
-/// <reference path="../../javascriptsdk/initialization.ts" />
+﻿/// <reference path="../TestFramework/Common.ts" />
+/// <reference path="../../JavaScriptSDK/AppInsights.ts" />
+/// <reference path="../../JavaScriptSDK/Initialization.ts" />
 
 class ValidateTests extends TestClass {
 
@@ -18,7 +18,7 @@ class ValidateTests extends TestClass {
         this.config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
         this.config.maxBatchInterval = 100;
         this.config.endpointUrl = "https://dc.services.visualstudio.com/v2/validate";
-        this.config.instrumentationKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46";
+        this.config.instrumentationKey = "b7170927-2d1c-44f1-acec-59f4e1751c11";
         this.config.enableSessionStorageBuffer = false;
 
         this.delay = this.config.maxBatchInterval + 100;
@@ -71,7 +71,10 @@ class ValidateTests extends TestClass {
                     Assert.ok(!this.successSpy.called, "success not called");
                     Assert.ok(this.errorSpy.called, "error called");
 
-                    var result = JSON.parse(this.errorSpy.args[0][1]);
+                    let response = this.errorSpy.args[0][1] as string;
+                    response = response.replace("XMLHttpRequest,Status:400,Response:", "");
+
+                    var result = JSON.parse(response);
 
                     Assert.equal(1, result.itemsReceived, "backend received wrong number of elements");
                     Assert.equal(0, result.itemsAccepted, "backend accepted invalid number of events");

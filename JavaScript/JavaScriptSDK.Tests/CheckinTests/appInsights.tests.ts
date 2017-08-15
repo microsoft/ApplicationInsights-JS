@@ -667,7 +667,12 @@ class AppInsightsTests extends TestClass {
 
                 // mock user agent
                 let originalUserAgent = navigator.userAgent;
-                this.setUserAgent("Googlebot/2.1");
+                try {
+                    this.setUserAgent("Googlebot/2.1");
+                } catch (ex) {
+                    Assert.ok(true, 'cannot run this test in the current setup - try Chrome');
+                    return;
+                }
 
                 // act
                 appInsights.trackPageView();
@@ -856,9 +861,15 @@ class AppInsightsTests extends TestClass {
 
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
 
-                Assert.equal(false, appInsights.context._config.isBeaconApiDisabled(), "Beacon API enabled");
-                Assert.equal(false, appInsights.context._config.enableSessionStorageBuffer(), "Session storage disabled");
-                Assert.equal(65536, appInsights.context._config.maxBatchSizeInBytes(), "Max batch size overriden by Beacon API payload limitation");
+                if (Microsoft.ApplicationInsights.Util.IsBeaconApiSupported()) {
+                    Assert.equal(false, appInsights.context._config.isBeaconApiDisabled(), "Beacon API enabled");
+                    Assert.equal(false, appInsights.context._config.enableSessionStorageBuffer(), "Session storage disabled");
+                    Assert.equal(65536, appInsights.context._config.maxBatchSizeInBytes(), "Max batch size overriden by Beacon API payload limitation");
+                } else {
+                    Assert.equal(false, appInsights.context._config.isBeaconApiDisabled(), "Beacon API enabled");
+                    Assert.equal(true, appInsights.context._config.enableSessionStorageBuffer(), "Session storage disabled");
+                    Assert.equal(1000000, appInsights.context._config.maxBatchSizeInBytes(), "Max batch size overriden by Beacon API payload limitation");
+                }
             }
         });
 
@@ -866,7 +877,7 @@ class AppInsightsTests extends TestClass {
             name: "AppInsights._onerror creates a dump of unexpected error thrown by trackException for logging",
             test: () => {
                 var sut = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var dumpSpy = this.sandbox.spy(Microsoft.ApplicationInsights.Util, "dump")
+                var dumpSpy = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "dump")
                 var unexpectedError = new Error();
                 var stub = this.sandbox.stub(sut, "trackException").throws(unexpectedError);
 

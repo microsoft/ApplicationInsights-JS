@@ -97,12 +97,6 @@
     <Content Include="E2ETests\testSnippet.js">
       <DependentUpon>PostBuild.ps1</DependentUpon>
     </Content>
-    <Content Include="E2ETests\ajax.html">
-      <DependentUpon>PostBuild.ps1</DependentUpon>
-    </Content>
-    <Content Include="E2ETests\errorDom.html">
-      <DependentUpon>PostBuild.ps1</DependentUpon>
-    </Content>
     <Content Include="E2ETests\errorScriptGlobal.html">
       <DependentUpon>PostBuild.ps1</DependentUpon>
     </Content>
@@ -123,8 +117,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="E2ETests\autoCollectionTemplates\ajax.html" />
-    <Content Include="E2ETests\autoCollectionTemplates\errorDom.html" />
     <Content Include="E2ETests\autoCollectionTemplates\errorScriptGlobal.html" />
     <Content Include="E2ETests\autoCollectionTemplates\errorScriptNested.html" />
     <Content Include="E2ETests\autoCollectionTemplates\errorScriptSyntax.html" />
@@ -169,20 +161,6 @@
     <Content Include="Selenium\Tests.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\JavaScriptSDK.Interfaces\JavaScriptSDK.Interfaces.csproj">
-      <Project>{fad54375-9834-4265-baac-77b64a6aeec1}</Project>
-      <Name>JavaScriptSDK.Interfaces</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\JavaScriptSDK.Module\JavaScriptSDK.Module.csproj">
-      <Project>{9efeed47-7841-4356-8a6f-ad16ff9a28e4}</Project>
-      <Name>JavaScriptSDK.Module</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\JavaScriptSDK\JavaScriptSDK.csproj">
-      <Project>{49ECFE69-8C92-4FA7-A7C3-CDB957C71654}</Project>
-      <Name>JavaScriptSDK</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="External\qunit.d.ts" />
@@ -275,12 +253,6 @@
       <DependentUpon>DisableTelemetryTests.ts</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-      
-    <SeleniumAppInsightsSDK Include="Selenium\appInsightsSdk.ts" />
-    <Content Include="Selenium\appInsightsSdk.js">
-      <DependentUpon>appInsightsSdk.ts</DependentUpon>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <SeleniumCheckinTests Include="Selenium\checkinTests.ts" />
     <SeleniumPerformance Include="Selenium\performanceTests.ts" />
     <Content Include="Selenium\checkinTests.js">
@@ -309,7 +281,6 @@
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SnippetTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\snippet.tests.js" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(DisableTelemetryTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\DisableTelemetryTests.js" />
     <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SenderTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\SenderE2E.tests.js" />
-  
     <Exec Command="Powershell.exe -ExecutionPolicy ByPass -File &quot;$(ProjectDir)E2ETests\PostBuild.ps1&quot; -projectDir $(ProjectDir) -outputDir $(OutputPath)" />
   </Target>
   <PropertyGroup>

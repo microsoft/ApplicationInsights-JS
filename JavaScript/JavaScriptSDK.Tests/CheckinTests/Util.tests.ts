@@ -141,21 +141,21 @@ class UtilTests extends TestClass {
                 // mock cookies
                 ((document) => {
                     var cookies = {};
-                    document.__defineGetter__('cookie', () => {
+                    (<any>document).__defineGetter__('cookie', () => {
                         var output = [];
                         for (var cookieName in cookies) {
                             output.push(cookieName + "=" + cookies[cookieName]);
                         }
                         return output.join(";");
                     });
-                    document.__defineSetter__('cookie', (s) => {
+                    (<any>document).__defineSetter__('cookie', (s) => {
                         var indexOfSeparator = s.indexOf("=");
                         var key = s.substr(0, indexOfSeparator);
                         var value = s.substring(indexOfSeparator + 1);
                         cookies[key] = value;
                         return key + "=" + value;
                     });
-                    document.clearCookies = () => {
+                    (<any>document).clearCookies = () => {
                         cookies = {};
                     };
                 })(document);

@@ -8,6 +8,6 @@
 !/bower.json
 !/README.md
 !/API-reference.md
-!/JavaScript/JavaScriptSDK.Module/AppInsightsModule.js
+!/bundle/ai.module.*
 !/dist/ai.js
 !/dist/ai.0.js

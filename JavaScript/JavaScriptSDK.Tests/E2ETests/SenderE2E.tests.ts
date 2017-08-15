@@ -1,6 +1,6 @@
 ﻿/// <reference path="..\TestFramework\Common.ts" />
-/// <reference path="../../javascriptsdk/appinsights.ts" />
-/// <reference path="../../javascriptsdk/initialization.ts" />
+/// <reference path="../../JavaScriptsdk/appinsights.ts" />
+/// <reference path="../../JavaScriptsdk/initialization.ts" />
 
 class SenderE2ETests extends TestClass {
 
@@ -30,8 +30,7 @@ class SenderE2ETests extends TestClass {
     public getAiClient(config: Microsoft.ApplicationInsights.IConfig): Microsoft.ApplicationInsights.AppInsights {
         config.maxBatchInterval = this.maxBatchInterval;
         config.endpointUrl = "https://dc.services.visualstudio.com/v2/track";
-        config.instrumentationKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46";
-
+        config.instrumentationKey = "b7170927-2d1c-44f1-acec-59f4e1751c11";
         
         return new Microsoft.ApplicationInsights.AppInsights(config);
     }
@@ -44,6 +43,10 @@ class SenderE2ETests extends TestClass {
             stepDelay: this.delay,
             steps: [
                 () => {
+                    if (!(<any>navigator).sendBeacon) {
+                        (<any>navigator)['sendBeacon'] = (url: any, data: any) => { };
+                    }
+
                     var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
                     config.isBeaconApiDisabled = false;
 

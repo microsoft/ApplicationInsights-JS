@@ -3,7 +3,7 @@ $jsSdkDir = Split-Path (Split-Path $MyInvocation.MyCommand.Path) -Parent;
 Write-Host "Releasing a vnext from $jsSdkDir";
 
 # check if the minified dir exists
-$jssdkMinDir = Join-Path $jssdkDir -ChildPath "JavaScript\JavaScriptSDK\min\";
+$jssdkMinDir = Join-Path $jssdkDir -ChildPath "bundle\";
 
 if (-Not (Test-Path $jssdkMinDir)) {
     Write-Warning "'$jssdkMinDir' directory doesn't exist. Compile JSSDK first.";

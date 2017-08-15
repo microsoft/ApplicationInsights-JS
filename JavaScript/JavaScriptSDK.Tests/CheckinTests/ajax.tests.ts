@@ -202,7 +202,7 @@ class AjaxTests extends TestClass {
                 try {
                     // Mocking window performance (sinon doesn't have it).
                     // tick() is similar to sinon's clock.tick()
-                    window.performance = <any>{
+                    (<any>window).performance = <any>{
                         current: 0,
 
                         now: function () {
@@ -238,7 +238,7 @@ class AjaxTests extends TestClass {
                     Assert.ok(this.trackDependencySpy.calledOnce, "TrackAjax should be called");
                     Assert.equal(expectedResponseDuration, this.trackDependencySpy.args[0][4], "Ajax duration should match expected duration");
                 } finally {
-                    window.performance = initialPerformance;
+                    (<any>window.performance).performance = initialPerformance;
                 }
             }
         });

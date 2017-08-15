@@ -13,7 +13,7 @@ $packagesJson = (Get-Content $packageJsonPath -Raw) | ConvertFrom-Json
 $version = $packagesJson.version;
 
 # check if the minified dir exists
-$jssdkMinDir = Join-Path $jssdkDir -ChildPath "JavaScript\JavaScriptSDK\min\";
+$jssdkMinDir = Join-Path $jssdkDir -ChildPath "bundle\";
 
 if (-Not (Test-Path $jssdkMinDir)) {
     Write-Warning "'$jssdkMinDir' directory doesn't exist. Compile JSSDK first.";

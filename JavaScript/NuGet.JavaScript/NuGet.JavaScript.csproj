@@ -23,26 +23,23 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
     <None Include="Package.nuspec" />
-    <Content Include="..\JavaScriptSDK\min\ai.js">
+    <Content Include="..\..\bundle\ai.js">
       <Link>ai.js</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\JavaScriptSDK\min\ai.min.js">
+    <Content Include="..\..\bundle\ai.0.js">
       <Link>ai.min.js</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\JavaScriptSDK\min\snippet_vsix.html">
+    <Content Include="..\..\bundle\ai.0.js.map">
+      <Link>ai.min.js.map</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\snippet\snippet.html">
       <Link>snippet.html</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\JavaScriptSDK\JavaScriptSDK.csproj">
-      <Project>{49ECFE69-8C92-4FA7-A7C3-CDB957C71654}</Project>
-      <Name>JavaScriptSDK</Name>
-    </ProjectReference>
-  </ItemGroup>
-
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\NuGet.targets" />
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'Package.targets'))\Package.targets" />

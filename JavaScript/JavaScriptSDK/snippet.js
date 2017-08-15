@@ -1,4 +1,4 @@
-﻿var appInsights = window.appInsights || (function(aiConfig) {
+﻿var appInsights = window.appInsights || (function (aiConfig) {
     var appInsights = {
         config: aiConfig
     };
@@ -22,17 +22,17 @@
     // capture initial cookie
     try {
         appInsights.cookie = localDocument.cookie;
-    } catch (e) {}
+    } catch (e) { }
 
     appInsights.queue = [];
 
     function createLazyMethod(name) {
         // Define a temporary method that queues-up a the real method call
-        appInsights[name] = function() {
+        appInsights[name] = function () {
             // Capture the original arguments passed to the method
             var originalArguments = arguments;
             // Queue-up a call to the real method
-            appInsights.queue.push(function() {
+            appInsights.queue.push(function () {
                 // Invoke the real method with the captured original arguments
                 appInsights[name].apply(appInsights, originalArguments);
             });
@@ -60,7 +60,7 @@
         method = "onerror";
         createLazyMethod("_" + method);
         var originalOnError = localWindow[method];
-        localWindow[method] = function(message, url, lineNumber, columnNumber, error) {
+        localWindow[method] = function (message, url, lineNumber, columnNumber, error) {
             var handled = originalOnError && originalOnError(message, url, lineNumber, columnNumber, error);
             if (handled !== true) {
                 appInsights["_" + method](message, url, lineNumber, columnNumber, error);

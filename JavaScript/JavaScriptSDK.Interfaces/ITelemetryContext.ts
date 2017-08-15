@@ -55,10 +55,13 @@ module Microsoft.ApplicationInsights {
         session: Context.ISession;
 
         /**
-        * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
-        * before telemetry item is pushed for sending and in the order they were added.
+        * Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one, 
+        * in the order they were added, before the telemetry item is pushed for sending. 
+        * If one of the telemetry initializers returns false or throws an error then the telemetry item will not be sent. 
+        * If it returns true or doesn't return any value the event will be passed to the next telemetry initializer and
+        * send to the cloud (if not rejected by other initializers). 
         */
-        addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.ApplicationInsights.IEnvelope) => boolean);
+        addTelemetryInitializer(telemetryInitializer: (envelope: Microsoft.ApplicationInsights.IEnvelope) => boolean | void);
 
          /**
          * Tracks telemetry object.

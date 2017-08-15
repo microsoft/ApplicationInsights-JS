@@ -95,15 +95,17 @@ See:
 ## Build and run check-in tests:
 
 * Build
-  * Visual Studio 2013 Ultimate with Update 4 or later
-  * Clone the Git repository 
-  * Open Visual Studio solution (devenv JavaScript\Microsoft.ApplicationInsights.JavaScript.sln)
-  * Build solution in Visual Studio
+  * `npm install -g grunt-cli`
+  * `npm install`
+  * `grunt` or Ctrl+Shift+B in VisualStudio Code
+  * `grunt module` to build the npm module
+  * compiled files are dropped into a `/bundle` folder
 
 * Run check-in tests
-  * `powershell "& .\scripts\RunTestsInBrowser.ps1"` to run `Tests.html` in a browser (you might need to call Set-ExecutionPolicy to be able to execute the script)
-  * Don't forget to build the solution after changing TypeScript files
-  * Refresh Tests.html in the browser to re-run tests
+  * `grunt test` to build and run tests
+  * You can also open `JavaScriptSDK.Tests/Selenium/Tests.html` directly in your browser to debug failing tests.
+  
+To debug tests in PhantomJS use a remote debugger: `phantomjs.exe --remote-debugger-port=9000 \JavaScript\JavaScriptSDK.Tests\phantomJS.debug.js`. If webkit console isn't working execute the following script in a browser's console: `function isEnterKey(event) { return (event.keyCode !== 229 && event.keyIdentifier === "Enter") || event.keyCode === 13; }`. 
 
 ## Contributing
 

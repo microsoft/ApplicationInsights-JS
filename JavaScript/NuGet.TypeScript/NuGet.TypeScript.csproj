@@ -7,7 +7,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <ProjectGuid>{314b90f5-0e04-456a-af38-914f520c3bf3}</ProjectGuid>
+    <ProjectGuid>{314B90F5-0E04-456A-AF38-914F520C3BF3}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Microsoft.ApplicationInsights.TypeScript.NuGet</RootNamespace>
     <AssemblyName>Microsoft.ApplicationInsights.TypeScript.NuGet</AssemblyName>
@@ -23,16 +23,10 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
     <None Include="Package.nuspec" />
-    <Content Include="..\JavaScriptSDK\min\ai.d.ts">
+    <Content Include="..\..\bundle\ai.d.ts">
       <Link>ai.d.ts</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\JavaScriptSDK\JavaScriptSDK.csproj">
-      <Project>{49ECFE69-8C92-4FA7-A7C3-CDB957C71654}</Project>
-      <Name>JavaScriptSDK</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\NuGet.targets" />

@@ -18,7 +18,7 @@ class SplitTestTests extends TestClass {
             name: "SplitTestTests: ",
             test: () => {
                 var sut = new Microsoft.ApplicationInsights.SplitTest();
-                var guids = getGuids(10000);                
+                var guids = getGuids(10000);
                 var enabledPercent = 20;
                 var acceptedErrorPercent = 2;
 
@@ -26,10 +26,11 @@ class SplitTestTests extends TestClass {
                 var totalCount = guids.length;
                 var enabledCount = 0;
                 guids.forEach((guid) => {
-                    console.log(guid);
                     if (sut.isEnabled(guid, enabledPercent))
                         ++enabledCount;
                 });
+
+                // Assert.ok(false);
 
                 // Validate
                 var actualEnabledPercent = (enabledCount / totalCount) * 100;
@@ -37,8 +38,8 @@ class SplitTestTests extends TestClass {
                     (actualEnabledPercent < enabledPercent + acceptedErrorPercent) &&
                     (actualEnabledPercent > enabledPercent - acceptedErrorPercent),
                     "Enabled percent does not fall into expected range (" + enabledPercent + " +- " + acceptedErrorPercent + "): " + actualEnabledPercent);
-                    
-                }        
+
+            }
         });
     }
 

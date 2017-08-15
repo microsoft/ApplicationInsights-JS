@@ -191,13 +191,7 @@ Error: testmessage2\n\
                 Assert.equal(expectedTypeName, actual.exceptions[0].typeName);
                 Assert.equal(expectedDetails, actual.exceptions[0].stack);
                 Assert.equal(true, actual.exceptions[0].hasFullStack);
-                
-                Assert.equal(0, actual.exceptions[0].parsedStack[0].level);
-                Assert.equal(expectedAssembly, actual.exceptions[0].parsedStack[0].assembly);
-                Assert.equal(expectedFileName, actual.exceptions[0].parsedStack[0].fileName);
-                Assert.equal(expectedLineNumber, actual.exceptions[0].parsedStack[0].line);
-                Assert.equal("unknown", actual.exceptions[0].parsedStack[0].method);
-
+                Assert.equal(undefined, actual.exceptions[0].parsedStack);
                 Assert.equal(expectedHandledAt, actual.handledAt);
             }
         });

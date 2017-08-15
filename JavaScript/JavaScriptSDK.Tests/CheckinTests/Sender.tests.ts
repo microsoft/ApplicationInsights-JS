@@ -194,7 +194,7 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                XDomainRequest = <any>(() => {
+                window["XDomainRequest"] = <any>(() => {
                     var xdr = new this.xhr;
                     xdr.onload = xdr.onreadystatechange;
                     xdr.responseText = 200;
@@ -247,7 +247,7 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                XDomainRequest = <any>(() => {
+                window["XDomainRequest"] = <any>(() => {
                     var xdr = new this.xhr;
                     xdr.onload = xdr.onreadystatechange;
                     xdr.responseText = 206;
@@ -298,7 +298,7 @@ class SenderTests extends TestClass {
                 // setup
                 var xdr = new this.xhr;
                 XMLHttpRequest = <any>(() => { });
-                XDomainRequest = <any>(() => {
+                window["XDomainRequest"] = <any>(() => {
                     xdr.onload = xdr.onreadystatechange;
                     xdr.responseText = 200;
                     return xdr;
@@ -838,7 +838,7 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                XDomainRequest = <any>(() => {
+                window["XDomainRequest"] = <any>(() => {
                     var xdr = new this.xhr;
                     xdr.onload = xdr.onreadystatechange;
                     xdr.responseText = 206;
@@ -863,7 +863,7 @@ class SenderTests extends TestClass {
                     return xhr;
                 });
 
-                XDomainRequest = <any>(() => {
+                window["XDomainRequest"] = <any>(() => {
                     var xdr = new this.xhr;
                     xdr.onload = xdr.onreadystatechange;
                     xdr.responseText = 206;
@@ -1111,12 +1111,17 @@ class SenderTests extends TestClass {
         this.testCase({
             name: "SenderTests: send() is using BeaconAPI sender if the BeaconAPI is enabled",
             test: () => {
+                if (!navigator.sendBeacon) {
+                    navigator['sendBeacon'] = (url: string, data?: any) => { return true; };
+                }
+
                 // enable beacon API and mock sender
                 var config = this.getDefaultConfig();
                 config.isBeaconApiDisabled = () => false;
 
                 var sender = <SenderWrapper>new Microsoft.ApplicationInsights.Sender(config);
-                sender.beaconStub = this.sandbox.stub((<any>navigator), "sendBeacon");
+                sender.beaconStub = this.sandbox.stub((
+                    navigator), "sendBeacon");
 
                 Assert.ok(sender, "sender was constructed");
                 Assert.ok(Microsoft.ApplicationInsights.Util.IsBeaconApiSupported(), "Beacon API is supported");
@@ -1134,12 +1139,16 @@ class SenderTests extends TestClass {
         this.testCase({
             name: "SenderTests: send() is not using BeaconAPI sender if the BeaconAPI is disabled",
             test: () => {
+                if (!navigator.sendBeacon) {
+                    navigator['sendBeacon'] = (url: string, data?: any) => { return true; };
+                }
+
                 // enable beacon API and mock sender
                 var config = this.getDefaultConfig();
                 config.isBeaconApiDisabled = () => true;
 
                 var sender = <SenderWrapper>new Microsoft.ApplicationInsights.Sender(config);
-                sender.beaconStub = this.sandbox.stub((<any>navigator), "sendBeacon");
+                sender.beaconStub = this.sandbox.stub((navigator), "sendBeacon");
 
                 Assert.ok(sender, "sender was constructed");
                 Assert.ok(Microsoft.ApplicationInsights.Util.IsBeaconApiSupported(), "Beacon API is supported");

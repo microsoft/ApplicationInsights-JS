@@ -26,10 +26,10 @@ $aiSize = (Get-Item $ai).Length;
 $aiMinSize = (Get-Item $aiMin).Length;
 $aiMinZipSize = (Get-Item $aiMinZip).Length;
 
-Write-Host ==== JS SDK size ===
-Write-Host ai.js: $aiSize bytes
-Write-Host ai.min.js: $aiMinSize bytes
-Write-Host ai.min.zip: $aiMinZipSize bytes
+Write-Host "==== JS SDK size ==="
+Write-Host "ai.js: $aiSize bytes. Path: $ai"
+Write-Host "ai.min.js: $aiMinSize bytes. Path: $aiMin"
+Write-Host "ai.min.zip: $aiMinZipSize bytes. Path $aiMinZip"
 
 $currentDir = Get-Location;
 $aiDll = Join-Path $currentDir -ChildPath "Microsoft.ApplicationInsights.dll";

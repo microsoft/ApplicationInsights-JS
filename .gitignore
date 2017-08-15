@@ -161,3 +161,10 @@ $RECYCLE.BIN/
 
 # Visual studio 2015 user specific files
 JavaScript/.vs
+
+# Temp directories
+bundle/
+node_modules/
+
+# Grunt
+.tscache
