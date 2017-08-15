@@ -44,7 +44,7 @@ class Sanitizer2ETests extends TestClass {
         this.config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
         this.config.maxBatchInterval = 1000;
         this.config.endpointUrl = "https://dc.services.visualstudio.com/v2/track";
-        this.config.instrumentationKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46";
+        this.config.instrumentationKey = "b7170927-2d1c-44f1-acec-59f4e1751c11";
 
         this.delay = 100;
 

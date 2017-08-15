@@ -33,7 +33,7 @@ class PublicApiTests extends TestClass {
         var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
         config.maxBatchInterval = 100;
         config.endpointUrl = "https://dc.services.visualstudio.com/v2/track";
-        config.instrumentationKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46";
+        config.instrumentationKey = "b7170927-2d1c-44f1-acec-59f4e1751c11";
 
         this.delay = config.maxBatchInterval + 100;
         this.testAi = new Microsoft.ApplicationInsights.AppInsights(config);

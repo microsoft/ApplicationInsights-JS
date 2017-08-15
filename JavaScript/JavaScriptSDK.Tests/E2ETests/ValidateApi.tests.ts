@@ -18,7 +18,7 @@ class ValidateTests extends TestClass {
         this.config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
         this.config.maxBatchInterval = 100;
         this.config.endpointUrl = "https://dc.services.visualstudio.com/v2/validate";
-        this.config.instrumentationKey = "3e6a441c-b52b-4f39-8944-f81dd6c2dc46";
+        this.config.instrumentationKey = "b7170927-2d1c-44f1-acec-59f4e1751c11";
         this.config.enableSessionStorageBuffer = false;
 
         this.delay = this.config.maxBatchInterval + 100;
