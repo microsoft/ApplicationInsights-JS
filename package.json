@@ -1,33 +1,33 @@
 {
-    "name":  "applicationinsights-js",
-    "version":  "1.0.12",
-    "description":  "Microsoft Application Insights JavaScript SDK",
-    "main":  "bundle/ai.module.js",
-    "keywords":  [
-                     "browser performance monitoring",
-                     "script errors",
-                     "application insights",
-                     "microsoft",
-                     "azure"
-                 ],
-    "scripts":  {
-                    "test":  "echo \"Error: no test specified\" && exit 1"
-                },
-    "repository":  {
-                       "type":  "git",
-                       "url":  "git+https://github.com/Microsoft/ApplicationInsights-JS.git"
-                   },
-    "author":  "Microsoft Application Insights Team",
-    "license":  "MIT",
-    "bugs":  {
-                 "url":  "https://github.com/Microsoft/ApplicationInsights-JS/issues"
-             },
-    "homepage":  "https://github.com/Microsoft/ApplicationInsights-JS#readme",
-    "devDependencies":  {
-                            "grunt":  "1.0.1",
-                            "grunt-contrib-qunit":  "2.0.0",
-                            "grunt-contrib-uglify":  "2.3.0",
-                            "grunt-ts":  "^6.0.0-beta.15",
-                            "typescript":  "2.4.1"
-                        }
+    "name": "applicationinsights-js",
+    "version": "1.0.12",
+    "description": "Microsoft Application Insights JavaScript SDK",
+    "main": "bundle/ai.module.js",
+    "keywords": [
+        "browser performance monitoring",
+        "script errors",
+        "application insights",
+        "microsoft",
+        "azure"
+    ],
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Microsoft/ApplicationInsights-JS.git"
+    },
+    "author": "Microsoft Application Insights Team",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/Microsoft/ApplicationInsights-JS/issues"
+    },
+    "homepage": "https://github.com/Microsoft/ApplicationInsights-JS#readme",
+    "devDependencies": {
+        "grunt": "1.0.1",
+        "grunt-contrib-qunit": "2.0.0",
+        "grunt-contrib-uglify": "2.3.0",
+        "grunt-ts": "^6.0.0-beta.15",
+        "typescript": "2.4.1"
+    }
 }
