@@ -16,7 +16,9 @@ $releaseFromDir = Join-Path $jssdkMinDir -ChildPath "vnext";
 
 New-Item -ItemType directory -Path $releaseFromDir | Out-Null
 Copy-Item ($jssdkMinDir + "ai.js") (Join-Path $releaseFromDir -ChildPath "ai.vnext.js")
-Copy-Item ($jssdkMinDir + "ai.min.js") (Join-Path $releaseFromDir -ChildPath "ai.vnext.0.js")
+Copy-Item ($jssdkMinDir + "ai.js.map") (Join-Path $releaseFromDir -ChildPath "ai.js.map")
+Copy-Item ($jssdkMinDir + "ai.0.js") (Join-Path $releaseFromDir -ChildPath "ai.vnext.0.js")
+Copy-Item ($jssdkMinDir + "ai.0.js.map") (Join-Path $releaseFromDir -ChildPath "ai.0.js.map")
 
 Write-Host "Please review files in $releaseFromDir"
 Write-Host "Files will be uploaded to Azure storage! Press any key to continue..."
