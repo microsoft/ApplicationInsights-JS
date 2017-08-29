@@ -24,7 +24,7 @@ Write-Host "Preparing js files...";
 
 $releaseFromDir = Join-Path $jssdkMinDir -ChildPath $version;
 $jsFile = "ai.js";
-$jsMinFile = "ai.min.js";
+$jsMinFile = "ai.0.js";
 
 if (Test-Path $releaseFromDir) {
     Write-Warning "$releaseFromDir release directory already exists."
@@ -35,8 +35,10 @@ if (Test-Path $releaseFromDir) {
 New-Item -ItemType directory -Path $releaseFromDir | Out-Null
 Copy-Item ($jssdkMinDir + "ai.js") (Join-Path $releaseFromDir -ChildPath "ai.js")
 Copy-Item ($jssdkMinDir + "ai.js") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".js"))
-Copy-Item ($jssdkMinDir + "ai.min.js") (Join-Path $releaseFromDir -ChildPath "ai.0.js")
-Copy-Item ($jssdkMinDir + "ai.min.js") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".min.js"))
+Copy-Item ($jssdkMinDir + "ai.js.map") (Join-Path $releaseFromDir -ChildPath "ai.js.map")
+Copy-Item ($jssdkMinDir + "ai.0.js") (Join-Path $releaseFromDir -ChildPath "ai.0.js")
+Copy-Item ($jssdkMinDir + "ai.0.js") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".0.js"))
+Copy-Item ($jssdkMinDir + "ai.0.js.map") (Join-Path $releaseFromDir -ChildPath "ai.0.js.map")
 
 Write-Host "Please review files in $releaseFromDir"
 Write-Host "Files will be uploaded to Azure storage! Press any key to continue..."
@@ -59,7 +61,9 @@ Write-Host "Files uploaded successfully to Azure Storage."
 # copying files to dist dir 
 Copy-Item (Join-Path $releaseFromDir -ChildPath "ai.js") (Join-Path $jsSdkDir -ChildPath "dist" | Join-Path -ChildPath "ai.js")
 Copy-Item (Join-Path $releaseFromDir -ChildPath "ai.js") (Join-Path $jsSdkDir -ChildPath "dist" | Join-Path -ChildPath ("ai." + $version + ".js"))
+Copy-Item (Join-Path $releaseFromDir -ChildPath "ai.js.map") (Join-Path $jsSdkDir -ChildPath "dist" | Join-Path -ChildPath "ai.js.map")
 Copy-Item (Join-Path $releaseFromDir -ChildPath "ai.0.js") (Join-Path $jsSdkDir -ChildPath "dist" | Join-Path -ChildPath "ai.0.js")
 Copy-Item (Join-Path $releaseFromDir -ChildPath "ai.0.js") (Join-Path $jsSdkDir -ChildPath "dist" | Join-Path -ChildPath ("ai." + $version + ".min.js"))
+Copy-Item (Join-Path $releaseFromDir -ChildPath "ai.0.js.map") (Join-Path $jsSdkDir -ChildPath "dist" | Join-Path -ChildPath "ai.0.js.map")
 
 Write-Host "Files copied to dist folder, don't forget to push them to GitHub"
