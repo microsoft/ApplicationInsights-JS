@@ -56,9 +56,13 @@ module Microsoft.ApplicationInsights {
         ///<summary>Determines whether ajax monitoring can be enabled on this document</summary>
         ///<returns>True if Ajax monitoring is supported on this page, otherwise false</returns>
         private supportsMonitoring(): boolean {
-            var result = false;
-            if (!extensions.IsNullOrUndefined(XMLHttpRequest)) {
-                result = true;
+            var result = true;
+            if (extensions.IsNullOrUndefined(XMLHttpRequest) ||
+                extensions.IsNullOrUndefined(XMLHttpRequest.prototype) ||
+                extensions.IsNullOrUndefined(XMLHttpRequest.prototype.open) ||
+                extensions.IsNullOrUndefined(XMLHttpRequest.prototype.send) ||
+                extensions.IsNullOrUndefined(XMLHttpRequest.prototype.abort)) {
+                result = false;
             }
 
             return result;
