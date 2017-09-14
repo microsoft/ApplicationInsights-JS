@@ -65,6 +65,13 @@ module Microsoft.ApplicationInsights {
                 result = false;
             }
 
+            // disable in IE8 or older (https://www.w3schools.com/jsref/jsref_trim_string.asp)
+            try {
+                " a ".trim();
+            } catch (ex) {
+                result = false;
+            }
+
             return result;
         }
 
