@@ -182,9 +182,11 @@ You don't usually have to use this, as it happens automatically on window closin
 <a name="setAuthenticatedUserContext"></a>
 ### setAuthenticatedUserContext
 
-    setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string)
+    setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false)
 
-Set the authenticated user id and the account id in this session. Use this when you have identified a specific signed-in user. Parameters must not contain spaces or ,;=|
+Set the authenticated user id and the account id. Use this when you have identified a specific signed-in user. Parameters must not contain spaces or ,;=|
+
+The method will only set the `authenticatedUserId` and `accountId` for all events in the current page view. To set them for all events within the whole session, you should either call this method on every page view or set `storeInCookie = true`. 
 
  Parameter | Description
 ---|---
