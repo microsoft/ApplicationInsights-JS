@@ -539,6 +539,21 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
+            name: "AppInsightsTests: set authenticatedId does not set the cookie by default",
+            test: () => {
+                let appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                let setAuthStub = this.sandbox.stub(appInsights.context.user, "setAuthenticatedUserContext");
+                
+                appInsights.setAuthenticatedUserContext("10001");
+
+                Assert.equal(true, setAuthStub.calledOnce);
+                Assert.equal(false, setAuthStub.calledWithExactly("10001", null, false));
+
+                setAuthStub.reset();
+            }
+        });      
+
+        this.testCase({
             name: "AppInsightsTests: trackPageView sends user-specified duration when passed",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();

@@ -167,6 +167,24 @@ class UserContextTests extends TestClass {
         });
 
         this.testCase({
+            name: "setAuthenticatedUserContext: auth id and account id is set (not in the cookie)",
+            test: () => {
+                // setup
+                var authAndAccountId = ['bla@bla.com', 'contoso'];
+                var user = new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
+                var cookieStub = this.sandbox.stub(Microsoft.ApplicationInsights.Util, "setCookie");
+
+                // act
+                user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
+
+                // verify
+                Assert.equal('bla@bla.com', user.authenticatedId, "user auth id was not set");
+                Assert.equal('contoso', user.accountId, "user account id was not set");
+                Assert.equal(cookieStub.notCalled, true, "cookie was not set");
+            }
+        });
+
+        this.testCase({
             name: "setAuthenticatedUserContext: auth user set in cookie without account id",
             test: () => {
                 // setup
@@ -175,7 +193,7 @@ class UserContextTests extends TestClass {
                 var user = new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
 
                 // act
-                user.setAuthenticatedUserContext(authAndAccountId[0]);
+                user.setAuthenticatedUserContext(authAndAccountId[0], null, true);
 
                 // verify
                 Assert.equal(authAndAccountId[0], user.authenticatedId, "user auth id was set");
@@ -192,7 +210,7 @@ class UserContextTests extends TestClass {
                 var user = new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
 
                 // act
-                user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
+                user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1], true);
 
                 // verify
                 Assert.equal(authAndAccountId[0], user.authenticatedId, "user auth id was set");
@@ -209,7 +227,7 @@ class UserContextTests extends TestClass {
                 var user = new Microsoft.ApplicationInsights.Context.User(this.getEmptyConfig());
 
                 // act
-                user.setAuthenticatedUserContext(authAndAccountId[0]);
+                user.setAuthenticatedUserContext(authAndAccountId[0], null, true);
 
                 // verify
                 Assert.equal(authAndAccountId[0], user.authenticatedId, "user auth id was set");
@@ -291,7 +309,7 @@ class UserContextTests extends TestClass {
                 var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
 
                 // act
-                user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
+                user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1], true);
 
                 // verify
                 Assert.equal(undefined, user.authenticatedId, "user auth id was not set");
@@ -332,7 +350,7 @@ class UserContextTests extends TestClass {
                 var loggingStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
 
                 // act
-                user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
+                user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1], true);
 
                 // verify
                 Assert.equal(authAndAccountId[0], user.authenticatedId, "user auth id was set");
