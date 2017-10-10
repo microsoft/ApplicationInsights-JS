@@ -10,4 +10,6 @@
 !/API-reference.md
 !/bundle/ai.module.*
 !/dist/ai.js
+!/dist/ai.js.map
 !/dist/ai.0.js
+!/dist/ai.0.js.map
