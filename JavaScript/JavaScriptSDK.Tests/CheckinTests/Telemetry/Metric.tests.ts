@@ -1,5 +1,5 @@
-﻿/// <reference path="../../testframework/common.ts" />
-/// <reference path="../../testframework/contracttesthelper.ts" />
+﻿/// <reference path="../../TestFramework/Common.ts" />
+/// <reference path="../../TestFramework/ContractTestHelper.ts" />
 /// <reference path="../../../JavaScriptSDK/telemetry/metric.ts" />
 
 var metricName = "test";

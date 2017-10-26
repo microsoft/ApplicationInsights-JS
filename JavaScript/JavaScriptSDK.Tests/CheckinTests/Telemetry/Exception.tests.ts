@@ -1,5 +1,5 @@
-﻿/// <reference path="../../testframework/common.ts" />
-/// <reference path="../../testframework/contracttesthelper.ts" />
+﻿/// <reference path="../../TestFramework/Common.ts" />
+/// <reference path="../../TestFramework/ContractTestHelper.ts" />
 /// <reference path="../../../JavaScriptSDK/telemetry/exception.ts" />
 /// <reference path="../../../JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts" />
 class ExceptionTelemetryTests extends ContractTestHelper {

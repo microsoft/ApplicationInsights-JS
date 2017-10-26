@@ -1,7 +1,7 @@
 ﻿/// <reference path="../../../JavaScriptSDK/appInsights.ts" />
 /// <reference path="../../../JavaScriptSDK/Util.ts" />
 /// <reference path="../../../JavaScriptSDK/HashCodeScoreGenerator.ts" />
-/// <reference path="../../testframework/common.ts" />
+/// <reference path="../../TestFramework/Common.ts" />
 
 class HashCodeScoreGeneratorTests extends TestClass {
 
