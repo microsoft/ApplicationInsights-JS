@@ -1,5 +1,5 @@
-﻿/// <reference path="..\TestFramework\Common.ts" />
-/// <reference path="../../JavaScriptSDK/util.ts" />
+﻿/// <reference path="../TestFramework/Common.ts" />
+/// <reference path="../../JavaScriptSDK/Util.ts" />
 
 class UtilTests extends TestClass {
 

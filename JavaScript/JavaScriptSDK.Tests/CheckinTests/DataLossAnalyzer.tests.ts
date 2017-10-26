@@ -1,5 +1,5 @@
-﻿/// <reference path="..\TestFramework\Common.ts" />
-/// <reference path="../../javascriptsdk/DataLossAnalyzer.ts" />
+﻿/// <reference path="../TestFramework/Common.ts" />
+/// <reference path="../../JavaScriptSDK/DataLossAnalyzer.ts" />
 
 class DataLossAnalyzerTests extends TestClass {
 

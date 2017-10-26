@@ -1,6 +1,6 @@
-﻿/// <reference path="..\TestFramework\Common.ts" />
-/// <reference path="../../JavaScriptSDK/sender.ts" />
-/// <reference path="../../javascriptsdk/appinsights.ts" />
+﻿/// <reference path="../TestFramework/Common.ts" />
+/// <reference path="../../JavaScriptSDK/Sender.ts" />
+/// <reference path="../../JavaScriptSDK/AppInsights.ts" />
 
 class SendBufferTests extends TestClass {
 

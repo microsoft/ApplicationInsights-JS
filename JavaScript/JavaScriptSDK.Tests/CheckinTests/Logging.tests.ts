@@ -1,6 +1,6 @@
-﻿/// <reference path="..\TestFramework\Common.ts" />
-/// <reference path="../../JavaScriptSDK/logging.ts" />
-/// <reference path="../../javascriptsdk/appinsights.ts" />
+﻿/// <reference path="../TestFramework/Common.ts" />
+/// <reference path="../../JavaScriptSDK/Logging.ts" />
+/// <reference path="../../JavaScriptSDK/AppInsights.ts" />
 
 
 class LoggingTests extends TestClass {

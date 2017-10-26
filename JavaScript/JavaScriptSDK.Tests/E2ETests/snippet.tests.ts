@@ -1,6 +1,6 @@
-﻿/// <reference path="..\TestFramework\Common.ts" />
-/// <reference path="../../javascriptsdk/sender.ts" />
-/// <reference path="../../javascriptsdk/appinsights.ts" />
+﻿/// <reference path="../TestFramework/Common.ts" />
+/// <reference path="../../JavaScriptSDK/Sender.ts" />
+/// <reference path="../../JavaScriptSDK/AppInsights.ts" />
 
 class SnippetTests extends TestClass {
     private aiName = "appInsights";

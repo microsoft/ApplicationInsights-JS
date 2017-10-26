@@ -1,4 +1,4 @@
-﻿/// <reference path="..\TestFramework\Common.ts" />
+﻿/// <reference path="../TestFramework/Common.ts" />
 /// <reference path="../../JavaScriptSDK/Util.ts" />
 /// <reference path="../../JavaScriptSDK/SplitTest.ts" />
 

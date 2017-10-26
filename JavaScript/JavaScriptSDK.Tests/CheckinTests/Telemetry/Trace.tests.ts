@@ -1,6 +1,6 @@
-﻿/// <reference path="../../testframework/common.ts" />
-/// <reference path="../../testframework/contracttesthelper.ts" />
-/// <reference path="../../../JavaScriptSDK/telemetry/trace.ts" />
+﻿/// <reference path="../../TestFramework/Common.ts" />
+/// <reference path="../../TestFramework/ContractTestHelper.ts" />
+/// <reference path="../../../JavaScriptSDK/Telemetry/Trace.ts" />
 
 class TraceTelemetryTests extends ContractTestHelper {
 
