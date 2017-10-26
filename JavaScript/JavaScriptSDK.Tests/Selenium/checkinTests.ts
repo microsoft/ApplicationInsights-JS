@@ -1,4 +1,4 @@
-﻿/// <reference path="../CheckinTests/appinsights.tests.ts" />
+﻿/// <reference path="../CheckinTests/appInsights.tests.ts" />
 /// <reference path="../CheckinTests/Context/HashCodeScoreGenerator.tests.ts" />
 /// <reference path="../CheckinTests/Context/Sample.tests.ts" />
 /// <reference path="../CheckinTests/Context/User.tests.ts" />
@@ -21,11 +21,11 @@
 /// <reference path="../CheckinTests/TelemetryContext.tests.ts" />
 /// <reference path="../CheckinTests/Util.tests.ts" />
 /// <reference path="../CheckinTests/Initialization.tests.ts" />
-/// <reference path="../CheckinTests/Ajax.tests.ts" />
+/// <reference path="../CheckinTests/ajax.tests.ts" />
 /// <reference path="../CheckinTests/SplitTest.tests.ts" />
 
 /* import modules */
-import AppInsightsModuleTests from "../CheckinTests/AppInsightsModule.Tests"
+import AppInsightsModuleTests from "../CheckinTests/AppInsightsModule.tests"
 
 export default function registerTests() {
     /* for every module call registerTests() */

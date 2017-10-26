@@ -1,5 +1,5 @@
-﻿/// <reference path="../../../JavaScriptSDK/appInsights.ts" />
-/// <reference path="../../../JavaScriptSDK/context/sample.ts" />
+﻿/// <reference path="../../../JavaScriptSDK/AppInsights.ts" />
+/// <reference path="../../../JavaScriptSDK/Context/Sample.ts" />
 /// <reference path="../../TestFramework/Common.ts" />
 /// <reference path="../Util.tests.ts"/>
 

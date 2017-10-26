@@ -1,6 +1,6 @@
-﻿/// <reference path="..\TestFramework\Common.ts" />
-/// <reference path="../../javascriptsdk/initialization.ts" />
-/// <reference path="../../javascriptsdk/appinsights.ts" />
+﻿/// <reference path="../TestFramework/Common.ts" />
+/// <reference path="../../JavaScriptSDK/Initialization.ts" />
+/// <reference path="../../JavaScriptSDK/AppInsights.ts" />
 
 class InitializationTests extends TestClass {
 

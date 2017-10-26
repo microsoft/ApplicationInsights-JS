@@ -1,4 +1,4 @@
-﻿/// <reference path="../../../JavaScriptSDK/context/user.ts" />
+﻿/// <reference path="../../../JavaScriptSDK/Context/User.ts" />
 /// <reference path="../../TestFramework/Common.ts" />
 /// <reference path="../Util.tests.ts"/>
 

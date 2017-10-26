@@ -1,4 +1,4 @@
-﻿/// <reference path="../testframework/common.ts" />
+﻿/// <reference path="../TestFramework/Common.ts" />
 /// <reference path="../../JavaScriptSDK/TelemetryContext.ts" />
 /// <reference path="../../JavaScriptSDK/AppInsights.ts" />
 /// <reference path="../../JavaScriptSDK/Telemetry/Common/Envelope.ts"/>

@@ -1,6 +1,6 @@
 ﻿/// <reference path="../../TestFramework/Common.ts" />
 /// <reference path="../../TestFramework/ContractTestHelper.ts" />
-/// <reference path="../../../JavaScriptSDK/telemetry/pageview.ts" />
+/// <reference path="../../../JavaScriptSDK/Telemetry/PageView.ts" />
 
 class PageViewTelemetryTests extends ContractTestHelper {
 

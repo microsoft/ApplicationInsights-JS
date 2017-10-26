@@ -1,4 +1,4 @@
-﻿/// <reference path="..\TestFramework\Common.ts" />
+﻿/// <reference path="../TestFramework/Common.ts" />
 /// <reference path="../../JavaScriptSDK/Serializer.ts" />
 
 class SerializerTests extends TestClass {

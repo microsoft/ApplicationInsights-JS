@@ -1,6 +1,6 @@
 ﻿/// <reference path="../../TestFramework/Common.ts" />
 /// <reference path="../../TestFramework/ContractTestHelper.ts" />
-/// <reference path="../../../JavaScriptSDK/telemetry/metric.ts" />
+/// <reference path="../../../JavaScriptSDK/Telemetry/Metric.ts" />
 
 var metricName = "test";
 var metricValue = 42;
