@@ -69,7 +69,13 @@ module.exports = function (grunt) {
                 options: {
                     sourceMap: true,
                     sourceMapIncludeSources: true,
-                    sourceMapIn: 'bundle/ai.js.map'
+                    sourceMapIn: 'bundle/ai.js.map',
+                    compress: {
+                        ie8: true
+                    },
+                    mangle: {
+                        ie8: true
+                    }
                 },
             },
             snippet: {
