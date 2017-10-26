@@ -1,4 +1,4 @@
-/// <reference path="..\External\qunit.d.ts" />
+/// <reference path="../External/qunit.d.ts" />
 
 /** Wrapper around QUnit asserts. This class has two purposes:
  * - Make Assertion methods easy to discover.

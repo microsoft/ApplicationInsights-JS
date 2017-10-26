@@ -1,5 +1,5 @@
-/// <reference path="..\External\qunit.d.ts" />
-/// <reference path="testclass.ts" />
+/// <reference path="../External/qunit.d.ts" />
+/// <reference path="TestClass.ts" />
 
 class PollingAssert {
     /**

@@ -1,4 +1,4 @@
-/// <reference path="../../JavaScriptSDK/appInsights.ts" />
+/// <reference path="../../JavaScriptSDK/AppInsights.ts" />
 
 // This file was copied from https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/master/types/applicationinsights-js/applicationinsights-js-tests.ts
 // and is used to validate ApplicationInsights-JS definition types. 

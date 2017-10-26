@@ -1,4 +1,4 @@
-﻿/// <reference path="..\TestFramework\Common.ts" />
+﻿/// <reference path="../TestFramework/Common.ts" />
 
 import {AppInsights} from "../../JavaScriptSDK.Module/AppInsightsModule"
 

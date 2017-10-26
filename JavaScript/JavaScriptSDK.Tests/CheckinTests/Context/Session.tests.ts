@@ -1,8 +1,8 @@
 ﻿/// <reference path="../../../JavaScriptSDK/TelemetryContext.ts" />
-/// <reference path="../../../JavaScriptSDK/context/session.ts" />
-/// <reference path="../../../JavaScriptSDK/context/user.ts" />
+/// <reference path="../../../JavaScriptSDK/Context/Session.ts" />
+/// <reference path="../../../JavaScriptSDK/Context/User.ts" />
 /// <reference path="../../../JavaScriptSDK/ajax/ajaxUtils.ts" />
-/// <reference path="../../testframework/common.ts" />
+/// <reference path="../../TestFramework/Common.ts" />
 /// <reference path="../Util.tests.ts"/>
 
 class SessionContextTests extends TestClass {

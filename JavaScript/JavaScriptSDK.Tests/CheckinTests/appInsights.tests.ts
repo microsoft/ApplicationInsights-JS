@@ -1,5 +1,5 @@
-﻿/// <reference path="..\TestFramework\Common.ts" />
-/// <reference path="../../JavaScriptSDK/appInsights.ts" />
+﻿/// <reference path="../TestFramework/Common.ts" />
+/// <reference path="../../JavaScriptSDK/AppInsights.ts" />
 /// <reference path="../../JavaScriptSDK/Util.ts"/>
 
 class AppInsightsTests extends TestClass {

@@ -1,6 +1,6 @@
-﻿/// <reference path="../../testframework/common.ts" />
-/// <reference path="../../testframework/contracttesthelper.ts" />
-/// <reference path="../../../JavaScriptSDK/telemetry/RemoteDependencyData.ts" />
+﻿/// <reference path="../../TestFramework/Common.ts" />
+/// <reference path="../../TestFramework/ContractTestHelper.ts" />
+/// <reference path="../../../JavaScriptSDK/Telemetry/RemoteDependencyData.ts" />
 /// <reference path="../../../JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts" />
 class RemoteDependencyTests extends ContractTestHelper {
 

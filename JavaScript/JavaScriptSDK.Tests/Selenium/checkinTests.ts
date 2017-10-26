@@ -1,31 +1,31 @@
-﻿/// <reference path="../checkintests/appinsights.tests.ts" />
-/// <reference path="../checkintests/context/HashCodeScoreGenerator.tests.ts" />
-/// <reference path="../checkintests/context/sample.tests.ts" />
-/// <reference path="../checkintests/context/user.tests.ts" />
-/// <reference path="../checkintests/context/session.tests.ts" />
+﻿/// <reference path="../CheckinTests/appInsights.tests.ts" />
+/// <reference path="../CheckinTests/Context/HashCodeScoreGenerator.tests.ts" />
+/// <reference path="../CheckinTests/Context/Sample.tests.ts" />
+/// <reference path="../CheckinTests/Context/User.tests.ts" />
+/// <reference path="../CheckinTests/Context/Session.tests.ts" />
 
-/// <reference path="../checkintests/telemetry/event.tests.ts" />
-/// <reference path="../checkintests/telemetry/exception.tests.ts" />
-/// <reference path="../checkintests/telemetry/metric.tests.ts" />
-/// <reference path="../checkintests/telemetry/pageviewperformance.tests.ts" />
-/// <reference path="../checkintests/telemetry/pageview.tests.ts" />
-/// <reference path="../checkintests/telemetry/trace.tests.ts" />
-/// <reference path="../checkintests/telemetry/RemoteDependency.tests.ts" />
-/// <reference path="../checkintests/telemetry/DataSanitizer.tests.ts" />
+/// <reference path="../CheckinTests/Telemetry/Event.tests.ts" />
+/// <reference path="../CheckinTests/Telemetry/Exception.tests.ts" />
+/// <reference path="../CheckinTests/Telemetry/Metric.tests.ts" />
+/// <reference path="../CheckinTests/Telemetry/PageViewPerformance.tests.ts" />
+/// <reference path="../CheckinTests/Telemetry/PageView.tests.ts" />
+/// <reference path="../CheckinTests/Telemetry/Trace.tests.ts" />
+/// <reference path="../CheckinTests/Telemetry/RemoteDependency.tests.ts" />
+/// <reference path="../CheckinTests/Telemetry/DataSanitizer.tests.ts" />
 
-/// <reference path="../checkintests/PageVisitTimeManager.tests.ts" />
-/// <reference path="../checkintests/logging.tests.ts" />
-/// <reference path="../checkintests/sender.tests.ts" />
-/// <reference path="../checkintests/SendBuffer.tests.ts" />
-/// <reference path="../checkintests/serializer.tests.ts" />
-/// <reference path="../checkintests/telemetrycontext.tests.ts" />
-/// <reference path="../checkintests/util.tests.ts" />
-/// <reference path="../checkintests/initialization.tests.ts" />
-/// <reference path="../checkintests/ajax.tests.ts" />
-/// <reference path="../checkintests/SplitTest.tests.ts" />
+/// <reference path="../CheckinTests/PageVisitTimeManager.tests.ts" />
+/// <reference path="../CheckinTests/Logging.tests.ts" />
+/// <reference path="../CheckinTests/Sender.tests.ts" />
+/// <reference path="../CheckinTests/SendBuffer.tests.ts" />
+/// <reference path="../CheckinTests/Serializer.tests.ts" />
+/// <reference path="../CheckinTests/TelemetryContext.tests.ts" />
+/// <reference path="../CheckinTests/Util.tests.ts" />
+/// <reference path="../CheckinTests/Initialization.tests.ts" />
+/// <reference path="../CheckinTests/ajax.tests.ts" />
+/// <reference path="../CheckinTests/SplitTest.tests.ts" />
 
 /* import modules */
-import AppInsightsModuleTests from "../CheckinTests/AppInsightsModule.Tests"
+import AppInsightsModuleTests from "../CheckinTests/AppInsightsModule.tests"
 
 export default function registerTests() {
     /* for every module call registerTests() */

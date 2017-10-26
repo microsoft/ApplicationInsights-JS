@@ -1,4 +1,4 @@
-﻿/// <reference path="..\TestFramework\Common.ts" />
+﻿/// <reference path="../TestFramework/Common.ts" />
 /// <reference path="../../JavaScriptSDK/Telemetry/PageVisitTimeManager.ts" />
 class PageVisitTimeManagerTests extends TestClass {
 
