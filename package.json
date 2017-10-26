@@ -1,6 +1,6 @@
 {
     "name":  "applicationinsights-js",
-    "version":  "1.0.13",
+    "version":  "1.0.14",
     "description":  "Microsoft Application Insights JavaScript SDK",
     "main":  "bundle/ai.module.js",
     "keywords":  [
