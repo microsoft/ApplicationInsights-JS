@@ -1,6 +1,7 @@
 ﻿# Microsoft Application Insights JavaScript SDK
  
  [![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
+ [![npm version](https://badge.fury.io/js/applicationinsights-js.svg)](https://badge.fury.io/js/applicationinsights-js)
 
 [Application Insights](https://azure.microsoft.com/services/application-insights/) tells you about your app's performance and usage. By adding a few lines of code to your web pages, you get data about how many users you have, which pages are most popular, how fast pages load, whether they throw exceptions, and more. And you can add code to track more detailed user activity.
 
