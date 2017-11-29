@@ -152,7 +152,7 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
         });
 
         this.testCase({
-            name: name + "PageViewPerformanceTelemetry is not reporting duration if a request is comming from a Googlebot",
+            name: name + "PageViewPerformanceTelemetry is not reporting duration if a request is coming from a Googlebot",
             test: () => {
                 // mock user agent
                 let originalUserAgent = navigator.userAgent;
@@ -255,6 +255,38 @@ class PageViewPerformanceTelemetryTests extends ContractTestHelper {
                 }
             }
         });
+
+        this.testCase({
+            name: name + "shouldCollectDuration() should detect all google bots",
+            test: () => {
+                try {
+                    this.setUserAgent('fake user agent');
+                } catch (ex) {
+                    Assert.ok(true, 'cannot run this test in the current setup - try Chrome');
+                    return;
+                }
+
+                let testCases = [
+                    // bots
+                    { string: 'Googlebot/2.1 (+http://www.google.com/bot.html)', shouldCollect: false },
+                    { string: 'Googlebot-Image/1.0', shouldCollect: false },
+                    { string: 'AdsBot-Google-Mobile-Apps', shouldCollect: false },
+                    { string: 'Mozilla/5.0 (Linux; Android 5.0; SM-G920A) AppleWebKit (KHTML, like Gecko) Chrome Mobile Safari (compatible; AdsBot-Google-Mobile; +http://www.google.com/mobile/adsbot.html)', shouldCollect: false },
+                    { string: 'APIs-Google (+https://developers.google.com/webmasters/APIs-Google.html)', shouldCollect: false },
+                    // browsers
+                    { string: 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36', shouldCollect: true },
+                    { string: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246', shouldCollect: true },
+                    { string: 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1', shouldCollect: true },
+                ];
+
+                for (let i = 0; i < testCases.length; i++) {
+                    this.setUserAgent(testCases[i].string);
+                    let shouldCollect = Microsoft.ApplicationInsights.Telemetry.PageViewPerformance.shouldCollectDuration(10);
+                    Assert.equal(testCases[i].shouldCollect, shouldCollect);
+                }
+            }
+        });
+
     }
 }
 new PageViewPerformanceTelemetryTests().registerTests();
