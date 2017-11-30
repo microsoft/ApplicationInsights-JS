@@ -29,8 +29,8 @@ from CDN or you can override the script hosting location by specifying `url` par
     }({
         instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
     });
-    window.appInsights = appInsights;
-    appInsights.trackPageView();
+    
+    window.appInsights=appInsights,appInsights.queue&&0===appInsights.queue.length&&appInsights.trackPageView();
 </script>
 ```    
 [Learn more.](https://azure.microsoft.com/documentation/articles/app-insights-javascript/)
@@ -75,7 +75,7 @@ Use this approach if you would like to host AI JS SDK script on your endpoint or
     var init = new Microsoft.ApplicationInsights.Initialization(snippet);   
     var appInsights = init.loadAppInsights();   
     appInsights.trackPageView();   
-</script>   
+</script>
 ```  
 ## API reference
 
