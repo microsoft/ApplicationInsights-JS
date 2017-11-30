@@ -164,8 +164,16 @@ module Microsoft.ApplicationInsights.Telemetry {
          * This method tells if given durations should be excluded from collection.
          */
         public static shouldCollectDuration(...durations: number[]): boolean {
+            // a full list of Google crawlers user agent strings - https://support.google.com/webmasters/answer/1061943?hl=en
+            let botAgentNames = ['googlebot', 'adsbot-google', 'apis-google', 'mediapartners-google'];
             let userAgent = navigator.userAgent;
-            let isGoogleBot = userAgent ? userAgent.toLowerCase().indexOf("googlebot") !== -1 : false;
+            let isGoogleBot = false;
+
+            if (userAgent) {
+                for(let i =0; i<botAgentNames.length; i++) {
+                    isGoogleBot = isGoogleBot || userAgent.toLowerCase().indexOf(botAgentNames[i]) !== -1;
+                }
+            }
 
             if (isGoogleBot) {
                 // Don't report durations for GoogleBot, it is returning invalid values in performance.timing API. 
