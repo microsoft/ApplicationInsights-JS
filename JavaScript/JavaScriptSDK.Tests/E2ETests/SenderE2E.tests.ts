@@ -44,7 +44,7 @@ class SenderE2ETests extends TestClass {
             steps: [
                 () => {
                     if (!(<any>navigator).sendBeacon) {
-                        (<any>navigator)['sendBeacon'] = (url: any, data: any) => { };
+                        (<any>navigator)['sendBeacon'] = (url: any, data: any) => { return true; };
                     }
 
                     var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
@@ -58,8 +58,15 @@ class SenderE2ETests extends TestClass {
                 () => {
                     Assert.ok(this.beaconSpy.calledOnce);
 
-                    var payload = <string>this.beaconSpy.args[0][1];
-                    Assert.ok(payload.indexOf('{"baseType":"EventData","baseData":{"ver":2,"name":"test"}}') >= 0);
+                    var payload = this.beaconSpy.args[0][1];
+                    Assert.equal("text/plain;charset=utf-8", payload.type);
+
+                    let reader = new FileReader();
+                    reader.addEventListener('loadend', (e) => {
+                      let text = (<any>e).srcElement.result;
+                      Assert.ok(text.indexOf('{"baseType":"EventData","baseData":{"ver":2,"name":"test"}}') >= 0);
+                    });
+                    reader.readAsText(payload);
                 }
             ]
         });

@@ -22,7 +22,7 @@ interface XDomainRequest extends XMLHttpRequestEventTarget {
 
 declare var XDomainRequest: {
     prototype: XDomainRequest;
-    new (): XDomainRequest;
+    new(): XDomainRequest;
 };
 
 module Microsoft.ApplicationInsights {
@@ -443,8 +443,12 @@ module Microsoft.ApplicationInsights {
             var url = this._config.endpointUrl();
             var batch = this._buffer.batchPayloads(payload);
 
+            // Chrome only allows CORS-safelisted values for the sendBeacon data argument
+            // see: https://bugs.chromium.org/p/chromium/issues/detail?id=720283
+            let plainTextBatch = new Blob([batch], { type: 'text/plain;charset=UTF-8' });
+            
             // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
-            var queued = (<any>navigator).sendBeacon(url, batch);
+            var queued = navigator.sendBeacon(url, plainTextBatch);
 
             if (queued) {
                 this._buffer.markAsSent(payload);
