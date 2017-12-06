@@ -31,6 +31,12 @@ module.exports = function (grunt) {
                 ],
                 out: 'JavaScript/JavaScriptSDK.Tests/Selenium/ai.tests.js'
             },
+            testSchema: {
+                src: [
+                    'JavaScript/JavaScriptSDK.Tests/Contracts/Generated/*.ts'
+                ],
+                out: 'bundle/test/ai.schema.tests.js'
+            },
             testE2E: {
                 files: [
                     {
@@ -89,6 +95,7 @@ module.exports = function (grunt) {
                 options: {
                     urls: [
                         'JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html',
+                        'JavaScript/JavaScriptSDK.Tests/Contracts/Schema.tests.htm',
                         'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.DisableTelemetry.tests.htm',
                         'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.PublicApi.tests.htm',
                         'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.SanitizerE2E.tests.htm',
@@ -115,5 +122,5 @@ module.exports = function (grunt) {
 
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("module", ["ts:module"]);
-    grunt.registerTask("test", ["ts:default", "ts:test", "ts:testE2E", "ts:types", "qunit"]);
+    grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit"]);
 };
