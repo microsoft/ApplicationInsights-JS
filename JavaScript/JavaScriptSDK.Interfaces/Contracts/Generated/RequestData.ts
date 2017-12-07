@@ -19,7 +19,7 @@ module AI
          * Identifier of a request call instance. Used for correlation between request and other telemetry items.
          */
         public id: string;
-        
+
         /**
          * Source of the request. Examples are the instrumentation key of the caller or the ip address of the caller.
          */
@@ -28,28 +28,12 @@ module AI
         /**
          * Name of the request. Represents code path taken to process request. Low cardinality value to allow better grouping of requests. For HTTP requests it represents the HTTP method and URL path template like 'GET /values/{id}'.
          */
-        public name: string;
-        
-        /**
-         * Request start time in DateTimeOffset 'O' (round-trip) format: yyyy-mm-ddThh:mm:ss.fffffff-hh:mm
-         */
-        public startTime: string;
-        
-        /**
-         * Request duration in format: DD.HH:MM:SS.MMMMMM. Must be less than 1000 days.
-         */
-        public duration: string;
-        
-        /**
-         * Result of a request execution. HTTP status code for HTTP requests.
-         */
-        public responseCode: string;
+        public name: string;        
         
         /**
          * Indication of successfull or unsuccessfull call.
          */
         public success: boolean;
-        public httpMethod: string;
         
         /**
          * Request URL with all query string parameters.

@@ -33,16 +33,6 @@ QUnit.test("Test property RequestData.name was created and default is set", func
     QUnit.ok(temp.name !== null, "RequestData.name == null");
 });
 
-QUnit.test("Test property RequestData.duration was created and default is set", function () {
-    var temp = new AI.RequestData();
-    QUnit.ok(temp.duration !== null, "RequestData.duration == null");
-});
-
-QUnit.test("Test property RequestData.responseCode was created and default is set", function () {
-    var temp = new AI.RequestData();
-    QUnit.ok(temp.responseCode !== null, "RequestData.responseCode == null");
-});
-
 QUnit.test("Test property RequestData.success was created and default is set", function () {
     var temp = new AI.RequestData();
     QUnit.ok(temp.success !== null, "RequestData.success == null");

@@ -31,16 +31,6 @@ module AI
         public duration: string;
         
         /**
-         * Referrer url. Never used so far.
-         */
-        public referrer: string;
-        
-        /**
-         * ???
-         */
-        public referrerData: string;
-        
-        /**
          * Collection of custom properties.
          */
         public properties: any;

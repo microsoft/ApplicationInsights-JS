@@ -41,19 +41,9 @@ module AI
         public networkConnect: string;
         
         /**
-         * Referrer url. Never used so far.
-         */
-        public referrer: string;
-        
-        /**
          * Sent request time in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff
          */
         public sentRequest: string;
-        
-        /**
-         * ???
-         */
-        public referrerData: string;
         
         /**
          * Received response time in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff

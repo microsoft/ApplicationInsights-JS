@@ -1,7 +1,6 @@
 /// <reference path="TelemetryContext.ts" />
 /// <reference path="./Telemetry/Common/Data.ts"/>
 /// <reference path="./Util.ts"/>
-/// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/SessionState.ts"/>
 /// <reference path="./Telemetry/PageViewManager.ts"/>
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
@@ -322,6 +321,7 @@ module Microsoft.ApplicationInsights {
         /**
          * Log an exception you have caught.
          * @param   exception   An Error from a catch clause, or the string error message.
+         * @param   handledAt   Not used
          * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
          * @param   severityLevel   AI.SeverityLevel - severity level
@@ -337,7 +337,7 @@ module Microsoft.ApplicationInsights {
                     }
                 }
 
-                var exceptionTelemetry = new Telemetry.Exception(exception, handledAt, properties, measurements, severityLevel);
+                var exceptionTelemetry = new Telemetry.Exception(exception, properties, measurements, severityLevel);
                 var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Exception>(Telemetry.Exception.dataType, exceptionTelemetry);
                 var envelope = new Telemetry.Common.Envelope(data, Telemetry.Exception.envelopeType);
                 this.context.track(envelope);
@@ -467,7 +467,7 @@ module Microsoft.ApplicationInsights {
                 "Script error.",
                 "Error", "unknown", "unknown",
                 "The browser's same-origin policy prevents us from getting the details of this exception. Consider using 'crossorigin' attribute.",
-                0, null);
+                0);
             exceptionData.properties = properties;
 
             var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.Exception>(Telemetry.Exception.dataType, exceptionData);

@@ -1,4 +1,5 @@
 ﻿/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/PageViewPerfData.ts"/>
+/// <reference path="../Serializer.ts" />
 /// <reference path="./Common/DataSanitizer.ts"/>
 /// <reference path="../Util.ts"/>
 

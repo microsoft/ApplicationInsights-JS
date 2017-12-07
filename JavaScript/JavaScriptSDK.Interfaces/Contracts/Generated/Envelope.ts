@@ -41,17 +41,6 @@ module Microsoft.Telemetry
         public iKey: string;
         
         /**
-         * A collection of values bit-packed to represent how the event was processed. Currently represents Priority and Latency. The lowest-order byte is Priority, next byte is Latency Still in development
-         */
-        public flags: number;
-        public deviceId: string;
-        public os: string;
-        public osVer: string;
-        public appId: string;
-        public appVer: string;
-        public userId: string;
-        
-        /**
          * Key/value collection of context properties. See ContextTagKeys for information on available properties.
          */
         public tags: any;

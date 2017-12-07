@@ -28,11 +28,6 @@ QUnit.test("Test property ExceptionData.severityLevel was created and default is
     QUnit.ok(temp.severityLevel !== null, "ExceptionData.severityLevel == null");
 });
 
-QUnit.test("Test property ExceptionData.problemId was created and default is set", function () {
-    var temp = new AI.ExceptionData();
-    QUnit.ok(temp.problemId !== null, "ExceptionData.problemId == null");
-});
-
 QUnit.test("Test property ExceptionData.properties was created and default is set", function () {
     var temp = new AI.ExceptionData();
     QUnit.ok(temp.properties !== null, "ExceptionData.properties == null");

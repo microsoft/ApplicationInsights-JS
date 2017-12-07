@@ -18,11 +18,6 @@ module AI
         public ver: number;
         
         /**
-         * Indication of where exception was caught to assess it's severity. Possible values are 'user code' (UserCode), 'framework' (Platform) or 'unhandled' (Unhandled)
-         */
-        public handledAt: string;
-        
-        /**
          * Exception chain - list of inner exceptions.
          */
         public exceptions: ExceptionDetails[];
@@ -31,12 +26,6 @@ module AI
          * Severity level. Mostly used to indicate exception severity level when it is reported by logging library.
          */
         public severityLevel: AI.SeverityLevel;
-        
-        /**
-         * Identifier of where the exception was thrown in code. Used for exceptions grouping. Typically a combination of exception type and a function from the call stack.
-         */
-        public problemId: string;
-        public crashThreadId: number;
         
         /**
          * Collection of custom properties.
