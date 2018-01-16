@@ -30,13 +30,16 @@ You add a short snippet of code to the page, which pulls in the rest of the SDK.
 The shop front for the SDK, that sends telemetry to Application Insights.
 
 In a web page where you have [set up web page tracking](https://azure.microsoft.com/documentation/articles/app-insights-javascript/), you can use the instance `appInsights`. For example:
-    
-    appInsights.trackPageView("page1");
 
+```js
+appInsights.trackPageView("page1");
+```
 
 ### trackPageView
 
-    trackPageView(name?: string, url?: string, properties?:{[string]:string}, measurements?: {[string]:number}, duration?: number)
+```ts
+trackPageView(name?: string, url?: string, properties?:{[string]:string}, measurements?: {[string]:number}, duration?: number)
+```
 
 Logs that a page or similar container was displayed to the user. 
 
@@ -54,7 +57,9 @@ tabs, and you want to log a page view when each tab opens.
 
 ### startTrackPage
 
-    startTrackPage(name?: string)
+```ts
+startTrackPage(name?: string)
+```
     
 Starts the timer for tracking a page view. Use this instead of ```trackPageView``` if you want to control when the page view timer starts and stops, but don't want to calculate the duration yourself. This method doesn't send any telemetry. Call ```stopTrackPage``` to log the end of the page view and send the event.
 
@@ -64,7 +69,9 @@ Parameter | Description
 
 ### stopTrackPage
 
-    stopTrackPage(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
+```ts
+stopTrackPage(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
+```
 
 Stops the timer that was started by calling ```startTrackPage``` and sends the page view telemetry with the specified properties and measurements. The duration of the page view will be the time between calling ```startTrackPage``` and ```stopTrackPage```.
 
@@ -77,7 +84,9 @@ Parameter | Description
 
 ### trackEvent
 
-    trackEvent(name: string, properties?: {[string]:string}, measurements?: {[string]:number})
+```ts
+trackEvent(name: string, properties?: {[string]:string}, measurements?: {[string]:number})
+```
 
 Log a user action or other occurrence.
 
@@ -94,7 +103,9 @@ You can also search and [display individual events](https://azure.microsoft.com/
 
 ### trackMetric
 
-    trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: {[string]:string})
+```ts
+trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: {[string]:string})
+```
 
 Log a positive numeric value that is not associated with a specific event. Typically used to send regular reports of performance indicators. 
 
@@ -114,7 +125,9 @@ To send a single measurement, use just the first two parameters. If you take mea
 
 ### trackException
 
-    trackException(exception: Error, handledAt?: string, properties?: {[string]:string}, measurements?: {[string]:number}, severityLevel?: AI.SeverityLevel)
+```ts
+trackException(exception: Error, handledAt?: string, properties?: {[string]:string}, measurements?: {[string]:number}, severityLevel?: AI.SeverityLevel)
+```
 
 Log an exception you have caught. (Exceptions caught by the browser are also logged.)
 
@@ -130,16 +143,19 @@ In the portal, you can [search on exception type and view](https://azure.microso
 
 By default, uncaught browser exceptions are caught by the SDK and reported to the portal. To disable this behavior, insert the following line in the initialization snippet that you got from the portal. You can't set this anywhere else:
 
-    })({
+```ts
+})({
     instrumentationKey: "your instrumentation key",
 
     disableExceptionTracking: true
-    });
-
+});
+```
 
 ### trackTrace
 
-    trackTrace(message: string, properties?: {[string]:string}, severityLevel?: AI.SeverityLevel)
+```ts
+trackTrace(message: string, properties?: {[string]:string}, severityLevel?: AI.SeverityLevel)
+```
 
 Log a diagnostic event such as entering or leaving a method.
 
@@ -156,7 +172,9 @@ In the portal, you can search on message content and [display individual trackTr
 
 ### trackDependency
 
-    trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
+```ts
+trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
+```
     
 Log a dependency call (for instance: ajax)
 
@@ -173,7 +191,9 @@ Log a dependency call (for instance: ajax)
 
 ### flush
 
-    flush()
+```ts
+flush()
+```
 
 Immediately send all queued telemetry. Synchronous.
 
@@ -182,7 +202,9 @@ You don't usually have to use this, as it happens automatically on window closin
 <a name="setAuthenticatedUserContext"></a>
 ### setAuthenticatedUserContext
 
-    setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false)
+```ts
+setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false)
+```
 
 Set the authenticated user id and the account id. Use this when you have identified a specific signed-in user. Parameters must not contain spaces or ,;=|
 
@@ -199,150 +221,164 @@ The authenticated user id will be available as part of the context of the teleme
 
 ### clearAuthenticatedUserContext
 
-    clearAuthenticatedUserContext ()
+```ts
+clearAuthenticatedUserContext ()
+```
 
 Clears the authenticated user id and the account id from the user context, and clears the associated cookie.
 
 
 ### config
 
-    config: IConfig
+```ts
+config: IConfig
+```
 
 Values that control how the telemetry data is sent.
 
-    interface IConfig {
-        // The key of your Application Insights resource in Azure
-        instrumentationKey: string;
-        
-        // The Application Insights server
-        endpointUrl: string;
-        
-        accountId: string;
-        
-        // A session is logged if the user is inactive for this time in milliseconds. Default 30 mins.
-        sessionRenewalMs: number; 
-        
-        // A session is logged if it has continued for this time in milliseconds. Default 24h.
-        sessionExpirationMs: number;
-        
-        // Default 100k
-        maxBatchSizeInBytes: number;
-        
-        // Default 15s
-        maxBatchInterval: number;
-        
-        // If true, debugging data is thrown as an exception by the logger. Default false.
-        enableDebug: boolean;
-                
-        // If true, telemetry data is not collected or sent. Default false.
-        disableTelemetry: boolean; 
-        
-        // If true, the SDK will log all internal errors (any severity) to the console. Default false
-        verboseLogging: boolean;
-        
-        // Controls what percentage of events will be sent
-        // Default 100. 
-        samplingPercentage: boolean;
-        
-        // Default 10s
-        diagnosticLogInterval: number;
-        
-        // If true, exceptions are not monitored. 
-        disableExceptionTracking: boolean;
-        
-        // If true, ajax calls are not monitored.
-        disableAjaxTracking: boolean;
-        
-        // If true, default behavior of trackPageView is changed to record end of page view duration interval when 
-        // trackPageView is called. If false and no custom duration is provided to trackPageView, the page view
-        // performance is calculated using the navigation timing API.
-        overridePageViewDuration: boolean;
-        
-        // Default 500 - controls how many ajax calls will be monitored per page view.
-        // Set to -1 to monitor all ajax calls on the page.
-        maxAjaxCallsPerView: number;
+```ts
+interface IConfig {
+    // The key of your Application Insights resource in Azure
+    instrumentationKey: string;
 
-        // If true, the SDK will not store or read any data from cookies.
-        // Default: false
-        isCookieUseDisabled: boolean;
-        
-        // Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains.
-        cookieDomain: string;
-        
-        // Default false. If true, flush method will not be called when onBeforeUnload event triggers.
-        disableFlushOnBeforeUnload: boolean;
+    // The Application Insights server
+    endpointUrl: string;
 
-        // If true, the buffer with all unsent telemetry is stored in a session storage. The buffer is restored on page load.
-        // The feature is enable by default starting with v0.23.0. 
-        enableSessionStorageBuffer: boolean;
+    accountId: string;
 
-        // Is retry handler disabled. Default false.
-        // If enabled, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error) and 503 (service unavailable).
-        isRetryDisabled: boolean;
+    // A session is logged if the user is inactive for this time in milliseconds. Default 30 mins.
+    sessionRenewalMs: number; 
 
-        // The url from where the JS SDK will be downloaded. 
-        // Default 'https://az416426.vo.msecnd.net/scripts/a/ai.0.js'
-        url: string;
+    // A session is logged if it has continued for this time in milliseconds. Default 24h.
+    sessionExpirationMs: number;
 
-        // If true, the SDK will not store or read any data from local and session storage.
-        // Default: false
-        isStorageUseDisabled: boolean;
-	
-        // Default true. If false, the SDK will add two headers ('x-ms-request-root-id' and 'x-ms-request-id) 
-        // to all dependency requests (within the same domain) to correlate them with corresponding requests on the server side. 
-        disableCorrelationHeaders: boolean;
-        
-        // If true, the SDK will send all telemetry using [Beacon API](https://www.w3.org/TR/beacon/)
-        // When Beacon API is enabled, then SessionStorageBuffer cannot be used and maxBatchSizeInBytes is limit too 64kb
-        // Default: true
-        isBeaconApiDisabled: boolean;
+    // Default 100k
+    maxBatchSizeInBytes: number;
 
-        // Sets the sdk extension name. Only alphabetic characters are allowed. 
-        // The extension name is added as a prefix to 'ai.internal.sdkVersion' tag (for instance 'ext_javascript:1.0.5')
-        // Default: null
-        sdkExtension: string;
+    // Default 15s
+    maxBatchInterval: number;
 
-        // If true, the SDK will track all [Browser Link](https://docs.microsoft.com/en-us/aspnet/core/client-side/using-browserlink) requests. 
-        // Default: false
-        isBrowserLinkTrackingEnabled: boolean;
-    }
+    // If true, debugging data is thrown as an exception by the logger. Default false.
+    enableDebug: boolean;
+
+    // If true, telemetry data is not collected or sent. Default false.
+    disableTelemetry: boolean; 
+
+    // If true, the SDK will log all internal errors (any severity) to the console. Default false
+    verboseLogging: boolean;
+
+    // Controls what percentage of events will be sent
+    // Default 100. 
+    samplingPercentage: boolean;
+
+    // Default 10s
+    diagnosticLogInterval: number;
+
+    // If true, exceptions are not monitored. 
+    disableExceptionTracking: boolean;
+
+    // If true, ajax calls are not monitored.
+    disableAjaxTracking: boolean;
+
+    // If true, default behavior of trackPageView is changed to record end of page view duration interval when 
+    // trackPageView is called. If false and no custom duration is provided to trackPageView, the page view
+    // performance is calculated using the navigation timing API.
+    overridePageViewDuration: boolean;
+
+    // Default 500 - controls how many ajax calls will be monitored per page view.
+    // Set to -1 to monitor all ajax calls on the page.
+    maxAjaxCallsPerView: number;
+
+    // If true, the SDK will not store or read any data from cookies.
+    // Default: false
+    isCookieUseDisabled: boolean;
+
+    // Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains.
+    cookieDomain: string;
+
+    // Default false. If true, flush method will not be called when onBeforeUnload event triggers.
+    disableFlushOnBeforeUnload: boolean;
+
+    // If true, the buffer with all unsent telemetry is stored in a session storage. The buffer is restored on page load.
+    // The feature is enable by default starting with v0.23.0. 
+    enableSessionStorageBuffer: boolean;
+
+    // Is retry handler disabled. Default false.
+    // If enabled, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error) and 503 (service unavailable).
+    isRetryDisabled: boolean;
+
+    // The url from where the JS SDK will be downloaded. 
+    // Default 'https://az416426.vo.msecnd.net/scripts/a/ai.0.js'
+    url: string;
+
+    // If true, the SDK will not store or read any data from local and session storage.
+    // Default: false
+    isStorageUseDisabled: boolean;
+
+    // Default true. If false, the SDK will add two headers ('x-ms-request-root-id' and 'x-ms-request-id) 
+    // to all dependency requests (within the same domain) to correlate them with corresponding requests on the server side. 
+    disableCorrelationHeaders: boolean;
+
+    // If true, the SDK will send all telemetry using [Beacon API](https://www.w3.org/TR/beacon/)
+    // When Beacon API is enabled, then SessionStorageBuffer cannot be used and maxBatchSizeInBytes is limit too 64kb
+    // Default: true
+    isBeaconApiDisabled: boolean;
+
+    // Sets the sdk extension name. Only alphabetic characters are allowed. 
+    // The extension name is added as a prefix to 'ai.internal.sdkVersion' tag (for instance 'ext_javascript:1.0.5')
+    // Default: null
+    sdkExtension: string;
+
+    // If true, the SDK will track all [Browser Link](https://docs.microsoft.com/en-us/aspnet/core/client-side/using-browserlink) requests. 
+    // Default: false
+    isBrowserLinkTrackingEnabled: boolean;
+}
+```
 
 Set these values in [the snippet](https://azure.microsoft.com/documentation/articles/app-insights-javascript/) that you insert in your web pages.
 Look for this line, and add more items:
 
-    })({
-      instrumentationKey: "000...000"
-    });
+```ts
+})({
+    instrumentationKey: "000...000"
+});
+```
 
 You can also read or write them dynamically:
 
-    appInsights.config.disableTelemetry = true;
+```ts
+appInsights.config.disableTelemetry = true;
+```
 
 ### context
 
-    context: TelemetryContext
+```ts
+context: TelemetryContext
+```
 
 Information that the SDK attempts to extract from the environment about the device, location, and user. 
-
-
-
 
 ## class TelemetryContext
 
 
 ### context.application
 
-    application: Context.Application
+```ts
+application: Context.Application
+```
 
 Details of the app you're monitoring.
 
-     context.application.ver: string
-     context.application.build : string
-
+```ts
+ context.application.ver: string
+ context.application.build : string
+```
         
 ### context.device
 
-    device : Context.Device
+```ts
+device : Context.Device
+```
     
  The device the app is running on.
  
@@ -362,7 +398,9 @@ Details of the app you're monitoring.
 
 ### context.user
 
-    user: Context.User
+```ts
+user: Context.User
+```
 
 Data about the current user. Users are identified by cookie, so one person can look like 
 more than one user if they use different machines or browsers, or delete cookies.
@@ -379,7 +417,9 @@ Property | Description
 
 ### context.session
 
-    session: Context.Session
+```ts
+session: Context.Session
+```
     
 The user session. A session represents a series of user actions. A session starts with a user action.
 It ends at the last user activity when there is no more activity for sessionRenewalMs, or if it lasts longer than sessionExpirationMs.
@@ -394,7 +434,9 @@ Property | Description
 
 ### context.location
 
-   location: Context.Location
+```ts
+location: Context.Location
+```
 
 Data from which the geographical location of the user's device can be guessed.
 
@@ -404,7 +446,9 @@ Property | Description
 
 ### context.operation
 
-        operation: Context.Operation;
+```ts
+operation: Context.Operation;
+```
         
 Represents the user request. Operation id is used to tie together related events in diagnostic search.
 
@@ -419,13 +463,17 @@ Property | Description
 
 ### track
 
-        public track(envelope: Telemetry.Common.Envelope) ;
+```ts
+public track(envelope: Telemetry.Common.Envelope) ;
+```
 
 Sends telemetry to the endpoint.
 
 ### addTelemetryInitializer
 
-        public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => boolean | void)
+```ts
+public addTelemetryInitializer(telemetryInitializer: (envelope: Telemetry.Common.Envelope) => boolean | void)
+```
 
 Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one, in the order they were added,
 before the telemetry item is pushed for sending.
@@ -437,51 +485,54 @@ If one of the telemetry initializers throws an error then the telemetry item wil
 
 Add this code immediately after the initialization snippet that you get from the portal.
 
-        ...
-        window.appInsights = appInsights;
-        
-        // Add telemetry initializer
-        appInsights.queue.push(function () {
-            appInsights.context.addTelemetryInitializer(function (envelope) {
-                var telemetryItem = envelope.data.baseData;
+```js
+...
+window.appInsights = appInsights;
 
-                // To check the telemetry item’s type:
-                if (envelope.name === Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType) {
-                    // this statement removes url from all page view documents
-                    telemetryItem.url = "URL CENSORED";
-                }
+// Add telemetry initializer
+appInsights.queue.push(function () {
+    appInsights.context.addTelemetryInitializer(function (envelope) {
+        var telemetryItem = envelope.data.baseData;
 
-                // To set custom properties:
-                telemetryItem.properties = telemetryItem.properties || {};
-                telemetryItem.properties["globalProperty"] = "boo";
+        // To check the telemetry item’s type:
+        if (envelope.name === Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType) {
+            // this statement removes url from all page view documents
+            telemetryItem.url = "URL CENSORED";
+        }
 
-                // To set custom metrics:
-                telemetryItem.measurements = telemetryItem.measurements || {};
-                telemetryItem.measurements["globalMetric"] = 100;
-            });
-        });
-    // end of insertion
-    
-    appInsights.trackPageView();
+        // To set custom properties:
+        telemetryItem.properties = telemetryItem.properties || {};
+        telemetryItem.properties["globalProperty"] = "boo";
+
+        // To set custom metrics:
+        telemetryItem.measurements = telemetryItem.measurements || {};
+        telemetryItem.measurements["globalMetric"] = 100;
+    });
+});
+// end of insertion
+
+appInsights.trackPageView();
+```
 
 ## class Envelope
 
-        public ver: number;
-        public name: string;
-        public time: string;
-        public sampleRate: number;
-        public seq: string;
-        public iKey: string;
-        public flags: number;
-        public deviceId: string;
-        public os: string;
-        public osVer: string;
-        public appId: string;
-        public appVer: string;
-        public userId: string;
-        public tags: any;
-        public data: Base;  // PageView, Event, Exception etc
-        
+```ts
+public ver: number;
+public name: string;
+public time: string;
+public sampleRate: number;
+public seq: string;
+public iKey: string;
+public flags: number;
+public deviceId: string;
+public os: string;
+public osVer: string;
+public appId: string;
+public appVer: string;
+public userId: string;
+public tags: any;
+public data: Base;  // PageView, Event, Exception etc
+```   
 
 
 ## Links
