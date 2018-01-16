@@ -15,7 +15,6 @@ module Microsoft.ApplicationInsights.Telemetry {
 
         public aiDataContract = {
             ver: FieldType.Required,
-            handledAt: FieldType.Required,
             exceptions: FieldType.Required,
             severityLevel: FieldType.Default,
             properties: FieldType.Default,
