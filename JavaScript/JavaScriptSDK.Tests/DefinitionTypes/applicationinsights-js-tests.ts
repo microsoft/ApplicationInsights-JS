@@ -141,7 +141,7 @@ const eventEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelop
 context.track(eventEnvelope);
 
 // track exception
-const exceptionObj = new Microsoft.ApplicationInsights.Telemetry.Exception(new Error(), "handledAt", null, null, AI.SeverityLevel.Critical);
+const exceptionObj = new Microsoft.ApplicationInsights.Telemetry.Exception(new Error(), null, null, AI.SeverityLevel.Critical);
 const exceptionData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.Exception>(
     Microsoft.ApplicationInsights.Telemetry.Exception.dataType, exceptionObj);
 const exceptionEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(exceptionData, Microsoft.ApplicationInsights.Telemetry.Exception.envelopeType);

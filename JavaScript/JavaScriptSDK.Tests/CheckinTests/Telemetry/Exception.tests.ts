@@ -25,14 +25,6 @@ class ExceptionTelemetryTests extends ContractTestHelper {
         });
 
         this.testCase({
-            name: name + "HandledAt is initialized in constructor",
-            test: () => {
-                var telemetry = new Microsoft.ApplicationInsights.Telemetry.Exception(new Error("test error"), "HA");
-                Assert.equal(telemetry.handledAt, "HA");
-            }
-        });
-
-        this.testCase({
             name: name + "Exception is initialized with undefined severityLevel",
             test: () => {
                 var telemetry = new Microsoft.ApplicationInsights.Telemetry.Exception(new Error("test error"), "HA");
@@ -44,7 +36,7 @@ class ExceptionTelemetryTests extends ContractTestHelper {
             name: name + "User can override severityLevel",
             test: () => {
                 var level = AI.SeverityLevel.Critical;
-                var telemetry = new Microsoft.ApplicationInsights.Telemetry.Exception(new Error("test error"), "HA", null, null, level);
+                var telemetry = new Microsoft.ApplicationInsights.Telemetry.Exception(new Error("test error"), null, null, level);
                 Assert.equal(level, telemetry.severityLevel, "Exception has proper severity level");
             }
         });
@@ -183,16 +175,14 @@ Error: testmessage2\n\
                 var expectedAssembly = "Test Assembly";
                 var expectedFileName = "Test File Name";
                 var expectedLineNumber = 42;
-                var expectedHandledAt = "Test Handled At";
 
-                var actual = Microsoft.ApplicationInsights.Telemetry.Exception.CreateSimpleException(expectedMessage, expectedTypeName, expectedAssembly, expectedFileName, expectedDetails, expectedLineNumber, expectedHandledAt);
+                var actual = Microsoft.ApplicationInsights.Telemetry.Exception.CreateSimpleException(expectedMessage, expectedTypeName, expectedAssembly, expectedFileName, expectedDetails, expectedLineNumber);
 
                 Assert.equal(expectedMessage, actual.exceptions[0].message);
                 Assert.equal(expectedTypeName, actual.exceptions[0].typeName);
                 Assert.equal(expectedDetails, actual.exceptions[0].stack);
                 Assert.equal(true, actual.exceptions[0].hasFullStack);
                 Assert.equal(undefined, actual.exceptions[0].parsedStack);
-                Assert.equal(expectedHandledAt, actual.handledAt);
             }
         });
 

@@ -1,5 +1,7 @@
-﻿/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/ExceptionData.ts" />
+﻿/// <reference path="../../JavaScriptSDK.Interfaces/Telemetry/ISerializable.ts" />
+/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/ExceptionData.ts" />
 /// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/StackFrame.ts" />
+/// <reference path="../Serializer.ts" />
 /// <reference path="./Common/DataSanitizer.ts"/>
 
 module Microsoft.ApplicationInsights.Telemetry {
@@ -13,7 +15,6 @@ module Microsoft.ApplicationInsights.Telemetry {
 
         public aiDataContract = {
             ver: FieldType.Required,
-            handledAt: FieldType.Required,
             exceptions: FieldType.Required,
             severityLevel: FieldType.Default,
             properties: FieldType.Default,
@@ -23,13 +24,12 @@ module Microsoft.ApplicationInsights.Telemetry {
         /**
         * Constructs a new isntance of the ExceptionTelemetry object
         */
-        constructor(exception: Error, handledAt?: string, properties?: any, measurements?: any, severityLevel?: AI.SeverityLevel) {
+        constructor(exception: Error, properties?: any, measurements?: any, severityLevel?: AI.SeverityLevel) {
             super();
 
             this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
             this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);
 
-            this.handledAt = handledAt || "unhandled";
             this.exceptions = [new _ExceptionDetails(exception)];
 
             if (severityLevel) {
@@ -42,10 +42,9 @@ module Microsoft.ApplicationInsights.Telemetry {
         * Creates a simple exception with 1 stack frame. Useful for manual constracting of exception.
         */
         public static CreateSimpleException(message: string, typeName: string, assembly: string, fileName: string,
-            details: string, line: number, handledAt?: string): Telemetry.Exception {
+            details: string, line: number): Telemetry.Exception {
 
             return <Telemetry.Exception> {
-                handledAt: handledAt || "unhandled",
                 exceptions: [
                     <AI.ExceptionDetails> {
                         hasFullStack: true,

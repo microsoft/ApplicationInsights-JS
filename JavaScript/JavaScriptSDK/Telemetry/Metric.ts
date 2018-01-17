@@ -1,4 +1,6 @@
-﻿/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/MetricData.ts" />
+﻿/// <reference path="../../JavaScriptSDK.Interfaces/Telemetry/ISerializable.ts" />
+/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/MetricData.ts" />
+/// <reference path="../Serializer.ts" />
 /// <reference path="./Common/DataSanitizer.ts" />
 /// <reference path="./Common/DataPoint.ts" />
 

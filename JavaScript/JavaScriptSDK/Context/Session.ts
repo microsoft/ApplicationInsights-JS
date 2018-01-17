@@ -1,5 +1,4 @@
 ﻿/// <reference path="../Util.ts" />
-/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/SessionState.ts"/>
 /// <reference path="../../JavaScriptSDK.Interfaces/Context/ISession.ts" />
 
 module Microsoft.ApplicationInsights.Context {

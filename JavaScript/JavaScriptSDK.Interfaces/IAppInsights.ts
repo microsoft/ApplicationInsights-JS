@@ -85,6 +85,7 @@ module Microsoft.ApplicationInsights {
         /**
          * Log an exception you have caught.
          * @param   exception   An Error from a catch clause, or the string error message.
+         * @param   handledAt   Not used
          * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
          * @param   severityLevel   AI.SeverityLevel - severity level
