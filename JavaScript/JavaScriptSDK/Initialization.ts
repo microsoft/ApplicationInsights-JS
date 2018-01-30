@@ -167,6 +167,11 @@ module Microsoft.ApplicationInsights {
           
             config.isBeaconApiDisabled = Util.stringToBoolOrDefault(config.isBeaconApiDisabled, true);
             config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders);
+            config.correlationHeaderExcludedDomains = config.correlationHeaderExcludedDomains || [
+                "*.blob.core.windows.net", 
+                "*.blob.core.chinacloudapi.cn",
+                "*.blob.core.cloudapi.de",
+                "*.blob.core.usgovcloudapi.net"];
             config.disableFlushOnBeforeUnload = Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
             config.enableSessionStorageBuffer = Util.stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
             config.isRetryDisabled = Util.stringToBoolOrDefault(config.isRetryDisabled);

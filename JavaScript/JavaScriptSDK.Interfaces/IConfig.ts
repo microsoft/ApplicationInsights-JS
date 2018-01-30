@@ -23,6 +23,7 @@
         maxAjaxCallsPerView?: number;
         disableDataLossAnalysis?: boolean;
         disableCorrelationHeaders?: boolean;
+        correlationHeaderExcludedDomains?: string[];
         disableFlushOnBeforeUnload?: boolean;
         enableSessionStorageBuffer?: boolean;
         isCookieUseDisabled?: boolean;
