@@ -389,7 +389,6 @@ class TelemetryContextTests extends TestClass {
                     // This illustrates how to use telemetry initializer (onBeforeSendTelemetry) 
                     // to access/ modify the contents of an envelope.
                     init: (envelope: Microsoft.ApplicationInsights.Telemetry.Common.Envelope) => {
-                        envelope.deviceId = "my device id";
                         if (envelope.name ==
                             Microsoft.ApplicationInsights.Telemetry.Event.envelopeType) {
                             var telemetryItem = (<any>envelope.data).baseData;
@@ -408,7 +407,6 @@ class TelemetryContextTests extends TestClass {
 
                 // verify
                 Assert.ok(stub.calledOnce, "sender should be called");
-                Assert.equal("my device id", (<any>stub.args[0][0]).deviceId);
                 Assert.equal("my name", (<any>stub.args[0][0]).data.baseData.name);
                 Assert.equal("val1", (<any>stub.args[0][0]).data.baseData.properties["prop1"]);
             }

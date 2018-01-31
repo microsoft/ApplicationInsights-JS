@@ -1,6 +1,7 @@
 ﻿/// <reference path="../../JavaScriptSDK.Interfaces/Telemetry/ISerializable.ts" />
 /// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/PageViewData.ts" />
 /// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/RemoteDependencyData.ts"/>
+/// <reference path="../Serializer.ts" />
 /// <reference path="./Common/DataSanitizer.ts"/>
 
 module Microsoft.ApplicationInsights.Telemetry {
@@ -31,7 +32,6 @@ module Microsoft.ApplicationInsights.Telemetry {
             max: FieldType.Default,
             stdDev: FieldType.Default,
             dependencyKind: FieldType.Default,
-            async: FieldType.Default,
             dependencySource: FieldType.Default,
             commandName: FieldType.Default,
             dependencyTypeName: FieldType.Default,
@@ -48,7 +48,6 @@ module Microsoft.ApplicationInsights.Telemetry {
             this.duration = Util.msToTimeSpan(value);
             this.success = success;
             this.resultCode = resultCode + "";
-            this.dependencyKind = AI.DependencyKind.Http;
 
             this.type = "Ajax";
             this.data = Common.DataSanitizer.sanitizeUrl(commandName);
