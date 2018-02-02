@@ -46,29 +46,15 @@ module Microsoft.ApplicationInsights.Telemetry {
             this.id = id;
 
             this.duration = Util.msToTimeSpan(value);
-            this.success = success;  
+            this.success = success;
             this.resultCode = resultCode + "";
 
             this.type = "Ajax";
             this.data = Common.DataSanitizer.sanitizeUrl(commandName);
 
-            if (absoluteUrl && absoluteUrl.length > 0) {
-                var parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)
-                this.target = parsedUrl.host;
-                if (parsedUrl.pathname != null) {
-                    var pathName: string = (parsedUrl.pathname.length === 0) ? "/" : parsedUrl.pathname;
-                    if (pathName.charAt(0) !== '/') {
-                        pathName = "/" + pathName;
-                    }
-
-                    this.name = Common.DataSanitizer.sanitizeString(method ? method + " " + pathName : pathName);
-                } else {
-                    this.name = Common.DataSanitizer.sanitizeString(absoluteUrl);
-                }
-            } else {
-                this.target = commandName;
-                this.name = commandName;
-            }
+            var dependencyFields = AjaxHelper.ParseDependencyPath(absoluteUrl, method, commandName);
+            this.target = dependencyFields.target;
+            this.name = dependencyFields.name;
 
             this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
             this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);

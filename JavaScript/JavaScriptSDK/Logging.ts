@@ -35,6 +35,7 @@
         FailedMonitorAjaxOpen,
         FailedMonitorAjaxRSC,
         FailedMonitorAjaxSend,
+        FailedMonitorAjaxGetCorrelationHeader,
         FailedToAddHandlerForOnBeforeUnload,
         FailedToSendQueuedTelemetry,
         FailedToReportDataLoss,

@@ -573,4 +573,58 @@ module Microsoft.ApplicationInsights {
             }
         }
     }
+
+    export class CorrelationIdHelper {
+        public static correlationIdPrefix = "cid-v1:";
+
+        /**
+        * Checks if a request url is not on a excluded domain list and if it is safe to add correlation headers
+        */
+        public static canIncludeCorrelationHeader(config: IConfig, requestUrl: string) {
+            if (config && config.disableCorrelationHeaders) {
+                return false;
+            }
+
+            let excludedDomains = config && config.correlationHeaderExcludedDomains;
+            if (!excludedDomains || excludedDomains.length == 0 || !requestUrl) {
+                return true;
+            }
+
+            for (let i = 0; i < excludedDomains.length; i++) {
+                let regex = new RegExp(excludedDomains[i].replace(/\./g, "\.").replace(/\*/g, ".*"));
+                if (regex.test(UrlHelper.parseUrl(requestUrl).host)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /**
+        * Combines target appId and target role name from response header.
+        */
+        public static getCorrelationContext(responseHeader: string) {
+            if (responseHeader) {
+                const correlationId = CorrelationIdHelper.getCorrelationContextValue(responseHeader, RequestHeaders.requestContextTargetKey);
+                if (correlationId && correlationId !== CorrelationIdHelper.correlationIdPrefix) {
+                    return correlationId;
+                }
+            }
+        }
+
+        /**
+        * Gets key from correlation response header
+        */
+        public static getCorrelationContextValue(responseHeader: string, key: string) {
+            if (responseHeader) {
+                const keyValues = responseHeader.split(",");
+                for (let i = 0; i < keyValues.length; ++i) {
+                    const keyValue = keyValues[i].split("=");
+                    if (keyValue.length == 2 && keyValue[0] == key) {
+                        return keyValue[1];
+                    }
+                }
+            }
+        }
+    }
 }

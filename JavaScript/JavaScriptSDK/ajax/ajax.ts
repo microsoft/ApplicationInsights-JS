@@ -2,6 +2,9 @@
 /// <reference path="../Util.ts" />
 /// <reference path="./ajaxUtils.ts" />
 /// <reference path="./ajaxRecord.ts" />
+/// <reference path="../RequestResponseHeaders.ts" />
+/// <reference path="../Telemetry/RemoteDependencyData.ts" />
+/// <reference path="../AppInsights.ts" />
 
 module Microsoft.ApplicationInsights {
     "use strict";
@@ -103,7 +106,10 @@ module Microsoft.ApplicationInsights {
         }
 
         private openHandler(xhr: XMLHttpRequestInstrumented, method, url, async) {
-            var ajaxData = new ajaxRecord(Util.newId());
+            // this format corresponds with activity logic on server-side and is required for the correct correlation
+            var id = "|" + this.appInsights.context.operation.id + "." + Util.newId();
+
+            var ajaxData = new ajaxRecord(id);
             ajaxData.method = method;
             ajaxData.requestUrl = url;
             ajaxData.xhrMonitoringState.openDone = true
@@ -151,12 +157,8 @@ module Microsoft.ApplicationInsights {
         private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
             xhr.ajaxData.requestSentTime = dateTime.Now();
 
-            // Add correlation headers only for requests within the same host and port number
-            // For cross- origin requests we need to ensure that x- ms -* headers are present in `Access-Control-Allow-Headers` header (OPTIONS response)
-            if (!this.appInsights.config.disableCorrelationHeaders && (UrlHelper.parseUrl(xhr.ajaxData.getAbsoluteUrl()).host == this.currentWindowHost)) {
-                var rootId = this.appInsights.context.operation.id;
-                xhr.setRequestHeader("x-ms-request-root-id", rootId);
-                xhr.setRequestHeader("x-ms-request-id", xhr.ajaxData.id);
+            if (CorrelationIdHelper.canIncludeCorrelationHeader(this.appInsights.config, xhr.ajaxData.getAbsoluteUrl())) {
+                xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
             }
             xhr.ajaxData.xhrMonitoringState.sendDone = true;
         }
@@ -216,7 +218,7 @@ module Microsoft.ApplicationInsights {
             xhr.ajaxData.responseFinishedTime = dateTime.Now();
             xhr.ajaxData.status = xhr.status;
             xhr.ajaxData.CalculateMetrics();
-
+            
             if (xhr.ajaxData.ajaxTotalDuration < 0) {
                 _InternalLogging.throwInternal(
                     LoggingSeverity.WARNING,
@@ -229,19 +231,41 @@ module Microsoft.ApplicationInsights {
                     });
             }
             else {
-                this.appInsights.trackDependency(
-                    xhr.ajaxData.id,
-                    xhr.ajaxData.method,
-                    xhr.ajaxData.getAbsoluteUrl(),
-                    xhr.ajaxData.getPathName(),
-                    xhr.ajaxData.ajaxTotalDuration,
-                    (+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
-                    +xhr.ajaxData.status
-                );
+                var dependency = new Telemetry.RemoteDependencyData(
+                    xhr.ajaxData.id, 
+                    xhr.ajaxData.getAbsoluteUrl(), 
+                    xhr.ajaxData.getPathName(), 
+                    xhr.ajaxData.ajaxTotalDuration, 
+                    (+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400, 
+                    +xhr.ajaxData.status, 
+                    xhr.ajaxData.method);                
+
+                // enrich dependency target with correlation context from the server
+                var correlationContext = this.getCorrelationContext(xhr);
+                if (correlationContext) {
+                    dependency.target = dependency.target + " | " + correlationContext;
+                }
+            
+                this.appInsights.trackDependencyData(dependency);
 
                 xhr.ajaxData = null;
             }
         }
 
+        private getCorrelationContext(xhr: XMLHttpRequestInstrumented) {
+            try {
+                var responseHeader = xhr.getResponseHeader(RequestHeaders.requestContextHeader);
+                return CorrelationIdHelper.getCorrelationContext(responseHeader);
+            } catch (e) {
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.FailedMonitorAjaxGetCorrelationHeader,
+                    "Failed to get Request-Context correlation header as it may be not included in the response or not accessible.",
+                    {
+                        ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr),
+                        exception: Microsoft.ApplicationInsights.Util.dump(e)
+                    });
+            }          
+        }
     }
 }

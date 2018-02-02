@@ -1,11 +1,13 @@
 ﻿/// <reference path="../TestFramework/Common.ts" />
 /// <reference path="../../JavaScriptSDK/ajax/ajax.ts" />
 /// <reference path="../../JavaScriptSDK/Util.ts"/>
+/// <reference path="../../JavaScriptSDK/Telemetry/RemoteDependencyData.ts"/>
 
 class AjaxTests extends TestClass {
 
     private appInsightsMock = {
         trackDependency: (id: string, method: string, absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) => { },
+        trackDependencyData: (dependency: Microsoft.ApplicationInsights.Telemetry.RemoteDependencyData) => { },
         context: {
             operation: {
                 id: "asdf"
@@ -20,7 +22,7 @@ class AjaxTests extends TestClass {
     private requests;
 
     public testInitialize() {
-        this.trackDependencySpy = this.sandbox.spy(this.appInsightsMock, "trackDependency");
+        this.trackDependencySpy = this.sandbox.spy(this.appInsightsMock, "trackDependencyData");
         this.callbackSpy = this.sandbox.spy();
         this.trackDependencySpy.reset();
         var xhr = sinon.useFakeXMLHttpRequest();
@@ -37,7 +39,7 @@ class AjaxTests extends TestClass {
                 var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
 
                 // act
-                var xhr = new XMLHttpRequest();
+                var xhr = new XMLHttpRequest();                
                 xhr.open("GET", "http://microsoft.com");
 
                 // assert
@@ -111,7 +113,7 @@ class AjaxTests extends TestClass {
                 (<any>xhr).respond(200, {}, "");
 
                 // Assert
-                Assert.equal(true, this.trackDependencySpy.args[0][5], "TrackAjax should receive true as a 'success' argument");
+                Assert.equal(true, this.trackDependencySpy.args[0][0].success, "TrackAjax should receive true as a 'success' argument");
 
             }
         });
@@ -130,7 +132,7 @@ class AjaxTests extends TestClass {
                 (<any>xhr).respond(404, {}, "");
 
                 // Assert
-                Assert.equal(false, this.trackDependencySpy.args[0][5], "TrackAjax should receive false as a 'success' argument");
+                Assert.equal(false, this.trackDependencySpy.args[0][0].success, "TrackAjax should receive false as a 'success' argument");
 
             }
         });
@@ -236,7 +238,7 @@ class AjaxTests extends TestClass {
 
                     // Assert
                     Assert.ok(this.trackDependencySpy.calledOnce, "TrackAjax should be called");
-                    Assert.equal(expectedResponseDuration, this.trackDependencySpy.args[0][4], "Ajax duration should match expected duration");
+                    Assert.equal("00:00:00.050", this.trackDependencySpy.args[0][0].duration, "Ajax duration should match expected duration");
                 } finally {
                     (<any>window.performance).performance = initialPerformance;
                 }
@@ -297,7 +299,7 @@ class AjaxTests extends TestClass {
         (<any>xhr).respond(responseCode, {}, "");
 
         // Assert
-        Assert.equal(success, this.trackDependencySpy.args[0][5], "TrackAjax should receive " + success + " as a 'success' argument");
+        Assert.equal(success, this.trackDependencySpy.args[0][0].success, "TrackAjax should receive " + success + " as a 'success' argument");
     }
 }
 new AjaxTests().registerTests();

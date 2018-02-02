@@ -23,6 +23,7 @@
 /// <reference path="../CheckinTests/Initialization.tests.ts" />
 /// <reference path="../CheckinTests/ajax.tests.ts" />
 /// <reference path="../CheckinTests/SplitTest.tests.ts" />
+/// <reference path="../CheckinTests/CorrelationIdHelper.tests.ts" />
 
 /* import modules */
 import AppInsightsModuleTests from "../CheckinTests/AppInsightsModule.tests"

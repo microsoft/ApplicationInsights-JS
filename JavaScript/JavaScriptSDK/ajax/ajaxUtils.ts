@@ -90,4 +90,32 @@ module Microsoft.ApplicationInsights {
             }
         }
     }
+
+    export class AjaxHelper {
+        public static ParseDependencyPath(absoluteUrl: string, method: string, pathName: string) {
+            var target, name;                
+            if (absoluteUrl && absoluteUrl.length > 0) {
+                var parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)
+                target = parsedUrl.host;
+                if (parsedUrl.pathname != null) {
+                    var pathName: string = (parsedUrl.pathname.length === 0) ? "/" : parsedUrl.pathname;
+                    if (pathName.charAt(0) !== '/') {
+                        pathName = "/" + pathName;
+                    }
+
+                    name = Telemetry.Common.DataSanitizer.sanitizeString(method ? method + " " + pathName : pathName);
+                } else {
+                    name = Telemetry.Common.DataSanitizer.sanitizeString(absoluteUrl);
+                }
+            } else {
+                target = pathName;
+                name = pathName;
+            }
+
+            return {
+                target: target, 
+                name: name
+            };
+        }
+    }
 }
