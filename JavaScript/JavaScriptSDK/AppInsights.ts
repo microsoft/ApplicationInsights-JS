@@ -134,7 +134,7 @@ module Microsoft.ApplicationInsights {
         }
 
         public sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
-            var pageView = new Telemetry.PageView(name, url, duration, properties, measurements);
+            var pageView = new Telemetry.PageView(this.context.operation.id, name, url, duration, properties, measurements);
             var data = new ApplicationInsights.Telemetry.Common.Data<ApplicationInsights.Telemetry.PageView>(Telemetry.PageView.dataType, pageView);
             var envelope = new Telemetry.Common.Envelope(data, Telemetry.PageView.envelopeType);
 

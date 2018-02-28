@@ -127,7 +127,7 @@ class TelemetryContextTests extends TestClass {
                 var stub = this.getStub(Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType, this._telemetryContext);
 
                 var envelope = getEnvelope<Microsoft.ApplicationInsights.Telemetry.PageView>(
-                    new Microsoft.ApplicationInsights.Telemetry.PageView("asdf", "asdf", 10),
+                    new Microsoft.ApplicationInsights.Telemetry.PageView("asdf", "asdf", "asdf", 10),
                     Microsoft.ApplicationInsights.Telemetry.PageView.dataType,
                     Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType);
 

@@ -10,6 +10,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static dataType = "PageviewData";
 
         public aiDataContract = {
+            id: FieldType.Required,
             ver: FieldType.Required,
             name: FieldType.Default,
             url: FieldType.Default,
@@ -21,9 +22,10 @@ module Microsoft.ApplicationInsights.Telemetry {
         /**
          * Constructs a new instance of the PageEventTelemetry object
          */
-        constructor(name?: string, url?: string, durationMs?: number, properties?: any, measurements?: any) {
+        constructor(id?: string, name?: string, url?: string, durationMs?: number, properties?: any, measurements?: any) {
             super();
 
+            this.id = id;
             this.url = Common.DataSanitizer.sanitizeUrl(url);
             this.name = Common.DataSanitizer.sanitizeString(name) || Util.NotSpecified;
             if (!isNaN(durationMs)) {
