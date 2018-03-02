@@ -2033,18 +2033,18 @@ declare module Microsoft.ApplicationInsights.Telemetry {
         static envelopeType: string;
         static dataType: string;
         aiDataContract: {
-            id: FieldType;
             ver: FieldType;
             name: FieldType;
             url: FieldType;
             duration: FieldType;
             properties: FieldType;
             measurements: FieldType;
+            id: FieldType;
         };
         /**
          * Constructs a new instance of the PageEventTelemetry object
          */
-        constructor(id?: string, name?: string, url?: string, durationMs?: number, properties?: any, measurements?: any);
+        constructor(name?: string, url?: string, durationMs?: number, properties?: any, measurements?: any, id?: string);
     }
 }
 declare module AI {

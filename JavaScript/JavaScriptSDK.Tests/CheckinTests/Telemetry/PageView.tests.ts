@@ -5,7 +5,7 @@
 class PageViewTelemetryTests extends ContractTestHelper {
 
     constructor() {
-        super(() => new Microsoft.ApplicationInsights.Telemetry.PageView("id", "name", "url", 0), "PageViewTelemetryTests");
+        super(() => new Microsoft.ApplicationInsights.Telemetry.PageView("name", "url", 0, null, null, "id"), "PageViewTelemetryTests");
     }
 
     public registerTests() {
@@ -27,9 +27,9 @@ class PageViewTelemetryTests extends ContractTestHelper {
         };
 
         this.testCase({
-            name: name + "PageviewData is initialized in constructor with 5 parameters (name, url, durationMs, properties, measurements) and valid",
+            name: name + "PageviewData is initialized in constructor with 6 parameters (name, url, durationMs, properties, measurements, id) and valid",
             test: () => {
-                var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageView(testValues.id, testValues.name, testValues.url, testValues.duration, testValues.properties, testValues.measurements);
+                var telemetry = new Microsoft.ApplicationInsights.Telemetry.PageView(testValues.name, testValues.url, testValues.duration, testValues.properties, testValues.measurements, testValues.id);
 
                 Assert.equal(testValues.id, telemetry.id);
                 Assert.equal(testValues.name, telemetry.name);

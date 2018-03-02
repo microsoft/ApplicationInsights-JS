@@ -973,7 +973,6 @@ class AppInsightsTests extends TestClass {
 
     private addPageViewSignatureTests() {
         var testValues = {
-            id: "id",
             name: "name",
             url: "url",
             duration: 1000,
@@ -1006,11 +1005,10 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 var trackAction = (ai) => ai.trackPageView();
                 var validateAction = (data) => {
-                    Assert.notEqual(testValues.id, data[0]);
-                    Assert.notEqual(testValues.name, data[1]);
-                    Assert.notEqual(testValues.url, data[2]);
-                    Assert.notEqual(testValues.properties, data[3]);
-                    Assert.notEqual(testValues.measurements, data[4]);
+                    Assert.notEqual(testValues.name, data[0]);
+                    Assert.notEqual(testValues.url, data[1]);
+                    Assert.notEqual(testValues.properties, data[2]);
+                    Assert.notEqual(testValues.measurements, data[3]);
                 };
 
                 test(trackAction, validateAction);
@@ -1018,16 +1016,15 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: name + "PageviewData is initialized in constructor with id and valid",
+            name: name + "PageviewData is initialized in constructor with name and valid",
             test: () => {
-                var trackAction = (ai) => ai.trackPageView(testValues.id);
+                var trackAction = (ai) => ai.trackPageView(testValues.name);
 
                 var validateAction = (data) => {
-                    Assert.equal(testValues.id, data[0]);
-                    Assert.notEqual(testValues.name, data[1]);
-                    Assert.notEqual(testValues.url, data[2]);
-                    Assert.notEqual(testValues.properties, data[3]);
-                    Assert.notEqual(testValues.measurements, data[4]);
+                    Assert.equal(testValues.name, data[0]);
+                    Assert.notEqual(testValues.url, data[1]);
+                    Assert.notEqual(testValues.properties, data[2]);
+                    Assert.notEqual(testValues.measurements, data[3]);
                 };
 
                 test(trackAction, validateAction);
@@ -1035,34 +1032,15 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: name + "PageviewData is initialized in constructor with id and name and valid",
+            name: name + "PageviewData is initialized in constructor with name and properties and valid",
             test: () => {
-                var trackAction = (ai) => ai.trackPageView(testValues.id, testValues.name);
+                var trackAction = (ai) => ai.trackPageView(testValues.name, null, testValues.properties);
 
                 var validateAction = (data) => {
-                    Assert.equal(testValues.id, data[0]);
-                    Assert.equal(testValues.name, data[1]);
-                    Assert.notEqual(testValues.url, data[2]);
-                    Assert.notEqual(testValues.properties, data[3]);
-                    Assert.notEqual(testValues.measurements, data[4]);                   
-                };
-
-                test(trackAction, validateAction);
-            }
-        });
-
-
-        this.testCase({
-            name: name + "PageviewData is initialized in constructor with id, name and properties and valid",
-            test: () => {
-                var trackAction = (ai) => ai.trackPageView(testValues.id, testValues.name, null, testValues.properties);
-
-                var validateAction = (data) => {
-                    Assert.equal(testValues.id, data[0]);
-                    Assert.equal(testValues.name, data[1]);
-                    Assert.notEqual(testValues.url, data[2]);
-                    Assert.deepEqual(testValues.properties, data[3]);
-                    Assert.notEqual(testValues.measurements, data[4]);                   
+                    Assert.equal(testValues.name, data[0]);
+                    Assert.notEqual(testValues.url, data[1]);
+                    Assert.deepEqual(testValues.properties, data[2]);
+                    Assert.notEqual(testValues.measurements, data[3]);
                 };
 
                 test(trackAction, validateAction);
@@ -1070,16 +1048,15 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: name + "PageviewData is initialized in constructor with id, name and url and valid",
+            name: name + "PageviewData is initialized in constructor with name and url and valid",
             test: () => {
-                var trackAction = (ai) => ai.trackPageView(testValues.id, testValues.name, testValues.url);
+                var trackAction = (ai) => ai.trackPageView(testValues.name, testValues.url);
 
                 var validateAction = (data) => {
-                    Assert.equal(testValues.id, data[0]);
-                    Assert.equal(testValues.name, data[1]);
-                    Assert.equal(testValues.url, data[2]);
-                    Assert.notEqual(testValues.properties, data[3]);
-                    Assert.notEqual(testValues.measurements, data[4]); 
+                    Assert.equal(testValues.name, data[0]);
+                    Assert.equal(testValues.url, data[1]);
+                    Assert.notEqual(testValues.properties, data[2]);
+                    Assert.notEqual(testValues.measurements, data[3]);
                 };
 
                 test(trackAction, validateAction);
@@ -1087,16 +1064,15 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: name + "PageviewData is initialized in constructor with id, name, properties, and measurements and valid",
+            name: name + "PageviewData is initialized in constructor with name, properties, and measurements and valid",
             test: () => {
-                var trackAction = (ai) => ai.trackPageView(testValues.id, testValues.name, null, testValues.properties, testValues.measurements);
+                var trackAction = (ai) => ai.trackPageView(testValues.name, null, testValues.properties, testValues.measurements);
 
                 var validateAction = (data) => {
-                    Assert.equal(testValues.id, data[0]);
-                    Assert.equal(testValues.name, data[1]);
-                    Assert.notEqual(testValues.url, data[2]);
-                    Assert.deepEqual(testValues.properties, data[3]);
-                    Assert.deepEqual(testValues.measurements, data[4]); 
+                    Assert.equal(testValues.name, data[0]);
+                    Assert.notEqual(testValues.url, data[1]);
+                    Assert.deepEqual(testValues.properties, data[2]);
+                    Assert.deepEqual(testValues.measurements, data[3]);
                 };
 
                 test(trackAction, validateAction);
@@ -1104,16 +1080,15 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: name + "PageviewData is initialized in constructor with id, name, url, and properties and valid",
+            name: name + "PageviewData is initialized in constructor with name, url, and properties and valid",
             test: () => {
-                var trackAction = (ai) => ai.trackPageView(testValues.id, testValues.name, testValues.url, testValues.properties);
+                var trackAction = (ai) => ai.trackPageView(testValues.name, testValues.url, testValues.properties);
 
                 var validateAction = (data) => {
-                    Assert.equal(testValues.id, data[0]);
-                    Assert.equal(testValues.name, data[1]);
-                    Assert.equal(testValues.url, data[2]);
-                    Assert.deepEqual(testValues.properties, data[3]);
-                    Assert.notEqual(testValues.measurements, data[4]); 
+                    Assert.equal(testValues.name, data[0]);
+                    Assert.equal(testValues.url, data[1]);
+                    Assert.deepEqual(testValues.properties, data[2]);
+                    Assert.notEqual(testValues.measurements, data[3]);
                 };
 
                 test(trackAction, validateAction);
@@ -1122,16 +1097,15 @@ class AppInsightsTests extends TestClass {
 
 
         this.testCase({
-            name: name + "PageviewData is initialized in constructor with id, name, url, properties, and measurements and valid",
+            name: name + "PageviewData is initialized in constructor with name, url, properties, and measurements and valid",
             test: () => {
-                var trackAction = (ai) => ai.trackPageView(testValues.id, testValues.name, testValues.url, testValues.properties, testValues.measurements);
+                var trackAction = (ai) => ai.trackPageView(testValues.name, testValues.url, testValues.properties, testValues.measurements);
 
                 var validateAction = (data) => {
-                    Assert.equal(testValues.id, data[0]);
-                    Assert.equal(testValues.name, data[1]);
-                    Assert.equal(testValues.url, data[2]);
-                    Assert.deepEqual(testValues.properties, data[3]);
-                    Assert.deepEqual(testValues.measurements, data[4]); 
+                    Assert.equal(testValues.name, data[0]);
+                    Assert.equal(testValues.url, data[1]);
+                    Assert.deepEqual(testValues.properties, data[2]);
+                    Assert.deepEqual(testValues.measurements, data[3]);
                 };
 
                 test(trackAction, validateAction);
