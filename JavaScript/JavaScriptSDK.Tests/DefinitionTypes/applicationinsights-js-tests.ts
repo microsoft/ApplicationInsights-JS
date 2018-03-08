@@ -154,7 +154,7 @@ const metricEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelo
 context.track(metricEnvelope);
 
 // track page view
-const pageViewObj = new Microsoft.ApplicationInsights.Telemetry.PageView("page name", "url", 999, null, null);
+const pageViewObj = new Microsoft.ApplicationInsights.Telemetry.PageView("page name", "url", 999, null, null, "id");
 const pageViewData = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.PageView>(Microsoft.ApplicationInsights.Telemetry.PageView.dataType, pageViewObj);
 const pageViewEnvelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(pageViewData, Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType);
 context.track(pageViewEnvelope);

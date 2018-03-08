@@ -567,27 +567,53 @@ declare module Microsoft.ApplicationInsights {
     }
 }
 declare module Microsoft.Telemetry {
+    /**
+     * Data struct to contain only C section with custom fields.
+     */
     class Base {
+        /**
+         * Name of item (B section) if any. If telemetry data is derived straight from this, this should be null.
+         */
         baseType: string;
         constructor();
     }
 }
 declare module Microsoft.Telemetry {
+    /**
+     * System variables for a telemetry item.
+     */
     class Envelope {
+        /**
+         * Envelope version. For internal use only. By assigning this the default, it will not be serialized within the payload unless changed to a value other than #1.
+         */
         ver: number;
+        /**
+         * Type name of telemetry data item.
+         */
         name: string;
+        /**
+         * Event date time when telemetry item was created. This is the wall clock time on the client when the event was generated. There is no guarantee that the client's time is accurate. This field must be formatted in UTC ISO 8601 format, with a trailing 'Z' character, as described publicly on https://en.wikipedia.org/wiki/ISO_8601#UTC. Note: the number of decimal seconds digits provided are variable (and unspecified). Consumers should handle this, i.e. managed code consumers should not use format 'O' for parsing as it specifies a fixed length. Example: 2009-06-15T13:45:30.0000000Z.
+         */
         time: string;
+        /**
+         * Sampling rate used in application. This telemetry item represents 1 / sampleRate actual telemetry items.
+         */
         sampleRate: number;
+        /**
+         * Sequence field used to track absolute order of uploaded events.
+         */
         seq: string;
+        /**
+         * The application's instrumentation key. The key is typically represented as a GUID, but there are cases when it is not a guid. No code should rely on iKey being a GUID. Instrumentation key is case insensitive.
+         */
         iKey: string;
-        flags: number;
-        deviceId: string;
-        os: string;
-        osVer: string;
-        appId: string;
-        appVer: string;
-        userId: string;
+        /**
+         * Key/value collection of context properties. See ContextTagKeys for information on available properties.
+         */
         tags: any;
+        /**
+         * Telemetry data item.
+         */
         data: Base;
         constructor();
     }
@@ -614,69 +640,166 @@ declare module Microsoft.ApplicationInsights.Telemetry.Common {
 }
 declare module AI {
     class ContextTagKeys {
+        /**
+         * Application version. Information in the application context fields is always about the application that is sending the telemetry.
+         */
         applicationVersion: string;
+        /**
+         * Application build.
+         */
         applicationBuild: string;
+        /**
+         * Application type id.
+         */
         applicationTypeId: string;
+        /**
+         * Application id.
+         */
         applicationId: string;
+        /**
+         * Application layer.
+         */
+        applicationLayer: string;
+        /**
+         * Unique client device id. Computer name in most cases.
+         */
         deviceId: string;
         deviceIp: string;
         deviceLanguage: string;
+        /**
+         * Device locale using <language>-<REGION> pattern, following RFC 5646. Example 'en-US'.
+         */
         deviceLocale: string;
+        /**
+         * Model of the device the end user of the application is using. Used for client scenarios. If this field is empty then it is derived from the user agent.
+         */
         deviceModel: string;
+        deviceFriendlyName: string;
         deviceNetwork: string;
         deviceNetworkName: string;
+        /**
+         * Client device OEM name taken from the browser.
+         */
         deviceOEMName: string;
         deviceOS: string;
+        /**
+         * Operating system name and version of the device the end user of the application is using. If this field is empty then it is derived from the user agent. Example 'Windows 10 Pro 10.0.10586.0'
+         */
         deviceOSVersion: string;
+        /**
+         * Name of the instance where application is running. Computer name for on-premisis, instance name for Azure.
+         */
         deviceRoleInstance: string;
+        /**
+         * Name of the role application is part of. Maps directly to the role name in azure.
+         */
         deviceRoleName: string;
         deviceScreenResolution: string;
+        /**
+         * The type of the device the end user of the application is using. Used primarily to distinguish JavaScript telemetry from server side telemetry. Examples: 'PC', 'Phone', 'Browser'. 'PC' is the default value.
+         */
         deviceType: string;
         deviceMachineName: string;
         deviceVMName: string;
+        deviceBrowser: string;
+        /**
+         * The browser name and version as reported by the browser.
+         */
+        deviceBrowserVersion: string;
+        /**
+         * The IP address of the client device. IPv4 and IPv6 are supported. Information in the location context fields is always about the end user. When telemetry is sent from a service, the location context is about the user that initiated the operation in the service.
+         */
         locationIp: string;
+        /**
+         * The country of the client device. If any of Country, Province, or City is specified, those values will be preferred over geolocation of the IP address field. Information in the location context fields is always about the end user. When telemetry is sent from a service, the location context is about the user that initiated the operation in the service.
+         */
+        locationCountry: string;
+        /**
+         * The province/state of the client device. If any of Country, Province, or City is specified, those values will be preferred over geolocation of the IP address field. Information in the location context fields is always about the end user. When telemetry is sent from a service, the location context is about the user that initiated the operation in the service.
+         */
+        locationProvince: string;
+        /**
+         * The city of the client device. If any of Country, Province, or City is specified, those values will be preferred over geolocation of the IP address field. Information in the location context fields is always about the end user. When telemetry is sent from a service, the location context is about the user that initiated the operation in the service.
+         */
+        locationCity: string;
+        /**
+         * A unique identifier for the operation instance. The operation.id is created by either a request or a page view. All other telemetry sets this to the value for the containing request or page view. Operation.id is used for finding all the telemetry items for a specific operation instance.
+         */
         operationId: string;
+        /**
+         * The name (group) of the operation. The operation.name is created by either a request or a page view. All other telemetry items set this to the value for the containing request or page view. Operation.name is used for finding all the telemetry items for a group of operations (i.e. 'GET Home/Index').
+         */
         operationName: string;
+        /**
+         * The unique identifier of the telemetry item's immediate parent.
+         */
         operationParentId: string;
         operationRootId: string;
+        /**
+         * Name of synthetic source. Some telemetry from the application may represent a synthetic traffic. It may be web crawler indexing the web site, site availability tests or traces from diagnostic libraries like Application Insights SDK itself.
+         */
         operationSyntheticSource: string;
-        operationIsSynthetic: string;
+        /**
+         * The correlation vector is a light weight vector clock which can be used to identify and order related events across clients and services.
+         */
         operationCorrelationVector: string;
+        /**
+         * Session ID - the instance of the user's interaction with the app. Information in the session context fields is always about the end user. When telemetry is sent from a service, the session context is about the user that initiated the operation in the service.
+         */
         sessionId: string;
+        /**
+         * Boolean value indicating whether the session identified by ai.session.id is first for the user or not.
+         */
         sessionIsFirst: string;
         sessionIsNew: string;
         userAccountAcquisitionDate: string;
+        /**
+         * In multi-tenant applications this is the account ID or name which the user is acting with. Examples may be subscription ID for Azure portal or blog name blogging platform.
+         */
         userAccountId: string;
+        /**
+         * The browser's user agent string as reported by the browser. This property will be used to extract informaiton regarding the customer's browser but will not be stored. Use custom properties to store the original user agent.
+         */
         userAgent: string;
+        /**
+         * Anonymous user id. Represents the end user of the application. When telemetry is sent from a service, the user context is about the user that initiated the operation in the service.
+         */
         userId: string;
+        /**
+         * Store region for UWP applications.
+         */
         userStoreRegion: string;
+        /**
+         * Authenticated user id. The opposite of ai.user.id, this represents the user with a friendly name. Since it's PII information it is not collected by default by most SDKs.
+         */
         userAuthUserId: string;
         userAnonymousUserAcquisitionDate: string;
         userAuthenticatedUserAcquisitionDate: string;
-        sampleRate: string;
         cloudName: string;
+        /**
+         * Name of the role the application is a part of. Maps directly to the role name in azure.
+         */
+        cloudRole: string;
         cloudRoleVer: string;
+        /**
+         * Name of the instance where the application is running. Computer name for on-premisis, instance name for Azure.
+         */
+        cloudRoleInstance: string;
         cloudEnvironment: string;
         cloudLocation: string;
         cloudDeploymentUnit: string;
-        serverDeviceOS: string;
-        serverDeviceOSVer: string;
+        /**
+         * SDK version. See https://github.com/Microsoft/ApplicationInsights-Home/blob/master/SDK-AUTHORING.md#sdk-version-specification for information.
+         */
         internalSdkVersion: string;
+        /**
+         * Agent version. Used to indicate the version of StatusMonitor installed on the computer if it is used for data collection.
+         */
         internalAgentVersion: string;
-        internalDataCollectorReceivedTime: string;
-        internalProfileId: string;
-        internalProfileClassId: string;
-        internalAccountId: string;
-        internalApplicationName: string;
-        internalInstrumentationKey: string;
-        internalTelemetryItemId: string;
-        internalApplicationType: string;
-        internalRequestSource: string;
-        internalFlowType: string;
-        internalIsAudit: string;
-        internalTrackingSourceId: string;
-        internalTrackingType: string;
-        internalIsDiagnosticExample: string;
+        /**
+         * This is the node name used for billing purposes. Use it to override the standard detection of nodes.
+         */
+        internalNodeName: string;
         constructor();
     }
 }
@@ -915,12 +1038,6 @@ declare module Microsoft.ApplicationInsights.Context {
         * Determines if an envelope is sampled in (i.e. will be sent) or not (i.e. will be dropped).
         */
         isSampledIn(envelope: Microsoft.ApplicationInsights.IEnvelope): boolean;
-    }
-}
-declare module AI {
-    enum SessionState {
-        Start = 0,
-        End = 1,
     }
 }
 declare module Microsoft.ApplicationInsights.Context {
@@ -1162,76 +1279,122 @@ declare module Microsoft.ApplicationInsights {
     }
 }
 declare module Microsoft.Telemetry {
+    /**
+     * The abstract common base of all domains.
+     */
     class Domain {
         constructor();
     }
 }
 declare module AI {
+    /**
+     * Instances of Event represent structured event records that can be grouped and searched by their properties. Event data item also creates a metric of event count by name.
+     */
     class EventData extends Microsoft.Telemetry.Domain {
+        /**
+         * Schema version
+         */
         ver: number;
+        /**
+         * Event name. Keep it low cardinality to allow proper grouping and useful metrics.
+         */
         name: string;
+        /**
+         * Collection of custom properties.
+         */
         properties: any;
+        /**
+         * Collection of custom measurements.
+         */
         measurements: any;
         constructor();
     }
 }
 declare module AI {
+    /**
+     * An instance of PageView represents a generic action on a page like a button click. It is also the base type for PageView.
+     */
     class PageViewData extends AI.EventData {
+        /**
+         * Schema version
+         */
         ver: number;
+        /**
+         * Request URL with all query string parameters
+         */
         url: string;
+        /**
+         * Event name. Keep it low cardinality to allow proper grouping and useful metrics.
+         */
         name: string;
+        /**
+         * Request duration in format: DD.HH:MM:SS.MMMMMM. For a page view (PageViewData), this is the duration. For a page view with performance information (PageViewPerfData), this is the page load time. Must be less than 1000 days.
+         */
         duration: string;
-        referrer: string;
-        referrerData: string;
+        /**
+         * Identifier of a page view instance. Used for correlation between page view and other telemetry items.
+         */
+        id: string;
+        /**
+         * Collection of custom properties.
+         */
         properties: any;
+        /**
+         * Collection of custom measurements.
+         */
         measurements: any;
         constructor();
     }
 }
 declare module AI {
-    enum DataPointType {
-        Measurement = 0,
-        Aggregation = 1,
-    }
-}
-declare module AI {
-    enum DependencyKind {
-        SQL = 0,
-        Http = 1,
-        Other = 2,
-    }
-}
-declare module AI {
-    enum DependencySourceType {
-        Undefined = 0,
-        Aic = 1,
-        Apmc = 2,
-    }
-}
-declare module AI {
+    /**
+     * An instance of Remote Dependency represents an interaction of the monitored component with a remote component/service like SQL or an HTTP endpoint.
+     */
     class RemoteDependencyData extends Microsoft.Telemetry.Domain {
+        /**
+         * Schema version
+         */
         ver: number;
+        /**
+         * Name of the command initiated with this dependency call. Low cardinality value. Examples are stored procedure name and URL path template.
+         */
         name: string;
+        /**
+         * Identifier of a dependency call instance. Used for correlation with the request telemetry item corresponding to this dependency call.
+         */
         id: string;
+        /**
+         * Result code of a dependency call. Examples are SQL error code and HTTP status code.
+         */
         resultCode: string;
+        /**
+         * Request duration in format: DD.HH:MM:SS.MMMMMM. Must be less than 1000 days.
+         */
         duration: string;
+        /**
+         * Indication of successfull or unsuccessfull call.
+         */
         success: boolean;
+        /**
+         * Command initiated by this dependency call. Examples are SQL statement and HTTP URL's with all query parameters.
+         */
         data: string;
+        /**
+         * Target site of a dependency call. Examples are server name, host address.
+         */
         target: string;
+        /**
+         * Dependency type name. Very low cardinality value for logical grouping of dependencies and interpretation of other fields like commandName and resultCode. Examples are SQL, Azure table, and HTTP.
+         */
         type: string;
+        /**
+         * Collection of custom properties.
+         */
         properties: any;
+        /**
+         * Collection of custom measurements.
+         */
         measurements: any;
-        kind: AI.DataPointType;
-        value: number;
-        count: number;
-        min: number;
-        max: number;
-        stdDev: number;
-        dependencyKind: AI.DependencyKind;
-        async: boolean;
-        dependencySource: AI.DependencySourceType;
-        commandName: string;
-        dependencyTypeName: string;
         constructor();
     }
 }
@@ -1291,7 +1454,6 @@ declare module Microsoft.ApplicationInsights.Telemetry {
             max: FieldType;
             stdDev: FieldType;
             dependencyKind: FieldType;
-            async: FieldType;
             dependencySource: FieldType;
             commandName: FieldType;
             dependencyTypeName: FieldType;
@@ -1577,6 +1739,9 @@ declare module Microsoft.ApplicationInsights {
     }
 }
 declare module AI {
+    /**
+     * Defines the level of severity for the event.
+     */
     enum SeverityLevel {
         Verbose = 0,
         Information = 1,
@@ -1586,10 +1751,25 @@ declare module AI {
     }
 }
 declare module AI {
+    /**
+     * Instances of Message represent printf-like trace statements that are text-searched. Log4Net, NLog and other text-based log file entries are translated into intances of this type. The message does not have measurements.
+     */
     class MessageData extends Microsoft.Telemetry.Domain {
+        /**
+         * Schema version
+         */
         ver: number;
+        /**
+         * Trace message
+         */
         message: string;
+        /**
+         * Trace severity level.
+         */
         severityLevel: AI.SeverityLevel;
+        /**
+         * Collection of custom properties.
+         */
         properties: any;
         constructor();
     }
@@ -1627,36 +1807,93 @@ declare module Microsoft.ApplicationInsights.Telemetry {
     }
 }
 declare module AI {
+    /**
+     * Exception details of the exception in a chain.
+     */
     class ExceptionDetails {
+        /**
+         * In case exception is nested (outer exception contains inner one), the id and outerId properties are used to represent the nesting.
+         */
         id: number;
+        /**
+         * The value of outerId is a reference to an element in ExceptionDetails that represents the outer exception
+         */
         outerId: number;
+        /**
+         * Exception type name.
+         */
         typeName: string;
+        /**
+         * Exception message.
+         */
         message: string;
+        /**
+         * Indicates if full exception stack is provided in the exception. The stack may be trimmed, such as in the case of a StackOverflow exception.
+         */
         hasFullStack: boolean;
+        /**
+         * Text describing the stack. Either stack or parsedStack should have a value.
+         */
         stack: string;
+        /**
+         * List of stack frames. Either stack or parsedStack should have a value.
+         */
         parsedStack: StackFrame[];
         constructor();
     }
 }
 declare module AI {
+    /**
+     * An instance of Exception represents a handled or unhandled exception that occurred during execution of the monitored application.
+     */
     class ExceptionData extends Microsoft.Telemetry.Domain {
+        /**
+         * Schema version
+         */
         ver: number;
-        handledAt: string;
+        /**
+         * Exception chain - list of inner exceptions.
+         */
         exceptions: ExceptionDetails[];
+        /**
+         * Severity level. Mostly used to indicate exception severity level when it is reported by logging library.
+         */
         severityLevel: AI.SeverityLevel;
-        problemId: string;
-        crashThreadId: number;
+        /**
+         * Collection of custom properties.
+         */
         properties: any;
+        /**
+         * Collection of custom measurements.
+         */
         measurements: any;
         constructor();
     }
 }
 declare module AI {
+    /**
+     * Stack frame information.
+     */
     class StackFrame {
+        /**
+         * Level in the call stack. For the long stacks SDK may not report every function in a call stack.
+         */
         level: number;
+        /**
+         * Method name.
+         */
         method: string;
+        /**
+         * Name of the assembly (dll, jar, etc.) containing this function.
+         */
         assembly: string;
+        /**
+         * File name or URL of the method implementation.
+         */
         fileName: string;
+        /**
+         * Line number of the code implementation.
+         */
         line: number;
         constructor();
     }
@@ -1667,7 +1904,6 @@ declare module Microsoft.ApplicationInsights.Telemetry {
         static dataType: string;
         aiDataContract: {
             ver: FieldType;
-            handledAt: FieldType;
             exceptions: FieldType;
             severityLevel: FieldType;
             properties: FieldType;
@@ -1676,11 +1912,11 @@ declare module Microsoft.ApplicationInsights.Telemetry {
         /**
         * Constructs a new isntance of the ExceptionTelemetry object
         */
-        constructor(exception: Error, handledAt?: string, properties?: any, measurements?: any, severityLevel?: AI.SeverityLevel);
+        constructor(exception: Error, properties?: any, measurements?: any, severityLevel?: AI.SeverityLevel);
         /**
         * Creates a simple exception with 1 stack frame. Useful for manual constracting of exception.
         */
-        static CreateSimpleException(message: string, typeName: string, assembly: string, fileName: string, details: string, line: number, handledAt?: string): Telemetry.Exception;
+        static CreateSimpleException(message: string, typeName: string, assembly: string, fileName: string, details: string, line: number): Telemetry.Exception;
     }
     class _StackFrame extends AI.StackFrame implements ISerializable {
         static regex: RegExp;
@@ -1697,22 +1933,67 @@ declare module Microsoft.ApplicationInsights.Telemetry {
     }
 }
 declare module AI {
-    class MetricData extends Microsoft.Telemetry.Domain {
-        ver: number;
-        metrics: DataPoint[];
-        properties: any;
+    /**
+     * Type of the metric data measurement.
+     */
+    enum DataPointType {
+        Measurement = 0,
+        Aggregation = 1,
+    }
+}
+declare module AI {
+    /**
+     * Metric data single measurement.
+     */
+    class DataPoint {
+        /**
+         * Name of the metric.
+         */
+        name: string;
+        /**
+         * Metric type. Single measurement or the aggregated value.
+         */
+        kind: AI.DataPointType;
+        /**
+         * Single value for measurement. Sum of individual measurements for the aggregation.
+         */
+        value: number;
+        /**
+         * Metric weight of the aggregated metric. Should not be set for a measurement.
+         */
+        count: number;
+        /**
+         * Minimum value of the aggregated metric. Should not be set for a measurement.
+         */
+        min: number;
+        /**
+         * Maximum value of the aggregated metric. Should not be set for a measurement.
+         */
+        max: number;
+        /**
+         * Standard deviation of the aggregated metric. Should not be set for a measurement.
+         */
+        stdDev: number;
         constructor();
     }
 }
 declare module AI {
-    class DataPoint {
-        name: string;
-        kind: AI.DataPointType;
-        value: number;
-        count: number;
-        min: number;
-        max: number;
-        stdDev: number;
+    /**
+     * An instance of the Metric item is a list of measurements (single data points) and/or aggregations.
+     */
+    class MetricData extends Microsoft.Telemetry.Domain {
+        /**
+         * Schema version
+         */
+        ver: number;
+        /**
+         * List of metrics. Only one metric in the list is currently supported by Application Insights storage. If multiple data points were sent only the first one will be used.
+         */
+        metrics: DataPoint[];
+        /**
+         * Collection of custom properties.
+         */
+        properties: any;
         constructor();
     }
 }
@@ -1758,27 +2039,62 @@ declare module Microsoft.ApplicationInsights.Telemetry {
             duration: FieldType;
             properties: FieldType;
             measurements: FieldType;
+            id: FieldType;
         };
         /**
          * Constructs a new instance of the PageEventTelemetry object
          */
-        constructor(name?: string, url?: string, durationMs?: number, properties?: any, measurements?: any);
+        constructor(name?: string, url?: string, durationMs?: number, properties?: any, measurements?: any, id?: string);
     }
 }
 declare module AI {
+    /**
+     * An instance of PageViewPerf represents: a page view with no performance data, a page view with performance data, or just the performance data of an earlier page request.
+     */
     class PageViewPerfData extends AI.PageViewData {
+        /**
+         * Schema version
+         */
         ver: number;
+        /**
+         * Request URL with all query string parameters
+         */
         url: string;
+        /**
+         * Performance total in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff
+         */
         perfTotal: string;
+        /**
+         * Event name. Keep it low cardinality to allow proper grouping and useful metrics.
+         */
         name: string;
+        /**
+         * Request duration in format: DD.HH:MM:SS.MMMMMM. For a page view (PageViewData), this is the duration. For a page view with performance information (PageViewPerfData), this is the page load time. Must be less than 1000 days.
+         */
         duration: string;
+        /**
+         * Network connection time in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff
+         */
         networkConnect: string;
-        referrer: string;
+        /**
+         * Sent request time in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff
+         */
         sentRequest: string;
-        referrerData: string;
+        /**
+         * Received response time in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff
+         */
         receivedResponse: string;
+        /**
+         * DOM processing time in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff
+         */
         domProcessing: string;
+        /**
+         * Collection of custom properties.
+         */
         properties: any;
+        /**
+         * Collection of custom measurements.
+         */
         measurements: any;
         constructor();
     }
@@ -1843,13 +2159,6 @@ declare module Microsoft.ApplicationInsights {
         sampleRate: number;
         seq: string;
         iKey: string;
-        flags: number;
-        deviceId: string;
-        os: string;
-        osVer: string;
-        appId: string;
-        appVer: string;
-        userId: string;
         tags: {
             [name: string]: any;
         };
@@ -1978,13 +2287,20 @@ declare module Microsoft.ApplicationInsights {
         private _applySampleContext(envelope, sampleContext);
         private _applySessionContext(envelope, sessionContext);
         private _applyUserContext(envelope, userContext);
-        private _fixDepricatedValues(envelope);
-        private _fixRDDDepricatedValues(rddData);
     }
 }
 declare module Microsoft.Telemetry {
+    /**
+     * Data struct to contain both B and C sections.
+     */
     class Data<TDomain> extends Microsoft.Telemetry.Base {
+        /**
+         * Name of item (B section) if any. If telemetry data is derived straight from this, this should be null.
+         */
         baseType: string;
+        /**
+         * Container for data item (B section).
+         */
         baseData: TDomain;
         constructor();
     }
@@ -2189,6 +2505,7 @@ declare module Microsoft.ApplicationInsights {
         /**
          * Log an exception you have caught.
          * @param   exception   An Error from a catch clause, or the string error message.
+         * @param   handledAt   Not used
          * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
          * @param   severityLevel   AI.SeverityLevel - severity level
@@ -2344,6 +2661,7 @@ declare module Microsoft.ApplicationInsights {
         /**
          * Log an exception you have caught.
          * @param   exception   An Error from a catch clause, or the string error message.
+         * @param   handledAt   Not used
          * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
          * @param   severityLevel   AI.SeverityLevel - severity level

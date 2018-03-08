@@ -33,6 +33,11 @@ QUnit.test("Test property PageViewData.duration was created and default is set",
     QUnit.ok(temp.duration !== null, "PageViewData.duration == null");
 });
 
+QUnit.test("Test property PageViewData.id was created and default is set", function () {
+    var temp = new AI.PageViewData();
+    QUnit.ok(temp.id !== null, "PageViewData.id == null");
+});
+
 QUnit.test("Test property PageViewData.properties was created and default is set", function () {
     var temp = new AI.PageViewData();
     QUnit.ok(temp.properties !== null, "PageViewData.properties == null");

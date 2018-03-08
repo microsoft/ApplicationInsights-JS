@@ -9,21 +9,23 @@ module Microsoft.ApplicationInsights.Telemetry {
         public static envelopeType = "Microsoft.ApplicationInsights.{0}.Pageview";
         public static dataType = "PageviewData";
 
-        public aiDataContract = {
+        public aiDataContract = {            
             ver: FieldType.Required,
             name: FieldType.Default,
             url: FieldType.Default,
             duration: FieldType.Default,
             properties: FieldType.Default,
-            measurements: FieldType.Default
+            measurements: FieldType.Default,
+            id: FieldType.Default,
         }
 
         /**
          * Constructs a new instance of the PageEventTelemetry object
          */
-        constructor(name?: string, url?: string, durationMs?: number, properties?: any, measurements?: any) {
+        constructor(name?: string, url?: string, durationMs?: number, properties?: any, measurements?: any, id?: string) {
             super();
 
+            this.id = Common.DataSanitizer.sanitizeString(id);
             this.url = Common.DataSanitizer.sanitizeUrl(url);
             this.name = Common.DataSanitizer.sanitizeString(name) || Util.NotSpecified;
             if (!isNaN(durationMs)) {
