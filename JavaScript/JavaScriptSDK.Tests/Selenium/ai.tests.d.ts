@@ -1273,9 +1273,21 @@ declare module Microsoft.ApplicationInsights {
          */
         static requestContextTargetKey: string;
         /**
+         * Request-Context appId format
+         */
+        static requestContextAppIdFormat: string;
+        /**
          * Request-Id header
          */
         static requestIdHeader: string;
+        /**
+         * Sdk-Context header.
+         */
+        static sdkContextHeader: string;
+        /**
+         * String to pass in header for requesting appId back from the backend.
+         */
+        static sdkContextHeaderAppIdRequest: string;
     }
 }
 declare module Microsoft.Telemetry {
@@ -1613,6 +1625,10 @@ declare module Microsoft.ApplicationInsights {
          * List of errors for items which were not accepted
          */
         errors: IResponseError[];
+        /**
+         * App id returned by the backend - not necessary returned, but we don't need it with each response.
+         */
+        appId?: string;
     }
     class Sender {
         /**
@@ -1639,6 +1655,10 @@ declare module Microsoft.ApplicationInsights {
          * The configuration for this sender instance
          */
         _config: ISenderConfig;
+        /**
+         * AppId of this component parsed from some backend response.
+         */
+        _appId: string;
         /**
          * A method which will cause data to be send to the url
          */
@@ -1708,12 +1728,16 @@ declare module Microsoft.ApplicationInsights {
          *
          * Note: XDomainRequest does not support sync requests. This 'isAsync' parameter is added
          * to maintain consistency with the xhrSender's contract
+         * Note: XDomainRequest does not support custom headers and we are not able to get
+         * appId from the backend for the correct correlation.
          */
         private _xdrSender(payload, isAsync);
         /**
          * Send Beacon API request
          * @param payload {string} - The data payload to be sent.
          * @param isAsync {boolean} - not used
+         * Note: Beacon API does not support custom headers and we are not able to get
+         * appId from the backend for the correct correlation.
          */
         private _beaconSender(payload, isAsync);
         /**
@@ -2259,6 +2283,10 @@ declare module Microsoft.ApplicationInsights {
          * The object describing a session tracked by this object.
          */
         session: Context.Session;
+        /**
+         * AppId of this component if returned by the backend.
+         */
+        appId: () => string;
         /**
         * The array of telemetry initializers to call before sending each telemetry item.
         */

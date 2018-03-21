@@ -315,8 +315,9 @@ interface IConfig {
     // Default: false
     isStorageUseDisabled: boolean;
 
-    // Default true. If false, the SDK will add two headers ('x-ms-request-root-id' and 'x-ms-request-id) 
-    // to all dependency requests (within the same domain) to correlate them with corresponding requests on the server side. 
+    // If false, the SDK will add two headers ('Request-Id' and 'Request-Context') to all 
+    // dependency requests to correlate them with corresponding requests on the server side.
+    // Default false. 
     disableCorrelationHeaders: boolean;
 
     // If true, the SDK will send all telemetry using [Beacon API](https://www.w3.org/TR/beacon/)

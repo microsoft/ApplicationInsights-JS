@@ -1710,13 +1710,14 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "Ajax - Request-Id is set and passed correctly",
+            name: "Ajax - Request-Context is not set if appId was not set",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
                 snippet.disableAjaxTracking = false;
                 snippet.disableCorrelationHeaders = false;
                 snippet.maxBatchInterval = 0;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+
                 var trackStub = this.sandbox.spy(appInsights, "trackDependencyData");
                 var expectedRootId = appInsights.context.operation.id;
                 Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
@@ -1733,7 +1734,40 @@ class AppInsightsTests extends TestClass {
                 (<any>xhr).respond("200", {}, "");
 
                 // Assert
-                Assert.equal(expectedAjaxId, (<any>xhr).requestHeaders['Request-Id'], "Request-Id id set correctly");
+                Assert.equal(expectedAjaxId, (<any>xhr).requestHeaders['Request-Id'], "Request-Id is set correctly");
+                Assert.equal(null, (<any>xhr).requestHeaders['Request-Context'], "Request-Context is not set");
+                Assert.equal(expectedAjaxId, trackStub.args[0][0].id, "ajax id passed to trackAjax correctly");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax - Request-Id and Request-Context are set and passed correctly",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.disableAjaxTracking = false;
+                snippet.disableCorrelationHeaders = false;
+                snippet.maxBatchInterval = 0;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                appInsights.context.appId = () => "C16FBA4D-ECE9-472E-8125-4FF5BEFAF8C1";
+
+                var trackStub = this.sandbox.spy(appInsights, "trackDependencyData");
+                var expectedRootId = appInsights.context.operation.id;
+                Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+
+                // Act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "/bla");
+                xhr.send();
+
+                var expectedAjaxId = (<any>xhr).ajaxData.id;
+                Assert.ok(expectedAjaxId.length > 0, "ajax id was initialized");
+
+                // Emulate response                               
+                (<any>xhr).respond("200", {}, "");
+
+                // Assert
+                Assert.equal(expectedAjaxId, (<any>xhr).requestHeaders['Request-Id'], "Request-Id is set correctly");
+                Assert.equal("appId=cid-v1:C16FBA4D-ECE9-472E-8125-4FF5BEFAF8C1", (<any>xhr).requestHeaders['Request-Context'], "Request-Context is set correctly");
                 Assert.equal(expectedAjaxId, trackStub.args[0][0].id, "ajax id passed to trackAjax correctly");
             }
         });
@@ -1772,13 +1806,16 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "Ajax - disableCorrelationHeaders disables Request-Id header",
+            name: "Ajax - disableCorrelationHeaders disables Request-Id and Request-Context headers",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
                 snippet.disableAjaxTracking = false;
                 snippet.disableCorrelationHeaders = true;
                 snippet.maxBatchInterval = 0;
+
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                appInsights.context.appId = () => "C16FBA4D-ECE9-472E-8125-4FF5BEFAF8C1";
+
                 var trackStub = this.sandbox.spy(appInsights, "trackDependencyData");
                 var expectedRootId = appInsights.context.operation.id;
                 Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
@@ -1793,11 +1830,12 @@ class AppInsightsTests extends TestClass {
 
                 // Assert
                 Assert.equal(null, (<any>xhr).requestHeaders['Request-Id'], "Request-Id header is not set.");
+                Assert.equal(null, (<any>xhr).requestHeaders['Request-Context'], "Request-Context header is not set.");
             }
         });
 
         this.testCase({
-            name: "Ajax - Request-Id header is disabled for excluded domain",
+            name: "Ajax - Request-Id and Request-Context headers are disabled for excluded domain",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
                 snippet.disableAjaxTracking = false;
@@ -1819,6 +1857,7 @@ class AppInsightsTests extends TestClass {
 
                 // Assert
                 Assert.equal(null, (<any>xhr).requestHeaders['Request-Id'], "Request-Id header is not set.");
+                Assert.equal(null, (<any>xhr).requestHeaders['Request-Context'], "Request-Context header is not set.");
             }
         });
     }

@@ -89,6 +89,11 @@ module Microsoft.ApplicationInsights {
          * List of errors for items which were not accepted
          */
         errors: IResponseError[];
+
+        /**
+         * App id returned by the backend - not necessary returned, but we don't need it with each response.
+         */
+        appId?: string;
     }
 
     export class Sender {
@@ -121,6 +126,11 @@ module Microsoft.ApplicationInsights {
          * The configuration for this sender instance
          */
         public _config: ISenderConfig;
+
+        /**
+         * AppId of this component parsed from some backend response.
+         */
+        public _appId: string;
 
         /**
          * A method which will cause data to be send to the url
@@ -388,6 +398,7 @@ module Microsoft.ApplicationInsights {
             xhr[AjaxMonitor.DisabledPropertyName] = true;
             xhr.open("POST", this._config.endpointUrl(), isAsync);
             xhr.setRequestHeader("Content-type", "application/json");
+            xhr.setRequestHeader(RequestHeaders.sdkContextHeader, RequestHeaders.sdkContextHeaderAppIdRequest);
             xhr.onreadystatechange = () => this._xhrReadyStateChange(xhr, payload, payload.length);
             xhr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessageXhr(xhr), event);
 
@@ -405,6 +416,8 @@ module Microsoft.ApplicationInsights {
          * 
          * Note: XDomainRequest does not support sync requests. This 'isAsync' parameter is added
          * to maintain consistency with the xhrSender's contract
+         * Note: XDomainRequest does not support custom headers and we are not able to get
+         * appId from the backend for the correct correlation.
          */
         private _xdrSender(payload: string[], isAsync: boolean) {
             var xdr = new XDomainRequest();
@@ -438,6 +451,8 @@ module Microsoft.ApplicationInsights {
          * Send Beacon API request
          * @param payload {string} - The data payload to be sent.
          * @param isAsync {boolean} - not used
+         * Note: Beacon API does not support custom headers and we are not able to get
+         * appId from the backend for the correct correlation.
          */
         private _beaconSender(payload: string[], isAsync: boolean) {
             var url = this._config.endpointUrl();
@@ -462,6 +477,14 @@ module Microsoft.ApplicationInsights {
          */
         public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) {
             if (xhr.readyState === 4) {
+                var response: IBackendResponse = null;
+                if (!this._appId) {
+                    response = this._parseResponse(xhr.responseText || xhr.response);
+                    if (response && response.appId) {
+                        this._appId = response.appId;
+                    }
+                }
+                
                 if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
                     if (!this._config.isRetryDisabled() && this._isRetriable(xhr.status)) {
                         this._resendPayload(payload);
@@ -475,7 +498,9 @@ module Microsoft.ApplicationInsights {
                     }
                 } else {
                     if (xhr.status === 206) {
-                        var response = this._parseResponse(xhr.responseText || xhr.response);
+                        if (!response) {
+                            response = this._parseResponse(xhr.responseText || xhr.response);
+                        }
 
                         if (response && !this._config.isRetryDisabled()) {
                             this._onPartialSuccess(payload, response);
