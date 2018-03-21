@@ -1281,7 +1281,8 @@ declare module Microsoft.ApplicationInsights {
          */
         static requestIdHeader: string;
         /**
-         * Sdk-Context header.
+         * Sdk-Context header
+         * If this header passed with appId in content then appId will be returned back by the backend.
          */
         static sdkContextHeader: string;
         /**

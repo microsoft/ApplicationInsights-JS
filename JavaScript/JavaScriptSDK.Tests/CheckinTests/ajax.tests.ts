@@ -11,7 +11,8 @@ class AjaxTests extends TestClass {
         context: {
             operation: {
                 id: "asdf"
-            }
+            },
+            appId: () => "someid"
         },
         config: {
             disableCorrelationHeaders: false

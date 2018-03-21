@@ -175,9 +175,9 @@ class SenderTests extends TestClass {
 
                 // verify
                 this.requestAsserts();
-                this.fakeServer.requests.pop().respond(404, { "Content-Type": "application/json" }, 'some_error');
+                this.fakeServer.requests[0].respond(404, { "Content-Type": "application/json" }, '{"itemsReceived": 1, "itemsAccepted": 0, "errors": [{ "index": 0, "statusCode": 404, "message": "Not found" }]}');
                 this.errorAsserts(sender);
-                this.logAsserts(1, "message:XMLHttpRequest,Status:404,Response:some_error");
+                this.logAsserts(1, "message:XMLHttpRequest,Status:404");
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
             }
@@ -215,7 +215,7 @@ class SenderTests extends TestClass {
 
                 // verify
                 this.requestAsserts();
-                this.fakeServer.requests[0].respond(200, { "Content-Type": "application/json" }, '{"itemsReceived": 1, "itemsAccepted": 1, "errors": []}');
+                this.fakeServer.requests[0].respond(200, { "Content-Type": "application/json" }, '200');
                 this.successAsserts(sender);
                 this.logAsserts(0);
                 sender.successSpy.reset();
@@ -228,9 +228,9 @@ class SenderTests extends TestClass {
 
                 // verify
                 this.requestAsserts();
-                this.fakeServer.requests[0].respond(404, { "Content-Type": "application/json" }, '400');
+                this.fakeServer.requests[0].respond(404, { "Content-Type": "application/json" }, '{ "itemsReceived": 1, "itemsAccepted": 0, "errors": [{ "index": 0, "statusCode": 404, "message": "Not found" }]}');
                 this.errorAsserts(sender);
-                this.logAsserts(1, "message:XDomainRequest,Response:400");
+                this.logAsserts(1, "message:partial success 0 of 1");
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
             }
