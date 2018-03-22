@@ -333,6 +333,11 @@ interface IConfig {
     // If true, the SDK will track all [Browser Link](https://docs.microsoft.com/en-us/aspnet/core/client-side/using-browserlink) requests. 
     // Default: false
     isBrowserLinkTrackingEnabled: boolean;
+
+    // AppId is used for the correlation between AJAX dependencies happening on the client-side with the server-side requests. 
+    // When Beacon API is enabled it can not be used automatically, but can be set manually in the configuration.
+    // Default: null
+    appId: string;
 }
 ```
 

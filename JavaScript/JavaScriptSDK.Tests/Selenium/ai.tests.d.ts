@@ -2248,6 +2248,7 @@ declare module Microsoft.ApplicationInsights {
         cookieDomain: () => string;
         sdkExtension: () => string;
         isBrowserLinkTrackingEnabled: () => boolean;
+        appId: () => string;
     }
     class TelemetryContext implements ITelemetryContext {
         /**
@@ -2455,6 +2456,7 @@ declare module Microsoft.ApplicationInsights {
         isBeaconApiDisabled?: boolean;
         sdkExtension?: string;
         isBrowserLinkTrackingEnabled?: boolean;
+        appId?: string;
     }
 }
 declare module Microsoft.ApplicationInsights {

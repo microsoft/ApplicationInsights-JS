@@ -31,7 +31,8 @@ class AppInsightsTests extends TestClass {
             isCookieUseDisabled: false,
             isRetryDisabled: false,
             isStorageUseDisabled: false,
-            isBeaconApiDisabled: true
+            isBeaconApiDisabled: true,
+            appId: undefined
         };
 
         // set default values
@@ -172,6 +173,28 @@ class AppInsightsTests extends TestClass {
                 // verify
                 var envelope = this.getFirstResult("track was called", trackStub);
                 Assert.equal(60000, new Date(envelope.time).getTime(), "envelope time");
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: appId is propagated from the config",
+            test: () => {
+                var expectedAppId = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+
+                // setup
+                var config = this.getAppInsightsSnippet();
+                config.appId = expectedAppId;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(config);
+                var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
+                this.clock.tick(60000);
+
+                Assert.equal(expectedAppId, appInsights.context._sender._appId);
+
+                // act 
+                appInsights.trackEvent("testEvent");
+
+                // verify
+                Assert.equal(expectedAppId, appInsights.context._sender._appId);
             }
         });
 
