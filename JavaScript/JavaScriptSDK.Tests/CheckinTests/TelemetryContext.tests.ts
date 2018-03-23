@@ -26,7 +26,8 @@ class TelemetryContextTests extends TestClass {
             isRetryDisabled: () => false,
             isBeaconApiDisabled: () => true,
             sdkExtension: () => null,
-            isBrowserLinkTrackingEnabled: () => false
+            isBrowserLinkTrackingEnabled: () => false,
+            appId: () => undefined,
         }
 
         this._telemetryContext = new Microsoft.ApplicationInsights.TelemetryContext(this._config);

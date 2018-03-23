@@ -34,5 +34,6 @@
         isBeaconApiDisabled?: boolean;
         sdkExtension?: string;
         isBrowserLinkTrackingEnabled?: boolean;
+        appId?: string;
     }
 }

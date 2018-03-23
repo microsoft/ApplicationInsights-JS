@@ -159,6 +159,12 @@ module Microsoft.ApplicationInsights {
 
             if (CorrelationIdHelper.canIncludeCorrelationHeader(this.appInsights.config, xhr.ajaxData.getAbsoluteUrl())) {
                 xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
+                if (this.appInsights.context) {
+                    var appId = this.appInsights.context.appId();
+                    if (appId) {
+                        xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
+                    }
+                }
             }
             xhr.ajaxData.xhrMonitoringState.sendDone = true;
         }

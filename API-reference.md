@@ -315,8 +315,9 @@ interface IConfig {
     // Default: false
     isStorageUseDisabled: boolean;
 
-    // Default true. If false, the SDK will add two headers ('x-ms-request-root-id' and 'x-ms-request-id) 
-    // to all dependency requests (within the same domain) to correlate them with corresponding requests on the server side. 
+    // If false, the SDK will add two headers ('Request-Id' and 'Request-Context') to all 
+    // dependency requests to correlate them with corresponding requests on the server side.
+    // Default false. 
     disableCorrelationHeaders: boolean;
 
     // If true, the SDK will send all telemetry using [Beacon API](https://www.w3.org/TR/beacon/)
@@ -332,6 +333,11 @@ interface IConfig {
     // If true, the SDK will track all [Browser Link](https://docs.microsoft.com/en-us/aspnet/core/client-side/using-browserlink) requests. 
     // Default: false
     isBrowserLinkTrackingEnabled: boolean;
+
+    // AppId is used for the correlation between AJAX dependencies happening on the client-side with the server-side requests. 
+    // When Beacon API is enabled it can not be used automatically, but can be set manually in the configuration.
+    // Default: null
+    appId: string;
 }
 ```
 

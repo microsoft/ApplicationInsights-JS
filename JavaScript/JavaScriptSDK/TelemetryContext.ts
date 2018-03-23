@@ -20,6 +20,7 @@ module Microsoft.ApplicationInsights {
         cookieDomain: () => string;
         sdkExtension: () => string;
         isBrowserLinkTrackingEnabled: () => boolean;
+        appId: () => string;
     }
 
     export class TelemetryContext implements ITelemetryContext {
@@ -68,6 +69,11 @@ module Microsoft.ApplicationInsights {
         public session: Context.Session;
 
         /**
+         * AppId of this component if returned by the backend.
+         */
+        public appId: () => string;
+
+        /**
         * The array of telemetry initializers to call before sending each telemetry item.
         */
         private telemetryInitializers: { (envelope: Microsoft.ApplicationInsights.IEnvelope): boolean | void; }[];
@@ -80,6 +86,13 @@ module Microsoft.ApplicationInsights {
         constructor(config: ITelemetryConfig) {
             this._config = config;
             this._sender = new Sender(config);
+            this.appId = () => this._sender._appId;
+
+            // use appId set in config instead of getting it from the backend
+            if (config.appId()) {
+                this._sender._appId = config.appId();
+            }
+
             this.telemetryInitializers = [];
 
             // window will be undefined in node.js where we do not want to initialize contexts

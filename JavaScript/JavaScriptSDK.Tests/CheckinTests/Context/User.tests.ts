@@ -413,7 +413,8 @@ class UserContextTests extends TestClass {
             isRetryDisabled: () => null,
             isBeaconApiDisabled: () => null,
             sdkExtension: () => null,
-            isBrowserLinkTrackingEnabled: () => null
+            isBrowserLinkTrackingEnabled: () => null,
+            appId: () => null,
         };
     }
 }

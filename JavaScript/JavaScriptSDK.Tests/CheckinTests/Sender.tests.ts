@@ -162,7 +162,7 @@ class SenderTests extends TestClass {
 
                 // verify
                 this.requestAsserts();
-                this.fakeServer.requests.pop().respond(200, { "Content-Type": "application/json" }, '{"test":"success"}');
+                this.fakeServer.requests.pop().respond(200, { "Content-Type": "application/json" }, '{"itemsReceived": 1, "itemsAccepted": 1, "errors": []}');
                 this.successAsserts(sender);
                 this.logAsserts(0);
                 sender.successSpy.reset();
@@ -175,9 +175,9 @@ class SenderTests extends TestClass {
 
                 // verify
                 this.requestAsserts();
-                this.fakeServer.requests.pop().respond(404, { "Content-Type": "application/json" }, 'some_error');
+                this.fakeServer.requests[0].respond(404, { "Content-Type": "application/json" }, '{"itemsReceived": 1, "itemsAccepted": 0, "errors": [{ "index": 0, "statusCode": 404, "message": "Not found" }]}');
                 this.errorAsserts(sender);
-                this.logAsserts(1, "message:XMLHttpRequest,Status:404,Response:some_error");
+                this.logAsserts(1, "message:XMLHttpRequest,Status:404");
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
             }
@@ -228,9 +228,9 @@ class SenderTests extends TestClass {
 
                 // verify
                 this.requestAsserts();
-                this.fakeServer.requests[0].respond(404, { "Content-Type": "application/json" }, '400');
+                this.fakeServer.requests[0].respond(404, { "Content-Type": "application/json" }, '{ "itemsReceived": 1, "itemsAccepted": 0, "errors": [{ "index": 0, "statusCode": 404, "message": "Not found" }]}');
                 this.errorAsserts(sender);
-                this.logAsserts(1, "message:XDomainRequest,Response:400");
+                this.logAsserts(1, "message:partial success 0 of 1");
                 sender.successSpy.reset();
                 sender.errorSpy.reset();
             }
@@ -724,6 +724,84 @@ class SenderTests extends TestClass {
                 });
             }
         });
+
+        this.testCase({
+            name: "SenderTests: XMLHttpRequest sender successfully parses appId from the response.",
+            test: () => {
+                // setup
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    return xhr;
+                });
+
+                var sender = this.getSender();
+                Assert.ok(sender, "sender was constructed. Testing response code: 200");
+
+                this.fakeServer.requests.pop();
+                sender.send(this.testTelemetry);
+
+                Assert.equal(1, sender._buffer.count(), "Buffer has one item");
+
+                // trigger send
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                this.requestAsserts();
+                this.fakeServer.requests.pop().respond(
+                    200,
+                    { "Content-Type": "application/json" },
+                    '{ "itemsReceived": 1, "itemsAccepted": 1, "errors": [], "appId": "C16FBA4D-ECE9-472E-8125-4FF5BEFAF8C1" }'
+                );
+
+                // verify
+                Assert.ok(sender.successSpy.called, "success was invoked");
+                Assert.ok(sender.errorSpy.notCalled, "error was not invoked");
+
+                Assert.equal("C16FBA4D-ECE9-472E-8125-4FF5BEFAF8C1", sender._appId, "App Id was parsed.");
+
+                // clean up
+                this.testCleanup();
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: XMLHttpRequest sender does not store appId from the response if it's not returned.",
+            test: () => {
+                // setup
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    return xhr;
+                });
+
+                var sender = this.getSender();
+                Assert.ok(sender, "sender was constructed. Testing response code: 200");
+
+                this.fakeServer.requests.pop();
+                sender.send(this.testTelemetry);
+
+                Assert.equal(1, sender._buffer.count(), "Buffer has one item");
+
+                // trigger send
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                this.requestAsserts();
+                this.fakeServer.requests.pop().respond(
+                    200,
+                    { "Content-Type": "application/json" },
+                    '{ "itemsReceived": 1, "itemsAccepted": 1, "errors": [] }'
+                );
+
+                // verify
+                Assert.ok(sender.successSpy.called, "success was invoked");
+                Assert.ok(sender.errorSpy.notCalled, "error was not invoked");
+
+                Assert.equal(null, sender._appId, "App Id was not parsed.");
+
+                // clean up
+                this.testCleanup();
+            }
+        });        
 
         this.testCase({
             name: "SenderTests: XMLHttpRequest sender does NOT retry on non-retriable response code from the backend.",
