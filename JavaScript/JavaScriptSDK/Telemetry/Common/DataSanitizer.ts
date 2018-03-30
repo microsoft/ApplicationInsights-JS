@@ -12,7 +12,17 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
         private static MAX_NAME_LENGTH = 150;
 
         /**
+         * Max length allowed for Id field in page views.
+         */
+        private static MAX_ID_LENGTH = 128;
+
+        /**
          * Max length allowed for custom values.
+         */
+        private static MAX_PROPERTY_LENGTH = 8192;
+
+        /**
+         * Max length allowed for names
          */
         private static MAX_STRING_LENGTH = 1024;
 
@@ -67,15 +77,15 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
             return name;
         }
 
-        public static sanitizeString(value) {
+        public static sanitizeString(value, maxLength: number = DataSanitizer.MAX_STRING_LENGTH) {
             if (value) {
                 value = Util.trim(value);
-                if (value.toString().length > DataSanitizer.MAX_STRING_LENGTH) {
-                    value = value.toString().substring(0, DataSanitizer.MAX_STRING_LENGTH);
+                if (value.toString().length > maxLength) {
+                    value = value.toString().substring(0, maxLength);
                     _InternalLogging.throwInternal(
                         LoggingSeverity.WARNING,
                         _InternalMessageId.StringValueTooLong,
-                        "string value is too long. It has been truncated to " + DataSanitizer.MAX_STRING_LENGTH + " characters.",
+                        "string value is too long. It has been truncated to " + maxLength + " characters.",
                         { value: value }, true);
                 }
             }
@@ -132,7 +142,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
             if (properties) {
                 var tempProps = {};
                 for (var prop in properties) {
-                    var value = DataSanitizer.sanitizeString(properties[prop]);
+                    var value = DataSanitizer.sanitizeString(properties[prop], DataSanitizer.MAX_PROPERTY_LENGTH);
                     prop = DataSanitizer.sanitizeKeyAndAddUniqueness(prop, tempProps);
                     tempProps[prop] = value;
                 }
@@ -154,6 +164,23 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
             }
 
             return measurements;
+        }
+
+        public static sanitizeId(id: string) {
+            if (id) {
+                id = Util.trim(id);
+                if (id.length > DataSanitizer.MAX_ID_LENGTH) {
+                    id = id.substring(0, DataSanitizer.MAX_ID_LENGTH);
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.UrlTooLong,
+                        "id is too long, it has been truncated to " + DataSanitizer.MAX_URL_LENGTH + " characters.",
+                        { id: id },
+                        true);
+                }
+            }
+
+            return id;
         }
 
         public static padNumber(num) {

@@ -281,6 +281,7 @@ declare module Microsoft.ApplicationInsights {
         UrlTooLong = 64,
         SessionStorageBufferFull = 65,
         CannotAccessCookie = 66,
+        IdTooLong = 67,
     }
     class _InternalLogMessage {
         message: string;
@@ -1418,7 +1419,15 @@ declare module Microsoft.ApplicationInsights.Telemetry.Common {
         */
         private static MAX_NAME_LENGTH;
         /**
+         * Max length allowed for Id field in page views.
+         */
+        private static MAX_ID_LENGTH;
+        /**
          * Max length allowed for custom values.
+         */
+        private static MAX_PROPERTY_LENGTH;
+        /**
+         * Max length allowed for names
          */
         private static MAX_STRING_LENGTH;
         /**
@@ -1435,12 +1444,13 @@ declare module Microsoft.ApplicationInsights.Telemetry.Common {
         private static MAX_EXCEPTION_LENGTH;
         static sanitizeKeyAndAddUniqueness(key: any, map: any): any;
         static sanitizeKey(name: any): any;
-        static sanitizeString(value: any): any;
+        static sanitizeString(value: any, maxLength?: number): any;
         static sanitizeUrl(url: any): any;
         static sanitizeMessage(message: any): any;
         static sanitizeException(exception: any): any;
         static sanitizeProperties(properties: any): any;
         static sanitizeMeasurements(measurements: any): any;
+        static sanitizeId(id: string): string;
         static padNumber(num: any): string;
     }
 }

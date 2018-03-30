@@ -147,6 +147,30 @@ class DataSanitizerTests extends TestClass {
         });
 
         this.testCase({
+            name: "DataSanitizerTests: Validate sanitizestring defaults to DataSanitizer.MAX_STRING_LENGTH length",
+            test: () => {
+                var expected = "247E5792-7F2";
+                var input = "247E5792-7F2A-49DE-81EB-17D868775A06";
+
+                Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer["MAX_STRING_LENGTH"] = 12;
+                var actual = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(input);
+                Assert.equal(expected, actual);
+            }
+        });
+
+        this.testCase({
+            name: "DataSanitizerTests: Validate sanitizestring checks against input max length",
+            test: () => {
+                var expected = "24";
+                var input = "247E5792-7F2A-49DE-81EB-17D868775A06";
+
+                Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer["MAX_STRING_LENGTH"] = 12;
+                var actual = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(input, 2);
+                Assert.equal(expected, actual);
+            }
+        });
+
+        this.testCase({
             name: "DataSanitizerTests: Validate sanitizeProperties trims whitespaces in properties names and values",
             test: () => {
                 var expected = "NoWhiteSpaces";
@@ -157,6 +181,18 @@ class DataSanitizerTests extends TestClass {
                 var actual = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(testProps);
                 Assert.equal("val", actual["prop1"]);
                 Assert.equal("val", actual["prop2"]);
+            }
+        });
+
+        this.testCase({
+            name: "DataSanitizerTests: Validate sanitizeId trims to valid size",
+            test: () => {
+                var expected = "247E5";
+                var input = "247E5792-7F2A-49DE-81EB-17D868775A06";
+
+                Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer["MAX_ID_LENGTH"] = 5;
+                var actual = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeId(input);
+                Assert.equal(expected, actual);
             }
         });
 

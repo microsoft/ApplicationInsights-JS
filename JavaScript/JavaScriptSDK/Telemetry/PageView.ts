@@ -25,7 +25,7 @@ module Microsoft.ApplicationInsights.Telemetry {
         constructor(name?: string, url?: string, durationMs?: number, properties?: any, measurements?: any, id?: string) {
             super();
 
-            this.id = Common.DataSanitizer.sanitizeString(id);
+            this.id = Common.DataSanitizer.sanitizeId(id);
             this.url = Common.DataSanitizer.sanitizeUrl(url);
             this.name = Common.DataSanitizer.sanitizeString(name) || Util.NotSpecified;
             if (!isNaN(durationMs)) {
