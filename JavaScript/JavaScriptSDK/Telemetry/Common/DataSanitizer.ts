@@ -79,6 +79,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
 
         public static sanitizeString(value, maxLength: number = DataSanitizer.MAX_STRING_LENGTH) {
             if (value) {
+                maxLength = maxLength ? maxLength: DataSanitizer.MAX_STRING_LENGTH; // in case default parameters dont work
                 value = Util.trim(value);
                 if (value.toString().length > maxLength) {
                     value = value.toString().substring(0, maxLength);
@@ -94,20 +95,7 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
         }
 
         public static sanitizeUrl(url) {
-            if (url) {
-                url = Util.trim(url);
-                if (url.length > DataSanitizer.MAX_URL_LENGTH) {
-                    url = url.substring(0, DataSanitizer.MAX_URL_LENGTH);
-                    _InternalLogging.throwInternal(
-                        LoggingSeverity.WARNING,
-                        _InternalMessageId.UrlTooLong,
-                        "url is too long, it has been truncated to " + DataSanitizer.MAX_URL_LENGTH + " characters.",
-                        { url: url },
-                        true);
-                }
-            }
-
-            return url;
+            return DataSanitizer.sanitizeInput(url, DataSanitizer.MAX_URL_LENGTH, _InternalMessageId.UrlTooLong);
         }
 
         public static sanitizeMessage(message) {
@@ -166,21 +154,25 @@ module Microsoft.ApplicationInsights.Telemetry.Common {
             return measurements;
         }
 
-        public static sanitizeId(id: string) {
-            if (id) {
-                id = Util.trim(id);
-                if (id.length > DataSanitizer.MAX_ID_LENGTH) {
-                    id = id.substring(0, DataSanitizer.MAX_ID_LENGTH);
+        public static sanitizeId(id: string): string {
+                return id ? DataSanitizer.sanitizeInput(id, DataSanitizer.MAX_ID_LENGTH, _InternalMessageId.IdTooLong).toString() : id;
+        }
+
+        public static sanitizeInput(input: any, maxLength: number, _msgId: _InternalMessageId) {
+            if (input) {
+            input = Util.trim(input);
+                if (input.length > maxLength) {
+                    input = input.substring(0, maxLength);
                     _InternalLogging.throwInternal(
                         LoggingSeverity.WARNING,
-                        _InternalMessageId.UrlTooLong,
-                        "id is too long, it has been truncated to " + DataSanitizer.MAX_URL_LENGTH + " characters.",
-                        { id: id },
+                        _msgId,
+                        "input is too long, it has been truncated to " + maxLength + " characters.",
+                        { data: input },
                         true);
                 }
             }
 
-            return id;
+            return input;
         }
 
         public static padNumber(num) {

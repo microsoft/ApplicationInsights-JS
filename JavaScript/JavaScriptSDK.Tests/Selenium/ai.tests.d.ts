@@ -1451,6 +1451,7 @@ declare module Microsoft.ApplicationInsights.Telemetry.Common {
         static sanitizeProperties(properties: any): any;
         static sanitizeMeasurements(measurements: any): any;
         static sanitizeId(id: string): string;
+        static sanitizeInput(input: any, maxLength: number, _msgId: _InternalMessageId): any;
         static padNumber(num: any): string;
     }
 }
