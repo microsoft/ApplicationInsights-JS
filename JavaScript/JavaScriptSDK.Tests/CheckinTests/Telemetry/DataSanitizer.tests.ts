@@ -203,6 +203,28 @@ class DataSanitizerTests extends TestClass {
                 Assert.ok(undefined === Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(undefined));
             }
         });
+
+        this.testCase({
+            name: "DataSanitizerTests: Validate sanitizeInput trims when data exceeds allowed maxlength",
+            test: () => {
+                var expected = "247E5792-"; // length 9
+                var input = "247E5792-7F2A-49DE-81EB-17D868775A06";
+
+                var actual = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeInput(input, 9, Microsoft.ApplicationInsights._InternalMessageId. IdTooLong);
+                Assert.equal(expected, actual);
+            }
+        });
+
+        this.testCase({
+            name: "DataSanitizerTests: Validate sanitizeInput trims input data",
+            test: () => {
+                var expected = "247E5792-"; // length 9
+                var input = "   247E5792-    ";
+
+                var actual = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeInput(input, 9, Microsoft.ApplicationInsights._InternalMessageId. IdTooLong);
+                Assert.equal(expected, actual);
+            }
+        });
     }
 }
 
