@@ -86,6 +86,7 @@
         UrlTooLong,
         SessionStorageBufferFull,
         CannotAccessCookie,
+        IdTooLong,
     }
 
     export class _InternalLogMessage {

@@ -147,6 +147,30 @@ class DataSanitizerTests extends TestClass {
         });
 
         this.testCase({
+            name: "DataSanitizerTests: Validate sanitizestring defaults to DataSanitizer.MAX_STRING_LENGTH length",
+            test: () => {
+                var expected = "247E5792-7F2";
+                var input = "247E5792-7F2A-49DE-81EB-17D868775A06";
+
+                Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer["MAX_STRING_LENGTH"] = 12;
+                var actual = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(input);
+                Assert.equal(expected, actual);
+            }
+        });
+
+        this.testCase({
+            name: "DataSanitizerTests: Validate sanitizestring checks against input max length",
+            test: () => {
+                var expected = "24";
+                var input = "247E5792-7F2A-49DE-81EB-17D868775A06";
+
+                Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer["MAX_STRING_LENGTH"] = 12;
+                var actual = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(input, 2);
+                Assert.equal(expected, actual);
+            }
+        });
+
+        this.testCase({
             name: "DataSanitizerTests: Validate sanitizeProperties trims whitespaces in properties names and values",
             test: () => {
                 var expected = "NoWhiteSpaces";
@@ -161,10 +185,44 @@ class DataSanitizerTests extends TestClass {
         });
 
         this.testCase({
+            name: "DataSanitizerTests: Validate sanitizeId trims to valid size",
+            test: () => {
+                var expected = "247E5";
+                var input = "247E5792-7F2A-49DE-81EB-17D868775A06";
+
+                Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer["MAX_ID_LENGTH"] = 5;
+                var actual = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeId(input);
+                Assert.equal(expected, actual);
+            }
+        });
+
+        this.testCase({
             name: "DataSanitizerTests: Validate sanitizeString handles null and undefined",
             test: () => {
                 Assert.ok(null === Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(null));
                 Assert.ok(undefined === Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(undefined));
+            }
+        });
+
+        this.testCase({
+            name: "DataSanitizerTests: Validate sanitizeInput trims when data exceeds allowed maxlength",
+            test: () => {
+                var expected = "247E5792-"; // length 9
+                var input = "247E5792-7F2A-49DE-81EB-17D868775A06";
+
+                var actual = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeInput(input, 9, Microsoft.ApplicationInsights._InternalMessageId. IdTooLong);
+                Assert.equal(expected, actual);
+            }
+        });
+
+        this.testCase({
+            name: "DataSanitizerTests: Validate sanitizeInput trims input data",
+            test: () => {
+                var expected = "247E5792-"; // length 9
+                var input = "   247E5792-    ";
+
+                var actual = Microsoft.ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeInput(input, 9, Microsoft.ApplicationInsights._InternalMessageId. IdTooLong);
+                Assert.equal(expected, actual);
             }
         });
     }
