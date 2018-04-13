@@ -262,7 +262,7 @@ module Microsoft.ApplicationInsights {
             try {
                 var responseHeadersString = xhr.getAllResponseHeaders();
                 if (responseHeadersString !== null) {
-                    var index = responseHeadersString.toLowerCase().indexOf(RequestHeaders.requestContextHeader.toLowerCase());
+                    var index = responseHeadersString.toLowerCase().indexOf(RequestHeaders.requestContextHeaderLowerCase);
                     if (index !== -1) {
                         var responseHeader = xhr.getResponseHeader(RequestHeaders.requestContextHeader);
                         return CorrelationIdHelper.getCorrelationContext(responseHeader);
