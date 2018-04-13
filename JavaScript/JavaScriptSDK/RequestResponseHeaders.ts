@@ -33,5 +33,7 @@ module Microsoft.ApplicationInsights {
          * String to pass in header for requesting appId back from the backend.
          */
         public static sdkContextHeaderAppIdRequest = "appId";
+
+        public static requestContextHeaderLowerCase = "request-context";
     }
 }
