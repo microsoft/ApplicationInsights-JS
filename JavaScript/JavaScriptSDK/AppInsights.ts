@@ -12,7 +12,7 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "1.0.15";
+    export var Version = "1.0.16";
 
     /**
     * Internal interface to pass appInsights object to subcomponents without coupling 
