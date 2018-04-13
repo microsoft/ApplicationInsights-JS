@@ -261,10 +261,12 @@ module Microsoft.ApplicationInsights {
         private getCorrelationContext(xhr: XMLHttpRequestInstrumented) {
             try {
                 var responseHeadersString = xhr.getAllResponseHeaders();
-                var index = responseHeadersString.toLowerCase().indexOf(RequestHeaders.requestContextHeader.toLowerCase());
-                if (index !== -1) {
-                    var responseHeader = xhr.getResponseHeader(RequestHeaders.requestContextHeader);
-                    return CorrelationIdHelper.getCorrelationContext(responseHeader);
+                if (responseHeadersString !== null) {
+                    var index = responseHeadersString.toLowerCase().indexOf(RequestHeaders.requestContextHeader.toLowerCase());
+                    if (index !== -1) {
+                        var responseHeader = xhr.getResponseHeader(RequestHeaders.requestContextHeader);
+                        return CorrelationIdHelper.getCorrelationContext(responseHeader);
+                    }
                 }
             } catch (e) {
                 _InternalLogging.throwInternal(
