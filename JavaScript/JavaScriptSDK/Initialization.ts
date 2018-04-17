@@ -115,7 +115,7 @@ module Microsoft.ApplicationInsights {
         public addHousekeepingBeforeUnload(appInsightsInstance: AppInsights): void {
             // Add callback to push events when the user navigates away
 
-            if (!appInsightsInstance.config.disableFlushOnBeforeUnload && ('Ex' in window)) {
+            if (!appInsightsInstance.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
                 var performHousekeeping = function () {
                     // Adds the ability to flush all data before the page unloads.
                     // Note: This approach tries to push an async request with all the pending events onbeforeunload.
