@@ -115,7 +115,7 @@ module Microsoft.ApplicationInsights {
         public addHousekeepingBeforeUnload(appInsightsInstance: AppInsights): void {
             // Add callback to push events when the user navigates away
 
-            if (!appInsightsInstance.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
+            if (!appInsightsInstance.config.disableFlushOnBeforeUnload && ('Ex' in window)) {
                 var performHousekeeping = function () {
                     // Adds the ability to flush all data before the page unloads.
                     // Note: This approach tries to push an async request with all the pending events onbeforeunload.
@@ -166,7 +166,7 @@ module Microsoft.ApplicationInsights {
             config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
           
             config.isBeaconApiDisabled = Util.stringToBoolOrDefault(config.isBeaconApiDisabled, true);
-            config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders);
+            config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders, true);
             config.correlationHeaderExcludedDomains = config.correlationHeaderExcludedDomains || [
                 "*.blob.core.windows.net", 
                 "*.blob.core.chinacloudapi.cn",
