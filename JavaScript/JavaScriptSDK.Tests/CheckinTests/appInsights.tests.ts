@@ -1824,7 +1824,6 @@ class AppInsightsTests extends TestClass {
 
                 // Assert
                 Assert.equal(null, (<any>xhr).requestHeaders['Request-Id'], "Request-Id id set correctly");
-                //Assert.equal(expectedAjaxId, trackStub.args[0][0].id, "ajax id passed to trackAjax correctly");
             }
         });
 

@@ -158,7 +158,7 @@ module Microsoft.ApplicationInsights {
             xhr.ajaxData.requestSentTime = dateTime.Now();
 
             var absoluteUrl = xhr.ajaxData.getAbsoluteUrl();
-            if (UrlHelper.parseUrl(absoluteUrl).host == this.currentWindowHost
+            if (UrlHelper.parseUrl(absoluteUrl).host === this.currentWindowHost
                 && CorrelationIdHelper.canIncludeCorrelationHeader(this.appInsights.config, absoluteUrl)) {
                 xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
                 if (this.appInsights.context) {
