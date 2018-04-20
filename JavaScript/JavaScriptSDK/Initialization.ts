@@ -166,7 +166,7 @@ module Microsoft.ApplicationInsights {
             config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
           
             config.isBeaconApiDisabled = Util.stringToBoolOrDefault(config.isBeaconApiDisabled, true);
-            config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders, true);
+            config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders);
             config.correlationHeaderExcludedDomains = config.correlationHeaderExcludedDomains || [
                 "*.blob.core.windows.net", 
                 "*.blob.core.chinacloudapi.cn",
