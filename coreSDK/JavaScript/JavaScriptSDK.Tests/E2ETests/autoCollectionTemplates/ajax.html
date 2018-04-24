@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>errorDom</title>
+    <!-- placeholder for snippet injected by PostBuild.ps1 -->
+    <script>
+        PREFIX_PLACEHOLDER
+
+        INSTRUMENTATION_PLACEHOLDER
+    </script>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+</head>
+<body>
+    <script>
+        $(window).load(function () {
+            var xhr;
+
+            // successful ajax POST
+            xhr = new XMLHttpRequest();
+            xhr.open("GET", "https://code.jquery.com/jquery-2.1.4.min.js")
+            xhr.send("");
+
+            // ajax POST
+            xhr = new XMLHttpRequest();
+            xhr.open("POST", "https://dc.services.visualstudio.com/v2/track");
+            xhr.send("{fakedata}");
+
+            // ajax GET
+            xhr = new XMLHttpRequest();
+            xhr.open("GET", "https://dc.services.visualstudio.com/v2/track");
+            xhr.send("{fakedata}");
+
+            // jQuery ajax
+            $.ajax({
+                url: "https://dc.services.visualstudio.com/v2/track",
+                method: "POST",
+                data: { fake: "fake data" },
+                success: function (data) {
+                }
+            });            
+        });
+    </script>
+    <h1>DOM error test page</h1>
+</body>
+</html>

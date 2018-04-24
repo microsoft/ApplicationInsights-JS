@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Microsoft.ApplicationInsights.TypeScript</id>
+    <version>$version$</version>
+    <title>Application Insights API for JavaScript Applications</title>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <language>en-us</language>
+    <licenseUrl>http://go.microsoft.com/fwlink/?LinkID=510709</licenseUrl>
+    <projectUrl>http://go.microsoft.com/fwlink/?LinkId=392727</projectUrl>
+    <iconUrl>$image$</iconUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+	<summary>Application Insights API for JavaScript Applications</summary>
+    <description>Application Insights API enables you to get insights into user behavior and monitor usage patterns for your JavaScript applications. Application Insights service collects the data, analyzes it and presents the results in the forms of graphs and reports in Application Insights portal in Microsoft Azure. Privacy statement: https://go.microsoft.com/fwlink/?LinkId=512156</description>
+    <tags>Analytics Insights Telemetry JavaScript MDD Multi-Device ApplicationInsights Cordova Web</tags>
+    <copyright>Copyright © 2013-2022, Microsoft. All rights reserved.</copyright>
+    <dependencies>
+      <dependency id="Microsoft.ApplicationInsights.JavaScript" version="$version$"/>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="$configuration$\Javascript\NuGet.TypeScript\ai.d.ts" target="content\scripts\ai.$version$.d.ts" />
+  </files>
+</package>

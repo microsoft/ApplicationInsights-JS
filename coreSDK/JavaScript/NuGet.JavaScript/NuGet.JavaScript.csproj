@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'Global.props'))\Global.props" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{7C2662E9-96D3-473A-B0DD-55A80343A237}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Microsoft.ApplicationInsights.JavaScript.NuGet</RootNamespace>
+    <AssemblyName>Microsoft.ApplicationInsights.JavaScript.NuGet</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Suppress the "CS2008: No source files specified" warning -->
+    <NoWarn>2008</NoWarn>
+    <PackageSpecFile>$(MSBuildProjectDirectory)\Package.nuspec</PackageSpecFile>
+    <PackageVersionFile>$(BinRoot)\$(Configuration)\JavaScript\NuGet.JavaScript\Microsoft.ApplicationInsights.JavaScript.NuGet.dll</PackageVersionFile>
+    <PackageOutputDir>$(BinRoot)\$(Configuration)\NuGet\JavaScript</PackageOutputDir>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
+  <ItemGroup>
+    <None Include="Package.nuspec" />
+    <Content Include="..\..\bundle\ai.js">
+      <Link>ai.js</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\bundle\ai.0.js">
+      <Link>ai.min.js</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\bundle\ai.0.js.map">
+      <Link>ai.min.js.map</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\snippet\snippet.html">
+      <Link>snippet.html</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\..\NuGet.targets" />
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'Package.targets'))\Package.targets" />
+</Project>
