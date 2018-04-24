@@ -334,7 +334,10 @@ module Microsoft.ApplicationInsights {
                 _InternalLogging.throwInternal(
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.InvalidBackendResponse,
-                    "Cannot parse the response. " + Util.getExceptionName(e));
+                    "Cannot parse the response. " + Util.getExceptionName(e),
+                    {
+                        response: response
+                    });
             }
 
             return null;

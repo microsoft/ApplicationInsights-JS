@@ -1075,7 +1075,7 @@ class SenderTests extends TestClass {
                 Assert.ok(!result, "Parse should fail");
 
                 this.logAsserts(1);
-                Assert.equal('AI (Internal): InvalidBackendResponse message:"Cannot parse the response. SyntaxError"', this.loggingSpy.args[0][0], "Expecting one warning message");
+                Assert.equal('AI (Internal): InvalidBackendResponse message:"Cannot parse the response. SyntaxError" props:"{response:{ \\itemsReceived: }}"', this.loggingSpy.args[0][0], "Expecting one warning message");
             }
         });
 
