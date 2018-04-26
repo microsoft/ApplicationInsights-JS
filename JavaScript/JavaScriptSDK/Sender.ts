@@ -324,11 +324,13 @@ module Microsoft.ApplicationInsights {
          */
         private _parseResponse(response: any): IBackendResponse {
             try {
-                var result = JSON.parse(response);
+                if (response && response !== "") {
+                    var result = JSON.parse(response);
 
-                if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
-                    result.itemsReceived - result.itemsAccepted == result.errors.length) {
-                    return result;
+                    if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
+                        result.itemsReceived - result.itemsAccepted == result.errors.length) {
+                        return result;
+                    }
                 }
             } catch (e) {
                 _InternalLogging.throwInternal(

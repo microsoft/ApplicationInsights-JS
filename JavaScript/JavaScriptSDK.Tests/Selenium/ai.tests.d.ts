@@ -535,7 +535,7 @@ declare module Microsoft.ApplicationInsights {
         /**
         * Checks if a request url is not on a excluded domain list and if it is safe to add correlation headers
         */
-        static canIncludeCorrelationHeader(config: IConfig, requestUrl: string): boolean;
+        static canIncludeCorrelationHeader(config: IConfig, requestUrl: string, currentHost: string): boolean;
         /**
         * Combines target appId and target role name from response header.
         */
@@ -2469,6 +2469,7 @@ declare module Microsoft.ApplicationInsights {
         sdkExtension?: string;
         isBrowserLinkTrackingEnabled?: boolean;
         appId?: string;
+        enableCorsCorrelation?: boolean;
     }
 }
 declare module Microsoft.ApplicationInsights {

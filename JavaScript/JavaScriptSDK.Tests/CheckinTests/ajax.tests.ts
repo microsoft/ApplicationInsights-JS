@@ -15,7 +15,8 @@ class AjaxTests extends TestClass {
             appId: () => "someid"
         },
         config: {
-            disableCorrelationHeaders: false
+            disableCorrelationHeaders: false,
+            enableCorsCorrelation: false
         }
     }
     private trackDependencySpy;

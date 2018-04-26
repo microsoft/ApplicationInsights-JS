@@ -32,7 +32,8 @@ class AppInsightsTests extends TestClass {
             isRetryDisabled: false,
             isStorageUseDisabled: false,
             isBeaconApiDisabled: true,
-            appId: undefined
+            appId: undefined,
+            enableCorsCorrelation: false
         };
 
         // set default values
@@ -1738,6 +1739,7 @@ class AppInsightsTests extends TestClass {
                 var snippet = this.getAppInsightsSnippet();
                 snippet.disableAjaxTracking = false;
                 snippet.disableCorrelationHeaders = false;
+                snippet.enableCorsCorrelation = true;
                 snippet.maxBatchInterval = 0;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
 
@@ -1769,6 +1771,7 @@ class AppInsightsTests extends TestClass {
                 var snippet = this.getAppInsightsSnippet();
                 snippet.disableAjaxTracking = false;
                 snippet.disableCorrelationHeaders = false;
+                snippet.enableCorsCorrelation = false;
                 snippet.maxBatchInterval = 0;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
                 appInsights.context.appId = () => "C16FBA4D-ECE9-472E-8125-4FF5BEFAF8C1";
@@ -1796,11 +1799,12 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "Ajax - Request-Id is not set for dependency calls with different port number",
+            name: "Ajax - Request-Id is not set for dependency calls with different port number if CORS correlation turned off",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
                 snippet.disableAjaxTracking = false;
                 snippet.disableCorrelationHeaders = false;
+                snippet.enableCorsCorrelation = false;
                 snippet.maxBatchInterval = 0;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
                 var trackStub = this.sandbox.spy(appInsights, "trackDependencyData");
@@ -1823,7 +1827,41 @@ class AppInsightsTests extends TestClass {
                 (<any>xhr).respond("200", {}, "");
 
                 // Assert
-                Assert.equal(null, (<any>xhr).requestHeaders['Request-Id'], "Request-Id id set correctly");
+                Assert.equal(null, (<any>xhr).requestHeaders['Request-Id'], "Request-Id is not set");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax - Request-Id is set for dependency calls with different port number if CORS correlation turned on",
+            test: () => {
+                var snippet = this.getAppInsightsSnippet();
+                snippet.disableAjaxTracking = false;
+                snippet.disableCorrelationHeaders = false;
+                snippet.enableCorsCorrelation = true;
+                snippet.maxBatchInterval = 0;
+                var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                var trackStub = this.sandbox.spy(appInsights, "trackDependencyData");
+                var expectedRootId = appInsights.context.operation.id;
+                Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+
+                // override currentWindowHost
+                var sampleHost = "api.applicationinsights.io";
+                (<any>appInsights)._ajaxMonitor.currentWindowHost = sampleHost;
+
+                // Act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "https://" + sampleHost + ":888/test");
+                xhr.send();
+
+                var expectedAjaxId = (<any>xhr).ajaxData.id;
+                Assert.ok(expectedAjaxId.length > 0, "ajax id was initialized");
+
+                // Emulate response                               
+                (<any>xhr).respond("200", {}, "");
+
+                // Assert
+                Assert.equal(expectedAjaxId, (<any>xhr).requestHeaders['Request-Id'], "Request-Id is set correctly");
+                Assert.equal(expectedAjaxId, trackStub.args[0][0].id, "ajax id passed to trackAjax correctly");
             }
         });
 
@@ -1833,6 +1871,7 @@ class AppInsightsTests extends TestClass {
                 var snippet = this.getAppInsightsSnippet();
                 snippet.disableAjaxTracking = false;
                 snippet.disableCorrelationHeaders = true;
+                snippet.enableCorsCorrelation = true;
                 snippet.maxBatchInterval = 0;
 
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
@@ -1862,6 +1901,7 @@ class AppInsightsTests extends TestClass {
                 var snippet = this.getAppInsightsSnippet();
                 snippet.disableAjaxTracking = false;
                 snippet.disableCorrelationHeaders = false;
+                snippet.enableCorsCorrelation = true;
                 snippet.correlationHeaderExcludedDomains = ["some.excluded.domain"];
                 snippet.maxBatchInterval = 0;
                 var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
