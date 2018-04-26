@@ -1058,6 +1058,28 @@ class SenderTests extends TestClass {
         });
 
         this.testCase({
+            name: "SenderTests: ParseResponse - can successfully parse empty response",
+            test: () => {
+                // setup
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    return xhr;
+                });
+
+                var sender = this.getSender();
+                Assert.ok(sender, "sender was constructed");
+
+                var response = "";
+                var result = <Microsoft.ApplicationInsights.IBackendResponse>(<any>sender)._parseResponse(response);
+                Assert.ok(!result, "Parse should fail - response is empty");
+
+                // no warnings
+                this.logAsserts(0);
+            }
+        });
+
+        this.testCase({
             name: "SenderTests: ParseResponse - parse error logs a InvalidBackendResponse error",
             test: () => {
                 // setup
