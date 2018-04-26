@@ -9,20 +9,26 @@ class CorrelationIdHelperTests extends TestClass {
         this.testCase({
             name: "CorrelationIdHelper: test for missing arguments",
             test: () => {
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(null, null, null));
+                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(null, null, null));
 
-                var config1: Microsoft.ApplicationInsights.IConfig = {};
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config1, null, null));
+                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader({}, null, null));
 
-                var config2: Microsoft.ApplicationInsights.IConfig = {
-                    correlationHeaderExcludedDomains: []
-                };
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config2, null, null));
-
-                var config3: Microsoft.ApplicationInsights.IConfig = {
+                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader({
                     enableCorsCorrelation: false
-                };
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config3, null, null));
+                }, null, null));
+
+                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader({
+                    enableCorsCorrelation: false
+                }, "url", null));
+
+                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader({
+                    enableCorsCorrelation: false
+                }, null, "host"));
+
+                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader({
+                    enableCorsCorrelation: true,
+                    correlationHeaderExcludedDomains: []
+                }, null, null));               
             }
         });
 
@@ -70,6 +76,18 @@ class CorrelationIdHelperTests extends TestClass {
                 };
                 let url = "http://bing.com/search?q=example.com";
                 Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "bing.com"));            
+            }
+        });
+
+        this.testCase({
+            name: "CorrelationIdHelper: should return true for same domain (case sensitive) if enableCorsCorrelation set to false",
+            test: () => {
+                var config: Microsoft.ApplicationInsights.IConfig = {
+                    disableCorrelationHeaders: false,
+                    enableCorsCorrelation: false
+                };
+                let url = "http://bing.com/search?q=example.com";
+                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "Bing.com"));            
             }
         });
 

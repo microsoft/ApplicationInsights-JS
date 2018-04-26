@@ -585,18 +585,22 @@ module Microsoft.ApplicationInsights {
                 return false;
             }
 
-            let requestHost = UrlHelper.parseUrl(requestUrl).host;
-            if (config && !config.enableCorsCorrelation && requestHost !== currentHost) {
+            if (!requestUrl) {
+                return false;
+            }
+
+            let requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
+            if (config && !config.enableCorsCorrelation && (!currentHost || requestHost !== currentHost.toLowerCase())) {
                 return false;
             }
 
             let excludedDomains = config && config.correlationHeaderExcludedDomains;
-            if (!excludedDomains || excludedDomains.length == 0 || !requestUrl) {
+            if (!excludedDomains || excludedDomains.length == 0) {
                 return true;
             }
 
             for (let i = 0; i < excludedDomains.length; i++) {
-                let regex = new RegExp(excludedDomains[i].replace(/\./g, "\.").replace(/\*/g, ".*"));
+                let regex = new RegExp(excludedDomains[i].toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
                 if (regex.test(requestHost)) {
                     return false;
                 }
