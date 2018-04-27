@@ -1290,6 +1290,7 @@ declare module Microsoft.ApplicationInsights {
          * String to pass in header for requesting appId back from the backend.
          */
         static sdkContextHeaderAppIdRequest: string;
+        static requestContextHeaderLowerCase: string;
     }
 }
 declare module Microsoft.Telemetry {

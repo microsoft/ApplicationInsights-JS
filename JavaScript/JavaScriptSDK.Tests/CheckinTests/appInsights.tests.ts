@@ -1796,7 +1796,7 @@ class AppInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "Ajax - Request-Id is set for dependency calls with different port number",
+            name: "Ajax - Request-Id is not set for dependency calls with different port number",
             test: () => {
                 var snippet = this.getAppInsightsSnippet();
                 snippet.disableAjaxTracking = false;
@@ -1823,8 +1823,7 @@ class AppInsightsTests extends TestClass {
                 (<any>xhr).respond("200", {}, "");
 
                 // Assert
-                Assert.equal(expectedAjaxId, (<any>xhr).requestHeaders['Request-Id'], "Request-Id id set correctly");
-                Assert.equal(expectedAjaxId, trackStub.args[0][0].id, "ajax id passed to trackAjax correctly");
+                Assert.equal(null, (<any>xhr).requestHeaders['Request-Id'], "Request-Id id set correctly");
             }
         });
 
