@@ -86,8 +86,8 @@ class CorrelationIdHelperTests extends TestClass {
                     disableCorrelationHeaders: false,
                     enableCorsCorrelation: false
                 };
-                let url = "http://bing.com/search?q=example.com";
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "Bing.com"));            
+                let url = "http://Bing.com/search?q=example.com";
+                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "bing.com"));            
             }
         });
 

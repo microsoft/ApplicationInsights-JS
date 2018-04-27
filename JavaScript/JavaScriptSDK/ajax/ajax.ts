@@ -20,7 +20,7 @@ module Microsoft.ApplicationInsights {
         private currentWindowHost;
 
         constructor(appInsights: Microsoft.ApplicationInsights.AppInsights) {
-            this.currentWindowHost = window.location.host;
+            this.currentWindowHost = window.location.host && window.location.host.toLowerCase();
             this.appInsights = appInsights;
             this.initialized = false;
             this.Init();
