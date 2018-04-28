@@ -1,0 +1,37 @@
+# Ignore test file
+/*/Selenium/*.js
+
+# Ignore compiled SDK
+/*/ai.full.*
+
+# Ignore Chutzpah output
+_Chutzpah.*
+
+# Ignore Policheck targets
+/*/*/policheck/targets/*
+
+# Ignore node package
+/Node/appInsights-0.1.5.tgz
+
+# Ignore modules
+/*/node_modules/**
+
+# Ignore minified scripts
+/*/min/*.js
+/*/min/*.d.ts
+/*/min/*.js.map
+/*/min/*.html
+
+# Ignore standalone test output
+/*/E2ETests/*.js
+/*/E2ETests/*.html
+/*/Selenium/testPageWithAppInsights.html
+
+# Ignore map files
+*.map
+
+# Ignore JS files and d.ts files in Interfaces and Module project
+JavaScriptSDK.Interfaces/**/*.js
+JavaScriptSDK.Interfaces/**/*.d.ts
+JavaScriptSDK.Module/**/*.js
+JavaScriptSDK.Module/**/*.d.ts
