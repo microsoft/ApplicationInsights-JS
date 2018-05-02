@@ -338,6 +338,11 @@ interface IConfig {
     // When Beacon API is enabled it can not be used automatically, but can be set manually in the configuration.
     // Default: null
     appId: string;
+
+    // If true, the SDK will add two headers ('Request-Id' and 'Request-Context') to all 
+    // CORS requests to correlate outgoing AJAX dependencies with corresponding requests on the server side.
+    // Default false. 
+    enableCorsCorrelation: boolean;
 }
 ```
 

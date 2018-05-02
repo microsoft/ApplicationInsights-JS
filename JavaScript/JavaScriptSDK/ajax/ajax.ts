@@ -20,7 +20,7 @@ module Microsoft.ApplicationInsights {
         private currentWindowHost;
 
         constructor(appInsights: Microsoft.ApplicationInsights.AppInsights) {
-            this.currentWindowHost = window.location.host;
+            this.currentWindowHost = window.location.host && window.location.host.toLowerCase();
             this.appInsights = appInsights;
             this.initialized = false;
             this.Init();
@@ -157,9 +157,8 @@ module Microsoft.ApplicationInsights {
         private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
             xhr.ajaxData.requestSentTime = dateTime.Now();
 
-            var absoluteUrl = xhr.ajaxData.getAbsoluteUrl();
-            if (UrlHelper.parseUrl(absoluteUrl).host === this.currentWindowHost
-                && CorrelationIdHelper.canIncludeCorrelationHeader(this.appInsights.config, absoluteUrl)) {
+            if (CorrelationIdHelper.canIncludeCorrelationHeader(this.appInsights.config, xhr.ajaxData.getAbsoluteUrl(), 
+                this.currentWindowHost)) {
                 xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
                 if (this.appInsights.context) {
                     var appId = this.appInsights.context.appId();

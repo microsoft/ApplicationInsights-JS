@@ -580,19 +580,28 @@ module Microsoft.ApplicationInsights {
         /**
         * Checks if a request url is not on a excluded domain list and if it is safe to add correlation headers
         */
-        public static canIncludeCorrelationHeader(config: IConfig, requestUrl: string) {
+        public static canIncludeCorrelationHeader(config: IConfig, requestUrl: string, currentHost: string) {
             if (config && config.disableCorrelationHeaders) {
                 return false;
             }
 
+            if (!requestUrl) {
+                return false;
+            }
+
+            let requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
+            if ((!config || !config.enableCorsCorrelation) && requestHost !== currentHost) {
+                return false;
+            }
+
             let excludedDomains = config && config.correlationHeaderExcludedDomains;
-            if (!excludedDomains || excludedDomains.length == 0 || !requestUrl) {
+            if (!excludedDomains || excludedDomains.length == 0) {
                 return true;
             }
 
             for (let i = 0; i < excludedDomains.length; i++) {
-                let regex = new RegExp(excludedDomains[i].replace(/\./g, "\.").replace(/\*/g, ".*"));
-                if (regex.test(UrlHelper.parseUrl(requestUrl).host)) {
+                let regex = new RegExp(excludedDomains[i].toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
+                if (regex.test(requestHost)) {
                     return false;
                 }
             }

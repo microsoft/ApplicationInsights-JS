@@ -35,5 +35,6 @@
         sdkExtension?: string;
         isBrowserLinkTrackingEnabled?: boolean;
         appId?: string;
+        enableCorsCorrelation?: boolean;
     }
 }

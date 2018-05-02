@@ -30,7 +30,8 @@ const config: Microsoft.ApplicationInsights.IConfig = {
     cookieDomain: "",
     isCookieUseDisabled: true,
     isRetryDisabled: true,
-    isStorageUseDisabled: true
+    isStorageUseDisabled: true,
+    enableCorsCorrelation: false
 };
 
 var appInsights: Microsoft.ApplicationInsights.IAppInsights = {

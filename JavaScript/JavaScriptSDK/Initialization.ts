@@ -178,6 +178,7 @@ module Microsoft.ApplicationInsights {
             config.isCookieUseDisabled = Util.stringToBoolOrDefault(config.isCookieUseDisabled);
             config.isStorageUseDisabled = Util.stringToBoolOrDefault(config.isStorageUseDisabled);
             config.isBrowserLinkTrackingEnabled = Util.stringToBoolOrDefault(config.isBrowserLinkTrackingEnabled);
+            config.enableCorsCorrelation = Util.stringToBoolOrDefault(config.enableCorsCorrelation);
  
             return config;
         }
