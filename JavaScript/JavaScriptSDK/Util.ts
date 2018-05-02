@@ -590,7 +590,7 @@ module Microsoft.ApplicationInsights {
             }
 
             let requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
-            if (config && !config.enableCorsCorrelation && requestHost !== currentHost) {
+            if ((!config || !config.enableCorsCorrelation) && requestHost !== currentHost) {
                 return false;
             }
 

@@ -28,7 +28,9 @@ class CorrelationIdHelperTests extends TestClass {
                 Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader({
                     enableCorsCorrelation: true,
                     correlationHeaderExcludedDomains: []
-                }, null, null));               
+                }, null, null));
+                
+                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(null, "url1", "url2"));
             }
         });
 
