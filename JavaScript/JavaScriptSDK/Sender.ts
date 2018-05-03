@@ -35,6 +35,11 @@ module Microsoft.ApplicationInsights {
         endpointUrl: () => string;
 
         /**
+         * True if endpoint URL is application insights internal injection service URL
+         */
+        isInternalEndpointUrl: () => boolean;
+
+        /**
         * The JSON format (normal vs line delimited). True means line delimited JSON.
         */
         emitLineDelimitedJson: () => boolean;
@@ -403,6 +408,12 @@ module Microsoft.ApplicationInsights {
             xhr[AjaxMonitor.DisabledPropertyName] = true;
             xhr.open("POST", this._config.endpointUrl(), isAsync);
             xhr.setRequestHeader("Content-type", "application/json");
+
+            // append Sdk-Context request header only in case of breeze endpoint
+            if (this._config.isInternalEndpointUrl()) {
+                xhr.setRequestHeader(RequestHeaders.sdkContextHeader, RequestHeaders.sdkContextHeaderAppIdRequest);
+            }
+
             xhr.onreadystatechange = () => this._xhrReadyStateChange(xhr, payload, payload.length);
             xhr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessageXhr(xhr), event);
 

@@ -368,6 +368,7 @@ declare module Microsoft.ApplicationInsights {
         private static _canUseCookies;
         private static _canUseLocalStorage;
         private static _canUseSessionStorage;
+        private static _internalEndpoints;
         static NotSpecified: string;
         static disableStorage(): void;
         /**
@@ -382,6 +383,13 @@ declare module Microsoft.ApplicationInsights {
          * @return {Storage} Returns storage object verified that it is usable
          */
         private static _getVerifiedStorageObject(storageType);
+        /**
+         *  Checks if endpoint URL is application insights internal injection service URL.
+         *
+         *  @param endpointUrl Endpoint URL to check.
+         *  @returns {boolean} True if if endpoint URL is application insights internal injection service URL.
+         */
+        static isInternalApplicationInsightsEndpoint(endpointUrl: string): boolean;
         /**
          *  Check if the browser supports local storage.
          *
@@ -1593,6 +1601,10 @@ declare module Microsoft.ApplicationInsights {
          * The url to which payloads will be sent
          */
         endpointUrl: () => string;
+        /**
+         * True if endpoint URL is application insights internal injection service URL
+         */
+        isInternalEndpointUrl: () => boolean;
         /**
         * The JSON format (normal vs line delimited). True means line delimited JSON.
         */
@@ -2934,6 +2946,7 @@ declare class SenderTests extends TestClass {
     private loggingSpy;
     private testTelemetry;
     private endpointUrl;
+    private isInternalEndpointUrl;
     private emitLineDelimitedJson;
     private maxBatchSizeInBytes;
     private maxBatchInterval;

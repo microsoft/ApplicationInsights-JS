@@ -22,6 +22,7 @@ class SenderTests extends TestClass {
     private loggingSpy: SinonStub;
     private testTelemetry;
     private endpointUrl: string;
+    private isInternalEndpointUrl: boolean;
     private emitLineDelimitedJson: boolean;
     private maxBatchSizeInBytes: number;
     private maxBatchInterval: number;
@@ -38,6 +39,7 @@ class SenderTests extends TestClass {
         this.xdr = sinon.useFakeXMLHttpRequest();
         this.fakeServer = sinon.fakeServer.create();
         this.endpointUrl = "testUrl";
+        this.isInternalEndpointUrl = true;
         this.maxBatchSizeInBytes = 1000000;
         this.maxBatchInterval = 1;
         this.disableTelemetry = false;
@@ -182,6 +184,65 @@ class SenderTests extends TestClass {
                 sender.errorSpy.reset();
             }
         });
+
+        this.testCase({
+            name: "SenderTests: XMLHttpRequest sender adds SDK-Context header for AI internal URLs",
+            test: () => {
+                // setup
+                var headersSpy: SinonSpy;
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    headersSpy = this.sandbox.spy(xhr, "setRequestHeader");
+                    return xhr;
+                });
+                
+                // act
+                var sender = this.getSender();
+                this.fakeServer.requests.pop();
+                sender.send(this.testTelemetry);
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                // verify
+                Assert.equal(2, headersSpy.callCount);
+                Assert.ok(headersSpy.calledWith("Sdk-Context"));
+                
+                this.logAsserts(0);
+                sender.successSpy.reset();
+                sender.errorSpy.reset();
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: XMLHttpRequest sender doesn't add SDK-Context header for non AI internal URLs",
+            test: () => {
+                this.isInternalEndpointUrl = false;
+
+                // setup
+                var headersSpy: SinonSpy;
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    headersSpy = this.sandbox.spy(xhr, "setRequestHeader");
+                    return xhr;
+                });
+                
+                // act
+                var sender = this.getSender();
+                this.fakeServer.requests.pop();
+                sender.send(this.testTelemetry);
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                // verify
+                Assert.equal(1, headersSpy.callCount);
+                Assert.ok(!headersSpy.calledWith("Sdk-Context"));
+                
+                this.logAsserts(0);
+                sender.successSpy.reset();
+                sender.errorSpy.reset();
+            }
+        });
+
 
         this.testCase({
             name: "SenderTests: XDomain sender can be invoked and handles errors",
@@ -1421,6 +1482,7 @@ class SenderTests extends TestClass {
     private getDefaultConfig(): Microsoft.ApplicationInsights.ISenderConfig {
         return {
             endpointUrl: () => this.endpointUrl,
+            isInternalEndpointUrl: () => this.isInternalEndpointUrl,
             emitLineDelimitedJson: () => this.emitLineDelimitedJson,
             maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
             maxBatchInterval: () => this.maxBatchInterval,
