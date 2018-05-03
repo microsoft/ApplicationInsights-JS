@@ -1,0 +1,14 @@
+{
+  "name": "applicationinsights-core-js",
+  "version": "0.0.1",
+  "description": "Microsoft Application Insights Javascript Core SDK",
+  "author": "Microsoft Application Insights Team",
+  "license": "MIT",
+  "devDependencies": {
+    "grunt": "1.0.1",
+    "grunt-contrib-qunit": "2.0.0",
+    "grunt-contrib-uglify": "3.1.0",
+    "grunt-ts": "^6.0.0-beta.15",
+    "typescript": "2.5.3"
+  }
+}
