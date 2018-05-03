@@ -12,6 +12,14 @@ module.exports = function (grunt) {
                 ],
                 out: 'bundle/ai.js',
             },
+			core: {
+                src: [
+                    'coreSDK/JavaScriptSDK.Interfaces/*.ts',
+                    'coreSDK/JavaScriptSDK/*.ts',
+                ],
+                out: 'bundle/aicore.js',
+            }
+			,
             module: {
                 src: [
                     'JavaScript/JavaScriptSDK.Interfaces/*.ts',
@@ -121,6 +129,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-qunit');
 
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
+	grunt.registerTask("core", ["ts:core"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit"]);
 };

@@ -1,0 +1,290 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'Global.props'))\Global.props" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{C6CA61F8-4855-4C77-B199-A56BAD047ADB}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ApplicationInsights.Javascript.Tests</RootNamespace>
+    <AssemblyName>ApplicationInsights.Javascript.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
+    <IsCodedUITest>False</IsCodedUITest>
+    <TestProjectType>UnitTest</TestProjectType>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <!-- In gated, ..\Javascript does not resolve, so grab the files that were copied to output instead. -->
+    <JavascriptSourceLocation Condition="'$(TF_Build_BINARIESDIRECTORY)' == ''">..\JavaScriptSDK</JavascriptSourceLocation>
+    <JavascriptSourceLocation Condition="'$(TF_Build_BINARIESDIRECTORY)' != ''">$(TF_Build_BINARIESDIRECTORY)</JavascriptSourceLocation>
+    <TypeScriptSourceMap>true</TypeScriptSourceMap>
+    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
+    <TypeScriptTarget>ES5</TypeScriptTarget>
+    <EnableTypeScript>true</EnableTypeScript>
+    <TypeScriptCompilerPath>..\..\..\packages\Microsoft.TypeScript.Compiler.1.8.11\tools\tsc.exe</TypeScriptCompilerPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
+    <TypeScriptTarget>ES5</TypeScriptTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
+    <TypeScriptTarget>ES5</TypeScriptTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IsPublicBuild)' == 'true'">
+    <DefineConstants>$(DefineConstants);IsPublicBuild</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="WebDriver, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\Selenium.WebDriver.3.0.1\lib\net40\WebDriver.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Selenium\IISExpress.cs" />
+    <Compile Include="Selenium\Tests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="E2ETests\policheck\run.cmd" />
+    <None Include="chutzpah.json" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="E2ETests\PostBuild.ps1" />
+    <Content Include="E2ETests\E2E.ValidateApiTests.htm" />
+    <Content Include="E2ETests\E2E.snippetTests.htm" />
+    <Content Include="E2ETests\E2E.DisableTelemetryTests.htm" />
+    <Content Include="E2ETests\E2E.SanitizerE2ETests.htm" />
+    <Content Include="E2ETests\E2E.PublicApiTests.htm" />
+    <Content Include="E2ETests\E2E.autoCollection.tests.htm" />
+    <Content Include="E2ETests\E2E.Sender.tests.htm" />
+    <Content Include="E2ETests\autoCollectionTemplates\instrumentation.js" />
+    <Content Include="E2ETests\ai.js">
+      <DependentUpon>PostBuild.ps1</DependentUpon>
+    </Content>
+    <Content Include="E2ETests\standalone\snippet_0.1.js" />
+    <Content Include="E2ETests\standalone\snippet_1.0.js" />
+    <Content Include="E2ETests\standalone\sprint70.html" />
+    <Content Include="E2ETests\standalone\testSnippet.js" />
+    <Content Include="E2ETests\testSnippet.js">
+      <DependentUpon>PostBuild.ps1</DependentUpon>
+    </Content>
+    <Content Include="E2ETests\errorScriptGlobal.html">
+      <DependentUpon>PostBuild.ps1</DependentUpon>
+    </Content>
+    <Content Include="E2ETests\errorScriptNested.html">
+      <DependentUpon>PostBuild.ps1</DependentUpon>
+    </Content>
+    <Content Include="E2ETests\errorScriptSyntax.html">
+      <DependentUpon>PostBuild.ps1</DependentUpon>
+    </Content>
+    <Content Include="E2ETests\snippet_0.1.js">
+      <DependentUpon>PostBuild.ps1</DependentUpon>
+    </Content>
+    <Content Include="E2ETests\snippet_1.0.js">
+      <DependentUpon>PostBuild.ps1</DependentUpon>
+    </Content>
+    <Content Include="E2ETests\snippetLatest.js">
+      <DependentUpon>PostBuild.ps1</DependentUpon>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="E2ETests\autoCollectionTemplates\errorScriptGlobal.html" />
+    <Content Include="E2ETests\autoCollectionTemplates\errorScriptNested.html" />
+    <Content Include="E2ETests\autoCollectionTemplates\errorScriptSyntax.html" />
+    <Content Include="E2ETests\policheck\task.xml" />
+    <Content Include="External\blanket-reporter.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="External\blanket-1.2.2.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="External\jquery-1.11.1.js" />
+    <Content Include="E2ETests\standalone\readme.txt" />
+    <Content Include="E2ETests\standalone\sprint66.html" />
+    <Content Include="E2ETests\standalone\sprint69.html" />
+    <Content Include="E2ETests\standalone\test.html" />
+    <Content Include="E2ETests\standalone\tests.js" />
+    <Content Include="geckodriver.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Performance\readme.txt" />
+    <Content Include="Selenium\testPageNoAppInsights.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Selenium\testPageWithAppInsights.html">
+      <DependentUpon>testPageNoAppInsights.html</DependentUpon>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Selenium\JSLitmus.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="External\sinon-1.17.2.js" />
+    <Content Include="chromedriver.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IEDriverServer.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="README.txt" />
+    <Content Include="Selenium\PerfTests.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Selenium\Tests.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="External\qunit.d.ts" />
+    <Content Include="External\sinon.d.ts" />
+    <Content Include="TestFramework\Assert.ts" />
+    <Content Include="TestFramework\Common.ts" />
+    <Content Include="TestFramework\TestCase.ts" />
+    <Content Include="TestFramework\TestClass.ts" />
+    <TypeScriptCompile Include="CheckinTests\ajax.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\DataLossAnalyzer.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\AppInsightsModule.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\SendBuffer.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\SplitTest.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\appInsights.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Context\Sample.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Context\HashCodeScoreGenerator.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Initialization.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\PageVisitTimeManager.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Telemetry\DataSanitizer.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Telemetry\RemoteDependency.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Telemetry\PageViewPerformance.tests.ts" />
+    <TypeScriptCompile Include="Contracts\Generated\Base.unittests.ts" />
+    <TypeScriptCompile Include="Contracts\Generated\ContextTagKeys.unittests.ts" />
+    <TypeScriptCompile Include="Contracts\Generated\Data.unittests.ts" />
+    <TypeScriptCompile Include="Contracts\Generated\DataPoint.unittests.ts" />
+    <TypeScriptCompile Include="Contracts\Generated\Envelope.unittests.ts" />
+    <TypeScriptCompile Include="Contracts\Generated\EventData.unittests.ts" />
+    <TypeScriptCompile Include="Contracts\Generated\ExceptionData.unittests.ts" />
+    <TypeScriptCompile Include="Contracts\Generated\ExceptionDetails.unittests.ts" />
+    <TypeScriptCompile Include="Contracts\Generated\MessageData.unittests.ts" />
+    <TypeScriptCompile Include="Contracts\Generated\MetricData.unittests.ts" />
+    <TypeScriptCompile Include="Contracts\Generated\PageViewData.unittests.ts" />
+    <TypeScriptCompile Include="Contracts\Generated\PageViewPerfData.unittests.ts" />
+    <TypeScriptCompile Include="Contracts\Generated\SessionStateData.unittests.ts" />
+    <TypeScriptCompile Include="Contracts\Generated\StackFrame.unittests.ts" />
+    <TypeScriptCompile Include="DefinitionTypes\applicationinsights-js-tests.ts" />
+    <TypeScriptCompile Include="External\jquery.d.ts" />
+    <TypeScriptCompile Include="Performance\api.perftests.ts" />
+    <TypeScriptCompile Include="Performance\pageLoad.perftests.ts" />
+    <TypeScriptCompile Include="Performance\serializer.perftests.ts" />
+    <Content Include="TestFramework\PollingAssert.ts" />
+    <TypeScriptCompile Include="TestFramework\ContractTestHelper.ts" />
+    <TypeScriptCompile Include="CheckinTests\Logging.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Sender.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Serializer.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\TelemetryContext.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Context\Session.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Context\User.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Telemetry\Event.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Telemetry\Exception.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Telemetry\Metric.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Telemetry\PageView.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Telemetry\Trace.tests.ts" />
+    <TypeScriptCompile Include="CheckinTests\Util.tests.ts" />
+    <TypeScriptCompile Include="TestFramework\PerformanceTestHelper.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <AutoCollectionTests Include="E2ETests\autoCollection.tests.ts" />
+    <Content Include="E2ETests\autoCollection.tests.js">
+      <DependentUpon>autoCollection.tests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <PublicApiTests Include="E2ETests\PublicApiTests.ts" />
+    <Content Include="E2ETests\PublicApiTests.js">
+      <DependentUpon>PublicApiTests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <ValidateApiTests Include="E2ETests\ValidateApiTests.ts" />
+    <Content Include="E2ETests\ValidateApiTests.js">
+      <DependentUpon>ValidateApiTests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <SanitizerE2ETests Include="E2ETests\SanitizerE2E.tests.ts" />
+    <Content Include="E2ETests\SanitizerE2E.tests.js">
+      <DependentUpon>SanitizerE2E.tests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <SnippetTests Include="E2ETests\snippet.tests.ts" />
+    <Content Include="E2ETests\snippet.tests.js">
+      <DependentUpon>snippet.tests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <DisableTelemetryTests Include="E2ETests\DisableTelemetryTests.ts" />
+    <Content Include="E2ETests\DisableTelemetryTests.js">
+      <DependentUpon>DisableTelemetryTests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <SenderTests Include="E2ETests\SenderE2E.tests.ts" />
+    <Content Include="E2ETests\SenderE2E.tests.js">
+      <DependentUpon>DisableTelemetryTests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <SeleniumCheckinTests Include="Selenium\checkinTests.ts" />
+    <SeleniumPerformance Include="Selenium\performanceTests.ts" />
+    <Content Include="Selenium\checkinTests.js">
+      <DependentUpon>checkinTests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Selenium\performanceTests.js">
+      <DependentUpon>performanceTests.ts</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="E2ETests\policheck\targets\" />
+  </ItemGroup>
+  <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="BeforeBuild">
+    <Message Text="Compiling TypeScript files" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SeleniumCheckinTests ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\checkinTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SeleniumAppInsightsSDK ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\appInsightsSdk.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SeleniumPerformance ->'&quot;%(fullpath)&quot;', ' ') --out Selenium\performanceTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(AutoCollectionTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\autoCollection.tests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(PublicApiTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\PublicApiTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(ValidateApiTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\ValidateApiTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SanitizerE2ETests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\SanitizerE2E.tests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SnippetTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\snippet.tests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(DisableTelemetryTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\DisableTelemetryTests.js" />
+    <Exec Command="$(TypeScriptCompilerPath) --target ES5 --module amd @(SenderTests ->'&quot;%(fullpath)&quot;', ' ') --out E2ETests\SenderE2E.tests.js" />
+    <Exec Command="Powershell.exe -ExecutionPolicy ByPass -File &quot;$(ProjectDir)E2ETests\PostBuild.ps1&quot; -projectDir $(ProjectDir) -outputDir $(OutputPath)" />
+  </Target>
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
+</Project>
