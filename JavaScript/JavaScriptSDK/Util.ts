@@ -69,13 +69,13 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
-         *  Checks if endpoint URL is application insights internal injection service URL.
+         *  Checks if endpoint URL is application insights internal injestion service URL.
          *
          *  @param endpointUrl Endpoint URL to check.
-         *  @returns {boolean} True if if endpoint URL is application insights internal injection service URL.
+         *  @returns {boolean} True if if endpoint URL is application insights internal injestion service URL.
          */
         public static isInternalApplicationInsightsEndpoint(endpointUrl: string): boolean {           
-            return Util._internalEndpoints.indexOf(endpointUrl) !== -1;
+            return Util._internalEndpoints.indexOf(endpointUrl.toLowerCase()) !== -1;
         }
 
 

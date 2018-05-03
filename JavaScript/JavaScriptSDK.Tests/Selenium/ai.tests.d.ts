@@ -384,10 +384,10 @@ declare module Microsoft.ApplicationInsights {
          */
         private static _getVerifiedStorageObject(storageType);
         /**
-         *  Checks if endpoint URL is application insights internal injection service URL.
+         *  Checks if endpoint URL is application insights internal injestion service URL.
          *
          *  @param endpointUrl Endpoint URL to check.
-         *  @returns {boolean} True if if endpoint URL is application insights internal injection service URL.
+         *  @returns {boolean} True if if endpoint URL is application insights internal injestion service URL.
          */
         static isInternalApplicationInsightsEndpoint(endpointUrl: string): boolean;
         /**

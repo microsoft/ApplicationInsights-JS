@@ -145,7 +145,7 @@ module Microsoft.ApplicationInsights {
             }
 
             // set default values
-            config.endpointUrl = (config.endpointUrl || "https://dc.services.visualstudio.com/v2/track").toLowerCase();
+            config.endpointUrl = config.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
             config.sessionRenewalMs = 30 * 60 * 1000;
             config.sessionExpirationMs = 24 * 60 * 60 * 1000;
             config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 102400; // 100kb

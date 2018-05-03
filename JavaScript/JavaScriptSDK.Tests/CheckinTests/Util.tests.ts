@@ -466,6 +466,7 @@ class UtilTests extends TestClass {
 
                 // Assert
                 Assert.equal(true, Util.isInternalApplicationInsightsEndpoint("https://dc.services.visualstudio.com/v2/track"));
+                Assert.equal(true, Util.isInternalApplicationInsightsEndpoint("https://DC.services.VisualStudio.com/v2/track"));
                 Assert.equal(true, Util.isInternalApplicationInsightsEndpoint("https://breeze.aimon.applicationinsights.io/v2/track"));
                 Assert.equal(true, Util.isInternalApplicationInsightsEndpoint("https://dc-int.services.visualstudio.com/v2/track"));
                 Assert.equal(false, Util.isInternalApplicationInsightsEndpoint("https://somethingelse.com/v2/track"));
