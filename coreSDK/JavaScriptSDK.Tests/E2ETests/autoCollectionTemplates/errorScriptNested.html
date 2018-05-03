@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>errorNested</title>
+    <!-- placeholder for snippet injected by PostBuild.ps1 -->
+    <script>
+        PREFIX_PLACEHOLDER
+
+        INSTRUMENTATION_PLACEHOLDER
+    </script>
+</head>
+<body>
+    <h1>Nested script error test page</h1>
+    <script type="text/javascript">
+        function fisrt() {
+            throw "error";
+        }
+
+        function second() {
+            first();
+        }
+
+        function third() {
+            second();
+        }
+
+        third();
+    </script>
+    
+    <script type="text/javascript">
+        function async1() {
+            window.doesNot.exist();
+        }
+
+        function async2() {
+            setTimeout(async1, 200);
+        }
+
+        function async() {
+            setTimeout(async2, 200);
+        }
+
+        async();
+    </script>
+
+    <script type="text/javascript">
+        function afterFullAiLoads() {
+            throw "afterFullAiLoads"
+        }
+
+        setTimeout(afterFullAiLoads, 1000);
+    </script>
+</body>
+</html>
