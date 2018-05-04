@@ -1,6 +1,6 @@
 {
   "name": "applicationinsights-core-js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Microsoft Application Insights Javascript Core SDK",
   "author": "Microsoft Application Insights Team",
   "license": "MIT",
