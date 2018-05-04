@@ -1,0 +1,10 @@
+# NPM Ignore
+
+# ignore everything
+*
+
+# ... but these files
+!/package.json
+!/bundle/aicore.js
+!/dist/aicore.js
+!/dist/aicore.js.map
