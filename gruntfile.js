@@ -17,7 +17,7 @@ module.exports = function (grunt) {
                     'coreSDK/JavaScriptSDK.Interfaces/*.ts',
                     'coreSDK/JavaScriptSDK/*.ts',
                 ],
-                out: 'bundle/aicore.js',
+                out: 'coresdk/bundle/aicore.js',
             },
             module: {
                 src: [
