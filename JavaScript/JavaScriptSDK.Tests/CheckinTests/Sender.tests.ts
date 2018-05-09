@@ -217,7 +217,6 @@ class SenderTests extends TestClass {
             name: "SenderTests: XMLHttpRequest sender doesn't add SDK-Context header for non AI internal URLs",
             test: () => {
                 this.endpointUrl = "https://external.endpoint/v2/track";
-
                 // setup
                 var headersSpy: SinonSpy;
                 XMLHttpRequest = <any>(() => {
