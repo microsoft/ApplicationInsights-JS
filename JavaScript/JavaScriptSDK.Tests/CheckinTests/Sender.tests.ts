@@ -22,7 +22,6 @@ class SenderTests extends TestClass {
     private loggingSpy: SinonStub;
     private testTelemetry;
     private endpointUrl: string;
-    private isInternalEndpointUrl: boolean;
     private emitLineDelimitedJson: boolean;
     private maxBatchSizeInBytes: number;
     private maxBatchInterval: number;
@@ -39,7 +38,6 @@ class SenderTests extends TestClass {
         this.xdr = sinon.useFakeXMLHttpRequest();
         this.fakeServer = sinon.fakeServer.create();
         this.endpointUrl = "testUrl";
-        this.isInternalEndpointUrl = true;
         this.maxBatchSizeInBytes = 1000000;
         this.maxBatchInterval = 1;
         this.disableTelemetry = false;
@@ -188,6 +186,8 @@ class SenderTests extends TestClass {
         this.testCase({
             name: "SenderTests: XMLHttpRequest sender adds SDK-Context header for AI internal URLs",
             test: () => {
+                this.endpointUrl = "https://dc.services.visualstudio.com/v2/track";
+
                 // setup
                 var headersSpy: SinonSpy;
                 XMLHttpRequest = <any>(() => {
@@ -216,7 +216,7 @@ class SenderTests extends TestClass {
         this.testCase({
             name: "SenderTests: XMLHttpRequest sender doesn't add SDK-Context header for non AI internal URLs",
             test: () => {
-                this.isInternalEndpointUrl = false;
+                this.endpointUrl = "https://external.endpoint/v2/track";
 
                 // setup
                 var headersSpy: SinonSpy;
@@ -1482,7 +1482,6 @@ class SenderTests extends TestClass {
     private getDefaultConfig(): Microsoft.ApplicationInsights.ISenderConfig {
         return {
             endpointUrl: () => this.endpointUrl,
-            isInternalEndpointUrl: () => this.isInternalEndpointUrl,
             emitLineDelimitedJson: () => this.emitLineDelimitedJson,
             maxBatchSizeInBytes: () => this.maxBatchSizeInBytes,
             maxBatchInterval: () => this.maxBatchInterval,

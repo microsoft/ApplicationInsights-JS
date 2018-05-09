@@ -68,7 +68,6 @@ module Microsoft.ApplicationInsights {
                 sessionRenewalMs: () => this.config.sessionRenewalMs,
                 sessionExpirationMs: () => this.config.sessionExpirationMs,
                 endpointUrl: () => this.config.endpointUrl,
-                isInternalEndpointUrl: () => Util.isInternalApplicationInsightsEndpoint(this.config.endpointUrl),
                 emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
                 maxBatchSizeInBytes: () => {
                     return (!this.config.isBeaconApiDisabled && Util.IsBeaconApiSupported()) ?

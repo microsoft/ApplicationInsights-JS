@@ -1602,10 +1602,6 @@ declare module Microsoft.ApplicationInsights {
          */
         endpointUrl: () => string;
         /**
-         * True if endpoint URL is application insights internal injection service URL
-         */
-        isInternalEndpointUrl: () => boolean;
-        /**
         * The JSON format (normal vs line delimited). True means line delimited JSON.
         */
         emitLineDelimitedJson: () => boolean;
@@ -2946,7 +2942,6 @@ declare class SenderTests extends TestClass {
     private loggingSpy;
     private testTelemetry;
     private endpointUrl;
-    private isInternalEndpointUrl;
     private emitLineDelimitedJson;
     private maxBatchSizeInBytes;
     private maxBatchInterval;

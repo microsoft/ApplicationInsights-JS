@@ -16,7 +16,6 @@ class SendBufferTests extends TestClass {
             emitLineDelimitedJson: () => false,
             enableSessionStorageBuffer: () => false,
             endpointUrl: () => null,
-            isInternalEndpointUrl: () => null,
             maxBatchSizeInBytes: () => null,
             maxBatchInterval: () => null,
             disableTelemetry: () => null,

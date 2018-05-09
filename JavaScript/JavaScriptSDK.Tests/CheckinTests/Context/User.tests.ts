@@ -404,7 +404,6 @@ class UserContextTests extends TestClass {
             sessionExpirationMs: () => null,
             sampleRate: () => null,
             endpointUrl: () => null,
-            isInternalEndpointUrl: () => null,
             cookieDomain: () => null,
             emitLineDelimitedJson: () => null,
             maxBatchSizeInBytes: () => null,

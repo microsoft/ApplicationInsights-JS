@@ -16,7 +16,6 @@ class TelemetryContextTests extends TestClass {
             sessionRenewalMs: () => 10,
             sessionExpirationMs: () => 10,
             endpointUrl: () => "asdf",
-            isInternalEndpointUrl: () => true,
             emitLineDelimitedJson: () => false,
             maxBatchSizeInBytes: () => 1000000,
             maxBatchInterval: () => 1,
