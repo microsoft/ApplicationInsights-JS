@@ -459,6 +459,19 @@ class UtilTests extends TestClass {
                 Assert.equal(8, Util.getIEVersion("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 10.0; Win64; x64; Trident/7.0; .NET4.0C; .NET4.0E; .NET CLR 2.0.50727; .NET CLR 3.0.30729; .NET CLR 3.5.30729"), "Should return IE version for IE browser");
             }
         });
+
+        this.testCase({
+            name: "isInternalApplicationInsightsEndpoint function handles endpoints correctly",
+            test: () => {
+
+                // Assert
+                Assert.equal(true, Util.isInternalApplicationInsightsEndpoint("https://dc.services.visualstudio.com/v2/track"));
+                Assert.equal(true, Util.isInternalApplicationInsightsEndpoint("https://DC.services.VisualStudio.com/v2/track"));
+                Assert.equal(true, Util.isInternalApplicationInsightsEndpoint("https://breeze.aimon.applicationinsights.io/v2/track"));
+                Assert.equal(true, Util.isInternalApplicationInsightsEndpoint("https://dc-int.services.visualstudio.com/v2/track"));
+                Assert.equal(false, Util.isInternalApplicationInsightsEndpoint("https://somethingelse.com/v2/track"));
+            }
+        });
     }
 
     private getMockStorage() {
