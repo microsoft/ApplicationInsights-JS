@@ -43,7 +43,7 @@
     <!-- Generate .nupkg file -->
     <Exec Command="$(PackageCommand)" />
   </Target>
-  <Target Name="PrepareNuGetForSigning" BeforeTargets="SignFiles" AfterTargets="BuildNugetPackage">
+  <Target Name="PrepareNuGetForSigning" BeforeTargets="SignFiles" DependsOnTargets="BuildNugetPackage">
     <ItemGroup>
       <FilesToSign Include="$(PackageOutputDir)\$(PackageId)*.nupkg">
           <Authenticode>Microsoft</Authenticode>
