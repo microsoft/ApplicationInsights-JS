@@ -51,6 +51,15 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="MoveNuGetFilesAfterSigning" DependsOnTargets="SignFiles">
+    <ItemGroup>
+      <FilesToMove Include="$(OutDir)*.nupkg" />
+    </ItemGroup>
+
+    <!-- Move the NuGet files from the OutDir to PackageOutputDir -->
+    <Move SourceFiles="@(FilesToMove)" DestinationFolder="$(PackageOutputDir)" />
+  </Target>
+
   <UsingTask TaskName="GetFileVersionInfo" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v12.0.dll">
     <ParameterGroup>
       <File ParameterType="System.String" Required="true" />
