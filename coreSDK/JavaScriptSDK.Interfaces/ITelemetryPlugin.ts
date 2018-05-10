@@ -5,10 +5,13 @@ module Microsoft.ApplicationInsights.Core {
 
     "use strict";
 
+    /**
+     * Configuration provided to SDK core
+     */
     export interface ITelemetryPlugin {
-        ProcessTelemetry: (env: ITelemetryItem) => void;
-        Start: (config: IConfiguration) => void;
-        Identifier: string;
-        SetNextPlugin: (next: ITelemetryPlugin) => void;
+        processTelemetry: (env: ITelemetryItem) => void;
+        start: (config: IConfiguration) => void;
+        identifier: string;
+        setNextPlugin: (next: ITelemetryPlugin) => void;
     }
 }
