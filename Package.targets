@@ -31,7 +31,7 @@
       <PackageImage>http://appanacdn.blob.core.windows.net/cdn/icons/aic.png</PackageImage>
       <PackageCopyright>@(VersionInfo->'%(LegalCopyright)')</PackageCopyright>
       <PackageSymbols Condition="'$(PackageSymbols)' == ''">false</PackageSymbols>
-      <PackageCommand>$(NuGetCommand) pack "$(PackageSpecFile)" -Properties "version=$(PackageVersion);author=$(PackageAuthor);image=$(PackageImage);copyright=$(PackageCopyright);configuration=$(Configuration)" -BasePath "$(BinRoot)" -OutputDirectory "$(OutDir)"</PackageCommand>
+      <PackageCommand>$(NuGetCommand) pack "$(PackageSpecFile)" -Properties "version=$(PackageVersion);author=$(PackageAuthor);image=$(PackageImage);copyright=$(PackageCopyright);configuration=$(Configuration)" -BasePath "$(BinRoot)" -OutputDirectory "$(OutDir)\"</PackageCommand>
       <PackageCommand Condition="'$(PackageSymbols)' == 'True'">$(PackageCommand) -Symbols</PackageCommand>
     </PropertyGroup>
 
