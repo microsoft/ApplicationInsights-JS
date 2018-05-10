@@ -43,7 +43,14 @@
     <!-- Generate .nupkg file -->
     <Exec Command="$(PackageCommand)" />
   </Target>
-  
+  <Target Name="PrepareNuGetForSigning" BeforeTargets="SignFiles" AfterTargets="BuildNugetPackage">
+    <ItemGroup>
+      <FilesToSign Include="$(PackageOutputDir)\$(PackageId)*.nupkg">
+          <Authenticode>Microsoft</Authenticode>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+
   <UsingTask TaskName="GetFileVersionInfo" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v12.0.dll">
     <ParameterGroup>
       <File ParameterType="System.String" Required="true" />
