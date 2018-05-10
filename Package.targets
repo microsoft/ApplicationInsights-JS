@@ -45,8 +45,8 @@
   </Target>
   <Target Name="PrepareNuGetForSigning" BeforeTargets="SignFiles" DependsOnTargets="BuildNugetPackage">
     <ItemGroup>
-      <FilesToSign Include="$(PackageOutputDir)\$(PackageId)*.nupkg">
-          <Authenticode>Microsoft</Authenticode>
+      <FilesToSign Include="$(OutputPath)\**\*.nupkg">
+          <Authenticode>NuGet</Authenticode>
       </FilesToSign>
     </ItemGroup>
   </Target>
