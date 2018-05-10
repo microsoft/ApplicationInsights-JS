@@ -1,0 +1,11 @@
+module Microsoft.ApplicationInsights.Core {
+
+    "use strict";
+
+    export interface IChannelControls {
+        pause(): void;
+        resume(): void;
+        flush(): void;
+        teardown(): void;
+    }
+}
