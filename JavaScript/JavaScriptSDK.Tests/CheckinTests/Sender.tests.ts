@@ -184,6 +184,66 @@ class SenderTests extends TestClass {
         });
 
         this.testCase({
+            name: "SenderTests: XMLHttpRequest sender adds SDK-Context header for AI internal URLs",
+            test: () => {
+                this.endpointUrl = "https://dc.services.visualstudio.com/v2/track";
+
+                // setup
+                var headersSpy: SinonSpy;
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    headersSpy = this.sandbox.spy(xhr, "setRequestHeader");
+                    return xhr;
+                });
+                
+                // act
+                var sender = this.getSender();
+                this.fakeServer.requests.pop();
+                sender.send(this.testTelemetry);
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                // verify
+                Assert.equal(2, headersSpy.callCount);
+                Assert.ok(headersSpy.calledWith("Sdk-Context"));
+                
+                this.logAsserts(0);
+                sender.successSpy.reset();
+                sender.errorSpy.reset();
+            }
+        });
+
+        this.testCase({
+            name: "SenderTests: XMLHttpRequest sender doesn't add SDK-Context header for non AI internal URLs",
+            test: () => {
+                this.endpointUrl = "https://external.endpoint/v2/track";
+                // setup
+                var headersSpy: SinonSpy;
+                XMLHttpRequest = <any>(() => {
+                    var xhr = new this.xhr;
+                    xhr.withCredentials = false;
+                    headersSpy = this.sandbox.spy(xhr, "setRequestHeader");
+                    return xhr;
+                });
+                
+                // act
+                var sender = this.getSender();
+                this.fakeServer.requests.pop();
+                sender.send(this.testTelemetry);
+                this.clock.tick(sender._config.maxBatchInterval());
+
+                // verify
+                Assert.equal(1, headersSpy.callCount);
+                Assert.ok(!headersSpy.calledWith("Sdk-Context"));
+                
+                this.logAsserts(0);
+                sender.successSpy.reset();
+                sender.errorSpy.reset();
+            }
+        });
+
+
+        this.testCase({
             name: "SenderTests: XDomain sender can be invoked and handles errors",
             test: () => {
                 // setup
