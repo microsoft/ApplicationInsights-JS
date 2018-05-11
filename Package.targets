@@ -51,7 +51,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="MoveNuGetFilesAfterSigning" DependsOnTargets="SignFiles">
+  <Target Name="MoveNuGetFilesAfterSigning" AfterTargets="SignFiles">
     <ItemGroup>
       <FilesToMove Include="$(OutDir)*.nupkg" />
     </ItemGroup>
