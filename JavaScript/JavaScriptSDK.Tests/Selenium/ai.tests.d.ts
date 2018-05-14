@@ -368,6 +368,7 @@ declare module Microsoft.ApplicationInsights {
         private static _canUseCookies;
         private static _canUseLocalStorage;
         private static _canUseSessionStorage;
+        private static _internalEndpoints;
         static NotSpecified: string;
         static disableStorage(): void;
         /**
@@ -382,6 +383,13 @@ declare module Microsoft.ApplicationInsights {
          * @return {Storage} Returns storage object verified that it is usable
          */
         private static _getVerifiedStorageObject(storageType);
+        /**
+         *  Checks if endpoint URL is application insights internal injestion service URL.
+         *
+         *  @param endpointUrl Endpoint URL to check.
+         *  @returns {boolean} True if if endpoint URL is application insights internal injestion service URL.
+         */
+        static isInternalApplicationInsightsEndpoint(endpointUrl: string): boolean;
         /**
          *  Check if the browser supports local storage.
          *

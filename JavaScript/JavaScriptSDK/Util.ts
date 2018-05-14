@@ -14,6 +14,12 @@ module Microsoft.ApplicationInsights {
         private static _canUseCookies: boolean = undefined;
         private static _canUseLocalStorage: boolean = undefined;
         private static _canUseSessionStorage: boolean = undefined;
+        // listing only non-geo specific locations
+        private static _internalEndpoints: string[] = [
+            "https://dc.services.visualstudio.com/v2/track",
+            "https://breeze.aimon.applicationinsights.io/v2/track",
+            "https://dc-int.services.visualstudio.com/v2/track"
+        ]
         public static NotSpecified = "not_specified";
 
         /*
@@ -61,6 +67,17 @@ module Microsoft.ApplicationInsights {
 
             return storage;
         }
+
+        /**
+         *  Checks if endpoint URL is application insights internal injestion service URL.
+         *
+         *  @param endpointUrl Endpoint URL to check.
+         *  @returns {boolean} True if if endpoint URL is application insights internal injestion service URL.
+         */
+        public static isInternalApplicationInsightsEndpoint(endpointUrl: string): boolean {           
+            return Util._internalEndpoints.indexOf(endpointUrl.toLowerCase()) !== -1;
+        }
+
 
         /**
          *  Check if the browser supports local storage.
