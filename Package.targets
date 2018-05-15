@@ -31,7 +31,7 @@
       <PackageImage>http://appanacdn.blob.core.windows.net/cdn/icons/aic.png</PackageImage>
       <PackageCopyright>@(VersionInfo->'%(LegalCopyright)')</PackageCopyright>
       <PackageSymbols Condition="'$(PackageSymbols)' == ''">false</PackageSymbols>
-      <PackageCommand>$(NuGetCommand) pack "$(PackageSpecFile)" -Properties "version=$(PackageVersion);author=$(PackageAuthor);image=$(PackageImage);copyright=$(PackageCopyright);configuration=$(Configuration)" -BasePath "$(BinRoot)" -OutputDirectory "$(PackageOutputDir)"</PackageCommand>
+      <PackageCommand>$(NuGetCommand) pack "$(PackageSpecFile)" -Properties "version=$(PackageVersion);author=$(PackageAuthor);image=$(PackageImage);copyright=$(PackageCopyright);configuration=$(Configuration)" -BasePath "$(BinRoot)" -OutputDirectory "$(OutDir)\"</PackageCommand>
       <PackageCommand Condition="'$(PackageSymbols)' == 'True'">$(PackageCommand) -Symbols</PackageCommand>
     </PropertyGroup>
 
@@ -43,7 +43,23 @@
     <!-- Generate .nupkg file -->
     <Exec Command="$(PackageCommand)" />
   </Target>
-  
+  <Target Name="PrepareNuGetForSigning" BeforeTargets="SignFiles" DependsOnTargets="BuildNugetPackage">
+    <ItemGroup>
+      <FilesToSign Include="$(OutDir)\**\*.nupkg">
+          <Authenticode>NuGet</Authenticode>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="MoveNuGetFilesAfterSigning" AfterTargets="SignFiles">
+    <ItemGroup>
+      <FilesToMove Include="$(OutDir)*.nupkg" />
+    </ItemGroup>
+
+    <!-- Move the NuGet files from the OutDir to PackageOutputDir -->
+    <Move SourceFiles="@(FilesToMove)" DestinationFolder="$(PackageOutputDir)" />
+  </Target>
+
   <UsingTask TaskName="GetFileVersionInfo" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v12.0.dll">
     <ParameterGroup>
       <File ParameterType="System.String" Required="true" />
