@@ -1,12 +1,19 @@
-﻿import _InternalLogging = Microsoft.ApplicationInsights.Common._InternalLogging;
-import LoggingSeverity = Microsoft.ApplicationInsights.Common.LoggingSeverity;
-import _InternalMessageId = Microsoft.ApplicationInsights.Common._InternalMessageId;
-import Util = Microsoft.ApplicationInsights.Common.Util;
+﻿/// <reference path="Serializer.ts" />
+/// <reference path="Telemetry/Common/Envelope.ts"/>
+/// <reference path="Telemetry/Common/Base.ts" />
+/// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/ContextTagKeys.ts"/>
+/// <reference path="Context/Application.ts"/>
+/// <reference path="Context/Device.ts"/>
+/// <reference path="Context/Internal.ts"/>
+/// <reference path="Context/Location.ts"/>
+/// <reference path="Context/Operation.ts"/>
+/// <reference path="Context/Sample.ts"/>
+/// <reference path="Context/Session.ts"/>
+/// <reference path="Context/User.ts"/>
+/// <reference path="ajax/ajax.ts"/>
 
-
-module Microsoft.ApplicationInsights.Channel {
-
-    "using strict";
+module Microsoft.ApplicationInsights {
+    "use strict";
 
     export interface ISendBuffer {
         /**
@@ -242,8 +249,8 @@ module Microsoft.ApplicationInsights.Channel {
             } catch (e) {
                 _InternalLogging.throwInternal(LoggingSeverity.CRITICAL,
                     _InternalMessageId.FailedToRestoreStorageBuffer,
-                    " storage key: " + key + ", " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) });
+                        " storage key: " + key + ", " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) });
             }
 
             return [];
@@ -260,8 +267,8 @@ module Microsoft.ApplicationInsights.Channel {
 
                 _InternalLogging.throwInternal(LoggingSeverity.WARNING,
                     _InternalMessageId.FailedToSetStorageBuffer,
-                    " storage key: " + key + ", " + Util.getExceptionName(e) + ". Buffer cleared",
-                    { exception: Util.dump(e) });
+                        " storage key: " + key + ", " + Util.getExceptionName(e) + ". Buffer cleared",
+                        { exception: Util.dump(e) });
             }
         }
     }

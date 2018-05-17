@@ -1,6 +1,5 @@
 ﻿/// <reference path="../../../JavaScriptSDK.Interfaces/Contracts/Generated/Envelope.ts" />
 /// <reference path="../../../JavaScriptSDK.Interfaces/Contracts/Generated/Base.ts" />
-/// <reference path="../../Util.ts"/>
 
 module Microsoft.ApplicationInsights.Telemetry.Common {
     "use strict";

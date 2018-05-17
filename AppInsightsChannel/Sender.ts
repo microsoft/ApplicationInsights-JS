@@ -1,458 +1,471 @@
 /// <reference path="./node_modules/applicationinsights-common-js/bundle/aicommon.d.ts" />
+/// <reference path="./Interfaces.ts" />
+/// <reference path="./SendBuffer.ts" />
 
-import { ISenderConfig, IConfig, ITelemetryItem, ITelemetryPlugin, IBackendResponse, XDomainRequest as IXDomainRequest } from "./Interfaces";
-import { ISendBuffer } from "./SendBuffer";
-import { SessionStorageSendBuffer, ArraySendBuffer } from './SendBuffer';
-import { _InternalLogging, LoggingSeverity, _InternalMessageId } from "Logging";
-import * as Constants from 'Constants';
-import { RequestHeaders } from "RequestResponseHeaders";
-import { Util } from "Util";
+import IXDomainRequest = Microsoft.ApplicationInsights.Channel.XDomainRequest;
+import DisabledPropertyName = Microsoft.ApplicationInsights.Common.DisabledPropertyName;
+import RequestHeaders = Microsoft.ApplicationInsights.Common.RequestHeaders;
 
-declare var XDomainRequest: {
-    prototype: IXDomainRequest;
-    new(): IXDomainRequest;
-};
+module Microsoft.ApplicationInsights.Channel {
 
-export class Sender implements ITelemetryPlugin {
-    /**
-     * The configuration for this sender instance
-     */
-    public _config: ISenderConfig;
+    "using strict";
 
-    /**
-     * A method which will cause data to be send to the url
-     */
-    public _sender: (payload: string[], isAsync: boolean) => void;
+    declare var XDomainRequest: {
+        prototype: IXDomainRequest;
+        new(): IXDomainRequest;
+    };
 
-    /**
-     * A send buffer object
-     */
-    public _buffer: ISendBuffer;
+    export class Sender implements ITelemetryPlugin {
+        /**
+         * The configuration for this sender instance
+         */
+        public _config: ISenderConfig;
 
-    /**
-     * AppId of this component parsed from some backend response.
-     */
-    public _appId: string;
+        /**
+         * A method which will cause data to be send to the url
+         */
+        public _sender: (payload: string[], isAsync: boolean) => void;
 
-    /**
-     * Whether XMLHttpRequest object is supported. Older version of IE (8,9) do not support it.
-     */
-    public _XMLHttpRequestSupported: boolean = false;
+        /**
+         * A send buffer object
+         */
+        public _buffer: ISendBuffer;
 
-    /**
-     * How many times in a row a retryable error condition has occurred.
-     */
-    private _consecutiveErrors: number;
+        /**
+         * AppId of this component parsed from some backend response.
+         */
+        public _appId: string;
 
-    /**
-     * The time to retry at in milliseconds from 1970/01/01 (this makes the timer calculation easy).
-     */
-    private _retryAt: number;
+        /**
+         * Whether XMLHttpRequest object is supported. Older version of IE (8,9) do not support it.
+         */
+        public _XMLHttpRequestSupported: boolean = false;
 
-    /**
-     * The time of the last send operation.
-     */
-    private _lastSend: number;
+        /**
+         * How many times in a row a retryable error condition has occurred.
+         */
+        private _consecutiveErrors: number;
 
-    /**
-     * Handle to the timer for delayed sending of batches of data.
-     */
-    private _timeoutHandle: any;
+        /**
+         * The time to retry at in milliseconds from 1970/01/01 (this makes the timer calculation easy).
+         */
+        private _retryAt: number;
 
-    public Start(config: IConfig) {
-        this._consecutiveErrors = 0;
-        this._retryAt = null;
-        this._lastSend = 0;
-        this._config = Sender._getDefaultAppInsightsChannelConfig(config);
-        this._sender = null;
-        this._buffer = (Util.canUseSessionStorage() && this._config.enableSessionStorageBuffer)
-            ? new SessionStorageSendBuffer(this._config) : new ArraySendBuffer(this._config);
+        /**
+         * The time of the last send operation.
+         */
+        private _lastSend: number;
 
-        if (!this._config.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
-            this._sender = this._beaconSender;
-        } else {
-            if (typeof XMLHttpRequest != "undefined") {
-                var testXhr = new XMLHttpRequest();
-                if ("withCredentials" in testXhr) {
-                    this._sender = this._xhrSender;
-                    this._XMLHttpRequestSupported = true;
-                } else if (typeof XDomainRequest !== "undefined") {
-                    this._sender = this._xdrSender; //IE 8 and 9
+        /**
+         * Handle to the timer for delayed sending of batches of data.
+         */
+        private _timeoutHandle: any;
+
+        public Start(config: IConfig) {
+            this._consecutiveErrors = 0;
+            this._retryAt = null;
+            this._lastSend = 0;
+            this._config = Sender._getDefaultAppInsightsChannelConfig(config);
+            this._sender = null;
+            this._buffer = (Util.canUseSessionStorage() && this._config.enableSessionStorageBuffer)
+                ? new SessionStorageSendBuffer(this._config) : new ArraySendBuffer(this._config);
+
+            if (!this._config.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
+                this._sender = this._beaconSender;
+            } else {
+                if (typeof XMLHttpRequest != "undefined") {
+                    var testXhr = new XMLHttpRequest();
+                    if ("withCredentials" in testXhr) {
+                        this._sender = this._xhrSender;
+                        this._XMLHttpRequestSupported = true;
+                    } else if (typeof XDomainRequest !== "undefined") {
+                        this._sender = this._xdrSender; //IE 8 and 9
+                    }
                 }
             }
         }
-    }
 
-    public ProcessTelemetry(envelope: ITelemetryItem) {
-    }
+        public ProcessTelemetry(envelope: ITelemetryItem) {
+        }
 
-    public SetNextPlugin(next: ITelemetryPlugin) {
-    }
+        public SetNextPlugin(next: ITelemetryPlugin) {
+        }
 
-    /**
-     * xhr state changes
-     */
-    public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) {
-        if (xhr.readyState === 4) {
-            var response: IBackendResponse = null;
-            if (!this._appId) {
-                response = this._parseResponse(xhr.responseText || xhr.response);
-                if (response && response.appId) {
-                    this._appId = response.appId;
-                }
-            }
-
-            if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
-                if (!this._config.isRetryDisabled() && this._isRetriable(xhr.status)) {
-                    this._resendPayload(payload);
-
-                    _InternalLogging.throwInternal(
-                        LoggingSeverity.WARNING,
-                        _InternalMessageId.TransmissionFailed, ". " +
-                        "Response code " + xhr.status + ". Will retry to send " + payload.length + " items.");
-                } else {
-                    this._onError(payload, this._formatErrorMessageXhr(xhr));
-                }
-            } else {
-                if (xhr.status === 206) {
-                    if (!response) {
-                        response = this._parseResponse(xhr.responseText || xhr.response);
+        /**
+         * xhr state changes
+         */
+        public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) {
+            if (xhr.readyState === 4) {
+                var response: IBackendResponse = null;
+                if (!this._appId) {
+                    response = this._parseResponse(xhr.responseText || xhr.response);
+                    if (response && response.appId) {
+                        this._appId = response.appId;
                     }
+                }
 
-                    if (response && !this._config.isRetryDisabled()) {
-                        this._onPartialSuccess(payload, response);
+                if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
+                    if (!this._config.isRetryDisabled() && this._isRetriable(xhr.status)) {
+                        this._resendPayload(payload);
+
+                        _InternalLogging.throwInternal(
+                            LoggingSeverity.WARNING,
+                            _InternalMessageId.TransmissionFailed, ". " +
+                            "Response code " + xhr.status + ". Will retry to send " + payload.length + " items.");
                     } else {
                         this._onError(payload, this._formatErrorMessageXhr(xhr));
                     }
                 } else {
-                    this._consecutiveErrors = 0;
-                    this._onSuccess(payload, countOfItemsInPayload);
+                    if (xhr.status === 206) {
+                        if (!response) {
+                            response = this._parseResponse(xhr.responseText || xhr.response);
+                        }
+
+                        if (response && !this._config.isRetryDisabled()) {
+                            this._onPartialSuccess(payload, response);
+                        } else {
+                            this._onError(payload, this._formatErrorMessageXhr(xhr));
+                        }
+                    } else {
+                        this._consecutiveErrors = 0;
+                        this._onSuccess(payload, countOfItemsInPayload);
+                    }
                 }
             }
         }
-    }
 
-    /**
-     * Immediately send buffered data
-     * @param async {boolean} - Indicates if the events should be sent asynchronously
-     */
-    public triggerSend(async = true) {
-        try {
-            // Send data only if disableTelemetry is false
-            if (!this._config.disableTelemetry()) {
+        /**
+         * Immediately send buffered data
+         * @param async {boolean} - Indicates if the events should be sent asynchronously
+         */
+        public triggerSend(async = true) {
+            try {
+                // Send data only if disableTelemetry is false
+                if (!this._config.disableTelemetry()) {
 
-                if (this._buffer.count() > 0) {
-                    var payload = this._buffer.getItems();
+                    if (this._buffer.count() > 0) {
+                        var payload = this._buffer.getItems();
 
-                    // invoke send
-                    this._sender(payload, async);
+                        // invoke send
+                        this._sender(payload, async);
+                    }
+
+                    // update lastSend time to enable throttling
+                    this._lastSend = +new Date;
+                } else {
+                    this._buffer.clear();
                 }
 
-                // update lastSend time to enable throttling
-                this._lastSend = +new Date;
-            } else {
-                this._buffer.clear();
+                clearTimeout(this._timeoutHandle);
+                this._timeoutHandle = null;
+                this._retryAt = null;
+            } catch (e) {
+                /* Ignore this error for IE under v10 */
+                if (!Util.getIEVersion() || Util.getIEVersion() > 9) {
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.CRITICAL,
+                        _InternalMessageId.TransmissionFailed,
+                        "Telemetry transmission failed, some telemetry will be lost: " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) });
+                }
+            }
+        }
+
+        /**
+         * error handler
+         */
+        public _onError(payload: string[], message: string, event?: ErrorEvent) {
+            _InternalLogging.throwInternal(
+                LoggingSeverity.WARNING,
+                _InternalMessageId.OnError,
+                "Failed to send telemetry.",
+                { message: message });
+
+            this._buffer.clearSent(payload);
+        }
+
+        /**
+         * partial success handler
+         */
+        public _onPartialSuccess(payload: string[], results: IBackendResponse) {
+            var failed = [];
+            var retry = [];
+
+            // Iterate through the reversed array of errors so that splicing doesn't have invalid indexes after the first item.
+            var errors = results.errors.reverse();
+            for (var error of errors) {
+                var extracted = payload.splice(error.index, 1)[0];
+                if (this._isRetriable(error.statusCode)) {
+                    retry.push(extracted);
+                } else {
+                    // All other errors, including: 402 (Monthly quota exceeded) and 439 (Too many requests and refresh cache).
+                    failed.push(extracted);
+                }
             }
 
-            clearTimeout(this._timeoutHandle);
-            this._timeoutHandle = null;
-            this._retryAt = null;
-        } catch (e) {
-            /* Ignore this error for IE under v10 */
-            if (!Util.getIEVersion() || Util.getIEVersion() > 9) {
+            if (payload.length > 0) {
+                this._onSuccess(payload, results.itemsAccepted);
+            }
+
+            if (failed.length > 0) {
+                this._onError(failed, this._formatErrorMessageXhr(null, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' ')));
+            }
+
+            if (retry.length > 0) {
+                this._resendPayload(retry);
+
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.TransmissionFailed, "Partial success. " +
+                    "Delivered: " + payload.length + ", Failed: " + failed.length +
+                    ". Will retry to send " + retry.length + " our of " + results.itemsReceived + " items");
+            }
+        }
+
+        /**
+         * success handler
+         */
+        public _onSuccess(payload: string[], countOfItemsInPayload: number) {
+            // Uncomment if you want to use DataLossanalyzer
+            // DataLossAnalyzer.decrementItemsQueued(countOfItemsInPayload);
+
+            this._buffer.clearSent(payload);
+        }
+
+        /**
+         * xdr state changes
+         */
+        public _xdrOnLoad(xdr: IXDomainRequest, payload: string[]) {
+            if (xdr && (xdr.responseText + "" === "200" || xdr.responseText === "")) {
+                this._consecutiveErrors = 0;
+                this._onSuccess(payload, 0);
+            } else {
+                var results = this._parseResponse(xdr.responseText);
+
+                if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
+                    && !this._config.isRetryDisabled()) {
+                    this._onPartialSuccess(payload, results);
+                } else {
+                    this._onError(payload, this._formatErrorMessageXdr(xdr));
+                }
+            }
+        }
+
+        private static _getDefaultAppInsightsChannelConfig(config: IConfig): ISenderConfig {
+            let resultConfig = <ISenderConfig>{};
+            let pluginConfig = config.extensions["AppInsightsChannelPlugin"];
+
+            // set default values
+            resultConfig.endpointUrl = () => config.collectorUri || "https://dc.services.visualstudio.com/v2/track";
+            resultConfig.emitLineDelimitedJson = () => Util.stringToBoolOrDefault(pluginConfig.emitLineDelimitedJson);
+            resultConfig.maxBatchInterval = () => !isNaN(pluginConfig.maxBatchInterval) ? pluginConfig.maxBatchInterval : 15000;
+            resultConfig.maxBatchSizeInBytes = () => pluginConfig.maxBatchSizeInBytes > 0 ? pluginConfig.maxBatchSizeInBytes : 102400; // 100kb
+            resultConfig.disableTelemetry = () => Util.stringToBoolOrDefault(pluginConfig.disableTelemetry);
+            resultConfig.enableSessionStorageBuffer = () => Util.stringToBoolOrDefault(pluginConfig.enableSessionStorageBuffer, true);
+            resultConfig.isRetryDisabled = () => Util.stringToBoolOrDefault(pluginConfig.isRetryDisabled);
+            resultConfig.isBeaconApiDisabled = () => Util.stringToBoolOrDefault(pluginConfig.isBeaconApiDisabled, true);
+
+            return resultConfig;
+        }
+
+        /**
+         * Send Beacon API request
+         * @param payload {string} - The data payload to be sent.
+         * @param isAsync {boolean} - not used
+         * Note: Beacon API does not support custom headers and we are not able to get
+         * appId from the backend for the correct correlation.
+         */
+        private _beaconSender(payload: string[], isAsync: boolean) {
+            var url = this._config.endpointUrl();
+            var batch = this._buffer.batchPayloads(payload);
+
+            // Chrome only allows CORS-safelisted values for the sendBeacon data argument
+            // see: https://bugs.chromium.org/p/chromium/issues/detail?id=720283
+            let plainTextBatch = new Blob([batch], { type: 'text/plain;charset=UTF-8' });
+
+            // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
+            var queued = navigator.sendBeacon(url, plainTextBatch);
+
+            if (queued) {
+                this._buffer.markAsSent(payload);
+            } else {
+                _InternalLogging.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API.");
+            }
+        }
+
+        /**
+         * Send XMLHttpRequest
+         * @param payload {string} - The data payload to be sent.
+         * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
+         */
+        private _xhrSender(payload: string[], isAsync: boolean) {
+            var xhr = new XMLHttpRequest();
+            xhr[DisabledPropertyName] = true;
+            xhr.open("POST", this._config.endpointUrl(), isAsync);
+            xhr.setRequestHeader("Content-type", "application/json");
+
+            // append Sdk-Context request header only in case of breeze endpoint 
+            if (Util.isInternalApplicationInsightsEndpoint(this._config.endpointUrl())) {
+                xhr.setRequestHeader(RequestHeaders.sdkContextHeader, RequestHeaders.sdkContextHeaderAppIdRequest);
+            }
+
+            xhr.onreadystatechange = () => this._xhrReadyStateChange(xhr, payload, payload.length);
+            xhr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessageXhr(xhr), event);
+
+            // compose an array of payloads
+            var batch = this._buffer.batchPayloads(payload);
+            xhr.send(batch);
+
+            this._buffer.markAsSent(payload);
+        }
+
+        /**
+         * Parses the response from the backend. 
+         * @param response - XMLHttpRequest or XDomainRequest response
+         */
+        private _parseResponse(response: any): IBackendResponse {
+            try {
+                if (response && response !== "") {
+                    var result = JSON.parse(response);
+
+                    if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
+                        result.itemsReceived - result.itemsAccepted == result.errors.length) {
+                        return result;
+                    }
+                }
+            } catch (e) {
                 _InternalLogging.throwInternal(
                     LoggingSeverity.CRITICAL,
-                    _InternalMessageId.TransmissionFailed,
-                    "Telemetry transmission failed, some telemetry will be lost: " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) });
+                    _InternalMessageId.InvalidBackendResponse,
+                    "Cannot parse the response. " + Util.getExceptionName(e),
+                    {
+                        response: response
+                    });
             }
+
+            return null;
         }
-    }
 
-    /**
-     * error handler
-     */
-    public _onError(payload: string[], message: string, event?: ErrorEvent) {
-        _InternalLogging.throwInternal(
-            LoggingSeverity.WARNING,
-            _InternalMessageId.OnError,
-            "Failed to send telemetry.",
-            { message: message });
+        /**
+         * Resend payload. Adds payload back to the send buffer and setup a send timer (with exponential backoff).
+         * @param payload
+         */
+        private _resendPayload(payload: string[]) {
+            if (!payload || payload.length === 0) {
+                return;
+            }
 
-        this._buffer.clearSent(payload);
-    }
+            this._buffer.clearSent(payload);
+            this._consecutiveErrors++;
 
-    /**
-     * partial success handler
-     */
-    public _onPartialSuccess(payload: string[], results: IBackendResponse) {
-        var failed = [];
-        var retry = [];
+            for (var item of payload) {
+                this._buffer.enqueue(item);
+            }
 
-        // Iterate through the reversed array of errors so that splicing doesn't have invalid indexes after the first item.
-        var errors = results.errors.reverse();
-        for (var error of errors) {
-            var extracted = payload.splice(error.index, 1)[0];
-            if (this._isRetriable(error.statusCode)) {
-                retry.push(extracted);
+            // setup timer
+            this._setRetryTime();
+            this._setupTimer();
+        }
+
+        /** Calculates the time to wait before retrying in case of an error based on
+         * http://en.wikipedia.org/wiki/Exponential_backoff
+         */
+        private _setRetryTime() {
+            const SlotDelayInSeconds = 10;
+            var delayInSeconds: number;
+
+            if (this._consecutiveErrors <= 1) {
+                delayInSeconds = SlotDelayInSeconds;
             } else {
-                // All other errors, including: 402 (Monthly quota exceeded) and 439 (Too many requests and refresh cache).
-                failed.push(extracted);
+                var backOffSlot = (Math.pow(2, this._consecutiveErrors) - 1) / 2;
+                var backOffDelay = Math.floor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
+                delayInSeconds = Math.max(Math.min(backOffDelay, 3600), SlotDelayInSeconds);
+            }
+
+            // TODO: Log the backoff time like the C# version does.
+            var retryAfterTimeSpan = Date.now() + (delayInSeconds * 1000);
+
+            // TODO: Log the retry at time like the C# version does.
+            this._retryAt = retryAfterTimeSpan;
+        }
+
+        /**
+         * Sets up the timer which triggers actually sending the data.
+         */
+        private _setupTimer() {
+            if (!this._timeoutHandle) {
+                var retryInterval = this._retryAt ? Math.max(0, this._retryAt - Date.now()) : 0;
+                var timerValue = Math.max(this._config.maxBatchInterval(), retryInterval);
+
+                this._timeoutHandle = setTimeout(() => {
+                    this.triggerSend();
+                }, timerValue);
             }
         }
 
-        if (payload.length > 0) {
-            this._onSuccess(payload, results.itemsAccepted);
+        /**
+         * Checks if the SDK should resend the payload after receiving this status code from the backend.
+         * @param statusCode
+         */
+        private _isRetriable(statusCode: number): boolean {
+            return statusCode == 408 // Timeout
+                || statusCode == 429 // Too many requests.
+                || statusCode == 500 // Internal server error.
+                || statusCode == 503; // Service unavailable.
         }
 
-        if (failed.length > 0) {
-            this._onError(failed, this._formatErrorMessageXhr(null, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' ')));
-        }
-
-        if (retry.length > 0) {
-            this._resendPayload(retry);
-
-            _InternalLogging.throwInternal(
-                LoggingSeverity.WARNING,
-                _InternalMessageId.TransmissionFailed, "Partial success. " +
-                "Delivered: " + payload.length + ", Failed: " + failed.length +
-                ". Will retry to send " + retry.length + " our of " + results.itemsReceived + " items");
-        }
-    }
-
-    /**
-     * success handler
-     */
-    public _onSuccess(payload: string[], countOfItemsInPayload: number) {
-        // Uncomment if you want to use DataLossanalyzer
-        // DataLossAnalyzer.decrementItemsQueued(countOfItemsInPayload);
-
-        this._buffer.clearSent(payload);
-    }
-
-    /**
-     * xdr state changes
-     */
-    public _xdrOnLoad(xdr: IXDomainRequest, payload: string[]) {
-        if (xdr && (xdr.responseText + "" === "200" || xdr.responseText === "")) {
-            this._consecutiveErrors = 0;
-            this._onSuccess(payload, 0);
-        } else {
-            var results = this._parseResponse(xdr.responseText);
-
-            if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
-                && !this._config.isRetryDisabled()) {
-                this._onPartialSuccess(payload, results);
-            } else {
-                this._onError(payload, this._formatErrorMessageXdr(xdr));
+        private _formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
+            if (xhr) {
+                return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + xhr.responseText || xhr.response || "";
             }
+
+            return message;
         }
-    }
 
-    private static _getDefaultAppInsightsChannelConfig(config: IConfig): ISenderConfig {
-        let resultConfig = <ISenderConfig>{};
-        let pluginConfig = config.extensions["AppInsightsChannelPlugin"];
+        /**
+         * Send XDomainRequest
+         * @param payload {string} - The data payload to be sent.
+         * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
+         * 
+         * Note: XDomainRequest does not support sync requests. This 'isAsync' parameter is added
+         * to maintain consistency with the xhrSender's contract
+         * Note: XDomainRequest does not support custom headers and we are not able to get
+         * appId from the backend for the correct correlation.
+         */
+        private _xdrSender(payload: string[], isAsync: boolean) {
+            var xdr = new XDomainRequest();
+            xdr.onload = () => this._xdrOnLoad(xdr, payload);
+            xdr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessageXdr(xdr), event);
 
-        // set default values
-        resultConfig.endpointUrl = () => config.collectorUri || "https://dc.services.visualstudio.com/v2/track";
-        resultConfig.emitLineDelimitedJson = () => Util.stringToBoolOrDefault(pluginConfig.emitLineDelimitedJson);
-        resultConfig.maxBatchInterval = () => !isNaN(pluginConfig.maxBatchInterval) ? pluginConfig.maxBatchInterval : 15000;
-        resultConfig.maxBatchSizeInBytes = () => pluginConfig.maxBatchSizeInBytes > 0 ? pluginConfig.maxBatchSizeInBytes : 102400; // 100kb
-        resultConfig.disableTelemetry = () => Util.stringToBoolOrDefault(pluginConfig.disableTelemetry);
-        resultConfig.enableSessionStorageBuffer = () => Util.stringToBoolOrDefault(pluginConfig.enableSessionStorageBuffer, true);
-        resultConfig.isRetryDisabled = () => Util.stringToBoolOrDefault(pluginConfig.isRetryDisabled);
-        resultConfig.isBeaconApiDisabled = () => Util.stringToBoolOrDefault(pluginConfig.isBeaconApiDisabled, true);
+            // XDomainRequest requires the same protocol as the hosting page. 
+            // If the protocol doesn't match, we can't send the telemetry :(. 
+            var hostingProtocol = window.location.protocol
+            if (this._config.endpointUrl().lastIndexOf(hostingProtocol, 0) !== 0) {
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.TransmissionFailed, ". " +
+                    "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol.");
 
-        return resultConfig;
-    }
+                this._buffer.clear();
+                return;
+            }
 
-    /**
-     * Send Beacon API request
-     * @param payload {string} - The data payload to be sent.
-     * @param isAsync {boolean} - not used
-     * Note: Beacon API does not support custom headers and we are not able to get
-     * appId from the backend for the correct correlation.
-     */
-    private _beaconSender(payload: string[], isAsync: boolean) {
-        var url = this._config.endpointUrl();
-        var batch = this._buffer.batchPayloads(payload);
+            var endpointUrl = this._config.endpointUrl().replace(/^(https?:)/, "");
+            xdr.open('POST', endpointUrl);
 
-        // Chrome only allows CORS-safelisted values for the sendBeacon data argument
-        // see: https://bugs.chromium.org/p/chromium/issues/detail?id=720283
-        let plainTextBatch = new Blob([batch], { type: 'text/plain;charset=UTF-8' });
+            // compose an array of payloads
+            var batch = this._buffer.batchPayloads(payload);
+            xdr.send(batch);
 
-        // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
-        var queued = navigator.sendBeacon(url, plainTextBatch);
-
-        if (queued) {
             this._buffer.markAsSent(payload);
-        } else {
-            _InternalLogging.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API.");
         }
-    }
 
-    /**
-     * Send XMLHttpRequest
-     * @param payload {string} - The data payload to be sent.
-     * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
-     */
-    private _xhrSender(payload: string[], isAsync: boolean) {
-        var xhr = new XMLHttpRequest();
-        xhr[Constants.DisabledPropertyName] = true;
-        xhr.open("POST", this._config.endpointUrl(), isAsync);
-        xhr.setRequestHeader("Content-type", "application/json");
-        xhr.setRequestHeader(RequestHeaders.sdkContextHeader, RequestHeaders.sdkContextHeaderAppIdRequest);
-        xhr.onreadystatechange = () => this._xhrReadyStateChange(xhr, payload, payload.length);
-        xhr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessageXhr(xhr), event);
-
-        // compose an array of payloads
-        var batch = this._buffer.batchPayloads(payload);
-        xhr.send(batch);
-
-        this._buffer.markAsSent(payload);
-    }
-
-    /**
-     * Parses the response from the backend. 
-     * @param response - XMLHttpRequest or XDomainRequest response
-     */
-    private _parseResponse(response: any): IBackendResponse {
-        try {
-            var result = JSON.parse(response);
-
-            if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
-                result.itemsReceived - result.itemsAccepted == result.errors.length) {
-                return result;
+        private _formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): string {
+            if (xdr) {
+                return "XDomainRequest,Response:" + xdr.responseText || "";
             }
-        } catch (e) {
-            _InternalLogging.throwInternal(
-                LoggingSeverity.CRITICAL,
-                _InternalMessageId.InvalidBackendResponse,
-                "Cannot parse the response. " + Util.getExceptionName(e));
+
+            return message;
         }
-
-        return null;
-    }
-
-    /**
-     * Resend payload. Adds payload back to the send buffer and setup a send timer (with exponential backoff).
-     * @param payload
-     */
-    private _resendPayload(payload: string[]) {
-        if (!payload || payload.length === 0) {
-            return;
-        }
-
-        this._buffer.clearSent(payload);
-        this._consecutiveErrors++;
-
-        for (var item of payload) {
-            this._buffer.enqueue(item);
-        }
-
-        // setup timer
-        this._setRetryTime();
-        this._setupTimer();
-    }
-
-    /** Calculates the time to wait before retrying in case of an error based on
-     * http://en.wikipedia.org/wiki/Exponential_backoff
-     */
-    private _setRetryTime() {
-        const SlotDelayInSeconds = 10;
-        var delayInSeconds: number;
-
-        if (this._consecutiveErrors <= 1) {
-            delayInSeconds = SlotDelayInSeconds;
-        } else {
-            var backOffSlot = (Math.pow(2, this._consecutiveErrors) - 1) / 2;
-            var backOffDelay = Math.floor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
-            delayInSeconds = Math.max(Math.min(backOffDelay, 3600), SlotDelayInSeconds);
-        }
-
-        // TODO: Log the backoff time like the C# version does.
-        var retryAfterTimeSpan = Date.now() + (delayInSeconds * 1000);
-
-        // TODO: Log the retry at time like the C# version does.
-        this._retryAt = retryAfterTimeSpan;
-    }
-
-    /**
-     * Sets up the timer which triggers actually sending the data.
-     */
-    private _setupTimer() {
-        if (!this._timeoutHandle) {
-            var retryInterval = this._retryAt ? Math.max(0, this._retryAt - Date.now()) : 0;
-            var timerValue = Math.max(this._config.maxBatchInterval(), retryInterval);
-
-            this._timeoutHandle = setTimeout(() => {
-                this.triggerSend();
-            }, timerValue);
-        }
-    }
-
-    /**
-     * Checks if the SDK should resend the payload after receiving this status code from the backend.
-     * @param statusCode
-     */
-    private _isRetriable(statusCode: number): boolean {
-        return statusCode == 408 // Timeout
-            || statusCode == 429 // Too many requests.
-            || statusCode == 500 // Internal server error.
-            || statusCode == 503; // Service unavailable.
-    }
-
-    private _formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
-        if (xhr) {
-            return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + xhr.responseText || xhr.response || "";
-        }
-
-        return message;
-    }
-
-    /**
-     * Send XDomainRequest
-     * @param payload {string} - The data payload to be sent.
-     * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
-     * 
-     * Note: XDomainRequest does not support sync requests. This 'isAsync' parameter is added
-     * to maintain consistency with the xhrSender's contract
-     * Note: XDomainRequest does not support custom headers and we are not able to get
-     * appId from the backend for the correct correlation.
-     */
-    private _xdrSender(payload: string[], isAsync: boolean) {
-        var xdr = new XDomainRequest();
-        xdr.onload = () => this._xdrOnLoad(xdr, payload);
-        xdr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessageXdr(xdr), event);
-
-        // XDomainRequest requires the same protocol as the hosting page. 
-        // If the protocol doesn't match, we can't send the telemetry :(. 
-        var hostingProtocol = window.location.protocol
-        if (this._config.endpointUrl().lastIndexOf(hostingProtocol, 0) !== 0) {
-            _InternalLogging.throwInternal(
-                LoggingSeverity.WARNING,
-                _InternalMessageId.TransmissionFailed, ". " +
-                "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol.");
-
-            this._buffer.clear();
-            return;
-        }
-
-        var endpointUrl = this._config.endpointUrl().replace(/^(https?:)/, "");
-        xdr.open('POST', endpointUrl);
-
-        // compose an array of payloads
-        var batch = this._buffer.batchPayloads(payload);
-        xdr.send(batch);
-
-        this._buffer.markAsSent(payload);
-    }
-
-    private _formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): string {
-        if (xdr) {
-            return "XDomainRequest,Response:" + xdr.responseText || "";
-        }
-
-        return message;
     }
 }

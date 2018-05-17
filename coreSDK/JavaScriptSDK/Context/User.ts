@@ -1,5 +1,4 @@
-﻿/// <reference path="../Util.ts" />
-/// <reference path="../../JavaScriptSDK.Interfaces/Context/IUser.ts" />
+﻿/// <reference path="../../JavaScriptSDK.Interfaces/Context/IUser.ts" />
 
 module Microsoft.ApplicationInsights.Context {
 

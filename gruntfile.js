@@ -14,14 +14,22 @@ module.exports = function (grunt) {
             },
 			core: {
                 src: [
-                    'coreSDK/JavaScriptSDK.Interfaces/*.ts',
+                    'coreSDK/JavaScriptSDK/Telemetry/Common/*.ts',
+                    'coreSDK/JavaScriptSDK/Telemetry/*.ts',
+                    'coreSDK/JavaScriptSDK/ajax/*.ts',
+                    'coreSDK/JavaScriptSDK/Context/*.ts',
+                    'coreSDK/JavaScriptSDK/Context/Common/*.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/Contracts/Generated/*.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/Telemetry/*.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/Context/*.ts',
                     'coreSDK/JavaScriptSDK/*.ts',
                 ],
-                out: 'bundle/aicore.js',
+                out: 'coreSDK/bundle/aicore.js',
             },
             common: {
                 src: [
                     'AppInsightsCommon/*.ts',
+                    'AppInsightsCommon/Interfaces/*.ts'
                 ],
                 out: 'AppInsightsCommon/bundle/aicommon.js'
             },

@@ -1,96 +1,101 @@
-export interface ITelemetryItem {
-    name: string;
-    timestamp: Date;
-    baseType: string;
-    iKey: string;
-    systemProperties: {[name: string]: any}; // part a
-    domainProperties: {[name: string]: any}; // part b
-    customProperties: {[name: string]: any}; // part c
-    customMeasurements: {[name: string]: number}; // part c
-}
+module Microsoft.ApplicationInsights.Channel {
 
-export interface ITelemetryPlugin {
-    Start: (config: any) => void;
-    ProcessTelemetry: (envelope: ITelemetryItem) => void;
-    SetNextPlugin: (next: ITelemetryPlugin) => void;
-}
+    "using strict";
+    
+    export interface ITelemetryItem {
+        name: string;
+        timestamp: Date;
+        baseType: string;
+        iKey: string;
+        systemProperties: { [name: string]: any }; // part a
+        domainProperties: { [name: string]: any }; // part b
+        customProperties: { [name: string]: any }; // part c
+        customMeasurements: { [name: string]: number }; // part c
+    }
 
-export interface IConfig {
-    collectorUri: string;
-    instrumentationKey: string[];
-    extensions: {[name: string]: any};
-}
+    export interface ITelemetryPlugin {
+        Start: (config: any) => void;
+        ProcessTelemetry: (envelope: ITelemetryItem) => void;
+        SetNextPlugin: (next: ITelemetryPlugin) => void;
+    }
 
-export interface ISenderConfig {
-    /**
-     * The url to which payloads will be sent
-     */
-    endpointUrl: () => string;
+    export interface IConfig {
+        collectorUri: string;
+        instrumentationKey: string[];
+        extensions: { [name: string]: any };
+    }
 
-    /**
-    * The JSON format (normal vs line delimited). True means line delimited JSON.
-    */
-    emitLineDelimitedJson: () => boolean;
+    export interface ISenderConfig {
+        /**
+         * The url to which payloads will be sent
+         */
+        endpointUrl: () => string;
 
-    /**
-     * The maximum size of a batch in bytes
-     */
-    maxBatchSizeInBytes: () => number;
+        /**
+        * The JSON format (normal vs line delimited). True means line delimited JSON.
+        */
+        emitLineDelimitedJson: () => boolean;
 
-    /**
-     * The maximum interval allowed between calls to batchInvoke
-     */
-    maxBatchInterval: () => number;
+        /**
+         * The maximum size of a batch in bytes
+         */
+        maxBatchSizeInBytes: () => number;
 
-    /**
-     * The master off switch.  Do not send any data if set to TRUE
-     */
-    disableTelemetry: () => boolean;
+        /**
+         * The maximum interval allowed between calls to batchInvoke
+         */
+        maxBatchInterval: () => number;
 
-    /**
-     * Store a copy of a send buffer in the session storage
-     */
-    enableSessionStorageBuffer: () => boolean;
+        /**
+         * The master off switch.  Do not send any data if set to TRUE
+         */
+        disableTelemetry: () => boolean;
 
-    /**
-     * Is retry handler disabled.
-     * If enabled, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error) and 503 (service unavailable).
-     */
-    isRetryDisabled: () => boolean;
+        /**
+         * Store a copy of a send buffer in the session storage
+         */
+        enableSessionStorageBuffer: () => boolean;
 
-    isBeaconApiDisabled: () => boolean;
-}
+        /**
+         * Is retry handler disabled.
+         * If enabled, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error) and 503 (service unavailable).
+         */
+        isRetryDisabled: () => boolean;
 
-export interface IBackendResponse {
-    /**
-     * Number of items received by the backend
-     */
-    itemsReceived: number;
+        isBeaconApiDisabled: () => boolean;
+    }
 
-    /**
-     * Number of items succesfuly accepted by the backend
-     */
-    itemsAccepted: number;
+    export interface IBackendResponse {
+        /**
+         * Number of items received by the backend
+         */
+        itemsReceived: number;
 
-    /**
-     * List of errors for items which were not accepted
-     */
-    errors: IResponseError[];
+        /**
+         * Number of items succesfuly accepted by the backend
+         */
+        itemsAccepted: number;
 
-    /**
-     * App id returned by the backend - not necessary returned, but we don't need it with each response.
-     */
-    appId?: string;
-}
+        /**
+         * List of errors for items which were not accepted
+         */
+        errors: IResponseError[];
 
-export interface XDomainRequest extends XMLHttpRequestEventTarget {
-    responseText: string;
-    send(payload: string);
-    open(method: string, url: string);
-}
+        /**
+         * App id returned by the backend - not necessary returned, but we don't need it with each response.
+         */
+        appId?: string;
+    }
 
-export interface IResponseError {
-    index: number;
-    statusCode: number;
-    message: string;
+    export interface XDomainRequest extends XMLHttpRequestEventTarget {
+        responseText: string;
+        send(payload: string);
+        open(method: string, url: string);
+    }
+
+    export interface IResponseError {
+        index: number;
+        statusCode: number;
+        message: string;
+    }
 }

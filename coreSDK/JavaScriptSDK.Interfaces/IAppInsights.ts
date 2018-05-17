@@ -1,7 +1,8 @@
-﻿/// <reference path="./IConfig.ts" />
+﻿/// <reference path="../node_modules/applicationinsights-common-js/bundle/aicommon.d.ts" />
 /// <reference path="./ITelemetryContext.ts" />
 /// <reference path="./Contracts/Generated/SeverityLevel.ts" />
 
+import IConfig = Microsoft.ApplicationInsights.Common.IConfig;
 
 module Microsoft.ApplicationInsights {
 
@@ -138,7 +139,7 @@ module Microsoft.ApplicationInsights {
         /*
         * Downloads and initializes AppInsights. You can override default script download location by specifying url property of `config`.
         */
-        downloadAndSetup?(config: Microsoft.ApplicationInsights.IConfig): void;
+        downloadAndSetup?(config: IConfig): void;
 
         /**
          * The custom error handler for Application Insights

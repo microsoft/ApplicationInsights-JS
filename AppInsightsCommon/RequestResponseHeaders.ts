@@ -1,35 +1,40 @@
-export class RequestHeaders {
-    /**
-     * Request-Context header
-     */
-    public static requestContextHeader = "Request-Context";
+module Microsoft.ApplicationInsights.Common {
 
-    /**
-     * Target instrumentation header that is added to the response and retrieved by the
-     * calling application when processing incoming responses.
-     */
-    public static requestContextTargetKey = "appId";
+    "use strict";
+    
+    export class RequestHeaders {
+        /**
+         * Request-Context header
+         */
+        public static requestContextHeader = "Request-Context";
 
-    /**
-     * Request-Context appId format
-     */
-    public static requestContextAppIdFormat = "appId=cid-v1:";
+        /**
+         * Target instrumentation header that is added to the response and retrieved by the
+         * calling application when processing incoming responses.
+         */
+        public static requestContextTargetKey = "appId";
 
-    /**
-     * Request-Id header
-     */
-    public static requestIdHeader = "Request-Id";
+        /**
+         * Request-Context appId format
+         */
+        public static requestContextAppIdFormat = "appId=cid-v1:";
 
-    /**
-     * Sdk-Context header
-     * If this header passed with appId in content then appId will be returned back by the backend.
-     */
-    public static sdkContextHeader = "Sdk-Context";
+        /**
+         * Request-Id header
+         */
+        public static requestIdHeader = "Request-Id";
 
-    /**
-     * String to pass in header for requesting appId back from the backend.
-     */
-    public static sdkContextHeaderAppIdRequest = "appId";
+        /**
+         * Sdk-Context header
+         * If this header passed with appId in content then appId will be returned back by the backend.
+         */
+        public static sdkContextHeader = "Sdk-Context";
 
-    public static requestContextHeaderLowerCase = "request-context";
+        /**
+         * String to pass in header for requesting appId back from the backend.
+         */
+        public static sdkContextHeaderAppIdRequest = "appId";
+
+        public static requestContextHeaderLowerCase = "request-context";
+    }
 }

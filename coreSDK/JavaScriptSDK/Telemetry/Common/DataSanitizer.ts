@@ -1,7 +1,4 @@
-﻿/// <reference path="../../Logging.ts" />
-/// <reference path="../../Util.ts"/>
-
-module Microsoft.ApplicationInsights.Telemetry.Common {
+﻿module Microsoft.ApplicationInsights.Telemetry.Common {
     "use strict";
 
     export class DataSanitizer {

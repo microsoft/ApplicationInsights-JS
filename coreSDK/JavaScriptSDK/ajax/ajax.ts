@@ -1,10 +1,10 @@
-﻿/// <reference path="../Logging.ts" />
-/// <reference path="../Util.ts" />
-/// <reference path="./ajaxUtils.ts" />
+﻿/// <reference path="./ajaxUtils.ts" />
 /// <reference path="./ajaxRecord.ts" />
-/// <reference path="../RequestResponseHeaders.ts" />
 /// <reference path="../Telemetry/RemoteDependencyData.ts" />
 /// <reference path="../AppInsights.ts" />
+
+import RequestHeaders = Microsoft.ApplicationInsights.Common.RequestHeaders;
+import CorrelationIdHelper = Microsoft.ApplicationInsights.Common.CorrelationIdHelper;
 
 module Microsoft.ApplicationInsights {
     "use strict";
@@ -97,7 +97,7 @@ module Microsoft.ApplicationInsights {
                         "Failed to monitor XMLHttpRequest.open, monitoring data for this ajax call may be incorrect.",
                         {
                             ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(this),
-                            exception: Microsoft.ApplicationInsights.Util.dump(e)
+                            exception: Util.dump(e)
                         });
                 }
 
@@ -146,7 +146,7 @@ module Microsoft.ApplicationInsights {
                         "Failed to monitor XMLHttpRequest, monitoring data for this ajax call may be incorrect.",
                         {
                             ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(this),
-                            exception: Microsoft.ApplicationInsights.Util.dump(e)
+                            exception: Util.dump(e)
                         });
                 }
 
@@ -186,7 +186,7 @@ module Microsoft.ApplicationInsights {
                         "Failed to monitor XMLHttpRequest.abort, monitoring data for this ajax call may be incorrect.",
                         {
                             ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(this),
-                            exception: Microsoft.ApplicationInsights.Util.dump(e)
+                            exception: Util.dump(e)
                         });
                 }
 
@@ -204,7 +204,7 @@ module Microsoft.ApplicationInsights {
                         }
                     }
                 } catch (e) {
-                    var exceptionText = Microsoft.ApplicationInsights.Util.dump(e);
+                    var exceptionText = Util.dump(e);
 
                     // ignore messages with c00c023f, as this a known IE9 XHR abort issue
                     if (!exceptionText || exceptionText.toLowerCase().indexOf("c00c023f") == -1) {
@@ -214,7 +214,7 @@ module Microsoft.ApplicationInsights {
                             "Failed to monitor XMLHttpRequest 'readystatechange' event handler, monitoring data for this ajax call may be incorrect.",
                             {
                                 ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr),
-                                exception: Microsoft.ApplicationInsights.Util.dump(e)
+                                exception: Util.dump(e)
                             });
                     }
                 }
@@ -276,7 +276,7 @@ module Microsoft.ApplicationInsights {
                     "Failed to get Request-Context correlation header as it may be not included in the response or not accessible.",
                     {
                         ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr),
-                        exception: Microsoft.ApplicationInsights.Util.dump(e)
+                        exception: Util.dump(e)
                     });
             }          
         }

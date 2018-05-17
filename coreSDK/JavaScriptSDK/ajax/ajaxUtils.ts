@@ -1,7 +1,4 @@
-﻿/// <reference path="../Logging.ts" />
-/// <reference path="../Util.ts" />
-
-module Microsoft.ApplicationInsights {
+﻿module Microsoft.ApplicationInsights {
     "use strict";
 
     export class extensions {
