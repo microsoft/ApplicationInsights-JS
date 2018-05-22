@@ -1,4 +1,4 @@
-module Microsoft.ApplicationInsights.Validator {
+module Microsoft.ApplicationInsights.Channel {
     "use strict";
 
     export interface ITypeValidator {

@@ -1,5 +1,5 @@
 /// <reference path="./ITypeValidator.ts" />
-module Microsoft.ApplicationInsights.Validator {
+module Microsoft.ApplicationInsights.Channel {
     "use strict";
 
     export class TraceValidator implements ITypeValidator {

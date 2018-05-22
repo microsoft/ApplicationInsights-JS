@@ -92,7 +92,7 @@
         public static ParseDependencyPath(absoluteUrl: string, method: string, pathName: string) {
             var target, name;                
             if (absoluteUrl && absoluteUrl.length > 0) {
-                var parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)
+                var parsedUrl: HTMLAnchorElement = Microsoft.ApplicationInsights.Common.UrlHelper.parseUrl(absoluteUrl)
                 target = parsedUrl.host;
                 if (parsedUrl.pathname != null) {
                     var pathName: string = (parsedUrl.pathname.length === 0) ? "/" : parsedUrl.pathname;

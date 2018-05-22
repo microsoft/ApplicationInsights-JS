@@ -2,11 +2,11 @@
 module Microsoft.ApplicationInsights.Channel {
     "use strict";
 
-    export class EventValidator implements ITypeValidator {
-        static EventValidator = new EventValidator();
+    export class ExceptionValidator implements ITypeValidator {
+        static ExceptionValidator = new ExceptionValidator();
         
         Validate(event: Core.ITelemetryItem): boolean {
-            return false;// todo barustum
+            return false;
         }
     }
 }

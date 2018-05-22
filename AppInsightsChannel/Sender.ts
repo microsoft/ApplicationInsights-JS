@@ -1,17 +1,28 @@
 /// <reference path="./node_modules/applicationinsights-common-js/bundle/aicommon.d.ts" />
 /// <reference path="./Interfaces.ts" />
 /// <reference path="./SendBuffer.ts" />
-/// <reference path="./TelemetryValidation/TelemetryValidator.ts" />
-/// <reference path="./Envelope/EventEnvelopeCreator.ts" />
+/// <reference path="./EnvelopeCreator.ts" />
+/// <reference path="./TelemetryValidation/EventValidator.ts" />
+/// <reference path="./TelemetryValidation/TraceValidator.ts" />
+/// <reference path="./TelemetryValidation/ExceptionValidator.ts" />
+/// <reference path="./TelemetryValidation/MetricValidator.ts" />
+/// <reference path="./TelemetryValidation/PageViewPerformanceValidator.ts" />
+/// <reference path="./TelemetryValidation/PageViewValidator.ts" />
+/// <reference path="./TelemetryValidation/RemoteDepdencyValidator.ts" />
+
 /// <reference path="../coreSDK/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts" />
 /// <reference path="../coreSDK/JavaScriptSDK.Interfaces/Telemetry/IEnvelope.ts" />
-/// <reference path="../coreSDK/JavaScriptSDK/Telemetry/Trace.ts" />
 /// <reference path="../coreSDK/JavaScriptSDK/Telemetry/PageView.ts" />
+/// <reference path="../coreSDK/JavaScriptSDK/Telemetry/Event.ts" />
+/// <reference path="../coreSDK/JavaScriptSDK/Telemetry/Trace.ts" />
+/// <reference path="../coreSDK/JavaScriptSDK/Telemetry/Exception.ts" />
+/// <reference path="../coreSDK/JavaScriptSDK/Telemetry/Metric.ts" />
+/// <reference path="../coreSDK/JavaScriptSDK/Telemetry/PageViewPerformance.ts" />
+/// <reference path="../coreSDK/JavaScriptSDK/Telemetry/RemoteDependencyData.ts" />
 
 import IXDomainRequest = Microsoft.ApplicationInsights.Channel.XDomainRequest;
 import DisabledPropertyName = Microsoft.ApplicationInsights.Common.DisabledPropertyName;
 import RequestHeaders = Microsoft.ApplicationInsights.Common.RequestHeaders;
-import TelemetryValidator = Microsoft.ApplicationInsights.Validator.TelemetryValidator;
 
 module Microsoft.ApplicationInsights.Channel {
 
@@ -117,7 +128,7 @@ module Microsoft.ApplicationInsights.Channel {
                 }
 
                 // first we need to validate that the envelope passed down is valid
-                let isValid: boolean = TelemetryValidator.Validate(envelope);
+                let isValid: boolean = Sender._validate(envelope);
                 if (!isValid) {
                     _InternalLogging.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryEnvelopeInvalid, "Invalid telemetry envelope");
                     return;
@@ -125,6 +136,10 @@ module Microsoft.ApplicationInsights.Channel {
 
                 // construct an envelope that Application Insights endpoint can understand
                 let aiEnvelope = Sender._constructEnvelope(envelope);
+                if (!aiEnvelope) {
+                    _InternalLogging.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
+                    return;
+                }
 
                 // check if the incoming payload is too large, truncate if necessary
                 let payload: string = Serializer.serialize(aiEnvelope);
@@ -331,16 +346,43 @@ module Microsoft.ApplicationInsights.Channel {
             return resultConfig;
         }
 
-        private static _constructEnvelope(env: Core.ITelemetryItem): IEnvelope {
-            switch (env.baseType) {
+        private static _validate(envelope: Core.ITelemetryItem): boolean {
+            // call the appropriate Validate depending on the baseType
+            switch (envelope.baseType) {
                 case Telemetry.Event.dataType:
-                    return EventEnvelopeCreator.EventEnvelopeCreator.Create(env);
+                    return EventValidator.EventValidator.Validate(envelope);
                 case Telemetry.Trace.dataType:
-                    return null;
+                    return TraceValidator.TraceValidator.Validate(envelope);
+                case Telemetry.Exception.dataType:
+                    return ExceptionValidator.ExceptionValidator.Validate(envelope);
+                case Telemetry.Metric.dataType:
+                    return MetricValidator.MetricValidator.Validate(envelope);
                 case Telemetry.PageView.dataType:
-                    // handle resetting the internal message count so that we can send internal telemetry for the new page.
-                    // TelemetryContext.ts line 130
-                    return null;
+                    return PageViewValidator.PageViewValidator.Validate(envelope);
+                case Telemetry.PageViewPerformance.dataType:
+                    return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(envelope);
+                case Telemetry.RemoteDependencyData.dataType:
+                    return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(envelope);
+            }
+            return false;
+        }
+
+        private static _constructEnvelope(envelope: Core.ITelemetryItem): IEnvelope {
+            switch (envelope.baseType) {
+                case Telemetry.Event.dataType:
+                    return EventEnvelopeCreator.EventEnvelopeCreator.Create(envelope);
+                case Telemetry.Trace.dataType:
+                    return TraceEnvelopeCreator.TraceEnvelopeCreator.Create(envelope);
+                case Telemetry.PageView.dataType:
+                    return PageViewEnvelopeCreator.PageViewEnvelopeCreator.Create(envelope);
+                case Telemetry.PageViewPerformance.dataType:
+                    return PageViewPerformanceEnvelopeCreator.PageViewPerformanceEnvelopeCreator.Create(envelope);
+                case Telemetry.Exception.dataType:
+                    return ExceptionEnvelopeCreator.ExceptionEnvelopeCreator.Create(envelope);
+                case Telemetry.Metric.dataType:
+                    return MetricEnvelopeCreator.MetricEnvelopeCreator.Create(envelope);
+                case Telemetry.RemoteDependencyData.dataType:
+                    return DependencyEnvelopeCreator.DependencyEnvelopeCreator.Create(envelope);
                 default:
                     return null;
             }
