@@ -1,6 +1,7 @@
-module Microsoft.ApplicationInsights {
-    "use strict";
+module Microsoft.ApplicationInsights.Common {
 
+    "use strict";
+    
     export class RequestHeaders {
         /**
          * Request-Context header

@@ -1,6 +1,7 @@
 ﻿/// <reference path="../../JavaScriptSDK.Interfaces/Telemetry/ISerializable.ts" />
 /// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/PageViewData.ts" />
 /// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/RemoteDependencyData.ts"/>
+/// <reference path="../ajax/ajaxUtils.ts" />
 /// <reference path="../Serializer.ts" />
 /// <reference path="./Common/DataSanitizer.ts"/>
 

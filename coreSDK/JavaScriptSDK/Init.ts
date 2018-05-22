@@ -33,6 +33,6 @@ module Microsoft.ApplicationInsights {
             }
         }
     } catch (e) {
-        Microsoft.ApplicationInsights._InternalLogging.warnToConsole('Failed to initialize AppInsights JS SDK: ' + e.message);
+        _InternalLogging.warnToConsole('Failed to initialize AppInsights JS SDK: ' + e.message);
     }
 }

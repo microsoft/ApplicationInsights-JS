@@ -77,7 +77,7 @@ module Microsoft.ApplicationInsights {
 
             // call functions that were queued before the main script was loaded
             try {
-                if (Microsoft.ApplicationInsights.Util.isArray(this.snippet.queue)) {
+                if (Util.isArray(this.snippet.queue)) {
                     // note: do not check length in the for-loop conditional in case something goes wrong and the stub methods are not overridden.
                     var length = this.snippet.queue.length;
                     for (var i = 0; i < length; i++) {
@@ -93,7 +93,7 @@ module Microsoft.ApplicationInsights {
                 if (exception && typeof exception.toString === "function") {
                     properties.exception = exception.toString();
                 }
-                Microsoft.ApplicationInsights._InternalLogging.throwInternal(
+                _InternalLogging.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.FailedToSendQueuedTelemetry,
                     "Failed to send queued telemetry",
@@ -103,7 +103,7 @@ module Microsoft.ApplicationInsights {
 
         public pollInteralLogs(appInsightsInstance: AppInsights) {
             return setInterval(() => {
-                var queue: Array<_InternalLogMessage> = Microsoft.ApplicationInsights._InternalLogging.queue;
+                var queue: Array<_InternalLogMessage> = _InternalLogging.queue;
                 var length = queue.length;
                 for (var i = 0; i < length; i++) {
                     appInsightsInstance.trackTrace(queue[i].message);
@@ -130,10 +130,10 @@ module Microsoft.ApplicationInsights {
                     appInsightsInstance.context._sessionManager.backup();
                 };
 
-                if (!Microsoft.ApplicationInsights.Util.addEventHandler('beforeunload', performHousekeeping)) {
-                    Microsoft.ApplicationInsights._InternalLogging.throwInternal(
-                        Microsoft.ApplicationInsights.LoggingSeverity.CRITICAL,
-                        Microsoft.ApplicationInsights._InternalMessageId.FailedToAddHandlerForOnBeforeUnload,
+                if (!Util.addEventHandler('beforeunload', performHousekeeping)) {
+                    _InternalLogging.throwInternal(
+                        LoggingSeverity.CRITICAL,
+                        _InternalMessageId.FailedToAddHandlerForOnBeforeUnload,
                         'Could not add handler for beforeunload');
                 }
             }

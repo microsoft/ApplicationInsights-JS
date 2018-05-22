@@ -1,6 +1,6 @@
-﻿/// <reference path="../Logging.ts" />
-/// <reference path="../Util.ts" />
-/// <reference path="./ajaxUtils.ts" />
+﻿/// <reference path="./ajaxUtils.ts" />
+
+import UrlHelper = Microsoft.ApplicationInsights.Common.UrlHelper;
 
 module Microsoft.ApplicationInsights {
     "use strict";
