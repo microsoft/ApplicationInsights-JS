@@ -1,10 +1,17 @@
 /// <reference path="./node_modules/applicationinsights-common-js/bundle/aicommon.d.ts" />
 /// <reference path="./Interfaces.ts" />
 /// <reference path="./SendBuffer.ts" />
+/// <reference path="./TelemetryValidation/TelemetryValidator.ts" />
+/// <reference path="./Envelope/EventEnvelopeCreator.ts" />
+/// <reference path="../coreSDK/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts" />
+/// <reference path="../coreSDK/JavaScriptSDK.Interfaces/Telemetry/IEnvelope.ts" />
+/// <reference path="../coreSDK/JavaScriptSDK/Telemetry/Trace.ts" />
+/// <reference path="../coreSDK/JavaScriptSDK/Telemetry/PageView.ts" />
 
 import IXDomainRequest = Microsoft.ApplicationInsights.Channel.XDomainRequest;
 import DisabledPropertyName = Microsoft.ApplicationInsights.Common.DisabledPropertyName;
 import RequestHeaders = Microsoft.ApplicationInsights.Common.RequestHeaders;
+import TelemetryValidator = Microsoft.ApplicationInsights.Validator.TelemetryValidator;
 
 module Microsoft.ApplicationInsights.Channel {
 
@@ -15,7 +22,11 @@ module Microsoft.ApplicationInsights.Channel {
         new(): IXDomainRequest;
     };
 
-    export class Sender implements ITelemetryPlugin {
+    export class Sender implements Core.ITelemetryPlugin {
+        public identifier: string;
+
+        public setNextPlugin: (next: Core.ITelemetryPlugin) => void;
+
         /**
          * The configuration for this sender instance
          */
@@ -61,7 +72,7 @@ module Microsoft.ApplicationInsights.Channel {
          */
         private _timeoutHandle: any;
 
-        public Start(config: IConfig) {
+        public start(config: IConfig) {
             this._consecutiveErrors = 0;
             this._retryAt = null;
             this._lastSend = 0;
@@ -85,10 +96,62 @@ module Microsoft.ApplicationInsights.Channel {
             }
         }
 
-        public ProcessTelemetry(envelope: ITelemetryItem) {
-        }
+        public processTelemetry(envelope: Core.ITelemetryItem) {
+            try {
+                // if master off switch is set, don't send any data
+                if (this._config.disableTelemetry()) {
+                    // Do not send/save data
+                    return;
+                }
 
-        public SetNextPlugin(next: ITelemetryPlugin) {
+                // validate input
+                if (!envelope) {
+                    _InternalLogging.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
+                    return;
+                }
+
+                // ensure a sender was constructed
+                if (!this._sender) {
+                    _InternalLogging.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.SenderNotInitialized, "Sender was not initialized");
+                    return;
+                }
+
+                // first we need to validate that the envelope passed down is valid
+                let isValid: boolean = TelemetryValidator.Validate(envelope);
+                if (!isValid) {
+                    _InternalLogging.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryEnvelopeInvalid, "Invalid telemetry envelope");
+                    return;
+                }
+
+                // construct an envelope that Application Insights endpoint can understand
+                let aiEnvelope = Sender._constructEnvelope(envelope);
+
+                // check if the incoming payload is too large, truncate if necessary
+                let payload: string = Serializer.serialize(aiEnvelope);
+
+                // flush if we would exceed the max-size limit by adding this item
+                var bufferPayload = this._buffer.getItems();
+                var batch = this._buffer.batchPayloads(bufferPayload);
+
+                if (batch && (batch.length + payload.length > this._config.maxBatchSizeInBytes())) {
+                    this.triggerSend();
+                }
+
+                // enqueue the payload
+                this._buffer.enqueue(payload);
+
+                // ensure an invocation timeout is set
+                this._setupTimer();
+
+                // Uncomment if you want to use DataLossanalyzer
+                // DataLossAnalyzer.incrementItemsQueued();
+            } catch (e) {
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.FailedAddingTelemetryToBuffer,
+                    "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) });
+            }
         }
 
         /**
@@ -266,6 +329,21 @@ module Microsoft.ApplicationInsights.Channel {
             resultConfig.isBeaconApiDisabled = () => Util.stringToBoolOrDefault(pluginConfig.isBeaconApiDisabled, true);
 
             return resultConfig;
+        }
+
+        private static _constructEnvelope(env: Core.ITelemetryItem): IEnvelope {
+            switch (env.baseType) {
+                case Telemetry.Event.dataType:
+                    return EventEnvelopeCreator.EventEnvelopeCreator.Create(env);
+                case Telemetry.Trace.dataType:
+                    return null;
+                case Telemetry.PageView.dataType:
+                    // handle resetting the internal message count so that we can send internal telemetry for the new page.
+                    // TelemetryContext.ts line 130
+                    return null;
+                default:
+                    return null;
+            }
         }
 
         /**

@@ -65,6 +65,7 @@
         InvalidBackendResponse,
         FailedToFixDepricatedValues,
         InvalidDurationValue,
+        TelemetryEnvelopeInvalid,
 
         // User actionable
         CannotSerializeObject,

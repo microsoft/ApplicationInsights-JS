@@ -2,24 +2,7 @@ module Microsoft.ApplicationInsights.Channel {
 
     "using strict";
     
-    export interface ITelemetryItem {
-        name: string;
-        timestamp: Date;
-        baseType: string;
-        iKey: string;
-        systemProperties: { [name: string]: any }; // part a
-        domainProperties: { [name: string]: any }; // part b
-        customProperties: { [name: string]: any }; // part c
-        customMeasurements: { [name: string]: number }; // part c
-    }
-
-    export interface ITelemetryPlugin {
-        Start: (config: any) => void;
-        ProcessTelemetry: (envelope: ITelemetryItem) => void;
-        SetNextPlugin: (next: ITelemetryPlugin) => void;
-    }
-
-    export interface IConfig {
+    export interface IConfig extends Core.IConfiguration {
         collectorUri: string;
         instrumentationKey: string[];
         extensions: { [name: string]: any };
