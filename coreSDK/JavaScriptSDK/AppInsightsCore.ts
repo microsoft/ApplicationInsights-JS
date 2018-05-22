@@ -1,5 +1,3 @@
-/// <reference path="../JavaScriptSDK.Interfaces/IAppInsightsCore.ts" />
-
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
