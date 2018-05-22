@@ -1,11 +1,10 @@
-module Microsoft.ApplicationInsights.Core {
+/**
+ * Configuration provided to SDK core
+ */
+export interface IConfiguration {
+    instrumentationKey: string; // todo: update later for multi-tenant?
+    
+    endpointUrl: string;
 
-    "use strict";
-
-    /**
-     * Configuration provided to SDK core
-     */
-    export interface IConfiguration {
-    }
-
+    extensions: { [key: string]: any }; // extension configs
 }

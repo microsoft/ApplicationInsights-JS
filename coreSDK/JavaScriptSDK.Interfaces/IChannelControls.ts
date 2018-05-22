@@ -1,30 +1,29 @@
-module Microsoft.ApplicationInsights.Core {
+import { ITelemetryPlugin } from "./ITelemetryPlugin";
 
-    "use strict";
+/**
+ * Provides data transmission capabilities
+ */
+export interface IChannelControls extends ITelemetryPlugin {
 
     /**
-     * Provides data transmission capabilities
+     * Pause sending data
+     */        
+    pause(): void;
+
+    /**
+     * Resume sending data
      */
-    export interface IChannelControls {
+    resume(): void;
 
-        /**
-         * Pause sending data
-         */        
-        pause(): void;
+    /**
+     * Send data in buffer immediately
+     */
+    flush(): void;
 
-        /**
-         * Resume sending data
-         */
-        resume(): void;
-
-        /**
-         * Send data in buffer immediately
-         */
-        flush(): void;
-
-        /**
-         * Tear down transmission pipeline
-         */
-        teardown(): void;
-    }
+    /**
+     * Tear down transmission pipeline
+     */
+    teardown(): void;
 }
+
+export const MinChannelPriorty: number = 100;
