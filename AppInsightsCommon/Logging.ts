@@ -1,5 +1,7 @@
-﻿module Microsoft.ApplicationInsights {
+﻿module Microsoft.ApplicationInsights.Common {
 
+    "use strict";
+    
     export enum LoggingSeverity {
         /**
          * Error will be sent as internal telemetry
@@ -63,6 +65,7 @@
         InvalidBackendResponse,
         FailedToFixDepricatedValues,
         InvalidDurationValue,
+        TelemetryEnvelopeInvalid,
 
         // User actionable
         CannotSerializeObject,

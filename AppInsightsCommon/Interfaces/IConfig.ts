@@ -1,7 +1,7 @@
-﻿module Microsoft.ApplicationInsights {
+﻿module Microsoft.ApplicationInsights.Common {
 
     "use strict";
-
+    
     export interface IConfig {
         instrumentationKey?: string;
         endpointUrl?: string;

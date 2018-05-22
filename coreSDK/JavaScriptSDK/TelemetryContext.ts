@@ -1,11 +1,9 @@
-﻿/// <reference path="Sender.ts"/>
-/// <reference path="Telemetry/Trace.ts" />
+﻿/// <reference path="Telemetry/Trace.ts" />
 /// <reference path="Telemetry/Event.ts" />
 /// <reference path="Telemetry/Exception.ts" />
 /// <reference path="Telemetry/Metric.ts" />
 /// <reference path="Telemetry/PageView.ts" />
 /// <reference path="Telemetry/PageViewPerformance.ts" />
-/// <reference path="./Util.ts"/>
 /// <reference path="../JavaScriptSDK.Interfaces/ITelemetryContext.ts" />
 
 module Microsoft.ApplicationInsights {

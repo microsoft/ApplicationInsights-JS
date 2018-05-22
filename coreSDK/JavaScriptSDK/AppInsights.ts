@@ -1,12 +1,17 @@
 /// <reference path="TelemetryContext.ts" />
 /// <reference path="./Telemetry/Common/Data.ts"/>
-/// <reference path="./Util.ts"/>
 /// <reference path="./Telemetry/PageViewManager.ts"/>
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
 /// <reference path="./ajax/ajax.ts"/>
 /// <reference path="./SplitTest.ts"/>
 /// <reference path="../JavaScriptSDK.Interfaces/IAppInsights.ts"/>
+
+import _InternalLogging = Microsoft.ApplicationInsights.Common._InternalLogging;
+import LoggingSeverity = Microsoft.ApplicationInsights.Common.LoggingSeverity;
+import _InternalMessageId = Microsoft.ApplicationInsights.Common._InternalMessageId;
+import _InternalLogMessage = Microsoft.ApplicationInsights.Common._InternalLogMessage;
+import Util = Microsoft.ApplicationInsights.Common.Util;
 
 module Microsoft.ApplicationInsights {
 
