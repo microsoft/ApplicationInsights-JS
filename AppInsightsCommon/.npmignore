@@ -5,4 +5,6 @@
 
 # ... but these files
 !/package.json
-!/bundle/aicommon.*
+!/bundle/**/*.js
+!/bundle/**/*.d.ts
+!/bundle/**/*.js.map
