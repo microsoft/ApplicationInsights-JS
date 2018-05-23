@@ -1,18 +1,19 @@
 module.exports = function (grunt) {
     grunt.initConfig({
         ts: {
-            tsconfig: true,
             options: {
                 comments: true
             },
             default: {
+                tsconfig: './tsconfig.json',
                 src: [
                     'JavaScript/JavaScriptSDK.Interfaces/*.ts',
                     'JavaScript/JavaScriptSDK/*.ts',
                 ],
                 out: 'bundle/ai.js',
             },
-			core: {
+	    core: {
+                tsconfig: './tsconfig.json',
                 src: [
                     'coreSDK/JavaScriptSDK/Telemetry/Common/*.ts',
                     'coreSDK/JavaScriptSDK/Telemetry/*.ts',
@@ -27,6 +28,7 @@ module.exports = function (grunt) {
                 out: 'coreSDK/bundle/aicore.js',
             },
             common: {
+                tsconfig: './tsconfig.json',
                 src: [
                     'AppInsightsCommon/*.ts',
                     'AppInsightsCommon/Interfaces/*.ts'
@@ -34,12 +36,21 @@ module.exports = function (grunt) {
                 out: 'AppInsightsCommon/bundle/aicommon.js'
             },
             channel: {
+                tsconfig: './tsconfig.json',
                 src: [
                     'AppInsightsChannel/*.ts',
                 ],
                 out: 'AppInsightsChannel/bundle/aichannel.js'
             },
+            corecommonjs: {
+                tsconfig: './tsconfigcommonjs.json',
+                src: [
+                    'coreSDK/JavaScriptSDK.Interfaces/*.ts',
+                    'coreSDK/JavaScriptSDK/*.ts',
+                ]
+            },
             module: {
+                tsconfig: './tsconfig.json',
                 src: [
                     'JavaScript/JavaScriptSDK.Interfaces/*.ts',
                     'JavaScript/JavaScriptSDK.Module/*.ts',
@@ -47,24 +58,28 @@ module.exports = function (grunt) {
                 out: 'bundle/ai.module.js'
             },
             types: {
+                tsconfig: './tsconfig.json',
                 src: [
                     'JavaScript/JavaScriptSDK.Tests/DefinitionTypes/*.ts'
                 ],
                 out: 'bundle/test/ai.types.js'
             },
             test: {
+                tsconfig: './tsconfig.json',
                 src: [
                     'JavaScript/JavaScriptSDK.Tests/Selenium/*.ts'
                 ],
                 out: 'JavaScript/JavaScriptSDK.Tests/Selenium/ai.tests.js'
             },
             testSchema: {
+                tsconfig: './tsconfig.json',
                 src: [
                     'JavaScript/JavaScriptSDK.Tests/Contracts/Generated/*.ts'
                 ],
                 out: 'bundle/test/ai.schema.tests.js'
             },
             testE2E: {
+                tsconfig: './tsconfig.json',
                 files: [
                     {
                         src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/DisableTelemetry.tests.ts',
@@ -151,6 +166,7 @@ module.exports = function (grunt) {
     grunt.registerTask("core", ["ts:core"]);
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("channel", ["ts:channel"]);
+    grunt.registerTask("corecommonjs", ["ts:corecommonjs"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit"]);
 };

@@ -1,6 +1,4 @@
 ﻿/// <reference path="../node_modules/applicationinsights-common-js/bundle/aicommon.d.ts" />
-/// <reference path="./ITelemetryContext.ts" />
-/// <reference path="./Contracts/Generated/SeverityLevel.ts" />
 
 import IConfig = Microsoft.ApplicationInsights.Common.IConfig;
 

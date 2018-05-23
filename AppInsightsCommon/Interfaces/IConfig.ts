@@ -3,6 +3,7 @@
     "use strict";
     
     export interface IConfig {
+        // To do: extend IConfig from IConfiguration, move instrumentation key and endpiont url to that interface
         instrumentationKey?: string;
         endpointUrl?: string;
         emitLineDelimitedJson?: boolean;
