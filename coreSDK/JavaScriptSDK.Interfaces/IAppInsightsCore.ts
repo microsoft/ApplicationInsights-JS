@@ -1,9 +1,3 @@
-/// <reference path="./ITelemetryItem.ts" />
-/// <reference path="./IConfiguration.ts" />
-/// <reference path="./IChannelControls.ts" />
-/// <reference path="./ITelemetryPlugin.ts" />
-/// <reference path="./IConfig.ts" />
-
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IChannelControls } from "./IChannelControls";
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
