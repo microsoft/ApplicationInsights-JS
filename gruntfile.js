@@ -47,6 +47,7 @@ module.exports = function (grunt) {
                 src: [
                     'coreSDK/JavaScriptSDK.Interfaces/*.ts',
                     'coreSDK/JavaScriptSDK/*.ts',
+                    'coreSDK/applicationinsights-core.ts'
                 ]
             },
             module: {
