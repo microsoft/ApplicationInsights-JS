@@ -36,14 +36,16 @@ module.exports = function (grunt) {
             common: {
                 tsconfig: './tsconfig.json',
                 src: [
+                    'applicationinsights-common.ts',
                     'AppInsightsCommon/*.ts',
                     'AppInsightsCommon/Interfaces/*.ts'
                 ],
-                out: 'AppInsightsCommon/bundle/aicommon.js'
+                out: 'AppInsightsCommon/bundle/applicationinsights-common.js'
             },
             commoncjs: {
                 tsconfig: './AppInsightsCommon/commonjs/tsconfigcommonjs.json',
                 src: [
+                    'applicationinsights-common.ts',
                     'AppInsightsCommon/*.ts',
                     'AppInsightsCommon/Interfaces/*.ts'
                 ]

@@ -2,8 +2,8 @@
     "name": "applicationinsights-common",
     "version": "0.0.1",
     "description": "Microsoft Application Insights Common JavaScript Library",
-    "main":"./bundle/aicommon.js",
-    "types":"./bundle/aicommon.d.ts",
+    "main":"./bundle/applicationinsights-common.js",
+    "types":"./bundle/applicationinsights-common.d.ts",
     "devDependencies": {
         "grunt": "1.0.1",
         "grunt-contrib-qunit": "2.0.0",

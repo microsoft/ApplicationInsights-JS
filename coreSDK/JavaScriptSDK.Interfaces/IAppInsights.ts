@@ -1,4 +1,4 @@
-﻿///<reference path="../node_modules/applicationinsights-common/bundle/aicommon.d.ts" />
+﻿///<reference path="../node_modules/applicationinsights-common/bundle/applicationinsights-common.d.ts" />
 import { IConfig } from 'applicationinsights-common';
 import { ITelemetryContext } from '../JavaScriptSDK.Interfaces/ITelemetryContext';
 import { SeverityLevel } from '../JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel';
