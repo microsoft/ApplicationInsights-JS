@@ -1,13 +1,10 @@
-﻿/// <reference path="../../../JavaScriptSDK.Interfaces/Contracts/Generated/Base.ts"/>
+﻿import { Base as AIBase } from '../../../JavaScriptSDK.Interfaces/Contracts/Generated/Base';
+import { ISerializable } from '../../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
 
-module Microsoft.ApplicationInsights.Telemetry.Common {
-    "use strict";
+export class Base extends AIBase implements ISerializable {
 
-    export class Base extends Microsoft.Telemetry.Base implements ISerializable {
-        
-        /**
-         * The data contract for serializing this object.
-         */
-        public aiDataContract = {};
-    }
+    /**
+     * The data contract for serializing this object.
+     */
+    public aiDataContract = {};
 }

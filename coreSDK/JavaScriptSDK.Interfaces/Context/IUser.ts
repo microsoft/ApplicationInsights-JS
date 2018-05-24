@@ -1,41 +1,36 @@
-﻿module Microsoft.ApplicationInsights.Context {
+﻿export interface IUser {
+    /**
+    * The telemetry configuration.
+    */
+    config: any;
 
-    "use strict";
+    /**
+     * The user ID.
+     */
+    id: string;
 
-    export interface IUser {
-        /**
-        * The telemetry configuration.
-        */
-        config: any;
+    /**
+     * Authenticated user id
+     */
+    authenticatedId: string;
 
-        /**
-         * The user ID.
-         */
-        id: string;
+    /**
+     * The account ID.
+     */
+    accountId: string;
 
-        /**
-         * Authenticated user id
-         */
-        authenticatedId: string;
+    /**
+     * The account acquisition date.
+     */
+    accountAcquisitionDate: string;
 
-        /**
-         * The account ID.
-         */
-        accountId: string;
+    /**
+     * The user agent string.
+     */
+    agent: string;
 
-        /**
-         * The account acquisition date.
-         */
-        accountAcquisitionDate: string;
-
-        /**
-         * The user agent string.
-         */
-        agent: string;
-
-        /**
-         * The store region.
-         */
-        storeRegion: string;
-    }
+    /**
+     * The store region.
+     */
+    storeRegion: string;
 }

@@ -1,25 +1,24 @@
-﻿/// <reference path="../../../JavaScriptSDK.Interfaces/Contracts/Generated/Data.ts"/>
+﻿import { Data as AIData } from '../../../JavaScriptSDK.Interfaces/Contracts/Generated/Data';
+import { ISerializable } from '../../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
+import { FieldType } from '../../../JavaScriptSDK/Serializer';
 
-module Microsoft.ApplicationInsights.Telemetry.Common {
-    "use strict";
-    export class Data<TDomain> extends Microsoft.Telemetry.Data<TDomain> implements ISerializable {
+export class Data<TDomain> extends AIData<TDomain> implements ISerializable {
 
-        /**
-         * The data contract for serializing this object.
-         */
-        public aiDataContract = {
-            baseType: FieldType.Required,
-            baseData: FieldType.Required
-        }
+    /**
+     * The data contract for serializing this object.
+     */
+    public aiDataContract = {
+        baseType: FieldType.Required,
+        baseData: FieldType.Required
+    }
 
-        /**
-         * Constructs a new instance of telemetry data.
-         */
-        constructor(type: string, data: TDomain) {
-            super();
+    /**
+     * Constructs a new instance of telemetry data.
+     */
+    constructor(type: string, data: TDomain) {
+        super();
 
-            this.baseType = type;
-            this.baseData = data;
-        }
+        this.baseType = type;
+        this.baseData = data;
     }
 }

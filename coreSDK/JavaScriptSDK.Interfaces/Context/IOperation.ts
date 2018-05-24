@@ -1,31 +1,26 @@
-﻿module Microsoft.ApplicationInsights.Context {
+﻿export interface IOperation {
+    /**
+     * Operation id
+     */
+    id: string;
 
-    "use strict";
+    /**
+     * Operation name
+     */
+    name: string;
 
-    export interface IOperation {
-        /**
-         * Operation id
-         */
-        id: string;
+    /**
+     * Parent operation id
+     */
+    parentId: string;
 
-        /**
-         * Operation name
-         */
-        name: string;
+    /**
+     * Root operation id
+     */
+    rootId: string;
 
-        /**
-         * Parent operation id
-         */
-        parentId: string;
-
-        /**
-         * Root operation id
-         */
-        rootId: string;
-
-        /**
-         * Synthetic source of the operation
-         */
-        syntheticSource: string;
-    }
+    /**
+     * Synthetic source of the operation
+     */
+    syntheticSource: string;
 }

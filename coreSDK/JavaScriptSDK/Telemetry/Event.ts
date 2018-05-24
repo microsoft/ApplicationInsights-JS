@@ -1,33 +1,31 @@
-﻿/// <reference path="../../JavaScriptSDK.Interfaces/Telemetry/ISerializable.ts" />
-/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/EventData.ts" />
-/// <reference path="../Serializer.ts" />
-/// <reference path="./Common/DataSanitizer.ts"/>
+﻿///<reference path="../../node_modules/applicationinsights-common/bundle/aicommon.d.ts" />
+import { EventData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/EventData';
+import { ISerializable } from '../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
+import { DataSanitizer } from './Common/DataSanitizer';
+import { FieldType } from '../Serializer';
+import { Util } from 'applicationinsights-common';
 
-module Microsoft.ApplicationInsights.Telemetry {
-    "use strict";
+export class Event extends EventData implements ISerializable {
 
-    export class Event extends AI.EventData implements ISerializable {
+    public static envelopeType = "Microsoft.ApplicationInsights.{0}.Event";
+    public static dataType = "EventData";
 
-        public static envelopeType = "Microsoft.ApplicationInsights.{0}.Event";
-        public static dataType = "EventData";
+    public aiDataContract = {
+        ver: FieldType.Required,
+        name: FieldType.Required,
+        properties: FieldType.Default,
+        measurements: FieldType.Default
+    }
 
-        public aiDataContract = {
-            ver: FieldType.Required,
-            name: FieldType.Required,
-            properties: FieldType.Default,
-            measurements: FieldType.Default
-        }
+    /**
+     * Constructs a new instance of the EventTelemetry object
+     */
+    constructor(name: string, properties?: any, measurements?: any) {
 
-        /**
-         * Constructs a new instance of the EventTelemetry object
-         */
-        constructor(name: string, properties?: any, measurements?: any) {
-            
-            super();
+        super();
 
-            this.name = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeString(name) || Util.NotSpecified;
-            this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
-            this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);
-        }
+        this.name = DataSanitizer.sanitizeString(name) || Util.NotSpecified;
+        this.properties = DataSanitizer.sanitizeProperties(properties);
+        this.measurements = DataSanitizer.sanitizeMeasurements(measurements);
     }
 }

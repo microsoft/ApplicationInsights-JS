@@ -1,14 +1,9 @@
-﻿/// <reference path="../../JavaScriptSDK.Interfaces/Context/ILocation.ts" />
+﻿import { ILocation } from '../../JavaScriptSDK.Interfaces/Context/ILocation';
 
-module Microsoft.ApplicationInsights.Context {
+export class Location implements ILocation {
 
-    "use strict";
-
-    export class Location implements ILocation {
-
-        /**
-         * Client IP address for reverse lookup
-         */
-        public ip: string;
-    }
+    /**
+     * Client IP address for reverse lookup
+     */
+    public ip: string;
 }
