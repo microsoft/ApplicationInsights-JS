@@ -13,7 +13,7 @@
     },
     "files":[
         "./applicationinsights-core.ts",
-        "./JavaScriptSDK/AppInsightsCore.ts",
+        "./JavaScriptSDK/AppInsightsCore-js.ts",
         "./JavaScriptSDK.Interfaces/IAppInsightsCore.ts",
         "./JavaScriptSDK.Interfaces/IChannelControls.ts",
         "./JavaScriptSDK.Interfaces/ITelemetryPlugin.ts",

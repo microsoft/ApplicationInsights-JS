@@ -2,7 +2,6 @@
     "name": "applicationinsights-core-js",
     "version": "0.0.1",
     "description": "Microsoft Application Insights Core Javascript SDK",
-    "main": "bundle/aicore.js",
     "devDependencies": {
         "grunt": "1.0.1",
         "grunt-contrib-qunit": "2.0.0",
@@ -11,13 +10,13 @@
         "typescript": "2.5.3"
     },
     "files":[
-        "coreSDK/applicationinsights-core.*",
+        "coreSDK/applicationinsights-core-js.*",
         "coreSDK/JavaScriptSDK/AppInsightsCore.*",
         "coreSDK/JavaScriptSDK.Interfaces/IAppInsightsCore.*",
         "coreSDK/JavaScriptSDK.Interfaces/IChannelControls.*",
         "coreSDK/JavaScriptSDK.Interfaces/ITelemetryPlugin.*",
         "coreSDK/JavaScriptSDK.Interfaces/IConfiguration.*"
    ],
-   "main": "coreSDK/applicationinsights-core.js",
-   "types": "coreSDK/applicationinsights-core.d.ts"
+   "main": "coreSDK/applicationinsights-core-js.js",
+   "types": "coreSDK/applicationinsights-core-js.d.ts"
 }
