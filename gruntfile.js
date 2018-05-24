@@ -15,15 +15,9 @@ module.exports = function (grunt) {
 	    core: {
                 tsconfig: './tsconfig.json',
                 src: [
-                    'coreSDK/JavaScriptSDK/Telemetry/Common/*.ts',
-                    'coreSDK/JavaScriptSDK/Telemetry/*.ts',
-                    'coreSDK/JavaScriptSDK/ajax/*.ts',
-                    'coreSDK/JavaScriptSDK/Context/*.ts',
-                    'coreSDK/JavaScriptSDK/Context/Common/*.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/Contracts/Generated/*.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/Telemetry/*.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/Context/*.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/*.ts',
                     'coreSDK/JavaScriptSDK/*.ts',
+                    'coreSDK/applicationinsights-core-js.ts'
                 ],
                 out: 'coreSDK/bundle/aicore.js',
             },
@@ -47,6 +41,7 @@ module.exports = function (grunt) {
                 src: [
                     'coreSDK/JavaScriptSDK.Interfaces/*.ts',
                     'coreSDK/JavaScriptSDK/*.ts',
+                    'coreSDK/applicationinsights-core-js.ts'
                 ]
             },
             module: {
