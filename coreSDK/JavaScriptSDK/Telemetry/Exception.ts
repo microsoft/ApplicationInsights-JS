@@ -1,5 +1,4 @@
-﻿///<reference path="../../node_modules/applicationinsights-common/bundle/aicommon.d.ts" />
-import { StackFrame } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/StackFrame';
+﻿import { StackFrame } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/StackFrame';
 import { ExceptionData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/ExceptionData';
 import { ExceptionDetails } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/ExceptionDetails';
 import { ISerializable } from '../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';

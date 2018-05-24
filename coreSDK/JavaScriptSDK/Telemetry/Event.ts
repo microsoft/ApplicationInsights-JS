@@ -1,5 +1,4 @@
-﻿///<reference path="../../node_modules/applicationinsights-common/bundle/aicommon.d.ts" />
-import { EventData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/EventData';
+﻿import { EventData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/EventData';
 import { ISerializable } from '../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Serializer';

@@ -1,5 +1,4 @@
-﻿///<reference path="../../node_modules/applicationinsights-common/bundle/aicommon.d.ts" />
-import { MessageData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/MessageData';
+﻿import { MessageData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/MessageData';
 import { ISerializable } from '../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Serializer';
