@@ -15,23 +15,11 @@ module.exports = function (grunt) {
             core: {
                 tsconfig: './tsconfig.json',
                 src: [
-                    'coreSDK/JavaScriptSDK/ajax/*.ts',
-                    'coreSDK/JavaScriptSDK/Context/*.ts',
-                    'coreSDK/JavaScriptSDK/Telemetry/*.ts',
-                    'coreSDK/JavaScriptSDK/Telemetry/Common/*.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/Context/*.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/Contracts/Generated/*.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/Telemetry/*.ts',
-                    'coreSDK/JavaScriptSDK/*.ts',
-                ],
-                out: 'coreSDK/bundle/aicore.js',
-            },
-            corecjs: {
-                tsconfig: './coreSDK/tsconfigcommonjs.json',
-                src: [
                     'coreSDK/JavaScriptSDK.Interfaces/*.ts',
                     'coreSDK/JavaScriptSDK/*.ts',
-                ]
+                    'coreSDK/applicationinsights-core-js.ts'
+                ],
+                out: 'coreSDK/bundle/aicore.js',
             },
             common: {
                 tsconfig: './tsconfig.json',
@@ -56,6 +44,14 @@ module.exports = function (grunt) {
                     'AppInsightsChannel/*.ts',
                 ],
                 out: 'AppInsightsChannel/bundle/aichannel.js'
+            },
+            corecommonjs: {
+                tsconfig: './tsconfigcommonjs.json',
+                src: [
+                    'coreSDK/JavaScriptSDK.Interfaces/*.ts',
+                    'coreSDK/JavaScriptSDK/*.ts',
+                    'coreSDK/applicationinsights-core-js.ts'
+                ]
             },
             module: {
                 tsconfig: './tsconfig.json',
@@ -175,7 +171,6 @@ module.exports = function (grunt) {
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("commoncjs", ["ts:commoncjs"]);
     grunt.registerTask("channel", ["ts:channel"]);
-    grunt.registerTask("corecjs", ["ts:corecjs"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit"]);
 };
