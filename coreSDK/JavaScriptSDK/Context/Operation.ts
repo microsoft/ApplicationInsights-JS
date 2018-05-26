@@ -1,22 +1,18 @@
-﻿/// <reference path="../../JavaScriptSDK.Interfaces/Context/IOperation.ts" />
+﻿import { IOperation } from '../../JavaScriptSDK.Interfaces/Context/IOperation';
+import { Util } from 'applicationinsights-common';
 
-module Microsoft.ApplicationInsights.Context {
+export class Operation implements IOperation {
 
-    "use strict";
+    public id: string;
+    public name: string;
+    public parentId: string;
+    public rootId: string;
+    public syntheticSource: string;
 
-    export class Operation implements IOperation {
-
-        public id: string;
-        public name: string;
-        public parentId: string;
-        public rootId: string;
-        public syntheticSource: string;
-
-        constructor() {
-            this.id = Util.newId();
-            if (window && window.location && window.location.pathname) {
-                this.name = window.location.pathname;
-            }
+    constructor() {
+        this.id = Util.newId();
+        if (window && window.location && window.location.pathname) {
+            this.name = window.location.pathname;
         }
     }
-} 
+}

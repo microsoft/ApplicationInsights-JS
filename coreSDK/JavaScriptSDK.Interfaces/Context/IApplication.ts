@@ -1,16 +1,11 @@
-﻿module Microsoft.ApplicationInsights.Context {
+﻿export interface IApplication {
+    /**
+     * The application version.
+     */
+    ver: string;
 
-    "use strict";
-
-    export interface IApplication {
-        /**
-         * The application version.
-         */
-        ver: string;
-
-        /**
-         * The application build version.
-         */
-        build: string;
-    }
+    /**
+     * The application build version.
+     */
+    build: string;
 }

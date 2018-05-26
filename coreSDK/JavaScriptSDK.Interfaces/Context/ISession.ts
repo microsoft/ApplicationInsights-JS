@@ -1,29 +1,24 @@
-﻿module Microsoft.ApplicationInsights.Context {
+﻿export interface ISession {
+    /**
+    * The session ID.
+    */
+    id: string;
 
-    "use strict";
+    /**  
+     * The true if this is the first session  
+     */
+    isFirst: boolean;
 
-    export interface ISession {
-        /**
-        * The session ID.
-        */
-        id: string;
+    /**
+     * The date at which this guid was genereated.
+     * Per the spec the ID will be regenerated if more than acquisitionSpan milliseconds ellapse from this time.
+     */
+    acquisitionDate: number;
 
-        /**  
-         * The true if this is the first session  
-         */
-        isFirst: boolean;
-
-        /**
-         * The date at which this guid was genereated.
-         * Per the spec the ID will be regenerated if more than acquisitionSpan milliseconds ellapse from this time.
-         */
-        acquisitionDate: number;
-
-        /**
-         * The date at which this session ID was last reported.
-         * This value should be updated whenever telemetry is sent using this ID.
-         * Per the spec the ID will be regenerated if more than renewalSpan milliseconds elapse from this time with no activity.
-         */
-        renewalDate: number;
-    }
+    /**
+     * The date at which this session ID was last reported.
+     * This value should be updated whenever telemetry is sent using this ID.
+     * Per the spec the ID will be regenerated if more than renewalSpan milliseconds elapse from this time with no activity.
+     */
+    renewalDate: number;
 }

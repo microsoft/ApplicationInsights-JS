@@ -1,61 +1,56 @@
-﻿module Microsoft.ApplicationInsights.Context {
+﻿export interface IDevice {
+    /**
+     * The type for the current device.
+     */
+    type: string;
 
-    "use strict";
+    /**
+     * A device unique ID.
+     */
+    id: string;
 
-    export interface IDevice {
-        /**
-         * The type for the current device.
-         */
-        type: string;
+    /**
+     * The device OEM for the current device.
+     */
+    oemName: string;
 
-        /**
-         * A device unique ID.
-         */
-        id: string;
+    /**
+     * The device model for the current device.
+     */
+    model: string;
 
-        /**
-         * The device OEM for the current device.
-         */
-        oemName: string;
+    /**
+     * The IANA interface type for the internet connected network adapter.
+     */
+    network: number;
 
-        /**
-         * The device model for the current device.
-         */
-        model: string;
+    /**
+     * The application screen resolution.
+     */
+    resolution: string;
 
-        /**
-         * The IANA interface type for the internet connected network adapter.
-         */
-        network: number;
+    /**
+     * The current display language of the operating system.
+     */
+    locale: string;
 
-        /**
-         * The application screen resolution.
-         */
-        resolution: string;
+    /**
+     * The IP address.
+     */
+    ip: string;
 
-        /**
-         * The current display language of the operating system.
-         */
-        locale: string;
+    /**
+     * The device language.
+     */
+    language: string;
 
-        /**
-         * The IP address.
-         */
-        ip: string;
+    /**
+     * The OS name.
+     */
+    os: string;
 
-        /**
-         * The device language.
-         */
-        language: string;
-
-        /**
-         * The OS name.
-         */
-        os: string;
-
-        /**
-         * The OS version.
-         */
-        osversion: string;
-    }
+    /**
+     * The OS version.
+     */
+    osversion: string;
 }

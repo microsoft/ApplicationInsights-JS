@@ -1,76 +1,71 @@
-﻿/// <reference path="../../JavaScriptSDK.Interfaces/Context/IDevice.ts" />
+﻿import { IDevice } from '../../JavaScriptSDK.Interfaces/Context/IDevice';
 
-module Microsoft.ApplicationInsights.Context {
+export class Device implements IDevice {
 
-    "use strict";
+    /**
+     * The type for the current device.
+     */
+    public type: string;
 
-    export class Device implements IDevice {
+    /**
+     * A device unique ID.
+     */
+    public id: string;
 
-        /**
-         * The type for the current device.
-         */
-        public type: string;
+    /**
+     * The device OEM for the current device.
+     */
+    public oemName: string;
 
-        /**
-         * A device unique ID.
-         */
-        public id: string;
+    /**
+     * The device model for the current device.
+     */
+    public model: string;
 
-        /**
-         * The device OEM for the current device.
-         */
-        public oemName: string;
+    /**
+     * The IANA interface type for the internet connected network adapter.
+     */
+    public network: number;
 
-        /**
-         * The device model for the current device.
-         */
-        public model: string;
+    /**
+     * The application screen resolution.
+     */
+    public resolution: string;
 
-        /**
-         * The IANA interface type for the internet connected network adapter.
-         */
-        public network: number;
+    /**
+     * The current display language of the operating system.
+     */
+    public locale: string;
 
-        /**
-         * The application screen resolution.
-         */
-        public resolution: string;
+    /**
+     * The IP address.
+     */
+    public ip: string;
 
-        /**
-         * The current display language of the operating system.
-         */
-        public locale: string;
-        
-        /**
-         * The IP address.
-         */
-        public ip: string;
+    /**
+     * The device language.
+     */
+    public language: string;
 
-        /**
-         * The device language.
-         */
-        public language: string;
+    /**
+     * The OS name.
+     */
+    public os: string;
 
-        /**
-         * The OS name.
-         */
-        public os: string;
+    /**
+     * The OS version.
+     */
+    public osversion: string;
 
-        /**
-         * The OS version.
-         */
-        public osversion: string;
+    /**
+     * Constructs a new instance of the Device class
+     */
+    constructor() {
+        // don't attempt to fingerprint browsers
+        this.id = "browser";
 
-        /**
-         * Constructs a new instance of the Device class
-         */
-        constructor() {
-            // don't attempt to fingerprint browsers
-            this.id = "browser";
-
-            // Device type is a dimension in our data platform
-            // Setting it to 'Browser' allows to separate client and server dependencies/exceptions
-            this.type = "Browser";
-        }
+        // Device type is a dimension in our data platform
+        // Setting it to 'Browser' allows to separate client and server dependencies/exceptions
+        this.type = "Browser";
     }
 }

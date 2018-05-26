@@ -12,7 +12,7 @@ module.exports = function (grunt) {
                 ],
                 out: 'bundle/ai.js',
             },
-	    core: {
+            core: {
                 tsconfig: './tsconfig.json',
                 src: [
                     'coreSDK/JavaScriptSDK.Interfaces/*.ts',
@@ -24,10 +24,19 @@ module.exports = function (grunt) {
             common: {
                 tsconfig: './tsconfig.json',
                 src: [
+                    'applicationinsights-common.ts',
                     'AppInsightsCommon/*.ts',
                     'AppInsightsCommon/Interfaces/*.ts'
                 ],
-                out: 'AppInsightsCommon/bundle/aicommon.js'
+                out: 'AppInsightsCommon/bundle/applicationinsights-common.js'
+            },
+            commoncjs: {
+                tsconfig: './AppInsightsCommon/commonjs/tsconfigcommonjs.json',
+                src: [
+                    'applicationinsights-common.ts',
+                    'AppInsightsCommon/*.ts',
+                    'AppInsightsCommon/Interfaces/*.ts'
+                ]
             },
             channel: {
                 tsconfig: './tsconfig.json',
@@ -160,8 +169,8 @@ module.exports = function (grunt) {
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("core", ["ts:core"]);
     grunt.registerTask("common", ["ts:common"]);
+    grunt.registerTask("commoncjs", ["ts:commoncjs"]);
     grunt.registerTask("channel", ["ts:channel"]);
-    grunt.registerTask("corecommonjs", ["ts:corecommonjs"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit"]);
 };

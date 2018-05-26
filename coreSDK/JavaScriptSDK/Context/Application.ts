@@ -1,18 +1,13 @@
-﻿/// <reference path="../../JavaScriptSDK.Interfaces/Context/IApplication.ts" />
+﻿import { IApplication } from '../../JavaScriptSDK.Interfaces/Context/IApplication';
 
-module Microsoft.ApplicationInsights.Context {
+export class Application implements IApplication {
+    /**
+     * The application version.
+     */
+    public ver: string;
 
-    "use strict";
-
-    export class Application implements IApplication {
-        /**
-         * The application version.
-         */
-        public ver: string;
-
-        /**
-         * The application build version.
-         */
-        public build: string;
-    }
+    /**
+     * The application build version.
+     */
+    public build: string;
 }

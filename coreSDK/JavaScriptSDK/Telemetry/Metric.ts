@@ -1,38 +1,36 @@
-﻿/// <reference path="../../JavaScriptSDK.Interfaces/Telemetry/ISerializable.ts" />
-/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/MetricData.ts" />
-/// <reference path="../Serializer.ts" />
-/// <reference path="./Common/DataSanitizer.ts" />
-/// <reference path="./Common/DataPoint.ts" />
+﻿import { MetricData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/MetricData';
+import { ISerializable } from '../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
+import { DataSanitizer } from './Common/DataSanitizer';
+import { FieldType } from '../Serializer';
+import { DataPoint } from './Common/DataPoint';
+import { SeverityLevel } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel';
+import { Util } from 'applicationinsights-common';
 
-module Microsoft.ApplicationInsights.Telemetry {
-    "use strict";
+export class Metric extends MetricData implements ISerializable {
 
-    export class Metric extends AI.MetricData implements ISerializable {
+    public static envelopeType = "Microsoft.ApplicationInsights.{0}.Metric";
+    public static dataType = "MetricData";
 
-        public static envelopeType = "Microsoft.ApplicationInsights.{0}.Metric";
-        public static dataType = "MetricData";
+    public aiDataContract = {
+        ver: FieldType.Required,
+        metrics: FieldType.Required,
+        properties: FieldType.Default
+    }
 
-        public aiDataContract = {
-            ver: FieldType.Required,
-            metrics: FieldType.Required,
-            properties: FieldType.Default
-        }
+    /**
+     * Constructs a new instance of the MetricTelemetry object
+     */
+    constructor(name: string, value: number, count?: number, min?: number, max?: number, properties?: any) {
+        super();
 
-        /**
-         * Constructs a new instance of the MetricTelemetry object
-         */
-        constructor(name: string, value: number, count?: number, min?: number, max?: number, properties?: any) {
-            super();
+        var dataPoint = new DataPoint();
+        dataPoint.count = count > 0 ? count : undefined;
+        dataPoint.max = isNaN(max) || max === null ? undefined : max;
+        dataPoint.min = isNaN(min) || min === null ? undefined : min;
+        dataPoint.name = DataSanitizer.sanitizeString(name) || Util.NotSpecified;
+        dataPoint.value = value;
 
-            var dataPoint = new Microsoft.ApplicationInsights.Telemetry.Common.DataPoint();
-            dataPoint.count = count > 0 ? count : undefined;
-            dataPoint.max = isNaN(max) || max === null ? undefined : max;
-            dataPoint.min = isNaN(min) || min === null ? undefined : min;
-            dataPoint.name = Common.DataSanitizer.sanitizeString(name) || Util.NotSpecified;
-            dataPoint.value = value;
-
-            this.metrics = [dataPoint];
-            this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
-        }
+        this.metrics = [dataPoint];
+        this.properties = DataSanitizer.sanitizeProperties(properties);
     }
 }

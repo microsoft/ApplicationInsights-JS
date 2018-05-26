@@ -1,26 +1,23 @@
-﻿/// <reference path="../../JavaScriptSDK.Interfaces/Context/IInternal.ts"/>
+﻿import { IInternal } from '../../JavaScriptSDK.Interfaces/Context/IInternal';
+import { ITelemetryConfig } from '../../JavaScriptSDK/TelemetryContext';
+import { AppInsights } from '../../JavaScriptSDK/AppInsights';
 
-module Microsoft.ApplicationInsights.Context {
+export class Internal implements IInternal {
 
-    "use strict";
+    /**
+     * The SDK version used to create this telemetry item.
+     */
+    public sdkVersion: string;
 
-    export class Internal implements IInternal {
+    /**
+     * The SDK agent version.
+     */
+    public agentVersion: string;
 
-        /**
-         * The SDK version used to create this telemetry item.
-         */
-        public sdkVersion: string;
-
-        /**
-         * The SDK agent version.
-         */
-        public agentVersion: string;
-
-         /**
-         * Constructs a new instance of the internal telemetry data class.
-         */
-        constructor(config: ITelemetryConfig) {
-            this.sdkVersion = (config.sdkExtension() ? config.sdkExtension() + "_" : "") + "javascript:" + Version;
-        }
+    /**
+    * Constructs a new instance of the internal telemetry data class.
+    */
+    constructor(config: ITelemetryConfig) {
+        this.sdkVersion = (config.sdkExtension() ? config.sdkExtension() + "_" : "") + "javascript:" + AppInsights.Version;
     }
 }

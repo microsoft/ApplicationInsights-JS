@@ -1,38 +1,37 @@
-﻿/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/PageViewData.ts" />
-/// <reference path="./Common/DataSanitizer.ts"/>
+﻿import { PageViewData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/PageViewData';
+import { DataSanitizer } from './Common/DataSanitizer';
+import { ISerializable } from '../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
+import { FieldType } from '../Serializer';
+import { Util } from 'applicationinsights-common';
 
-module Microsoft.ApplicationInsights.Telemetry {
-    "use strict";
+export class PageView extends PageViewData implements ISerializable {
 
-    export class PageView extends AI.PageViewData implements ISerializable {
+    public static envelopeType = "Microsoft.ApplicationInsights.{0}.Pageview";
+    public static dataType = "PageviewData";
 
-        public static envelopeType = "Microsoft.ApplicationInsights.{0}.Pageview";
-        public static dataType = "PageviewData";
+    public aiDataContract = {
+        ver: FieldType.Required,
+        name: FieldType.Default,
+        url: FieldType.Default,
+        duration: FieldType.Default,
+        properties: FieldType.Default,
+        measurements: FieldType.Default,
+        id: FieldType.Default,
+    }
 
-        public aiDataContract = {            
-            ver: FieldType.Required,
-            name: FieldType.Default,
-            url: FieldType.Default,
-            duration: FieldType.Default,
-            properties: FieldType.Default,
-            measurements: FieldType.Default,
-            id: FieldType.Default,
+    /**
+     * Constructs a new instance of the PageEventTelemetry object
+     */
+    constructor(name?: string, url?: string, durationMs?: number, properties?: any, measurements?: any, id?: string) {
+        super();
+
+        this.id = DataSanitizer.sanitizeId(id);
+        this.url = DataSanitizer.sanitizeUrl(url);
+        this.name = DataSanitizer.sanitizeString(name) || Util.NotSpecified;
+        if (!isNaN(durationMs)) {
+            this.duration = Util.msToTimeSpan(durationMs);
         }
-
-        /**
-         * Constructs a new instance of the PageEventTelemetry object
-         */
-        constructor(name?: string, url?: string, durationMs?: number, properties?: any, measurements?: any, id?: string) {
-            super();
-
-            this.id = Common.DataSanitizer.sanitizeId(id);
-            this.url = Common.DataSanitizer.sanitizeUrl(url);
-            this.name = Common.DataSanitizer.sanitizeString(name) || Util.NotSpecified;
-            if (!isNaN(durationMs)) {
-                this.duration = Util.msToTimeSpan(durationMs);
-            }
-            this.properties = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeProperties(properties);
-            this.measurements = ApplicationInsights.Telemetry.Common.DataSanitizer.sanitizeMeasurements(measurements);
-        }
+        this.properties = DataSanitizer.sanitizeProperties(properties);
+        this.measurements = DataSanitizer.sanitizeMeasurements(measurements);
     }
 }
