@@ -42,11 +42,19 @@ module.exports = function (grunt) {
                 tsconfig: './tsconfig.json',
                 src: [
                     'AppInsightsChannel/*.ts',
+                    'AppInsightsChannel/TelemetryValidation/*.ts'
                 ],
                 out: 'AppInsightsChannel/bundle/aichannel.js'
             },
+            channelcommonjs: {
+                tsconfig:'./AppInsightsChannel/commonjs/tsconfigcommonjs.json',
+                src: [
+                    'AppInsightsChannel/*.ts',
+                    'AppInsightsChannel/TelemetryValidation/*.ts'
+                ]
+            },
             corecommonjs: {
-                tsconfig: './tsconfigcommonjs.json',
+                tsconfig: './coreSDK/tsconfigcommonjs.json',
                 src: [
                     'coreSDK/JavaScriptSDK.Interfaces/*.ts',
                     'coreSDK/JavaScriptSDK/*.ts',
@@ -168,9 +176,11 @@ module.exports = function (grunt) {
 
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("core", ["ts:core"]);
+    grunt.registerTask("corecommonjs", ["ts:corecommonjs"]);
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("commoncjs", ["ts:commoncjs"]);
     grunt.registerTask("channel", ["ts:channel"]);
+    grunt.registerTask("channelcommonjs", ["ts:channelcommonjs"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit"]);
 };
