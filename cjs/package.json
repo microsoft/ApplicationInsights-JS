@@ -9,14 +9,15 @@
         "grunt-ts": "^6.0.0-beta.15",
         "typescript": "2.5.3"
     },
-    "files":[
+    "files": [
         "coreSDK/applicationinsights-core-js.*",
         "coreSDK/JavaScriptSDK/AppInsightsCore.*",
+        "coreSDK/JavaScriptSDK/CoreUtils.*",
         "coreSDK/JavaScriptSDK.Interfaces/IAppInsightsCore.*",
         "coreSDK/JavaScriptSDK.Interfaces/IChannelControls.*",
         "coreSDK/JavaScriptSDK.Interfaces/ITelemetryPlugin.*",
         "coreSDK/JavaScriptSDK.Interfaces/IConfiguration.*"
-   ],
-   "main": "coreSDK/applicationinsights-core-js.js",
-   "types": "coreSDK/applicationinsights-core-js.d.ts"
+    ],
+    "main": "coreSDK/applicationinsights-core-js.js",
+    "types": "coreSDK/applicationinsights-core-js.d.ts"
 }

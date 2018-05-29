@@ -15,8 +15,13 @@ module.exports = function (grunt) {
             core: {
                 tsconfig: './tsconfig.json',
                 src: [
-                    'coreSDK/JavaScriptSDK.Interfaces/*.ts',
-                    'coreSDK/JavaScriptSDK/*.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/IConfiguration.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/IChannelControls.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/ITelemetryItem.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/IAppInsightsCore.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/CoreUtils.ts',
+                    'coreSDK/JavaScriptSDK/AppInsightsCore.ts',
                     'coreSDK/applicationinsights-core-js.ts'
                 ],
                 out: 'coreSDK/bundle/aicore.js',
@@ -48,8 +53,13 @@ module.exports = function (grunt) {
             corecommonjs: {
                 tsconfig: './tsconfigcommonjs.json',
                 src: [
-                    'coreSDK/JavaScriptSDK.Interfaces/*.ts',
-                    'coreSDK/JavaScriptSDK/*.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/IConfiguration.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/IChannelControls.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/ITelemetryItem.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/IAppInsightsCore.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/CoreUtils.ts',
+                    'coreSDK/JavaScriptSDK/AppInsightsCore.ts',
                     'coreSDK/applicationinsights-core-js.ts'
                 ]
             },

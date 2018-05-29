@@ -3,6 +3,7 @@ import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IChannelControls, MinChannelPriorty } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
+import { CoreUtils } from "./CoreUtils";
     
 export class AppInsightsCore implements IAppInsightsCore {
     public config: IConfiguration;
