@@ -169,7 +169,10 @@ JavaScript/.vs
 bundle/
 node_modules/
 out/
-coresdk/node_modules
+coreSDK/node_modules
 
 # Grunt
 .tscache
+
+# Test
+aicore.tests.*

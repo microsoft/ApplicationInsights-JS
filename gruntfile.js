@@ -92,6 +92,13 @@ module.exports = function (grunt) {
                 ],
                 out: 'bundle/test/ai.schema.tests.js'
             },
+            coretest: {
+                tsconfig: './tsconfig.json',
+                src: [
+                    'coreSDK/JavaScriptSDK.Tests/CoreTests/ApplicationInsightsCore.Tests.ts'
+                ],
+                out: 'coreSDK/JavaScriptSDK.Tests/Selenium/aicore.tests.js'
+            },
             testE2E: {
                 tsconfig: './tsconfig.json',
                 files: [
@@ -164,6 +171,17 @@ module.exports = function (grunt) {
                     summaryOnly: true,
                     '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
+            },
+            core: {
+                options: {
+                    urls: [
+                        'coreSDK/JavaScriptSDK.Tests/Selenium/Tests.html'                       
+                    ],
+                    timeout: 300 * 1000, // 5 min
+                    console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false'
+                }
             }
         }
     });
@@ -182,5 +200,6 @@ module.exports = function (grunt) {
     grunt.registerTask("commoncjs", ["ts:commoncjs"]);
     grunt.registerTask("channel", ["ts:channel"]);
     grunt.registerTask("module", ["ts:module"]);
+    grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit"]);
 };
