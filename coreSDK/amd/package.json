@@ -11,11 +11,11 @@
         "typescript": "2.5.3"
     },
     "files":[
-        "./applicationinsights-core.ts",
-        "./JavaScriptSDK/AppInsightsCore-js.ts",
-        "./JavaScriptSDK.Interfaces/IAppInsightsCore.ts",
-        "./JavaScriptSDK.Interfaces/IChannelControls.ts",
-        "./JavaScriptSDK.Interfaces/ITelemetryPlugin.ts",
-        "./JavaScriptSDK.Interfaces/IConfiguration.ts"
+        "coreSDK/applicationinsights-core-js.*",
+        "coreSDK/JavaScriptSDK/AppInsightsCore.*",
+        "coreSDK/JavaScriptSDK.Interfaces/IAppInsightsCore.*",
+        "coreSDK/JavaScriptSDK.Interfaces/IChannelControls.*",
+        "coreSDK/JavaScriptSDK.Interfaces/ITelemetryPlugin.*",
+        "coreSDK/JavaScriptSDK.Interfaces/IConfiguration.*"
    ]
 }
