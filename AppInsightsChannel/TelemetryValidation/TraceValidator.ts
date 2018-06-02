@@ -1,12 +1,10 @@
-/// <reference path="./ITypeValidator.ts" />
-module Microsoft.ApplicationInsights.Channel {
-    "use strict";
+import { ITelemetryItem } from '../../coreSDK/JavaScriptSDK.Interfaces/ITelemetryItem';
+import { ITypeValidator } from './ITypeValidator';
 
-    export class TraceValidator implements ITypeValidator {
-        static TraceValidator = new TraceValidator();
-        
-        Validate(event: Core.ITelemetryItem): boolean {
-            return false;
-        }
+export class TraceValidator implements ITypeValidator {
+    static TraceValidator = new TraceValidator();
+
+    Validate(event: ITelemetryItem): boolean {
+        return false;
     }
 }
