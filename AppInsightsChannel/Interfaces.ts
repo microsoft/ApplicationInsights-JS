@@ -1,10 +1,3 @@
-import { IConfiguration } from '../coreSDK/JavaScriptSDK.Interfaces/IConfiguration';
-
-export interface IConfig extends IConfiguration {
-    collectorUri: string;
-    extensions: { [name: string]: any };
-}
-
 export interface ISenderConfig {
     /**
      * The url to which payloads will be sent

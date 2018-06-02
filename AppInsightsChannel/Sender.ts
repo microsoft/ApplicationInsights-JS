@@ -1,5 +1,5 @@
 ///<reference path="./node_modules/applicationinsights-common/bundle/applicationinsights-common.d.ts" />
-import { ISenderConfig, XDomainRequest as IXDomainRequest, IConfig, IBackendResponse } from './Interfaces';
+import { ISenderConfig, XDomainRequest as IXDomainRequest, IBackendResponse } from './Interfaces';
 import { ISendBuffer, SessionStorageSendBuffer, ArraySendBuffer } from './SendBuffer';
 import {
     EnvelopeCreator, DependencyEnvelopeCreator, EventEnvelopeCreator,
@@ -24,6 +24,7 @@ import { Metric } from '../coreSDK/JavaScriptSDK/Telemetry/Metric';
 import { PageViewPerformance } from '../coreSDK/JavaScriptSDK/Telemetry/PageViewPerformance';
 import { RemoteDependencyData } from '../coreSDK/JavaScriptSDK/Telemetry/RemoteDependencyData';
 import { Serializer } from '../coreSDK/JavaScriptSDK/Serializer';
+import { IConfiguration } from '../coreSDK/JavaScriptSDK.Interfaces/IConfiguration';
 import {
     DisabledPropertyName, RequestHeaders, Util,
     _InternalMessageId, LoggingSeverity, _InternalLogging
@@ -85,7 +86,7 @@ export class Sender implements ITelemetryPlugin {
      */
     private _timeoutHandle: any;
 
-    public start(config: IConfig) {
+    public start(config: IConfiguration) {
         this._consecutiveErrors = 0;
         this._retryAt = null;
         this._lastSend = 0;
@@ -331,12 +332,12 @@ export class Sender implements ITelemetryPlugin {
         }
     }
 
-    private static _getDefaultAppInsightsChannelConfig(config: IConfig): ISenderConfig {
+    private static _getDefaultAppInsightsChannelConfig(config: IConfiguration): ISenderConfig {
         let resultConfig = <ISenderConfig>{};
         let pluginConfig = config.extensions["AppInsightsChannelPlugin"];
 
         // set default values
-        resultConfig.endpointUrl = () => config.collectorUri || "https://dc.services.visualstudio.com/v2/track";
+        resultConfig.endpointUrl = () => config.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
         resultConfig.emitLineDelimitedJson = () => Util.stringToBoolOrDefault(pluginConfig.emitLineDelimitedJson);
         resultConfig.maxBatchInterval = () => !isNaN(pluginConfig.maxBatchInterval) ? pluginConfig.maxBatchInterval : 15000;
         resultConfig.maxBatchSizeInBytes = () => pluginConfig.maxBatchSizeInBytes > 0 ? pluginConfig.maxBatchSizeInBytes : 102400; // 100kb
