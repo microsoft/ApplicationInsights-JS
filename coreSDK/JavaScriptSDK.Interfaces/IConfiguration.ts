@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Configuration provided to SDK core
  */

@@ -22,9 +22,9 @@ module.exports = function (grunt) {
                     'coreSDK/JavaScriptSDK.Interfaces/IAppInsightsCore.ts',
                     'coreSDK/JavaScriptSDK.Interfaces/CoreUtils.ts',
                     'coreSDK/JavaScriptSDK/AppInsightsCore.ts',
-                    'coreSDK/applicationinsights-core-js.ts'
+                    'coreSDK/applicationinsights-core.ts'
                 ],
-                out: 'coreSDK/bundle/aicore.js',
+                out: 'coreSDK/amd/bundle/aicore.js',
             },
             common: {
                 tsconfig: './tsconfig.json',
@@ -95,7 +95,7 @@ module.exports = function (grunt) {
             coretest: {
                 tsconfig: './tsconfig.json',
                 src: [
-                    'coreSDK/JavaScriptSDK.Tests/CoreTests/ApplicationInsightsCore.Tests.ts'
+                    'coreSDK/JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests.ts'
                 ],
                 out: 'coreSDK/JavaScriptSDK.Tests/Selenium/aicore.tests.js'
             },

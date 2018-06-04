@@ -1,13 +1,19 @@
 /// <reference path="../TestFramework/Common.ts" />
 /// <reference path="../../JavaScriptSDK/AppInsightsCore.ts" />
-/// <reference path="../../JavaScriptSDK.Interfaces/ITelemetryPlugin.ts" />
+/// <reference path="../../applicationinsights-core.ts" />
 
+import { IAppInsightsCore, IConfiguration, ITelemetryPlugin, IChannelControls, ITelemetryItem, MinChannelPriorty } from "../../applicationinsights-core"
 import { AppInsightsCore } from "../../JavaScriptSDK/AppInsightsCore";
-import { ITelemetryPlugin } from "../../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { ITelemetryItem } from "../../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { IConfiguration } from "../../JavaScriptSDK.Interfaces/IConfiguration";
 
-class ApplicationInsightsCoreTests extends TestClass {
+export class ApplicationInsightsCoreTests extends TestClass {
+
+    public testInitialize() {
+        super.testInitialize();
+    }
+
+    public testCleanup() {
+        super.testCleanup();
+    }
 
     public registerTests() {
 
@@ -36,6 +42,8 @@ class ApplicationInsightsCoreTests extends TestClass {
                 } catch (error) {
                     Assert.ok(true, "Validates extensions are provided");                    
                 }
+
+                Assert.ok(false);
             }
         });
     }
@@ -81,5 +89,4 @@ class TestSamplingPlugin implements ITelemetryPlugin {
     }
 }
 
-
-new ApplicationInsightsCoreTests().registerTests(); 
+new ApplicationInsightsCoreTests().registerTests();

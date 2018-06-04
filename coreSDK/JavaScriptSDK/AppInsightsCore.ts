@@ -4,7 +4,9 @@ import { ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IChannelControls, MinChannelPriorty } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { CoreUtils } from "./CoreUtils";
-    
+
+"use strict";
+
 export class AppInsightsCore implements IAppInsightsCore {
     public config: IConfiguration;
     public queue: (() => void)[];
@@ -54,7 +56,8 @@ export class AppInsightsCore implements IAppInsightsCore {
     getTransmissionControl(): IChannelControls {
         for (let i = 0; i < this._extensions.length; i++) {
             if (this._extensions[i].priority >= MinChannelPriorty) {
-                return <IChannelControls>this._extensions[i]; // return first channel in list
+                let firstChannel = <any>this._extensions[i];
+                return firstChannel as IChannelControls; // return first channel in list
             }
         }
 

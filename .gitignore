@@ -173,6 +173,3 @@ coreSDK/node_modules
 
 # Grunt
 .tscache
-
-# Test
-aicore.tests.*
