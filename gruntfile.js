@@ -50,7 +50,7 @@ module.exports = function (grunt) {
                 ],
                 out: 'AppInsightsChannel/bundle/aichannel.js'
             },
-            corecommonjs: {
+            corecjs: {
                 tsconfig: './tsconfigcommonjs.json',
                 src: [
                     'coreSDK/JavaScriptSDK.Interfaces/IConfiguration.ts',
@@ -196,6 +196,7 @@ module.exports = function (grunt) {
 
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("core", ["ts:core"]);
+    grunt.registerTask("corecjs", ["ts:corecjs"])
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("commoncjs", ["ts:commoncjs"]);
     grunt.registerTask("channel", ["ts:channel"]);
