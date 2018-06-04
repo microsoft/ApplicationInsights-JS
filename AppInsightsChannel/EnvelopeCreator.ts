@@ -10,6 +10,64 @@ import { PageViewPerformance } from '../coreSDK/JavaScriptSDK/Telemetry/PageView
 import { Trace } from '../coreSDK/JavaScriptSDK/Telemetry/Trace';
 import { ITelemetryItem } from '../coreSDK/JavaScriptSDK.Interfaces/ITelemetryItem';
 
+export const ContextTagKeys: string[] = [
+    "ai.application.ver",
+    "ai.application.build",
+    "ai.application.typeId",
+    "ai.application.applicationId",
+    "ai.application.layer",
+    "ai.device.id",
+    "ai.device.ip",
+    "ai.device.language",
+    "ai.device.locale",
+    "ai.device.model",
+    "ai.device.friendlyName",
+    "ai.device.network",
+    "ai.device.networkName",
+    "ai.device.oemName",
+    "ai.device.os",
+    "ai.device.osVersion",
+    "ai.device.roleInstance",
+    "ai.device.roleName",
+    "ai.device.screenResolution",
+    "ai.device.type",
+    "ai.device.machineName",
+    "ai.device.vmName",
+    "ai.device.browser",
+    "ai.device.browserVersion",
+    "ai.location.ip",
+    "ai.location.country",
+    "ai.location.province",
+    "ai.location.city",
+    "ai.operation.id",
+    "ai.operation.name",
+    "ai.operation.parentId",
+    "ai.operation.rootId",
+    "ai.operation.syntheticSource",
+    "ai.operation.correlationVector",
+    "ai.session.id",
+    "ai.session.isFirst",
+    "ai.session.isNew",
+    "ai.user.accountAcquisitionDate",
+    "ai.user.accountId",
+    "ai.user.userAgent",
+    "ai.user.id",
+    "ai.user.storeRegion",
+    "ai.user.authUserId",
+    "ai.user.anonUserAcquisitionDate",
+    "ai.user.authUserAcquisitionDate",
+    "ai.cloud.name",
+    "ai.cloud.role",
+    "ai.cloud.roleVer",
+    "ai.cloud.roleInstance",
+    "ai.cloud.environment",
+    "ai.cloud.location",
+    "ai.cloud.deploymentUnit",
+    "ai.internal.sdkVersion",
+    "ai.internal.agentVersion",
+    "ai.internal.nodeName",
+];
+
 export abstract class EnvelopeCreator {
     abstract Create(telemetryItem: ITelemetryItem): IEnvelope;
 
@@ -31,7 +89,7 @@ export abstract class EnvelopeCreator {
     }
 
     protected static createEnvelope<T>(envelopeType: string, telemetryItem: ITelemetryItem, data: Data<T>): IEnvelope {
-        let envelope = new Envelope(data, Event.envelopeType);
+        let envelope = new Envelope(data, envelopeType);
         envelope.iKey = telemetryItem.instrumentationKey;
         let iKeyNoDashes = telemetryItem.instrumentationKey.replace(/-/g, "");
         envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
@@ -39,7 +97,7 @@ export abstract class EnvelopeCreator {
         // loop through the envelope systemProperties and pick out the ones that should go in tags
         for (let key in telemetryItem.sytemProperties) {
             if (telemetryItem.sytemProperties.hasOwnProperty(key)) {
-                if (/*this key exists in the whitelist of ContextTagKeys*/ true) {// todo barustum
+                if (ContextTagKeys.indexOf(key) >= 0) {
                     envelope.tags[key] = telemetryItem.sytemProperties[key];
                 }
             }
