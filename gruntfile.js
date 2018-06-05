@@ -204,11 +204,7 @@ module.exports = function (grunt) {
 
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("core", ["ts:core"]);
-<<<<<<< HEAD
     grunt.registerTask("corecjs", ["ts:corecjs"])
-=======
-    grunt.registerTask("corecommonjs", ["ts:corecommonjs"]);
->>>>>>> master
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("commoncjs", ["ts:commoncjs"]);
     grunt.registerTask("channel", ["ts:channel"]);
