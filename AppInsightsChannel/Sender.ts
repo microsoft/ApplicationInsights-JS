@@ -13,9 +13,11 @@ import { MetricValidator } from './TelemetryValidation/MetricValidator';
 import { PageViewPerformanceValidator } from './TelemetryValidation/PageViewPerformanceValidator';
 import { PageViewValidator } from './TelemetryValidation/PageViewValidator';
 import { RemoteDepdencyValidator } from './TelemetryValidation/RemoteDepdencyValidator';
+import { IChannelControls } from '../coreSDK/JavaScriptSDK.Interfaces/IChannelControls';
 import { ITelemetryPlugin } from '../coreSDK/JavaScriptSDK.Interfaces/ITelemetryPlugin';
 import { ITelemetryItem } from '../coreSDK/JavaScriptSDK.Interfaces/ITelemetryItem';
 import { IEnvelope } from '../coreSDK/JavaScriptSDK.Interfaces/Telemetry/IEnvelope';
+import { IConfiguration } from '../coreSDK/JavaScriptSDK.Interfaces/IConfiguration';
 import { PageView } from '../coreSDK/JavaScriptSDK/Telemetry/PageView';
 import { Event } from '../coreSDK/JavaScriptSDK/Telemetry/Event';
 import { Trace } from '../coreSDK/JavaScriptSDK/Telemetry/Trace';
@@ -23,8 +25,7 @@ import { Exception } from '../coreSDK/JavaScriptSDK/Telemetry/Exception';
 import { Metric } from '../coreSDK/JavaScriptSDK/Telemetry/Metric';
 import { PageViewPerformance } from '../coreSDK/JavaScriptSDK/Telemetry/PageViewPerformance';
 import { RemoteDependencyData } from '../coreSDK/JavaScriptSDK/Telemetry/RemoteDependencyData';
-import { Serializer } from '../coreSDK/JavaScriptSDK/Serializer';
-import { IConfiguration } from '../coreSDK/JavaScriptSDK.Interfaces/IConfiguration';
+import { Serializer } from '../coreSDK/JavaScriptSDK/Serializer'; // todo move to channel
 import {
     DisabledPropertyName, RequestHeaders, Util,
     _InternalMessageId, LoggingSeverity, _InternalLogging
@@ -35,9 +36,26 @@ declare var XDomainRequest: {
     new(): IXDomainRequest;
 };
 
-export class Sender implements ITelemetryPlugin {
-    priority: number; // todo set priority
-    public identifier: string; // todo set identifier
+export class Sender implements IChannelControls {
+    public priority: number; // todo set priority
+
+    public identifier: string;
+
+    public pause(): void {
+        throw new Error("Method not implemented.");
+    }
+
+    public resume(): void {
+        throw new Error("Method not implemented.");
+    }
+
+    public flush(): void {
+        throw new Error("Method not implemented.");
+    }
+
+    public teardown(): void {
+        throw new Error("Method not implemented.");
+    }
 
     public setNextPlugin: (next: ITelemetryPlugin) => void;
 
@@ -87,10 +105,11 @@ export class Sender implements ITelemetryPlugin {
     private _timeoutHandle: any;
 
     public start(config: IConfiguration) {
+        this.identifier = "AppInsightsChannelPlugin";
         this._consecutiveErrors = 0;
         this._retryAt = null;
         this._lastSend = 0;
-        this._config = Sender._getDefaultAppInsightsChannelConfig(config);
+        this._config = Sender._getDefaultAppInsightsChannelConfig(config, this.identifier);
         this._sender = null;
         this._buffer = (Util.canUseSessionStorage() && this._config.enableSessionStorageBuffer)
             ? new SessionStorageSendBuffer(this._config) : new ArraySendBuffer(this._config);
@@ -332,9 +351,9 @@ export class Sender implements ITelemetryPlugin {
         }
     }
 
-    private static _getDefaultAppInsightsChannelConfig(config: IConfiguration): ISenderConfig {
+    private static _getDefaultAppInsightsChannelConfig(config: IConfiguration, identifier: string): ISenderConfig {
         let resultConfig = <ISenderConfig>{};
-        let pluginConfig = config.extensions["AppInsightsChannelPlugin"];
+        let pluginConfig = config.extensions[identifier];
 
         // set default values
         resultConfig.endpointUrl = () => config.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
