@@ -269,7 +269,7 @@ interface IConfig {
 
     // Controls what percentage of events will be sent
     // Default 100. 
-    samplingPercentage: boolean;
+    samplingPercentage: number;
 
     // Default 10s
     diagnosticLogInterval: number;

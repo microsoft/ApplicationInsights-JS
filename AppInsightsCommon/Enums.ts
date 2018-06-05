@@ -62,6 +62,7 @@ export enum _InternalMessageId {
     FailedToFixDepricatedValues,
     InvalidDurationValue,
     TelemetryEnvelopeInvalid,
+    CreateEnvelopeError,
 
     // User actionable
     CannotSerializeObject,

@@ -1,268 +1,260 @@
-﻿import _InternalLogging = Microsoft.ApplicationInsights.Common._InternalLogging;
-import LoggingSeverity = Microsoft.ApplicationInsights.Common.LoggingSeverity;
-import _InternalMessageId = Microsoft.ApplicationInsights.Common._InternalMessageId;
-import Util = Microsoft.ApplicationInsights.Common.Util;
+﻿import { _InternalLogging, LoggingSeverity, _InternalMessageId, Util } from 'applicationinsights-common';
+import { ISenderConfig } from './Interfaces';
 
+export interface ISendBuffer {
+    /**
+     * Enqueue the payload
+     */
+    enqueue: (payload: string) => void;
 
-module Microsoft.ApplicationInsights.Channel {
+    /**
+     * Returns the number of elements in the buffer
+     */
+    count: () => number;
 
-    "using strict";
+    /**
+     * Clears the buffer
+     */
+    clear: () => void;
 
-    export interface ISendBuffer {
-        /**
-         * Enqueue the payload
-         */
-        enqueue: (payload: string) => void;
+    /**
+     * Returns items stored in the buffer
+     */
+    getItems: () => string[];
 
-        /**
-         * Returns the number of elements in the buffer
-         */
-        count: () => number;
+    /**
+     * Build a batch of all elements in the payload array
+     */
+    batchPayloads: (payload: string[]) => string;
 
-        /**
-         * Clears the buffer
-         */
-        clear: () => void;
+    /**
+     * Moves items to the SENT_BUFFER.
+     * The buffer holds items which were sent, but we haven't received any response from the backend yet. 
+     */
+    markAsSent: (payload: string[]) => void;
 
-        /**
-         * Returns items stored in the buffer
-         */
-        getItems: () => string[];
+    /**
+     * Removes items from the SENT_BUFFER. Should be called on successful response from the backend. 
+     */
+    clearSent: (payload: string[]) => void;
+}
 
-        /**
-         * Build a batch of all elements in the payload array
-         */
-        batchPayloads: (payload: string[]) => string;
+/*
+ * An array based send buffer. 
+ */
+export class ArraySendBuffer implements ISendBuffer {
+    private _config: ISenderConfig;
+    private _buffer: string[];
 
-        /**
-         * Moves items to the SENT_BUFFER.
-         * The buffer holds items which were sent, but we haven't received any response from the backend yet. 
-         */
-        markAsSent: (payload: string[]) => void;
+    constructor(config: ISenderConfig) {
+        this._config = config;
 
-        /**
-         * Removes items from the SENT_BUFFER. Should be called on successful response from the backend. 
-         */
-        clearSent: (payload: string[]) => void;
+        this._buffer = [];
     }
 
-    /*
-     * An array based send buffer. 
-     */
-    export class ArraySendBuffer implements ISendBuffer {
-        private _config: ISenderConfig;
-        private _buffer: string[];
-
-        constructor(config: ISenderConfig) {
-            this._config = config;
-
-            this._buffer = [];
-        }
-
-        public enqueue(payload: string) {
-            this._buffer.push(payload);
-        }
-
-        public count(): number {
-            return this._buffer.length;
-        }
-
-        public clear() {
-            this._buffer.length = 0;
-        }
-
-        public getItems(): string[] {
-            return this._buffer.slice(0);
-        }
-
-        public batchPayloads(payload: string[]): string {
-            if (payload && payload.length > 0) {
-                var batch = this._config.emitLineDelimitedJson() ?
-                    payload.join("\n") :
-                    "[" + payload.join(",") + "]";
-
-                return batch;
-            }
-
-            return null;
-        }
-
-        public markAsSent(payload: string[]) {
-            this.clear();
-        }
-
-        public clearSent(payload: string[]) {
-            // not supported
-        }
+    public enqueue(payload: string) {
+        this._buffer.push(payload);
     }
 
-    /*
-     * Session storege buffer holds a copy of all unsent items in the browser session storage.
-     */
-    export class SessionStorageSendBuffer implements ISendBuffer {
-        static BUFFER_KEY = "AI_buffer";
-        static SENT_BUFFER_KEY = "AI_sentBuffer";
+    public count(): number {
+        return this._buffer.length;
+    }
 
-        // Maximum number of payloads stored in the buffer. If the buffer is full, new elements will be dropped. 
-        static MAX_BUFFER_SIZE = 2000;
-        private _bufferFullMessageSent = false;
+    public clear() {
+        this._buffer.length = 0;
+    }
 
-        // An in-memory copy of the buffer. A copy is saved to the session storage on enqueue() and clear(). 
-        // The buffer is restored in a constructor and contains unsent events from a previous page.
-        private _buffer: string[];
-        private _config: ISenderConfig;
+    public getItems(): string[] {
+        return this._buffer.slice(0);
+    }
 
-        constructor(config: ISenderConfig) {
-            this._config = config;
+    public batchPayloads(payload: string[]): string {
+        if (payload && payload.length > 0) {
+            var batch = this._config.emitLineDelimitedJson() ?
+                payload.join("\n") :
+                "[" + payload.join(",") + "]";
 
-            var bufferItems = this.getBuffer(SessionStorageSendBuffer.BUFFER_KEY);
-            var notDeliveredItems = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+            return batch;
+        }
 
-            this._buffer = bufferItems.concat(notDeliveredItems);
+        return null;
+    }
 
-            // If the buffer has too many items, drop items from the end.
-            if (this._buffer.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
-                this._buffer.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
+    public markAsSent(payload: string[]) {
+        this.clear();
+    }
+
+    public clearSent(payload: string[]) {
+        // not supported
+    }
+}
+
+/*
+ * Session storege buffer holds a copy of all unsent items in the browser session storage.
+ */
+export class SessionStorageSendBuffer implements ISendBuffer {
+    static BUFFER_KEY = "AI_buffer";
+    static SENT_BUFFER_KEY = "AI_sentBuffer";
+
+    // Maximum number of payloads stored in the buffer. If the buffer is full, new elements will be dropped. 
+    static MAX_BUFFER_SIZE = 2000;
+    private _bufferFullMessageSent = false;
+
+    // An in-memory copy of the buffer. A copy is saved to the session storage on enqueue() and clear(). 
+    // The buffer is restored in a constructor and contains unsent events from a previous page.
+    private _buffer: string[];
+    private _config: ISenderConfig;
+
+    constructor(config: ISenderConfig) {
+        this._config = config;
+
+        var bufferItems = this.getBuffer(SessionStorageSendBuffer.BUFFER_KEY);
+        var notDeliveredItems = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+
+        this._buffer = bufferItems.concat(notDeliveredItems);
+
+        // If the buffer has too many items, drop items from the end.
+        if (this._buffer.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
+            this._buffer.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
+        }
+
+        // update DataLossAnalyzer with the number of recovered items
+        // Uncomment if you want to use DataLossanalyzer
+        // DataLossAnalyzer.itemsRestoredFromSessionBuffer = this._buffer.length;
+
+        this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
+        this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
+    }
+
+    public enqueue(payload: string) {
+        if (this._buffer.length >= SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
+            // sent internal log only once per page view
+            if (!this._bufferFullMessageSent) {
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.SessionStorageBufferFull,
+                    "Maximum buffer size reached: " + this._buffer.length,
+                    true);
+                this._bufferFullMessageSent = true;
             }
-
-            // update DataLossAnalyzer with the number of recovered items
-            // Uncomment if you want to use DataLossanalyzer
-            // DataLossAnalyzer.itemsRestoredFromSessionBuffer = this._buffer.length;
-
-            this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
-            this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
+            return;
         }
 
-        public enqueue(payload: string) {
-            if (this._buffer.length >= SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
-                // sent internal log only once per page view
-                if (!this._bufferFullMessageSent) {
-                    _InternalLogging.throwInternal(
-                        LoggingSeverity.WARNING,
-                        _InternalMessageId.SessionStorageBufferFull,
-                        "Maximum buffer size reached: " + this._buffer.length,
-                        true);
-                    this._bufferFullMessageSent = true;
-                }
-                return;
+        this._buffer.push(payload);
+        this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
+    }
+
+    public count(): number {
+        return this._buffer.length;
+    }
+
+    public clear() {
+        this._buffer.length = 0;
+        this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, []);
+        this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
+
+        this._bufferFullMessageSent = false;
+    }
+
+    public getItems(): string[] {
+        return this._buffer.slice(0)
+    }
+
+    public batchPayloads(payload: string[]): string {
+        if (payload && payload.length > 0) {
+            var batch = this._config.emitLineDelimitedJson() ?
+                payload.join("\n") :
+                "[" + payload.join(",") + "]";
+
+            return batch;
+        }
+
+        return null;
+    }
+
+    public markAsSent(payload: string[]) {
+        this._buffer = this.removePayloadsFromBuffer(payload, this._buffer);
+        this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
+
+        var sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+        if (sentElements instanceof Array && payload instanceof Array) {
+            sentElements = sentElements.concat(payload);
+
+            if (sentElements.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
+                // We send telemetry normally. If the SENT_BUFFER is too big we don't add new elements
+                // until we receive a response from the backend and the buffer has free space again (see clearSent method)
+                _InternalLogging.throwInternal(
+                    LoggingSeverity.CRITICAL,
+                    _InternalMessageId.SessionStorageBufferFull,
+                    "Sent buffer reached its maximum size: " + sentElements.length,
+                    true);
+
+                sentElements.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
             }
-
-            this._buffer.push(payload);
-            this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
-        }
-
-        public count(): number {
-            return this._buffer.length;
-        }
-
-        public clear() {
-            this._buffer.length = 0;
-            this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, []);
-            this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
-
-            this._bufferFullMessageSent = false;
-        }
-
-        public getItems(): string[] {
-            return this._buffer.slice(0)
-        }
-
-        public batchPayloads(payload: string[]): string {
-            if (payload && payload.length > 0) {
-                var batch = this._config.emitLineDelimitedJson() ?
-                    payload.join("\n") :
-                    "[" + payload.join(",") + "]";
-
-                return batch;
-            }
-
-            return null;
-        }
-
-        public markAsSent(payload: string[]) {
-            this._buffer = this.removePayloadsFromBuffer(payload, this._buffer);
-            this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
-
-            var sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
-            if (sentElements instanceof Array && payload instanceof Array) {
-                sentElements = sentElements.concat(payload);
-
-                if (sentElements.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
-                    // We send telemetry normally. If the SENT_BUFFER is too big we don't add new elements
-                    // until we receive a response from the backend and the buffer has free space again (see clearSent method)
-                    _InternalLogging.throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.SessionStorageBufferFull,
-                        "Sent buffer reached its maximum size: " + sentElements.length,
-                        true);
-
-                    sentElements.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
-                }
-
-                this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
-            }
-        }
-
-        public clearSent(payload: string[]) {
-            var sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
-            sentElements = this.removePayloadsFromBuffer(payload, sentElements);
 
             this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
         }
+    }
 
-        private removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
-            var remaining: string[] = [];
+    public clearSent(payload: string[]) {
+        var sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+        sentElements = this.removePayloadsFromBuffer(payload, sentElements);
 
-            for (var i in buffer) {
-                var contains = false;
-                for (var j in payloads) {
-                    if (payloads[j] === buffer[i]) {
-                        contains = true;
-                        break;
-                    }
+        this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
+    }
+
+    private removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
+        var remaining: string[] = [];
+
+        for (var i in buffer) {
+            var contains = false;
+            for (var j in payloads) {
+                if (payloads[j] === buffer[i]) {
+                    contains = true;
+                    break;
                 }
-
-                if (!contains) {
-                    remaining.push(buffer[i]);
-                }
-            };
-
-            return remaining;
-        }
-
-        private getBuffer(key: string): string[] {
-            try {
-                var bufferJson = Util.getSessionStorage(key);
-                if (bufferJson) {
-                    var buffer: string[] = JSON.parse(bufferJson);
-                    if (buffer) {
-                        return buffer;
-                    }
-                }
-            } catch (e) {
-                _InternalLogging.throwInternal(LoggingSeverity.CRITICAL,
-                    _InternalMessageId.FailedToRestoreStorageBuffer,
-                    " storage key: " + key + ", " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) });
             }
 
-            return [];
+            if (!contains) {
+                remaining.push(buffer[i]);
+            }
+        };
+
+        return remaining;
+    }
+
+    private getBuffer(key: string): string[] {
+        try {
+            var bufferJson = Util.getSessionStorage(key);
+            if (bufferJson) {
+                var buffer: string[] = JSON.parse(bufferJson);
+                if (buffer) {
+                    return buffer;
+                }
+            }
+        } catch (e) {
+            _InternalLogging.throwInternal(LoggingSeverity.CRITICAL,
+                _InternalMessageId.FailedToRestoreStorageBuffer,
+                " storage key: " + key + ", " + Util.getExceptionName(e),
+                { exception: Util.dump(e) });
         }
 
-        private setBuffer(key: string, buffer: string[]) {
-            try {
-                var bufferJson = JSON.stringify(buffer);
-                Util.setSessionStorage(key, bufferJson);
-            } catch (e) {
-                // if there was an error, clear the buffer
-                // telemetry is stored in the _buffer array so we won't loose any items
-                Util.setSessionStorage(key, JSON.stringify([]));
+        return [];
+    }
 
-                _InternalLogging.throwInternal(LoggingSeverity.WARNING,
-                    _InternalMessageId.FailedToSetStorageBuffer,
-                    " storage key: " + key + ", " + Util.getExceptionName(e) + ". Buffer cleared",
-                    { exception: Util.dump(e) });
-            }
+    private setBuffer(key: string, buffer: string[]) {
+        try {
+            var bufferJson = JSON.stringify(buffer);
+            Util.setSessionStorage(key, bufferJson);
+        } catch (e) {
+            // if there was an error, clear the buffer
+            // telemetry is stored in the _buffer array so we won't loose any items
+            Util.setSessionStorage(key, JSON.stringify([]));
+
+            _InternalLogging.throwInternal(LoggingSeverity.WARNING,
+                _InternalMessageId.FailedToSetStorageBuffer,
+                " storage key: " + key + ", " + Util.getExceptionName(e) + ". Buffer cleared",
+                { exception: Util.dump(e) });
         }
     }
 }

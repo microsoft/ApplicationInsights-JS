@@ -47,6 +47,7 @@ module.exports = function (grunt) {
                 tsconfig: './tsconfig.json',
                 src: [
                     'AppInsightsChannel/*.ts',
+                    'AppInsightsChannel/TelemetryValidation/*.ts'
                 ],
                 out: 'AppInsightsChannel/bundle/aichannel.js'
             },
@@ -61,6 +62,13 @@ module.exports = function (grunt) {
                     'coreSDK/JavaScriptSDK.Interfaces/CoreUtils.ts',
                     'coreSDK/JavaScriptSDK/AppInsightsCore.ts',
                     'coreSDK/applicationinsights-core-js.ts'
+                ]
+            },
+            channelcommonjs: {
+                tsconfig:'./AppInsightsChannel/commonjs/tsconfigcommonjs.json',
+                src: [
+                    'AppInsightsChannel/*.ts',
+                    'AppInsightsChannel/TelemetryValidation/*.ts'
                 ]
             },
             module: {
@@ -196,10 +204,15 @@ module.exports = function (grunt) {
 
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("core", ["ts:core"]);
+<<<<<<< HEAD
     grunt.registerTask("corecjs", ["ts:corecjs"])
+=======
+    grunt.registerTask("corecommonjs", ["ts:corecommonjs"]);
+>>>>>>> master
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("commoncjs", ["ts:commoncjs"]);
     grunt.registerTask("channel", ["ts:channel"]);
+    grunt.registerTask("channelcommonjs", ["ts:channelcommonjs"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit"]);
