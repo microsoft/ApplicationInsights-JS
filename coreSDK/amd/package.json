@@ -3,11 +3,15 @@
     "version": "0.0.1",
     "description": "Microsoft Application Insights Core Javascript SDK",
     "main": "bundle/aicore.js",
+    "types": "bundle/aicore.d.ts",
     "devDependencies": {
         "grunt": "1.0.1",
         "grunt-contrib-qunit": "2.0.0",
         "grunt-contrib-uglify": "3.1.0",
         "grunt-ts": "^6.0.0-beta.15",
         "typescript": "2.5.3"
-    }
+    },
+    "publishConfig": {
+    "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
+      }
 }
