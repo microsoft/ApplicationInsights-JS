@@ -29,16 +29,16 @@ module.exports = function (grunt) {
             common: {
                 tsconfig: './tsconfig.json',
                 src: [
-                    'applicationinsights-common.ts',
+                    'AppInsightsCommon/applicationinsights-common.ts',
                     'AppInsightsCommon/*.ts',
                     'AppInsightsCommon/Interfaces/*.ts'
                 ],
-                out: 'AppInsightsCommon/bundle/applicationinsights-common.js'
+                out: 'AppInsightsCommon/amd/bundle/applicationinsights-common.js'
             },
             commoncjs: {
-                tsconfig: './AppInsightsCommon/commonjs/tsconfigcommonjs.json',
+                tsconfig: './AppInsightsCommon/cjs/tsconfigcommonjs.json',
                 src: [
-                    'applicationinsights-common.ts',
+                    'AppInsightsCommon/applicationinsights-common.ts',
                     'AppInsightsCommon/*.ts',
                     'AppInsightsCommon/Interfaces/*.ts'
                 ]
@@ -49,10 +49,10 @@ module.exports = function (grunt) {
                     'AppInsightsChannel/*.ts',
                     'AppInsightsChannel/TelemetryValidation/*.ts'
                 ],
-                out: 'AppInsightsChannel/bundle/aichannel.js'
+                out: 'AppInsightsChannel/amd/bundle/aichannel.js'
             },
-            channelcommonjs: {
-                tsconfig:'./AppInsightsChannel/commonjs/tsconfigcommonjs.json',
+            channelcjs: {
+                tsconfig:'./AppInsightsChannel/cjs/tsconfigcommonjs.json',
                 src: [
                     'AppInsightsChannel/*.ts',
                     'AppInsightsChannel/TelemetryValidation/*.ts'
@@ -215,7 +215,7 @@ module.exports = function (grunt) {
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("commoncjs", ["ts:commoncjs"]);
     grunt.registerTask("channel", ["ts:channel"]);
-    grunt.registerTask("channelcommonjs", ["ts:channelcommonjs"]);
+    grunt.registerTask("channelcjs", ["ts:channelcjs"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit"]);
