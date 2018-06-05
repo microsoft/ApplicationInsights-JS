@@ -51,7 +51,7 @@ module.exports = function (grunt) {
                 out: 'AppInsightsChannel/bundle/aichannel.js'
             },
             corecjs: {
-                tsconfig: './tsconfigcommonjs.json',
+                tsconfig: './coreSDK/cjs/tsconfigcommonjs.json',
                 src: [
                     'coreSDK/JavaScriptSDK.Interfaces/IConfiguration.ts',
                     'coreSDK/JavaScriptSDK.Interfaces/IChannelControls.ts',
