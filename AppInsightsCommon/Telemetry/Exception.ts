@@ -1,11 +1,11 @@
-﻿import { StackFrame } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/StackFrame';
-import { ExceptionData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/ExceptionData';
-import { ExceptionDetails } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/ExceptionDetails';
-import { ISerializable } from '../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
+﻿import { StackFrame } from '../Interfaces/Contracts/Generated/StackFrame';
+import { ExceptionData } from '../Interfaces/Contracts/Generated/ExceptionData';
+import { ExceptionDetails } from '../Interfaces/Contracts/Generated/ExceptionDetails';
+import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
-import { FieldType } from '../Serializer';
-import { SeverityLevel } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel';
-import { Util } from 'applicationinsights-common';
+import { FieldType } from '../Enums';
+import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
+import { Util } from '../Util';
 
 export class Exception extends ExceptionData implements ISerializable {
 

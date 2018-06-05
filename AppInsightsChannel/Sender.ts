@@ -1,5 +1,5 @@
 ///<reference path="./node_modules/applicationinsights-common/bundle/applicationinsights-common.d.ts" />
-///<reference path="./node_modules/applicationinsights-core-js/bundle/aicore.d.ts" />
+///<reference path="./node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js.d.ts" />
 import { ISenderConfig, XDomainRequest as IXDomainRequest, IBackendResponse } from './Interfaces';
 import { ISendBuffer, SessionStorageSendBuffer, ArraySendBuffer } from './SendBuffer';
 import {
@@ -14,18 +14,13 @@ import { MetricValidator } from './TelemetryValidation/MetricValidator';
 import { PageViewPerformanceValidator } from './TelemetryValidation/PageViewPerformanceValidator';
 import { PageViewValidator } from './TelemetryValidation/PageViewValidator';
 import { RemoteDepdencyValidator } from './TelemetryValidation/RemoteDepdencyValidator';
-import { IEnvelope } from '../coreSDK/JavaScriptSDK.Interfaces/Telemetry/IEnvelope';
-import { PageView } from '../coreSDK/JavaScriptSDK/Telemetry/PageView';
-import { Event } from '../coreSDK/JavaScriptSDK/Telemetry/Event';
-import { Trace } from '../coreSDK/JavaScriptSDK/Telemetry/Trace';
-import { Exception } from '../coreSDK/JavaScriptSDK/Telemetry/Exception';
-import { Metric } from '../coreSDK/JavaScriptSDK/Telemetry/Metric';
-import { PageViewPerformance } from '../coreSDK/JavaScriptSDK/Telemetry/PageViewPerformance';
-import { RemoteDependencyData } from '../coreSDK/JavaScriptSDK/Telemetry/RemoteDependencyData';
-import { Serializer } from '../coreSDK/JavaScriptSDK/Serializer'; // todo move to channel
+import { Serializer } from './Serializer'; // todo move to channel
 import {
     DisabledPropertyName, RequestHeaders, Util,
-    _InternalMessageId, LoggingSeverity, _InternalLogging
+    _InternalMessageId, LoggingSeverity, _InternalLogging,
+    IEnvelope, PageView, Event,
+    Trace, Exception, Metric,
+    PageViewPerformance, RemoteDependencyData
 } from 'applicationinsights-common';
 import {
     IChannelControls, ITelemetryPlugin, ITelemetryItem, IConfiguration

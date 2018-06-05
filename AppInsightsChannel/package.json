@@ -9,7 +9,8 @@
         "grunt-contrib-uglify": "3.1.0",
         "grunt-ts": "^6.0.0-beta.15",
         "typescript": "2.5.3",
-        "applicationinsights-common": "file:../AppInsightsCommon/commonjs/applicationinsights-common-0.0.1.tgz"
+        "applicationinsights-common": "file:../AppInsightsCommon/commonjs/applicationinsights-common-0.0.1.tgz",
+        "applicationinsights-core-js": "file:./applicationinsights-core-js-0.0.1.tgz"
     },
     "files": [
         "package.json",

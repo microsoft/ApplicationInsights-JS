@@ -24,7 +24,7 @@ module.exports = function (grunt) {
                     'coreSDK/JavaScriptSDK/AppInsightsCore.ts',
                     'coreSDK/applicationinsights-core-js.ts'
                 ],
-                out: 'coreSDK/amd/bundle/aicore.js',
+                out: 'coreSDK/amd/bundle/applicationinsights-core-js.js',
             },
             common: {
                 tsconfig: './tsconfig.json',

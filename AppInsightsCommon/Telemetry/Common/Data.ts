@@ -1,6 +1,6 @@
-﻿import { Data as AIData } from '../../../JavaScriptSDK.Interfaces/Contracts/Generated/Data';
-import { ISerializable } from '../../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
-import { FieldType } from '../../../JavaScriptSDK/Serializer';
+﻿import { Data as AIData } from '../../Interfaces/Contracts/Generated/Data';
+import { ISerializable } from '../../Interfaces/Telemetry/ISerializable';
+import { FieldType } from '../../Enums';
 
 export class Data<TDomain> extends AIData<TDomain> implements ISerializable {
 

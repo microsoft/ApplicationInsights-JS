@@ -1,9 +1,9 @@
-﻿import { Envelope as AIEnvelope } from '../../../JavaScriptSDK.Interfaces/Contracts/Generated/Envelope';
-import { Base } from '../../../JavaScriptSDK.Interfaces/Contracts/Generated/Base';
-import { IEnvelope } from '../../../JavaScriptSDK.Interfaces/Telemetry/IEnvelope';
-import { DataSanitizer } from '../../../JavaScriptSDK/Telemetry/Common/DataSanitizer';
-import { FieldType } from '../../../JavaScriptSDK/Serializer';
-import { Util } from 'applicationinsights-common';
+﻿import { Envelope as AIEnvelope } from '../../Interfaces/Contracts/Generated/Envelope';
+import { Base } from '../../Interfaces/Contracts/Generated/Base';
+import { IEnvelope } from '../../Interfaces/Telemetry/IEnvelope';
+import { DataSanitizer } from './DataSanitizer';
+import { FieldType } from '../../Enums';
+import { Util } from '../../Util';
 
 export class Envelope extends AIEnvelope implements IEnvelope {
 

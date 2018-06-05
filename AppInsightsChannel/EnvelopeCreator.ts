@@ -1,13 +1,9 @@
-import { IEnvelope } from '../coreSDK/JavaScriptSDK.Interfaces/Telemetry/IEnvelope';
-import { Data } from '../coreSDK/JavaScriptSDK/Telemetry/Common/Data';
-import { Envelope } from '../coreSDK/JavaScriptSDK/Telemetry/Common/Envelope';
-import { RemoteDependencyData } from '../coreSDK/JavaScriptSDK/Telemetry/RemoteDependencyData';
-import { Event } from '../coreSDK/JavaScriptSDK/Telemetry/Event';
-import { Exception } from '../coreSDK/JavaScriptSDK/Telemetry/Exception';
-import { Metric } from '../coreSDK/JavaScriptSDK/Telemetry/Metric';
-import { PageView } from '../coreSDK/JavaScriptSDK/Telemetry/PageView';
-import { PageViewPerformance } from '../coreSDK/JavaScriptSDK/Telemetry/PageViewPerformance';
-import { Trace } from '../coreSDK/JavaScriptSDK/Telemetry/Trace';
+///<reference path="./node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js.d.ts" />
+import {
+    IEnvelope, Data, Envelope,
+    RemoteDependencyData, Event, Exception,
+    Metric, PageView, Trace, PageViewPerformance
+} from 'applicationinsights-common';
 import { ITelemetryItem } from 'applicationinsights-core-js';
 
 export const ContextTagKeys: string[] = [

@@ -1,8 +1,8 @@
-﻿import { PageViewData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/PageViewData';
+﻿import { PageViewData } from '../Interfaces/Contracts/Generated/PageViewData';
 import { DataSanitizer } from './Common/DataSanitizer';
-import { ISerializable } from '../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
-import { FieldType } from '../Serializer';
-import { Util } from 'applicationinsights-common';
+import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
+import { FieldType } from '../Enums';
+import { Util } from '../Util';
 
 export class PageView extends PageViewData implements ISerializable {
 
