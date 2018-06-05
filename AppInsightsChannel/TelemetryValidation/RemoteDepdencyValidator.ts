@@ -1,5 +1,5 @@
-import { ITelemetryItem } from '../../coreSDK/JavaScriptSDK.Interfaces/ITelemetryItem';
 import { ITypeValidator } from './ITypeValidator';
+import { ITelemetryItem } from 'applicationinsights-core-js';
 
 export class RemoteDepdencyValidator implements ITypeValidator {
     static RemoteDepdencyValidator = new RemoteDepdencyValidator();

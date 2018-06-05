@@ -1,4 +1,5 @@
 ///<reference path="./node_modules/applicationinsights-common/bundle/applicationinsights-common.d.ts" />
+///<reference path="./node_modules/applicationinsights-core-js/bundle/aicore.d.ts" />
 import { ISenderConfig, XDomainRequest as IXDomainRequest, IBackendResponse } from './Interfaces';
 import { ISendBuffer, SessionStorageSendBuffer, ArraySendBuffer } from './SendBuffer';
 import {
@@ -13,11 +14,7 @@ import { MetricValidator } from './TelemetryValidation/MetricValidator';
 import { PageViewPerformanceValidator } from './TelemetryValidation/PageViewPerformanceValidator';
 import { PageViewValidator } from './TelemetryValidation/PageViewValidator';
 import { RemoteDepdencyValidator } from './TelemetryValidation/RemoteDepdencyValidator';
-import { IChannelControls } from '../coreSDK/JavaScriptSDK.Interfaces/IChannelControls';
-import { ITelemetryPlugin } from '../coreSDK/JavaScriptSDK.Interfaces/ITelemetryPlugin';
-import { ITelemetryItem } from '../coreSDK/JavaScriptSDK.Interfaces/ITelemetryItem';
 import { IEnvelope } from '../coreSDK/JavaScriptSDK.Interfaces/Telemetry/IEnvelope';
-import { IConfiguration } from '../coreSDK/JavaScriptSDK.Interfaces/IConfiguration';
 import { PageView } from '../coreSDK/JavaScriptSDK/Telemetry/PageView';
 import { Event } from '../coreSDK/JavaScriptSDK/Telemetry/Event';
 import { Trace } from '../coreSDK/JavaScriptSDK/Telemetry/Trace';
@@ -30,6 +27,9 @@ import {
     DisabledPropertyName, RequestHeaders, Util,
     _InternalMessageId, LoggingSeverity, _InternalLogging
 } from 'applicationinsights-common';
+import {
+    IChannelControls, ITelemetryPlugin, ITelemetryItem, IConfiguration
+} from 'applicationinsights-core-js';
 
 declare var XDomainRequest: {
     prototype: IXDomainRequest;

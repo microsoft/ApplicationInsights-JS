@@ -8,7 +8,7 @@ import { Metric } from '../coreSDK/JavaScriptSDK/Telemetry/Metric';
 import { PageView } from '../coreSDK/JavaScriptSDK/Telemetry/PageView';
 import { PageViewPerformance } from '../coreSDK/JavaScriptSDK/Telemetry/PageViewPerformance';
 import { Trace } from '../coreSDK/JavaScriptSDK/Telemetry/Trace';
-import { ITelemetryItem } from '../coreSDK/JavaScriptSDK.Interfaces/ITelemetryItem';
+import { ITelemetryItem } from 'applicationinsights-core-js';
 
 export const ContextTagKeys: string[] = [
     "ai.application.ver",

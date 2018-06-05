@@ -1,5 +1,5 @@
 import { ITypeValidator } from './ITypeValidator';
-import { ITelemetryItem } from '../../coreSDK/JavaScriptSDK.Interfaces/ITelemetryItem';
+import { ITelemetryItem } from 'applicationinsights-core-js';
 
 export class EventValidator implements ITypeValidator {
     static EventValidator = new EventValidator();
