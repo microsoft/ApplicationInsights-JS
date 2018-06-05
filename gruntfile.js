@@ -22,7 +22,7 @@ module.exports = function (grunt) {
                     'coreSDK/JavaScriptSDK.Interfaces/IAppInsightsCore.ts',
                     'coreSDK/JavaScriptSDK.Interfaces/CoreUtils.ts',
                     'coreSDK/JavaScriptSDK/AppInsightsCore.ts',
-                    'coreSDK/applicationinsights-core.ts'
+                    'coreSDK/applicationinsights-core-js.ts'
                 ],
                 out: 'coreSDK/amd/bundle/aicore.js',
             },
