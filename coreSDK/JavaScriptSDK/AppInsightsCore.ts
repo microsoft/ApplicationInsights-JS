@@ -3,7 +3,10 @@ import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IChannelControls, MinChannelPriorty } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-    
+import { CoreUtils } from "./CoreUtils";
+
+"use strict";
+
 export class AppInsightsCore implements IAppInsightsCore {
     public config: IConfiguration;
     public queue: (() => void)[];
@@ -40,8 +43,8 @@ export class AppInsightsCore implements IAppInsightsCore {
             return extA.priority > extB.priority ? -1 : 1;
         });
 
-        for (let idx = 0; idx < this._extensions.length - 1; idx++) {
-            this._extensions[idx].setNextPlugin(this._extensions[idx]); // set next plugin
+        for (let idx = 0; idx < this._extensions.length - 2; idx++) {
+            this._extensions[idx].setNextPlugin(this._extensions[idx + 1]); // set next plugin
         }
 
         this._extensions.forEach(ext => ext.start(this.config)); // initialize
@@ -53,7 +56,8 @@ export class AppInsightsCore implements IAppInsightsCore {
     getTransmissionControl(): IChannelControls {
         for (let i = 0; i < this._extensions.length; i++) {
             if (this._extensions[i].priority >= MinChannelPriorty) {
-                return <IChannelControls>this._extensions[i]; // return first channel in list
+                let firstChannel = <any>this._extensions[i];
+                return firstChannel as IChannelControls; // return first channel in list
             }
         }
 
@@ -67,8 +71,10 @@ export class AppInsightsCore implements IAppInsightsCore {
         }
 
         // do base validation before sending it through the pipeline        
-        this._validateTelmetryItem(telemetryItem);
-        
+        this._validateTelmetryItem(telemetryItem);        
+
+        // invoke any common telemetry processors before sending through pipeline
+
         this._extensions[0].processTelemetry(telemetryItem); // pass on to first extension
     }
 

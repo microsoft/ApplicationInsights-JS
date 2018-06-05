@@ -1,5 +1,7 @@
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
 
+"use strict";
+
 /**
  * Provides data transmission capabilities
  */

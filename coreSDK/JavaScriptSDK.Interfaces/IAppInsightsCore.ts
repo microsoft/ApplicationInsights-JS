@@ -3,6 +3,7 @@ import { IChannelControls } from "./IChannelControls";
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
 import { IConfiguration } from "./IConfiguration";
 
+"use strict";
 
 export interface IAppInsightsCore {
 
