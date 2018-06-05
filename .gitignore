@@ -55,6 +55,9 @@ ipch/
 *.sdf
 *.cachefile
 
+# Local tgz files
+*.tgz
+
 # Visual Studio profiler
 *.psess
 *.vsp
@@ -166,6 +169,7 @@ JavaScript/.vs
 bundle/
 node_modules/
 out/
+coreSDK/node_modules
 
 # Grunt
 .tscache

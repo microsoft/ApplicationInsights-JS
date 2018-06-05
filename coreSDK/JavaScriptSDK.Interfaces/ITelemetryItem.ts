@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Telemety item supported in Core
  */
