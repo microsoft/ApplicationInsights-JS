@@ -1,5 +1,5 @@
-import { ITelemetryItem } from '../../coreSDK/JavaScriptSDK.Interfaces/ITelemetryItem';
+import { ITelemetryItem } from 'applicationinsights-core-js';
 
 export interface ITypeValidator {
-    Validate(event: ITelemetryItem): boolean;
+    Validate(item: ITelemetryItem): boolean;
 }

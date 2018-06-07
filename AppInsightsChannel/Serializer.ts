@@ -1,10 +1,4 @@
-﻿import { ISerializable } from '../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
-import { LoggingSeverity, _InternalMessageId, _InternalLogging, Util } from 'applicationinsights-common';
-/**
- * Enum is used in aiDataContract to describe how fields are serialized. 
- * For instance: (Fieldtype.Required | FieldType.Array) will mark the field as required and indicate it's an array
- */
-export enum FieldType { Default = 0, Required = 1, Array = 2, Hidden = 4 };
+﻿import { LoggingSeverity, _InternalMessageId, _InternalLogging, Util, ISerializable, FieldType } from 'applicationinsights-common';
 
 export class Serializer {
 

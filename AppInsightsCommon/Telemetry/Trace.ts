@@ -1,9 +1,9 @@
-﻿import { MessageData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/MessageData';
-import { ISerializable } from '../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
+﻿import { MessageData } from '../Interfaces/Contracts/Generated/MessageData';
+import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
-import { FieldType } from '../Serializer';
-import { SeverityLevel } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel';
-import { Util } from 'applicationinsights-common';
+import { FieldType } from '../Enums';
+import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
+import { Util } from '../Util';
 
 export class Trace extends MessageData implements ISerializable {
 

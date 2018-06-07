@@ -1,9 +1,9 @@
 ﻿import { DataSanitizer } from './Common/DataSanitizer';
-import { FieldType } from '../Serializer';
-import { ISerializable } from '../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
-import { Util } from 'applicationinsights-common';
-import { AjaxHelper } from '../ajax/ajaxUtils';
-import { RemoteDependencyData as GeneratedRemoteDependencyData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/RemoteDependencyData';
+import { FieldType } from '../Enums';
+import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
+import { Util } from '../Util';
+import { AjaxHelper } from '../Util';
+import { RemoteDependencyData as GeneratedRemoteDependencyData } from '../Interfaces/Contracts/Generated/RemoteDependencyData';
 
 export class RemoteDependencyData extends GeneratedRemoteDependencyData implements ISerializable {
 

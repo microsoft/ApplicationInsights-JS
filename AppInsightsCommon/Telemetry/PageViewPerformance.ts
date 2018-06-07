@@ -1,8 +1,10 @@
-﻿import { PageViewPerfData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/PageViewPerfData';
-import { FieldType } from '../Serializer';
-import { ISerializable } from '../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
+﻿import { PageViewPerfData } from '../Interfaces/Contracts/Generated/PageViewPerfData';
+import { FieldType, LoggingSeverity, _InternalMessageId } from '../Enums';
+import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
-import { Util, _InternalLogging, LoggingSeverity, _InternalMessageId } from 'applicationinsights-common';
+import { Util } from '../Util';
+import { _InternalLogging } from '../Logging';
+
 
 export class PageViewPerformance extends PageViewPerfData implements ISerializable {
 

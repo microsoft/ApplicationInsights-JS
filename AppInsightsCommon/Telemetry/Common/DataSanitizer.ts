@@ -1,4 +1,6 @@
-﻿import { _InternalLogging, _InternalMessageId, LoggingSeverity, Util } from 'applicationinsights-common';
+﻿import { _InternalLogging } from '../../Logging';
+import { Util } from '../../Util';
+import { LoggingSeverity, _InternalMessageId } from '../../Enums';
 
 export class DataSanitizer {
 

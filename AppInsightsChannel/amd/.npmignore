@@ -1,0 +1,10 @@
+# NPM Ignore
+
+# ignore everything
+*
+
+# ... but these files
+!package.json
+!bundle/aichannel.js
+!bundle/aichannel.js.map
+!bundle/aichannel.d.ts

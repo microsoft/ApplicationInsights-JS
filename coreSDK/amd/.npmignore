@@ -5,6 +5,6 @@
 
 # ... but these files
 !package.json
-!bundle/aicore.js
-!bundle/aicore.js.map
-!bundle/aicore.d.ts
+!bundle/applicationinsights-core-js.js
+!bundle/applicationinsights-core-js.js.map
+!bundle/applicationinsights-core-js.d.ts
