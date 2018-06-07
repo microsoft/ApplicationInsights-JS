@@ -169,11 +169,8 @@ JavaScript/.vs
 bundle/
 node_modules/
 out/
-<<<<<<< Updated upstream
 coreSDK/node_modules
-=======
-coresdk/node_modules
->>>>>>> Stashed changes
+
 
 # Grunt
 .tscache
