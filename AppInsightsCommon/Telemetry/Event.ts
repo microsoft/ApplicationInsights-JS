@@ -1,8 +1,8 @@
-﻿import { EventData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/EventData';
-import { ISerializable } from '../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
+﻿import { EventData } from '../Interfaces/Contracts/Generated/EventData';
+import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
-import { FieldType } from '../Serializer';
-import { Util } from 'applicationinsights-common';
+import { FieldType } from '../Enums';
+import { Util } from '../Util';
 
 export class Event extends EventData implements ISerializable {
 

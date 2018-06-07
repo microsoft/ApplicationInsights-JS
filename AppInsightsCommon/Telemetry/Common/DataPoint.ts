@@ -1,6 +1,6 @@
-﻿import { DataPoint as AIDataPoint } from '../../../JavaScriptSDK.Interfaces/Contracts/Generated/DataPoint';
-import { ISerializable } from '../../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
-import { FieldType } from '../../../JavaScriptSDK/Serializer';
+﻿import { DataPoint as AIDataPoint } from '../../Interfaces/Contracts/Generated/DataPoint';
+import { ISerializable } from '../../Interfaces/Telemetry/ISerializable';
+import { FieldType } from '../../Enums';
 
 export class DataPoint extends AIDataPoint implements ISerializable {
 

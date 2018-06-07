@@ -1,10 +1,10 @@
-﻿import { MetricData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/MetricData';
-import { ISerializable } from '../../JavaScriptSDK.Interfaces/Telemetry/ISerializable';
+﻿import { MetricData } from '../Interfaces/Contracts/Generated/MetricData';
+import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
-import { FieldType } from '../Serializer';
+import { FieldType } from '../Enums';
 import { DataPoint } from './Common/DataPoint';
-import { SeverityLevel } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel';
-import { Util } from 'applicationinsights-common';
+import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
+import { Util } from '../Util';
 
 export class Metric extends MetricData implements ISerializable {
 

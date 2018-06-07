@@ -2,8 +2,8 @@
     "name": "applicationinsights-core-js",
     "version": "0.0.7",
     "description": "Microsoft Application Insights Core Javascript SDK",
-    "main": "bundle/aicore.js",
-    "types": "bundle/aicore.d.ts",
+    "main": "bundle/applicationinsights-core-js.js",
+    "types": "bundle/applicationinsights-core-js.d.ts",
     "devDependencies": {
         "grunt": "1.0.1",
         "grunt-contrib-qunit": "2.0.0",

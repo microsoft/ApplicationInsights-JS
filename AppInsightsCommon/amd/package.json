@@ -10,11 +10,5 @@
         "grunt-contrib-uglify": "3.1.0",
         "grunt-ts": "^6.0.0-beta.15",
         "typescript": "2.5.3"
-    },
-    "files": [
-        "package.json",
-        "bundle/**/*.js",
-        "bundle/**/*.d.ts",
-        "bundle/**/*.js.map"
-    ]
+    }
 }
