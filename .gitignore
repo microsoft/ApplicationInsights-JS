@@ -171,6 +171,5 @@ node_modules/
 out/
 coreSDK/node_modules
 
-
 # Grunt
 .tscache
