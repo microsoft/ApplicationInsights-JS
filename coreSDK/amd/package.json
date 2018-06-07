@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-core-js",
-    "version": "0.0.1",
+    "version": "0.0.5",
     "description": "Microsoft Application Insights Core Javascript SDK",
     "main": "bundle/aicore.js",
     "types": "bundle/aicore.d.ts",
@@ -12,6 +12,6 @@
         "typescript": "2.5.3"
     },
     "publishConfig": {
-    "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
-      }
+    	"registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
+     }
 }
