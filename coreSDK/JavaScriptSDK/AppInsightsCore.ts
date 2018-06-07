@@ -18,6 +18,18 @@ export class AppInsightsCore implements IAppInsightsCore {
         this._extensions = new Array<ITelemetryPlugin>();
     }
 
+    private static _appInsightsCore: IAppInsightsCore;
+
+    public static get appInsightsCore() : IAppInsightsCore {
+        return AppInsightsCore._appInsightsCore;
+    }
+
+    public static set appInsightsCore(core: IAppInsightsCore) {
+        if (CoreUtils.isNullOrUndefined(AppInsightsCore._appInsightsCore)) {
+            AppInsightsCore._appInsightsCore = core;
+        }
+    }
+
     initialize(config: IConfiguration, extensions: ITelemetryPlugin[], queue?: (() => void)[]): void {
         
         if (!extensions || extensions.length === 0) {
