@@ -5,6 +5,7 @@
 
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IConfiguration } from "./IConfiguration";
+import { IAppInsightsCore } from "./IAppInsightsCore";
 
 /**
  * Configuration provided to SDK core
@@ -18,7 +19,7 @@ export interface ITelemetryPlugin {
     /**
     * Extensions loaded in SDK
     */
-    start: (config: IConfiguration) => void;
+    initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: ITelemetryPlugin[]) => void;
 
     /**
     * Extension name
