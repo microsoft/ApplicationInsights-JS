@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-common",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Microsoft Application Insights Common JavaScript Library",
     "main": "bundle/applicationinsights-common.js",
     "types": "bundle/applicationinsights-common.d.ts",

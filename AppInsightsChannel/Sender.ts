@@ -99,7 +99,7 @@ export class Sender implements IChannelControls {
      */
     private _timeoutHandle: any;
 
-    public start(config: IConfiguration) {
+    public initialize(config: IConfiguration) {
         this.identifier = "AppInsightsChannelPlugin";
         this._consecutiveErrors = 0;
         this._retryAt = null;
