@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-core-js",
-    "version": "0.0.1",
+    "version": "0.0.14",
     "description": "Microsoft Application Insights Core Javascript SDK",
     "devDependencies": {
         "grunt": "1.0.1",
@@ -8,7 +8,10 @@
         "grunt-contrib-uglify": "3.1.0",
         "grunt-ts": "^6.0.0-beta.15",
         "typescript": "2.5.3"
-    },
-    "main": "bundle/applicationinsights-core-js.js",
-    "types": "bundle/applicationinsights-core-js.d.ts"
+    },    
+   "main": "bundle/applicationinsights-core-js.js",
+   "types": "bundle/applicationinsights-core-js.d.ts",
+   "publishConfig": {
+    	"registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
+     }
 }
