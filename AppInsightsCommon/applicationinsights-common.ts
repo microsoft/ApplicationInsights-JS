@@ -17,3 +17,4 @@ export { RemoteDependencyData } from './Telemetry/RemoteDependencyData';
 export { Trace } from './Telemetry/Trace';
 export { PageViewPerformance } from './Telemetry/PageViewPerformance';
 export { Data } from './Telemetry/Common/Data';
+export { SeverityLevel } from './Interfaces/Contracts/Generated/SeverityLevel';
