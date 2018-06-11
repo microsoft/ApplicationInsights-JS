@@ -208,6 +208,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-ts");
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
+    grunt.loadNpmTasks('grunt-run');
 
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("core", ["ts:core"]);

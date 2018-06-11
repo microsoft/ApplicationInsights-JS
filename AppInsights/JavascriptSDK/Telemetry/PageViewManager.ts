@@ -1,8 +1,16 @@
-﻿import { PageViewData } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/PageViewData';
-import { DataSanitizer } from './Common/DataSanitizer';
-import { IAppInsightsInternal } from '../../JavaScriptSDK/AppInsights';
-import { PageViewPerformance } from '../../JavaScriptSDK/Telemetry/PageViewPerformance';
-import { _InternalLogging, LoggingSeverity, _InternalMessageId, Util } from 'applicationinsights-common';
+﻿import { PageViewData, PageViewPerformance, _InternalLogging, LoggingSeverity, _InternalMessageId, Util } from 'applicationinsights-common';
+
+
+
+/**
+* Internal interface to pass appInsights object to subcomponents without coupling 
+*/
+export interface IAppInsightsInternal {
+    sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object);
+    sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance);
+    flush();
+}
+
 
 /**
 * Class encapsulates sending page views and page view performance telemetry.
