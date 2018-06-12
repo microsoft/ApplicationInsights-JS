@@ -4,7 +4,6 @@ import { Exception } from './Telemetry/Exception';
 import { Metric } from './Telemetry/Metric';
 import { PageView } from './Telemetry/PageView';
 import { Data } from './Telemetry/Common/Data';
-import { RemoteDependencyData } from './Telemetry/RemoteDependencyData';
 import { PageViewPerformance } from './Telemetry/PageViewPerformance';
 import { ITelemetryContext } from '../JavaScriptSDK.Interfaces/ITelemetryContext';
 import { Application } from './Context/Application';
@@ -18,7 +17,7 @@ import { Session, _SessionManager } from './Context/Session';
 import { Sender, ISenderConfig } from './Sender';
 import { IEnvelope } from '../JavaScriptSDK.Interfaces/Telemetry/IEnvelope';
 import { ContextTagKeys } from '../JavaScriptSDK.Interfaces/Contracts/Generated/ContextTagKeys';
-import { _InternalLogging, _InternalMessageId, LoggingSeverity, Util } from 'applicationinsights-common';
+import { RemoteDependencyData, _InternalLogging, _InternalMessageId, LoggingSeverity, Util } from 'applicationinsights-common';
 
 export interface ITelemetryConfig extends ISenderConfig {
     instrumentationKey: () => string;

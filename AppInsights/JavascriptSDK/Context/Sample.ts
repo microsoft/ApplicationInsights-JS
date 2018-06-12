@@ -1,7 +1,7 @@
 ﻿import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
-import { Envelope } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/Envelope';
+import { Envelope } from 'applicationinsights-common';
 import { ISample } from '../../JavaScriptSDK.Interfaces/Context/ISample';
-import { IEnvelope } from '../../JavaScriptSDK.Interfaces/Telemetry/IEnvelope';
+import { IEnvelope } from 'applicationinsights-common';
 import { _InternalLogging, _InternalMessageId, LoggingSeverity } from 'applicationinsights-common';
 
 export class Sample implements ISample {
