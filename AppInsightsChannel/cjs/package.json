@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-channel-js",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Microsoft Application Insights JavaScript SDK Channel",
     "main": "bundle/aichannel.js",
     "devDependencies": {

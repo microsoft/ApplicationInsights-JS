@@ -47,7 +47,7 @@ export class AppInsightsCore implements IAppInsightsCore {
             this._extensions[idx].setNextPlugin(this._extensions[idx + 1]); // set next plugin
         }
 
-        this._extensions.forEach(ext => ext.start(this.config)); // initialize
+        this._extensions.forEach(ext => ext.initialize(this.config, this, this._extensions)); // initialize
 
         // get defaults for configuration values as applicable
     }
