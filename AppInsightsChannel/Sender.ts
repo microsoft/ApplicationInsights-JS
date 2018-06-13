@@ -346,6 +346,27 @@ export class Sender implements IChannelControls {
         }
     }
 
+    public static _constructEnvelope(envelope: ITelemetryItem): IEnvelope {
+        switch (envelope.baseType) {
+            case Event.dataType:
+                return EventEnvelopeCreator.EventEnvelopeCreator.Create(envelope);
+            case Trace.dataType:
+                return TraceEnvelopeCreator.TraceEnvelopeCreator.Create(envelope);
+            case PageView.dataType:
+                return PageViewEnvelopeCreator.PageViewEnvelopeCreator.Create(envelope);
+            case PageViewPerformance.dataType:
+                return PageViewPerformanceEnvelopeCreator.PageViewPerformanceEnvelopeCreator.Create(envelope);
+            case Exception.dataType:
+                return ExceptionEnvelopeCreator.ExceptionEnvelopeCreator.Create(envelope);
+            case Metric.dataType:
+                return MetricEnvelopeCreator.MetricEnvelopeCreator.Create(envelope);
+            case RemoteDependencyData.dataType:
+                return DependencyEnvelopeCreator.DependencyEnvelopeCreator.Create(envelope);
+            default:
+                return null;
+        }
+    }
+
     private static _getDefaultAppInsightsChannelConfig(config: IConfiguration, identifier: string): ISenderConfig {
         let resultConfig = <ISenderConfig>{};
         let pluginConfig = config.extensions[identifier];
@@ -382,27 +403,6 @@ export class Sender implements IChannelControls {
                 return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(envelope);
         }
         return false;
-    }
-
-    private static _constructEnvelope(envelope: ITelemetryItem): IEnvelope {
-        switch (envelope.baseType) {
-            case Event.dataType:
-                return EventEnvelopeCreator.EventEnvelopeCreator.Create(envelope);
-            case Trace.dataType:
-                return TraceEnvelopeCreator.TraceEnvelopeCreator.Create(envelope);
-            case PageView.dataType:
-                return PageViewEnvelopeCreator.PageViewEnvelopeCreator.Create(envelope);
-            case PageViewPerformance.dataType:
-                return PageViewPerformanceEnvelopeCreator.PageViewPerformanceEnvelopeCreator.Create(envelope);
-            case Exception.dataType:
-                return ExceptionEnvelopeCreator.ExceptionEnvelopeCreator.Create(envelope);
-            case Metric.dataType:
-                return MetricEnvelopeCreator.MetricEnvelopeCreator.Create(envelope);
-            case RemoteDependencyData.dataType:
-                return DependencyEnvelopeCreator.DependencyEnvelopeCreator.Create(envelope);
-            default:
-                return null;
-        }
     }
 
     /**
