@@ -1,6 +1,6 @@
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IChannelControls } from "./IChannelControls";
-import { ITelemetryPlugin } from "./ITelemetryPlugin";
+import { ITelemetryPlugin, IPlugin } from "./ITelemetryPlugin";
 import { IConfiguration } from "./IConfiguration";
 
 "use strict";
@@ -15,7 +15,7 @@ export interface IAppInsightsCore {
     /*
     * Initialization queue. Contains functions to run when appInsights initializes
     */        
-    initialize(config: IConfiguration, extensions: ITelemetryPlugin[]): void;
+    initialize(config: IConfiguration, extensions: IPlugin[]): void;
 
     /*
     * Get transmission controls for controlling transmission behavior
