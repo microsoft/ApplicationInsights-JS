@@ -1,11 +1,18 @@
 import { ITelemetryContext } from "../JavaScriptSDK.Interfaces/ITelemetryContext";
-import { SeverityLevel, IConfig, _InternalLogging, LoggingSeverity, _InternalMessageId, Util, RemoteDependencyData, Data, Exception, Metric, Trace, PageViewPerformance, PageView } from "applicationinsights-common";
+import {
+    Event, SeverityLevel, IConfig,
+    _InternalLogging, LoggingSeverity,
+    _InternalMessageId, Util, RemoteDependencyData,
+    Data, Exception, Metric,
+    Trace, PageViewPerformance, PageView }
+from "applicationinsights-common";
+
 import { PageViewManager } from "./Telemetry/PageViewManager";
 import { AppInsightsCore } from "applicationinsights-core-js";
 import { TelemetryContext } from "./TelemetryContext";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { IAI } from "../JavascriptSDK.Interfaces/IAI";
-import { AjaxMonitor } from "./ajax/ajax";
+//import { AjaxMonitor } from "./ajax/ajax";
 import { Envelope } from "Telemetry/Common/Envelope";
 
 export class AI extends AppInsightsCore implements IAI {
@@ -22,7 +29,7 @@ export class AI extends AppInsightsCore implements IAI {
     private _pageTracking: Timing;
     private _pageViewManager: PageViewManager;
     private _pageVisitTimeManager: PageVisitTimeManager;
-    private _ajaxMonitor: AjaxMonitor;
+    //private _ajaxMonitor: AjaxMonitor;
 
     public config: IConfig;
     public context: TelemetryContext;
@@ -34,7 +41,7 @@ export class AI extends AppInsightsCore implements IAI {
         this.config = config || <IConfig>{};
 
         // load default values if specified
-        var defaults: IConfig = AppInsights.appInsightsDefaultConfig;
+        var defaults: IConfig = AI.appInsightsDefaultConfig;
         if (defaults !== undefined) {
             for (var field in defaults) {
                 // for each unspecified field, set the default value
@@ -53,24 +60,24 @@ export class AI extends AppInsightsCore implements IAI {
             sessionExpirationMs: () => this.config.sessionExpirationMs,
             endpointUrl: () => this.config.endpointUrl,
             emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
-            maxBatchSizeInBytes: () => {
-                return (!this.config.isBeaconApiDisabled && Util.IsBeaconApiSupported()) ?
-                    Math.min(this.config.maxBatchSizeInBytes, Sender.MaxBeaconPayloadSize) :
-                    this.config.maxBatchSizeInBytes;
-            },
-            maxBatchInterval: () => this.config.maxBatchInterval,
+            // maxBatchSizeInBytes: () => {
+            //     return (!this.config.isBeaconApiDisabled && Util.IsBeaconApiSupported()) ?
+            //         Math.min(this.config.maxBatchSizeInBytes, Sender.MaxBeaconPayloadSize) :
+            //         this.config.maxBatchSizeInBytes;
+            // },
+            // maxBatchInterval: () => this.config.maxBatchInterval,
             disableTelemetry: () => this.config.disableTelemetry,
-            sampleRate: () => this.config.samplingPercentage,
+            // sampleRate: () => this.config.samplingPercentage,
             cookieDomain: () => this.config.cookieDomain,
             enableSessionStorageBuffer: () => {
                 // Disable Session Storage buffer if telemetry is sent using Beacon API
                 return ((this.config.isBeaconApiDisabled || !Util.IsBeaconApiSupported()) && this.config.enableSessionStorageBuffer);
             },
-            isRetryDisabled: () => this.config.isRetryDisabled,
-            isBeaconApiDisabled: () => this.config.isBeaconApiDisabled,
+            // isRetryDisabled: () => this.config.isRetryDisabled,
+            // isBeaconApiDisabled: () => this.config.isBeaconApiDisabled,
             sdkExtension: () => this.config.sdkExtension,
             isBrowserLinkTrackingEnabled: () => this.config.isBrowserLinkTrackingEnabled,
-            appId: () => this.config.appId,
+            // appId: () => this.config.appId,
         }
 
         if (this.config.isCookieUseDisabled) {
@@ -113,9 +120,9 @@ export class AI extends AppInsightsCore implements IAI {
         this._pageVisitTimeManager = new PageVisitTimeManager(
             (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime));
 
-        if (!this.config.disableAjaxTracking) {
-            this._ajaxMonitor = new AjaxMonitor(this);
-        }
+        // if (!this.config.disableAjaxTracking) {
+            //this._ajaxMonitor = new AjaxMonitor(this);
+        //}
     }
 
     public sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
@@ -410,20 +417,20 @@ export class AI extends AppInsightsCore implements IAI {
         this.trackMetric("PageVisitTime", pageVisitTime, 1, pageVisitTime, pageVisitTime, properties);
     }
 
-    /**
-     * Immediately send all queued telemetry.
-     * @param {boolean} async - If flush should be call asynchronously
-     */
-    public flush(async = true) {
-        try {
-            this.context._sender.triggerSend(async);
-        } catch (e) {
-            _InternalLogging.throwInternal(LoggingSeverity.CRITICAL,
-                _InternalMessageId.FlushFailed,
-                "flush failed, telemetry will not be collected: " + Util.getExceptionName(e),
-                { exception: Util.dump(e) });
-        }
-    }
+    // /**
+    //  * Immediately send all queued telemetry.
+    //  * @param {boolean} async - If flush should be call asynchronously
+    //  */
+    // public flush(async = true) {
+    //     try {
+    //         this.context._sender.triggerSend(async);
+    //     } catch (e) {
+    //         _InternalLogging.throwInternal(LoggingSeverity.CRITICAL,
+    //             _InternalMessageId.FlushFailed,
+    //             "flush failed, telemetry will not be collected: " + Util.getExceptionName(e),
+    //             { exception: Util.dump(e) });
+    //     }
+    // }
 
     /**
      * Sets the authenticated user id and the account id.

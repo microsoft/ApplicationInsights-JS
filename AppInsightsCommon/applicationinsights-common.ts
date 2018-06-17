@@ -1,6 +1,5 @@
 export { Util, CorrelationIdHelper, UrlHelper } from './Util';
 export { _InternalMessageId, LoggingSeverity, FieldType } from './Enums';
-export { IConfig } from './Interfaces/IConfig';
 export { _InternalLogging, _InternalLogMessage } from './Logging';
 export { RequestHeaders } from './RequestResponseHeaders';
 export { DisabledPropertyName } from './Constants';

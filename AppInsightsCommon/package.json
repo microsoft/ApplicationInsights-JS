@@ -16,5 +16,8 @@
         "bundle/**/*.js",
         "bundle/**/*.d.ts",
         "bundle/**/*.js.map"
-    ]
+    ],
+    "dependencies": {
+        "applicationinsights-core-js": "0.0.15"
+    }
 }

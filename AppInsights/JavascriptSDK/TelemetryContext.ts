@@ -37,10 +37,10 @@ export class TelemetryContext implements ITelemetryContext {
      */
     public _config: ITelemetryConfig;
 
-    /**
-     * The sender instance for this context
-     */
-    public _sender: Sender;
+    // /**
+    //  * The sender instance for this context
+    //  */
+    // public _sender: Sender;
 
     /**
      * The object describing a component tracked by this object.
@@ -93,13 +93,13 @@ export class TelemetryContext implements ITelemetryContext {
 
     constructor(config: ITelemetryConfig) {
         this._config = config;
-        this._sender = new Sender(config);
-        this.appId = () => this._sender._appId;
+//        this._sender = new Sender(config);
+        // this.appId = () => this._sender._appId;
 
-        // use appId set in config instead of getting it from the backend
-        if (config.appId()) {
-            this._sender._appId = config.appId();
-        }
+        // // use appId set in config instead of getting it from the backend
+        // if (config.appId()) {
+        //     this._sender._appId = config.appId();
+        // }
 
         this.telemetryInitializers = [];
 
@@ -222,7 +222,7 @@ export class TelemetryContext implements ITelemetryContext {
                 this.sample.isSampledIn(envelope)) {
                 var iKeyNoDashes = this._config.instrumentationKey().replace(/-/g, "");
                 envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
-                this._sender.send(envelope);
+                //this._sender.send(envelope);
             } else {
                 _InternalLogging.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TelemetrySampledAndNotSent,
                     "Telemetry is sampled and not sent to the AI service.", { SampleRate: this.sample.sampleRate }, true);

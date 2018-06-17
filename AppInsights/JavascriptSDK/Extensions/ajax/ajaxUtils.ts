@@ -1,5 +1,4 @@
 ﻿import { UrlHelper } from 'applicationinsights-common';
-import { DataSanitizer } from '../Telemetry/Common/DataSanitizer';
 
 export class extensions {
     public static IsNullOrUndefined(obj) {

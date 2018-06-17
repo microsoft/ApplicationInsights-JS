@@ -78,6 +78,20 @@ module.exports = function (grunt) {
                     'AppInsightsChannel/TelemetryValidation/*.ts'
                 ]
             },
+            appinsightscjs: {
+                tsconfig:'./AppInsightsChannel/commonjs/tsconfigcommonjs.json',
+                 src: [
+                    'AppInsights/JavascriptSDK/**/*.ts',
+                    'AppInsights/JavascriptSDK.Interfaces/*.ts'
+                ]
+            },
+            appinsights: {
+                tsconfig: './tsconfig.json',
+                src: [
+                    'AppInsights/JavascriptSDK/**/*.ts',
+                    'AppInsights/JavascriptSDK.Interfaces/*.ts'
+                ]
+            },
             module: {
                 tsconfig: './tsconfig.json',
                 src: [
@@ -208,8 +222,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-ts");
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
-    grunt.loadNpmTasks('grunt-run');
-
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("core", ["ts:core"]);
     grunt.registerTask("corecjs", ["ts:corecjs"])
@@ -218,6 +230,8 @@ module.exports = function (grunt) {
     grunt.registerTask("channel", ["ts:channel"]);
     grunt.registerTask("channelcjs", ["ts:channelcjs"]);
     grunt.registerTask("module", ["ts:module"]);
+    grunt.registerTask("ai", ["ts:appinsights"]);
+    grunt.registerTask("aicjs", ["ts:appinsightscjs"]);
     grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit"]);
 };
