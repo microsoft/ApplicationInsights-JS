@@ -3,21 +3,20 @@ import {
     Event, SeverityLevel, IConfig,
     _InternalLogging, LoggingSeverity,
     _InternalMessageId, Util, RemoteDependencyData,
-    Data, Exception, Metric,
+    Data, Exception, Metric, Envelope,
     Trace, PageViewPerformance, PageView }
 from "applicationinsights-common";
 
-import { PageViewManager } from "./Telemetry/PageViewManager";
-import { AppInsightsCore } from "applicationinsights-core-js";
-import { TelemetryContext } from "./TelemetryContext";
+import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
+import { AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore } from "applicationinsights-core-js";
+import { TelemetryContext, ITelemetryConfig } from "./TelemetryContext";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { IAI } from "../JavascriptSDK.Interfaces/IAI";
-//import { AjaxMonitor } from "./ajax/ajax";
-import { Envelope } from "Telemetry/Common/Envelope";
 
-export class AI extends AppInsightsCore implements IAI {
+export class AI implements IAI, IPlugin, IAppInsightsInternal {
+    public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
 
-    public static Version = "1.0.17";
+    public static Version = "0.0.1";
 
     // Counts number of trackAjax invokations.
     // By default we only monitor X ajax call per view to avoid too much load.
@@ -37,8 +36,8 @@ export class AI extends AppInsightsCore implements IAI {
     public static appInsightsDefaultConfig: IConfig;
 
     constructor(config: IConfig) {
-        super();
         this.config = config || <IConfig>{};
+        this.initialize = this._initialize.bind(this);
 
         // load default values if specified
         var defaults: IConfig = AI.appInsightsDefaultConfig;
@@ -58,26 +57,26 @@ export class AI extends AppInsightsCore implements IAI {
             accountId: () => this.config.accountId,
             sessionRenewalMs: () => this.config.sessionRenewalMs,
             sessionExpirationMs: () => this.config.sessionExpirationMs,
-            endpointUrl: () => this.config.endpointUrl,
-            emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
+            // endpointUrl: () => this.config.endpointUrl,
+            // emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
             // maxBatchSizeInBytes: () => {
             //     return (!this.config.isBeaconApiDisabled && Util.IsBeaconApiSupported()) ?
             //         Math.min(this.config.maxBatchSizeInBytes, Sender.MaxBeaconPayloadSize) :
             //         this.config.maxBatchSizeInBytes;
             // },
             // maxBatchInterval: () => this.config.maxBatchInterval,
-            disableTelemetry: () => this.config.disableTelemetry,
+            // disableTelemetry: () => this.config.disableTelemetry,
             // sampleRate: () => this.config.samplingPercentage,
             cookieDomain: () => this.config.cookieDomain,
-            enableSessionStorageBuffer: () => {
-                // Disable Session Storage buffer if telemetry is sent using Beacon API
-                return ((this.config.isBeaconApiDisabled || !Util.IsBeaconApiSupported()) && this.config.enableSessionStorageBuffer);
-            },
+            // enableSessionStorageBuffer: () => {
+            //     // Disable Session Storage buffer if telemetry is sent using Beacon API
+            //     return ((this.config.isBeaconApiDisabled || !Util.IsBeaconApiSupported()) && this.config.enableSessionStorageBuffer);
+            // },
             // isRetryDisabled: () => this.config.isRetryDisabled,
             // isBeaconApiDisabled: () => this.config.isBeaconApiDisabled,
             sdkExtension: () => this.config.sdkExtension,
             isBrowserLinkTrackingEnabled: () => this.config.isBrowserLinkTrackingEnabled,
-            // appId: () => this.config.appId,
+            appId: () => this.config.appId
         }
 
         if (this.config.isCookieUseDisabled) {
@@ -520,6 +519,10 @@ export class AI extends AppInsightsCore implements IAI {
                 "_onerror threw exception while logging error, error will not be collected: " + Util.getExceptionName(exception),
                 { exception: exceptionDump, errorString: errorString });
         }
+    }
+
+    private _initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
+        
     }
 }
 

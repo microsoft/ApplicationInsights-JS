@@ -1,10 +1,9 @@
-﻿import { Trace } from './Telemetry/Trace';
-import { Event } from './Telemetry/Event';
-import { Exception } from './Telemetry/Exception';
-import { Metric } from './Telemetry/Metric';
-import { PageView } from './Telemetry/PageView';
-import { Data } from './Telemetry/Common/Data';
-import { PageViewPerformance } from './Telemetry/PageViewPerformance';
+﻿import { 
+    Trace, Event, Exception, Metric, 
+    Pageview, IEnvelope, ContextTagKeys,
+    RemoteDependencyData, _InternalLogging, 
+    _InternalMessageId, LoggingSeverity, Util,
+    Data,PageViewPerformance } from 'applicationinsights-common';
 import { ITelemetryContext } from '../JavaScriptSDK.Interfaces/ITelemetryContext';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
@@ -14,17 +13,12 @@ import { Operation } from './Context/Operation';
 import { Sample } from './Context/Sample';
 import { User } from './Context/User';
 import { Session, _SessionManager } from './Context/Session';
-import { Sender, ISenderConfig } from './Sender';
-import { IEnvelope } from '../JavaScriptSDK.Interfaces/Telemetry/IEnvelope';
-import { ContextTagKeys } from '../JavaScriptSDK.Interfaces/Contracts/Generated/ContextTagKeys';
-import { RemoteDependencyData, _InternalLogging, _InternalMessageId, LoggingSeverity, Util } from 'applicationinsights-common';
 
-export interface ITelemetryConfig extends ISenderConfig {
+export interface ITelemetryConfig {
     instrumentationKey: () => string;
     accountId: () => string;
     sessionRenewalMs: () => number;
     sessionExpirationMs: () => number;
-    sampleRate: () => number;
     cookieDomain: () => string;
     sdkExtension: () => string;
     isBrowserLinkTrackingEnabled: () => boolean;

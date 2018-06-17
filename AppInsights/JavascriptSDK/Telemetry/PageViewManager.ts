@@ -1,6 +1,5 @@
-﻿import { PageViewData, PageViewPerformance, _InternalLogging, LoggingSeverity, _InternalMessageId, Util } from 'applicationinsights-common';
-
-
+﻿import { PageViewData, PageViewPerformance, _InternalLogging,
+         LoggingSeverity, _InternalMessageId, Util, IChannelControls } from 'applicationinsights-common';
 
 /**
 * Internal interface to pass appInsights object to subcomponents without coupling 
@@ -8,7 +7,6 @@
 export interface IAppInsightsInternal {
     sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object);
     sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance);
-    flush();
 }
 
 
@@ -19,6 +17,7 @@ export class PageViewManager {
     private pageViewPerformanceSent: boolean = false;
 
     private overridePageViewDuration: boolean = false;
+    private _channelControl: IChannelControls;
 
     private appInsights: IAppInsightsInternal;
 
@@ -66,7 +65,7 @@ export class PageViewManager {
                 !isNaN(duration) ? duration : undefined,
                 properties,
                 measurements);
-            this.appInsights.flush();
+            this._channelControl.flush();
             pageViewSent = true;
         }
 
@@ -78,7 +77,7 @@ export class PageViewManager {
                 !isNaN(duration) ? duration : customDuration,
                 properties,
                 measurements);
-            this.appInsights.flush();
+            this._channelControl.flush();
             pageViewSent = true;
         }
 
@@ -103,7 +102,7 @@ export class PageViewManager {
                         // If navigation timing gives invalid numbers, then go back to "override page view duration" mode.
                         // That's the best value we can get that makes sense.
                         this.appInsights.sendPageViewInternal(name, url, customDuration, properties, measurements);
-                        this.appInsights.flush();
+                        this._channelControl.flush();
                     } else {
                         if (!pageViewSent) {
                             this.appInsights.sendPageViewInternal(name, url, pageViewPerformance.getDurationMs(), properties, measurements);
@@ -113,14 +112,14 @@ export class PageViewManager {
                             this.appInsights.sendPageViewPerformanceInternal(pageViewPerformance);
                             this.pageViewPerformanceSent = true;
                         }
-                        this.appInsights.flush();
+                        this._channelControl.flush();
                     }
                 }
                 else if (PageViewPerformance.getDuration(start, +new Date) > maxDurationLimit) {
                     clearInterval(handle);
                     if (!pageViewSent) {
                         this.appInsights.sendPageViewInternal(name, url, maxDurationLimit, properties, measurements);
-                        this.appInsights.flush();
+                        this._channelControl.flush();
                     }
                 }
             } catch (e) {

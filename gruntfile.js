@@ -91,7 +91,7 @@ module.exports = function (grunt) {
                     'AppInsights/JavascriptSDK/**/*.ts',
                     'AppInsights/JavascriptSDK.Interfaces/*.ts'
                 ],
-                out: 'coreSDK/amd/bundle/applicationinsights-js.js',
+                out: 'appinsights/amd/bundle/applicationinsights-js.js',
             },
             module: {
                 tsconfig: './tsconfig.json',

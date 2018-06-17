@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-js",
-    "version": "0.0.15",
+    "version": "0.0.1",
     "description": "Microsoft Application Insights Javascript SDK apis and auto collection",
     "main": "bundle/applicationinsights-js.js",
     "types": "bundle/applicationinsights-js.d.ts",
@@ -12,6 +12,6 @@
     },
     "dependencies": {
         "applicationinsights-common": "0.0.10",
-        "applicationinsights-core-js": "0.0.15"
+        "applicationinsights-core-js": "0.0.19"
     }
 }
