@@ -1,4 +1,4 @@
-import { IConfiguration } from "../../coreSDK/JavaScriptSDK.Interfaces/IConfiguration";
+import { IConfiguration } from "applicationinsights-core-js";
 
 export interface IConfig extends IConfiguration {    
     emitLineDelimitedJson?: boolean;
