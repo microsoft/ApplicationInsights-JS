@@ -72,23 +72,23 @@ module.exports = function (grunt) {
                 ]
             },
             channelcommonjs: {
-                tsconfig:'./AppInsightsChannel/commonjs/tsconfigcommonjs.json',
+                tsconfig:'./AppInsightsChannel/cjs/tsconfigcommonjs.json',
                 src: [
                     'AppInsightsChannel/*.ts',
                     'AppInsightsChannel/TelemetryValidation/*.ts'
                 ]
             },
             appinsightscjs: {
-                tsconfig:'./AppInsightsChannel/commonjs/tsconfigcommonjs.json',
+                tsconfig:'./AppInsightsChannel/cjs/tsconfigcommonjs.json',
                  src: [
-                    'AppInsights/JavascriptSDK/**/*.ts',
+                    'AppInsights/JavascriptSDK/*.ts',
                     'AppInsights/JavascriptSDK.Interfaces/*.ts'
                 ]
             },
             appinsights: {
                 tsconfig: './tsconfig.json',
                 src: [
-                    'AppInsights/JavascriptSDK/**/*.ts',
+                    'AppInsights/JavascriptSDK/*.ts',
                     'AppInsights/JavascriptSDK.Interfaces/*.ts'
                 ],
                 out: 'appinsights/amd/bundle/applicationinsights-js.js',

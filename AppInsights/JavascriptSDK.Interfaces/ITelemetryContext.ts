@@ -6,8 +6,8 @@ import { IOperation } from './Context/IOperation';
 import { ISample } from './Context/ISample';
 import { IUser } from './Context/IUser';
 import { ISession } from './Context/ISession';
-import { IEnvelope } from './Telemetry/IEnvelope';
-import { Envelope } from './Contracts/Generated/Envelope';
+import { IEnvelope } from 'applicationinsights-common';
+import { Envelope } from 'applicationinsights-common';
 
 export interface ITelemetryContext {
     /**

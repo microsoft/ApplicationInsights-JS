@@ -1,5 +1,6 @@
 ﻿import { PageViewData, PageViewPerformance, _InternalLogging,
-         LoggingSeverity, _InternalMessageId, Util, IChannelControls } from 'applicationinsights-common';
+         LoggingSeverity, _InternalMessageId, Util } from 'applicationinsights-common';
+import { IChannelControls } from 'applicationinsights-core-js';
 
 /**
 * Internal interface to pass appInsights object to subcomponents without coupling 

@@ -1,3 +1,7 @@
+///<reference path="../node_modules/applicationinsights-common/bundle/applicationinsights-common.d.ts" />
+///<reference path="../node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js.d.ts" />
+
+
 import { ITelemetryContext } from "../JavaScriptSDK.Interfaces/ITelemetryContext";
 import {
     Event, SeverityLevel, IConfig,

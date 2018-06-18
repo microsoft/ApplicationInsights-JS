@@ -1,9 +1,11 @@
-﻿import { 
+﻿///<reference path="../node_modules/applicationinsights-common/bundle/applicationinsights-common.d.ts" />
+
+import { 
     Trace, Event, Exception, Metric, 
     Pageview, IEnvelope, ContextTagKeys,
     RemoteDependencyData, _InternalLogging, 
     _InternalMessageId, LoggingSeverity, Util,
-    Data,PageViewPerformance } from 'applicationinsights-common';
+    Data,PageViewPerformance } from "applicationinsights-common";
 import { ITelemetryContext } from '../JavaScriptSDK.Interfaces/ITelemetryContext';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';

@@ -1,7 +1,8 @@
-﻿import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
+﻿///<reference path="../../node_modules/applicationinsights-common/bundle/applicationinsights-common.d.ts" />
+
+import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
 import { Envelope } from 'applicationinsights-common';
-import { ISample } from '../../JavaScriptSDK.Interfaces/Context/ISample';
-import { IEnvelope } from 'applicationinsights-common';
+import { IEnvelope, ISample } from 'applicationinsights-common';
 import { _InternalLogging, _InternalMessageId, LoggingSeverity } from 'applicationinsights-common';
 
 export class Sample implements ISample {
