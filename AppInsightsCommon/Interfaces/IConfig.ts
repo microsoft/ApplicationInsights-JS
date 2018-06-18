@@ -1,3 +1,5 @@
+///<reference path="../node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js.d.ts" />
+
 import { IConfiguration } from "applicationinsights-core-js";
 
 export interface IConfig extends IConfiguration {    
