@@ -1,7 +1,5 @@
 ﻿import { HashCodeScoreGenerator } from './HashCodeScoreGenerator';
-import { Envelope } from '../JavaScriptSDK.Interfaces/Contracts/Generated/Envelope';
-import { IEnvelope } from '../JavaScriptSDK.Interfaces/Telemetry/IEnvelope';
-import { ContextTagKeys } from '../JavaScriptSDK.Interfaces/Contracts/Generated/ContextTagKeys';
+import { IEnvelope, ContextTagKeys } from '../../AppInsightsCommon/applicationinsights-common';
 
 export class SamplingScoreGenerator {
     private hashCodeGeneragor: HashCodeScoreGenerator;

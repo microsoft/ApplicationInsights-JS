@@ -70,7 +70,7 @@ export class AI implements IAI, IPlugin, IAppInsightsInternal {
             // },
             // maxBatchInterval: () => this.config.maxBatchInterval,
             // disableTelemetry: () => this.config.disableTelemetry,
-            // sampleRate: () => this.config.samplingPercentage,
+            sampleRate: () => this.config.samplingPercentage,
             cookieDomain: () => this.config.cookieDomain,
             // enableSessionStorageBuffer: () => {
             //     // Disable Session Storage buffer if telemetry is sent using Beacon API
@@ -526,7 +526,7 @@ export class AI implements IAI, IPlugin, IAppInsightsInternal {
     }
 
     private _initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
-        
+        // Todo: implement
     }
 }
 
