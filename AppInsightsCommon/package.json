@@ -18,6 +18,6 @@
         "bundle/**/*.js.map"
     ],
     "dependencies": {
-        "applicationinsights-core-js": "0.0.20"
+        "applicationinsights-core-js": "0.0.21"
     }
 }
