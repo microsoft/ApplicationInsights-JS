@@ -236,6 +236,6 @@ module.exports = function (grunt) {
     grunt.registerTask("channelcjs", ["ts:channelcjs"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
-    grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit"]);
+    grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
     grunt.registerTask("testchannel", ["ts:channel", "ts:channeltest", "qunit:channel"]);
 };
