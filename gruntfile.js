@@ -114,6 +114,13 @@ module.exports = function (grunt) {
                 ],
                 out: 'coreSDK/JavaScriptSDK.Tests/Selenium/aicore.tests.js'
             },
+            channeltest: {
+                tsconfig: './tsconfig.json',
+                src: [
+                    'AppInsightsChannel/Tests/Selenium/*.ts'
+                ],
+                out: 'AppInsightsChannel/Tests/Selenium/aichannel.tests.js'
+            },
             testE2E: {
                 tsconfig: './tsconfig.json',
                 files: [
@@ -187,6 +194,17 @@ module.exports = function (grunt) {
                     '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
             },
+            channel: {
+                options: {
+                    urls: [
+                        'AppInsightsChannel/Tests/Selenium/Tests.html',
+                    ],
+                    timeout: 300 * 1000, // 5 min
+                    console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
+                }
+            },
             core: {
                 options: {
                     urls: [
@@ -218,5 +236,6 @@ module.exports = function (grunt) {
     grunt.registerTask("channelcjs", ["ts:channelcjs"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
-    grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit"]);
+    grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
+    grunt.registerTask("testchannel", ["ts:channel", "ts:channeltest", "qunit:channel"]);
 };
