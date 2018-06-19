@@ -90,7 +90,7 @@ export class TelemetryContext implements ITelemetryContext {
 
     constructor(config: ITelemetryConfig) {
         this._config = config;
-//        this._sender = new Sender(config);
+        // this._sender = new Sender(config);
         // this.appId = () => this._sender._appId;
 
         // // use appId set in config instead of getting it from the backend
@@ -152,6 +152,7 @@ export class TelemetryContext implements ITelemetryContext {
         return envelope;
     }
 
+    // Todo: move to separate extension
     private _addDefaultTelemetryInitializers() {
         if (!this._config.isBrowserLinkTrackingEnabled()) {
             const browserLinkPaths = ['/browserLinkSignalR/', '/__browserLink/'];
@@ -197,6 +198,7 @@ export class TelemetryContext implements ITelemetryContext {
 
         var doNotSendItem = false;
         try {
+
             var telemetryInitializersCount = this.telemetryInitializers.length;
             for (var i = 0; i < telemetryInitializersCount; ++i) {
                 var telemetryInitializer = this.telemetryInitializers[i];

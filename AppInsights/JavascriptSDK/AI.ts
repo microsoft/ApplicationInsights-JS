@@ -12,11 +12,14 @@ import { AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore } from "appl
 import { TelemetryContext, ITelemetryConfig } from "./TelemetryContext";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { IAI } from "../JavascriptSDK.Interfaces/IAI";
+import { CoreUtils } from "JavaScriptSDK/CoreUtils";
 
 export class AI implements IAI, IPlugin, IAppInsightsInternal {
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
 
     public static Version = "0.0.1";
+
+    private _core: IAppInsightsCore;
 
     // Counts number of trackAjax invokations.
     // By default we only monitor X ajax call per view to avoid too much load.
@@ -284,7 +287,7 @@ export class AI implements IAI, IPlugin, IAppInsightsInternal {
      * @param properties    map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
      * @param measurements  map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
-    public trackDependency(id: string, method: string, absoluteUrl: string, command: string, totalTime: number, success: boolean, resultCode: number, properties?: Object, measurements?: Object) {
+    private trackDependency(id: string, method: string, absoluteUrl: string, command: string, totalTime: number, success: boolean, resultCode: number, properties?: Object, measurements?: Object) {
         if (this.config.maxAjaxCallsPerView === -1 ||
             this._trackAjaxAttempts < this.config.maxAjaxCallsPerView) {
             var dependency = new RemoteDependencyData(id, absoluteUrl, command, totalTime, success, resultCode, method, properties, measurements);
@@ -306,7 +309,7 @@ export class AI implements IAI, IPlugin, IAppInsightsInternal {
     * Logs dependency call
     * @param dependencyData dependency data object
     */
-    public trackDependencyData(dependency: RemoteDependencyData) {
+   private trackDependencyData(dependency: RemoteDependencyData) {
         if (this.config.maxAjaxCallsPerView === -1 || this._trackAjaxAttempts < this.config.maxAjaxCallsPerView) {
             var dependencyData = new Data<RemoteDependencyData>(
                 RemoteDependencyData.dataType, dependency);
@@ -325,7 +328,7 @@ export class AI implements IAI, IPlugin, IAppInsightsInternal {
     /**
      * trackAjax method is obsolete, use trackDependency instead
      */
-    public trackAjax(id: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number, method?: string) {
+    private trackAjax(id: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number, method?: string) {
         this.trackDependency(id, null, absoluteUrl, pathName, totalTime, success, resultCode);
     }
 
@@ -337,7 +340,7 @@ export class AI implements IAI, IPlugin, IAppInsightsInternal {
      * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
      * @param   severityLevel   AI.SeverityLevel - severity level
      */
-    public trackException(exception: Error, handledAt?: string, properties?: Object, measurements?: Object, severityLevel?: SeverityLevel) {
+    private trackException(exception: Error, handledAt?: string, properties?: Object, measurements?: Object, severityLevel?: SeverityLevel) {
         try {
             if (!Util.isError(exception)) {
                 // ensure that we have an error object (user could pass a string/message)
@@ -370,7 +373,7 @@ export class AI implements IAI, IPlugin, IAppInsightsInternal {
      * @param   min The smallest measurement in the sample. Defaults to the average.
      * @param   max The largest measurement in the sample. Defaults to the average.
      */
-    public trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: Object) {
+    private trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: Object) {
         try {
             var telemetry = new Metric(name, average, sampleCount, min, max, properties);
             var data = new Data<Metric>(Metric.dataType, telemetry);
@@ -391,7 +394,7 @@ export class AI implements IAI, IPlugin, IAppInsightsInternal {
     * @param   properties  map[string, string] - additional data used to filter traces in the portal. Defaults to empty.
     * @param   severityLevel   AI.SeverityLevel - severity level
     */
-    public trackTrace(message: string, properties?: Object, severityLevel?: SeverityLevel) {
+   private trackTrace(message: string, properties?: Object, severityLevel?: SeverityLevel) {
         try {
             var telemetry = new Trace(message, properties, severityLevel);
             var data = new Data<Trace>(Trace.dataType, telemetry);
@@ -416,20 +419,6 @@ export class AI implements IAI, IPlugin, IAppInsightsInternal {
         this.trackMetric("PageVisitTime", pageVisitTime, 1, pageVisitTime, pageVisitTime, properties);
     }
 
-    // /**
-    //  * Immediately send all queued telemetry.
-    //  * @param {boolean} async - If flush should be call asynchronously
-    //  */
-    // public flush(async = true) {
-    //     try {
-    //         this.context._sender.triggerSend(async);
-    //     } catch (e) {
-    //         _InternalLogging.throwInternal(LoggingSeverity.CRITICAL,
-    //             _InternalMessageId.FlushFailed,
-    //             "flush failed, telemetry will not be collected: " + Util.getExceptionName(e),
-    //             { exception: Util.dump(e) });
-    //     }
-    // }
 
     /**
      * Sets the authenticated user id and the account id.
@@ -442,7 +431,7 @@ export class AI implements IAI, IPlugin, IAppInsightsInternal {
      * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
      * @param storeInCookie {boolean} - AuthenticateUserID will be stored in a cookie and added to all events within this session. 
      */
-    public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false) {
+    private setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false) {
         try {
             this.context.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
         } catch (e) {
@@ -457,7 +446,7 @@ export class AI implements IAI, IPlugin, IAppInsightsInternal {
     /**
      * Clears the authenticated user id and the account id from the user context.
      */
-    public clearAuthenticatedUserContext() {
+    private clearAuthenticatedUserContext() {
         try {
             this.context.user.clearAuthenticatedUserContext();
         } catch (e) {
@@ -494,7 +483,7 @@ export class AI implements IAI, IPlugin, IAppInsightsInternal {
      * @param {number} columnNumber - The column number for the line where the error was raised
      * @param {Error}  error - The Error object
      */
-    public _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
+    private _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
         try {
             var properties = { url: url ? url : document.URL };
 
@@ -522,7 +511,11 @@ export class AI implements IAI, IPlugin, IAppInsightsInternal {
     }
 
     private _initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
-        // Todo: implement
+        if (CoreUtils.isNullOrUndefined(core)) {
+            throw Error("Error initializing");
+        }
+
+        this._core = core;
     }
 }
 
