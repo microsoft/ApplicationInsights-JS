@@ -27,9 +27,3 @@ export interface IAppInsightsCore {
     */
     track(telemetryItem: ITelemetryItem);
 }
-
-export interface Snippet {
-    queue: Array<() => void>;
-    config: IConfiguration;
-    extensions: ITelemetryPlugin[];
-}

@@ -9,7 +9,6 @@ import { CoreUtils } from "./CoreUtils";
 
 export class AppInsightsCore implements IAppInsightsCore {
     public config: IConfiguration;
-    public queue: (() => void)[];
     public static defaultConfig: IConfiguration;
 
     private _extensions: Array<IPlugin>;
@@ -18,7 +17,7 @@ export class AppInsightsCore implements IAppInsightsCore {
         this._extensions = new Array<IPlugin>();
     }
 
-    initialize(config: IConfiguration, extensions: IPlugin[], queue?: (() => void)[]): void {
+    initialize(config: IConfiguration, extensions: IPlugin[]): void {
         
         if (!extensions || extensions.length === 0) {
             // throw error
