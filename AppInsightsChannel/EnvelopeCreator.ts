@@ -72,7 +72,7 @@ export abstract class EnvelopeCreator {
         for (let key in properties) {
             if (properties.hasOwnProperty(key)) {
                 let value = properties[key];
-                if (value instanceof Number) {
+                if (typeof value === "number") {
                     if (!customMeasurements) {
                         customMeasurements = {};
                     }

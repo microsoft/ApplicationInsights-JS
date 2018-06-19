@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Cache-control" content="no-Cache" />
+    <title>Tests for Application Insights JavaScript API</title>
+    <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css">
+    <script src="http://sinonjs.org/releases/sinon-2.3.8.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script>
+    <script src="../../node_modules/applicationinsights-common/bundle/applicationinsights-common.js"></script>
+    <script src="aichannel.tests.js"></script>
+
+    <script>
+        require.config({
+            paths: {
+                qunit: "../External/qunit-1.23.1",
+                bridge: "../../node_modules/grunt-contrib-qunit/phantomjs/bridge"
+            }
+        });
+
+        require(
+            ["qunit", "Tests/Selenium/aichannel.tests"],
+            function (QUnit, tests) {
+                QUnit.start();
+                tests.runTests();
+            }
+        );
+    </script>
+</head>
+
+<body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <div id="error-message"></div>
+</body>
+
+</html>

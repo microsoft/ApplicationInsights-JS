@@ -12,6 +12,7 @@
         "typescript": "2.5.3"
     },
     "dependencies": {
-        "applicationinsights-common": "0.0.10"
+        "applicationinsights-common": "0.0.3",
+        "applicationinsights-core-js": "0.0.15"
     }
 }
