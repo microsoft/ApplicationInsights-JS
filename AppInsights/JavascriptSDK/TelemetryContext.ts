@@ -2,10 +2,10 @@
 
 import { 
     Trace, Event, Exception, Metric, 
-    Pageview, IEnvelope, ContextTagKeys,
+    IEnvelope, ContextTagKeys,
     RemoteDependencyData, _InternalLogging, 
     _InternalMessageId, LoggingSeverity, Util,
-    Data,PageViewPerformance } from "applicationinsights-common";
+    Data,PageViewPerformance, PageView } from "applicationinsights-common";
 import { ITelemetryContext } from '../JavaScriptSDK.Interfaces/ITelemetryContext';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';

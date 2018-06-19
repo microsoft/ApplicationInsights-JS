@@ -1,4 +1,4 @@
-///<reference path="../node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js.d.ts" />
+///<reference types="applicationinsights-core-js" />
 
 import { IConfiguration } from "applicationinsights-core-js";
 

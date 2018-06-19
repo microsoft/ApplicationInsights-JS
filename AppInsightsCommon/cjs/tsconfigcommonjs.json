@@ -7,7 +7,7 @@
     "target": "es5",
     "alwaysStrict": true,
     "declaration": true,
-    "outDir": "./bundle",
+    "outDir": "../bundle",
     "rootDir": "./AppInsightsCommon"
   },
   "files": []
