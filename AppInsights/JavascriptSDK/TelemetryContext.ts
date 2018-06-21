@@ -1,11 +1,11 @@
-﻿///<reference path="../node_modules/applicationinsights-common/bundle/applicationinsights-common.d.ts" />
+﻿///<reference types="applicationinsights-common" />
+///<reference types="applicationinsights-core-js" />
 
 import { 
-    Trace, Event, Exception, Metric, 
-    IEnvelope, ContextTagKeys,
+    Metric, IEnvelope, ContextTagKeys,
     RemoteDependencyData, _InternalLogging, 
     _InternalMessageId, LoggingSeverity, Util,
-    Data,PageViewPerformance, PageView } from "applicationinsights-common";
+    Data, PageView } from "applicationinsights-common";
 import { ITelemetryContext } from '../JavaScriptSDK.Interfaces/ITelemetryContext';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
@@ -15,6 +15,7 @@ import { Operation } from './Context/Operation';
 import { Sample } from './Context/Sample';
 import { User } from './Context/User';
 import { Session, _SessionManager } from './Context/Session';
+import { IAppInsightsCore } from "applicationinsights-core-js";
 
 export interface ITelemetryConfig {
     instrumentationKey: () => string;
@@ -79,26 +80,22 @@ export class TelemetryContext implements ITelemetryContext {
     public appId: () => string;
 
     /**
-    * The array of telemetry initializers to call before sending each telemetry item.
-    */
-    private telemetryInitializers: { (envelope: IEnvelope): boolean | void; }[];
-
-    /**
      * The session manager that manages session on the base of cookies.
      */
     public _sessionManager: _SessionManager;
 
-    constructor(config: ITelemetryConfig) {
+    /**
+    * Internal telemetry initializers.
+    */
+    private _telemetryInitializers: { (envelope: IEnvelope): boolean | void; }[];
+
+    private _core: IAppInsightsCore;
+
+    constructor(config: ITelemetryConfig, core: IAppInsightsCore) {
         this._config = config;
-        // this._sender = new Sender(config);
-        // this.appId = () => this._sender._appId;
+        this._core = core;
 
-        // // use appId set in config instead of getting it from the backend
-        // if (config.appId()) {
-        //     this._sender._appId = config.appId();
-        // }
-
-        this.telemetryInitializers = [];
+        this._telemetryInitializers = [];
 
         // window will be undefined in node.js where we do not want to initialize contexts
         if (typeof window !== 'undefined') {
@@ -117,15 +114,14 @@ export class TelemetryContext implements ITelemetryContext {
     }
 
     /**
-    * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
-    * before telemetry item is pushed for sending and in the order they were added.
+    * Adds internal telemetry initializer to the collection.
     */
-    public addTelemetryInitializer(telemetryInitializer: (envelope: IEnvelope) => boolean | void) {
-        this.telemetryInitializers.push(telemetryInitializer);
+    private addTelemetryInitializer(telemetryInitializer: (envelope: IEnvelope) => boolean | void) {
+        this._telemetryInitializers.push(telemetryInitializer);
     }
 
     /**
-     * Use Sender.ts to send telemetry object to the endpoint
+     * Uses channel to send telemetry object to the endpoint
      */
     public track(envelope: IEnvelope) {
         if (!envelope) {
@@ -199,9 +195,9 @@ export class TelemetryContext implements ITelemetryContext {
         var doNotSendItem = false;
         try {
 
-            var telemetryInitializersCount = this.telemetryInitializers.length;
+            var telemetryInitializersCount = this._telemetryInitializers.length;
             for (var i = 0; i < telemetryInitializersCount; ++i) {
-                var telemetryInitializer = this.telemetryInitializers[i];
+                var telemetryInitializer = this._telemetryInitializers[i];
                 if (telemetryInitializer) {
                     if (telemetryInitializer.apply(null, [envelope]) === false) {
                         doNotSendItem = true;
@@ -221,7 +217,9 @@ export class TelemetryContext implements ITelemetryContext {
                 this.sample.isSampledIn(envelope)) {
                 var iKeyNoDashes = this._config.instrumentationKey().replace(/-/g, "");
                 envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
-                //this._sender.send(envelope);
+
+                // map and send data
+                 this._core.track(null);
             } else {
                 _InternalLogging.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TelemetrySampledAndNotSent,
                     "Telemetry is sampled and not sent to the AI service.", { SampleRate: this.sample.sampleRate }, true);
