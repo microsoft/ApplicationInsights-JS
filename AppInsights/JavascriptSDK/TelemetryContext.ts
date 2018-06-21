@@ -16,6 +16,7 @@ import { Sample } from './Context/Sample';
 import { User } from './Context/User';
 import { Session, _SessionManager } from './Context/Session';
 import { IAppInsightsCore } from "applicationinsights-core-js";
+import { TelemetryItemCreator } from "./TelemetryItemCreator";
 
 export interface ITelemetryConfig {
     instrumentationKey: () => string;
@@ -218,8 +219,10 @@ export class TelemetryContext implements ITelemetryContext {
                 var iKeyNoDashes = this._config.instrumentationKey().replace(/-/g, "");
                 envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
 
+                let telemetryItem = TelemetryItemCreator.createItem(envelope);
+
                 // map and send data
-                 this._core.track(null);
+                 this._core.track(telemetryItem);
             } else {
                 _InternalLogging.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TelemetrySampledAndNotSent,
                     "Telemetry is sampled and not sent to the AI service.", { SampleRate: this.sample.sampleRate }, true);
