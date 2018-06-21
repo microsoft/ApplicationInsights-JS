@@ -10,11 +10,11 @@ import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManag
 import { AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore } from "applicationinsights-core-js";
 import { TelemetryContext, ITelemetryConfig } from "./TelemetryContext";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
-import { IAI } from "../JavascriptSDK.Interfaces/IAI";
+import { IAppInsights } from "../JavascriptSDK.Interfaces/IAppInsights";
 import { CoreUtils } from "JavaScriptSDK/CoreUtils";
 import { IPageViewTelemetry } from "../JavascriptSDK.Interfaces/IPageViewTelemetry";
 
-export class AI implements IAI, IPlugin, IAppInsightsInternal {
+export class AppInsights implements IAppInsights, IPlugin, IAppInsightsInternal {
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
 
     public static Version = "0.0.1";
@@ -42,7 +42,7 @@ export class AI implements IAI, IPlugin, IAppInsightsInternal {
         this.initialize = this._initialize.bind(this);
 
         // load default values if specified
-        var defaults: IConfig = AI.appInsightsDefaultConfig;
+        var defaults: IConfig = AppInsights.appInsightsDefaultConfig;
         if (defaults !== undefined) {
             for (var field in defaults) {
                 // for each unspecified field, set the default value

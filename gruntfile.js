@@ -82,16 +82,18 @@ module.exports = function (grunt) {
                 tsconfig:'./AppInsightsChannel/cjs/tsconfigcommonjs.json',
                  src: [
                     'AppInsights/JavascriptSDK/*.ts',
-                    'AppInsights/JavascriptSDK.Interfaces/*.ts'
+                    'AppInsights/JavascriptSDK.Interfaces/*.ts',
+                    'AppInsights/applicationinsights-analytics-js.ts'
                 ]
             },
             appinsights: {
                 tsconfig: './tsconfig.json',
                 src: [
                     'AppInsights/JavascriptSDK/*.ts',
-                    'AppInsights/JavascriptSDK.Interfaces/*.ts'
+                    'AppInsights/JavascriptSDK.Interfaces/*.ts',
+                    'AppInsights/applicationinsights-analytics-js.ts'
                 ],
-                out: 'appinsights/amd/bundle/applicationinsights-js.js',
+                out: 'appinsights/amd/bundle/applicationinsights-analytics-js.js',
             },
             module: {
                 tsconfig: './tsconfig.json',
