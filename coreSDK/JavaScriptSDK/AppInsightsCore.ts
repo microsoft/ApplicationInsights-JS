@@ -39,22 +39,28 @@ export class AppInsightsCore implements IAppInsightsCore {
         });        
 
         this._extensions = extensions.sort((extA, extB) => {
-            if (extA && (<any>extA).processTelemetry === 'function' && (<any>extB).processTelemetry === 'function') {
+            let typeExtA = typeof (<any>extA).processTelemetry;
+            let typeExtB = typeof (<any>extB).processTelemetry;
+            if (extA && typeExtA === 'function' && typeExtB === 'function') {
                 return (<any>extA).priority > (<any>extB).priority ? 1 : -1;
             }
 
-            if (extA && (<any>extA).processTelemetry === 'function' && (<any>extB).processTelemetry !== 'function') {
+            if (extA && 
+                typeof typeExtA === 'function' && 
+                typeof typeExtB !== 'function') {
                 // keep non telemetryplugin specific extensions at start
                 return 1;
             }
 
-            if (extA && (<any>extA).processTelemetry !== 'function' && (<any>extB).processTelemetry === 'function') {
+            if (extA && 
+                typeof typeExtA !== 'function' && 
+                typeof typeExtB === 'function') {
                 return -1;
             }
         });
 
-        for (let idx = 0; idx < this._extensions.length - 2; idx++) {
-            if (this._extensions[idx] && (<any>this._extensions[idx]).processTelemetry !== 'function') {
+        for (let idx = 0; idx < this._extensions.length - 1; idx++) {
+            if (this._extensions[idx] && typeof (<any>this._extensions[idx]).processTelemetry !== 'function') {
                 // these are initialized only
                 continue;
             }

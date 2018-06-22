@@ -1,7 +1,7 @@
 {
-    "name": "applicationinsights-api-js",
+    "name": "applicationinsights-sdk-js",
     "version": "0.0.1",
-    "description": "Microsoft Application Insights Javascript SDK apis and auto collection",
+    "description": "Microsoft Application Insights Javascript SDK apis",
     "main": "bundle/applicationinsights-js.js",
     "types": "bundle/applicationinsights-js.d.ts",
     "devDependencies": {
@@ -11,6 +11,7 @@
         "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
     },
     "dependencies": {
-        "applicationinsights-analytics-js": "0.0.1"
+        "applicationinsights-analytics-js": "0.0.1",
+	"applicationinsights-channel-js": "0.0.1"
     }
 }

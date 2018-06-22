@@ -243,11 +243,11 @@ declare module "JavaScriptSDK.Interfaces/IConfiguration" {
         /**
         * Endpoint where telemetry data is sent
         */
-        endpointUrl: string;
+        endpointUrl?: string;
         /**
-        * Extensions loaded in SDK
+        * Extension configs loaded in SDK
         */
-        extensions: {
+        extensions?: {
             [key: string]: any;
         };
     }
@@ -255,18 +255,15 @@ declare module "JavaScriptSDK.Interfaces/IConfiguration" {
 declare module "JavaScriptSDK.Interfaces/ITelemetryPlugin" {
     import { ITelemetryItem } from "JavaScriptSDK.Interfaces/ITelemetryItem";
     import { IConfiguration } from "JavaScriptSDK.Interfaces/IConfiguration";
+    import { IAppInsightsCore } from "JavaScriptSDK.Interfaces/IAppInsightsCore";
     /**
      * Configuration provided to SDK core
      */
-    export interface ITelemetryPlugin {
+    export interface ITelemetryPlugin extends IPlugin {
         /**
         * Call back for telemetry processing before it it is sent
         */
         processTelemetry: (env: ITelemetryItem) => void;
-        /**
-        * Extensions loaded in SDK
-        */
-        start: (config: IConfiguration) => void;
         /**
         * Extension name
         */
@@ -279,6 +276,12 @@ declare module "JavaScriptSDK.Interfaces/ITelemetryPlugin" {
         * Priority of the extension
         */
         priority: number;
+    }
+    export interface IPlugin {
+        /**
+        * Initialize plugin loaded by SDK
+        */
+        initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
     }
 }
 declare module "JavaScriptSDK.Interfaces/IChannelControls" {
@@ -296,10 +299,6 @@ declare module "JavaScriptSDK.Interfaces/IChannelControls" {
          */
         resume(): void;
         /**
-         * Send data in buffer immediately
-         */
-        flush(): void;
-        /**
          * Tear down transmission pipeline
          */
         teardown(): void;
@@ -309,18 +308,13 @@ declare module "JavaScriptSDK.Interfaces/IChannelControls" {
 declare module "JavaScriptSDK.Interfaces/IAppInsightsCore" {
     import { ITelemetryItem } from "JavaScriptSDK.Interfaces/ITelemetryItem";
     import { IChannelControls } from "JavaScriptSDK.Interfaces/IChannelControls";
-    import { ITelemetryPlugin } from "JavaScriptSDK.Interfaces/ITelemetryPlugin";
+    import { IPlugin } from "JavaScriptSDK.Interfaces/ITelemetryPlugin";
     import { IConfiguration } from "JavaScriptSDK.Interfaces/IConfiguration";
     export interface IAppInsightsCore {
         config: IConfiguration;
-        initialize(config: IConfiguration, extensions: ITelemetryPlugin[]): void;
+        initialize(config: IConfiguration, extensions: IPlugin[]): void;
         getTransmissionControl(): IChannelControls;
         track(telemetryItem: ITelemetryItem): any;
-    }
-    export interface Snippet {
-        queue: Array<() => void>;
-        config: IConfiguration;
-        extensions: ITelemetryPlugin[];
     }
 }
 declare module "JavaScriptSDK/CoreUtils" {
@@ -331,20 +325,27 @@ declare module "JavaScriptSDK/CoreUtils" {
 declare module "JavaScriptSDK/AppInsightsCore" {
     import { IAppInsightsCore } from "JavaScriptSDK.Interfaces/IAppInsightsCore";
     import { IConfiguration } from "JavaScriptSDK.Interfaces/IConfiguration";
-    import { ITelemetryPlugin } from "JavaScriptSDK.Interfaces/ITelemetryPlugin";
+    import { IPlugin } from "JavaScriptSDK.Interfaces/ITelemetryPlugin";
     import { IChannelControls } from "JavaScriptSDK.Interfaces/IChannelControls";
     import { ITelemetryItem } from "JavaScriptSDK.Interfaces/ITelemetryItem";
     export class AppInsightsCore implements IAppInsightsCore {
         config: IConfiguration;
-        queue: (() => void)[];
         static defaultConfig: IConfiguration;
         private _extensions;
         constructor();
-        initialize(config: IConfiguration, extensions: ITelemetryPlugin[], queue?: (() => void)[]): void;
+        initialize(config: IConfiguration, extensions: IPlugin[]): void;
         getTransmissionControl(): IChannelControls;
         track(telemetryItem: ITelemetryItem): void;
         private _validateTelmetryItem(telemetryItem);
     }
+}
+declare module "applicationinsights-core-js" {
+    export { IConfiguration } from "JavaScriptSDK.Interfaces/IConfiguration";
+    export { IChannelControls, MinChannelPriorty } from "JavaScriptSDK.Interfaces/IChannelControls";
+    export { ITelemetryPlugin, IPlugin } from "JavaScriptSDK.Interfaces/ITelemetryPlugin";
+    export { IAppInsightsCore } from "JavaScriptSDK.Interfaces/IAppInsightsCore";
+    export { ITelemetryItem } from "JavaScriptSDK.Interfaces/ITelemetryItem";
+    export { AppInsightsCore } from "JavaScriptSDK/AppInsightsCore";
 }
 declare module "JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests" {
     export class ApplicationInsightsCoreTests extends TestClass {
@@ -352,4 +353,7 @@ declare module "JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests" {
         testCleanup(): void;
         registerTests(): void;
     }
+}
+declare module "JavaScriptSDK.Tests/Selenium/aitests" {
+    export function runTests(): void;
 }

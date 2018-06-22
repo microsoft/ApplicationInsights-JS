@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css">
     <script src="http://sinonjs.org/releases/sinon-2.3.8.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script>
+    <script src="./aicore.tests.js"></script>
 
     <script>
         require.config({
@@ -18,11 +19,12 @@
         });
 
         require(
-            ["qunit", "aicore.tests"],
+            ["qunit", "JavaScriptSDK.Tests/Selenium/aitests"],
             function (QUnit, tests) {
                 QUnit.start();
+                tests.runTests();
             }
-        );
+	);
     </script>
 </head>
 
