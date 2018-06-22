@@ -1,6 +1,3 @@
-/// <reference path="./ITelemetryItem.ts" />
-/// <reference path="./IConfiguration.ts" />
-
 "use strict";
 
 import { ITelemetryItem } from "./ITelemetryItem";

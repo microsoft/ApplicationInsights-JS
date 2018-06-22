@@ -1,6 +1,6 @@
 ﻿import { IInternal } from '../../JavaScriptSDK.Interfaces/Context/IInternal';
 import { ITelemetryConfig } from '../../JavaScriptSDK/TelemetryContext';
-import { AppInsights } from '../../JavaScriptSDK/AppInsights';
+import { ApplicationInsights } from '../../JavaScriptSDK/ApplicationInsights';
 
 export class Internal implements IInternal {
 
@@ -18,6 +18,6 @@ export class Internal implements IInternal {
     * Constructs a new instance of the internal telemetry data class.
     */
     constructor(config: ITelemetryConfig) {
-        this.sdkVersion = (config.sdkExtension() ? config.sdkExtension() + "_" : "") + "javascript:" + AppInsights.Version;
+        this.sdkVersion = (config.sdkExtension() ? config.sdkExtension() + "_" : "") + "javascript:" + ApplicationInsights.Version;
     }
 }

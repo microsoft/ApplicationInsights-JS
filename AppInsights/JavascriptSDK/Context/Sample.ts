@@ -1,4 +1,4 @@
-﻿///<reference path="../../node_modules/applicationinsights-common/bundle/applicationinsights-common.d.ts" />
+﻿///<reference types="applicationinsights-common" />
 
 import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
 import { Envelope } from 'applicationinsights-common';

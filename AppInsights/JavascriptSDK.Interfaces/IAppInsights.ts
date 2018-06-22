@@ -1,4 +1,4 @@
-///<reference path="../node_modules/applicationinsights-common/bundle/applicationinsights-common.d.ts" />
+///<reference types="applicationinsights-common" />
 
 import { ITelemetryContext } from "./ITelemetryContext";
 import { SeverityLevel } from "applicationinsights-common";

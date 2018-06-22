@@ -1,1 +1,1 @@
-export { AppInsights } from "./JavaScriptSDK/AppInsights";
+export { ApplicationInsights } from "AppInsights/JavaScriptSDK/ApplicationInsights";

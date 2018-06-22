@@ -81,19 +81,26 @@ module.exports = function (grunt) {
             appinsightscjs: {
                 tsconfig:'./AppInsightsChannel/cjs/tsconfigcommonjs.json',
                  src: [
-                    'AppInsights/JavascriptSDK/*.ts',
-                    'AppInsights/JavascriptSDK.Interfaces/*.ts',
+                    'AppInsights/JavaScriptSDK/*.ts',
+                    'AppInsights/JavaScriptSDK.Interfaces/*.ts',
                     'AppInsights/applicationinsights-analytics-js.ts'
                 ]
             },
             appinsights: {
                 tsconfig: './tsconfig.json',
                 src: [
-                    'AppInsights/JavascriptSDK/*.ts',
-                    'AppInsights/JavascriptSDK.Interfaces/*.ts',
+                    'AppInsights/JavaScriptSDK/*.ts',
+                    'AppInsights/JavaScriptSDK.Interfaces/*.ts',
                     'AppInsights/applicationinsights-analytics-js.ts'
                 ],
-                out: 'appinsights/amd/bundle/applicationinsights-analytics-js.js',
+                out: 'AppInsights/amd/bundle/applicationinsights-analytics-js.js'
+            },
+            aisku: {
+                tsconfig: './tsconfig.json',
+                src: [
+                    'AppInsights/AISKU/*.ts'
+                ],
+                out: 'appinsights/AISKU/amd/bundle/aisdk-js.js'
             },
             module: {
                 tsconfig: './tsconfig.json',
@@ -254,6 +261,7 @@ module.exports = function (grunt) {
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("ai", ["ts:appinsights"]);
     grunt.registerTask("aicjs", ["ts:appinsightscjs"]);
+    grunt.registerTask("aisku", ["ts:aisku"]);
     grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
     grunt.registerTask("testchannel", ["ts:channel", "ts:channeltest", "qunit:channel"]);

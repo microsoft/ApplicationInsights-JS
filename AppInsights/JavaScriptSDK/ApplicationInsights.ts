@@ -14,7 +14,9 @@ import { IAppInsights } from "../JavascriptSDK.Interfaces/IAppInsights";
 import { CoreUtils } from "JavaScriptSDK/CoreUtils";
 import { IPageViewTelemetry } from "../JavascriptSDK.Interfaces/IPageViewTelemetry";
 
-export class AppInsights implements IAppInsights, IPlugin, IAppInsightsInternal {
+"use strict";
+
+export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsInternal {
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
 
     public static Version = "0.0.1";
@@ -42,7 +44,7 @@ export class AppInsights implements IAppInsights, IPlugin, IAppInsightsInternal 
         this.initialize = this._initialize.bind(this);
 
         // load default values if specified
-        var defaults: IConfig = AppInsights.appInsightsDefaultConfig;
+        var defaults: IConfig = ApplicationInsights.appInsightsDefaultConfig;
         if (defaults !== undefined) {
             for (var field in defaults) {
                 // for each unspecified field, set the default value
