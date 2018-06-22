@@ -1,5 +1,6 @@
-﻿import { PageViewData, PageViewPerformance, _InternalLogging,
-         LoggingSeverity, _InternalMessageId, Util } from 'applicationinsights-common';
+﻿import { PageViewData, PageViewPerformance, 
+    _InternalLogging, LoggingSeverity, 
+    _InternalMessageId, Util, IChannelControlsAI } from 'applicationinsights-common';
 import { IChannelControls } from 'applicationinsights-core-js';
 
 /**
@@ -66,7 +67,7 @@ export class PageViewManager {
                 !isNaN(duration) ? duration : undefined,
                 properties,
                 measurements);
-            this._channelControl.flush();
+            (<IChannelControlsAI>this._channelControl).flush();
             pageViewSent = true;
         }
 
@@ -78,7 +79,7 @@ export class PageViewManager {
                 !isNaN(duration) ? duration : customDuration,
                 properties,
                 measurements);
-            this._channelControl.flush();
+                (<IChannelControlsAI>this._channelControl).flush();
             pageViewSent = true;
         }
 
@@ -103,7 +104,7 @@ export class PageViewManager {
                         // If navigation timing gives invalid numbers, then go back to "override page view duration" mode.
                         // That's the best value we can get that makes sense.
                         this.appInsights.sendPageViewInternal(name, url, customDuration, properties, measurements);
-                        this._channelControl.flush();
+                        (<IChannelControlsAI>this._channelControl).flush();
                     } else {
                         if (!pageViewSent) {
                             this.appInsights.sendPageViewInternal(name, url, pageViewPerformance.getDurationMs(), properties, measurements);
@@ -113,14 +114,14 @@ export class PageViewManager {
                             this.appInsights.sendPageViewPerformanceInternal(pageViewPerformance);
                             this.pageViewPerformanceSent = true;
                         }
-                        this._channelControl.flush();
+                        (<IChannelControlsAI>this._channelControl).flush();
                     }
                 }
                 else if (PageViewPerformance.getDuration(start, +new Date) > maxDurationLimit) {
                     clearInterval(handle);
                     if (!pageViewSent) {
                         this.appInsights.sendPageViewInternal(name, url, maxDurationLimit, properties, measurements);
-                        this._channelControl.flush();
+                        (<IChannelControlsAI>this._channelControl).flush();
                     }
                 }
             } catch (e) {

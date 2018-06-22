@@ -1,5 +1,5 @@
-///<reference path="./node_modules/applicationinsights-common/bundle/applicationinsights-common.d.ts" />
-///<reference path="./node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js.d.ts" />
+///<reference types="applicationinsights-common" />
+///<reference types="applicationinsights-core-js" />
 import { ISenderConfig, XDomainRequest as IXDomainRequest, IBackendResponse } from './Interfaces';
 import { ISendBuffer, SessionStorageSendBuffer, ArraySendBuffer } from './SendBuffer';
 import {

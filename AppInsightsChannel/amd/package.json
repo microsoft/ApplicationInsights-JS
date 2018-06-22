@@ -1,13 +1,14 @@
 {
     "name": "applicationinsights-channel-js",
-    "version": "0.0.1",
+    "version": "0.0.4",
     "description": "Microsoft Application Insights JavaScript SDK Channel",
     "main": "bundle/aichannel.js",
+    "types": "bundle/aichannel.d.ts",
     "devDependencies": {
-        "grunt": "1.0.1",
-        "grunt-contrib-qunit": "2.0.0",
-        "grunt-contrib-uglify": "3.1.0",
-        "grunt-ts": "^6.0.0-beta.15",
         "typescript": "2.5.3"
+    },
+    "dependencies": {
+        "applicationinsights-common": "0.0.39",
+        "applicationinsights-core-js": "0.0.27"
     }
 }
