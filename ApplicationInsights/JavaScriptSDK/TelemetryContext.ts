@@ -1,7 +1,4 @@
-﻿///<reference types="applicationinsights-common" />
-///<reference types="applicationinsights-core-js" />
-
-import { 
+﻿import { 
     Metric, IEnvelope, ContextTagKeys,
     RemoteDependencyData, _InternalLogging, 
     _InternalMessageId, LoggingSeverity, Util,

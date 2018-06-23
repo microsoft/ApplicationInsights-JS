@@ -12,20 +12,6 @@ module.exports = function (grunt) {
                 ],
                 out: 'bundle/ai.js',
             },
-            core: {
-                tsconfig: './tsconfig.json',
-                src: [
-                    'coreSDK/JavaScriptSDK.Interfaces/IConfiguration.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/IChannelControls.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/ITelemetryItem.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/IAppInsightsCore.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/CoreUtils.ts',
-                    'coreSDK/JavaScriptSDK/AppInsightsCore.ts',
-                    'coreSDK/applicationinsights-core-js.ts'
-                ],
-                out: 'coreSDK/amd/bundle/applicationinsights-core-js.js',
-            },
             common: {
                 tsconfig: './tsconfig.json',
                 src: [
@@ -79,29 +65,43 @@ module.exports = function (grunt) {
                 ]
             },
             appinsightscjs: {
-                tsconfig:'./AppInsightsChannel/cjs/tsconfigcommonjs.json',
+                tsconfig:'./ApplicationInsights/cjs/tsconfigcommonjs.json',
                  src: [
-                    'AppInsights/JavaScriptSDK/*.ts',
-                    'AppInsights/JavaScriptSDK.Interfaces/*.ts',
-                    'AppInsights/applicationinsights-analytics-js.ts'
+                    'ApplicationInsights/JavascriptSDK/*.ts',
+                    'ApplicationInsights/JavascriptSDK.Interfaces/*.ts',
+                    'ApplicationInsights/applicationinsights-analytics-js.ts'
                 ]
             },
+            core: {
+                tsconfig: './tsconfig.json',
+                src: [
+                    'coreSDK/JavaScriptSDK.Interfaces/IConfiguration.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/IChannelControls.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/ITelemetryItem.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/IAppInsightsCore.ts',
+                    'coreSDK/JavaScriptSDK.Interfaces/CoreUtils.ts',
+                    'coreSDK/JavaScriptSDK/AppInsightsCore.ts',
+                    'coreSDK/applicationinsights-core-js.ts'
+                ],
+                out: 'coreSDK/amd/bundle/applicationinsights-core-js.js',
+            }, 
             appinsights: {
                 tsconfig: './tsconfig.json',
                 src: [
-                    'AppInsights/JavaScriptSDK/*.ts',
-                    'AppInsights/JavaScriptSDK.Interfaces/*.ts',
-                    'AppInsights/applicationinsights-analytics-js.ts'
+                    'ApplicationInsights/JavascriptSDK.Interfaces/*.ts',
+                    'ApplicationInsights/JavascriptSDK/*.ts',
+                    'ApplicationInsights/applicationinsights-analytics-js.ts'
                 ],
-                out: 'AppInsights/amd/bundle/applicationinsights-analytics-js.js'
+                out: 'ApplicationInsights/amd/bundle/applicationinsights-analytics-js.js',
             },
-            aisku: {
-                tsconfig: './tsconfig.json',
+             aisku: {
+                 tsconfig: './tsconfig.json',
                 src: [
                     'AISKU/Init.ts'
-                ],
+                 ],
                 out: 'AISKU/amd/bundle/aisdk-js.js'
-            },
+             },
             module: {
                 tsconfig: './tsconfig.json',
                 src: [

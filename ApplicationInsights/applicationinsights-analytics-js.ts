@@ -1,0 +1,1 @@
+export { ApplicationInsights } from "./JavaScriptSDK/ApplicationInsights";

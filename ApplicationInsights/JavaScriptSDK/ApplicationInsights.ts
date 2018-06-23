@@ -1,3 +1,5 @@
+/// <reference types="applicationinsights-common" />
+
 import {
     Event, IConfig,
     _InternalLogging, LoggingSeverity,

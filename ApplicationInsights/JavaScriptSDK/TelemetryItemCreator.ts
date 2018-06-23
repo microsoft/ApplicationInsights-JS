@@ -1,5 +1,3 @@
-/// <reference types="applicationinsights-common" />
-
 import { PageView, IEnvelope } from "AppInsightsCommon/applicationinsights-common";
 import { ITelemetryItem } from "applicationinsights-core-js";
 import { CoreUtils } from "JavaScriptSDK/CoreUtils";

@@ -1,5 +1,3 @@
-///<reference types="applicationinsights-common" />
-
 import { ITelemetryContext } from "./ITelemetryContext";
 import { SeverityLevel } from "applicationinsights-common";
 import { IPageViewTelemetry } from "./IPageViewTelemetry";

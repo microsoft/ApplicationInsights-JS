@@ -1,6 +1,4 @@
-﻿///<reference types="applicationinsights-common" />
-
-import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
+﻿import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
 import { Envelope } from 'applicationinsights-common';
 import { ISample } from '../../JavascriptSDK.Interfaces/Context/ISample';
 import { IEnvelope, _InternalLogging, _InternalMessageId, LoggingSeverity } from 'applicationinsights-common';
