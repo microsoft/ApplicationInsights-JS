@@ -98,9 +98,9 @@ module.exports = function (grunt) {
             aisku: {
                 tsconfig: './tsconfig.json',
                 src: [
-                    'AppInsights/AISKU/*.ts'
+                    'AISKU/Init.ts'
                 ],
-                out: 'appinsights/AISKU/amd/bundle/aisdk-js.js'
+                out: 'AISKU/amd/bundle/aisdk-js.js'
             },
             module: {
                 tsconfig: './tsconfig.json',

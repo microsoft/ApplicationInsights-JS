@@ -93,14 +93,19 @@ export class AppInsightsCore implements IAppInsightsCore {
         }
 
         // do base validation before sending it through the pipeline        
-        this._validateTelmetryItem(telemetryItem);        
+        this._validateTelmetryItem(telemetryItem);
+        if (!telemetryItem.instrumentationKey) {
+            // setup default ikey if not passed in
+            telemetryItem.instrumentationKey = this.config.instrumentationKey;
+        }
 
         // invoke any common telemetry processors before sending through pipeline
 
         let i = 0;
-        while (true) {
+        while (i < this._extensions.length) {
             if ((<any>this._extensions[i]).processTelemetry) {
-                (<any>this._extensions[i]).processTelemetry(telemetryItem); // pass on to first extension
+                (<any>this._extensions[i]).processTelemetry(telemetryItem); // pass on to first extension that can support processing
+                i++;
                 break;
             }
         }

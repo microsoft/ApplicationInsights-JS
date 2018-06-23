@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-core-js",
-    "version": "0.0.29",
+    "version": "0.0.31",
     "description": "Microsoft Application Insights Core Javascript SDK",
     "main": "bundle/applicationinsights-core-js.js",
     "types": "bundle/applicationinsights-core-js.d.ts",

@@ -369,7 +369,7 @@ export class Sender implements IChannelControls {
 
     private static _getDefaultAppInsightsChannelConfig(config: IConfiguration, identifier: string): ISenderConfig {
         let resultConfig = <ISenderConfig>{};
-        let pluginConfig = config.extensions[identifier];
+        let pluginConfig = config.extensions ? config.extensions[identifier] : {};
 
         // set default values
         resultConfig.endpointUrl = () => config.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
