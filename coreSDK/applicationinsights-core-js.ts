@@ -4,3 +4,4 @@ export { ITelemetryPlugin, IPlugin } from "./JavaScriptSDK.Interfaces/ITelemetry
 export { IAppInsightsCore } from "./JavaScriptSDK.Interfaces/IAppInsightsCore";
 export { ITelemetryItem } from "./JavaScriptSDK.Interfaces/ITelemetryItem";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
+export { CoreUtils } from "./JavaScriptSDK/CoreUtils";

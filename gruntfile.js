@@ -69,7 +69,7 @@ module.exports = function (grunt) {
                  src: [
                     'ApplicationInsights/JavascriptSDK/*.ts',
                     'ApplicationInsights/JavascriptSDK.Interfaces/*.ts',
-                    'ApplicationInsights/applicationinsights-analytics-js.ts'
+                    'ApplicationInsights/*.ts'
                 ]
             },
             core: {
@@ -91,7 +91,7 @@ module.exports = function (grunt) {
                 src: [
                     'ApplicationInsights/JavascriptSDK.Interfaces/*.ts',
                     'ApplicationInsights/JavascriptSDK/*.ts',
-                    'ApplicationInsights/applicationinsights-analytics-js.ts'
+                    'ApplicationInsights/*.ts'
                 ],
                 out: 'ApplicationInsights/amd/bundle/applicationinsights-analytics-js.js',
             },

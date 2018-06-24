@@ -1,20 +1,19 @@
 ﻿import { RequestHeaders, Util, LoggingSeverity, _InternalMessageId, _InternalLogging, CorrelationIdHelper } from 'applicationinsights-common';
 import { ajaxRecord } from './ajaxRecord';
-import { AI } from '../../AI';
 import { extensions, dateTime, EventHelper } from './ajaxUtils';
 import { RemoteDependencyData } from 'applicationinsights-common';
-
+import { ApplicationInsights } from '../../ApplicationInsights';
 export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;
 }
 
 export class AjaxMonitor {
-    private appInsights: AI;
+    private appInsights: ApplicationInsights;
     private initialized: boolean;
     private static instrumentedByAppInsightsName = "InstrumentedByAppInsights";
     private currentWindowHost;
 
-    constructor(appInsights: AI) {
+    constructor(appInsights: ApplicationInsights) {
         this.currentWindowHost = window.location.host && window.location.host.toLowerCase();
         this.appInsights = appInsights;
         this.initialized = false;

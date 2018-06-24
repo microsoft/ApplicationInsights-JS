@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-common",
-    "version": "0.0.39",
+    "version": "0.0.43",
     "description": "Microsoft Application Insights Common JavaScript Library - AMD version",
     "main": "./bundle/applicationinsights-common.js",
     "types": "./bundle/applicationinsights-common.d.ts",
@@ -11,6 +11,6 @@
         "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
     },
     "dependencies": {
-        "applicationinsights-core-js": "0.0.27"
+        "applicationinsights-core-js": "0.0.33"
     }
 }
