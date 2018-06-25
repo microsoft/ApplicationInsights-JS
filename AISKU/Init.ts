@@ -6,7 +6,7 @@
 import { _InternalLogging, PageView } from "applicationinsights-common";
 import { AppInsightsCore, IConfiguration, ITelemetryItem } from "applicationinsights-core-js";
 import { Sender } from "Sender";
-import { ApplicationInsights, IPageViewTelemetry } from "ApplicationInsights/applicationinsights-analytics-js";
+import { ApplicationInsights, IPageViewTelemetry } from "applicationinsights-analytics-js";
 
 "use strict";
 export function init() {
