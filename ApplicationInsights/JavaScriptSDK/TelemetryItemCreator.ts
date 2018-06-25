@@ -18,45 +18,48 @@ export class TelemetryItemCreator implements ITelemetryItemCreator {
     }
 
     create(env: IEnvelope): ITelemetryItem {
-        
-
-        if (env.name === PageView.envelopeType) {
+        if (env.data.baseType === PageView.dataType) {
             let item: ITelemetryItem = {
                 name: env.name,
                 timestamp: new Date(env.time),
-                baseType: PageView.envelopeType,
+                baseType: env.data.baseType,
                 instrumentationKey: env.iKey
             }
 
+            item.sytemProperties = {};
+            item.sytemProperties["ver"] = 2;
             if (env.tags) {
-                for (var key in env.tags) {
-                    if (env.tags.hasOwnProperty(key)) {
-                        item.sytemProperties[key] = env.tags[key]; // part A
-                    }
-                }
-            }
+               for (var property in env.tags) {
+                   if (env.tags.hasOwnProperty(property)) {
+                   
+                   item.sytemProperties[property] = env.tags[property]; // part A
+                   }
+               }
+           }
 
-                let data = env.data as PageView;
-                if (!CoreUtils.isNullOrUndefined(data)) {
-                    item.domainProperties["name"] = env.data.name;
-                    item.domainProperties["url"] = env.data.url;
-                    item.domainProperties["duration"] = env.data.duration;
-                    item.domainProperties["id"] = env.data.id;
+            if (!CoreUtils.isNullOrUndefined(env.data) && !CoreUtils.isNullOrUndefined(env.data.baseData)) {
+                item.domainProperties = {};
+                item.domainProperties["name"] = env.data.baseData.name;
+                item.domainProperties["url"] = env.data.baseData.url;
+                item.domainProperties["duration"] = env.data.baseData.duration;
+                item.domainProperties["id"] = env.data.baseData.id;
+                item.customProperties = {};
 
+                    let data = env.data as PageView;
                     let props = data.properties;
                     if (!CoreUtils.isNullOrUndefined(props)) {
-                        for (var key in props) {
-                            if (props.hasOwnProperty(key)) {
-                                item.customProperties[key] = props[key]; // part C
+                        for (var prop1 in props) {
+                            if (props.hasOwnProperty(prop1)) {
+                                item.customProperties[prop1] = props[prop1]; // part C
                             }
                         }
                     }
                     
                     let measurements = data.measurements;
                     if (!CoreUtils.isNullOrUndefined(measurements)) {
-                        for (var key in measurements) {
-                            if (measurements.hasOwnProperty(key)) {
-                                item.customProperties[key] = measurements[key]; // part C
+                        for (var prop2 in measurements) {
+                            if (measurements.hasOwnProperty(prop2)) {
+                                item.customProperties[prop2] = measurements[prop2]; // part C
                             }
                         }
                     }

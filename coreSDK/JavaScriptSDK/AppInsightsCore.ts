@@ -46,15 +46,15 @@ export class AppInsightsCore implements IAppInsightsCore {
             }
 
             if (extA && 
-                typeof typeExtA === 'function' && 
-                typeof typeExtB !== 'function') {
+                typeExtA === 'function' && 
+                typeExtB !== 'function') {
                 // keep non telemetryplugin specific extensions at start
                 return 1;
             }
 
             if (extA && 
-                typeof typeExtA !== 'function' && 
-                typeof typeExtB === 'function') {
+                typeExtA !== 'function' && 
+                typeExtB === 'function') {
                 return -1;
             }
         });
@@ -77,7 +77,7 @@ export class AppInsightsCore implements IAppInsightsCore {
     getTransmissionControl(): IChannelControls {
         for (let i = 0; i < this._extensions.length; i++) {
             let priority = (<any>this._extensions[i]).priority;
-            if (CoreUtils.isNullOrUndefined(priority) && priority >= MinChannelPriorty) {
+            if (!CoreUtils.isNullOrUndefined(priority) && priority >= MinChannelPriorty) {
                 let firstChannel = <any>this._extensions[i];
                 return firstChannel as IChannelControls; // return first channel in list
             }
@@ -105,9 +105,10 @@ export class AppInsightsCore implements IAppInsightsCore {
         while (i < this._extensions.length) {
             if ((<any>this._extensions[i]).processTelemetry) {
                 (<any>this._extensions[i]).processTelemetry(telemetryItem); // pass on to first extension that can support processing
-                i++;
                 break;
             }
+
+            i++;
         }
     }
 

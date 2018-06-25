@@ -27,10 +27,7 @@ export class Sample implements ISample {
     * Determines if an envelope is sampled in (i.e. will be sent) or not (i.e. will be dropped).
     */
     public isSampledIn(envelope: IEnvelope): boolean {
-        if (this.sampleRate == 100) return true;
-
-        var score = this.samplingScoreGenerator.getSamplingScore(envelope);
-
-        return score < this.sampleRate;
+        // return true as sampling will move to different extension
+        return true;
     }
 }

@@ -59,32 +59,6 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
 
         _InternalLogging.verboseLogging = () => this.config.verboseLogging;
         _InternalLogging.enableDebugExceptions = () => this.config.enableDebug;
-        var configGetters: ITelemetryConfig = {
-            instrumentationKey: () => this.config.instrumentationKey,
-            accountId: () => this.config.accountId,
-            sessionRenewalMs: () => this.config.sessionRenewalMs,
-            sessionExpirationMs: () => this.config.sessionExpirationMs,
-            // endpointUrl: () => this.config.endpointUrl,
-            // emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
-            // maxBatchSizeInBytes: () => {
-            //     return (!this.config.isBeaconApiDisabled && Util.IsBeaconApiSupported()) ?
-            //         Math.min(this.config.maxBatchSizeInBytes, Sender.MaxBeaconPayloadSize) :
-            //         this.config.maxBatchSizeInBytes;
-            // },
-            // maxBatchInterval: () => this.config.maxBatchInterval,
-            // disableTelemetry: () => this.config.disableTelemetry,
-            sampleRate: () => this.config.samplingPercentage,
-            cookieDomain: () => this.config.cookieDomain,
-            // enableSessionStorageBuffer: () => {
-            //     // Disable Session Storage buffer if telemetry is sent using Beacon API
-            //     return ((this.config.isBeaconApiDisabled || !Util.IsBeaconApiSupported()) && this.config.enableSessionStorageBuffer);
-            // },
-            // isRetryDisabled: () => this.config.isRetryDisabled,
-            // isBeaconApiDisabled: () => this.config.isBeaconApiDisabled,
-            sdkExtension: () => this.config.sdkExtension,
-            isBrowserLinkTrackingEnabled: () => this.config.isBrowserLinkTrackingEnabled,
-            appId: () => this.config.appId
-        }
 
         if (this.config.isCookieUseDisabled) {
             Util.disableCookies();
@@ -94,34 +68,6 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
             Util.disableStorage();
         }
 
-        this.context = new TelemetryContext(configGetters, this._core);
-
-        this._pageViewManager = new PageViewManager(this, this.config.overridePageViewDuration);
-
-        // initialize event timing
-        this._eventTracking = new Timing("trackEvent");
-        this._eventTracking.action = (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
-            if (!measurements) {
-                measurements = { duration: duration };
-            }
-            else {
-                // do not override existing duration value
-                if (isNaN(measurements["duration"])) {
-                    measurements["duration"] = duration;
-                }
-            }
-            var event = new Event(name, properties, measurements);
-            var data = new Data<Event>(Event.dataType, event);
-            var envelope = new Envelope(data, Event.envelopeType);
-
-            this.context.track(envelope);
-        }
-
-        // initialize page view timing
-        this._pageTracking = new Timing("trackPageView");
-        this._pageTracking.action = (name, url, duration, properties, measurements) => {
-            this.sendPageViewInternal(name, url, duration, properties, measurements);
-        }
     }
 
     /**
@@ -137,13 +83,17 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
             
             let properties: Object = {};
             let measurements: Object = {}; 
-            pageView.customDimensions.keys.forEach(key => {
-                if (typeof pageView.customDimensions[key] === 'number') {
-                    measurements[key] = pageView.customDimensions[key];
-                } else {
-                    properties[key] = pageView.customDimensions[key];
+            if (pageView.customDimensions) {
+                for (var key in pageView.customDimensions) {
+                    if (pageView.customDimensions.hasOwnProperty(key)) {
+                        if (typeof pageView.customDimensions[key] === 'number') {
+                            measurements[key] = pageView.customDimensions[key];
+                        } else {
+                            properties[key] = pageView.customDimensions[key];
+                        }
+                    }
                 }
-            });
+            }
 
             this._pageViewManager.trackPageView(pageView.name, pageView.url, properties, measurements, pageView.duration);
 
@@ -184,6 +134,63 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
         }
 
         this._core = core;
+
+        var configGetters: ITelemetryConfig = {
+            instrumentationKey: () => this.config.instrumentationKey,
+            accountId: () => this.config.accountId,
+            sessionRenewalMs: () => this.config.sessionRenewalMs,
+            sessionExpirationMs: () => this.config.sessionExpirationMs,
+            // endpointUrl: () => this.config.endpointUrl,
+            // emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
+            // maxBatchSizeInBytes: () => {
+            //     return (!this.config.isBeaconApiDisabled && Util.IsBeaconApiSupported()) ?
+            //         Math.min(this.config.maxBatchSizeInBytes, Sender.MaxBeaconPayloadSize) :
+            //         this.config.maxBatchSizeInBytes;
+            // },
+            // maxBatchInterval: () => this.config.maxBatchInterval,
+            // disableTelemetry: () => this.config.disableTelemetry,
+            sampleRate: () => this.config.samplingPercentage,
+            cookieDomain: () => this.config.cookieDomain,
+            // enableSessionStorageBuffer: () => {
+            //     // Disable Session Storage buffer if telemetry is sent using Beacon API
+            //     return ((this.config.isBeaconApiDisabled || !Util.IsBeaconApiSupported()) && this.config.enableSessionStorageBuffer);
+            // },
+            // isRetryDisabled: () => this.config.isRetryDisabled,
+            // isBeaconApiDisabled: () => this.config.isBeaconApiDisabled,
+            sdkExtension: () => this.config.sdkExtension,
+            isBrowserLinkTrackingEnabled: () => this.config.isBrowserLinkTrackingEnabled,
+            appId: () => this.config.appId
+        }
+
+        this.context = new TelemetryContext(configGetters, this._core);
+
+        this._pageViewManager = new PageViewManager(this, this.config.overridePageViewDuration, this._core);
+
+        // initialize event timing
+        this._eventTracking = new Timing("trackEvent");
+        this._eventTracking.action = (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
+            if (!measurements) {
+                measurements = { duration: duration };
+            }
+            else {
+                // do not override existing duration value
+                if (isNaN(measurements["duration"])) {
+                    measurements["duration"] = duration;
+                }
+            }
+            var event = new Event(name, properties, measurements);
+            var data = new Data<Event>(Event.dataType, event);
+            var envelope = new Envelope(data, Event.envelopeType);
+
+            this.context.track(envelope);
+        }
+
+        // initialize page view timing
+        this._pageTracking = new Timing("trackPageView");
+        this._pageTracking.action = (name, url, duration, properties, measurements) => {
+            this.sendPageViewInternal(name, url, duration, properties, measurements);
+        }
+
     }
 }
 
