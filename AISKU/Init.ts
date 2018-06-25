@@ -9,7 +9,7 @@ import { Sender } from "Sender";
 import { ApplicationInsights, IPageViewTelemetry } from "ApplicationInsights/applicationinsights-analytics-js";
 
 "use strict";
-
+export function init() {
     try {
         // only initialize if we are running in a browser that supports JSON serialization (ie7<, node.js, cordova)
         if (typeof window !== "undefined" && typeof JSON !== "undefined") {
@@ -62,3 +62,5 @@ import { ApplicationInsights, IPageViewTelemetry } from "ApplicationInsights/app
     } catch (e) {
         _InternalLogging.warnToConsole('Failed to initialize AppInsights JS SDK: ' + e.message);
     }
+
+}

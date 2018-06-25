@@ -1,6 +1,4 @@
-﻿import { UrlHelper } from 'applicationinsights-common';
-
-export class extensions {
+﻿export class extensions {
     public static IsNullOrUndefined(obj) {
         return typeof (obj) === "undefined" || obj === null;
     }

@@ -1,5 +1,5 @@
 ﻿import { HashCodeScoreGenerator } from './HashCodeScoreGenerator';
-import { IEnvelope, ContextTagKeys } from '../../AppInsightsCommon/applicationinsights-common';
+import { IEnvelope, ContextTagKeys } from 'applicationinsights-common';
 
 export class SamplingScoreGenerator {
     private hashCodeGeneragor: HashCodeScoreGenerator;

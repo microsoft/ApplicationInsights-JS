@@ -7,7 +7,6 @@ import { ISample } from './Context/ISample';
 import { IUser } from './Context/IUser';
 import { ISession } from './Context/ISession';
 import { IEnvelope } from 'applicationinsights-common';
-import { Envelope } from 'applicationinsights-common';
 
 export interface ITelemetryContext {
     /**

@@ -1,5 +1,5 @@
 ﻿import { IInternal } from '../../JavaScriptSDK.Interfaces/Context/IInternal';
-import { ITelemetryConfig } from '../../JavaScriptSDK/TelemetryContext';
+import { ITelemetryConfig } from '../../JavaScriptSDK.Interfaces/ITelemetryConfig';
 import { ApplicationInsights } from '../../JavaScriptSDK/ApplicationInsights';
 
 export class Internal implements IInternal {

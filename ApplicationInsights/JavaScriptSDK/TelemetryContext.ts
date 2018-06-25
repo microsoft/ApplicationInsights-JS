@@ -14,18 +14,8 @@ import { User } from './Context/User';
 import { Session, _SessionManager } from './Context/Session';
 import { IAppInsightsCore } from "applicationinsights-core-js";
 import { TelemetryItemCreator } from "./TelemetryItemCreator";
+import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 
-export interface ITelemetryConfig {
-    instrumentationKey: () => string;
-    accountId: () => string;
-    sessionRenewalMs: () => number;
-    sampleRate: () => number;
-    sessionExpirationMs: () => number;
-    cookieDomain: () => string;
-    sdkExtension: () => string;
-    isBrowserLinkTrackingEnabled: () => boolean;
-    appId: () => string;
-}
 
 export class TelemetryContext implements ITelemetryContext {
     /**

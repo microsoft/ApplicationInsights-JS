@@ -10,11 +10,12 @@ from "applicationinsights-common";
 
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore } from "applicationinsights-core-js";
-import { TelemetryContext, ITelemetryConfig } from "./TelemetryContext";
+import { TelemetryContext } from "./TelemetryContext";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { IAppInsights } from "../JavascriptSDK.Interfaces/IAppInsights";
 import { CoreUtils } from "JavaScriptSDK/CoreUtils";
 import { IPageViewTelemetry } from "../JavascriptSDK.Interfaces/IPageViewTelemetry";
+import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 
 "use strict";
 
