@@ -132,7 +132,9 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
     * Returns true is window performance timing API is supported, false otherwise.
     */
     public static isPerformanceTimingSupported() {
-        return typeof window != "undefined" && window.performance && window.performance.timing;
+        // To do: add functionality when adding api support for trackpageview
+        //return typeof window != "undefined" && window.performance && window.performance.timing;
+        return false;
     }
 
     /**

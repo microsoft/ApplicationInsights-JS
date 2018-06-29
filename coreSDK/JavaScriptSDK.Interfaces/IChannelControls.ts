@@ -18,11 +18,6 @@ export interface IChannelControls extends ITelemetryPlugin {
     resume(): void;
 
     /**
-     * Send data in buffer immediately
-     */
-    flush(): void;
-
-    /**
      * Tear down transmission pipeline
      */
     teardown(): void;

@@ -1,8 +1,7 @@
 ﻿import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
-import { Envelope } from '../../JavaScriptSDK.Interfaces/Contracts/Generated/Envelope';
-import { ISample } from '../../JavaScriptSDK.Interfaces/Context/ISample';
-import { IEnvelope } from '../../JavaScriptSDK.Interfaces/Telemetry/IEnvelope';
-import { _InternalLogging, _InternalMessageId, LoggingSeverity } from 'applicationinsights-common';
+import { Envelope } from 'applicationinsights-common';
+import { ISample } from '../../JavascriptSDK.Interfaces/Context/ISample';
+import { IEnvelope, _InternalLogging, _InternalMessageId, LoggingSeverity } from 'applicationinsights-common';
 
 export class Sample implements ISample {
     public sampleRate: number;
@@ -28,10 +27,7 @@ export class Sample implements ISample {
     * Determines if an envelope is sampled in (i.e. will be sent) or not (i.e. will be dropped).
     */
     public isSampledIn(envelope: IEnvelope): boolean {
-        if (this.sampleRate == 100) return true;
-
-        var score = this.samplingScoreGenerator.getSamplingScore(envelope);
-
-        return score < this.sampleRate;
+        // return true as sampling will move to different extension
+        return true;
     }
 }

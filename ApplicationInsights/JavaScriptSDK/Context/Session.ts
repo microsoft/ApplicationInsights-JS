@@ -1,6 +1,6 @@
 ﻿import { ISession } from '../../JavaScriptSDK.Interfaces/Context/ISession';
 import { Util, _InternalLogging, _InternalMessageId, LoggingSeverity } from 'applicationinsights-common';
-import { dateTime } from '../../JavaScriptSDK/ajax/ajaxUtils';
+import { dateTime } from '../../JavaScriptSDK/Extensions/ajax/ajaxUtils';
 
 export interface ISessionConfig {
     sessionRenewalMs: () => number;

@@ -1,8 +1,8 @@
 /// <reference path="../TestFramework/Common.ts" />
 /// <reference path="../../JavaScriptSDK/AppInsightsCore.ts" />
-/// <reference path="../../applicationinsights-core.ts" />
+/// <reference path="../../applicationinsights-core-js.ts" />
 
-import { IAppInsightsCore, IConfiguration, ITelemetryPlugin, IChannelControls, ITelemetryItem, MinChannelPriorty } from "../../applicationinsights-core"
+import { IConfiguration, ITelemetryPlugin, ITelemetryItem } from "../../applicationinsights-core-js"
 import { AppInsightsCore } from "../../JavaScriptSDK/AppInsightsCore";
 
 export class ApplicationInsightsCoreTests extends TestClass {
@@ -18,15 +18,14 @@ export class ApplicationInsightsCoreTests extends TestClass {
     public registerTests() {
 
         this.testCase({
-            name: "ApplicationInsightsCore: Validates input",
+            name: "ApplicationInsightsCore: Initialization validates input",
             test: () => {
 
-                let telemetryPlugin = new TestSamplingPlugin();
+                let samplingPlugin = new TestSamplingPlugin();
                                 
-                let appInsightsCore: AppInsightsCore;
-                appInsightsCore = new AppInsightsCore();
+                let appInsightsCore = new AppInsightsCore();
                 try {                    
-                    appInsightsCore.initialize(null, [telemetryPlugin]);
+                    appInsightsCore.initialize(null, [samplingPlugin]);
                 } catch (error) {
                     Assert.ok(true, "Validates configuration");                    
                 }
@@ -42,8 +41,25 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 } catch (error) {
                     Assert.ok(true, "Validates extensions are provided");                    
                 }
+            }
+        });
 
-                Assert.ok(false);
+        this.testCase({
+            name: "ApplicationInsightsCore: Initialization initializes setNextPlugin",
+            test: () => {
+                let samplingPlugin = new TestSamplingPlugin();
+                samplingPlugin.priority = 20;
+
+                let channelPlugin = new TestSamplingPlugin();
+                channelPlugin.priority = 120;
+                // Assert prior to initialize
+                Assert.ok(!samplingPlugin.nexttPlugin, "Not setup prior to pipeline initialization");
+
+                let appInsightsCore = new AppInsightsCore();
+                appInsightsCore.initialize(
+                    {instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41"}, 
+                    [samplingPlugin, channelPlugin]);
+                Assert.ok(!!samplingPlugin.nexttPlugin, "Not setup prior to pipeline initialization");
             }
         });
     }
@@ -51,17 +67,17 @@ export class ApplicationInsightsCoreTests extends TestClass {
 
 class TestSamplingPlugin implements ITelemetryPlugin {
     public processTelemetry: (env: ITelemetryItem) => void;
-    public start: (config: IConfiguration) => void;
+    public initialize: (config: IConfiguration) => void;
     public identifier: string = "AzureSamplingPlugin";
     public setNextPlugin: (next: ITelemetryPlugin) => void;
     public priority: number = 5;
     private samplingPercentage;
-    private nexttPlugin: ITelemetryPlugin;
+    public nexttPlugin: ITelemetryPlugin;
 
 
     constructor() {
         this.processTelemetry = this._processTelemetry.bind(this);
-        this.start = this._start.bind(this);
+        this.initialize = this._start.bind(this);
         this.setNextPlugin = this._setNextPlugin.bind(this);
     }
 
@@ -76,17 +92,15 @@ class TestSamplingPlugin implements ITelemetryPlugin {
     }
 
     private _start(config: IConfiguration) {
-        if (!config || !config.extensions[this.identifier]) {
+        if (!config) {
             throw Error("required configuration missing");            
         }
 
-        let pluginConfig = config.extensions[this.identifier];
-        this.samplingPercentage = pluginConfig.samplingPercentage;
+        let pluginConfig = config.extensions ? config.extensions[this.identifier] : null;
+        this.samplingPercentage = pluginConfig? pluginConfig.samplingPercentage : 100;
     }
 
     private _setNextPlugin(next: ITelemetryPlugin) : void {
         this.nexttPlugin = next;
     }
 }
-
-new ApplicationInsightsCoreTests().registerTests();

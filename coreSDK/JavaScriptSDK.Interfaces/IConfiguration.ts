@@ -13,10 +13,10 @@ export interface IConfiguration {
     /**
     * Endpoint where telemetry data is sent
     */
-    endpointUrl: string;
+    endpointUrl?: string;
 
     /**
-    * Extensions loaded in SDK
+    * Extension configs loaded in SDK
     */
-    extensions: { [key: string]: any }; // extension configs
+    extensions?: { [key: string]: any }; // extension configs
 }

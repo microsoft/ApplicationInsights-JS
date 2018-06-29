@@ -1,20 +1,19 @@
 ﻿import { RequestHeaders, Util, LoggingSeverity, _InternalMessageId, _InternalLogging, CorrelationIdHelper } from 'applicationinsights-common';
 import { ajaxRecord } from './ajaxRecord';
-import { AppInsights } from '../AppInsights';
 import { extensions, dateTime, EventHelper } from './ajaxUtils';
-import { RemoteDependencyData } from '../Telemetry/RemoteDependencyData';
-
+import { RemoteDependencyData } from 'applicationinsights-common';
+import { ApplicationInsights } from '../../ApplicationInsights';
 export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;
 }
 
 export class AjaxMonitor {
-    private appInsights: AppInsights;
+    private appInsights: ApplicationInsights;
     private initialized: boolean;
     private static instrumentedByAppInsightsName = "InstrumentedByAppInsights";
     private currentWindowHost;
 
-    constructor(appInsights: AppInsights) {
+    constructor(appInsights: ApplicationInsights) {
         this.currentWindowHost = window.location.host && window.location.host.toLowerCase();
         this.appInsights = appInsights;
         this.initialized = false;
@@ -23,6 +22,11 @@ export class AjaxMonitor {
 
     ///<summary>The main function that needs to be called in order to start Ajax Monitoring</summary>
     private Init() {
+
+        // if (!this.config.disableAjaxTracking) {
+        //     this._ajaxMonitor = new AjaxMonitor(this);
+        // }
+
         if (this.supportsMonitoring()) {
             this.instrumentOpen();
             this.instrumentSend();

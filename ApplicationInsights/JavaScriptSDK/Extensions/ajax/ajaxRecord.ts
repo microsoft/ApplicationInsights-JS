@@ -1,6 +1,5 @@
-﻿import { UrlHelper } from 'applicationinsights-common';
+﻿import { DataSanitizer, UrlHelper } from 'applicationinsights-common';
 import { dateTime } from './ajaxUtils';
-import { DataSanitizer } from '../Telemetry/Common/DataSanitizer';
 
 export class XHRMonitoringState {
     public openDone: boolean = false;

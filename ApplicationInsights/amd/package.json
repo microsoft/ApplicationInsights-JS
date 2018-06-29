@@ -1,0 +1,17 @@
+{
+    "name": "applicationinsights-analytics-js",
+    "version": "0.0.21",
+    "description": "Microsoft Application Insights Javascript SDK apis",
+    "main": "bundle/applicationinsights-analytics-js.js",
+    "types": "bundle/applicationinsights-analytics-js.d.ts",
+    "devDependencies": {
+        "typescript": "2.5.3"
+    },
+    "publishConfig": {
+        "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
+    },
+    "dependencies": {
+        "applicationinsights-common": "0.0.49",
+        "applicationinsights-core-js": "0.0.39"
+    }
+}

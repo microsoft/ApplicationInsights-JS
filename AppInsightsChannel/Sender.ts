@@ -1,5 +1,5 @@
-///<reference path="./node_modules/applicationinsights-common/bundle/applicationinsights-common.d.ts" />
-///<reference path="./node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js.d.ts" />
+///<reference types="applicationinsights-common" />
+///<reference types="applicationinsights-core-js" />
 import { ISenderConfig, XDomainRequest as IXDomainRequest, IBackendResponse } from './Interfaces';
 import { ISendBuffer, SessionStorageSendBuffer, ArraySendBuffer } from './SendBuffer';
 import {
@@ -20,10 +20,11 @@ import {
     _InternalMessageId, LoggingSeverity, _InternalLogging,
     IEnvelope, PageView, Event,
     Trace, Exception, Metric,
-    PageViewPerformance, RemoteDependencyData
+    PageViewPerformance, RemoteDependencyData,
+    IChannelControlsAI
 } from 'applicationinsights-common';
 import {
-    IChannelControls, ITelemetryPlugin, ITelemetryItem, IConfiguration
+    ITelemetryPlugin, ITelemetryItem, IConfiguration
 } from 'applicationinsights-core-js';
 
 declare var XDomainRequest: {
@@ -31,8 +32,8 @@ declare var XDomainRequest: {
     new(): IXDomainRequest;
 };
 
-export class Sender implements IChannelControls {
-    public priority: number; // todo set priority
+export class Sender implements IChannelControlsAI {
+    public priority: number = 200;
 
     public identifier: string;
 
@@ -44,8 +45,15 @@ export class Sender implements IChannelControls {
         throw new Error("Method not implemented.");
     }
 
-    public flush(): void {
-        throw new Error("Method not implemented.");
+    public flush() {
+        try {
+            this.triggerSend();
+        } catch (e) {
+            _InternalLogging.throwInternal(LoggingSeverity.CRITICAL,
+                _InternalMessageId.FlushFailed,
+                "flush failed, telemetry will not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) });
+        }
     }
 
     public teardown(): void {
@@ -369,7 +377,7 @@ export class Sender implements IChannelControls {
 
     private static _getDefaultAppInsightsChannelConfig(config: IConfiguration, identifier: string): ISenderConfig {
         let resultConfig = <ISenderConfig>{};
-        let pluginConfig = config.extensions[identifier];
+        let pluginConfig = config.extensions ? config.extensions[identifier] : {};
 
         // set default values
         resultConfig.endpointUrl = () => config.endpointUrl || "https://dc.services.visualstudio.com/v2/track";

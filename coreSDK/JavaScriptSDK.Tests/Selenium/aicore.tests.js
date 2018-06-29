@@ -421,7 +421,7 @@ define("JavaScriptSDK/AppInsightsCore", ["require", "exports", "JavaScriptSDK.In
         function AppInsightsCore() {
             this._extensions = new Array();
         }
-        AppInsightsCore.prototype.initialize = function (config, extensions, queue) {
+        AppInsightsCore.prototype.initialize = function (config, extensions) {
             var _this = this;
             if (!extensions || extensions.length === 0) {
                 // throw error
@@ -439,17 +439,37 @@ define("JavaScriptSDK/AppInsightsCore", ["require", "exports", "JavaScriptSDK.In
                 }
             });
             this._extensions = extensions.sort(function (extA, extB) {
-                return extA.priority > extB.priority ? -1 : 1;
+                var typeExtA = typeof extA.processTelemetry;
+                var typeExtB = typeof extB.processTelemetry;
+                if (extA && typeExtA === 'function' && typeExtB === 'function') {
+                    return extA.priority > extB.priority ? 1 : -1;
+                }
+                if (extA &&
+                    typeof typeExtA === 'function' &&
+                    typeof typeExtB !== 'function') {
+                    // keep non telemetryplugin specific extensions at start
+                    return 1;
+                }
+                if (extA &&
+                    typeof typeExtA !== 'function' &&
+                    typeof typeExtB === 'function') {
+                    return -1;
+                }
             });
-            for (var idx = 0; idx < this._extensions.length - 2; idx++) {
+            for (var idx = 0; idx < this._extensions.length - 1; idx++) {
+                if (this._extensions[idx] && typeof this._extensions[idx].processTelemetry !== 'function') {
+                    // these are initialized only
+                    continue;
+                }
                 this._extensions[idx].setNextPlugin(this._extensions[idx + 1]); // set next plugin
             }
-            this._extensions.forEach(function (ext) { return ext.start(_this.config); }); // initialize
+            this._extensions.forEach(function (ext) { return ext.initialize(_this.config, _this, _this._extensions); }); // initialize
             // get defaults for configuration values as applicable
         };
         AppInsightsCore.prototype.getTransmissionControl = function () {
             for (var i = 0; i < this._extensions.length; i++) {
-                if (this._extensions[i].priority >= IChannelControls_1.MinChannelPriorty) {
+                var priority = this._extensions[i].priority;
+                if (CoreUtils_1.CoreUtils.isNullOrUndefined(priority) && priority >= IChannelControls_1.MinChannelPriorty) {
                     var firstChannel = this._extensions[i];
                     return firstChannel; // return first channel in list
                 }
@@ -464,7 +484,13 @@ define("JavaScriptSDK/AppInsightsCore", ["require", "exports", "JavaScriptSDK.In
             // do base validation before sending it through the pipeline        
             this._validateTelmetryItem(telemetryItem);
             // invoke any common telemetry processors before sending through pipeline
-            this._extensions[0].processTelemetry(telemetryItem); // pass on to first extension
+            var i = 0;
+            while (true) {
+                if (this._extensions[i].processTelemetry) {
+                    this._extensions[i].processTelemetry(telemetryItem); // pass on to first extension
+                    break;
+                }
+            }
         };
         AppInsightsCore.prototype._validateTelmetryItem = function (telemetryItem) {
             if (CoreUtils_1.CoreUtils.isNullOrUndefined(telemetryItem.name)) {
@@ -484,10 +510,16 @@ define("JavaScriptSDK/AppInsightsCore", ["require", "exports", "JavaScriptSDK.In
     }());
     exports.AppInsightsCore = AppInsightsCore;
 });
+define("applicationinsights-core-js", ["require", "exports", "JavaScriptSDK.Interfaces/IChannelControls", "JavaScriptSDK/AppInsightsCore"], function (require, exports, IChannelControls_2, AppInsightsCore_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.MinChannelPriorty = IChannelControls_2.MinChannelPriorty;
+    exports.AppInsightsCore = AppInsightsCore_1.AppInsightsCore;
+});
 /// <reference path="../TestFramework/Common.ts" />
 /// <reference path="../../JavaScriptSDK/AppInsightsCore.ts" />
-/// <reference path="../../applicationinsights-core.ts" />
-define("JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests", ["require", "exports", "JavaScriptSDK/AppInsightsCore"], function (require, exports, AppInsightsCore_1) {
+/// <reference path="../../applicationinsights-core-js.ts" />
+define("JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests", ["require", "exports", "JavaScriptSDK/AppInsightsCore"], function (require, exports, AppInsightsCore_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var ApplicationInsightsCoreTests = /** @class */ (function (_super) {
@@ -503,13 +535,12 @@ define("JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests", ["require",
         };
         ApplicationInsightsCoreTests.prototype.registerTests = function () {
             this.testCase({
-                name: "ApplicationInsightsCore: Validates input",
+                name: "ApplicationInsightsCore: Initialization validates input",
                 test: function () {
-                    var telemetryPlugin = new TestSamplingPlugin();
-                    var appInsightsCore;
-                    appInsightsCore = new AppInsightsCore_1.AppInsightsCore();
+                    var samplingPlugin = new TestSamplingPlugin();
+                    var appInsightsCore = new AppInsightsCore_2.AppInsightsCore();
                     try {
-                        appInsightsCore.initialize(null, [telemetryPlugin]);
+                        appInsightsCore.initialize(null, [samplingPlugin]);
                     }
                     catch (error) {
                         Assert.ok(true, "Validates configuration");
@@ -525,7 +556,20 @@ define("JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests", ["require",
                     catch (error) {
                         Assert.ok(true, "Validates extensions are provided");
                     }
-                    Assert.ok(false);
+                }
+            });
+            this.testCase({
+                name: "ApplicationInsightsCore: Initialization initializes setNextPlugin",
+                test: function () {
+                    var samplingPlugin = new TestSamplingPlugin();
+                    samplingPlugin.priority = 20;
+                    var channelPlugin = new TestSamplingPlugin();
+                    channelPlugin.priority = 120;
+                    // Assert prior to initialize
+                    Assert.ok(!samplingPlugin.nexttPlugin, "Not setup prior to pipeline initialization");
+                    var appInsightsCore = new AppInsightsCore_2.AppInsightsCore();
+                    appInsightsCore.initialize({ instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" }, [samplingPlugin, channelPlugin]);
+                    Assert.ok(!!samplingPlugin.nexttPlugin, "Not setup prior to pipeline initialization");
                 }
             });
         };
@@ -537,7 +581,7 @@ define("JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests", ["require",
             this.identifier = "AzureSamplingPlugin";
             this.priority = 5;
             this.processTelemetry = this._processTelemetry.bind(this);
-            this.start = this._start.bind(this);
+            this.initialize = this._start.bind(this);
             this.setNextPlugin = this._setNextPlugin.bind(this);
         }
         TestSamplingPlugin.prototype._processTelemetry = function (env) {
@@ -549,17 +593,24 @@ define("JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests", ["require",
             }
         };
         TestSamplingPlugin.prototype._start = function (config) {
-            if (!config || !config.extensions[this.identifier]) {
+            if (!config) {
                 throw Error("required configuration missing");
             }
-            var pluginConfig = config.extensions[this.identifier];
-            this.samplingPercentage = pluginConfig.samplingPercentage;
+            var pluginConfig = config.extensions ? config.extensions[this.identifier] : null;
+            this.samplingPercentage = pluginConfig ? pluginConfig.samplingPercentage : 100;
         };
         TestSamplingPlugin.prototype._setNextPlugin = function (next) {
             this.nexttPlugin = next;
         };
         return TestSamplingPlugin;
     }());
-    new ApplicationInsightsCoreTests().registerTests();
+});
+define("JavaScriptSDK.Tests/Selenium/aitests", ["require", "exports", "JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests"], function (require, exports, ApplicationInsightsCore_Tests_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function runTests() {
+        new ApplicationInsightsCore_Tests_1.ApplicationInsightsCoreTests().registerTests();
+    }
+    exports.runTests = runTests;
 });
 //# sourceMappingURL=aicore.tests.js.map

@@ -1,7 +1,8 @@
-export interface IConfig {
-    // To do: extend IConfig from IConfiguration, move instrumentation key and endpiont url to that interface
-    instrumentationKey?: string;
-    endpointUrl?: string;
+///<reference types="applicationinsights-core-js" />
+
+import { IConfiguration } from "applicationinsights-core-js";
+
+export interface IConfig extends IConfiguration {    
     emitLineDelimitedJson?: boolean;
     accountId?: string;
     sessionRenewalMs?: number;
