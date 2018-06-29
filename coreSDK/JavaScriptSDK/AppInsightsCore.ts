@@ -21,44 +21,42 @@ export class AppInsightsCore implements IAppInsightsCore {
         
         if (!extensions || extensions.length === 0) {
             // throw error
-            throw Error("At least one sender channel is required");
+            throw Error("At least one extension channel is required");
         }
         
-        if (!config || config.endpointUrl === null || config.instrumentationKey === null) {
-            // throw error
+        if (!config || CoreUtils.isNullOrUndefined(config.instrumentationKey)) {
+            throw Error("Please provide instrumentation key");
         }
 
         this.config = config;
 
         // Initial validation
         extensions.forEach((extension: ITelemetryPlugin) => {
-            if (extension.setNextPlugin === null || extension.processTelemetry === null || extension.identifier === null) {
-                // Todo: throw detailed error
-                throw Error("Invalid state");
+            if (CoreUtils.isNullOrUndefined(extension.initialize)) {
+                throw Error("Extensions must provide callback to initialize");
             }
-        });        
+        });
 
-        this._extensions = extensions.sort((extA, extB) => {
-            let typeExtA = typeof (<any>extA).processTelemetry;
-            let typeExtB = typeof (<any>extB).processTelemetry;
-            if (extA && typeExtA === 'function' && typeExtB === 'function') {
-                return (<any>extA).priority > (<any>extB).priority ? 1 : -1;
+        this._extensions = extensions.sort((a, b) => {
+            let extA = (<ITelemetryPlugin>a);
+            let extB = (<ITelemetryPlugin>b);
+            let typeExtA = typeof extA.processTelemetry;
+            let typeExtB = typeof extB.processTelemetry;
+            if (typeExtA === 'function' && typeExtB === 'function') {
+                return extA.priority > extB.priority ? 1 : -1;
             }
 
-            if (extA && 
-                typeExtA === 'function' && 
-                typeExtB !== 'function') {
+            if (typeExtA === 'function' && typeExtB !== 'function') {
                 // keep non telemetryplugin specific extensions at start
                 return 1;
             }
 
-            if (extA && 
-                typeExtA !== 'function' && 
-                typeExtB === 'function') {
+            if (typeExtA !== 'function' && typeExtB === 'function') {
                 return -1;
             }
         });
 
+        // Set next plugin for all but last extension
         for (let idx = 0; idx < this._extensions.length - 1; idx++) {
             if (this._extensions[idx] && typeof (<any>this._extensions[idx]).processTelemetry !== 'function') {
                 // these are initialized only
@@ -69,8 +67,6 @@ export class AppInsightsCore implements IAppInsightsCore {
         }
 
         this._extensions.forEach(ext => ext.initialize(this.config, this, this._extensions)); // initialize
-
-        // get defaults for configuration values as applicable
     }
 
 
@@ -83,7 +79,7 @@ export class AppInsightsCore implements IAppInsightsCore {
             }
         }
 
-        return null;
+        throw new Error("No channel extension found");
     }
 
     track(telemetryItem: ITelemetryItem) {

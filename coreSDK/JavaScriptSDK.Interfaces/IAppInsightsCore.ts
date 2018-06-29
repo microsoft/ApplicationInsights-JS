@@ -1,6 +1,6 @@
 import { ITelemetryItem } from "./ITelemetryItem";
 import { IChannelControls } from "./IChannelControls";
-import { ITelemetryPlugin, IPlugin } from "./ITelemetryPlugin";
+import { IPlugin } from "./ITelemetryPlugin";
 import { IConfiguration } from "./IConfiguration";
 
 "use strict";

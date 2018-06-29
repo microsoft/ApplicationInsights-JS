@@ -72,11 +72,7 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
 
     /**
      * Logs that a page or other item was viewed. 
-     * @param   name  The string you used as the name in startTrackPage. Defaults to the document title.
-     * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
-     * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
-     * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
-     * @param   duration    number - the number of milliseconds it took to load the page. Defaults to undefined. If set to default value, page load time is calculated internally.
+     * @param   IPageViewTelemetry  The string you used as the name in startTrackPage. Defaults to the document title.
      */
     public trackPageView(pageView: IPageViewTelemetry) {
         try {
@@ -140,23 +136,8 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
             accountId: () => this.config.accountId,
             sessionRenewalMs: () => this.config.sessionRenewalMs,
             sessionExpirationMs: () => this.config.sessionExpirationMs,
-            // endpointUrl: () => this.config.endpointUrl,
-            // emitLineDelimitedJson: () => this.config.emitLineDelimitedJson,
-            // maxBatchSizeInBytes: () => {
-            //     return (!this.config.isBeaconApiDisabled && Util.IsBeaconApiSupported()) ?
-            //         Math.min(this.config.maxBatchSizeInBytes, Sender.MaxBeaconPayloadSize) :
-            //         this.config.maxBatchSizeInBytes;
-            // },
-            // maxBatchInterval: () => this.config.maxBatchInterval,
-            // disableTelemetry: () => this.config.disableTelemetry,
             sampleRate: () => this.config.samplingPercentage,
             cookieDomain: () => this.config.cookieDomain,
-            // enableSessionStorageBuffer: () => {
-            //     // Disable Session Storage buffer if telemetry is sent using Beacon API
-            //     return ((this.config.isBeaconApiDisabled || !Util.IsBeaconApiSupported()) && this.config.enableSessionStorageBuffer);
-            // },
-            // isRetryDisabled: () => this.config.isRetryDisabled,
-            // isBeaconApiDisabled: () => this.config.isBeaconApiDisabled,
             sdkExtension: () => this.config.sdkExtension,
             isBrowserLinkTrackingEnabled: () => this.config.isBrowserLinkTrackingEnabled,
             appId: () => this.config.appId

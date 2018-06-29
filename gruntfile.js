@@ -135,7 +135,7 @@ module.exports = function (grunt) {
                 tsconfig: './tsconfig.json',
                 src: [
                     'coreSDK/JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests.ts',
-		    'coreSDK/JavaScriptSDK.Tests/Selenium/aitests.ts'
+		            'coreSDK/JavaScriptSDK.Tests/Selenium/aitests.ts'
                 ],
                 out: 'coreSDK/JavaScriptSDK.Tests/Selenium/aicore.tests.js'
             },

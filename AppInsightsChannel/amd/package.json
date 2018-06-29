@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-channel-js",
-    "version": "0.0.10",
+    "version": "0.0.11",
     "description": "Microsoft Application Insights JavaScript SDK Channel",
     "main": "bundle/aichannel.js",
     "types": "bundle/aichannel.d.ts",
@@ -8,7 +8,7 @@
         "typescript": "2.5.3"
     },
     "dependencies": {
-        "applicationinsights-common": "0.0.47",
-        "applicationinsights-core-js": "0.0.37"
+        "applicationinsights-common": "0.0.49",
+        "applicationinsights-core-js": "0.0.39"
     }
 }
