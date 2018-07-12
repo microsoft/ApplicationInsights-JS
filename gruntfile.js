@@ -44,19 +44,6 @@ module.exports = function (grunt) {
                     'AppInsightsChannel/TelemetryValidation/*.ts'
                 ]
             },
-            corecjs: {
-                tsconfig: './coreSDK/cjs/tsconfigcommonjs.json',
-                src: [
-                    'coreSDK/JavaScriptSDK.Interfaces/IConfiguration.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/IChannelControls.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/ITelemetryItem.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/IAppInsightsCore.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/CoreUtils.ts',
-                    'coreSDK/JavaScriptSDK/AppInsightsCore.ts',
-                    'coreSDK/applicationinsights-core-js.ts'
-                ]
-            },
             channelcommonjs: {
                 tsconfig:'./AppInsightsChannel/cjs/tsconfigcommonjs.json',
                 src: [
@@ -71,20 +58,6 @@ module.exports = function (grunt) {
                     'ApplicationInsights/JavascriptSDK.Interfaces/*.ts',
                     'ApplicationInsights/*.ts'
                 ]
-            },
-            core: {
-                tsconfig: './tsconfig.json',
-                src: [
-                    'coreSDK/JavaScriptSDK.Interfaces/IConfiguration.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/IChannelControls.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/ITelemetryItem.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/IAppInsightsCore.ts',
-                    'coreSDK/JavaScriptSDK.Interfaces/CoreUtils.ts',
-                    'coreSDK/JavaScriptSDK/AppInsightsCore.ts',
-                    'coreSDK/applicationinsights-core-js.ts'
-                ],
-                out: 'coreSDK/amd/bundle/applicationinsights-core-js.js',
             }, 
             appinsights: {
                 tsconfig: './tsconfig.json',
@@ -130,14 +103,6 @@ module.exports = function (grunt) {
                     'JavaScript/JavaScriptSDK.Tests/Contracts/Generated/*.ts'
                 ],
                 out: 'bundle/test/ai.schema.tests.js'
-            },
-            coretest: {
-                tsconfig: './tsconfig.json',
-                src: [
-                    'coreSDK/JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests.ts',
-		            'coreSDK/JavaScriptSDK.Tests/Selenium/aitests.ts'
-                ],
-                out: 'coreSDK/JavaScriptSDK.Tests/Selenium/aicore.tests.js'
             },
             channeltest: {
                 tsconfig: './tsconfig.json',
@@ -229,17 +194,6 @@ module.exports = function (grunt) {
                     summaryOnly: true,
                     '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
-            },
-            core: {
-                options: {
-                    urls: [
-                        'coreSDK/JavaScriptSDK.Tests/Selenium/Tests.html'                       
-                    ],
-                    timeout: 300 * 1000, // 5 min
-                    console: false,
-                    summaryOnly: true,
-                    '--web-security': 'false'
-                }
             }
         }
     });
@@ -252,8 +206,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
-    grunt.registerTask("core", ["ts:core"]);
-    grunt.registerTask("corecjs", ["ts:corecjs"])
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("commoncjs", ["ts:commoncjs"]);
     grunt.registerTask("channel", ["ts:channel"]);
@@ -262,7 +214,6 @@ module.exports = function (grunt) {
     grunt.registerTask("ai", ["ts:appinsights"]);
     grunt.registerTask("aicjs", ["ts:appinsightscjs"]);
     grunt.registerTask("aisku", ["ts:aisku"]);
-    grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
     grunt.registerTask("testchannel", ["ts:channel", "ts:channeltest", "qunit:channel"]);
 };
