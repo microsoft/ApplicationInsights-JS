@@ -29,28 +29,6 @@ module.exports = function (grunt) {
                     'AppInsightsCommon/Interfaces/*.ts'
                 ]
             },
-            channel: {
-                tsconfig: './tsconfig.json',
-                src: [
-                    'AppInsightsChannel/*.ts',
-                    'AppInsightsChannel/TelemetryValidation/*.ts'
-                ],
-                out: 'AppInsightsChannel/amd/bundle/aichannel.js'
-            },
-            channelcjs: {
-                tsconfig:'./AppInsightsChannel/cjs/tsconfigcommonjs.json',
-                src: [
-                    'AppInsightsChannel/*.ts',
-                    'AppInsightsChannel/TelemetryValidation/*.ts'
-                ]
-            },
-            channelcommonjs: {
-                tsconfig:'./AppInsightsChannel/cjs/tsconfigcommonjs.json',
-                src: [
-                    'AppInsightsChannel/*.ts',
-                    'AppInsightsChannel/TelemetryValidation/*.ts'
-                ]
-            },
             appinsightscjs: {
                 tsconfig:'./ApplicationInsights/cjs/tsconfigcommonjs.json',
                  src: [
@@ -103,13 +81,6 @@ module.exports = function (grunt) {
                     'JavaScript/JavaScriptSDK.Tests/Contracts/Generated/*.ts'
                 ],
                 out: 'bundle/test/ai.schema.tests.js'
-            },
-            channeltest: {
-                tsconfig: './tsconfig.json',
-                src: [
-                    'AppInsightsChannel/Tests/Selenium/*.ts'
-                ],
-                out: 'AppInsightsChannel/Tests/Selenium/aichannel.tests.js'
             },
             testE2E: {
                 tsconfig: './tsconfig.json',
@@ -183,17 +154,6 @@ module.exports = function (grunt) {
                     summaryOnly: true,
                     '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
-            },
-            channel: {
-                options: {
-                    urls: [
-                        'AppInsightsChannel/Tests/Selenium/Tests.html',
-                    ],
-                    timeout: 300 * 1000, // 5 min
-                    console: false,
-                    summaryOnly: true,
-                    '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
-                }
             }
         }
     });
@@ -208,12 +168,9 @@ module.exports = function (grunt) {
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("commoncjs", ["ts:commoncjs"]);
-    grunt.registerTask("channel", ["ts:channel"]);
-    grunt.registerTask("channelcjs", ["ts:channelcjs"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("ai", ["ts:appinsights"]);
     grunt.registerTask("aicjs", ["ts:appinsightscjs"]);
     grunt.registerTask("aisku", ["ts:aisku"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
-    grunt.registerTask("testchannel", ["ts:channel", "ts:channeltest", "qunit:channel"]);
 };
