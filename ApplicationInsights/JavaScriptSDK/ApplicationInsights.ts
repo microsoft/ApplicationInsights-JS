@@ -5,8 +5,8 @@ import {
     _InternalLogging, LoggingSeverity,
     _InternalMessageId, Util,
     Data, Envelope,
-    Trace, PageViewPerformance, PageView }
-from "applicationinsights-common";
+    Trace, PageViewPerformance, PageView
+} from "applicationinsights-common";
 
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore } from "applicationinsights-core-js";
@@ -72,20 +72,21 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
 
     /**
      * Logs that a page or other item was viewed. 
-     * @param   IPageViewTelemetry  The string you used as the name in startTrackPage. Defaults to the document title.
+     * @param IPageViewTelemetry The string you used as the name in startTrackPage. Defaults to the document title.
+     * @param customProperties Additional data used to filter events and metrics. Defaults to empty.
      */
-    public trackPageView(pageView: IPageViewTelemetry) {
+    public trackPageView(pageView: IPageViewTelemetry, customProperties: { [key: string]: any }) {
         try {
-            
+
             let properties: Object = {};
-            let measurements: Object = {}; 
-            if (pageView.customDimensions) {
-                for (var key in pageView.customDimensions) {
-                    if (pageView.customDimensions.hasOwnProperty(key)) {
-                        if (typeof pageView.customDimensions[key] === 'number') {
-                            measurements[key] = pageView.customDimensions[key];
+            let measurements: Object = {};
+            if (customProperties !== undefined) {
+                for (var key in customProperties) {
+                    if (customProperties.hasOwnProperty(key)) {
+                        if (typeof customProperties[key] === 'number') {
+                            measurements[key] = customProperties[key];
                         } else {
-                            properties[key] = pageView.customDimensions[key];
+                            properties[key] = customProperties[key];
                         }
                     }
                 }
