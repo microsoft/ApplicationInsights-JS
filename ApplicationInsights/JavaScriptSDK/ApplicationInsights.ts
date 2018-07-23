@@ -77,7 +77,7 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
      */
     public trackPageView(pageView: IPageViewTelemetry, customProperties: { [key: string]: any }) {
         try {
-
+            // parse custom properties and extract numbers into measurements
             let properties: Object = {};
             let measurements: Object = {};
             if (customProperties !== undefined) {
@@ -97,7 +97,6 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
             if (this.config.autoTrackPageVisitTime) {
                 this._pageVisitTimeManager.trackPreviousPageVisit(pageView.name, pageView.url);
             }
-
         } catch (e) {
             _InternalLogging.throwInternal(
                 LoggingSeverity.CRITICAL,
