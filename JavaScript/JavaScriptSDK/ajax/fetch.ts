@@ -31,6 +31,10 @@ module Microsoft.ApplicationInsights {
 
         public static DisabledPropertyName: string = "Microsoft_ApplicationInsights_BypassFetchInstrumentation";
 
+        private isMonitoredInstance(input: Request | string): boolean {
+            return this.initialized && input[FetchMonitor.DisabledPropertyName] !== true;
+        }
+
         private supportsMonitoring(): boolean {
             let result: boolean = true;
             if (extensions.IsNullOrUndefined(Request) ||
@@ -46,18 +50,20 @@ module Microsoft.ApplicationInsights {
             let fetchMonitorInstance: FetchMonitor = this;
             window.fetch = function fetch(input?: Request | string, init?: RequestInit): Promise<Response> {
                 let ajaxData: ajaxRecord;
-                try {
-                    ajaxData = fetchMonitorInstance.createAjaxRecord(input, init);
-                    init = fetchMonitorInstance.includeCorrelationHeaders(ajaxData, input, init);
-                } catch (e) {
-                    _InternalLogging.throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _InternalMessageId.FailedMonitorAjaxOpen,
-                        "Failed to monitor Window.fetch, monitoring data for this fetch call may be incorrect.",
-                        {
-                            ajaxDiagnosticsMessage: FetchMonitor.getFailedFetchDiagnosticsMessage(input),
-                            exception: Microsoft.ApplicationInsights.Util.dump(e)
-                        });
+                if (fetchMonitorInstance.isMonitoredInstance(input)) {
+                    try {
+                        ajaxData = fetchMonitorInstance.createAjaxRecord(input, init);
+                        init = fetchMonitorInstance.includeCorrelationHeaders(ajaxData, input, init);
+                    } catch (e) {
+                        _InternalLogging.throwInternal(
+                            LoggingSeverity.CRITICAL,
+                            _InternalMessageId.FailedMonitorAjaxOpen,
+                            "Failed to monitor Window.fetch, monitoring data for this fetch call may be incorrect.",
+                            {
+                                ajaxDiagnosticsMessage: FetchMonitor.getFailedFetchDiagnosticsMessage(input),
+                                exception: Microsoft.ApplicationInsights.Util.dump(e)
+                            });
+                    }
                 }
                 return originalFetch(input, init)
                     .then(response => {
