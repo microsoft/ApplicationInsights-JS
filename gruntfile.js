@@ -30,13 +30,13 @@ module.exports = function (grunt) {
                 ]
             },
             appinsightscjs: {
-                tsconfig:'./ApplicationInsights/cjs/tsconfigcommonjs.json',
-                 src: [
+                tsconfig: './ApplicationInsights/cjs/tsconfigcommonjs.json',
+                src: [
                     'ApplicationInsights/JavascriptSDK/*.ts',
                     'ApplicationInsights/JavascriptSDK.Interfaces/*.ts',
                     'ApplicationInsights/*.ts'
                 ]
-            }, 
+            },
             appinsights: {
                 tsconfig: './tsconfig.json',
                 src: [
@@ -46,13 +46,20 @@ module.exports = function (grunt) {
                 ],
                 out: 'ApplicationInsights/amd/bundle/applicationinsights-analytics-js.js',
             },
-             aisku: {
-                 tsconfig: './tsconfig.json',
+            appinsightstests: {
+                tsconfig: './tsconfig.json',
+                src: [
+                    './ApplicationInsights/Tests/Selenium/*.ts'
+                ],
+                out: 'ApplicationInsights/Tests/Selenium/appinsights-analytics.tests.js'
+            },
+            aisku: {
+                tsconfig: './tsconfig.json',
                 src: [
                     'AISKU/Init.ts'
-                 ],
+                ],
                 out: 'AISKU/amd/bundle/aisdk-js.js'
-             },
+            },
             module: {
                 tsconfig: './tsconfig.json',
                 src: [
@@ -154,6 +161,17 @@ module.exports = function (grunt) {
                     summaryOnly: true,
                     '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
+            },
+            aitests: {
+                options: {
+                    urls: [
+                        'ApplicationInsights/Tests/Selenium/Tests.html'
+                    ],
+                    timeout: 300 * 1000, // 5 min
+                    console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
+                }
             }
         }
     });
@@ -170,6 +188,7 @@ module.exports = function (grunt) {
     grunt.registerTask("commoncjs", ["ts:commoncjs"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("ai", ["ts:appinsights"]);
+    grunt.registerTask("aitests", ["ts:appinsights", "ts:appinsightstests", "qunit:aitests"]);
     grunt.registerTask("aicjs", ["ts:appinsightscjs"]);
     grunt.registerTask("aisku", ["ts:aisku"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
