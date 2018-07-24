@@ -5,7 +5,8 @@
     "noImplicitAny": false,
     "module": "amd",
     "target": "es5",
-    "alwaysStrict": true
+    "alwaysStrict": true,
+    "declaration": true
   },
   "files": []
 }
