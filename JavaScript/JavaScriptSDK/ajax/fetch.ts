@@ -37,9 +37,9 @@ module Microsoft.ApplicationInsights {
 
         private supportsMonitoring(): boolean {
             let result: boolean = true;
-            if (extensions.IsNullOrUndefined(Request) ||
-                extensions.IsNullOrUndefined(Request.prototype) ||
-                extensions.IsNullOrUndefined(fetch)) {
+            if (extensions.IsNullOrUndefined((window as any).Request) ||
+                extensions.IsNullOrUndefined((window as any).Request.prototype) ||
+                extensions.IsNullOrUndefined(window.fetch)) {
                 result = false;
             }
             return result;
