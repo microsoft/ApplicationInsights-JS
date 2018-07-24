@@ -54,7 +54,7 @@ module.exports = function (grunt) {
                 out: 'AISKU/amd/bundle/aisdk-js.js'
              },
             module: {
-                tsconfig: './tsconfig.json',
+                tsconfig: './tsconfigmodule.json',
                 src: [
                     'JavaScript/JavaScriptSDK.Interfaces/*.ts',
                     'JavaScript/JavaScriptSDK.Module/*.ts',
