@@ -36,7 +36,7 @@ class FetchTests extends TestClass {
     }
 
     public registerTests() {
-
+        this.useFakeTimers = false;
         this.testCase({
             name: "Fetch: window.fetch gets instrumented",
             test: () => {
@@ -54,78 +54,64 @@ class FetchTests extends TestClass {
                 () => {
                     window.fetch = x => (window as any).Promise.resolve(new Response("bla", { status: 200, headers: { "Content-Type": "application/json" } }));
                     var fm = new Microsoft.ApplicationInsights.FetchMonitor(<any>this.appInsightsMock);
-
-                    // Act
                     fetch("bla").then(r => {
                         this["response"] = r;
                         r.text().then(t => this["text"] = t);
                     });
                 },
-                <() => void>PollingAssert.createPollingAssert(() => {
-                    return this.trackDependencySpy.called;
-                }, "trackDependencyData is called"),
-                <() => void>PollingAssert.createPollingAssert(() => this["text"] === "bla", "Expected result mismatch"),
-                <() => void>PollingAssert.createPollingAssert(() => this["response"].status === 200, "Expected 200 response code")
+                <() => void>PollingAssert.createPollingAssert(() => this.trackDependencySpy.called, "trackDependencyData is called", 0.1),
+                <() => void>PollingAssert.createPollingAssert(() => this["text"] === "bla", "Expected result mismatch", 0.1),
+                <() => void>PollingAssert.createPollingAssert(() => this["response"].status === 200, "Expected 200 response code", 0.1)
             ],
             stepDelay: 0
         });
 
-        /*
+
         this.testCaseAsync({
             name: "Fetch: 200 means success",
             steps: [
                 () => {
                     window.fetch = x => (window as any).Promise.resolve(new Response("bla", { status: 200, headers: { "Content-Type": "application/json" } }));
                     var fm = new Microsoft.ApplicationInsights.FetchMonitor(<any>this.appInsightsMock);
-                    // Act
-                    return fetch("bla").then(response => {
-                        Assert.ok(this.trackDependencySpy.called, "trackDependencyData is called");
-
-                        // Assert
-                        Assert.equal(true, this.trackDependencySpy.args[0][0].success, "trackDependencyData should receive true as a 'success' argument");
-                    });
-                }],
+                    fetch("bla");
+                },
+                <() => void>PollingAssert.createPollingAssert(() => this.trackDependencySpy.called, "trackDependencyData is called", 0.1),
+                <() => void>PollingAssert.createPollingAssert(() => this.trackDependencySpy.args[0][0].success, "trackDependencyData should receive true as a 'success' argument", 0.1)
+            ],
             stepDelay: 0
         });
 
-                        this.testCase({
-                            name: "Ajax: non 200 means failure",
-                            test: () => {
-                                var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
-                
-                                // Act
-                                var xhr = new XMLHttpRequest();
-                                xhr.open("GET", "/bla");
-                                xhr.send();
-                
-                                // Emulate response                
-                                (<any>xhr).respond(404, {}, "");
-                
-                                // Assert
-                                Assert.equal(false, this.trackDependencySpy.args[0][0].success, "TrackAjax should receive false as a 'success' argument");
-                
-                            }
-                        });
-                
-                        [200, 201, 202, 203, 204, 301, 302, 303, 304].forEach((responseCode) => {
-                            this.testCase({
-                                name: "Ajax: test success http response code: " + responseCode,
-                                test: () => {
-                                    this.testAjaxSuccess(responseCode, true);
-                                }
-                            })
-                        });
-                
-                        [400, 401, 402, 403, 404, 500, 501].forEach((responseCode) => {
-                            this.testCase({
-                                name: "Ajax: test failure http response code: " + responseCode,
-                                test: () => {
-                                    this.testAjaxSuccess(responseCode, false);
-                                }
-                            })
-                        });
-                
-                        this.testCase({
+        this.testCaseAsync({
+            name: "Ajax: non 200 means failure",
+            steps: [
+                () => {
+                    window.fetch = x => (window as any).Promise.resolve(new Response("bla", { status: 400, headers: { "Content-Type": "application/json" } }));
+                    var fm = new Microsoft.ApplicationInsights.FetchMonitor(<any>this.appInsightsMock);
+                    fetch("bla");
+                },
+                <() => void>PollingAssert.createPollingAssert(() => this.trackDependencySpy.called, "trackDependencyData is called", 0.1),
+                <() => void>PollingAssert.createPollingAssert(() => !this.trackDependencySpy.args[0][0].success, "trackDependencyData should receive false as a 'success' argument", 0.1)
+            ],
+            stepDelay: 0
+        });
+
+        [200, 201, 202, 203, 204, 301, 302, 303, 304].forEach((responseCode) => {
+            this.testCaseAsync({
+                name: "Ajax: test success http response code: " + responseCode,
+                steps: this.testFetchSuccess(responseCode, true),
+                stepDelay: 0
+            })
+        });
+
+        [400, 401, 402, 403, 404, 500, 501].forEach((responseCode) => {
+            this.testCaseAsync({
+                name: "Ajax: test failure http response code: " + responseCode,
+                steps: this.testFetchSuccess(responseCode, false),
+                stepDelay: 0
+            })
+        });
+
+        /*                this.testCase({
                             name: "Ajax: overriding ready state change handlers in all possible ways",
                             test: () => {
                                 var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
@@ -257,19 +243,15 @@ class FetchTests extends TestClass {
                         });*/
     }
 
-    private testAjaxSuccess(responseCode: number, success: boolean) {
-        var ajax = new Microsoft.ApplicationInsights.AjaxMonitor(<any>this.appInsightsMock);
-
-        // Act
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/bla");
-        xhr.send();
-
-        // Emulate response                
-        (<any>xhr).respond(responseCode, {}, "");
-
-        // Assert
-        Assert.equal(success, this.trackDependencySpy.args[0][0].success, "TrackAjax should receive " + success + " as a 'success' argument");
+    private testFetchSuccess(responseCode: number, success: boolean): Array<() => void> {
+        return [
+            () => {
+                window.fetch = x => (window as any).Promise.resolve(new Response(responseCode === 204 || responseCode === 304 ? null : "bla", { status: responseCode, headers: { "Content-Type": "application/json" } }));
+                var fm = new Microsoft.ApplicationInsights.FetchMonitor(<any>this.appInsightsMock);
+                fetch("bla");
+            },
+            <() => void>PollingAssert.createPollingAssert(() => this.trackDependencySpy.args[0][0].success === success, `trackDependencyData should receive ${success} as a 'success' argument`, 0.1)
+        ];
     }
 }
 new FetchTests().registerTests();
