@@ -91,7 +91,7 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
     }
 
     public sendPageViewInternal(pageView: IPageViewTelemetry, properties?: { [key: string]: any }) {
-        let telemetryItem = TelemetryItemCreator.createTelemetryItem(pageView, PageView.dataType, PageView.envelopeType, properties);
+        let telemetryItem = TelemetryItemCreator.createItem(pageView, PageView.dataType, PageView.envelopeType, properties);
 
         this.context.track(telemetryItem);
 
@@ -133,6 +133,10 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
 
         this._pageViewManager = new PageViewManager(this, this.config.overridePageViewDuration, this._core);
 
+        /*
+        TODO: renable this trackEvent once we support trackEvent in this package. Created task to track this:
+        https://mseng.visualstudio.com/AppInsights/_workitems/edit/1310833
+
         // initialize event timing
         this._eventTracking = new Timing("trackEvent");
         this._eventTracking.action = (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
@@ -145,13 +149,18 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
                     measurements["duration"] = duration;
                 }
             }
+
+
             var event = new Event(name, properties, measurements);
             var data = new Data<Event>(Event.dataType, event);
             var envelope = new Envelope(data, Event.envelopeType);
 
             this.context.track(envelope);
         }
+        */
 
+        /* TODO re-enable once we add support for startTrackPage. Task to track this:
+        https://mseng.visualstudio.com/AppInsights/1DS-Web/_workitems/edit/1305304
         // initialize page view timing
         this._pageTracking = new Timing("trackPageView");
         this._pageTracking.action = (name, url, duration, properties, measurements) => {
@@ -160,9 +169,9 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
                 uri: url,
                 duration: duration,
             };
-            this.sendPageViewInternal(pageViewItem, properties, measurements);
+            this.sendPageViewInternal(pageViewItem, properties);
         }
-
+        */
     }
 }
 
