@@ -13,6 +13,11 @@ export interface IPageViewTelemetry {
     uri?: string;
 
     /*
+     * id string - unique page identifier for the page view
+     */
+    id?: string;
+
+    /*
      * refUri  String - the URL of the source page where current page is loaded from
      */
     refUri?: string;
@@ -26,6 +31,11 @@ export interface IPageViewTelemetry {
      * pageType  String - page type
      */
     pageType?: string;
+
+    /*
+     * isLoggedIn - boolean is user logged in
+     */
+    isLoggedIn?: boolean;
 
     /*
      * property bag to contain an extension to domain properties - extension to Part B
