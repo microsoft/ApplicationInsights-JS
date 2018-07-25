@@ -13,7 +13,7 @@ module Microsoft.ApplicationInsights {
         private appInsights: AppInsights;
         private initialized: boolean;
         public static instrumentedByAppInsightsName = "InstrumentedByAppInsights";
-        private currentWindowHost;
+        private currentWindowHost: string;
 
         constructor(appInsights: Microsoft.ApplicationInsights.AppInsights) {
             this.currentWindowHost = window.location.host && window.location.host.toLowerCase();
