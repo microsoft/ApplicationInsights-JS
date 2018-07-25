@@ -3,13 +3,14 @@
     _InternalLogging, LoggingSeverity,
     _InternalMessageId, Util, IChannelControlsAI
 } from 'applicationinsights-common';
-import { IAppInsightsCore } from 'applicationinsights-core-js';
+import { IAppInsightsCore, CoreUtils } from 'applicationinsights-core-js';
+import { IPageViewTelemetry } from "../../JavascriptSDK.Interfaces/IPageViewTelemetry";
 
 /**
 * Internal interface to pass appInsights object to subcomponents without coupling 
 */
 export interface IAppInsightsInternal {
-    sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object);
+    sendPageViewInternal(pageViewItem: IPageViewTelemetry, properties?: Object);
     sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance);
 }
 
@@ -46,26 +47,23 @@ export class PageViewManager {
     *
     * In all cases page view performance is sent once (only for the 1st call of trackPageView), or not sent if navigation timing is not supported.
     */
-    public trackPageView(name?: string, url?: string, properties?: Object, measurements?: Object, duration?: number) {
-        // ensure we have valid values for the required fields
-        if (typeof name !== "string") {
-            name = window.document && window.document.title || "";
+    public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any }) {
+        let name = pageView.name;
+        if (CoreUtils.isNullOrUndefined(name) || typeof name !== "string") {
+            pageView.name = window.document && window.document.title || "";
         }
 
-        if (typeof url !== "string") {
-            url = window.location && window.location.href || "";
+        let uri = pageView.uri;
+        if (CoreUtils.isNullOrUndefined(uri) || typeof uri !== "string") {
+            pageView.uri = window.location && window.location.href || "";
         }
-
 
         // if performance timing is not supported by the browser, send the page view telemetry with the duration provided by the user. If the user
         // do not provide the duration, set duration to undefined
         if (!PageViewPerformance.isPerformanceTimingSupported()) {
             this.appInsights.sendPageViewInternal(
-                name,
-                url,
-                !isNaN(duration) ? duration : undefined,
-                properties,
-                measurements);
+                pageView,
+                customProperties);
             this._channel.flush();
 
             // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
@@ -89,13 +87,14 @@ export class PageViewManager {
 
         // if the user has provided duration, send a page view telemetry with the provided duration. Otherwise, if
         // overridePageViewDuration is set to true, send a page view telemetry with the custom duration calculated earlier
+        let duration = pageView.duration
         if (this.overridePageViewDuration || !isNaN(duration)) {
+            if (isNaN(duration)) {
+                pageView.duration = customDuration
+            }
             this.appInsights.sendPageViewInternal(
-                name,
-                url,
-                !isNaN(duration) ? duration : customDuration,
-                properties,
-                measurements);
+                pageView,
+                customProperties);
             this._channel.flush();
             pageViewSent = true;
         }
@@ -106,26 +105,24 @@ export class PageViewManager {
             try {
                 if (PageViewPerformance.isPerformanceTimingDataReady()) {
                     clearInterval(handle);
-                    var pageViewPerformance = new PageViewPerformance(name, url, null, properties, measurements);
+                    // TODO: For now, sent undefined for measurements in the below code this package only supports pageViewTelemetry. Added task 
+                    // https://mseng.visualstudio.com/AppInsights/_workitems/edit/1310811
+                    var pageViewPerformance = new PageViewPerformance(name, uri, null, customProperties, undefined);
 
-                    if (!pageViewPerformance.getIsValid() && !pageViewSent) {
+                    if (/*!pageViewPerformance.getIsValid()*/ true && !pageViewSent) {
                         // If navigation timing gives invalid numbers, then go back to "override page view duration" mode.
                         // That's the best value we can get that makes sense.
+                        pageView.duration = customDuration;
                         this.appInsights.sendPageViewInternal(
-                            name, 
-                            url, 
-                            customDuration, 
-                            properties, 
-                            measurements);
+                            pageView,
+                            customProperties);
                         this._channel.flush();
                     } else {
                         if (!pageViewSent) {
+                            pageView.duration = pageViewPerformance.getDurationMs();
                             this.appInsights.sendPageViewInternal(
-                                name, 
-                                url, 
-                                pageViewPerformance.getDurationMs(), 
-                                properties, 
-                                measurements);
+                                pageView,
+                                customProperties);
                         }
 
                         if (!this.pageViewPerformanceSent) {
@@ -139,12 +136,10 @@ export class PageViewManager {
                     // with the maximum duration limit. Otherwise, keep waiting until performance timings are ready
                     clearInterval(handle);
                     if (!pageViewSent) {
+                        pageView.duration = maxDurationLimit;
                         this.appInsights.sendPageViewInternal(
-                            name, 
-                            url, 
-                            maxDurationLimit, 
-                            properties, 
-                            measurements);
+                            pageView,
+                            customProperties);
                         this._channel.flush();
                     }
                 }

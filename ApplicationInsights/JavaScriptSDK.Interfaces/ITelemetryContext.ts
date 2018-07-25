@@ -6,7 +6,7 @@ import { IOperation } from './Context/IOperation';
 import { ISample } from './Context/ISample';
 import { IUser } from './Context/IUser';
 import { ISession } from './Context/ISession';
-import { IEnvelope } from 'applicationinsights-common';
+import { ITelemetryItem } from 'applicationinsights-core-js';
 
 export interface ITelemetryContext {
     /**
@@ -52,5 +52,5 @@ export interface ITelemetryContext {
     /**
     * Tracks telemetry object.
     */
-    track(envelope: IEnvelope);
+    track(envelope: ITelemetryItem);
 }

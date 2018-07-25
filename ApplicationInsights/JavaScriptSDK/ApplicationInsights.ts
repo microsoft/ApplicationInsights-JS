@@ -5,7 +5,7 @@ import {
     _InternalLogging, LoggingSeverity,
     _InternalMessageId, Util,
     Data, Envelope,
-    Trace, PageViewPerformance, PageView
+    Trace, PageViewPerformance, PageView, DataSanitizer
 } from "applicationinsights-common";
 
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
@@ -15,6 +15,7 @@ import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { IAppInsights } from "../JavascriptSDK.Interfaces/IAppInsights";
 import { IPageViewTelemetry } from "../JavascriptSDK.Interfaces/IPageViewTelemetry";
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
+import { TelemetryItemCreator } from "./TelemetryItemCreator";
 
 "use strict";
 
@@ -73,27 +74,12 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
      * @param IPageViewTelemetry The string you used as the name in startTrackPage. Defaults to the document title.
      * @param customProperties Additional data used to filter events and metrics. Defaults to empty.
      */
-    public trackPageView(pageView: IPageViewTelemetry, customProperties: { [key: string]: any }) {
+    public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any }) {
         try {
-            // parse custom properties and extract numbers into measurements
-            let properties: Object = {};
-            let measurements: Object = {};
-            if (customProperties !== undefined) {
-                for (var key in customProperties) {
-                    if (customProperties.hasOwnProperty(key)) {
-                        if (typeof customProperties[key] === 'number') {
-                            measurements[key] = customProperties[key];
-                        } else {
-                            properties[key] = customProperties[key];
-                        }
-                    }
-                }
-            }
-
-            this._pageViewManager.trackPageView(pageView.name, pageView.url, properties, measurements, pageView.duration);
+            this._pageViewManager.trackPageView(pageView, customProperties);
 
             if (this.config.autoTrackPageVisitTime) {
-                this._pageVisitTimeManager.trackPreviousPageVisit(pageView.name, pageView.url);
+                this._pageVisitTimeManager.trackPreviousPageVisit(pageView.name, pageView.uri);
             }
         } catch (e) {
             _InternalLogging.throwInternal(
@@ -104,22 +90,24 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
         }
     }
 
-    public sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) {
-        var pageView = new PageView(name, url, duration, properties, measurements, this.context.operation.id);
-        var data = new Data<PageView>(PageView.dataType, pageView);
-        var envelope = new Envelope(data, PageView.envelopeType);
+    public sendPageViewInternal(pageView: IPageViewTelemetry, properties?: { [key: string]: any }) {
+        let telemetryItem = TelemetryItemCreator.createTelemetryItem(pageView, PageView.dataType, PageView.envelopeType, properties);
 
-        this.context.track(envelope);
+        this.context.track(telemetryItem);
 
         // reset ajaxes counter
         this._trackAjaxAttempts = 0;
     }
 
     public sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance) {
+        // TODO: Commenting out for now as we this package only supports pageViewTelemetry. Added task 
+        // https://mseng.visualstudio.com/AppInsights/_workitems/edit/1310811
+        /*
         var pageViewPerformanceData = new Data<PageViewPerformance>(
             PageViewPerformance.dataType, pageViewPerformance);
         var pageViewPerformanceEnvelope = new Envelope(pageViewPerformanceData, PageViewPerformance.envelopeType);
         this.context.track(pageViewPerformanceEnvelope);
+        */
     }
 
     private _initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
@@ -167,7 +155,12 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
         // initialize page view timing
         this._pageTracking = new Timing("trackPageView");
         this._pageTracking.action = (name, url, duration, properties, measurements) => {
-            this.sendPageViewInternal(name, url, duration, properties, measurements);
+            let pageViewItem: IPageViewTelemetry = {
+                name: name,
+                uri: url,
+                duration: duration,
+            };
+            this.sendPageViewInternal(pageViewItem, properties, measurements);
         }
 
     }
