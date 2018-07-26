@@ -13,11 +13,6 @@ export interface IPageViewTelemetry {
     uri?: string;
 
     /*
-     * id string - unique page identifier for the page view
-     */
-    id?: string;
-
-    /*
      * refUri  String - the URL of the source page where current page is loaded from
      */
     refUri?: string;

@@ -40,9 +40,9 @@ export class PageViewManager {
     /**
     * Currently supported cases:
     * 1) (default case) track page view called with default parameters, overridePageViewDuration = false. Page view is sent with page view performance when navigation timing data is available.
-    *    If navigation timing is not supported then page view is sent right away with undefined duration. Page view performance is not sent.
+    *    a. If navigation timing is not supported then page view is sent right away with undefined duration. Page view performance is not sent.
     * 2) overridePageViewDuration = true, custom duration provided. Custom duration is used, page view sends right away.
-    * 3) overridePageViewDuration = true. Page view is sent right away, duration is time spent from page load till now (or undefined if navigation timing is not supported). 
+    * 3) overridePageViewDuration = true, custom duration NOT provided. Page view is sent right away, duration is time spent from page load till now (or undefined if navigation timing is not supported). 
     * 4) overridePageViewDuration = false, custom duration is provided. Page view is sent right away with custom duration. 
     *
     * In all cases page view performance is sent once (only for the 1st call of trackPageView), or not sent if navigation timing is not supported.
@@ -58,8 +58,9 @@ export class PageViewManager {
             pageView.uri = window.location && window.location.href || "";
         }
 
-        // if performance timing is not supported by the browser, send the page view telemetry with the duration provided by the user. If the user
+        // case 1a. if performance timing is not supported by the browser, send the page view telemetry with the duration provided by the user. If the user
         // do not provide the duration, set duration to undefined
+        // Also this is case 4
         if (!PageViewPerformance.isPerformanceTimingSupported()) {
             this.appInsights.sendPageViewInternal(
                 pageView,
@@ -90,8 +91,10 @@ export class PageViewManager {
         let duration = pageView.duration
         if (this.overridePageViewDuration || !isNaN(duration)) {
             if (isNaN(duration)) {
+                // case 3
                 pageView.duration = customDuration
             }
+            // case 2
             this.appInsights.sendPageViewInternal(
                 pageView,
                 customProperties);
@@ -109,7 +112,7 @@ export class PageViewManager {
                     // https://mseng.visualstudio.com/AppInsights/_workitems/edit/1310811
                     var pageViewPerformance = new PageViewPerformance(name, uri, null, customProperties, undefined);
 
-                    if (/*!pageViewPerformance.getIsValid()*/ true && !pageViewSent) {
+                    if (!pageViewPerformance.getIsValid() && !pageViewSent) {
                         // If navigation timing gives invalid numbers, then go back to "override page view duration" mode.
                         // That's the best value we can get that makes sense.
                         pageView.duration = customDuration;
