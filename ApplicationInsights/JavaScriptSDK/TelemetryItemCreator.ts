@@ -1,69 +1,48 @@
-import { PageView, IEnvelope } from "applicationinsights-common";
+import { PageView, IEnvelope, Util, DataSanitizer } from "applicationinsights-common";
 import { ITelemetryItem } from "applicationinsights-core-js";
 import { CoreUtils } from "JavaScriptSDK/CoreUtils";
+import { IPageViewTelemetry } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
 
 export interface ITelemetryItemCreator {
-    create(env: IEnvelope) : ITelemetryItem
+    create(pageView: IPageViewTelemetry, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }): ITelemetryItem
 }
 
 export class TelemetryItemCreator implements ITelemetryItemCreator {
-
     private static creator = new TelemetryItemCreator();
-    public static createItem(env: IEnvelope): ITelemetryItem {
-        if (CoreUtils.isNullOrUndefined(env)) {
-            throw Error("Invalid envelope");
+
+    public static createItem(pageView: IPageViewTelemetry, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }): ITelemetryItem {
+        if (CoreUtils.isNullOrUndefined(pageView) ||
+            CoreUtils.isNullOrUndefined(baseType) ||
+            CoreUtils.isNullOrUndefined(envelopeName)) {
+            throw Error("pageView doesn't contain all required fields");
         };
 
-        return TelemetryItemCreator.creator.create(env);
+        return TelemetryItemCreator.creator.create(pageView, baseType, envelopeName, customProperties);
     }
 
-    create(env: IEnvelope): ITelemetryItem {
-        if (env.data.baseType === PageView.dataType) {
+    create(pageView: IPageViewTelemetry, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }): ITelemetryItem {
+        envelopeName = DataSanitizer.sanitizeString(envelopeName) || Util.NotSpecified;
+        if (baseType === PageView.dataType) {
             let item: ITelemetryItem = {
-                name: env.name,
-                timestamp: new Date(env.time),
-                baseType: env.data.baseType,
-                instrumentationKey: env.iKey
-            }
+                name: envelopeName,
+                timestamp: new Date(),
+                instrumentationKey: "", // this will be set in TelemetryContext
+                ctx: {},
+                tags: [],
+                data: {
+                    baseType: baseType,
+                    baseData: pageView,
+                },
+            };
 
-            item.sytemProperties = {};
-            item.sytemProperties["ver"] = 2;
-            if (env.tags) {
-               for (var property in env.tags) {
-                   if (env.tags.hasOwnProperty(property)) {
-                   
-                   item.sytemProperties[property] = env.tags[property]; // part A
-                   }
-               }
-           }
-
-            if (!CoreUtils.isNullOrUndefined(env.data) && !CoreUtils.isNullOrUndefined(env.data.baseData)) {
-                item.domainProperties = {};
-                item.domainProperties["name"] = env.data.baseData.name;
-                item.domainProperties["url"] = env.data.baseData.url;
-                item.domainProperties["duration"] = env.data.baseData.duration;
-                item.domainProperties["id"] = env.data.baseData.id;
-                item.customProperties = {};
-
-                    let data = env.data as PageView;
-                    let props = data.properties;
-                    if (!CoreUtils.isNullOrUndefined(props)) {
-                        for (var prop1 in props) {
-                            if (props.hasOwnProperty(prop1)) {
-                                item.customProperties[prop1] = props[prop1]; // part C
-                            }
-                        }
-                    }
-                    
-                    let measurements = data.measurements;
-                    if (!CoreUtils.isNullOrUndefined(measurements)) {
-                        for (var prop2 in measurements) {
-                            if (measurements.hasOwnProperty(prop2)) {
-                                item.customProperties[prop2] = measurements[prop2]; // part C
-                            }
-                        }
+            // Part C
+            if (!CoreUtils.isNullOrUndefined(customProperties)) {
+                for (var prop in customProperties) {
+                    if (customProperties.hasOwnProperty(prop)) {
+                        item.data[prop] = customProperties[prop];
                     }
                 }
+            }
 
             return item;
         }

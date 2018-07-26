@@ -2,6 +2,7 @@
 import { Envelope } from 'applicationinsights-common';
 import { ISample } from '../../JavascriptSDK.Interfaces/Context/ISample';
 import { IEnvelope, _InternalLogging, _InternalMessageId, LoggingSeverity } from 'applicationinsights-common';
+import { ITelemetryItem } from 'applicationinsights-core-js';
 
 export class Sample implements ISample {
     public sampleRate: number;
@@ -26,7 +27,7 @@ export class Sample implements ISample {
     /**
     * Determines if an envelope is sampled in (i.e. will be sent) or not (i.e. will be dropped).
     */
-    public isSampledIn(envelope: IEnvelope): boolean {
+    public isSampledIn(envelope: ITelemetryItem): boolean {
         // return true as sampling will move to different extension
         return true;
     }
