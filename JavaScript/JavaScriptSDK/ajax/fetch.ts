@@ -133,6 +133,9 @@ module Microsoft.ApplicationInsights {
         }
 
         private onFetchComplete(response: Response, ajaxData: ajaxRecord): void {
+            if (!ajaxData) {
+                return;
+            }
             try {
                 ajaxData.responseFinishedTime = dateTime.Now();
                 ajaxData.CalculateMetrics();
@@ -178,6 +181,9 @@ module Microsoft.ApplicationInsights {
         }
 
         private onFetchFailed(input: Request | string, ajaxData: ajaxRecord, reason: any): void {
+            if (!ajaxData) {
+                return;
+            }
             try {
                 ajaxData.responseFinishedTime = dateTime.Now();
                 ajaxData.CalculateMetrics();
