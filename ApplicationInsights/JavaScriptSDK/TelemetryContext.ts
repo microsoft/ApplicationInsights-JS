@@ -280,7 +280,7 @@ export class TelemetryContext implements ITelemetryContext {
                 tagsItem[tagKeys.internalAgentVersion] = internalContext.agentVersion;
             }
             if (typeof internalContext.sdkVersion === "string") {
-                tagsItem.ctx[tagKeys.internalSdkVersion] = internalContext.sdkVersion;
+                tagsItem[tagKeys.internalSdkVersion] = internalContext.sdkVersion;
             }
         }
     }

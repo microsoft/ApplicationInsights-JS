@@ -36,7 +36,7 @@ export class TelemetryItemCreator implements ITelemetryItemCreator {
             };
 
             // Part C
-            if (CoreUtils.isNullOrUndefined(customProperties)) {
+            if (!CoreUtils.isNullOrUndefined(customProperties)) {
                 for (var prop in customProperties) {
                     if (customProperties.hasOwnProperty(prop)) {
                         item.data[prop] = customProperties[prop];
