@@ -2018,7 +2018,8 @@ class AppInsightsTests extends TestClass {
                     expectedAjaxId = (request as any).ajaxData.id;
                     Assert.ok(expectedAjaxId.length > 0, "ajax id was initialized");
                     Assert.equal(null, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestIdHeader), "Request-Id is not set");
-                }
+                },
+                <() => void>PollingAssert.createPollingAssert(() => trackStub.called, "trackDependencyData is called", 0.1)
             ],
             stepDelay: 0
         });
@@ -2081,7 +2082,8 @@ class AppInsightsTests extends TestClass {
                     fetch(request, init);
                     Assert.equal(null, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestIdHeader), "Request-Id is not set");
                     Assert.equal(null, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestContextHeader), "Request-Context is not set");
-                }
+                },
+                <() => void>PollingAssert.createPollingAssert(() => trackStub.called, "trackDependencyData is called", 0.1)
             ],
             stepDelay: 0
         });
@@ -2111,7 +2113,8 @@ class AppInsightsTests extends TestClass {
                     fetch(request, init);
                     Assert.equal(null, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestIdHeader), "Request-Id is not set");
                     Assert.equal(null, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestContextHeader), "Request-Context is not set");
-                }
+                },
+                <() => void>PollingAssert.createPollingAssert(() => trackStub.called, "trackDependencyData is called", 0.1)
             ],
             stepDelay: 0
         });
