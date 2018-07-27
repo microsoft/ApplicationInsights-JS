@@ -35,7 +35,7 @@ class FetchTests extends TestClass {
         this.testCase({
             name: "Fetch: window.fetch gets instrumented",
             test: () => {
-                window.fetch = this.createFetch(200);
+                window.fetch = FetchTests.createFetchStub(200);
                 let fm = new Microsoft.ApplicationInsights.FetchMonitor(<any>this.appInsightsMock);
 
                 // assert
@@ -48,7 +48,7 @@ class FetchTests extends TestClass {
             name: "Fetch: successful request, fetch monitor doesn't change payload",
             steps: [
                 () => {
-                    window.fetch = this.createFetch(200);
+                    window.fetch = FetchTests.createFetchStub(200);
                     let fm = new Microsoft.ApplicationInsights.FetchMonitor(<any>this.appInsightsMock);
                     fetch("bla").then(r => {
                         this["response"] = r;
@@ -67,7 +67,7 @@ class FetchTests extends TestClass {
             name: "Fetch: 200 means success",
             steps: [
                 () => {
-                    window.fetch = this.createFetch(200);
+                    window.fetch = FetchTests.createFetchStub(200);
                     let fm = new Microsoft.ApplicationInsights.FetchMonitor(<any>this.appInsightsMock);
                     fetch("bla");
                 },
@@ -81,7 +81,7 @@ class FetchTests extends TestClass {
             name: "Fetch: non 200 means failure",
             steps: [
                 () => {
-                    window.fetch = this.createFetch(400);
+                    window.fetch = FetchTests.createFetchStub(400);
                     let fm = new Microsoft.ApplicationInsights.FetchMonitor(<any>this.appInsightsMock);
                     fetch("bla");
                 },
@@ -111,7 +111,7 @@ class FetchTests extends TestClass {
     private testFetchSuccess(responseCode: number, success: boolean): Array<() => void> {
         return [
             () => {
-                window.fetch = this.createFetch(responseCode, responseCode === 204 || responseCode === 304 ? null : "bla");
+                window.fetch = FetchTests.createFetchStub(responseCode, responseCode === 204 || responseCode === 304 ? null : "bla");
                 let fm = new Microsoft.ApplicationInsights.FetchMonitor(<any>this.appInsightsMock);
                 fetch("bla");
             },
@@ -119,7 +119,7 @@ class FetchTests extends TestClass {
         ];
     }
 
-    private createFetch(responseCode: number, body: string = "bla", timeout: number = 0): (input?: Request | string, init?: RequestInit) => Promise<Response> {
+    static createFetchStub(responseCode: number, body: string = "bla", timeout: number = 0): (input?: Request | string, init?: RequestInit) => Promise<Response> {
         return (input, init) => new (window as any).Promise(resolve => {
             setTimeout(() => resolve(new Response(body, { status: responseCode, headers: { "Content-Type": "application/json" } })), timeout);
         });

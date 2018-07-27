@@ -1922,6 +1922,40 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(null, (<any>xhr).requestHeaders['Request-Context'], "Request-Context header is not set.");
             }
         });
+        /*
+        this.useFakeTimers = false;
+        let trackStub: SinonSpy;
+        this.testCaseAsync({
+            name: "Fetch - Request-Context is not set if appId was not set",
+            steps: [
+                () => {
+                    window.fetch = FetchTests.createFetchStub(200);
+                    var snippet = this.getAppInsightsSnippet();
+                    snippet.disableFetchTracking = false;
+                    snippet.disableCorrelationHeaders = false;
+                    snippet.enableCorsCorrelation = true;
+                    snippet.maxBatchInterval = 0;
+                    var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                    trackStub = this.sandbox.spy(appInsights, "trackDependencyData");
+                    var expectedRootId = appInsights.context.operation.id;
+                    // Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+
+                    let request = new Request("bla");
+                    // init is needed to check headers - they won't be added to the original request
+                    let init: RequestInit = { headers: new Headers() };
+                    fetch(request, init);
+                    this["expectedAjaxId"] = (request as any).ajaxData.id;
+                    // Assert.equal(this["expectedAjaxId"], (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestIdHeader), "Request-Id is set correctly");
+                    // Assert.equal(null, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestContextHeader), "Request-Context is not set");
+                },
+                <() => void>PollingAssert.createPollingAssert(() => {
+                    console.log(this["expectedAjaxId"]);
+                    return trackStub.args[0][0].id === this["expectedAjaxId"];
+                }, "ajax id passed to trackDependencyData correctly", 1)
+            ],
+            stepDelay: 0
+       });
+       */
     }
 
     private getFirstResult(action: string, trackStub: SinonStub, skipSessionState?: boolean) {

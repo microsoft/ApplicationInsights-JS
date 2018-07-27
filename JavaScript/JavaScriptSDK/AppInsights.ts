@@ -133,6 +133,9 @@ module Microsoft.ApplicationInsights {
 
             if (!this.config.disableAjaxTracking) {
                 this._ajaxMonitor = new Microsoft.ApplicationInsights.AjaxMonitor(this);
+            }
+
+            if (!this.config.disableFetchTracking) {
                 this._fetchMonitor = new Microsoft.ApplicationInsights.FetchMonitor(this);
             }
         }

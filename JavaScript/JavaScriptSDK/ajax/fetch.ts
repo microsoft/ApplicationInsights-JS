@@ -84,6 +84,7 @@ module Microsoft.ApplicationInsights {
             let ajaxData: ajaxRecord = new ajaxRecord(id);
             ajaxData.requestSentTime = dateTime.Now();
             if (input instanceof Request) {
+                (input as any).ajaxData = ajaxData;
                 ajaxData.requestUrl = input ? input.url : "";
             } else {
                 ajaxData.requestUrl = input;

@@ -19,6 +19,7 @@
         samplingPercentage?: number;
         autoTrackPageVisitTime?: boolean;
         disableAjaxTracking?: boolean;
+        disableFetchTracking?: boolean;
         overridePageViewDuration?: boolean;
         maxAjaxCallsPerView?: number;
         disableDataLossAnalysis?: boolean;
