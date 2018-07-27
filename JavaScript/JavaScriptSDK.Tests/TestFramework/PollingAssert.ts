@@ -2,6 +2,16 @@
 /// <reference path="TestClass.ts" />
 
 class PollingAssert {
+    static originalSetTimeout: (handler: (...args: any[]) => void, timeout: number) => number;
+
+    public static storeOriginalTimeout(){
+        PollingAssert.originalSetTimeout = setTimeout;
+    }
+
+    public static setTimeout(handler: (...args: any[]) => void, timeout: number): number{
+        return PollingAssert.originalSetTimeout.call(window, handler, timeout);
+    }
+
     /**
     * Starts polling assertion function for a period of time after which it's considered failed.
     * @param {() => boolean} assertionFunctionReturnsBoolean - funciton returning true if condition passes and false if condition fails. Assertion will be done on this function's result.
@@ -21,10 +31,10 @@ class PollingAssert {
                     Assert.ok(false, "assert didn't succeed for " + timeout + " seconds: " + assertDescription);
                     nextTestStep();
                 } else {
-                    setTimeout(polling, pollIntervalMs);
+                    PollingAssert.setTimeout(polling, pollIntervalMs);
                 }
             }
-            setTimeout(polling, pollIntervalMs);
+            PollingAssert.setTimeout(polling, pollIntervalMs);
         }
 
         pollingAssert[TestClass.isPollingStepFlag] = true;
@@ -32,3 +42,5 @@ class PollingAssert {
         return pollingAssert;
     }
 }
+
+PollingAssert.storeOriginalTimeout();

@@ -31,7 +31,6 @@ class FetchTests extends TestClass {
     }
 
     public registerTests() {
-        this.useFakeTimers = false;
         this.testCase({
             name: "Fetch: window.fetch gets instrumented",
             test: () => {
@@ -61,7 +60,6 @@ class FetchTests extends TestClass {
             ],
             stepDelay: 0
         });
-
 
         this.testCaseAsync({
             name: "Fetch: 200 means success",
@@ -121,7 +119,7 @@ class FetchTests extends TestClass {
 
     static createFetchStub(responseCode: number, body: string = "bla", timeout: number = 0): (input?: Request | string, init?: RequestInit) => Promise<Response> {
         return (input, init) => new (window as any).Promise(resolve => {
-            setTimeout(() => resolve(new Response(body, { status: responseCode, headers: { "Content-Type": "application/json" } })), timeout);
+            PollingAssert.setTimeout(() => resolve(new Response(body, { status: responseCode, headers: { "Content-Type": "application/json" } })), timeout);
         });
     }
 }

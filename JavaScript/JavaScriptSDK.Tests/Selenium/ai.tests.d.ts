@@ -179,6 +179,9 @@ declare class TestClass {
     protected setUserAgent(userAgent: string): void;
 }
 declare class PollingAssert {
+    static originalSetTimeout: (handler: (...args: any[]) => void, timeout: number) => number;
+    static storeOriginalTimeout(): void;
+    static setTimeout(handler: (...args: any[]) => void, timeout: number): number;
     /**
     * Starts polling assertion function for a period of time after which it's considered failed.
     * @param {() => boolean} assertionFunctionReturnsBoolean - funciton returning true if condition passes and false if condition fails. Assertion will be done on this function's result.
@@ -2438,6 +2441,26 @@ declare module Microsoft.ApplicationInsights.Telemetry {
     }
 }
 declare module Microsoft.ApplicationInsights {
+    class FetchMonitor {
+        private appInsights;
+        private initialized;
+        static instrumentedByAppInsightsName: string;
+        private currentWindowHost;
+        constructor(appInsights: Microsoft.ApplicationInsights.AppInsights);
+        private Init();
+        static DisabledPropertyName: string;
+        private isMonitoredInstance(input);
+        private supportsMonitoring();
+        private instrumentFetch();
+        private createAjaxRecord(input?, init?);
+        private includeCorrelationHeaders(ajaxData, input?, init?);
+        private static getFailedFetchDiagnosticsMessage(input);
+        private onFetchComplete(response, ajaxData);
+        private onFetchFailed(input, ajaxData, reason);
+        private getCorrelationContext(response);
+    }
+}
+declare module Microsoft.ApplicationInsights {
     class SplitTest {
         private hashCodeGeneragor;
         isEnabled(key: string, percentEnabled: number): boolean;
@@ -2461,6 +2484,7 @@ declare module Microsoft.ApplicationInsights {
         samplingPercentage?: number;
         autoTrackPageVisitTime?: boolean;
         disableAjaxTracking?: boolean;
+        disableFetchTracking?: boolean;
         overridePageViewDuration?: boolean;
         maxAjaxCallsPerView?: number;
         disableDataLossAnalysis?: boolean;
@@ -2639,6 +2663,7 @@ declare module Microsoft.ApplicationInsights {
         private _pageViewManager;
         private _pageVisitTimeManager;
         private _ajaxMonitor;
+        private _fetchMonitor;
         config: IConfig;
         context: TelemetryContext;
         queue: (() => void)[];
@@ -3028,6 +3053,15 @@ declare class AjaxTests extends TestClass {
     testCleanup(): void;
     registerTests(): void;
     private testAjaxSuccess(responseCode, success);
+}
+declare class FetchTests extends TestClass {
+    private appInsightsMock;
+    private trackDependencySpy;
+    testInitialize(): void;
+    testCleanup(): void;
+    registerTests(): void;
+    private testFetchSuccess(responseCode, success);
+    static createFetchStub(responseCode: number, body?: string, timeout?: number): (input?: Request | string, init?: RequestInit) => Promise<Response>;
 }
 declare class SplitTestTests extends TestClass {
     registerTests(): void;
