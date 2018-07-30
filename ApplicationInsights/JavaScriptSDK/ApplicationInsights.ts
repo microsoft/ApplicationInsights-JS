@@ -9,7 +9,7 @@ import {
 } from "applicationinsights-common";
 
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
-import { AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, CoreUtils } from "applicationinsights-core-js";
+import { IPlugin, IConfiguration, IAppInsightsCore, ITelemetryPlugin, CoreUtils, ITelemetryItem } from "applicationinsights-core-js";
 import { TelemetryContext } from "./TelemetryContext";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { IAppInsights } from "../JavascriptSDK.Interfaces/IAppInsights";
@@ -19,11 +19,16 @@ import { TelemetryItemCreator } from "./TelemetryItemCreator";
 
 "use strict";
 
-export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsInternal {
+export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
+
+    public static defaultIdentifier = "ApplicationInsightsAnalytics";
+    public processTelemetry: (env: ITelemetryItem) => void;
+    public identifier: string;
+    public setNextPlugin: (next: ITelemetryPlugin) => void;
+    priority: number;
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
 
     public static Version = "0.0.1";
-
     private _core: IAppInsightsCore;
 
     // Counts number of trackAjax invokations.
@@ -32,41 +37,17 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
     // This counter keeps increasing even after the limit is reached.
     private _trackAjaxAttempts: number = 0;
 
-    private _eventTracking: Timing;
-    private _pageTracking: Timing;
     private _pageViewManager: PageViewManager;
     private _pageVisitTimeManager: PageVisitTimeManager;
 
     public config: IConfig;
     public context: TelemetryContext;
     public queue: (() => void)[];
-    public static appInsightsDefaultConfig: IConfig;
+    public static appInsightsDefaultConfig: IConfiguration;
 
-    constructor(config: IConfig) {
-        this.config = config || <IConfig>{};
+    constructor() {
+        this.identifier = ApplicationInsights.defaultIdentifier;
         this.initialize = this._initialize.bind(this);
-
-        // load default values if specified
-        var defaults: IConfig = ApplicationInsights.appInsightsDefaultConfig;
-        if (defaults !== undefined) {
-            for (var field in defaults) {
-                // for each unspecified field, set the default value
-                if (this.config[field] === undefined) {
-                    this.config[field] = defaults[field];
-                }
-            }
-        }
-
-        _InternalLogging.verboseLogging = () => this.config.verboseLogging;
-        _InternalLogging.enableDebugExceptions = () => this.config.enableDebug;
-
-        if (this.config.isCookieUseDisabled) {
-            Util.disableCookies();
-        }
-
-        if (this.config.isStorageUseDisabled) {
-            Util.disableStorage();
-        }
     }
 
     /**
@@ -116,9 +97,36 @@ export class ApplicationInsights implements IAppInsights, IPlugin, IAppInsightsI
         }
 
         this._core = core;
+        this.config = config.extensions[this.identifier] || <IConfig>{};
+
+        // load default values if specified
+        var defaults: IConfiguration = ApplicationInsights.appInsightsDefaultConfig;
+        if (defaults !== undefined) {
+            if (defaults.extensions[this.identifier]) {
+                for (var field in defaults.extensions[this.identifier]) {
+                    // for each unspecified field, set the default value
+                    if (this.config[field] === undefined) {
+                        this.config[field] = defaults[field];
+                    }
+                }
+            }
+        }
+
+        _InternalLogging.verboseLogging = () => this.config.verboseLogging;
+        _InternalLogging.enableDebugExceptions = () => this.config.enableDebug;
+
+        // Todo: move this out of static state
+        if (this.config.isCookieUseDisabled) {
+            Util.disableCookies();
+        }
+
+        // Todo: move this out of static state
+        if (this.config.isStorageUseDisabled) {
+            Util.disableStorage();
+        }
 
         var configGetters: ITelemetryConfig = {
-            instrumentationKey: () => this.config.instrumentationKey,
+            instrumentationKey: () => config.extensions[this.identifier].instrumentationKey,
             accountId: () => this.config.accountId,
             sessionRenewalMs: () => this.config.sessionRenewalMs,
             sessionExpirationMs: () => this.config.sessionExpirationMs,

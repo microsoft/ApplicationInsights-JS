@@ -1,6 +1,5 @@
 import { PageView, IEnvelope, Util, DataSanitizer } from "applicationinsights-common";
-import { ITelemetryItem } from "applicationinsights-core-js";
-import { CoreUtils } from "JavaScriptSDK/CoreUtils";
+import { ITelemetryItem, CoreUtils } from "applicationinsights-core-js";
 import { IPageViewTelemetry } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
 
 export interface ITelemetryItemCreator {

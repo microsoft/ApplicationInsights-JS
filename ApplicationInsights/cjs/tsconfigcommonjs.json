@@ -8,7 +8,7 @@
     "alwaysStrict": true,
     "declaration": true,
     "outDir": "./bundle",
-    "rootDir": "./"
+    "rootDir": "./ApplicationInsights"
     },
   "files": []
 }
