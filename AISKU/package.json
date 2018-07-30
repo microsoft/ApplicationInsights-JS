@@ -14,6 +14,7 @@
         "applicationinsights-analytics-js": "0.0.35",
         "applicationinsights-channel-js": "0.0.16",
         "applicationinsights-common": "0.0.59",
-        "applicationinsights-core-js": "0.0.53"
+        "applicationinsights-core-js": "0.0.53",
+        "require.js": "^1.0.0"
     }
 }

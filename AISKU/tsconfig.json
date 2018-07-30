@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+    "noImplicitAny": false,
+    "module": "amd",
+    "target": "es5",
+    "alwaysStrict": true,
+    "declaration": true,
+    "outDir": "amd/bundle",
+    "rootDir": "AISKU"
+  },
+  "files": []
+}
