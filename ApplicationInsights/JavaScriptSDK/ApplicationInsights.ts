@@ -30,6 +30,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
     public static Version = "0.0.1";
     private _core: IAppInsightsCore;
+    private _globalconfig: IConfiguration;
 
     // Counts number of trackAjax invokations.
     // By default we only monitor X ajax call per view to avoid too much load.
@@ -97,16 +98,29 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
 
         this._core = core;
-        this.config = config.extensions[this.identifier] || <IConfig>{};
+        this._globalconfig = {
+            instrumentationKey: config.instrumentationKey,
+            endpointUrl: config.endpointUrl
+        };
+
+        this.config = config.extensions ? config.extensions[this.identifier] : <IConfig>{};
 
         // load default values if specified
         var defaults: IConfiguration = ApplicationInsights.appInsightsDefaultConfig;
         if (defaults !== undefined) {
-            if (defaults.extensions[this.identifier]) {
+            if (defaults.extensions && defaults.extensions[this.identifier]) {
                 for (var field in defaults.extensions[this.identifier]) {
                     // for each unspecified field, set the default value
                     if (this.config[field] === undefined) {
                         this.config[field] = defaults[field];
+                    }
+                }
+            }
+
+            if (this._globalconfig) {
+                for (var field in defaults) {
+                    if (this._globalconfig[field] === undefined) {
+                        this._globalconfig[field] = defaults[field];
                     }
                 }
             }

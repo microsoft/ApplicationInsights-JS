@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-analytics-js",
-    "version": "0.0.35",
+    "version": "0.0.37",
     "description": "Microsoft Application Insights Javascript SDK apis",
     "main": "bundle/applicationinsights-analytics-js.js",
     "types": "bundle/applicationinsights-analytics-js.d.ts",
@@ -12,9 +12,6 @@
     },
     "dependencies": {
         "applicationinsights-common": "0.0.61",
-        "applicationinsights-core-js": "0.0.55"
-    },
-    "peerDependencies": {
         "applicationinsights-core-js": "0.0.55"
     }
 }

@@ -6,16 +6,15 @@
     "types": "bundle/applicationinsights-sdk-js.d.ts",
     "devDependencies": {
         "typescript": "2.5.3",
-        "webpack": "^4.16.3",
-        "webpack-command": "^0.4.1"
+        "require.js": "^1.0.0"
     },
     "publishConfig": {
         "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
     },
     "dependencies": {
-        "applicationinsights-common": "0.0.59",
-        "applicationinsights-core-js": "0.0.53",
-        "applicationinsights-channel-js": "0.0.16",
-        "applicationinsights-analytics-js": "0.0.35"
+        "applicationinsights-analytics-js": "0.0.39",
+        "applicationinsights-channel-js": "0.0.13",
+        "applicationinsights-common": "0.0.61",
+        "applicationinsights-core-js": "0.0.57"
     }
 }

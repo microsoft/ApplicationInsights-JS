@@ -141,7 +141,7 @@ export class Initialization {
             identifier = identifier ? identifier : "AppAnalytics"; // To do: define constant        
         }
 
-        let config = <IConfig>configuration.extensions[identifier];
+        let config = configuration.extensions ? <IConfig>configuration.extensions[identifier] : {};
 
         // set default values
         configuration.endpointUrl = configuration.endpointUrl || "https://dc.services.visualstudio.com/v2/track";

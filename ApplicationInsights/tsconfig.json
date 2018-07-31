@@ -4,12 +4,12 @@
     "inlineSources": true,
     "noImplicitAny": false,
     "module": "amd",
-    "target": "es5",
     "moduleResolution": "Node",
+    "target": "es5",
     "alwaysStrict": true,
     "declaration": true,
     "outDir": "amd/bundle",
-    "rootDir": "AISKU"
+    "rootDir": "ApplicationInsights"
   },
   "files": []
 }
