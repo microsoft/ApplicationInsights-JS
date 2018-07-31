@@ -49,12 +49,10 @@ try {
     // only initialize if we are running in a browser that supports JSON serialization (ie7<, node.js, cordova)
     if (typeof window !== "undefined" && typeof JSON !== "undefined") {
 
+        // temporary for testing
         let config: IConfiguration = {
             instrumentationKey: "8e68dc94-34d1-4894-8697-be2ba6282b5b"
         };
-
-
-
 
         var core = new AppInsightsCore();
         let extensions = [];
