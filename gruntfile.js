@@ -13,13 +13,12 @@ module.exports = function (grunt) {
                 out: 'bundle/ai.js',
             },
             common: {
-                tsconfig: './tsconfig.json',
+                tsconfig: './AppInsightsCommon/tsconfig.json',
                 src: [
                     'AppInsightsCommon/applicationinsights-common.ts',
                     'AppInsightsCommon/*.ts',
                     'AppInsightsCommon/Interfaces/*.ts'
-                ],
-                out: 'AppInsightsCommon/amd/bundle/applicationinsights-common.js'
+                ]
             },
             commoncjs: {
                 tsconfig: './AppInsightsCommon/cjs/tsconfigcommonjs.json',
@@ -38,13 +37,12 @@ module.exports = function (grunt) {
                 ]
             },
             appinsights: {
-                tsconfig: './tsconfig.json',
+                tsconfig: './ApplicationInsights/tsconfig.json',
                 src: [
                     'ApplicationInsights/JavascriptSDK.Interfaces/*.ts',
                     'ApplicationInsights/JavascriptSDK/*.ts',
                     'ApplicationInsights/*.ts'
-                ],
-                out: 'ApplicationInsights/amd/bundle/applicationinsights-analytics-js.js',
+                ]
             },
             appinsightstests: {
                 tsconfig: './tsconfig.json',
@@ -54,11 +52,10 @@ module.exports = function (grunt) {
                 out: 'ApplicationInsights/Tests/Selenium/appinsights-analytics.tests.js'
             },
             aisku: {
-                tsconfig: './tsconfig.json',
+                tsconfig: './AISKU/tsconfig.json',
                 src: [
-                    'AISKU/Init.ts'
-                ],
-                out: 'AISKU/amd/bundle/aisdk-js.js'
+                    'AISKU/*.ts'
+                ]
             },
             module: {
                 // Use a different tsconfig for building module in order to not generate a declaration file for module, while keeping declaration for other modules
