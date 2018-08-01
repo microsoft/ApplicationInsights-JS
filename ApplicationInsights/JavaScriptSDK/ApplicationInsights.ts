@@ -103,7 +103,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             endpointUrl: config.endpointUrl
         };
 
-        this.config = config.extensions ? config.extensions[this.identifier] : <IConfig>{};
+        this.config = config.extensions && config.extensions[this.identifier] ? config.extensions[this.identifier] : <IConfig>{};
 
         // load default values if specified
         var defaults: IConfiguration = ApplicationInsights.appInsightsDefaultConfig;
@@ -140,7 +140,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
 
         var configGetters: ITelemetryConfig = {
-            instrumentationKey: () => config.extensions[this.identifier].instrumentationKey,
+            instrumentationKey: () => config.instrumentationKey,
             accountId: () => this.config.accountId,
             sessionRenewalMs: () => this.config.sessionRenewalMs,
             sessionExpirationMs: () => this.config.sessionExpirationMs,

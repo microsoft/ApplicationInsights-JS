@@ -43,58 +43,54 @@ try {
             initialization.addHousekeepingBeforeUnload(appInsightsLocal);
         }
     }
+    // // only initialize if we are running in a browser that supports JSON serialization (ie7<, node.js, cordova)
+    // if (typeof window !== "undefined" && typeof JSON !== "undefined") {
 
+    //     // temporary for testing
+    //     let config: IConfiguration = {
+    //         instrumentationKey: "8e68dc94-34d1-4894-8697-be2ba6282b5b"
+    //     };
 
+    //     var core = new AppInsightsCore();
+    //     let extensions = [];
+    //     let appInsightsChannel : Sender = new Sender();
+    //     let appInsights = new ApplicationInsights();
 
-    // only initialize if we are running in a browser that supports JSON serialization (ie7<, node.js, cordova)
-    if (typeof window !== "undefined" && typeof JSON !== "undefined") {
+    //     extensions.push(appInsightsChannel);
+    //     extensions.push(appInsights);
 
-        // temporary for testing
-        let config: IConfiguration = {
-            instrumentationKey: "8e68dc94-34d1-4894-8697-be2ba6282b5b"
-        };
-
-        var core = new AppInsightsCore();
-        let extensions = [];
-        let appInsightsChannel : Sender = new Sender();
-        let appInsights = new ApplicationInsights();
-
-        extensions.push(appInsightsChannel);
-        extensions.push(appInsights);
-
-        // initialize core
-        core.initialize(config, extensions);
+    //     // initialize core
+    //     core.initialize(config, extensions);
         
-        // initialize extensions
-        appInsights.initialize(config, core, extensions);
-        appInsightsChannel.initialize(config);
+    //     // initialize extensions
+    //     // appInsights.initialize(config, core, extensions);
+    //     // appInsightsChannel.initialize(config);
 
-        let pageView: IPageViewTelemetry = {
-            name: document.title ? document.title : "test page",
-            uri: document.URL ? document.URL : "",
-            //id: "661addf3-c2c6-4bab-ac64-157962e231ba"
-        };
+    //     let pageView: IPageViewTelemetry = {
+    //         name: document.title ? document.title : "test page",
+    //         uri: document.URL ? document.URL : ""
+    //     };
 
-        appInsights.trackPageView(pageView); // track a page view
+    //     appInsights.trackPageView(pageView); // track a page view
 
-        // let telemetryItem: ITelemetryItem = {
-        //     name: "TestPageView",
-        //     instrumentationKey: "8e68dc94-34d1-4894-8697-be2ba6282b5b",
-        //     timestamp: new Date(),
-        //     baseType: PageView.dataType,
-        // }
+    //     // let telemetryItem: ITelemetryItem = {
+    //     //     name: "TestPageView",
+    //     //     instrumentationKey: "8e68dc94-34d1-4894-8697-be2ba6282b5b",
+    //     //     timestamp: new Date(),
+    //     //     baseType: PageView.dataType,
+    //     // }
 
-        // telemetryItem.sytemProperties = {};
-        // telemetryItem.domainProperties = {};
+    //     // telemetryItem.sytemProperties = {};
+    //     // telemetryItem.domainProperties = {};
 
-        // telemetryItem.sytemProperties["ver"] = "2";
-        // telemetryItem.domainProperties["url"] = document.title ? document.title : "";
-        // telemetryItem.domainProperties["id"] = "";
-        // telemetryItem.domainProperties["name"] = "2";
-        // telemetryItem.domainProperties["duration"] = 10;
+    //     // telemetryItem.sytemProperties["ver"] = "2";
+    //     // telemetryItem.domainProperties["url"] = document.title ? document.title : "";
+    //     // telemetryItem.domainProperties["id"] = "";
+    //     // telemetryItem.domainProperties["name"] = "2";
+    //     // telemetryItem.domainProperties["duration"] = 10;
 
-        // core.track(telemetryItem);
-    }
+    //     // core.track(telemetryItem);
+    // }
 } catch (e) {
     _InternalLogging.warnToConsole('Failed to initialize AppInsights JS SDK: ' + e.message);
 }

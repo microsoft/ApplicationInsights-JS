@@ -29,9 +29,9 @@ export class TelemetryItemCreator implements ITelemetryItemCreator {
                 ctx: {},
                 tags: [],
                 data: {
-                    baseType: baseType,
-                    baseData: pageView,
                 },
+                baseType: baseType,
+                baseData: pageView
             };
 
             // Part C
