@@ -37,3 +37,8 @@ export interface IPageViewTelemetry {
      */
     pageTags?: { [key: string]: any };
 }
+
+
+export interface IPageViewTelemetryInternal extends IPageViewTelemetry {
+    id?: string;
+}
