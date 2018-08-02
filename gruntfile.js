@@ -135,9 +135,27 @@ module.exports = function (grunt) {
                     }
                 },
             },
+            aivNext: {
+                files: {
+                    'AISKU/dist/aisdk.0.js': ['AISKU/dist/aisdk.js'],
+                },
+                options: {                  
+                    compress: {
+                        ie8: true
+                    },
+                    mangle: {
+                        ie8: true
+                    }
+                },
+            },
             snippet: {
                 files: {
                     'bundle/snippet/snippet.min.js': ['JavaScript/JavaScriptSDK/snippet.js']
+                }
+            },
+            snippetvNext: {
+                files: {
+                    'AISKU/dist/snippet.min.js': ['AISKU/snippet/snippet.js']
                 }
             }
         },
@@ -188,6 +206,6 @@ module.exports = function (grunt) {
     grunt.registerTask("ai", ["ts:appinsights"]);
     grunt.registerTask("aitests", ["ts:appinsights", "ts:appinsightstests", "qunit:aitests"]);
     grunt.registerTask("aicjs", ["ts:appinsightscjs"]);
-    grunt.registerTask("aisku", ["ts:aisku"]);
+    grunt.registerTask("aisku", ["ts:aisku", "uglify:aivNext", "uglify:snippetvNext"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
 };
