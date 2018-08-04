@@ -206,6 +206,7 @@ module.exports = function (grunt) {
     grunt.registerTask("ai", ["ts:appinsights"]);
     grunt.registerTask("aitests", ["ts:appinsights", "ts:appinsightstests", "qunit:aitests"]);
     grunt.registerTask("aicjs", ["ts:appinsightscjs"]);
-    grunt.registerTask("aisku", ["ts:aisku", "uglify:aivNext", "uglify:snippetvNext"]);
+    grunt.registerTask("aisku", ["ts:aisku", "uglify:aivNext"]);
+    grunt.registerTask("snippetvnext, ["uglify:snippetvNext"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
 };
