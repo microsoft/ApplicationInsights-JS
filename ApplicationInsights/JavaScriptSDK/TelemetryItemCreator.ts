@@ -1,32 +1,32 @@
 import { PageView, IEnvelope, Util, DataSanitizer } from "applicationinsights-common";
 import { ITelemetryItem, CoreUtils } from "applicationinsights-core-js";
-import { IPageViewTelemetry } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
+import { IPageViewTelemetryInternal } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
 
 export interface ITelemetryItemCreator {
-    create(pageView: IPageViewTelemetry, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }): ITelemetryItem
+    create(pageView: IPageViewTelemetryInternal, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }): ITelemetryItem
 }
 
 export class TelemetryItemCreator implements ITelemetryItemCreator {
     private static creator = new TelemetryItemCreator();
 
-    public static createItem(pageView: IPageViewTelemetry, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }): ITelemetryItem {
+    public static createItem(pageView: IPageViewTelemetryInternal, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }, systemProperties?: { [key: string]: any }): ITelemetryItem {
         if (CoreUtils.isNullOrUndefined(pageView) ||
             CoreUtils.isNullOrUndefined(baseType) ||
             CoreUtils.isNullOrUndefined(envelopeName)) {
             throw Error("pageView doesn't contain all required fields");
         };
 
-        return TelemetryItemCreator.creator.create(pageView, baseType, envelopeName, customProperties);
+        return TelemetryItemCreator.creator.create(pageView, baseType, envelopeName, customProperties, systemProperties);
     }
 
-    create(pageView: IPageViewTelemetry, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }): ITelemetryItem {
+    create(pageView: IPageViewTelemetryInternal, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }, systemProperties?: { [key: string]: any }): ITelemetryItem {
         envelopeName = DataSanitizer.sanitizeString(envelopeName) || Util.NotSpecified;
         if (baseType === PageView.dataType) {
             let item: ITelemetryItem = {
                 name: envelopeName,
                 timestamp: new Date(),
                 instrumentationKey: "", // this will be set in TelemetryContext
-                ctx: {},
+                ctx: systemProperties ? systemProperties : {},
                 tags: [],
                 data: {
                 },

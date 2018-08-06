@@ -13,7 +13,7 @@ import { IPlugin, IConfiguration, IAppInsightsCore, ITelemetryPlugin, CoreUtils,
 import { TelemetryContext } from "./TelemetryContext";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { IAppInsights } from "../JavascriptSDK.Interfaces/IAppInsights";
-import { IPageViewTelemetry } from "../JavascriptSDK.Interfaces/IPageViewTelemetry";
+import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../JavascriptSDK.Interfaces/IPageViewTelemetry";
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 import { TelemetryItemCreator } from "./TelemetryItemCreator";
 
@@ -21,16 +21,15 @@ import { TelemetryItemCreator } from "./TelemetryItemCreator";
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
 
-    public static defaultIdentifier = "ApplicationInsightsAnalytics";
-    public processTelemetry: (env: ITelemetryItem) => void;
+    public static defaultIdentifier = "ApplicationInsightsAnalytics";    
     public identifier: string;
-    public setNextPlugin: (next: ITelemetryPlugin) => void;
     priority: number;
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
 
     public static Version = "0.0.1";
     private _core: IAppInsightsCore;
     private _globalconfig: IConfiguration;
+    private _nextPlugin: ITelemetryPlugin;
 
     // Counts number of trackAjax invokations.
     // By default we only monitor X ajax call per view to avoid too much load.
@@ -48,7 +47,15 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
     constructor() {
         this.identifier = ApplicationInsights.defaultIdentifier;
-        this.initialize = this._initialize.bind(this);
+        this.initialize = this._initialize.bind(this);        
+    }
+
+    public processTelemetry(env: ITelemetryItem) {
+        this._nextPlugin.processTelemetry(env);
+    }
+
+    public setNextPlugin(next: ITelemetryPlugin) {
+        this._nextPlugin = next;
     }
 
     /**
@@ -72,8 +79,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
     }
 
-    public sendPageViewInternal(pageView: IPageViewTelemetry, properties?: { [key: string]: any }) {
-        let telemetryItem = TelemetryItemCreator.createItem(pageView, PageView.dataType, PageView.envelopeType, properties);
+    public sendPageViewInternal(pageView: IPageViewTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
+        let telemetryItem = TelemetryItemCreator.createItem(pageView, PageView.dataType, PageView.envelopeType, properties, systemProperties);
 
         this.context.track(telemetryItem);
 
