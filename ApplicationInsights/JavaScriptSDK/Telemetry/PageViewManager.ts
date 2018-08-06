@@ -4,13 +4,13 @@
     _InternalMessageId, Util, IChannelControlsAI
 } from 'applicationinsights-common';
 import { IAppInsightsCore, CoreUtils } from 'applicationinsights-core-js';
-import { IPageViewTelemetry } from "../../JavascriptSDK.Interfaces/IPageViewTelemetry";
+import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../../JavascriptSDK.Interfaces/IPageViewTelemetry";
 
 /**
 * Internal interface to pass appInsights object to subcomponents without coupling 
 */
 export interface IAppInsightsInternal {
-    sendPageViewInternal(pageViewItem: IPageViewTelemetry, properties?: Object);
+    sendPageViewInternal(pageViewItem: IPageViewTelemetryInternal, properties?: Object);
     sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance);
 }
 

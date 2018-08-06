@@ -1,2 +1,2 @@
 export { ApplicationInsights } from "./JavaScriptSDK/ApplicationInsights";
-export { IPageViewTelemetry } from "./JavaScriptSDK.Interfaces/IPageViewTelemetry";
+export { IPageViewTelemetry, IPageViewTelemetryInternal } from "./JavaScriptSDK.Interfaces/IPageViewTelemetry";
