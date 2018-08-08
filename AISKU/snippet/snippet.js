@@ -42,7 +42,6 @@
     return appInsights;
 })({
     instrumentationKey: "INSTRUMENTATION_KEY",
-
 });
 
 // global instance must be set in this order to mitigate issues in ie8 and lower
@@ -50,5 +49,9 @@ window.appInsightsvNext = appInsights;
 
 // if somebody calls the snippet twice, don't report page view again
 if (appInsights.queue && appInsights.queue.length === 0) {
-    appInsights.trackPageView();
+    var pageViewItem = {
+        name: document.title ? document.title : "",
+        uri: document.URL ? document.URL : ""
+    };
+    appInsights.trackPageView(pageViewItem);
 }

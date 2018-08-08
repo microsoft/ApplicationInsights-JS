@@ -21,13 +21,12 @@ import { TelemetryItemCreator } from "./TelemetryItemCreator";
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
 
-    public static defaultIdentifier = "ApplicationInsightsAnalytics";    
+    public static defaultIdentifier = "ApplicationInsightsAnalytics";
     public identifier: string;
     priority: number;
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
 
     public static Version = "0.0.1";
-    private _core: IAppInsightsCore;
     private _globalconfig: IConfiguration;
     private _nextPlugin: ITelemetryPlugin;
 
@@ -41,17 +40,20 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     private _pageVisitTimeManager: PageVisitTimeManager;
 
     public config: IConfig;
+    public core: IAppInsightsCore;
     public context: TelemetryContext;
     public queue: (() => void)[];
     public static appInsightsDefaultConfig: IConfiguration;
 
     constructor() {
         this.identifier = ApplicationInsights.defaultIdentifier;
-        this.initialize = this._initialize.bind(this);        
+        this.initialize = this._initialize.bind(this);
     }
 
     public processTelemetry(env: ITelemetryItem) {
-        this._nextPlugin.processTelemetry(env);
+        if (!CoreUtils.isNullOrUndefined(this._nextPlugin)) {
+            this._nextPlugin.processTelemetry(env);
+        }
     }
 
     public setNextPlugin(next: ITelemetryPlugin) {
@@ -104,7 +106,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             throw Error("Error initializing");
         }
 
-        this._core = core;
+        this.core = core;
         this._globalconfig = {
             instrumentationKey: config.instrumentationKey,
             endpointUrl: config.endpointUrl
@@ -158,9 +160,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             appId: () => this.config.appId
         }
 
-        this.context = new TelemetryContext(configGetters, this._core);
+        this.context = new TelemetryContext(configGetters, this.core);
 
-        this._pageViewManager = new PageViewManager(this, this.config.overridePageViewDuration, this._core);
+        this._pageViewManager = new PageViewManager(this, this.config.overridePageViewDuration, this.core);
 
         /*
         TODO: renable this trackEvent once we support trackEvent in this package. Created task to track this:
