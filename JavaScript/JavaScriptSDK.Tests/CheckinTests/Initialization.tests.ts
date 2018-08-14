@@ -26,6 +26,7 @@ class InitializationTests extends TestClass {
             autoTrackPageVisitTime: false,
             samplingPercentage: 33,
             disableAjaxTracking: true,
+            disableFetchTracking: false,
             overridePageViewDuration: false,
             maxAjaxCallsPerView: 44,
             disableDataLossAnalysis: true,
@@ -96,6 +97,7 @@ class InitializationTests extends TestClass {
                 Assert.equal(10000, init.config.diagnosticLogInterval);
                 Assert.equal(100, init.config.samplingPercentage);
                 Assert.equal(500, init.config.maxAjaxCallsPerView);
+                Assert.equal(true, init.config.disableFetchTracking);
             }
         });
 
@@ -123,6 +125,7 @@ class InitializationTests extends TestClass {
                 Assert.equal(1, init.config.diagnosticLogInterval);
                 Assert.equal(33, init.config.samplingPercentage);
                 Assert.equal(44, init.config.maxAjaxCallsPerView);
+                Assert.equal(false, init.config.disableFetchTracking);
             }
         });
 
@@ -205,6 +208,7 @@ class InitializationTests extends TestClass {
                     disableTelemetry: "false",
                     verboseLogging: "false",
                     emitLineDelimitedJson: "false",
+                    disableFetchTracking: "false",
                 };
 
                 var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>userConfig);
@@ -214,6 +218,7 @@ class InitializationTests extends TestClass {
                 Assert.ok(!config.disableTelemetry);
                 Assert.ok(!config.verboseLogging);
                 Assert.ok(!config.emitLineDelimitedJson);
+                Assert.ok(!config.disableFetchTracking);
             }
         });
 
@@ -227,6 +232,7 @@ class InitializationTests extends TestClass {
                     disableTelemetry: "true",
                     verboseLogging: "true",
                     emitLineDelimitedJson: "true",
+                    disableFetchTracking: "true",
                 };
 
                 var config = Microsoft.ApplicationInsights.Initialization.getDefaultConfig(<any>userConfig);
@@ -236,6 +242,7 @@ class InitializationTests extends TestClass {
                 Assert.ok(config.disableTelemetry);
                 Assert.ok(config.verboseLogging);
                 Assert.ok(config.emitLineDelimitedJson);
+                Assert.ok(config.disableFetchTracking);
             }
         });
 
