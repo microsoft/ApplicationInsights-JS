@@ -1,8 +1,4 @@
-///<reference types="applicationinsights-core-js" />
-
-import { IConfiguration } from "applicationinsights-core-js";
-
-export interface IConfig extends IConfiguration {    
+export interface IConfig {    
     emitLineDelimitedJson?: boolean;
     accountId?: string;
     sessionRenewalMs?: number;

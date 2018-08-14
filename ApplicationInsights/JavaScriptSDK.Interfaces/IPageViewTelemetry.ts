@@ -3,32 +3,42 @@
  */
 export interface IPageViewTelemetry {
     /*
-     * name The string you used as the name in startTrackPage. Defaults to the document title.
+     * name String - The string you used as the name in startTrackPage. Defaults to the document title.
      */
-    name: string;
-    
-    /*
-     * url  String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
-     */ 
-    url: string;
+    name?: string;
 
     /*
-     * id  String - unique identifier for the page view
-     */ 
-    id: string;
+     * uri  String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
+     */
+    uri?: string;
 
     /*
-     * referrerUri  String - source page where current page is loaded from
-     */ 
-    referrerUri?: string;
-    
+     * refUri  String - the URL of the source page where current page is loaded from
+     */
+    refUri?: string;
+
     /*
      * duration  number - the number of milliseconds it took to load the page. Defaults to undefined. If set to default value, page load time is calculated internally.
      */
     duration?: number;
-    
+
     /*
-     * properties  map[string, any] - additional data used to filter pages and metrics in the portal.
+     * pageType  String - page type
      */
-    customDimensions?: { [key: string]: any };
+    pageType?: string;
+
+    /*
+     * isLoggedIn - boolean is user logged in
+     */
+    isLoggedIn?: boolean;
+
+    /*
+     * property bag to contain an extension to domain properties - extension to Part B
+     */
+    pageTags?: { [key: string]: any };
+}
+
+
+export interface IPageViewTelemetryInternal extends IPageViewTelemetry {
+    id?: string;
 }

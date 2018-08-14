@@ -3,12 +3,13 @@
     "sourceMap": true,
     "inlineSources": true,
     "noImplicitAny": false,
-    "module": "commonjs",
+    "module": "amd",
     "target": "es5",
+    "moduleResolution": "Node",
     "alwaysStrict": true,
     "declaration": true,
-    "outDir": "./bundle",
-    "rootDir": "./ApplicationInsights"
-    },
+    "outDir": "amd/bundle",
+    "rootDir": "AISKU"
+  },
   "files": []
 }

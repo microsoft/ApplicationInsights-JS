@@ -3,12 +3,9 @@
     "sourceMap": true,
     "inlineSources": true,
     "noImplicitAny": false,
-    "module": "commonjs",
+    "module": "amd",
     "target": "es5",
-    "alwaysStrict": true,
-    "declaration": true,
-    "outDir": "./bundle",
-    "rootDir": "./AppInsightsCommon"
+    "alwaysStrict": true
   },
   "files": []
 }

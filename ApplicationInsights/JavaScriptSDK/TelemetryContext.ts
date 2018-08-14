@@ -1,8 +1,9 @@
-﻿import { 
+﻿import {
     Metric, IEnvelope, ContextTagKeys,
-    RemoteDependencyData, _InternalLogging, 
+    RemoteDependencyData, _InternalLogging,
     _InternalMessageId, LoggingSeverity, Util,
-    Data, PageView } from "applicationinsights-common";
+    Data, PageView
+} from "applicationinsights-common";
 import { ITelemetryContext } from '../JavaScriptSDK.Interfaces/ITelemetryContext';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
@@ -12,7 +13,7 @@ import { Operation } from './Context/Operation';
 import { Sample } from './Context/Sample';
 import { User } from './Context/User';
 import { Session, _SessionManager } from './Context/Session';
-import { IAppInsightsCore } from "applicationinsights-core-js";
+import { IAppInsightsCore, ITelemetryItem, CoreUtils } from "applicationinsights-core-js";
 import { TelemetryItemCreator } from "./TelemetryItemCreator";
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 
@@ -111,15 +112,15 @@ export class TelemetryContext implements ITelemetryContext {
     /**
      * Uses channel to send telemetry object to the endpoint
      */
-    public track(envelope: IEnvelope) {
-        if (!envelope) {
+    public track(telemetryItem: ITelemetryItem) {
+        if (CoreUtils.isNullOrUndefined(telemetryItem)) {
             _InternalLogging.throwInternal(
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.TrackArgumentsNotSpecified,
                 "cannot call .track() with a null or undefined argument", null, true);
         } else {
             // If the envelope is PageView, reset the internal message count so that we can send internal telemetry for the new page.
-            if (envelope.name === PageView.envelopeType) {
+            if (telemetryItem.name === PageView.envelopeType) {
                 _InternalLogging.resetInternalMessageCount();
             }
 
@@ -130,10 +131,10 @@ export class TelemetryContext implements ITelemetryContext {
                 }
             }
 
-            this._track(envelope);
+            this._track(telemetryItem);
         }
 
-        return envelope;
+        return telemetryItem;
     }
 
     // Todo: move to separate extension
@@ -159,35 +160,38 @@ export class TelemetryContext implements ITelemetryContext {
         }
     }
 
-    private _track(envelope: IEnvelope) {
+    private _track(telemetryItem: ITelemetryItem) {
+        let tagsItem: { [key: string]: any } = {};
 
         if (this.session) {
             // If customer set id, apply his context; otherwise apply context generated from cookies 
             if (typeof this.session.id === "string") {
-                this._applySessionContext(envelope, this.session);
+                this._applySessionContext(tagsItem, this.session);
             } else {
-                this._applySessionContext(envelope, this._sessionManager.automaticSession);
+                this._applySessionContext(tagsItem, this._sessionManager.automaticSession);
             }
         }
 
-        this._applyApplicationContext(envelope, this.application);
-        this._applyDeviceContext(envelope, this.device);
-        this._applyInternalContext(envelope, this.internal);
-        this._applyLocationContext(envelope, this.location);
-        this._applySampleContext(envelope, this.sample);
-        this._applyUserContext(envelope, this.user);
-        this._applyOperationContext(envelope, this.operation);
+        // set Part A fields
+        this._applyApplicationContext(tagsItem, this.application);
+        this._applyDeviceContext(tagsItem, this.device);
+        this._applyInternalContext(tagsItem, this.internal);
+        this._applyLocationContext(tagsItem, this.location);
+        this._applySampleContext(tagsItem, this.sample);
+        this._applyUserContext(tagsItem, this.user);
+        this._applyOperationContext(tagsItem, this.operation);
+        telemetryItem.tags.push(tagsItem);
 
-        envelope.iKey = this._config.instrumentationKey();
+        // set instrumentation key
+        telemetryItem.instrumentationKey = this._config.instrumentationKey();
 
         var doNotSendItem = false;
         try {
-
             var telemetryInitializersCount = this._telemetryInitializers.length;
             for (var i = 0; i < telemetryInitializersCount; ++i) {
                 var telemetryInitializer = this._telemetryInitializers[i];
                 if (telemetryInitializer) {
-                    if (telemetryInitializer.apply(null, [envelope]) === false) {
+                    if (telemetryInitializer.apply(null, [telemetryItem]) === false) {
                         doNotSendItem = true;
                         break;
                     }
@@ -201,154 +205,151 @@ export class TelemetryContext implements ITelemetryContext {
         }
 
         if (!doNotSendItem) {
-            if (envelope.name === Metric.envelopeType ||
-                this.sample.isSampledIn(envelope)) {
+            if (telemetryItem.name === Metric.envelopeType || this.sample.isSampledIn(telemetryItem)) {
                 var iKeyNoDashes = this._config.instrumentationKey().replace(/-/g, "");
-                envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
-
-                let telemetryItem = TelemetryItemCreator.createItem(envelope);
+                telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
 
                 // map and send data
-                 this._core.track(telemetryItem);
+                this._core.track(telemetryItem);
             } else {
                 _InternalLogging.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TelemetrySampledAndNotSent,
                     "Telemetry is sampled and not sent to the AI service.", { SampleRate: this.sample.sampleRate }, true);
             }
         }
 
-        return envelope;
+        return telemetryItem;
     }
 
-    private _applyApplicationContext(envelope: IEnvelope, appContext: Application) {
+    private _applyApplicationContext(tagsItem: { [key: string]: any }, appContext: Application) {
         if (appContext) {
             var tagKeys: ContextTagKeys = new ContextTagKeys();
 
             if (typeof appContext.ver === "string") {
-                envelope.tags[tagKeys.applicationVersion] = appContext.ver;
+                tagsItem[tagKeys.applicationVersion] = appContext.ver;
             }
             if (typeof appContext.build === "string") {
-                envelope.tags[tagKeys.applicationBuild] = appContext.build;
+                tagsItem[tagKeys.applicationBuild] = appContext.build;
             }
         }
     }
 
-    private _applyDeviceContext(envelope: IEnvelope, deviceContext: Device) {
+    private _applyDeviceContext(tagsItem: { [key: string]: any }, deviceContext: Device) {
         var tagKeys: ContextTagKeys = new ContextTagKeys();
 
         if (deviceContext) {
             if (typeof deviceContext.id === "string") {
-                envelope.tags[tagKeys.deviceId] = deviceContext.id;
+                tagsItem[tagKeys.deviceId] = deviceContext.id;
             }
             if (typeof deviceContext.ip === "string") {
-                envelope.tags[tagKeys.deviceIp] = deviceContext.ip;
+                tagsItem[tagKeys.deviceIp] = deviceContext.ip;
             }
             if (typeof deviceContext.language === "string") {
-                envelope.tags[tagKeys.deviceLanguage] = deviceContext.language;
+                tagsItem[tagKeys.deviceLanguage] = deviceContext.language;
             }
             if (typeof deviceContext.locale === "string") {
-                envelope.tags[tagKeys.deviceLocale] = deviceContext.locale;
+                tagsItem[tagKeys.deviceLocale] = deviceContext.locale;
             }
             if (typeof deviceContext.model === "string") {
-                envelope.tags[tagKeys.deviceModel] = deviceContext.model;
+                tagsItem[tagKeys.deviceModel] = deviceContext.model;
             }
             if (typeof deviceContext.network !== "undefined") {
-                envelope.tags[tagKeys.deviceNetwork] = deviceContext.network;
+                tagsItem[tagKeys.deviceNetwork] = deviceContext.network;
             }
             if (typeof deviceContext.oemName === "string") {
-                envelope.tags[tagKeys.deviceOEMName] = deviceContext.oemName;
+                tagsItem[tagKeys.deviceOEMName] = deviceContext.oemName;
             }
             if (typeof deviceContext.os === "string") {
-                envelope.tags[tagKeys.deviceOS] = deviceContext.os;
+                tagsItem[tagKeys.deviceOS] = deviceContext.os;
             }
             if (typeof deviceContext.osversion === "string") {
-                envelope.tags[tagKeys.deviceOSVersion] = deviceContext.osversion;
+                tagsItem[tagKeys.deviceOSVersion] = deviceContext.osversion;
             }
             if (typeof deviceContext.resolution === "string") {
-                envelope.tags[tagKeys.deviceScreenResolution] = deviceContext.resolution;
+                tagsItem[tagKeys.deviceScreenResolution] = deviceContext.resolution;
             }
             if (typeof deviceContext.type === "string") {
-                envelope.tags[tagKeys.deviceType] = deviceContext.type;
+                tagsItem[tagKeys.deviceType] = deviceContext.type;
             }
         }
     }
 
-    private _applyInternalContext(envelope: IEnvelope, internalContext: Internal) {
+    private _applyInternalContext(tagsItem: { [key: string]: any }, internalContext: Internal) {
         if (internalContext) {
             var tagKeys: ContextTagKeys = new ContextTagKeys();
             if (typeof internalContext.agentVersion === "string") {
-                envelope.tags[tagKeys.internalAgentVersion] = internalContext.agentVersion;
+                tagsItem[tagKeys.internalAgentVersion] = internalContext.agentVersion;
             }
             if (typeof internalContext.sdkVersion === "string") {
-                envelope.tags[tagKeys.internalSdkVersion] = internalContext.sdkVersion;
+                tagsItem[tagKeys.internalSdkVersion] = internalContext.sdkVersion;
             }
         }
     }
 
-    private _applyLocationContext(envelope: IEnvelope, locationContext: Location) {
+    private _applyLocationContext(tagsItem: { [key: string]: any }, locationContext: Location) {
         if (locationContext) {
             var tagKeys: ContextTagKeys = new ContextTagKeys();
             if (typeof locationContext.ip === "string") {
-                envelope.tags[tagKeys.locationIp] = locationContext.ip;
+                tagsItem[tagKeys.locationIp] = locationContext.ip;
             }
         }
     }
 
-    private _applyOperationContext(envelope: IEnvelope, operationContext: Operation) {
+    private _applyOperationContext(tagsItem: { [key: string]: any }, operationContext: Operation) {
         if (operationContext) {
             var tagKeys: ContextTagKeys = new ContextTagKeys();
             if (typeof operationContext.id === "string") {
-                envelope.tags[tagKeys.operationId] = operationContext.id;
+                tagsItem[tagKeys.operationId] = operationContext.id;
             }
             if (typeof operationContext.name === "string") {
-                envelope.tags[tagKeys.operationName] = operationContext.name;
+                tagsItem[tagKeys.operationName] = operationContext.name;
             }
             if (typeof operationContext.parentId === "string") {
-                envelope.tags[tagKeys.operationParentId] = operationContext.parentId;
+                tagsItem[tagKeys.operationParentId] = operationContext.parentId;
             }
             if (typeof operationContext.rootId === "string") {
-                envelope.tags[tagKeys.operationRootId] = operationContext.rootId;
+                tagsItem[tagKeys.operationRootId] = operationContext.rootId;
             }
             if (typeof operationContext.syntheticSource === "string") {
-                envelope.tags[tagKeys.operationSyntheticSource] = operationContext.syntheticSource;
+                tagsItem[tagKeys.operationSyntheticSource] = operationContext.syntheticSource;
             }
         }
     }
 
-    private _applySampleContext(envelope: IEnvelope, sampleContext: Sample) {
+    private _applySampleContext(tagsItem: { [key: string]: any }, sampleContext: Sample) {
         if (sampleContext) {
-            envelope.sampleRate = sampleContext.sampleRate;
+            tagsItem.sampleRate = sampleContext.sampleRate;
         }
     }
 
-    private _applySessionContext(envelope: IEnvelope, sessionContext: Session) {
+    private _applySessionContext(tags: { [key: string]: any }, sessionContext: Session) {
         if (sessionContext) {
             var tagKeys: ContextTagKeys = new ContextTagKeys();
             if (typeof sessionContext.id === "string") {
-                envelope.tags[tagKeys.sessionId] = sessionContext.id;
+                tags[tagKeys.sessionId] = sessionContext.id;
             }
             if (typeof sessionContext.isFirst !== "undefined") {
-                envelope.tags[tagKeys.sessionIsFirst] = sessionContext.isFirst;
+                tags[tagKeys.sessionIsFirst] = sessionContext.isFirst;
             }
         }
     }
 
-    private _applyUserContext(envelope: IEnvelope, userContext: User) {
+    private _applyUserContext(tagsItem: { [key: string]: any }, userContext: User) {
         if (userContext) {
             var tagKeys: ContextTagKeys = new ContextTagKeys();
             if (typeof userContext.accountId === "string") {
-                envelope.tags[tagKeys.userAccountId] = userContext.accountId;
+                tagsItem[tagKeys.userAccountId] = userContext.accountId;
             }
             if (typeof userContext.agent === "string") {
-                envelope.tags[tagKeys.userAgent] = userContext.agent;
+                tagsItem[tagKeys.userAgent] = userContext.agent;
             }
             if (typeof userContext.id === "string") {
-                envelope.tags[tagKeys.userId] = userContext.id;
+                tagsItem[tagKeys.userId] = userContext.id;
             }
             if (typeof userContext.authenticatedId === "string") {
-                envelope.tags[tagKeys.userAuthUserId] = userContext.authenticatedId;
+                tagsItem[tagKeys.userAuthUserId] = userContext.authenticatedId;
             }
             if (typeof userContext.storeRegion === "string") {
-                envelope.tags[tagKeys.userStoreRegion] = userContext.storeRegion;
+                tagsItem[tagKeys.userStoreRegion] = userContext.storeRegion;
             }
         }
     }

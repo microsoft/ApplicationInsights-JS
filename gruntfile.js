@@ -13,13 +13,12 @@ module.exports = function (grunt) {
                 out: 'bundle/ai.js',
             },
             common: {
-                tsconfig: './tsconfig.json',
+                tsconfig: './AppInsightsCommon/tsconfig.json',
                 src: [
                     'AppInsightsCommon/applicationinsights-common.ts',
                     'AppInsightsCommon/*.ts',
                     'AppInsightsCommon/Interfaces/*.ts'
-                ],
-                out: 'AppInsightsCommon/amd/bundle/applicationinsights-common.js'
+                ]
             },
             commoncjs: {
                 tsconfig: './AppInsightsCommon/cjs/tsconfigcommonjs.json',
@@ -30,31 +29,37 @@ module.exports = function (grunt) {
                 ]
             },
             appinsightscjs: {
-                tsconfig:'./ApplicationInsights/cjs/tsconfigcommonjs.json',
-                 src: [
+                tsconfig: './ApplicationInsights/cjs/tsconfigcommonjs.json',
+                src: [
                     'ApplicationInsights/JavascriptSDK/*.ts',
                     'ApplicationInsights/JavascriptSDK.Interfaces/*.ts',
                     'ApplicationInsights/*.ts'
                 ]
-            }, 
+            },
             appinsights: {
-                tsconfig: './tsconfig.json',
+                tsconfig: './ApplicationInsights/tsconfig.json',
                 src: [
                     'ApplicationInsights/JavascriptSDK.Interfaces/*.ts',
                     'ApplicationInsights/JavascriptSDK/*.ts',
                     'ApplicationInsights/*.ts'
-                ],
-                out: 'ApplicationInsights/amd/bundle/applicationinsights-analytics-js.js',
+                ]
             },
-             aisku: {
-                 tsconfig: './tsconfig.json',
-                src: [
-                    'AISKU/Init.ts'
-                 ],
-                out: 'AISKU/amd/bundle/aisdk-js.js'
-             },
-            module: {
+            appinsightstests: {
                 tsconfig: './tsconfig.json',
+                src: [
+                    './ApplicationInsights/Tests/Selenium/*.ts'
+                ],
+                out: 'ApplicationInsights/Tests/Selenium/appinsights-analytics.tests.js'
+            },
+            aisku: {
+                tsconfig: './AISKU/tsconfig.json',
+                src: [
+                    'AISKU/*.ts'
+                ]
+            },
+            module: {
+                // Use a different tsconfig for building module in order to not generate a declaration file for module, while keeping declaration for other modules
+                tsconfig: './tsconfigmodule.json', 
                 src: [
                     'JavaScript/JavaScriptSDK.Interfaces/*.ts',
                     'JavaScript/JavaScriptSDK.Module/*.ts',
@@ -154,6 +159,17 @@ module.exports = function (grunt) {
                     summaryOnly: true,
                     '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
+            },
+            aitests: {
+                options: {
+                    urls: [
+                        'ApplicationInsights/Tests/Selenium/Tests.html'
+                    ],
+                    timeout: 300 * 1000, // 5 min
+                    console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
+                }
             }
         }
     });
@@ -170,6 +186,7 @@ module.exports = function (grunt) {
     grunt.registerTask("commoncjs", ["ts:commoncjs"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("ai", ["ts:appinsights"]);
+    grunt.registerTask("aitests", ["ts:appinsights", "ts:appinsightstests", "qunit:aitests"]);
     grunt.registerTask("aicjs", ["ts:appinsightscjs"]);
     grunt.registerTask("aisku", ["ts:aisku"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);

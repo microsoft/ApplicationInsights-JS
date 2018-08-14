@@ -5,6 +5,4 @@
 
 # ... but these files
 !package.json
-!bundle/applicationinsights-analytics-js.js
-!bundle/applicationinsights-analytics-js.js.map
-!bundle/applicationinsights-analytics-js.d.ts
+!bundle/**/*.*

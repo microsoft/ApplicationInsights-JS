@@ -5,6 +5,4 @@
 
 # ... but these files
 !package.json
-!bundle/applicationinsights-common.js
-!bundle/applicationinsights-common.js.map
-!bundle/applicationinsights-common.d.ts
+!bundle/**/*.*
