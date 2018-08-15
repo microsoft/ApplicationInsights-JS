@@ -97,6 +97,11 @@ appInsights.setAuthenticatedUserContext("userId", "accountId");
 // set config dynamically
 appInsights.config.instrumentationKey = "<new key>";
 
+// UtilHelpers
+var Util: Microsoft.ApplicationInsights.IUtilHelpers = Microsoft.ApplicationInsights.UtilHelpers;
+
+Util.newId();
+
 // TelementryContext
 const context: Microsoft.ApplicationInsights.ITelemetryContext = appInsights.context;
 
