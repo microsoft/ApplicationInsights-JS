@@ -162,14 +162,14 @@ class SenderE2ETests extends TestClass {
                     for (let i = 0; i < 7; i++) {
                         xhr = new XMLHttpRequest();
                         xhr.onloadend = () => { this["xhrStatus"]++; }
-                        xhr.open("GET", "https://httpbin.org/status/200", true);
+                        xhr.open("GET", `https://httpbin.org/status/${i + 200}`, true);
                         xhr.send();
                     }
                 },
                 () => {
                     this["fetchStatus"] = 0;
                     for (let i = 0; i < 9; i++) {
-                        fetch(`https://httpbin.org/status/${i+200}`, { method: "POST" }).then(r => {
+                        fetch(`https://httpbin.org/status/${i + 200}`, { method: "POST" }).then(r => {
                             this["fetchStatus"] += (r.status === 200 + i);
                         });
                     }
@@ -185,9 +185,9 @@ class SenderE2ETests extends TestClass {
                         let count: number = payload[1];
                         itemsAccepted += count;
                     }
-
-                    return (itemsAccepted === 7 + 9) || (itemsAccepted === 7 + 9 + 9);
-                }, "Backend accepts 7 XHR items and 9 Fetch items (+9 more XHR for browsers requiring fetch-polyfill)", 5)
+                    console.log(window.fetch.toString());
+                    return (itemsAccepted === 7 + 9);
+                }, "Backend accepts 7 XHR items and 9 Fetch items, or 16 XHR items for browsers requiring a fetch-polyfill", 5)
             ]
         });
 

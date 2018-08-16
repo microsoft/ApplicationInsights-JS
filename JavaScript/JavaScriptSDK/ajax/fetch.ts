@@ -39,7 +39,8 @@ module Microsoft.ApplicationInsights {
             let result: boolean = true;
             if (extensions.IsNullOrUndefined((window as any).Request) ||
                 extensions.IsNullOrUndefined((window as any).Request.prototype) ||
-                extensions.IsNullOrUndefined(window.fetch)) {
+                extensions.IsNullOrUndefined(window.fetch) ||
+                window.fetch.toString().indexOf("new XMLHttpRequest") !== -1) {
                 result = false;
             }
             return result;
