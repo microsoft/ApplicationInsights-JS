@@ -185,7 +185,7 @@ class SenderE2ETests extends TestClass {
                         let count: number = payload[1];
                         itemsAccepted += count;
                     }
-                    console.log(window.fetch.toString());
+                    
                     return (itemsAccepted === 7 + 9);
                 }, "Backend accepts 7 XHR items and 9 Fetch items, or 16 XHR items for browsers requiring a fetch-polyfill", 5)
             ]
