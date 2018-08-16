@@ -366,15 +366,7 @@ declare module Microsoft.ApplicationInsights {
     }
 }
 declare module Microsoft.ApplicationInsights {
-    interface IUtilHelpers {
-        /**
-         * generate random id string
-         */
-        newId?(): string;
-    }
-}
-declare module Microsoft.ApplicationInsights {
-    class UtilHelpers implements IUtilHelpers {
+    class UtilHelpers {
         /**
          * generate random id string
          */
@@ -3087,7 +3079,7 @@ declare class CorrelationIdHelperTests extends TestClass {
 }
 declare module "JavaScriptSDK.Module/AppInsightsModule" {
     export var AppInsights: Microsoft.ApplicationInsights.IAppInsights;
-    export var Util: Microsoft.ApplicationInsights.IUtilHelpers;
+    export var Util: typeof Microsoft.ApplicationInsights.UtilHelpers;
 }
 declare module "JavaScriptSDK.Tests/CheckinTests/AppInsightsModule.tests" {
     export default class AppInsightsModuleTests extends TestClass {

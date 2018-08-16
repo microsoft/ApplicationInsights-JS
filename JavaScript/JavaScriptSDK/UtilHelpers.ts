@@ -1,9 +1,7 @@
-/// <reference path="../JavaScriptSDK.Interfaces/IUtilHelpers.ts"/>
-
 module Microsoft.ApplicationInsights {
     "use strict"
 
-    export class UtilHelpers implements IUtilHelpers {
+    export class UtilHelpers {
 
         /**
          * generate random id string

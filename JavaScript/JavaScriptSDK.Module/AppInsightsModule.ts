@@ -1,6 +1,5 @@
 /// <reference path="../JavaScriptSDK.Interfaces/IConfig.ts"/>
 /// <reference path="../JavaScriptSDK.Interfaces/IAppInsights.ts"/>
-/// <reference path="../JavaScriptSDK.Interfaces/IUtilHelpers.ts"/>
 /// <reference path="../JavaScriptSDK/UtilHelpers.ts"/>
 
 "use strict";
@@ -112,4 +111,4 @@ class AppInsightsModule {
 }
 
 export var AppInsights: Microsoft.ApplicationInsights.IAppInsights = AppInsightsModule.appInsightsInstance;
-export var Util: Microsoft.ApplicationInsights.IUtilHelpers = Microsoft.ApplicationInsights.UtilHelpers;
+export var Util: typeof Microsoft.ApplicationInsights.UtilHelpers;
