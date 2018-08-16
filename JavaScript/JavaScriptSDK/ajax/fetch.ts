@@ -37,10 +37,14 @@ module Microsoft.ApplicationInsights {
 
         private supportsMonitoring(): boolean {
             let result: boolean = true;
+
+            // polyfilled fetch on old browsers (IE) will try to use XMLHttpRequest instead
+            const fetchPolyfill: string = "new XMLHttpRequest";
+
             if (extensions.IsNullOrUndefined((window as any).Request) ||
                 extensions.IsNullOrUndefined((window as any).Request.prototype) ||
                 extensions.IsNullOrUndefined(window.fetch) ||
-                window.fetch.toString().indexOf("new XMLHttpRequest") !== -1) {
+                window.fetch.toString().indexOf(fetchPolyfill) !== -1) {
                 result = false;
             }
             return result;
