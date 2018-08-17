@@ -162,7 +162,8 @@ module Microsoft.ApplicationInsights {
                 config.samplingPercentage = 100;
             }
 
-            config.disableAjaxTracking = Util.stringToBoolOrDefault(config.disableAjaxTracking)
+            config.disableAjaxTracking = Util.stringToBoolOrDefault(config.disableAjaxTracking);
+            config.disableFetchTracking = Util.stringToBoolOrDefault(config.disableFetchTracking, true);
             config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
           
             config.isBeaconApiDisabled = Util.stringToBoolOrDefault(config.isBeaconApiDisabled, true);

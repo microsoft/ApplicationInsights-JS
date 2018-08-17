@@ -8,17 +8,19 @@
     <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css">
     <script src="http://sinonjs.org/releases/sinon-2.3.8.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.4/fetch.js"></script>
 
     <script>
         require.config({
             paths: {
                 qunit: "../External/qunit-1.23.1",
+                promise: "../External/es6-promise.auto.min",
                 bridge: "../../../node_modules/grunt-contrib-qunit/phantomjs/bridge"
             }
         });
 
         require(
-            ["qunit", "ai.tests"],
+            ["qunit", "promise", "ai.tests"],
             function (QUnit, tests) {
                 QUnit.start();
             }

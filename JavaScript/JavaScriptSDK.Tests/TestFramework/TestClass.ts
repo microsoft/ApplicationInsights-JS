@@ -64,7 +64,7 @@ class TestClass {
 
                         // The callback which activates the next test step. 
                         var nextTestStepTrigger = () => {
-                            setTimeout(() => {
+                            PollingAssert.setTimeout(() => {
                                 trigger();
                             }, testInfo.stepDelay);
                         };

@@ -1,4 +1,5 @@
-﻿/// <reference path="../TestFramework/Common.ts" />
+﻿/// <reference path="./fetch.tests.ts"/>
+/// <reference path="../TestFramework/Common.ts" />
 /// <reference path="../../JavaScriptSDK/AppInsights.ts" />
 /// <reference path="../../JavaScriptSDK/Util.ts"/>
 
@@ -41,7 +42,9 @@ class AppInsightsTests extends TestClass {
     }
 
     public testInitialize() {
-        this.clock.reset();
+        if (this.clock) {
+            this.clock.reset();
+        }
         Microsoft.ApplicationInsights.Util.setCookie('ai_session', "");
         Microsoft.ApplicationInsights.Util.setCookie('ai_user', "");
         if (Microsoft.ApplicationInsights.Util.canUseLocalStorage()) {
@@ -567,7 +570,7 @@ class AppInsightsTests extends TestClass {
             test: () => {
                 let appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
                 let setAuthStub = this.sandbox.stub(appInsights.context.user, "setAuthenticatedUserContext");
-                
+
                 appInsights.setAuthenticatedUserContext("10001");
 
                 Assert.equal(true, setAuthStub.calledOnce);
@@ -575,7 +578,7 @@ class AppInsightsTests extends TestClass {
 
                 setAuthStub.reset();
             }
-        });      
+        });
 
         this.testCase({
             name: "AppInsightsTests: trackPageView sends user-specified duration when passed",
@@ -1271,36 +1274,36 @@ class AppInsightsTests extends TestClass {
         this.testCase({
             name: "Timing Tests: Multiple startTrackPage",
             test:
-            () => {
-                // setup
-                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
-                Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
+                () => {
+                    // setup
+                    var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                    var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
+                    Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
 
-                // act
-                appInsights.startTrackPage();
-                appInsights.startTrackPage();
+                    // act
+                    appInsights.startTrackPage();
+                    appInsights.startTrackPage();
 
-                // verify
-                Assert.ok(logStub.calledOnce, "calling start twice triggers warning to user");
-            }
+                    // verify
+                    Assert.ok(logStub.calledOnce, "calling start twice triggers warning to user");
+                }
         });
 
         this.testCase({
             name: "Timing Tests: stopTrackPage called without a corresponding start",
             test:
-            () => {
-                // setup
-                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
-                Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
+                () => {
+                    // setup
+                    var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                    var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
+                    Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
 
-                // act
-                appInsights.stopTrackPage();
+                    // act
+                    appInsights.stopTrackPage();
 
-                // verify
-                Assert.ok(logStub.calledOnce, "calling stop without a corresponding start triggers warning to user");
-            }
+                    // verify
+                    Assert.ok(logStub.calledOnce, "calling stop without a corresponding start triggers warning to user");
+                }
         });
 
         this.testCase({
@@ -1380,36 +1383,36 @@ class AppInsightsTests extends TestClass {
         this.testCase({
             name: "Timing Tests: Multiple startTrackEvent",
             test:
-            () => {
-                // setup
-                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
-                Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
+                () => {
+                    // setup
+                    var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                    var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
+                    Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
 
-                // act
-                appInsights.startTrackEvent("Event1");
-                appInsights.startTrackEvent("Event1");
+                    // act
+                    appInsights.startTrackEvent("Event1");
+                    appInsights.startTrackEvent("Event1");
 
-                // verify
-                Assert.ok(logStub.calledOnce, "calling startTrackEvent twice triggers warning to user");
-            }
+                    // verify
+                    Assert.ok(logStub.calledOnce, "calling startTrackEvent twice triggers warning to user");
+                }
         });
 
         this.testCase({
             name: "Timing Tests: stopTrackPage called without a corresponding start",
             test:
-            () => {
-                // setup
-                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
-                Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
+                () => {
+                    // setup
+                    var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                    var logStub = this.sandbox.stub(Microsoft.ApplicationInsights._InternalLogging, "throwInternal");
+                    Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
 
-                // act
-                appInsights.stopTrackPage("Event1");
+                    // act
+                    appInsights.stopTrackPage("Event1");
 
-                // verify
-                Assert.ok(logStub.calledOnce, "calling stopTrackEvent without a corresponding start triggers warning to user");
-            }
+                    // verify
+                    Assert.ok(logStub.calledOnce, "calling stopTrackEvent without a corresponding start triggers warning to user");
+                }
         });
 
         this.testCase({
@@ -1490,30 +1493,30 @@ class AppInsightsTests extends TestClass {
         this.testCase({
             name: "flush causes queue to be sent",
             test:
-            () => {
-                // setup
-                var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
-                appInsights.config.maxBatchInterval = 100;
-                Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
-                appInsights.context._sender._sender = () => null;
-                var senderSpy = this.sandbox.spy(appInsights.context._sender, "_sender");
+                () => {
+                    // setup
+                    var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.getAppInsightsSnippet());
+                    appInsights.config.maxBatchInterval = 100;
+                    Microsoft.ApplicationInsights._InternalLogging.verboseLogging = () => true;
+                    appInsights.context._sender._sender = () => null;
+                    var senderSpy = this.sandbox.spy(appInsights.context._sender, "_sender");
 
-                // act
-                appInsights.trackEvent("Event1");
-                appInsights.trackEvent("Event2");
-                appInsights.trackEvent("Event3");
+                    // act
+                    appInsights.trackEvent("Event1");
+                    appInsights.trackEvent("Event2");
+                    appInsights.trackEvent("Event3");
 
-                // verify
-                this.clock.tick(1);
-                Assert.ok(senderSpy.notCalled, "data is not sent without calling flush");
+                    // verify
+                    this.clock.tick(1);
+                    Assert.ok(senderSpy.notCalled, "data is not sent without calling flush");
 
-                // act
-                appInsights.flush();
+                    // act
+                    appInsights.flush();
 
-                // verify
-                this.clock.tick(1);
-                Assert.ok(senderSpy.calledOnce, "data is sent after calling flush");
-            }
+                    // verify
+                    this.clock.tick(1);
+                    Assert.ok(senderSpy.calledOnce, "data is sent after calling flush");
+                }
         });
 
         this.testCase({
@@ -1921,6 +1924,200 @@ class AppInsightsTests extends TestClass {
                 Assert.equal(null, (<any>xhr).requestHeaders['Request-Id'], "Request-Id header is not set.");
                 Assert.equal(null, (<any>xhr).requestHeaders['Request-Context'], "Request-Context header is not set.");
             }
+        });
+
+
+        let trackStub: SinonSpy;
+        let expectedAjaxId: string;
+        this.testCaseAsync({
+            name: "Fetch - Request-Context is not set if appId was not set",
+            steps: [
+                () => {
+                    window.fetch = FetchTests.createFetchStub(200);
+                    var snippet = this.getAppInsightsSnippet();
+                    snippet.disableFetchTracking = false;
+                    snippet.disableCorrelationHeaders = false;
+                    snippet.enableCorsCorrelation = true;
+                    snippet.maxBatchInterval = 0;
+
+                    var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                    trackStub = this.sandbox.spy(appInsights, "trackDependencyData");
+
+                    var expectedRootId = appInsights.context.operation.id;
+                    Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+
+                    let request = new Request("bla");
+                    // init is needed to check headers - they won't be added to the original request
+                    let init: RequestInit = { headers: new Headers() };
+                    fetch(request, init);
+                    expectedAjaxId = (request as any).ajaxData.id;
+                    Assert.equal(expectedAjaxId, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestIdHeader), "Request-Id is set correctly");
+                    Assert.equal(null, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestContextHeader), "Request-Context is not set");
+                },
+                <() => void>PollingAssert.createPollingAssert(() => trackStub.args[0][0].id === expectedAjaxId, "ajax id passed to trackDependencyData correctly", 1)
+            ],
+            stepDelay: 0
+        });
+
+        this.testCaseAsync({
+            name: "Fetch - Request-Id and Request-Context are set and passed correctly",
+            steps: [
+                () => {
+                    window.fetch = FetchTests.createFetchStub(200);
+                    var snippet = this.getAppInsightsSnippet();
+                    snippet.disableAjaxTracking = false;
+                    snippet.disableCorrelationHeaders = false;
+                    snippet.enableCorsCorrelation = false;
+                    snippet.maxBatchInterval = 0;
+
+                    var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                    appInsights.context.appId = () => "C16FBA4D-ECE9-472E-8125-4FF5BEFAF8C1";
+                    trackStub = this.sandbox.spy(appInsights, "trackDependencyData");
+
+                    var expectedRootId = appInsights.context.operation.id;
+                    Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+
+                    let request = new Request("bla");
+                    // init is needed to check headers - they won't be added to the original request
+                    let init: RequestInit = { headers: new Headers() };
+                    fetch(request, init);
+                    expectedAjaxId = (request as any).ajaxData.id;
+                    Assert.ok(expectedAjaxId.length > 0, "ajax id was initialized");
+                    Assert.equal(expectedAjaxId, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestIdHeader), "Request-Id is set correctly");
+                    Assert.equal("appId=cid-v1:C16FBA4D-ECE9-472E-8125-4FF5BEFAF8C1", (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestContextHeader), "Request-Context is set correctly");
+                },
+                <() => void>PollingAssert.createPollingAssert(() => trackStub.args[0][0].id === expectedAjaxId, "ajax id passed to trackDependencyData correctly", 1)
+            ],
+            stepDelay: 0
+        });
+
+        this.testCaseAsync({
+            name: "Fetch - Request-Id is not set for dependency calls with different port number if CORS correlation turned off",
+            steps: [
+                () => {
+                    window.fetch = FetchTests.createFetchStub(200);
+                    var snippet = this.getAppInsightsSnippet();
+                    snippet.disableAjaxTracking = false;
+                    snippet.disableCorrelationHeaders = false;
+                    snippet.enableCorsCorrelation = false;
+                    snippet.maxBatchInterval = 0;
+
+                    var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                    trackStub = this.sandbox.spy(appInsights, "trackDependencyData");
+
+                    var expectedRootId = appInsights.context.operation.id;
+                    Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+
+                    // override currentWindowHost
+                    var sampleHost = "api.applicationinsights.io";
+                    (<any>appInsights)._ajaxMonitor.currentWindowHost = sampleHost;
+
+                    let request = new Request(`https://${sampleHost}:888/test`);
+                    // init is needed to check headers - they won't be added to the original request
+                    let init: RequestInit = { headers: new Headers() };
+                    fetch(request, init);
+                    expectedAjaxId = (request as any).ajaxData.id;
+                    Assert.ok(expectedAjaxId.length > 0, "ajax id was initialized");
+                    Assert.equal(null, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestIdHeader), "Request-Id is not set");
+                },
+                <() => void>PollingAssert.createPollingAssert(() => trackStub.called, "trackDependencyData is called", 0.1)
+            ],
+            stepDelay: 0
+        });
+
+        this.testCaseAsync({
+            name: "Fetch - Request-Id is set for dependency calls with different port number if CORS correlation turned on",
+            steps: [
+                () => {
+                    window.fetch = FetchTests.createFetchStub(200);
+                    var snippet = this.getAppInsightsSnippet();
+                    snippet.disableAjaxTracking = false;
+                    snippet.disableCorrelationHeaders = false;
+                    snippet.enableCorsCorrelation = true;
+                    snippet.maxBatchInterval = 0;
+
+                    var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                    trackStub = this.sandbox.spy(appInsights, "trackDependencyData");
+
+                    var expectedRootId = appInsights.context.operation.id;
+                    Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+
+                    // override currentWindowHost
+                    var sampleHost = "api.applicationinsights.io";
+                    (<any>appInsights)._ajaxMonitor.currentWindowHost = sampleHost;
+
+                    let request = new Request(`https://${sampleHost}:888/test`);
+                    // init is needed to check headers - they won't be added to the original request
+                    let init: RequestInit = { headers: new Headers() };
+                    fetch(request, init);
+                    expectedAjaxId = (request as any).ajaxData.id;
+                    Assert.ok(expectedAjaxId.length > 0, "ajax id was initialized");
+                    Assert.equal(expectedAjaxId, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestIdHeader), "Request-Id is set correctly");
+                },
+                <() => void>PollingAssert.createPollingAssert(() => trackStub.args[0][0].id === expectedAjaxId, "ajax id passed to trackDependencyData correctly", 1)
+            ],
+            stepDelay: 0
+        });
+
+        this.testCaseAsync({
+            name: "Fetch - disableCorrelationHeaders disables Request-Id and Request-Context headers",
+            steps: [
+                () => {
+                    window.fetch = FetchTests.createFetchStub(200);
+                    var snippet = this.getAppInsightsSnippet();
+                    snippet.disableAjaxTracking = false;
+                    snippet.disableCorrelationHeaders = true;
+                    snippet.enableCorsCorrelation = true;
+                    snippet.maxBatchInterval = 0;
+
+                    var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                    appInsights.context.appId = () => "C16FBA4D-ECE9-472E-8125-4FF5BEFAF8C1";
+                    trackStub = this.sandbox.spy(appInsights, "trackDependencyData");
+
+                    var expectedRootId = appInsights.context.operation.id;
+                    Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+
+                    let request = new Request("bla");
+                    // init is needed to check headers - they won't be added to the original request
+                    let init: RequestInit = { headers: new Headers() };
+                    fetch(request, init);
+                    Assert.equal(null, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestIdHeader), "Request-Id is not set");
+                    Assert.equal(null, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestContextHeader), "Request-Context is not set");
+                },
+                <() => void>PollingAssert.createPollingAssert(() => trackStub.called, "trackDependencyData is called", 0.1)
+            ],
+            stepDelay: 0
+        });
+
+        this.testCaseAsync({
+            name: "Ajax - Request-Id and Request-Context headers are disabled for excluded domain",
+            steps: [
+                () => {
+                    window.fetch = FetchTests.createFetchStub(200);
+                    var snippet = this.getAppInsightsSnippet();
+                    snippet.disableAjaxTracking = false;
+                    snippet.disableCorrelationHeaders = false;
+                    snippet.enableCorsCorrelation = true;
+                    snippet.correlationHeaderExcludedDomains = ["some.excluded.domain"];
+                    snippet.maxBatchInterval = 0;
+
+                    var appInsights = new Microsoft.ApplicationInsights.AppInsights(snippet);
+                    appInsights.context.appId = () => "C16FBA4D-ECE9-472E-8125-4FF5BEFAF8C1";
+                    trackStub = this.sandbox.spy(appInsights, "trackDependencyData");
+
+                    var expectedRootId = appInsights.context.operation.id;
+                    Assert.ok(expectedRootId.length > 0, "root id was initialized to non empty string");
+
+                    let request = new Request("http://some.excluded.domain/test");
+                    // init is needed to check headers - they won't be added to the original request
+                    let init: RequestInit = { headers: new Headers() };
+                    fetch(request, init);
+                    Assert.equal(null, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestIdHeader), "Request-Id is not set");
+                    Assert.equal(null, (init.headers as Headers).get(Microsoft.ApplicationInsights.RequestHeaders.requestContextHeader), "Request-Context is not set");
+                },
+                <() => void>PollingAssert.createPollingAssert(() => trackStub.called, "trackDependencyData is called", 0.1)
+            ],
+            stepDelay: 0
         });
     }
 

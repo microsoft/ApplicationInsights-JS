@@ -82,6 +82,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="ajax\ajax.ts" />
+    <TypeScriptCompile Include="ajax\fetch.ts" />
     <TypeScriptCompile Include="ajax\ajaxRecord.ts" />
     <TypeScriptCompile Include="ajax\ajaxUtils.ts" />
     <TypeScriptCompile Include="HashCodeScoreGenerator.ts" />

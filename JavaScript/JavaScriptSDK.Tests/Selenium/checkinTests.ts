@@ -22,6 +22,7 @@
 /// <reference path="../CheckinTests/Util.tests.ts" />
 /// <reference path="../CheckinTests/Initialization.tests.ts" />
 /// <reference path="../CheckinTests/ajax.tests.ts" />
+/// <reference path="../CheckinTests/fetch.tests.ts" />
 /// <reference path="../CheckinTests/SplitTest.tests.ts" />
 /// <reference path="../CheckinTests/CorrelationIdHelper.tests.ts" />
 
