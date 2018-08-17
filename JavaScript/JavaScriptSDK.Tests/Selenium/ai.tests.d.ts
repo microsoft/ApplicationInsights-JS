@@ -193,16 +193,6 @@ declare class PollingAssert {
     static createPollingAssert(assertionFunctionReturnsBoolean: () => boolean, assertDescription: string, timeoutSeconds?: number, pollIntervalMs?: number): (nextTestStep) => void;
 }
 declare module Microsoft.ApplicationInsights {
-    interface ISerializable {
-        /**
-         * The set of fields for a serializable object.
-         * This defines the serialization order and a value of true/false
-         * for each field defines whether the field is required or not.
-         */
-        aiDataContract: any;
-    }
-}
-declare module Microsoft.ApplicationInsights {
     enum LoggingSeverity {
         /**
          * Error will be sent as internal telemetry
@@ -566,6 +556,225 @@ declare module Microsoft.ApplicationInsights {
     }
 }
 declare module Microsoft.ApplicationInsights {
+    class extensions {
+        static IsNullOrUndefined(obj: any): boolean;
+    }
+    class stringUtils {
+        static GetLength(strObject: any): number;
+    }
+    class dateTime {
+        static Now: () => number;
+        static GetDuration: (start: number, end: number) => number;
+    }
+    class EventHelper {
+        static AttachEvent(obj: any, eventNameWithoutOn: any, handlerRef: any): boolean;
+        static DetachEvent(obj: any, eventNameWithoutOn: any, handlerRef: any): void;
+    }
+    class AjaxHelper {
+        static ParseDependencyPath(absoluteUrl: string, method: string, pathName: string): {
+            target: any;
+            name: any;
+        };
+    }
+}
+declare module Microsoft.ApplicationInsights {
+    class XHRMonitoringState {
+        openDone: boolean;
+        setRequestHeaderDone: boolean;
+        sendDone: boolean;
+        abortDone: boolean;
+        onreadystatechangeCallbackAttached: boolean;
+    }
+    class ajaxRecord {
+        completed: boolean;
+        requestHeadersSize: any;
+        ttfb: any;
+        responseReceivingDuration: any;
+        callbackDuration: any;
+        ajaxTotalDuration: any;
+        aborted: any;
+        pageUrl: any;
+        requestUrl: any;
+        requestSize: number;
+        method: any;
+        status: any;
+        requestSentTime: any;
+        responseStartedTime: any;
+        responseFinishedTime: any;
+        callbackFinishedTime: any;
+        endTime: any;
+        originalOnreadystatechage: any;
+        xhrMonitoringState: XHRMonitoringState;
+        clientFailure: number;
+        id: string;
+        constructor(id: string);
+        getAbsoluteUrl(): string;
+        getPathName(): any;
+        CalculateMetrics: () => void;
+    }
+}
+declare module Microsoft.ApplicationInsights {
+    class RequestHeaders {
+        /**
+         * Request-Context header
+         */
+        static requestContextHeader: string;
+        /**
+         * Target instrumentation header that is added to the response and retrieved by the
+         * calling application when processing incoming responses.
+         */
+        static requestContextTargetKey: string;
+        /**
+         * Request-Context appId format
+         */
+        static requestContextAppIdFormat: string;
+        /**
+         * Request-Id header
+         */
+        static requestIdHeader: string;
+        /**
+         * Sdk-Context header
+         * If this header passed with appId in content then appId will be returned back by the backend.
+         */
+        static sdkContextHeader: string;
+        /**
+         * String to pass in header for requesting appId back from the backend.
+         */
+        static sdkContextHeaderAppIdRequest: string;
+        static requestContextHeaderLowerCase: string;
+    }
+}
+declare module Microsoft.ApplicationInsights {
+    interface ISerializable {
+        /**
+         * The set of fields for a serializable object.
+         * This defines the serialization order and a value of true/false
+         * for each field defines whether the field is required or not.
+         */
+        aiDataContract: any;
+    }
+}
+declare module Microsoft.Telemetry {
+    /**
+     * The abstract common base of all domains.
+     */
+    class Domain {
+        constructor();
+    }
+}
+declare module AI {
+    /**
+     * Instances of Event represent structured event records that can be grouped and searched by their properties. Event data item also creates a metric of event count by name.
+     */
+    class EventData extends Microsoft.Telemetry.Domain {
+        /**
+         * Schema version
+         */
+        ver: number;
+        /**
+         * Event name. Keep it low cardinality to allow proper grouping and useful metrics.
+         */
+        name: string;
+        /**
+         * Collection of custom properties.
+         */
+        properties: any;
+        /**
+         * Collection of custom measurements.
+         */
+        measurements: any;
+        constructor();
+    }
+}
+declare module AI {
+    /**
+     * An instance of PageView represents a generic action on a page like a button click. It is also the base type for PageView.
+     */
+    class PageViewData extends AI.EventData {
+        /**
+         * Schema version
+         */
+        ver: number;
+        /**
+         * Request URL with all query string parameters
+         */
+        url: string;
+        /**
+         * Event name. Keep it low cardinality to allow proper grouping and useful metrics.
+         */
+        name: string;
+        /**
+         * Request duration in format: DD.HH:MM:SS.MMMMMM. For a page view (PageViewData), this is the duration. For a page view with performance information (PageViewPerfData), this is the page load time. Must be less than 1000 days.
+         */
+        duration: string;
+        /**
+         * Identifier of a page view instance. Used for correlation between page view and other telemetry items.
+         */
+        id: string;
+        /**
+         * Collection of custom properties.
+         */
+        properties: any;
+        /**
+         * Collection of custom measurements.
+         */
+        measurements: any;
+        constructor();
+    }
+}
+declare module AI {
+    /**
+     * An instance of Remote Dependency represents an interaction of the monitored component with a remote component/service like SQL or an HTTP endpoint.
+     */
+    class RemoteDependencyData extends Microsoft.Telemetry.Domain {
+        /**
+         * Schema version
+         */
+        ver: number;
+        /**
+         * Name of the command initiated with this dependency call. Low cardinality value. Examples are stored procedure name and URL path template.
+         */
+        name: string;
+        /**
+         * Identifier of a dependency call instance. Used for correlation with the request telemetry item corresponding to this dependency call.
+         */
+        id: string;
+        /**
+         * Result code of a dependency call. Examples are SQL error code and HTTP status code.
+         */
+        resultCode: string;
+        /**
+         * Request duration in format: DD.HH:MM:SS.MMMMMM. Must be less than 1000 days.
+         */
+        duration: string;
+        /**
+         * Indication of successfull or unsuccessfull call.
+         */
+        success: boolean;
+        /**
+         * Command initiated by this dependency call. Examples are SQL statement and HTTP URL's with all query parameters.
+         */
+        data: string;
+        /**
+         * Target site of a dependency call. Examples are server name, host address.
+         */
+        target: string;
+        /**
+         * Dependency type name. Very low cardinality value for logical grouping of dependencies and interpretation of other fields like commandName and resultCode. Examples are SQL, Azure table, and HTTP.
+         */
+        type: string;
+        /**
+         * Collection of custom properties.
+         */
+        properties: any;
+        /**
+         * Collection of custom measurements.
+         */
+        measurements: any;
+        constructor();
+    }
+}
+declare module Microsoft.ApplicationInsights {
     /**
      * Enum is used in aiDataContract to describe how fields are serialized.
      * For instance: (Fieldtype.Required | FieldType.Array) will mark the field as required and indicate it's an array
@@ -584,6 +793,82 @@ declare module Microsoft.ApplicationInsights {
         private static _serializeObject(source, name);
         private static _serializeArray(sources, name);
         private static _serializeStringMap(map, expectedType, name);
+    }
+}
+declare module Microsoft.ApplicationInsights.Telemetry.Common {
+    class DataSanitizer {
+        /**
+        * Max length allowed for custom names.
+        */
+        private static MAX_NAME_LENGTH;
+        /**
+         * Max length allowed for Id field in page views.
+         */
+        private static MAX_ID_LENGTH;
+        /**
+         * Max length allowed for custom values.
+         */
+        private static MAX_PROPERTY_LENGTH;
+        /**
+         * Max length allowed for names
+         */
+        private static MAX_STRING_LENGTH;
+        /**
+         * Max length allowed for url.
+         */
+        private static MAX_URL_LENGTH;
+        /**
+         * Max length allowed for messages.
+         */
+        private static MAX_MESSAGE_LENGTH;
+        /**
+         * Max length allowed for exceptions.
+         */
+        private static MAX_EXCEPTION_LENGTH;
+        static sanitizeKeyAndAddUniqueness(key: any, map: any): any;
+        static sanitizeKey(name: any): any;
+        static sanitizeString(value: any, maxLength?: number): any;
+        static sanitizeUrl(url: any): any;
+        static sanitizeMessage(message: any): any;
+        static sanitizeException(exception: any): any;
+        static sanitizeProperties(properties: any): any;
+        static sanitizeMeasurements(measurements: any): any;
+        static sanitizeId(id: string): string;
+        static sanitizeInput(input: any, maxLength: number, _msgId: _InternalMessageId): any;
+        static padNumber(num: any): string;
+    }
+}
+declare module Microsoft.ApplicationInsights.Telemetry {
+    class RemoteDependencyData extends AI.RemoteDependencyData implements ISerializable {
+        static envelopeType: string;
+        static dataType: string;
+        aiDataContract: {
+            id: FieldType;
+            ver: FieldType;
+            name: FieldType;
+            resultCode: FieldType;
+            duration: FieldType;
+            success: FieldType;
+            data: FieldType;
+            target: FieldType;
+            type: FieldType;
+            properties: FieldType;
+            measurements: FieldType;
+            kind: FieldType;
+            value: FieldType;
+            count: FieldType;
+            min: FieldType;
+            max: FieldType;
+            stdDev: FieldType;
+            dependencyKind: FieldType;
+            dependencySource: FieldType;
+            commandName: FieldType;
+            dependencyTypeName: FieldType;
+        };
+        /**
+         * Constructs a new instance of the RemoteDependencyData object
+         */
+        constructor(id: string, absoluteUrl: string, commandName: string, value: number, success: boolean, resultCode: number, method?: string, properties?: Object, measurements?: Object);
     }
 }
 declare module Microsoft.Telemetry {
@@ -1221,316 +1506,6 @@ declare module Microsoft.ApplicationInsights.Context {
         clearAuthenticatedUserContext(): void;
         constructor(config: ITelemetryConfig);
         private validateUserInput(id);
-    }
-}
-declare module Microsoft.ApplicationInsights {
-    class extensions {
-        static IsNullOrUndefined(obj: any): boolean;
-    }
-    class stringUtils {
-        static GetLength(strObject: any): number;
-    }
-    class dateTime {
-        static Now: () => number;
-        static GetDuration: (start: number, end: number) => number;
-    }
-    class EventHelper {
-        static AttachEvent(obj: any, eventNameWithoutOn: any, handlerRef: any): boolean;
-        static DetachEvent(obj: any, eventNameWithoutOn: any, handlerRef: any): void;
-    }
-    class AjaxHelper {
-        static ParseDependencyPath(absoluteUrl: string, method: string, pathName: string): {
-            target: any;
-            name: any;
-        };
-    }
-}
-declare module Microsoft.ApplicationInsights {
-    class XHRMonitoringState {
-        openDone: boolean;
-        setRequestHeaderDone: boolean;
-        sendDone: boolean;
-        abortDone: boolean;
-        onreadystatechangeCallbackAttached: boolean;
-    }
-    class ajaxRecord {
-        completed: boolean;
-        requestHeadersSize: any;
-        ttfb: any;
-        responseReceivingDuration: any;
-        callbackDuration: any;
-        ajaxTotalDuration: any;
-        aborted: any;
-        pageUrl: any;
-        requestUrl: any;
-        requestSize: number;
-        method: any;
-        status: any;
-        requestSentTime: any;
-        responseStartedTime: any;
-        responseFinishedTime: any;
-        callbackFinishedTime: any;
-        endTime: any;
-        originalOnreadystatechage: any;
-        xhrMonitoringState: XHRMonitoringState;
-        clientFailure: number;
-        id: string;
-        constructor(id: string);
-        getAbsoluteUrl(): string;
-        getPathName(): any;
-        CalculateMetrics: () => void;
-    }
-}
-declare module Microsoft.ApplicationInsights {
-    class RequestHeaders {
-        /**
-         * Request-Context header
-         */
-        static requestContextHeader: string;
-        /**
-         * Target instrumentation header that is added to the response and retrieved by the
-         * calling application when processing incoming responses.
-         */
-        static requestContextTargetKey: string;
-        /**
-         * Request-Context appId format
-         */
-        static requestContextAppIdFormat: string;
-        /**
-         * Request-Id header
-         */
-        static requestIdHeader: string;
-        /**
-         * Sdk-Context header
-         * If this header passed with appId in content then appId will be returned back by the backend.
-         */
-        static sdkContextHeader: string;
-        /**
-         * String to pass in header for requesting appId back from the backend.
-         */
-        static sdkContextHeaderAppIdRequest: string;
-        static requestContextHeaderLowerCase: string;
-    }
-}
-declare module Microsoft.Telemetry {
-    /**
-     * The abstract common base of all domains.
-     */
-    class Domain {
-        constructor();
-    }
-}
-declare module AI {
-    /**
-     * Instances of Event represent structured event records that can be grouped and searched by their properties. Event data item also creates a metric of event count by name.
-     */
-    class EventData extends Microsoft.Telemetry.Domain {
-        /**
-         * Schema version
-         */
-        ver: number;
-        /**
-         * Event name. Keep it low cardinality to allow proper grouping and useful metrics.
-         */
-        name: string;
-        /**
-         * Collection of custom properties.
-         */
-        properties: any;
-        /**
-         * Collection of custom measurements.
-         */
-        measurements: any;
-        constructor();
-    }
-}
-declare module AI {
-    /**
-     * An instance of PageView represents a generic action on a page like a button click. It is also the base type for PageView.
-     */
-    class PageViewData extends AI.EventData {
-        /**
-         * Schema version
-         */
-        ver: number;
-        /**
-         * Request URL with all query string parameters
-         */
-        url: string;
-        /**
-         * Event name. Keep it low cardinality to allow proper grouping and useful metrics.
-         */
-        name: string;
-        /**
-         * Request duration in format: DD.HH:MM:SS.MMMMMM. For a page view (PageViewData), this is the duration. For a page view with performance information (PageViewPerfData), this is the page load time. Must be less than 1000 days.
-         */
-        duration: string;
-        /**
-         * Identifier of a page view instance. Used for correlation between page view and other telemetry items.
-         */
-        id: string;
-        /**
-         * Collection of custom properties.
-         */
-        properties: any;
-        /**
-         * Collection of custom measurements.
-         */
-        measurements: any;
-        constructor();
-    }
-}
-declare module AI {
-    /**
-     * An instance of Remote Dependency represents an interaction of the monitored component with a remote component/service like SQL or an HTTP endpoint.
-     */
-    class RemoteDependencyData extends Microsoft.Telemetry.Domain {
-        /**
-         * Schema version
-         */
-        ver: number;
-        /**
-         * Name of the command initiated with this dependency call. Low cardinality value. Examples are stored procedure name and URL path template.
-         */
-        name: string;
-        /**
-         * Identifier of a dependency call instance. Used for correlation with the request telemetry item corresponding to this dependency call.
-         */
-        id: string;
-        /**
-         * Result code of a dependency call. Examples are SQL error code and HTTP status code.
-         */
-        resultCode: string;
-        /**
-         * Request duration in format: DD.HH:MM:SS.MMMMMM. Must be less than 1000 days.
-         */
-        duration: string;
-        /**
-         * Indication of successfull or unsuccessfull call.
-         */
-        success: boolean;
-        /**
-         * Command initiated by this dependency call. Examples are SQL statement and HTTP URL's with all query parameters.
-         */
-        data: string;
-        /**
-         * Target site of a dependency call. Examples are server name, host address.
-         */
-        target: string;
-        /**
-         * Dependency type name. Very low cardinality value for logical grouping of dependencies and interpretation of other fields like commandName and resultCode. Examples are SQL, Azure table, and HTTP.
-         */
-        type: string;
-        /**
-         * Collection of custom properties.
-         */
-        properties: any;
-        /**
-         * Collection of custom measurements.
-         */
-        measurements: any;
-        constructor();
-    }
-}
-declare module Microsoft.ApplicationInsights.Telemetry.Common {
-    class DataSanitizer {
-        /**
-        * Max length allowed for custom names.
-        */
-        private static MAX_NAME_LENGTH;
-        /**
-         * Max length allowed for Id field in page views.
-         */
-        private static MAX_ID_LENGTH;
-        /**
-         * Max length allowed for custom values.
-         */
-        private static MAX_PROPERTY_LENGTH;
-        /**
-         * Max length allowed for names
-         */
-        private static MAX_STRING_LENGTH;
-        /**
-         * Max length allowed for url.
-         */
-        private static MAX_URL_LENGTH;
-        /**
-         * Max length allowed for messages.
-         */
-        private static MAX_MESSAGE_LENGTH;
-        /**
-         * Max length allowed for exceptions.
-         */
-        private static MAX_EXCEPTION_LENGTH;
-        static sanitizeKeyAndAddUniqueness(key: any, map: any): any;
-        static sanitizeKey(name: any): any;
-        static sanitizeString(value: any, maxLength?: number): any;
-        static sanitizeUrl(url: any): any;
-        static sanitizeMessage(message: any): any;
-        static sanitizeException(exception: any): any;
-        static sanitizeProperties(properties: any): any;
-        static sanitizeMeasurements(measurements: any): any;
-        static sanitizeId(id: string): string;
-        static sanitizeInput(input: any, maxLength: number, _msgId: _InternalMessageId): any;
-        static padNumber(num: any): string;
-    }
-}
-declare module Microsoft.ApplicationInsights.Telemetry {
-    class RemoteDependencyData extends AI.RemoteDependencyData implements ISerializable {
-        static envelopeType: string;
-        static dataType: string;
-        aiDataContract: {
-            id: FieldType;
-            ver: FieldType;
-            name: FieldType;
-            resultCode: FieldType;
-            duration: FieldType;
-            success: FieldType;
-            data: FieldType;
-            target: FieldType;
-            type: FieldType;
-            properties: FieldType;
-            measurements: FieldType;
-            kind: FieldType;
-            value: FieldType;
-            count: FieldType;
-            min: FieldType;
-            max: FieldType;
-            stdDev: FieldType;
-            dependencyKind: FieldType;
-            dependencySource: FieldType;
-            commandName: FieldType;
-            dependencyTypeName: FieldType;
-        };
-        /**
-         * Constructs a new instance of the RemoteDependencyData object
-         */
-        constructor(id: string, absoluteUrl: string, commandName: string, value: number, success: boolean, resultCode: number, method?: string, properties?: Object, measurements?: Object);
-    }
-}
-declare module Microsoft.ApplicationInsights {
-    interface XMLHttpRequestInstrumented extends XMLHttpRequest {
-        ajaxData: ajaxRecord;
-    }
-    class AjaxMonitor {
-        private appInsights;
-        private initialized;
-        private static instrumentedByAppInsightsName;
-        private currentWindowHost;
-        constructor(appInsights: Microsoft.ApplicationInsights.AppInsights);
-        private Init();
-        static DisabledPropertyName: string;
-        private isMonitoredInstance(xhr, excludeAjaxDataValidation?);
-        private supportsMonitoring();
-        private instrumentOpen();
-        private openHandler(xhr, method, url, async);
-        private static getFailedAjaxDiagnosticsMessage(xhr);
-        private instrumentSend();
-        private sendHandler(xhr, content);
-        private instrumentAbort();
-        private attachToOnReadyStateChange(xhr);
-        private onAjaxComplete(xhr);
-        private getCorrelationContext(xhr);
     }
 }
 declare module Microsoft.ApplicationInsights {
@@ -2813,6 +2788,40 @@ declare module Microsoft.ApplicationInsights {
         _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): void;
     }
 }
+declare module Microsoft.ApplicationInsights {
+    interface XMLHttpRequestInstrumented extends XMLHttpRequest {
+        ajaxData: ajaxRecord;
+    }
+    class AjaxMonitor {
+        private appInsights;
+        private initialized;
+        private static instrumentedByAppInsightsName;
+        private currentWindowHost;
+        constructor(appInsights: Microsoft.ApplicationInsights.AppInsights);
+        private Init();
+        static DisabledPropertyName: string;
+        private isMonitoredInstance(xhr, excludeAjaxDataValidation?);
+        private supportsMonitoring();
+        private instrumentOpen();
+        private openHandler(xhr, method, url, async);
+        private static getFailedAjaxDiagnosticsMessage(xhr);
+        private instrumentSend();
+        private sendHandler(xhr, content);
+        private instrumentAbort();
+        private attachToOnReadyStateChange(xhr);
+        private onAjaxComplete(xhr);
+        private getCorrelationContext(xhr);
+    }
+}
+declare class FetchTests extends TestClass {
+    private appInsightsMock;
+    private trackDependencySpy;
+    testInitialize(): void;
+    testCleanup(): void;
+    registerTests(): void;
+    private testFetchSuccess(responseCode, success);
+    static createFetchStub(responseCode: number, body?: string, timeout?: number): (input?: Request | string, init?: RequestInit) => Promise<Response>;
+}
 declare class AppInsightsTests extends TestClass {
     private getAppInsightsSnippet();
     testInitialize(): void;
@@ -3061,15 +3070,6 @@ declare class AjaxTests extends TestClass {
     testCleanup(): void;
     registerTests(): void;
     private testAjaxSuccess(responseCode, success);
-}
-declare class FetchTests extends TestClass {
-    private appInsightsMock;
-    private trackDependencySpy;
-    testInitialize(): void;
-    testCleanup(): void;
-    registerTests(): void;
-    private testFetchSuccess(responseCode, success);
-    static createFetchStub(responseCode: number, body?: string, timeout?: number): (input?: Request | string, init?: RequestInit) => Promise<Response>;
 }
 declare class SplitTestTests extends TestClass {
     registerTests(): void;
