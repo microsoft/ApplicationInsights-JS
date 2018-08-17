@@ -1,4 +1,5 @@
-﻿/// <reference path="../TestFramework/Common.ts" />
+﻿/// <reference path="./fetch.tests.ts"/>
+/// <reference path="../TestFramework/Common.ts" />
 /// <reference path="../../JavaScriptSDK/AppInsights.ts" />
 /// <reference path="../../JavaScriptSDK/Util.ts"/>
 
