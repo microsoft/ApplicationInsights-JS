@@ -1,5 +1,5 @@
 ﻿import {
-    PageViewData, PageViewPerformance,
+    PageViewPerformance,
     _InternalLogging, LoggingSeverity,
     _InternalMessageId, Util, IChannelControlsAI
 } from 'applicationinsights-common';
@@ -13,7 +13,6 @@ export interface IAppInsightsInternal {
     sendPageViewInternal(pageViewItem: IPageViewTelemetryInternal, properties?: Object);
     sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance);
 }
-
 
 /**
 * Class encapsulates sending page views and page view performance telemetry.

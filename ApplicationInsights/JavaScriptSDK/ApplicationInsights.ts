@@ -1,11 +1,8 @@
 /// <reference types="applicationinsights-common" />
 
 import {
-    Event, IConfig,
-    _InternalLogging, LoggingSeverity,
-    _InternalMessageId, Util,
-    Data, Envelope,
-    Trace, PageViewPerformance, PageView, DataSanitizer
+    IConfig, _InternalLogging, LoggingSeverity,
+    _InternalMessageId, Util, PageViewPerformance, PageView
 } from "applicationinsights-common";
 
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
@@ -21,7 +18,7 @@ import { TelemetryItemCreator } from "./TelemetryItemCreator";
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
 
-    public static defaultIdentifier = "ApplicationInsightsAnalytics";    
+    public static defaultIdentifier = "ApplicationInsightsAnalytics";
     public identifier: string;
     priority: number;
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
@@ -47,7 +44,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
     constructor() {
         this.identifier = ApplicationInsights.defaultIdentifier;
-        this.initialize = this._initialize.bind(this);        
+        this.initialize = this._initialize.bind(this);
     }
 
     public processTelemetry(env: ITelemetryItem) {
@@ -89,16 +86,13 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     }
 
     public sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance) {
-        // TODO: Commenting out for now as we this package only supports pageViewTelemetry. Added task 
-        // https://mseng.visualstudio.com/AppInsights/_workitems/edit/1310811
-        /*
-        var pageViewPerformanceData = new Data<PageViewPerformance>(
-            PageViewPerformance.dataType, pageViewPerformance);
-        var pageViewPerformanceEnvelope = new Envelope(pageViewPerformanceData, PageViewPerformance.envelopeType);
-        this.context.track(pageViewPerformanceEnvelope);
-        */
-    }
+        let telemetryItem = TelemetryItemCreator.createItem(pageViewPerformance, 
+            PageViewPerformance.dataType, 
+            PageViewPerformance.envelopeType);
 
+        this.context.track(telemetryItem);
+    }
+    
     private _initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
         if (CoreUtils.isNullOrUndefined(core)) {
             throw Error("Error initializing");
