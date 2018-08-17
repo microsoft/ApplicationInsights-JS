@@ -11,7 +11,7 @@ import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../../Javascript
 */
 export interface IAppInsightsInternal {
     sendPageViewInternal(pageViewItem: IPageViewTelemetryInternal, properties?: Object);
-    sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance);
+    sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance, properties?: Object);
 }
 
 /**
@@ -107,9 +107,7 @@ export class PageViewManager {
             try {
                 if (PageViewPerformance.isPerformanceTimingDataReady()) {
                     clearInterval(handle);
-                    // TODO: For now, sent undefined for measurements in the below code this package only supports pageViewTelemetry. Added task 
-                    // https://mseng.visualstudio.com/AppInsights/_workitems/edit/1310811
-                    var pageViewPerformance = new PageViewPerformance(name, uri, null, customProperties, undefined);
+                    var pageViewPerformance = new PageViewPerformance(name, uri, null);
 
                     if (!pageViewPerformance.getIsValid() && !pageViewSent) {
                         // If navigation timing gives invalid numbers, then go back to "override page view duration" mode.
@@ -128,7 +126,7 @@ export class PageViewManager {
                         }
 
                         if (!this.pageViewPerformanceSent) {
-                            this.appInsights.sendPageViewPerformanceInternal(pageViewPerformance);
+                            this.appInsights.sendPageViewPerformanceInternal(pageViewPerformance, customProperties);
                             this.pageViewPerformanceSent = true;
                         }
                         this._channel.flush();

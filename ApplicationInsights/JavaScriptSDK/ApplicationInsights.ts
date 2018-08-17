@@ -85,14 +85,15 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this._trackAjaxAttempts = 0;
     }
 
-    public sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance) {
-        let telemetryItem = TelemetryItemCreator.createItem(pageViewPerformance, 
-            PageViewPerformance.dataType, 
-            PageViewPerformance.envelopeType);
+    public sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance, properties?: { [key: string]: any }) {
+        let telemetryItem = TelemetryItemCreator.createItem(pageViewPerformance,
+            PageViewPerformance.dataType,
+            PageViewPerformance.envelopeType,
+            properties);
 
         this.context.track(telemetryItem);
     }
-    
+
     private _initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
         if (CoreUtils.isNullOrUndefined(core)) {
             throw Error("Error initializing");
