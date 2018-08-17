@@ -139,6 +139,11 @@ module.exports = function (grunt) {
                 files: {
                     'bundle/snippet/snippet.min.js': ['JavaScript/JavaScriptSDK/snippet.js']
                 }
+            },
+            snippetvNext: {
+                files: {
+                    'AISKU/dist/snippet.min.js': ['AISKU/snippet/snippet.js']
+                }
             }
         },
         qunit: {
@@ -189,5 +194,6 @@ module.exports = function (grunt) {
     grunt.registerTask("aitests", ["ts:appinsights", "ts:appinsightstests", "qunit:aitests"]);
     grunt.registerTask("aicjs", ["ts:appinsightscjs"]);
     grunt.registerTask("aisku", ["ts:aisku"]);
+    grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
 };
