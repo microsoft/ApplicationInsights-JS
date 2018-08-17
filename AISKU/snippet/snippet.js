@@ -10,7 +10,7 @@
     var track = "Track";
     setTimeout(function () {
         var scriptElement = localDocument.createElement(scriptText);
-        scriptElement.src = aiConfig.url || "https://jssdkvnext.blob.core.windows.net/scripts/aisdk.js";
+        scriptElement.src = aiConfig.url || "https://jssdkvnext.azureedge.net/scripts/aisdk.min.0.0.9.js";
         localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
     });
 
