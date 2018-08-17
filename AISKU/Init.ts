@@ -19,7 +19,7 @@ try {
         // get snippet or initialize to an empty object
 
         // appinsightsvnext should not conflict if page uses existing sdk for a layer of instrumentation
-        var aiName = "appinsightsvnext";
+        var aiName = "appInsightsvNext";
 
         if (window[aiName] === undefined) {
             // if no snippet is present, initialize default values
