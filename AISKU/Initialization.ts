@@ -48,8 +48,6 @@ export class Initialization {
         let extensions = [];
         let appInsightsChannel : Sender = new Sender();
 
-
-
         extensions.push(appInsightsChannel);
         extensions.push(this.appInsights);
 

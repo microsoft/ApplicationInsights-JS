@@ -1,4 +1,6 @@
 ﻿/// <reference path="./Logging.ts" />
+/// <reference path="./UtilHelpers.ts" />
+
 module Microsoft.ApplicationInsights {
 
     /**
@@ -74,7 +76,7 @@ module Microsoft.ApplicationInsights {
          *  @param endpointUrl Endpoint URL to check.
          *  @returns {boolean} True if if endpoint URL is application insights internal injestion service URL.
          */
-        public static isInternalApplicationInsightsEndpoint(endpointUrl: string): boolean {           
+        public static isInternalApplicationInsightsEndpoint(endpointUrl: string): boolean {
             return Util._internalEndpoints.indexOf(endpointUrl.toLowerCase()) !== -1;
         }
 
@@ -387,17 +389,7 @@ module Microsoft.ApplicationInsights {
          * generate random id string
          */
         public static newId(): string {
-            var base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-            var result = "";
-            var random = Math.random() * 1073741824; //5 symbols in base64, almost maxint
-
-            while (random > 0) {
-                var char = base64chars.charAt(random % 64);
-                result += char;
-                random = Math.floor(random / 64);
-            }
-            return result;
+            return UtilHelpers.newId();
         }
 
         /**
