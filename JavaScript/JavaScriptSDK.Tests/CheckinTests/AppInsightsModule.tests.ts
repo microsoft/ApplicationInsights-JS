@@ -1,6 +1,6 @@
 ﻿/// <reference path="../TestFramework/Common.ts" />
 
-import {AppInsights} from "../../JavaScriptSDK.Module/AppInsightsModule"
+import {AppInsights, Util} from "../../JavaScriptSDK.Module/AppInsightsModule"
 
 export default class AppInsightsModuleTests extends TestClass {
 
@@ -95,6 +95,20 @@ export default class AppInsightsModuleTests extends TestClass {
                 Assert.equal(3, AppInsights.queue.length);
                 AppInsights.downloadAndSetup({ instrumentationKey: "test", url: AppInsightsModuleTests.getUncachedScriptUrl() });
                 Assert.equal(3, AppInsights.queue.length);
+            }
+        });
+
+        this.testCase({
+            name: "UtilHelpers: exposed Util.newId() generates unique GUIDs",
+            test: () => {
+                var results = [];
+                for (var i = 0; i < 100; i++) {
+                    var newId = Util.newId();
+                    for (var j = 0; j < results.length; j++) {
+                        Assert.notEqual(newId, results[j]);
+                    }
+                    results.push(newId);
+                }
             }
         });
     }

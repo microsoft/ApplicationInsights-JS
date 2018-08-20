@@ -1,5 +1,6 @@
 /// <reference path="../JavaScriptSDK.Interfaces/IConfig.ts"/>
 /// <reference path="../JavaScriptSDK.Interfaces/IAppInsights.ts"/>
+/// <reference path="../JavaScriptSDK/UtilHelpers.ts"/>
 
 "use strict";
 
@@ -33,7 +34,7 @@ class AppInsightsModule {
         try {
             (<any>aiObject).cookie = document.cookie;
         }
-        catch(e){
+        catch (e) {
         }
 
         aiObject.queue = [];
@@ -110,3 +111,4 @@ class AppInsightsModule {
 }
 
 export var AppInsights: Microsoft.ApplicationInsights.IAppInsights = AppInsightsModule.appInsightsInstance;
+export var Util: typeof Microsoft.ApplicationInsights.UtilHelpers;

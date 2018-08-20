@@ -1,4 +1,5 @@
 /// <reference path="../../JavaScriptSDK/AppInsights.ts" />
+/// <reference path="../../JavaScriptSDK/UtilHelpers.ts" />
 
 // This file was copied from https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/master/types/applicationinsights-js/applicationinsights-js-tests.ts
 // and is used to validate ApplicationInsights-JS definition types. 
@@ -96,6 +97,11 @@ appInsights.setAuthenticatedUserContext("userId", "accountId");
 
 // set config dynamically
 appInsights.config.instrumentationKey = "<new key>";
+
+// UtilHelpers
+var Util: typeof Microsoft.ApplicationInsights.UtilHelpers;
+
+Util.newId();
 
 // TelementryContext
 const context: Microsoft.ApplicationInsights.ITelemetryContext = appInsights.context;
