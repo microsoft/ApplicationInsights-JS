@@ -70,16 +70,22 @@ module Microsoft.ApplicationInsights {
                             });
                     }
                 }
-                return originalFetch(input, init)
-                    .then(response => {
+
+                let promise = originalFetch(input, init);
+                if (promise !== null && promise !== undefined) {
+                promise.then(response => {
                         fetchMonitorInstance.onFetchComplete(response, ajaxData);
                         return response;
-                    })
-                    .catch(reason => {
+                    },
+                    reason => {
                         fetchMonitorInstance.onFetchFailed(input, ajaxData, reason);
                         throw reason;
                     });
+                }
+
+                return promise;
             };
+            
             window.fetch[FetchMonitor.instrumentedByAppInsightsName] = true;
         }
 
