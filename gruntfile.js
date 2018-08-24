@@ -45,9 +45,10 @@ module.exports = function (grunt) {
                 ]
             },
             appinsightstests: {
-                tsconfig: './tsconfig.json',
+                tsconfig: './ApplicationInsights/Tests/tsconfig.json',
                 src: [
-                    './ApplicationInsights/Tests/Selenium/*.ts'
+                    './ApplicationInsights/Tests/Selenium/*.ts',
+                    './ApplicationInsights/Tests/*.ts'
                 ],
                 out: 'ApplicationInsights/Tests/Selenium/appinsights-analytics.tests.js'
             },

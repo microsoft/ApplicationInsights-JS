@@ -7,8 +7,6 @@ import { ApplicationInsights } from "../JavaScriptSDK/ApplicationInsights";
 export class ApplicationInsightsTests extends TestClass {
     private getAppInsightsSnippet() {
         var snippet: IConfig = {
-            instrumentationKey: "",
-            endpointUrl: "https://dc.services.visualstudio.com/v2/track",
             emitLineDelimitedJson: false,
             accountId: undefined,
             sessionRenewalMs: 10,
@@ -63,11 +61,16 @@ export class ApplicationInsightsTests extends TestClass {
         this.testCase({
             name: "AppInsightsTests: public members are correct",
             test: () => {
-                var appInsights = new ApplicationInsights(this.getAppInsightsSnippet());
+                // setup
+                var appInsights = new ApplicationInsights();
+                // the assert test will only see config as part of an object member if it has been initialized. Not sure how it worked before
+                appInsights.config = {};
                 var leTest = (name) => {
+                    // assert
                     Assert.ok(name in appInsights, name + " exists");
                 }
 
+                // act
                 var members = ["config"];
                 while (members.length) {
                     leTest(members.pop());
