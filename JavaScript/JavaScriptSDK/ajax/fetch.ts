@@ -81,11 +81,11 @@ module Microsoft.ApplicationInsights {
                         fetchMonitorInstance.onFetchFailed(input, ajaxData, reason);
                         throw reason;
                     });
-
                 }
 
                 return promise;
             };
+            
             window.fetch[FetchMonitor.instrumentedByAppInsightsName] = true;
         }
 
