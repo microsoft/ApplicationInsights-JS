@@ -1,4 +1,5 @@
-﻿import { RequestHeaders, Util, LoggingSeverity, _InternalMessageId, _InternalLogging, CorrelationIdHelper } from 'applicationinsights-common';
+﻿import { RequestHeaders, Util, CorrelationIdHelper } from 'applicationinsights-common';
+import { LoggingSeverity, _InternalMessageId, _InternalLogging } from 'applicationinsights-core-js';
 import { ajaxRecord } from './ajaxRecord';
 import { extensions, dateTime, EventHelper } from './ajaxUtils';
 import { RemoteDependencyData } from 'applicationinsights-common';

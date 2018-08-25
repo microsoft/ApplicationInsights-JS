@@ -1,15 +1,16 @@
 /// <reference types="applicationinsights-common" />
 
 import {
-    Event, IConfig,
-    _InternalLogging, LoggingSeverity,
-    _InternalMessageId, Util,
+    Event, IConfig, Util,
     Data, Envelope,
     Trace, PageViewPerformance, PageView, DataSanitizer
 } from "applicationinsights-common";
 
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
-import { IPlugin, IConfiguration, IAppInsightsCore, ITelemetryPlugin, CoreUtils, ITelemetryItem } from "applicationinsights-core-js";
+import {
+    IPlugin, IConfiguration, IAppInsightsCore,
+    ITelemetryPlugin, CoreUtils, ITelemetryItem, _InternalLogging, LoggingSeverity, _InternalMessageId
+} from "applicationinsights-core-js";
 import { TelemetryContext } from "./TelemetryContext";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { IAppInsights } from "../JavascriptSDK.Interfaces/IAppInsights";

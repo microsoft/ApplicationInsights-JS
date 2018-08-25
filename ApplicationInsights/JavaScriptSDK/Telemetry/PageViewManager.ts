@@ -1,9 +1,9 @@
 ﻿import {
     PageViewData, PageViewPerformance,
-    _InternalLogging, LoggingSeverity,
-    _InternalMessageId, Util, IChannelControlsAI
+    Util, IChannelControlsAI
 } from 'applicationinsights-common';
-import { IAppInsightsCore, CoreUtils } from 'applicationinsights-core-js';
+import { IAppInsightsCore, CoreUtils, _InternalLogging, LoggingSeverity,
+    _InternalMessageId } from 'applicationinsights-core-js';
 import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../../JavascriptSDK.Interfaces/IPageViewTelemetry";
 
 /**

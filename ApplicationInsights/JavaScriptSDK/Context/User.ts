@@ -1,6 +1,7 @@
 ﻿import { IUser } from '../../JavaScriptSDK.Interfaces/Context/IUser';
 import { ITelemetryConfig } from '../../JavaScriptSDK.Interfaces/ITelemetryConfig';
-import { _InternalLogging, _InternalMessageId, LoggingSeverity, Util } from 'applicationinsights-common';
+import { Util } from 'applicationinsights-common';
+import {_InternalLogging, _InternalMessageId, LoggingSeverity } from 'applicationinsights-core-js';
 
 export class User implements IUser {
 

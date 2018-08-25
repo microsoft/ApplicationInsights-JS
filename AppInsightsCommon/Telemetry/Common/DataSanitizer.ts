@@ -1,6 +1,5 @@
-﻿import { _InternalLogging } from '../../Logging';
+﻿import { _InternalLogging, LoggingSeverity, _InternalMessageId } from 'applicationinsights-core-js';
 import { Util } from '../../Util';
-import { LoggingSeverity, _InternalMessageId } from '../../Enums';
 
 export class DataSanitizer {
 

@@ -1,7 +1,6 @@
 ﻿import {
     Metric, IEnvelope, ContextTagKeys,
-    RemoteDependencyData, _InternalLogging,
-    _InternalMessageId, LoggingSeverity, Util,
+    RemoteDependencyData, Util,
     Data, PageView
 } from "applicationinsights-common";
 import { ITelemetryContext } from '../JavaScriptSDK.Interfaces/ITelemetryContext';
@@ -13,7 +12,8 @@ import { Operation } from './Context/Operation';
 import { Sample } from './Context/Sample';
 import { User } from './Context/User';
 import { Session, _SessionManager } from './Context/Session';
-import { IAppInsightsCore, ITelemetryItem, CoreUtils } from "applicationinsights-core-js";
+import { IAppInsightsCore, ITelemetryItem, CoreUtils, _InternalLogging,
+    _InternalMessageId, LoggingSeverity } from "applicationinsights-core-js";
 import { TelemetryItemCreator } from "./TelemetryItemCreator";
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 
