@@ -5,7 +5,6 @@
 /// <reference path="./Telemetry/PageVisitTimeManager.ts"/>
 /// <reference path="./Telemetry/RemoteDependencyData.ts"/>
 /// <reference path="./ajax/ajax.ts"/>
-/// <reference path="./ajax/fetch.ts"/>
 /// <reference path="./SplitTest.ts"/>
 /// <reference path="../JavaScriptSDK.Interfaces/IAppInsights.ts"/>
 
@@ -13,7 +12,7 @@ module Microsoft.ApplicationInsights {
 
     "use strict";
 
-    export var Version = "1.0.19";
+    export var Version = "1.0.20";
 
     /**
     * Internal interface to pass appInsights object to subcomponents without coupling 
@@ -41,7 +40,6 @@ module Microsoft.ApplicationInsights {
         private _pageViewManager: Microsoft.ApplicationInsights.Telemetry.PageViewManager;
         private _pageVisitTimeManager: Microsoft.ApplicationInsights.Telemetry.PageVisitTimeManager;
         private _ajaxMonitor: Microsoft.ApplicationInsights.AjaxMonitor;
-        private _fetchMonitor: Microsoft.ApplicationInsights.FetchMonitor;
 
         public config: IConfig;
         public context: TelemetryContext;
@@ -133,10 +131,6 @@ module Microsoft.ApplicationInsights {
 
             if (!this.config.disableAjaxTracking) {
                 this._ajaxMonitor = new Microsoft.ApplicationInsights.AjaxMonitor(this);
-            }
-
-            if (!this.config.disableFetchTracking) {
-                this._fetchMonitor = new Microsoft.ApplicationInsights.FetchMonitor(this);
             }
         }
 

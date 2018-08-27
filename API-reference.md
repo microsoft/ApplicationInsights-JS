@@ -280,10 +280,6 @@ interface IConfig {
     // If true, ajax calls are not monitored.
     disableAjaxTracking: boolean;
 
-    // If true, fetch API calls are not monitored.
-    // Default true
-    disableFetchTracking: boolean;
-
     // If true, default behavior of trackPageView is changed to record end of page view duration interval when 
     // trackPageView is called. If false and no custom duration is provided to trackPageView, the page view
     // performance is calculated using the navigation timing API.
