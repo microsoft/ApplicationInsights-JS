@@ -26,7 +26,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     priority: number;
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
 
-    public static Version = "0.0.1";
     private _globalconfig: IConfiguration;
     private _nextPlugin: ITelemetryPlugin;
 

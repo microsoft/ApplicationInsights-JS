@@ -1,4 +1,4 @@
-export { Util, CorrelationIdHelper, UrlHelper } from './Util';
+export { Util, CorrelationIdHelper, UrlHelper, dateTime } from './Util';
 export { _InternalMessageId, LoggingSeverity, FieldType } from './Enums';
 export { _InternalLogging, _InternalLogMessage } from './Logging';
 export { RequestHeaders } from './RequestResponseHeaders';

@@ -540,6 +540,14 @@ export class Util {
     public static IsBeaconApiSupported(): boolean {
         return ('sendBeacon' in navigator && (<any>navigator).sendBeacon);
     }
+
+    /**
+     * Checks if the object passed is set to null or 'undefined'
+     * @param obj object to be examined
+     */
+    public static IsNullOrUndefined(obj) {
+        return typeof (obj) === "undefined" || obj === null;
+    }
 }
 
 export class UrlHelper {
@@ -673,5 +681,34 @@ export class AjaxHelper {
             target: target,
             name: name
         };
+    }
+}
+
+/**
+ * A utility class that helps getting time related parameters
+ */
+export class dateTime {
+    /**
+     * Get the number of milliseconds since 1970/01/01 in local timezone
+     */
+    public static Now = (window.performance && window.performance.now && window.performance.timing) ?
+        function () {
+            return window.performance.now() + window.performance.timing.navigationStart;
+        }
+        :
+        function () {
+            return new Date().getTime();
+        }
+
+        /**
+         * Gets duration between two timestamps
+         */
+    public static GetDuration = function (start: number, end: number): number {
+        var result = null;
+        if (start !== 0 && end !== 0 && !Util.IsNullOrUndefined(start) && !Util.IsNullOrUndefined(end)) {
+            result = end - start;
+        }
+
+        return result;
     }
 }

@@ -1,7 +1,7 @@
 ﻿import { RequestHeaders, Util, LoggingSeverity, _InternalMessageId, _InternalLogging, CorrelationIdHelper } from 'applicationinsights-common';
 import { ajaxRecord } from './ajaxRecord';
-import { extensions, dateTime, EventHelper } from './ajaxUtils';
-import { RemoteDependencyData } from 'applicationinsights-common';
+import { extensions, EventHelper } from './ajaxUtils';
+import { RemoteDependencyData, Util, dateTime } from 'applicationinsights-common';
 import { ApplicationInsights } from '../../ApplicationInsights';
 export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;
@@ -48,7 +48,7 @@ export class AjaxMonitor {
         return this.initialized
 
             // checking on ajaxData to see that it was not removed in user code
-            && (excludeAjaxDataValidation === true || !extensions.IsNullOrUndefined(xhr.ajaxData))
+            && (excludeAjaxDataValidation === true || !Util.IsNullOrUndefined(xhr.ajaxData))
 
             // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
             && xhr[AjaxMonitor.DisabledPropertyName] !== true;
@@ -59,11 +59,11 @@ export class AjaxMonitor {
     ///<returns>True if Ajax monitoring is supported on this page, otherwise false</returns>
     private supportsMonitoring(): boolean {
         var result = true;
-        if (extensions.IsNullOrUndefined(XMLHttpRequest) ||
-            extensions.IsNullOrUndefined(XMLHttpRequest.prototype) ||
-            extensions.IsNullOrUndefined(XMLHttpRequest.prototype.open) ||
-            extensions.IsNullOrUndefined(XMLHttpRequest.prototype.send) ||
-            extensions.IsNullOrUndefined(XMLHttpRequest.prototype.abort)) {
+        if (Util.IsNullOrUndefined(XMLHttpRequest) ||
+            Util.IsNullOrUndefined(XMLHttpRequest.prototype) ||
+            Util.IsNullOrUndefined(XMLHttpRequest.prototype.open) ||
+            Util.IsNullOrUndefined(XMLHttpRequest.prototype.send) ||
+            Util.IsNullOrUndefined(XMLHttpRequest.prototype.abort)) {
             result = false;
         }
 
@@ -120,9 +120,9 @@ export class AjaxMonitor {
     private static getFailedAjaxDiagnosticsMessage(xhr: XMLHttpRequestInstrumented): string {
         var result = "";
         try {
-            if (!extensions.IsNullOrUndefined(xhr) &&
-                !extensions.IsNullOrUndefined(xhr.ajaxData) &&
-                !extensions.IsNullOrUndefined(xhr.ajaxData.requestUrl)) {
+            if (!Util.IsNullOrUndefined(xhr) &&
+                !Util.IsNullOrUndefined(xhr.ajaxData) &&
+                !Util.IsNullOrUndefined(xhr.ajaxData.requestUrl)) {
                 result += "(url: '" + xhr.ajaxData.requestUrl + "')";
             }
         } catch (e) { }

@@ -1,5 +1,4 @@
-﻿import { DataSanitizer, UrlHelper } from 'applicationinsights-common';
-import { dateTime } from './ajaxUtils';
+﻿import { DataSanitizer, UrlHelper, dateTime } from 'applicationinsights-common';
 
 export class XHRMonitoringState {
     public openDone: boolean = false;

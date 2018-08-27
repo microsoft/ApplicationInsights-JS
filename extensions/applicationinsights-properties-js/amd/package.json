@@ -12,6 +12,7 @@
         "grunt-ts": "^6.0.0-beta.15"
     },
     "dependencies": {
+        "applicationinsights-common": "0.0.65",
         "applicationinsights-core-js": "0.0.59"
     },
     "publishConfig": {
