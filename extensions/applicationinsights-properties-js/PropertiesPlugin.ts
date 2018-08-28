@@ -1,6 +1,6 @@
 /**
  * PropertiesPlugin.ts
- * @author Basel Rustum (barustum)
+ * @author Basel Rustum, Piyali Jana and Mark Wolff
  * @copyright Microsoft 2018
  */
 
@@ -22,7 +22,7 @@ import { ITelemetryContext } from './Interfaces/ITelemetryContext';
 export const Version = "0.0.1";
 
 export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryContext {
-    public priority = 10;
+    public priority;
     public identifier = "AppInsightsPropertiesPlugin";
     public application: Application; // The object describing a component tracked by this object.
     public device: Device; // The object describing a device tracked by this object.
