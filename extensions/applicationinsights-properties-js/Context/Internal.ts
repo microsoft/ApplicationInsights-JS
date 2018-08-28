@@ -19,6 +19,6 @@ export class Internal implements IInternal {
     * Constructs a new instance of the internal telemetry data class.
     */
     constructor(config: ITelemetryConfig) {
-        this.sdkVersion = (config.sdkExtension() ? config.sdkExtension() + "_" : "") + "javascript:" + Version;
+        this.sdkVersion = (config.sdkExtension && config.sdkExtension() ? config.sdkExtension() + "_" : "") + "javascript:" + Version;
     }
 }
