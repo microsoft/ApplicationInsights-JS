@@ -9,7 +9,7 @@
     "alwaysStrict": true,
     "declaration": true,
     "outDir": "amd/bundle",
-    "rootDir": "./"
+    "rootDir": "extensions/applicationinsights-properties-js"
   },
   "files": []
 }

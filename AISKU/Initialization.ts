@@ -7,7 +7,7 @@ import { IConfiguration, AppInsightsCore, IAppInsightsCore } from "applicationin
 import { ApplicationInsights } from "applicationinsights-analytics-js";
 import { Util, _InternalLogging, LoggingSeverity, _InternalMessageId, IConfig } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
-
+import { PropertiesPlugin } from "applicationinsights-properties-js";
 
 "use strict";
 
@@ -21,6 +21,7 @@ export class Initialization {
     public config: IConfiguration;
     private core: IAppInsightsCore;
     private appInsights: ApplicationInsights;
+    private properties: PropertiesPlugin;
 
     constructor(snippet: Snippet) {
 
@@ -38,6 +39,8 @@ export class Initialization {
         // set default values using config passed through snippet
         config = Initialization.getDefaultConfig(config, this.appInsights.identifier);
 
+        this.properties = new PropertiesPlugin();
+
         this.snippet = snippet;
         this.config = config;
     }
@@ -46,14 +49,15 @@ export class Initialization {
 
         this.core = new AppInsightsCore();
         let extensions = [];
-        let appInsightsChannel : Sender = new Sender();
+        let appInsightsChannel: Sender = new Sender();
 
         extensions.push(appInsightsChannel);
+        extensions.push(this.properties);
         extensions.push(this.appInsights);
 
         // initialize core
         this.core.initialize(this.config, extensions);
-        
+
         // initialize extensions
         this.appInsights.initialize(this.config, this.core, extensions);
         appInsightsChannel.initialize(this.config);
@@ -112,7 +116,7 @@ export class Initialization {
                 // Telemetry here will help us analyze how effective this approach is.
                 // Another approach would be to make this call sync with a acceptable timeout to reduce the 
                 // impact on user experience.
-                
+
                 //appInsightsInstance.context._sender.triggerSend();
 
                 this.core.getTransmissionControl().flush(true);
@@ -145,7 +149,7 @@ export class Initialization {
         configuration.endpointUrl = configuration.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
         config.sessionRenewalMs = 30 * 60 * 1000;
         config.sessionExpirationMs = 24 * 60 * 60 * 1000;
-        
+
         config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
         config.disableExceptionTracking = Util.stringToBoolOrDefault(config.disableExceptionTracking);
         config.verboseLogging = Util.stringToBoolOrDefault(config.verboseLogging);
@@ -158,10 +162,10 @@ export class Initialization {
 
         config.disableAjaxTracking = Util.stringToBoolOrDefault(config.disableAjaxTracking)
         config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
-        
+
         config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders);
         config.correlationHeaderExcludedDomains = config.correlationHeaderExcludedDomains || [
-            "*.blob.core.windows.net", 
+            "*.blob.core.windows.net",
             "*.blob.core.chinacloudapi.cn",
             "*.blob.core.cloudapi.de",
             "*.blob.core.usgovcloudapi.net"];

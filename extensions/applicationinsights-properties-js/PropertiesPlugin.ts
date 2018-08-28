@@ -19,8 +19,6 @@ import { User } from './Context/User';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 import { ITelemetryContext } from './Interfaces/ITelemetryContext';
 
-export const Version = "0.0.1";
-
 export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryContext {
     public priority;
     public identifier = "AppInsightsPropertiesPlugin";
