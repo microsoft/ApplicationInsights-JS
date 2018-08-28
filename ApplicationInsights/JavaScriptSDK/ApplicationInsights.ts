@@ -1,11 +1,9 @@
 /// <reference types="applicationinsights-common" />
 
 import {
-    Event, IConfig,
-    _InternalLogging, LoggingSeverity,
-    _InternalMessageId, Util,
-    Data, Envelope,
-    Trace, PageViewPerformance, PageView, DataSanitizer
+    IConfig, _InternalLogging, LoggingSeverity,
+    _InternalMessageId, Util, PageViewPerformance, 
+    PageView
 } from "applicationinsights-common";
 
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";

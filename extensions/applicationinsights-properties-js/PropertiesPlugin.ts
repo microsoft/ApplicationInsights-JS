@@ -15,41 +15,39 @@ import { Device } from './Context/Device';
 import { Internal } from './Context/Internal';
 import { Location } from './Context/Location';
 import { Operation } from './Context/Operation';
-import { Sample } from './Context/Sample';
 import { User } from './Context/User';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
+import { ITelemetryContext } from './Interfaces/ITelemetryContext';
 
 export const Version = "0.0.1";
 
-export default class PropertiesPlugin implements ITelemetryPlugin {
+export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryContext {
     public priority = 10;
     public identifier = "AppInsightsPropertiesPlugin";
+    public application: Application; // The object describing a component tracked by this object.
+    public device: Device; // The object describing a device tracked by this object.
+    public location: Location; // The object describing a location tracked by this object.
+    public operation: Operation; // The object describing a operation tracked by this object.
+    public user: User; // The object describing a user tracked by this object.
+    public internal: Internal;
+    public session: Session; // The object describing a session tracked by this object.
 
     private _nextPlugin: ITelemetryPlugin;
     private _extensionConfig: ITelemetryConfig;
-    private _session: Session; // The object describing a session tracked by this object.
     private _sessionManager: _SessionManager; // The session manager that manages session on the base of cookies.
-    private _application: Application; // The object describing a component tracked by this object.
-    private _device: Device; // The object describing a device tracked by this object.
-    private _location: Location; // The object describing a location tracked by this object.
-    private _operation: Operation; // The object describing a operation tracked by this object.
-    private _user: User; // The object describing a user tracked by this object.
-    private _internal: Internal;
-    private _sample: Sample;
 
     initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
         this._extensionConfig = config.extensions && config.extensions[this.identifier] ? config.extensions[this.identifier] : <ITelemetryConfig>{};
 
         if (typeof window !== 'undefined') {
             this._sessionManager = new _SessionManager(this._extensionConfig);
-            this._application = new Application();
-            this._device = new Device();
-            this._internal = new Internal(this._extensionConfig);
-            this._location = new Location();
-            this._user = new User(this._extensionConfig);
-            this._operation = new Operation();
-            this._session = new Session();
-            this._sample = new Sample(this._extensionConfig.sampleRate());
+            this.application = new Application();
+            this.device = new Device();
+            this.internal = new Internal(this._extensionConfig);
+            this.location = new Location();
+            this.user = new User(this._extensionConfig);
+            this.operation = new Operation();
+            this.session = new Session();
         }
     }
 
@@ -67,9 +65,9 @@ export default class PropertiesPlugin implements ITelemetryPlugin {
                 //_InternalLogging.resetInternalMessageCount();
             }
 
-            if (this._session) {
+            if (this.session) {
                 // If customer did not provide custom session id update the session manager
-                if (typeof this._session.id !== "string") {
+                if (typeof this.session.id !== "string") {
                     this._sessionManager.update();
                 }
             }
@@ -91,27 +89,23 @@ export default class PropertiesPlugin implements ITelemetryPlugin {
     private _processTelemetryInternal(event: ITelemetryItem) {
         let tagsItem: { [key: string]: any } = {};
 
-        if (this._session) {
+        if (this.session) {
             // If customer set id, apply his context; otherwise apply context generated from cookies 
-            if (typeof this._session.id === "string") {
-                PropertiesPlugin._applySessionContext(tagsItem, this._session);
+            if (typeof this.session.id === "string") {
+                PropertiesPlugin._applySessionContext(tagsItem, this.session);
             } else {
                 PropertiesPlugin._applySessionContext(tagsItem, this._sessionManager.automaticSession);
             }
         }
 
         // set part A  fields
-        PropertiesPlugin._applyApplicationContext(tagsItem, this._application);
-        PropertiesPlugin._applyDeviceContext(tagsItem, this._device);
-        PropertiesPlugin._applyInternalContext(tagsItem, this._internal);
-        PropertiesPlugin._applyLocationContext(tagsItem, this._location);
-        PropertiesPlugin._applySampleContext(tagsItem, this._sample);
-        PropertiesPlugin._applyUserContext(tagsItem, this._user);
-        PropertiesPlugin._applyOperationContext(tagsItem, this._operation);
+        PropertiesPlugin._applyApplicationContext(tagsItem, this.application);
+        PropertiesPlugin._applyDeviceContext(tagsItem, this.device);
+        PropertiesPlugin._applyInternalContext(tagsItem, this.internal);
+        PropertiesPlugin._applyLocationContext(tagsItem, this.location);
+        PropertiesPlugin._applyUserContext(tagsItem, this.user);
+        PropertiesPlugin._applyOperationContext(tagsItem, this.operation);
         event.tags.push(tagsItem);
-
-        // set instrumentation key
-        event.instrumentationKey = this._extensionConfig.instrumentationKey();
     }
 
     private static _applySessionContext(tags: { [key: string]: any }, sessionContext: Session) {
@@ -218,12 +212,6 @@ export default class PropertiesPlugin implements ITelemetryPlugin {
             if (typeof operationContext.syntheticSource === "string") {
                 tagsItem[tagKeys.operationSyntheticSource] = operationContext.syntheticSource;
             }
-        }
-    }
-
-    private static _applySampleContext(tagsItem: { [key: string]: any }, sampleContext: Sample) {
-        if (sampleContext) {
-            tagsItem.sampleRate = sampleContext.sampleRate;
         }
     }
 

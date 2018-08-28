@@ -31,8 +31,10 @@ module.exports = function (grunt) {
             appinsightscjs: {
                 tsconfig: './ApplicationInsights/cjs/tsconfigcommonjs.json',
                 src: [
-                    'ApplicationInsights/JavascriptSDK/*.ts',
                     'ApplicationInsights/JavascriptSDK.Interfaces/*.ts',
+                    'ApplicationInsights/JavascriptSDK/Extensions/*.ts',
+                    'ApplicationInsights/JavascriptSDK/Telemetry/*.ts',
+                    'ApplicationInsights/JavascriptSDK/*.ts',
                     'ApplicationInsights/*.ts'
                 ]
             },
@@ -40,6 +42,8 @@ module.exports = function (grunt) {
                 tsconfig: './ApplicationInsights/tsconfig.json',
                 src: [
                     'ApplicationInsights/JavascriptSDK.Interfaces/*.ts',
+                    'ApplicationInsights/JavascriptSDK/Extensions/*.ts',
+                    'ApplicationInsights/JavascriptSDK/Telemetry/*.ts',
                     'ApplicationInsights/JavascriptSDK/*.ts',
                     'ApplicationInsights/*.ts'
                 ]
@@ -55,6 +59,24 @@ module.exports = function (grunt) {
                 tsconfig: './AISKU/tsconfig.json',
                 src: [
                     'AISKU/*.ts'
+                ]
+            },
+            properties: {
+                tsconfig: './extensions/applicationinsights-properties-js/tsconfig.json',
+                src: [
+                    './extensions/applicationinsights-properties-js/*.ts',
+                    './extensions/applicationinsights-properties-js/Context/*.ts',
+                    './extensions/applicationinsights-properties-js/Interfaces/Context/*.ts',
+                    './extensions/applicationinsights-properties-js/Interfaces/*.ts'
+                ]
+            },
+            propertiescjs: {
+                tsconfig: './extensions/applicationinsights-properties-js/cjs/tsconfigcommonjs.json',
+                src: [
+                    './extensions/applicationinsights-properties-js/*.ts',
+                    './extensions/applicationinsights-properties-js/Context/*.ts',
+                    './extensions/applicationinsights-properties-js/Interfaces/Context/*.ts',
+                    './extensions/applicationinsights-properties-js/Interfaces/*.ts'
                 ]
             },
             module: {
@@ -196,4 +218,6 @@ module.exports = function (grunt) {
     grunt.registerTask("aisku", ["ts:aisku"]);
     grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
+    grunt.registerTask("properties", ["ts:properties"]);
+    grunt.registerTask("propertiescjs", ["ts:propertiescjs"]);
 };

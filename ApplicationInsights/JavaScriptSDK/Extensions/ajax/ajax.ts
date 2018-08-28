@@ -1,8 +1,12 @@
-﻿import { RequestHeaders, Util, LoggingSeverity, _InternalMessageId, _InternalLogging, CorrelationIdHelper } from 'applicationinsights-common';
+﻿import {
+    RequestHeaders, Util, LoggingSeverity,
+    _InternalMessageId, _InternalLogging, CorrelationIdHelper,
+    RemoteDependencyData, dateTime
+} from 'applicationinsights-common';
 import { ajaxRecord } from './ajaxRecord';
-import { extensions, EventHelper } from './ajaxUtils';
-import { RemoteDependencyData, Util, dateTime } from 'applicationinsights-common';
+import { EventHelper } from './ajaxUtils';
 import { ApplicationInsights } from '../../ApplicationInsights';
+
 export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;
 }
@@ -105,8 +109,12 @@ export class AjaxMonitor {
     }
 
     private openHandler(xhr: XMLHttpRequestInstrumented, method, url, async) {
+        /*
+        Disabling the following block of code as CV is not yet supported in 1DS for 3rd Part. 
         // this format corresponds with activity logic on server-side and is required for the correct correlation
         var id = "|" + this.appInsights.context.operation.id + "." + Util.newId();
+        */
+       var id = Util.newId();
 
         var ajaxData = new ajaxRecord(id);
         ajaxData.method = method;
