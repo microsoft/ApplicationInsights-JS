@@ -26,6 +26,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public static Version = "0.0.1";
     private _globalconfig: IConfiguration;
     private _nextPlugin: ITelemetryPlugin;
+    private _pageTracking: Timing;
 
     // Counts number of trackAjax invokations.
     // By default we only monitor X ajax call per view to avoid too much load.
@@ -94,6 +95,58 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             properties);
 
         this.context.track(telemetryItem);
+    }
+
+    /**
+     * Starts timing how long the user views a page or other item. Call this when the page opens. 
+     * This method doesn't send any telemetry. Call {@link stopTrackTelemetry} to log the page when it closes.
+     * @param name A string that idenfities this item, unique within this HTML document. Defaults to the document title.
+     */
+    public startTrackPage(name?: string) {
+        try {
+            if (typeof name !== "string") {
+                name = window.document && window.document.title || "";
+            }
+
+            this._pageTracking.start(name);
+        } catch (e) {
+            _InternalLogging.throwInternal(
+                LoggingSeverity.CRITICAL,
+                _InternalMessageId.StartTrackFailed,
+                "startTrackPage failed, page view may not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) });
+        }
+    }
+
+    /**
+     * Logs how long a page or other item was visible, after {@link startTrackPage}. Call this when the page closes. 
+     * @param name The string you used as the name in startTrackPage. Defaults to the document title.
+     * @param url A relative or absolute URL that identifies the page or other item. Defaults to the window location.
+     * @param properties Additional data used to filter pages and metrics in the portal. Defaults to empty. 
+     *                   Any property of type double will be considered a measurement, and will be treated by Application Insights as a metric
+     */
+    public stopTrackPage(name?: string, url?: string, properties?: Object) {
+        try {
+            if (typeof name !== "string") {
+                name = window.document && window.document.title || "";
+            }
+
+            if (typeof url !== "string") {
+                url = window.location && window.location.href || "";
+            }
+
+            this._pageTracking.stop(name, url, properties);
+
+            if (this.config.autoTrackPageVisitTime) {
+                this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
+            }
+        } catch (e) {
+            _InternalLogging.throwInternal(
+                LoggingSeverity.CRITICAL,
+                _InternalMessageId.StopTrackFailed,
+                "stopTrackPage failed, page view will not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) });
+        }
     }
 
     private _initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
@@ -185,11 +238,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
         */
 
-        /* TODO re-enable once we add support for startTrackPage. Task to track this:
-        https://mseng.visualstudio.com/AppInsights/1DS-Web/_workitems/edit/1305304
         // initialize page view timing
         this._pageTracking = new Timing("trackPageView");
-        this._pageTracking.action = (name, url, duration, properties, measurements) => {
+        this._pageTracking.action = (name, url, duration, properties) => {
             let pageViewItem: IPageViewTelemetry = {
                 name: name,
                 uri: url,
@@ -197,7 +248,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             };
             this.sendPageViewInternal(pageViewItem, properties);
         }
-        */
     }
 }
 
@@ -226,7 +276,7 @@ class Timing {
         this._events[name] = +new Date;
     }
 
-    public stop(name: string, url: string, properties?: Object, measurements?: Object) {
+    public stop(name: string, url: string, properties?: Object) {
         var start = this._events[name];
         if (isNaN(start)) {
             _InternalLogging.throwInternal(
@@ -235,12 +285,12 @@ class Timing {
         } else {
             var end = +new Date;
             var duration = PageViewPerformance.getDuration(start, end);
-            this.action(name, url, duration, properties, measurements);
+            this.action(name, url, duration, properties);
         }
 
         delete this._events[name];
         this._events[name] = undefined;
     }
 
-    public action: (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => void;
+    public action: (name?: string, url?: string, duration?: number, properties?: Object) => void;
 }
