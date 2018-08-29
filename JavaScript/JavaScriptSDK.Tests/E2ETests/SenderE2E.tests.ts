@@ -80,18 +80,12 @@ class SenderE2ETests extends TestClass {
         }
         let beaconConfig = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
         beaconConfig.isBeaconApiDisabled = false;
-        beaconConfig.disableFetchTracking = true;
-        beaconConfig.disableAjaxTracking = true;
         this.beaconClient = this.getAiClient(beaconConfig);
 
         let aiConfig = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
-        aiConfig.disableAjaxTracking = false;
-        aiConfig.disableFetchTracking = false;
         this.aiClient = this.getAiClient(aiConfig);
 
         let vortexConfig = Microsoft.ApplicationInsights.Initialization.getDefaultConfig();
-        vortexConfig.disableFetchTracking = true;
-        vortexConfig.disableAjaxTracking = true;
         this.vortexAiClient = this.getVortexAiClient(vortexConfig);
 
         this.testCaseAsync({
@@ -149,48 +143,6 @@ class SenderE2ETests extends TestClass {
                 }
             ]
         });
-
-        this.testCaseAsync({
-            name: "Ajax/Fetch: Network request telemetry is successfully recorded",
-            stepDelay: 0,
-            steps: [
-                // Act: Ajax
-                () => {
-                    let xhr: XMLHttpRequest;
-
-                    this["xhrStatus"] = 0;
-                    for (let i = 0; i < 7; i++) {
-                        xhr = new XMLHttpRequest();
-                        xhr.onloadend = () => { this["xhrStatus"]++; }
-                        xhr.open("GET", `https://httpbin.org/status/${i + 200}`, true);
-                        xhr.send();
-                    }
-                },
-                () => {
-                    this["fetchStatus"] = 0;
-                    for (let i = 0; i < 9; i++) {
-                        fetch(`https://httpbin.org/status/${i + 200}`, { method: "POST" }).then(r => {
-                            this["fetchStatus"] += (r.status === 200 + i);
-                        });
-                    }
-                },
-                // Assert
-                <() => void>PollingAssert.createPollingAssert(() => this.aiSpy.called, "trackDependencyData is called", 5),
-                <() => void>PollingAssert.createPollingAssert(() => this["xhrStatus"] === 7, "XHR expects 200 response code 7 times", 5),
-                <() => void>PollingAssert.createPollingAssert(() => this["fetchStatus"] === 9, "Fetch expects 200 response code 9 times", 5),
-                <() => void>PollingAssert.createPollingAssert(() => {
-                    let itemsAccepted: number = 0;
-
-                    for (let payload of this.aiSpy.args) {
-                        let count: number = payload[1];
-                        itemsAccepted += count;
-                    }
-                    
-                    return (itemsAccepted === 7 + 9);
-                }, "Backend accepts 7 XHR items and 9 Fetch items, or 16 XHR items for browsers requiring a fetch-polyfill", 5)
-            ]
-        });
-
     }
 }
 new SenderE2ETests().registerTests();
