@@ -148,80 +148,44 @@ export class ApplicationInsightsTests extends TestClass {
             }
         });
 
-        // this.testCase({
-        //     name: "Timing Tests: Start/StopPageView tracks single page view with all parameters",
-        //     test: () => {
-        //         // setup
-        //         var appInsights = new ApplicationInsights();
-        //         var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
-        //         this.clock.tick(10);        // Needed to ensure the duration calculation works
+        this.testCase({
+            name: "Timing Tests: Multiple Start/StopPageView track single pages view ",
+            test: () => {
+                // setup
+                var core = new AppInsightsCore();
+                this.sandbox.stub(core, "getTransmissionControl");
+                var appInsights = new ApplicationInsights();
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                var trackStub = this.sandbox.stub(appInsights.context, "track");
+                this.clock.tick(10);        // Needed to ensure the duration calculation works
 
-        //         // act
-        //         appInsights.startTrackPage(testValues.name);
-        //         this.clock.tick(testValues.duration);
-        //         appInsights.stopTrackPage(testValues.name, testValues.url, testValues.properties, testValues.measurements);
-        //         Assert.ok(trackStub.calledOnce, "single page view tracking stopped");
+                // act
+                appInsights.startTrackPage(testValues.name);
+                this.clock.tick(testValues.duration);
 
-        //         // verify
-        //         var telemetry = <Microsoft.ApplicationInsights.Telemetry.PageView>trackStub.args[0][0].data.baseData;
-        //         Assert.equal(testValues.name, telemetry.name);
-        //         Assert.equal(testValues.url, telemetry.url);
-        //         Assert.deepEqual(testValues.properties, telemetry.properties);
-        //         Assert.deepEqual(testValues.measurements, telemetry.measurements);
+                appInsights.startTrackPage();
+                this.clock.tick(testValues.duration);
+                appInsights.stopTrackPage();
+                Assert.ok(trackStub.calledOnce, "single page view tracking stopped no parameters");
 
-        //         // act
-        //         trackStub.reset();
-        //         appInsights.startTrackPage(testValues.name);
-        //         this.clock.tick(testValues.duration);
-        //         appInsights.stopTrackPage(testValues.name, testValues.url, testValues.properties, testValues.measurements);
-        //         Assert.ok(trackStub.calledOnce, "single page view tracking stopped");
+                this.clock.tick(testValues.duration);
+                appInsights.stopTrackPage(testValues.name, testValues.url, testValues.properties);
+                Assert.ok(trackStub.calledTwice, "single page view tracking stopped all parameters");
 
-        //         // verify
-        //         telemetry = <Microsoft.ApplicationInsights.Telemetry.PageView>trackStub.args[0][0].data.baseData;
-        //         Assert.equal(testValues.name, telemetry.name);
-        //         Assert.equal(testValues.url, telemetry.url);
-        //         Assert.deepEqual(testValues.properties, telemetry.properties);
-        //         Assert.deepEqual(testValues.measurements, telemetry.measurements);
-        //     }
-        // });
+                // verify
+                // Empty parameters
+                var telemetry: ITelemetryItem = trackStub.args[0][0];
+                Assert.equal(window.document.title, telemetry.baseData.name);
+                Assert.equal(window.document.location.href, telemetry.baseData.uri);
 
-        // this.testCase({
-        //     name: "Timing Tests: Multiple Start/StopPageView track single pages view ",
-        //     test: () => {
-        //         // setup
-        //         var appInsights = new ApplicationInsights();
-        //         var trackStub = this.sandbox.stub(appInsights.context._sender, "send");
-        //         this.clock.tick(10);        // Needed to ensure the duration calculation works
-
-        //         // act
-        //         appInsights.startTrackPage(testValues.name);
-        //         this.clock.tick(testValues.duration);
-
-        //         appInsights.startTrackPage();
-        //         this.clock.tick(testValues.duration);
-        //         appInsights.stopTrackPage();
-        //         Assert.ok(trackStub.calledOnce, "single page view tracking stopped no parameters");
-
-        //         this.clock.tick(testValues.duration);
-        //         appInsights.stopTrackPage(testValues.name, testValues.url, testValues.properties, testValues.measurements);
-        //         Assert.ok(trackStub.calledTwice, "single page view tracking stopped all parameters");
-
-        //         // verify
-        //         // Empty parameters
-        //         var telemetry = <Microsoft.ApplicationInsights.Telemetry.PageView>trackStub.args[0][0].data.baseData;
-        //         Assert.notEqual(testValues.name, telemetry.name);
-        //         Assert.notEqual(testValues.url, telemetry.url);
-        //         Assert.notEqual(testValues.properties, telemetry.properties);
-        //         Assert.notEqual(testValues.measurements, telemetry.measurements);
-
-        //         // All parameters
-        //         telemetry = <Microsoft.ApplicationInsights.Telemetry.PageView>trackStub.args[1][0].data.baseData;
-        //         Assert.equal(testValues.name, telemetry.name);
-        //         Assert.equal(testValues.url, telemetry.url);
-        //         Assert.deepEqual(testValues.properties, telemetry.properties);
-        //         Assert.deepEqual(testValues.measurements, telemetry.measurements);
-        //     }
-        // });
+                // // All parameters
+                telemetry = trackStub.args[1][0];
+                Assert.equal(testValues.name, telemetry.baseData.name);
+                Assert.equal(testValues.url, telemetry.baseData.uri);
+                // Assert.deepEqual(testValues.properties, telemetry.properties);
+                // Assert.deepEqual(testValues.measurements, telemetry.measurements);
+            }
+        });
 
         // this.testCase({
         //     name: "Timing Tests: Multiple startTrackPage",
