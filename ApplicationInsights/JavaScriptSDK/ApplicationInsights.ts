@@ -61,7 +61,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     /**
      * Logs that a page or other item was viewed. 
      * @param IPageViewTelemetry The string you used as the name in startTrackPage. Defaults to the document title.
-     * @param customProperties Additional data used to filter events and metrics. Defaults to empty.
+     * @param customProperties Additional data used to filter events and metrics. Defaults to empty. If a user wants
+     *                         to provide a custom duration, it'll have to be in customProperties
      */
     public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any }) {
         try {
@@ -80,7 +81,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     }
 
     public sendPageViewInternal(pageView: IPageViewTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
-        let telemetryItem = TelemetryItemCreator.createItem(pageView, PageView.dataType, PageView.envelopeType, properties, systemProperties);
+        let telemetryItem = TelemetryItemCreator.createItem(pageView, 
+            PageView.dataType, 
+            PageView.envelopeType, 
+            properties, 
+            systemProperties);
 
         this.context.track(telemetryItem);
 
@@ -243,9 +248,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this._pageTracking.action = (name, url, duration, properties) => {
             let pageViewItem: IPageViewTelemetry = {
                 name: name,
-                uri: url,
-                duration: duration,
+                uri: url
             };
+
+            // duration must be a custom property in order for the collector to extract it
+            properties["duration"] = duration;
             this.sendPageViewInternal(pageViewItem, properties);
         }
     }
