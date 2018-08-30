@@ -252,6 +252,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             };
 
             // duration must be a custom property in order for the collector to extract it
+            if (CoreUtils.isNullOrUndefined(properties)) {
+                properties = {};
+            }
             properties["duration"] = duration;
             this.sendPageViewInternal(pageViewItem, properties);
         }

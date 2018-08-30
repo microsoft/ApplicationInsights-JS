@@ -79,11 +79,11 @@ export class ApplicationInsightsTests extends TestClass {
                 // verify
                 Assert.ok(spy.calledOnce, "stop track page view sent data");
                 var actual = spy.args[0][0];
-                Assert.equal(testValues.duration, actual.duration, "duration is calculated and sent correctly");
                 Assert.equal(testValues.name, actual.name);
                 Assert.equal(testValues.url, actual.uri);
 
                 var actualProperties = spy.args[0][1];
+                Assert.equal(testValues.duration, actualProperties.duration, "duration is calculated and sent correctly");
                 Assert.equal(testValues.properties.property1, actualProperties.property1);
                 Assert.equal(testValues.properties.property2, actualProperties.property2);
             }
@@ -109,7 +109,7 @@ export class ApplicationInsightsTests extends TestClass {
                 // verify
                 var telemetry: ITelemetryItem = trackStub.args[0][0];
                 Assert.equal(window.document.title, telemetry.baseData.name);
-                Assert.equal(testValues.duration, telemetry.baseData.duration);
+                Assert.equal(testValues.duration, telemetry.data.duration);
             }
         });
 
