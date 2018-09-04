@@ -1,5 +1,5 @@
 export { Util, CorrelationIdHelper, UrlHelper } from './Util';
-export { LoggingSeverity, FieldType } from './Enums';
+export { FieldType } from './Enums';
 export { RequestHeaders } from './RequestResponseHeaders';
 export { DisabledPropertyName } from './Constants';
 export { Data as AIData } from './Interfaces/Contracts/Generated/Data';

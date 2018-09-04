@@ -1,5 +1,5 @@
-﻿import { StorageType, LoggingSeverity } from "./Enums";
-import { _InternalLogging, _InternalMessageId } from "applicationinsights-core-js";
+﻿import { StorageType } from "./Enums";
+import { _InternalLogging, _InternalMessageId, LoggingSeverity } from "applicationinsights-core-js";
 import { IConfig } from "./Interfaces/IConfig";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";

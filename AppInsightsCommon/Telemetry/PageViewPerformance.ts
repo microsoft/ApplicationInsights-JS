@@ -1,9 +1,9 @@
 ﻿import { PageViewPerfData } from '../Interfaces/Contracts/Generated/PageViewPerfData';
-import { FieldType, LoggingSeverity } from '../Enums';
+import { FieldType } from '../Enums';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
 import { Util } from '../Util';
-import { _InternalLogging, _InternalMessageId } from 'applicationinsights-core-js';
+import { _InternalLogging, _InternalMessageId, LoggingSeverity } from 'applicationinsights-core-js';
 
 
 export class PageViewPerformance extends PageViewPerfData implements ISerializable {

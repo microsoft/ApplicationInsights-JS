@@ -1,15 +1,3 @@
-export enum LoggingSeverity {
-    /**
-     * Error will be sent as internal telemetry
-     */
-    CRITICAL = 0,
-
-    /**
-     * Error will NOT be sent as internal telemetry, and will only be shown in browser console
-     */
-    WARNING = 1
-}
-
 /**
 * Type of storage to differentiate between local storage and session storage
 */

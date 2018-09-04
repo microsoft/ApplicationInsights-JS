@@ -1,4 +1,5 @@
-﻿import { _InternalLogging, Util } from 'applicationinsights-common';
+﻿import { Util } from 'applicationinsights-common';
+import { _InternalLogging } from 'applicationinsights-core-js';
 
 /**
  * Used to track page visit durations
