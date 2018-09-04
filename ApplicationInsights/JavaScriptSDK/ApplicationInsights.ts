@@ -1,18 +1,17 @@
 /**
  * ApplicationInsights.ts
- * @author Basel Rustum, Piyali Jana and Mark Wolff
  * @copyright Microsoft 2018
  */
 
 import {
     IConfig, _InternalLogging, LoggingSeverity,
     _InternalMessageId, Util, PageViewPerformance,
-    PageView, IEnvelope, RemoteDependencyData, 
+    PageView, IEnvelope, RemoteDependencyData,
     Data, Metric
 } from "applicationinsights-common";
-import { 
-    IPlugin, IConfiguration, IAppInsightsCore, 
-    ITelemetryPlugin, CoreUtils, ITelemetryItem 
+import {
+    IPlugin, IConfiguration, IAppInsightsCore,
+    ITelemetryPlugin, CoreUtils, ITelemetryItem
 } from "applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -49,7 +48,26 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     }
 
     public processTelemetry(env: ITelemetryItem) {
-        if (!CoreUtils.isNullOrUndefined(this._nextPlugin)) {
+        var doNotSendItem = false;
+        try {
+            var telemetryInitializersCount = this._telemetryInitializers.length;
+            for (var i = 0; i < telemetryInitializersCount; ++i) {
+                var telemetryInitializer = this._telemetryInitializers[i];
+                if (telemetryInitializer) {
+                    if (telemetryInitializer.apply(null, [env]) === false) {
+                        doNotSendItem = true;
+                        break;
+                    }
+                }
+            }
+        } catch (e) {
+            doNotSendItem = true;
+            _InternalLogging.throwInternal(
+                LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) }, true);
+        }
+
+        if (!doNotSendItem && !CoreUtils.isNullOrUndefined(this._nextPlugin)) {
             this._nextPlugin.processTelemetry(env);
         }
     }
@@ -90,34 +108,14 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
         // set instrumentation key
         telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
-        var doNotSendItem = false;
-        try {
-            var telemetryInitializersCount = this._telemetryInitializers.length;
-            for (var i = 0; i < telemetryInitializersCount; ++i) {
-                var telemetryInitializer = this._telemetryInitializers[i];
-                if (telemetryInitializer) {
-                    if (telemetryInitializer.apply(null, [telemetryItem]) === false) {
-                        doNotSendItem = true;
-                        break;
-                    }
-                }
-            }
-        } catch (e) {
-            doNotSendItem = true;
-            _InternalLogging.throwInternal(
-                LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
-                { exception: Util.dump(e) }, true);
-        }
 
-        if (!doNotSendItem) {
-            // TODO(barustum): Removed a sampling check here. Re-add once we have sampling plugin ready
-            if (telemetryItem.name === Metric.envelopeType) {
-                var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
-                telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
+        // TODO(barustum): Removed a sampling check here. Re-add once we have sampling plugin ready
+        if (telemetryItem.name === Metric.envelopeType) {
+            var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
+            telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
 
-                // map and send data
-                this.core.track(telemetryItem);
-            } 
+            // map and send data
+            this.core.track(telemetryItem);
         }
 
         // reset ajaxes counter

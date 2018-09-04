@@ -51,7 +51,8 @@ module.exports = function (grunt) {
             appinsightstests: {
                 tsconfig: './ApplicationInsights/Tests/tsconfig.json',
                 src: [
-                    './ApplicationInsights/Tests/Selenium/*.ts'
+                    './ApplicationInsights/Tests/Selenium/*.ts',
+                    './ApplicationInsights/Tests/*.ts'
                 ],
                 out: 'ApplicationInsights/Tests/Selenium/appinsights-analytics.tests.js'
             },
@@ -62,7 +63,7 @@ module.exports = function (grunt) {
                 ]
             },
             properties: {
-                tsconfig: './extensions/applicationinsights-properties-js/tsconfig.json',
+                tsconfig: './extensions/applicationinsights-properties-js/tsconfigamd.json',
                 src: [
                     './extensions/applicationinsights-properties-js/*.ts',
                     './extensions/applicationinsights-properties-js/Context/*.ts',
@@ -190,7 +191,7 @@ module.exports = function (grunt) {
             aitests: {
                 options: {
                     urls: [
-                        'ApplicationInsights/Tests/Selenium/Tests.html'
+                        './ApplicationInsights/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,

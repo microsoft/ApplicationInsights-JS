@@ -1,9 +1,9 @@
-﻿import { Util } from 'applicationinsights-common';
+﻿import { CoreUtils } from 'applicationinsights-core-js';
 
 export class stringUtils {
     public static GetLength(strObject) {
         var res = 0;
-        if (!Util.IsNullOrUndefined(strObject)) {
+        if (!CoreUtils.isNullOrUndefined(strObject)) {
             var stringified = "";
             try {
                 stringified = strObject.toString();
@@ -27,14 +27,14 @@ export class EventHelper {
     ///<returns>True if the function was bound successfully to the event, otherwise false</returns>
     public static AttachEvent(obj, eventNameWithoutOn, handlerRef) {
         var result = false;
-        if (!Util.IsNullOrUndefined(obj)) {
-            if (!Util.IsNullOrUndefined(obj.attachEvent)) {
+        if (!CoreUtils.isNullOrUndefined(obj)) {
+            if (!CoreUtils.isNullOrUndefined(obj.attachEvent)) {
                 // IE before version 9                    
                 obj.attachEvent("on" + eventNameWithoutOn, handlerRef);
                 result = true;
             }
             else {
-                if (!Util.IsNullOrUndefined(obj.addEventListener)) {
+                if (!CoreUtils.isNullOrUndefined(obj.addEventListener)) {
                     // all browsers except IE before version 9
                     obj.addEventListener(eventNameWithoutOn, handlerRef, false);
                     result = true;
@@ -46,12 +46,12 @@ export class EventHelper {
     }
 
     public static DetachEvent(obj, eventNameWithoutOn, handlerRef) {
-        if (!Util.IsNullOrUndefined(obj)) {
-            if (!Util.IsNullOrUndefined(obj.detachEvent)) {
+        if (!CoreUtils.isNullOrUndefined(obj)) {
+            if (!CoreUtils.isNullOrUndefined(obj.detachEvent)) {
                 obj.detachEvent("on" + eventNameWithoutOn, handlerRef);
             }
             else {
-                if (!Util.IsNullOrUndefined(obj.removeEventListener)) {
+                if (!CoreUtils.isNullOrUndefined(obj.removeEventListener)) {
                     obj.removeEventListener(eventNameWithoutOn, handlerRef, false);
                 }
             }

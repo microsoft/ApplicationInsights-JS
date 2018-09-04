@@ -1,11 +1,10 @@
 /**
  * PropertiesPlugin.ts
- * @author Basel Rustum, Piyali Jana and Mark Wolff
  * @copyright Microsoft 2018
  */
 
 import {
-    ITelemetryPlugin, IConfiguration,
+    ITelemetryPlugin, IConfiguration, CoreUtils,
     IAppInsightsCore, IPlugin, ITelemetryItem
 } from 'applicationinsights-core-js';
 import { ContextTagKeys, Util, PageView } from 'applicationinsights-common';
@@ -16,6 +15,7 @@ import { Internal } from './Context/Internal';
 import { Location } from './Context/Location';
 import { Operation } from './Context/Operation';
 import { User } from './Context/User';
+import { Sample } from './Context/Sample';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 import { ITelemetryContext } from './Interfaces/ITelemetryContext';
 
@@ -29,6 +29,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
     public user: User; // The object describing a user tracked by this object.
     public internal: Internal;
     public session: Session; // The object describing a session tracked by this object.
+    public sample: Sample;
 
     private _nextPlugin: ITelemetryPlugin;
     private _extensionConfig: ITelemetryConfig;
@@ -46,6 +47,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
             this.user = new User(this._extensionConfig);
             this.operation = new Operation();
             this.session = new Session();
+            this.sample = new Sample(this._extensionConfig.sampleRate());
         }
     }
 
@@ -54,26 +56,31 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
      * @param event The event that needs to be processed
      */
     processTelemetry(event: ITelemetryItem) {
-        if (Util.IsNullOrUndefined(event)) {
+        if (CoreUtils.isNullOrUndefined(event)) {
             // TODO(barustum): throw an internal event once we have support for internal logging
         } else {
-            // If the envelope is PageView, reset the internal message count so that we can send internal telemetry for the new page.
-            if (event.name === PageView.envelopeType) {
-                // TODO(barustum): resetInternalMessageCount once we have support for internal logging
-                //_InternalLogging.resetInternalMessageCount();
-            }
-
-            if (this.session) {
-                // If customer did not provide custom session id update the session manager
-                if (typeof this.session.id !== "string") {
-                    this._sessionManager.update();
+            // if the event is not sampled in, do not bother going through the pipeline
+            if (this.sample.isSampledIn(event)) {
+                // If the envelope is PageView, reset the internal message count so that we can send internal telemetry for the new page.
+                if (event.name === PageView.envelopeType) {
+                    // TODO(barustum): resetInternalMessageCount once we have support for internal logging
+                    //_InternalLogging.resetInternalMessageCount();
                 }
+
+                if (this.session) {
+                    // If customer did not provide custom session id update the session manager
+                    if (typeof this.session.id !== "string") {
+                        this._sessionManager.update();
+                    }
+                }
+
+                this._processTelemetryInternal(event);
             }
 
-            this._processTelemetryInternal(event);
+            if (!CoreUtils.isNullOrUndefined(this._nextPlugin)) {
+                this._nextPlugin.processTelemetry(event);
+            }
         }
-
-        this._nextPlugin.processTelemetry(event);
     }
 
     /**
@@ -101,6 +108,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
         PropertiesPlugin._applyDeviceContext(tagsItem, this.device);
         PropertiesPlugin._applyInternalContext(tagsItem, this.internal);
         PropertiesPlugin._applyLocationContext(tagsItem, this.location);
+        PropertiesPlugin._applySampleContext(tagsItem, this.sample);
         PropertiesPlugin._applyUserContext(tagsItem, this.user);
         PropertiesPlugin._applyOperationContext(tagsItem, this.operation);
         event.tags.push(tagsItem);
@@ -189,6 +197,12 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
             if (typeof locationContext.ip === "string") {
                 tagsItem[tagKeys.locationIp] = locationContext.ip;
             }
+        }
+    }
+
+    private static _applySampleContext(tagsItem: { [key: string]: any }, sampleContext: Sample) {
+        if (sampleContext) {
+            tagsItem.sampleRate = sampleContext.sampleRate;
         }
     }
 

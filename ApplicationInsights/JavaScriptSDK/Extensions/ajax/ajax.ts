@@ -1,11 +1,12 @@
 ﻿import {
     RequestHeaders, Util, LoggingSeverity,
     _InternalMessageId, _InternalLogging, CorrelationIdHelper,
-    RemoteDependencyData, dateTime
+    RemoteDependencyData, DateTimeUtils
 } from 'applicationinsights-common';
 import { ajaxRecord } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
 import { ApplicationInsights } from '../../ApplicationInsights';
+import { CoreUtils } from '../../../node_modules/applicationinsights-core-js';
 
 export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;
@@ -52,7 +53,7 @@ export class AjaxMonitor {
         return this.initialized
 
             // checking on ajaxData to see that it was not removed in user code
-            && (excludeAjaxDataValidation === true || !Util.IsNullOrUndefined(xhr.ajaxData))
+            && (excludeAjaxDataValidation === true || !CoreUtils.isNullOrUndefined(xhr.ajaxData))
 
             // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
             && xhr[AjaxMonitor.DisabledPropertyName] !== true;
@@ -63,11 +64,11 @@ export class AjaxMonitor {
     ///<returns>True if Ajax monitoring is supported on this page, otherwise false</returns>
     private supportsMonitoring(): boolean {
         var result = true;
-        if (Util.IsNullOrUndefined(XMLHttpRequest) ||
-            Util.IsNullOrUndefined(XMLHttpRequest.prototype) ||
-            Util.IsNullOrUndefined(XMLHttpRequest.prototype.open) ||
-            Util.IsNullOrUndefined(XMLHttpRequest.prototype.send) ||
-            Util.IsNullOrUndefined(XMLHttpRequest.prototype.abort)) {
+        if (CoreUtils.isNullOrUndefined(XMLHttpRequest) ||
+            CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype) ||
+            CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype.open) ||
+            CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype.send) ||
+            CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype.abort)) {
             result = false;
         }
 
@@ -128,9 +129,9 @@ export class AjaxMonitor {
     private static getFailedAjaxDiagnosticsMessage(xhr: XMLHttpRequestInstrumented): string {
         var result = "";
         try {
-            if (!Util.IsNullOrUndefined(xhr) &&
-                !Util.IsNullOrUndefined(xhr.ajaxData) &&
-                !Util.IsNullOrUndefined(xhr.ajaxData.requestUrl)) {
+            if (!CoreUtils.isNullOrUndefined(xhr) &&
+                !CoreUtils.isNullOrUndefined(xhr.ajaxData) &&
+                !CoreUtils.isNullOrUndefined(xhr.ajaxData.requestUrl)) {
                 result += "(url: '" + xhr.ajaxData.requestUrl + "')";
             }
         } catch (e) { }
@@ -162,7 +163,7 @@ export class AjaxMonitor {
     }
 
     private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
-        xhr.ajaxData.requestSentTime = dateTime.Now();
+        xhr.ajaxData.requestSentTime = DateTimeUtils.Now();
 
         if (CorrelationIdHelper.canIncludeCorrelationHeader(this.appInsights.config, xhr.ajaxData.getAbsoluteUrl(),
             this.currentWindowHost)) {
@@ -229,7 +230,7 @@ export class AjaxMonitor {
     }
 
     private onAjaxComplete(xhr: XMLHttpRequestInstrumented) {
-        xhr.ajaxData.responseFinishedTime = dateTime.Now();
+        xhr.ajaxData.responseFinishedTime = DateTimeUtils.Now();
         xhr.ajaxData.status = xhr.status;
         xhr.ajaxData.CalculateMetrics();
 
