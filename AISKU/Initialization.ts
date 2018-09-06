@@ -122,7 +122,7 @@ export class Initialization {
                 this.core.getTransmissionControl().flush(true);
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
-                appInsightsInstance.context._sessionManager.backup();
+                this.properties._sessionManager.backup();
             };
 
             if (!Util.addEventHandler('beforeunload', performHousekeeping)) {

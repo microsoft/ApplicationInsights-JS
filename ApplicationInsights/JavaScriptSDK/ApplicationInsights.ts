@@ -24,6 +24,7 @@ import { TelemetryItemCreator } from "./TelemetryItemCreator";
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
     public static appInsightsDefaultConfig: IConfiguration;
+    public static Version = "0.0.1";
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
     public identifier: string = "ApplicationInsightsAnalytics";
     public priority: number;
@@ -109,14 +110,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         // set instrumentation key
         telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
 
-        // TODO(barustum): Removed a sampling check here. Re-add once we have sampling plugin ready
-        if (telemetryItem.name === Metric.envelopeType) {
-            var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
-            telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
+        var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
+        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
 
-            // map and send data
-            this.core.track(telemetryItem);
-        }
+        // map and send data
+        this.core.track(telemetryItem);
 
         // reset ajaxes counter
         this._trackAjaxAttempts = 0;

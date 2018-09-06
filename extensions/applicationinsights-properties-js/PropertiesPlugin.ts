@@ -20,7 +20,7 @@ import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 import { ITelemetryContext } from './Interfaces/ITelemetryContext';
 
 export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryContext {
-    public priority;
+    public priority = 3;
     public identifier = "AppInsightsPropertiesPlugin";
     public application: Application; // The object describing a component tracked by this object.
     public device: Device; // The object describing a device tracked by this object.
@@ -30,14 +30,28 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
     public internal: Internal;
     public session: Session; // The object describing a session tracked by this object.
     public sample: Sample;
+    public _sessionManager: _SessionManager; // The session manager that manages session on the base of cookies.
 
     private _nextPlugin: ITelemetryPlugin;
     private _extensionConfig: ITelemetryConfig;
-    private _sessionManager: _SessionManager; // The session manager that manages session on the base of cookies.
 
     initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
-        this._extensionConfig = config.extensions && config.extensions[this.identifier] ? config.extensions[this.identifier] : <ITelemetryConfig>{};
+        let extensionConfig = config.extensions &&
+            config.extensions[this.identifier] ?
+            config.extensions[this.identifier] : {};
 
+        this._extensionConfig = {
+            instrumentationKey: () => extensionConfig.instrumentationKey,
+            accountId: () => extensionConfig.accountId,
+            sessionRenewalMs: () => extensionConfig.sessionRenewalMs,
+            sampleRate: () => extensionConfig.sampleRate,
+            sessionExpirationMs: () => extensionConfig.sessionExpirationMs,
+            cookieDomain: () => extensionConfig.cookieDomain,
+            sdkExtension: () => extensionConfig.sdkExtension,
+            isBrowserLinkTrackingEnabled: () => extensionConfig.isBrowserLinkTrackingEnabled,
+            appId: () => extensionConfig.appId
+        };
+        
         if (typeof window !== 'undefined') {
             this._sessionManager = new _SessionManager(this._extensionConfig);
             this.application = new Application();
