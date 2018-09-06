@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-sdk-js",
-    "version": "0.0.9",
+    "version": "0.0.10",
     "description": "Microsoft Application Insights Javascript SDK apis",
     "main": "bundle/applicationinsights-sdk-js.js",
     "types": "bundle/applicationinsights-sdk-js.d.ts",
@@ -15,10 +15,10 @@
         "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
     },
     "dependencies": {
-        "applicationinsights-analytics-js": "0.0.73",
+        "applicationinsights-analytics-js": "0.0.75",
         "applicationinsights-channel-js": "0.0.25",
-        "applicationinsights-common": "0.0.65",
-        "applicationinsights-core-js": "0.0.59",
+        "applicationinsights-common": "0.0.71",
+        "applicationinsights-core-js": "0.0.69",
         "source-map-loader": "^0.2.3",
         "ts-loader": "^4.4.2",
         "webpack": "^4.16.4"
