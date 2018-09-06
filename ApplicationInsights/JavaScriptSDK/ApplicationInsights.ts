@@ -1,16 +1,19 @@
-/// <reference types="applicationinsights-common" />
+/**
+ * ApplicationInsights.ts
+ * @copyright Microsoft 2018
+ */
 
 import {
-    Event, IConfig,
-    _InternalLogging, LoggingSeverity,
-    _InternalMessageId, Util,
-    Data, Envelope,
-    Trace, PageViewPerformance, PageView, DataSanitizer
+    IConfig, _InternalLogging, LoggingSeverity,
+    _InternalMessageId, Util, PageViewPerformance,
+    PageView, IEnvelope, RemoteDependencyData,
+    Data, Metric
 } from "applicationinsights-common";
-
+import {
+    IPlugin, IConfiguration, IAppInsightsCore,
+    ITelemetryPlugin, CoreUtils, ITelemetryItem
+} from "applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
-import { IPlugin, IConfiguration, IAppInsightsCore, ITelemetryPlugin, CoreUtils, ITelemetryItem } from "applicationinsights-core-js";
-import { TelemetryContext } from "./TelemetryContext";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { IAppInsights } from "../JavascriptSDK.Interfaces/IAppInsights";
 import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../JavascriptSDK.Interfaces/IPageViewTelemetry";
@@ -20,15 +23,20 @@ import { TelemetryItemCreator } from "./TelemetryItemCreator";
 "use strict";
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
-
-    public static defaultIdentifier = "ApplicationInsightsAnalytics";
-    public identifier: string;
-    priority: number;
-    public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
-
+    public static appInsightsDefaultConfig: IConfiguration;
     public static Version = "0.0.1";
+    public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
+    public identifier: string = "ApplicationInsightsAnalytics";
+    public priority: number;
+    public config: IConfig;
+    public core: IAppInsightsCore;
+    public queue: (() => void)[];
+
     private _globalconfig: IConfiguration;
     private _nextPlugin: ITelemetryPlugin;
+    private _telemetryInitializers: { (envelope: IEnvelope): boolean | void; }[]; // Internal telemetry initializers.
+    private _pageViewManager: PageViewManager;
+    private _pageVisitTimeManager: PageVisitTimeManager;
 
     // Counts number of trackAjax invokations.
     // By default we only monitor X ajax call per view to avoid too much load.
@@ -36,22 +44,31 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     // This counter keeps increasing even after the limit is reached.
     private _trackAjaxAttempts: number = 0;
 
-    private _pageViewManager: PageViewManager;
-    private _pageVisitTimeManager: PageVisitTimeManager;
-
-    public config: IConfig;
-    public core: IAppInsightsCore;
-    public context: TelemetryContext;
-    public queue: (() => void)[];
-    public static appInsightsDefaultConfig: IConfiguration;
-
     constructor() {
-        this.identifier = ApplicationInsights.defaultIdentifier;
         this.initialize = this._initialize.bind(this);
     }
 
     public processTelemetry(env: ITelemetryItem) {
-        if (!CoreUtils.isNullOrUndefined(this._nextPlugin)) {
+        var doNotSendItem = false;
+        try {
+            var telemetryInitializersCount = this._telemetryInitializers.length;
+            for (var i = 0; i < telemetryInitializersCount; ++i) {
+                var telemetryInitializer = this._telemetryInitializers[i];
+                if (telemetryInitializer) {
+                    if (telemetryInitializer.apply(null, [env]) === false) {
+                        doNotSendItem = true;
+                        break;
+                    }
+                }
+            }
+        } catch (e) {
+            doNotSendItem = true;
+            _InternalLogging.throwInternal(
+                LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) }, true);
+        }
+
+        if (!doNotSendItem && !CoreUtils.isNullOrUndefined(this._nextPlugin)) {
             this._nextPlugin.processTelemetry(env);
         }
     }
@@ -81,10 +98,23 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
     }
 
+    /**
+     * Create a page view telemetry item and send it to the SDK pipeline through the core.track API
+     * @param pageView Page view item to be sent
+     * @param properties Custom properties (Part C) that a user can add to the telemetry item
+     * @param systemProperties System level properties (Part A) that a user can add to the telemetry item
+     */
     public sendPageViewInternal(pageView: IPageViewTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         let telemetryItem = TelemetryItemCreator.createItem(pageView, PageView.dataType, PageView.envelopeType, properties, systemProperties);
 
-        this.context.track(telemetryItem);
+        // set instrumentation key
+        telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
+
+        var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
+        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
+
+        // map and send data
+        this.core.track(telemetryItem);
 
         // reset ajaxes counter
         this._trackAjaxAttempts = 0;
@@ -160,9 +190,10 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             appId: () => this.config.appId
         }
 
-        this.context = new TelemetryContext(configGetters, this.core);
-
         this._pageViewManager = new PageViewManager(this, this.config.overridePageViewDuration, this.core);
+
+        this._telemetryInitializers = [];
+        this._addDefaultTelemetryInitializers(configGetters);
 
         /*
         TODO: renable this trackEvent once we support trackEvent in this package. Created task to track this:
@@ -203,6 +234,33 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             this.sendPageViewInternal(pageViewItem, properties);
         }
         */
+    }
+
+    // Todo: move to separate extension
+    private _addDefaultTelemetryInitializers(configGetters: ITelemetryConfig) {
+        if (!configGetters.isBrowserLinkTrackingEnabled()) {
+            const browserLinkPaths = ['/browserLinkSignalR/', '/__browserLink/'];
+            let dropBrowserLinkRequests = (envelope: IEnvelope) => {
+                if (envelope.name === RemoteDependencyData.envelopeType) {
+                    let remoteData = envelope.data as Data<RemoteDependencyData>;
+                    if (remoteData && remoteData.baseData) {
+                        for (let i = 0; i < browserLinkPaths.length; i++) {
+                            if (remoteData.baseData.name.indexOf(browserLinkPaths[i]) >= 0) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+
+                return true;
+            }
+
+            this.addTelemetryInitializer(dropBrowserLinkRequests)
+        }
+    }
+
+    private addTelemetryInitializer(telemetryInitializer: (envelope: IEnvelope) => boolean | void) {
+        this._telemetryInitializers.push(telemetryInitializer);
     }
 }
 

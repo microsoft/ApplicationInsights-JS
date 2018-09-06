@@ -1,6 +1,5 @@
-﻿import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
-import { Envelope } from 'applicationinsights-common';
-import { ISample } from '../../JavascriptSDK.Interfaces/Context/ISample';
+import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
+import { ISample } from '../Interfaces/Context/ISample';
 import { IEnvelope, _InternalLogging, _InternalMessageId, LoggingSeverity } from 'applicationinsights-common';
 import { ITelemetryItem } from 'applicationinsights-core-js';
 
