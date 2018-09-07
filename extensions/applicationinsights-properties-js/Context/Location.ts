@@ -1,4 +1,4 @@
-﻿import { ILocation } from '../../JavaScriptSDK.Interfaces/Context/ILocation';
+﻿import { ILocation } from '../Interfaces/Context/ILocation';
 
 export class Location implements ILocation {
 

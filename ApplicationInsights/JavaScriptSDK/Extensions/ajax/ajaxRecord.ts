@@ -1,5 +1,4 @@
-﻿import { DataSanitizer, UrlHelper } from 'applicationinsights-common';
-import { dateTime } from './ajaxUtils';
+﻿import { DataSanitizer, UrlHelper, DateTimeUtils } from 'applicationinsights-common';
 
 export class XHRMonitoringState {
     public openDone: boolean = false;
@@ -69,7 +68,7 @@ export class ajaxRecord {
     public CalculateMetrics = function () {
         var self = this;
         // round to 3 decimal points
-        self.ajaxTotalDuration = Math.round(dateTime.GetDuration(self.requestSentTime, self.responseFinishedTime) * 1000) / 1000;
+        self.ajaxTotalDuration = Math.round(DateTimeUtils.GetDuration(self.requestSentTime, self.responseFinishedTime) * 1000) / 1000;
     }
 };
 
