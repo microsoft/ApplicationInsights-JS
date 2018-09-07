@@ -22,6 +22,8 @@ import { TelemetryItemCreator } from "./TelemetryItemCreator";
 
 "use strict";
 
+const durationProperty: string = "duration";
+
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
     public static appInsightsDefaultConfig: IConfiguration;
     public static Version = "0.0.1";
@@ -294,7 +296,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             if (CoreUtils.isNullOrUndefined(properties)) {
                 properties = {};
             }
-            properties["duration"] = duration;
+            properties[durationProperty] = duration;
             this.sendPageViewInternal(pageViewItem, properties);
         }
     }
