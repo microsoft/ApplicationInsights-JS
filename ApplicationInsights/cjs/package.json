@@ -12,6 +12,6 @@
     },
     "dependencies": {
         "applicationinsights-common": "0.0.72",
-        "applicationinsights-core-js": "0.0.58"
+        "applicationinsights-core-js": "0.0.68"
     }
 }
