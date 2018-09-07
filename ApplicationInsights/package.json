@@ -1,17 +1,20 @@
 {
     "name": "applicationinsights-analytics-js",
-    "version": "0.0.71",
+    "version": "0.0.77",
     "description": "Microsoft Application Insights Javascript SDK apis",
     "main": "bundle/applicationinsights-analytics-js.js",
     "types": "bundle/applicationinsights-analytics-js.d.ts",
     "devDependencies": {
-        "typescript": "2.5.3"
+        "typescript": "2.5.3",
+        "grunt": "1.0.1",
+        "grunt-contrib-qunit": "2.0.0",
+        "grunt-ts": "^6.0.0-beta.15"
     },
     "publishConfig": {
         "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
     },
     "dependencies": {
-        "applicationinsights-common": "0.0.65",
-        "applicationinsights-core-js": "0.0.59"
+        "applicationinsights-common": "0.0.73",
+        "applicationinsights-core-js": "0.0.67"
     }
 }

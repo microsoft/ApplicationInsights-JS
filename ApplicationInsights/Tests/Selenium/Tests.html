@@ -24,23 +24,27 @@
         require([
             'qunit', // Load qunit here instead of with tests, otherwise will not work
             'core/applicationinsights-core-js',
-            'common/applicationinsights-common'
-        ], function (QUnit, aicore, aicommon) {
+        ], function (QUnit, aicore) {
             // aichannel is expecting to import from i.e 'applicationinsights-core-js', so create a temp module
             define('applicationinsights-core-js', function () { return aicore; });
-            define('applicationinsights-common', function () { return aicommon; });
-            require.config({
-                baseUrl: './'
-            });
-            
-            require([
-                "Tests/Selenium/appinsights-analytics.tests"
-            ], function (tests) {
-                QUnit.start();
-                tests.runTests();
-            }, function (err) {
-                console.log('REQUIRE ERROR:', err.toString());
-            });
+
+            require(['common/applicationinsights-common'], function (aicommon) {
+                define('applicationinsights-common', function () { return aicommon; });
+                require.config({
+                    baseUrl: './'
+                });
+
+                require([
+                    "Tests/Selenium/appinsights-analytics.tests"
+                ], function (tests) {
+                    QUnit.start();
+                    tests.runTests();
+                }, function (err) {
+                    console.log('REQUIRE ERROR:', err.toString());
+                });
+            })
+
+
         });
     </script>
 </head>

@@ -3,10 +3,8 @@ import { IDevice } from './Context/IDevice';
 import { IInternal } from './Context/IInternal';
 import { ILocation } from './Context/ILocation';
 import { IOperation } from './Context/IOperation';
-import { ISample } from './Context/ISample';
 import { IUser } from './Context/IUser';
 import { ISession } from './Context/ISession';
-import { ITelemetryItem } from 'applicationinsights-core-js';
 
 export interface ITelemetryContext {
     /**
@@ -35,11 +33,6 @@ export interface ITelemetryContext {
     operation: IOperation;
 
     /**
-    * The object describing sampling settings.
-    */
-    sample: ISample;
-
-    /**
      * The object describing a user tracked by this object.
      */
     user: IUser;
@@ -48,9 +41,4 @@ export interface ITelemetryContext {
      * The object describing a session tracked by this object.
      */
     session: ISession;
-
-    /**
-    * Tracks telemetry object.
-    */
-    track(envelope: ITelemetryItem);
 }

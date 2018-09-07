@@ -173,3 +173,6 @@ coreSDK/node_modules
 
 # Grunt
 .tscache
+ApplicationInsights/Tests/Selenium/*.tests.js
+ApplicationInsights/Tests/Selenium/*.tests.d.ts
+ApplicationInsights/Tests/Selenium/*.tests.js.map

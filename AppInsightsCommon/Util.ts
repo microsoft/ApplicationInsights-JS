@@ -1,4 +1,5 @@
-﻿import { StorageType, LoggingSeverity, _InternalMessageId } from "./Enums";
+﻿import { CoreUtils } from "applicationinsights-core-js";
+import { StorageType, LoggingSeverity, _InternalMessageId } from "./Enums";
 import { _InternalLogging } from "./Logging";
 import { IConfig } from "./Interfaces/IConfig";
 import { RequestHeaders } from "./RequestResponseHeaders";
@@ -673,5 +674,34 @@ export class AjaxHelper {
             target: target,
             name: name
         };
+    }
+}
+
+/**
+ * A utility class that helps getting time related parameters
+ */
+export class DateTimeUtils {
+    /**
+     * Get the number of milliseconds since 1970/01/01 in local timezone
+     */
+    public static Now = (window.performance && window.performance.now && window.performance.timing) ?
+        function () {
+            return window.performance.now() + window.performance.timing.navigationStart;
+        }
+        :
+        function () {
+            return new Date().getTime();
+        }
+
+    /**
+     * Gets duration between two timestamps
+     */
+    public static GetDuration = function (start: number, end: number): number {
+        var result = null;
+        if (start !== 0 && end !== 0 && !CoreUtils.isNullOrUndefined(start) && !CoreUtils.isNullOrUndefined(end)) {
+            result = end - start;
+        }
+
+        return result;
     }
 }
