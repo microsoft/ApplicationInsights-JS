@@ -12,8 +12,8 @@
         "grunt-ts": "^6.0.0-beta.15"
     },
     "dependencies": {
-        "applicationinsights-common": "0.0.73",
-        "applicationinsights-core-js": "0.0.69"
+        "applicationinsights-common": "^0.0.73",
+        "applicationinsights-core-js": "^0.0.69"
     },
     "publishConfig": {
         "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
