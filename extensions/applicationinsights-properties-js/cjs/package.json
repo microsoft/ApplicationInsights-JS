@@ -12,8 +12,13 @@
         "typescript": "2.5.3"
     },
     "dependencies": {
+<<<<<<< HEAD
         "applicationinsights-common": "0.0.72",
         "applicationinsights-core-js": "0.0.68"
+=======
+        "applicationinsights-common": "^0.0.72",
+        "applicationinsights-core-js": "^0.0.68"
+>>>>>>> master
     },
     "publishConfig": {
          "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
