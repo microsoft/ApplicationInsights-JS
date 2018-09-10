@@ -22,6 +22,8 @@ import { TelemetryItemCreator } from "./TelemetryItemCreator";
 
 "use strict";
 
+const durationProperty: string = "duration";
+
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
     public static appInsightsDefaultConfig: IConfiguration;
     public static Version = "0.0.1";
@@ -34,6 +36,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
     private _globalconfig: IConfiguration;
     private _nextPlugin: ITelemetryPlugin;
+    private _pageTracking: Timing;
     private _telemetryInitializers: { (envelope: IEnvelope): boolean | void; }[]; // Internal telemetry initializers.
     private _pageViewManager: PageViewManager;
     private _pageVisitTimeManager: PageVisitTimeManager;
@@ -80,7 +83,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     /**
      * Logs that a page or other item was viewed. 
      * @param IPageViewTelemetry The string you used as the name in startTrackPage. Defaults to the document title.
-     * @param customProperties Additional data used to filter events and metrics. Defaults to empty.
+     * @param customProperties Additional data used to filter events and metrics. Defaults to empty. If a user wants
+     *                         to provide a custom duration, it'll have to be in customProperties
      */
     public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any }) {
         try {
@@ -105,7 +109,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param systemProperties System level properties (Part A) that a user can add to the telemetry item
      */
     public sendPageViewInternal(pageView: IPageViewTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
-        let telemetryItem = TelemetryItemCreator.createItem(pageView, PageView.dataType, PageView.envelopeType, properties, systemProperties);
+        let telemetryItem = TelemetryItemCreator.createItem(pageView,
+            PageView.dataType,
+            PageView.envelopeType,
+            properties,
+            systemProperties);
 
         // set instrumentation key
         telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
@@ -113,22 +121,77 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
         telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
 
-        // map and send data
         this.core.track(telemetryItem);
 
         // reset ajaxes counter
         this._trackAjaxAttempts = 0;
     }
 
-    public sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance) {
-        // TODO: Commenting out for now as we this package only supports pageViewTelemetry. Added task 
-        // https://mseng.visualstudio.com/AppInsights/_workitems/edit/1310811
-        /*
-        var pageViewPerformanceData = new Data<PageViewPerformance>(
-            PageViewPerformance.dataType, pageViewPerformance);
-        var pageViewPerformanceEnvelope = new Envelope(pageViewPerformanceData, PageViewPerformance.envelopeType);
-        this.context.track(pageViewPerformanceEnvelope);
-        */
+    public sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance, properties?: { [key: string]: any }) {
+        let telemetryItem = TelemetryItemCreator.createItem(pageViewPerformance,
+            PageViewPerformance.dataType,
+            PageViewPerformance.envelopeType,
+            properties);
+
+        // set instrumentation key
+        telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
+
+        var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
+        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
+
+        this.core.track(telemetryItem);
+    }
+
+    /**
+     * Starts timing how long the user views a page or other item. Call this when the page opens. 
+     * This method doesn't send any telemetry. Call {@link stopTrackTelemetry} to log the page when it closes.
+     * @param name A string that idenfities this item, unique within this HTML document. Defaults to the document title.
+     */
+    public startTrackPage(name?: string) {
+        try {
+            if (typeof name !== "string") {
+                name = window.document && window.document.title || "";
+            }
+
+            this._pageTracking.start(name);
+        } catch (e) {
+            _InternalLogging.throwInternal(
+                LoggingSeverity.CRITICAL,
+                _InternalMessageId.StartTrackFailed,
+                "startTrackPage failed, page view may not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) });
+        }
+    }
+
+    /**
+     * Logs how long a page or other item was visible, after {@link startTrackPage}. Call this when the page closes. 
+     * @param name The string you used as the name in startTrackPage. Defaults to the document title.
+     * @param url A relative or absolute URL that identifies the page or other item. Defaults to the window location.
+     * @param properties Additional data used to filter pages and metrics in the portal. Defaults to empty. 
+     *                   Any property of type double will be considered a measurement, and will be treated by Application Insights as a metric
+     */
+    public stopTrackPage(name?: string, url?: string, properties?: Object) {
+        try {
+            if (typeof name !== "string") {
+                name = window.document && window.document.title || "";
+            }
+
+            if (typeof url !== "string") {
+                url = window.location && window.location.href || "";
+            }
+
+            this._pageTracking.stop(name, url, properties);
+
+            if (this.config.autoTrackPageVisitTime) {
+                this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
+            }
+        } catch (e) {
+            _InternalLogging.throwInternal(
+                LoggingSeverity.CRITICAL,
+                _InternalMessageId.StopTrackFailed,
+                "stopTrackPage failed, page view will not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) });
+        }
     }
 
     private _initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
@@ -221,19 +284,21 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
         */
 
-        /* TODO re-enable once we add support for startTrackPage. Task to track this:
-        https://mseng.visualstudio.com/AppInsights/1DS-Web/_workitems/edit/1305304
         // initialize page view timing
         this._pageTracking = new Timing("trackPageView");
-        this._pageTracking.action = (name, url, duration, properties, measurements) => {
+        this._pageTracking.action = (name, url, duration, properties) => {
             let pageViewItem: IPageViewTelemetry = {
                 name: name,
-                uri: url,
-                duration: duration,
+                uri: url
             };
+
+            // duration must be a custom property in order for the collector to extract it
+            if (CoreUtils.isNullOrUndefined(properties)) {
+                properties = {};
+            }
+            properties[durationProperty] = duration;
             this.sendPageViewInternal(pageViewItem, properties);
         }
-        */
     }
 
     // Todo: move to separate extension
@@ -289,7 +354,7 @@ class Timing {
         this._events[name] = +new Date;
     }
 
-    public stop(name: string, url: string, properties?: Object, measurements?: Object) {
+    public stop(name: string, url: string, properties?: Object) {
         var start = this._events[name];
         if (isNaN(start)) {
             _InternalLogging.throwInternal(
@@ -298,12 +363,12 @@ class Timing {
         } else {
             var end = +new Date;
             var duration = PageViewPerformance.getDuration(start, end);
-            this.action(name, url, duration, properties, measurements);
+            this.action(name, url, duration, properties);
         }
 
         delete this._events[name];
         this._events[name] = undefined;
     }
 
-    public action: (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => void;
+    public action: (name?: string, url?: string, duration?: number, properties?: Object) => void;
 }
