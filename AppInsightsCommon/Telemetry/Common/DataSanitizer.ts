@@ -1,4 +1,4 @@
-﻿import { _InternalLogging, LoggingSeverity, _InternalMessageId } from 'applicationinsights-core-js';
+﻿import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId } from 'applicationinsights-core-js';
 import { Util } from '../../Util';
 
 export class DataSanitizer {
@@ -38,9 +38,9 @@ export class DataSanitizer {
      */
     private static MAX_EXCEPTION_LENGTH = 32768;
 
-    public static sanitizeKeyAndAddUniqueness(key, map) {
+    public static sanitizeKeyAndAddUniqueness(logger: IDiagnosticLogger, key, map) {
         var origLength = key.length;
-        var field = DataSanitizer.sanitizeKey(key);
+        var field = DataSanitizer.sanitizeKey(logger, key);
 
         // validation truncated the length.  We need to add uniqueness
         if (field.length !== origLength) {
@@ -55,7 +55,7 @@ export class DataSanitizer {
         return field;
     }
 
-    public static sanitizeKey(name) {
+    public static sanitizeKey(logger: IDiagnosticLogger, name) {
         if (name) {
             // Remove any leading or trailing whitepace
             name = Util.trim(name.toString());
@@ -63,7 +63,7 @@ export class DataSanitizer {
             // truncate the string to 150 chars
             if (name.length > DataSanitizer.MAX_NAME_LENGTH) {
                 name = name.substring(0, DataSanitizer.MAX_NAME_LENGTH);
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.NameTooLong,
                     "name is too long.  It has been truncated to " + DataSanitizer.MAX_NAME_LENGTH + " characters.",
@@ -74,13 +74,13 @@ export class DataSanitizer {
         return name;
     }
 
-    public static sanitizeString(value, maxLength: number = DataSanitizer.MAX_STRING_LENGTH) {
+    public static sanitizeString(logger: IDiagnosticLogger, value, maxLength: number = DataSanitizer.MAX_STRING_LENGTH) {
         if (value) {
             maxLength = maxLength ? maxLength : DataSanitizer.MAX_STRING_LENGTH; // in case default parameters dont work
             value = Util.trim(value);
             if (value.toString().length > maxLength) {
                 value = value.toString().substring(0, maxLength);
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.StringValueTooLong,
                     "string value is too long. It has been truncated to " + maxLength + " characters.",
@@ -91,15 +91,15 @@ export class DataSanitizer {
         return value;
     }
 
-    public static sanitizeUrl(url) {
-        return DataSanitizer.sanitizeInput(url, DataSanitizer.MAX_URL_LENGTH, _InternalMessageId.UrlTooLong);
+    public static sanitizeUrl(logger: IDiagnosticLogger, url) {
+        return DataSanitizer.sanitizeInput(logger, url, DataSanitizer.MAX_URL_LENGTH, _InternalMessageId.UrlTooLong);
     }
 
-    public static sanitizeMessage(message) {
+    public static sanitizeMessage(logger: IDiagnosticLogger, message) {
         if (message) {
             if (message.length > DataSanitizer.MAX_MESSAGE_LENGTH) {
                 message = message.substring(0, DataSanitizer.MAX_MESSAGE_LENGTH);
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING, _InternalMessageId.MessageTruncated,
                     "message is too long, it has been truncated to " + DataSanitizer.MAX_MESSAGE_LENGTH + " characters.",
                     { message: message },
@@ -110,11 +110,11 @@ export class DataSanitizer {
         return message;
     }
 
-    public static sanitizeException(exception) {
+    public static sanitizeException(logger: IDiagnosticLogger, exception) {
         if (exception) {
             if (exception.length > DataSanitizer.MAX_EXCEPTION_LENGTH) {
                 exception = exception.substring(0, DataSanitizer.MAX_EXCEPTION_LENGTH);
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING, _InternalMessageId.ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizer.MAX_EXCEPTION_LENGTH + " characters.",
                     { exception: exception }, true);
             }
@@ -123,12 +123,12 @@ export class DataSanitizer {
         return exception;
     }
 
-    public static sanitizeProperties(properties) {
+    public static sanitizeProperties(logger: IDiagnosticLogger, properties) {
         if (properties) {
             var tempProps = {};
             for (var prop in properties) {
                 var value = DataSanitizer.sanitizeString(properties[prop], DataSanitizer.MAX_PROPERTY_LENGTH);
-                prop = DataSanitizer.sanitizeKeyAndAddUniqueness(prop, tempProps);
+                prop = DataSanitizer.sanitizeKeyAndAddUniqueness(logger, prop, tempProps);
                 tempProps[prop] = value;
             }
             properties = tempProps;
@@ -137,12 +137,12 @@ export class DataSanitizer {
         return properties;
     }
 
-    public static sanitizeMeasurements(measurements) {
+    public static sanitizeMeasurements(logger: IDiagnosticLogger, measurements) {
         if (measurements) {
             var tempMeasurements = {};
             for (var measure in measurements) {
                 var value = measurements[measure];
-                measure = DataSanitizer.sanitizeKeyAndAddUniqueness(measure, tempMeasurements);
+                measure = DataSanitizer.sanitizeKeyAndAddUniqueness(logger, measure, tempMeasurements);
                 tempMeasurements[measure] = value;
             }
             measurements = tempMeasurements;
@@ -151,16 +151,16 @@ export class DataSanitizer {
         return measurements;
     }
 
-    public static sanitizeId(id: string): string {
-        return id ? DataSanitizer.sanitizeInput(id, DataSanitizer.MAX_ID_LENGTH, _InternalMessageId.IdTooLong).toString() : id;
+    public static sanitizeId(logger: IDiagnosticLogger, id: string): string {
+        return id ? DataSanitizer.sanitizeInput(logger, id, DataSanitizer.MAX_ID_LENGTH, _InternalMessageId.IdTooLong).toString() : id;
     }
 
-    public static sanitizeInput(input: any, maxLength: number, _msgId: _InternalMessageId) {
+    public static sanitizeInput(logger: IDiagnosticLogger, input: any, maxLength: number, _msgId: _InternalMessageId) {
         if (input) {
             input = Util.trim(input);
             if (input.length > maxLength) {
                 input = input.substring(0, maxLength);
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _msgId,
                     "input is too long, it has been truncated to " + maxLength + " characters.",

@@ -4,6 +4,7 @@ import { IEnvelope } from '../../Interfaces/Telemetry/IEnvelope';
 import { DataSanitizer } from './DataSanitizer';
 import { FieldType } from '../../Enums';
 import { Util } from '../../Util';
+import { IDiagnosticLogger } from 'applicationinsights-core-js';
 
 export class Envelope extends AIEnvelope implements IEnvelope {
 
@@ -15,10 +16,10 @@ export class Envelope extends AIEnvelope implements IEnvelope {
     /**
      * Constructs a new instance of telemetry data.
      */
-    constructor(data: Base, name: string) {
+    constructor(logger: IDiagnosticLogger, data: Base, name: string) {
         super();
 
-        this.name = DataSanitizer.sanitizeString(name) || Util.NotSpecified;
+        this.name = DataSanitizer.sanitizeString(logger, name) || Util.NotSpecified;
         this.data = data;
         this.time = Util.toISOStringForIE8(new Date());
 

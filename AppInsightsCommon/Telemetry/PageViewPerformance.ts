@@ -3,7 +3,7 @@ import { FieldType } from '../Enums';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
 import { Util } from '../Util';
-import { _InternalLogging, _InternalMessageId, LoggingSeverity } from 'applicationinsights-core-js';
+import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from 'applicationinsights-core-js';
 
 
 export class PageViewPerformance extends PageViewPerfData implements ISerializable {
@@ -51,7 +51,7 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
     /**
      * Constructs a new instance of the PageEventTelemetry object
      */
-    constructor(name: string, url: string, unused: number, properties?: any, measurements?: any) {
+    constructor(logger: IDiagnosticLogger, name: string, url: string, unused: number, properties?: any, measurements?: any) {
         super();
 
         this.isValid = false;
@@ -77,14 +77,14 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
             var dom = PageViewPerformance.getDuration(timing.responseEnd, timing.loadEventEnd);
 
             if (total == 0) {
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.ErrorPVCalc,
                     "error calculating page view performance.",
                     { total: total, network: network, request: request, response: response, dom: dom });
 
             } else if (!PageViewPerformance.shouldCollectDuration(total, network, request, response, dom)) {
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.InvalidDurationValue,
                     "Invalid page load duration value. Browser perf data won't be sent.",
@@ -93,7 +93,7 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
             } else if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
                 // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
                 // in this case, don't report client performance from this page
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.ClientPerformanceMathError,
                     "client performance math error.",
@@ -113,11 +113,11 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
             }
         }
 
-        this.url = DataSanitizer.sanitizeUrl(url);
-        this.name = DataSanitizer.sanitizeString(name) || Util.NotSpecified;
+        this.url = DataSanitizer.sanitizeUrl(logger, url);
+        this.name = DataSanitizer.sanitizeString(logger, name) || Util.NotSpecified;
 
-        this.properties = DataSanitizer.sanitizeProperties(properties);
-        this.measurements = DataSanitizer.sanitizeMeasurements(measurements);
+        this.properties = DataSanitizer.sanitizeProperties(logger, properties);
+        this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
     }
 
     public static getPerformanceTiming(): PerformanceTiming {
