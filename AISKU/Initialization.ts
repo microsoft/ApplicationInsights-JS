@@ -7,7 +7,7 @@ import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _In
 import { ApplicationInsights } from "applicationinsights-analytics-js";
 import { Util, IConfig } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
-
+import { PropertiesPlugin } from "applicationinsights-properties-js";
 
 "use strict";
 
@@ -21,6 +21,7 @@ export class Initialization {
     public config: IConfiguration;
     private core: IAppInsightsCore;
     private appInsights: ApplicationInsights;
+    private properties: PropertiesPlugin;
 
     constructor(snippet: Snippet) {
 
@@ -38,6 +39,8 @@ export class Initialization {
         // set default values using config passed through snippet
         config = Initialization.getDefaultConfig(config, this.appInsights.identifier);
 
+        this.properties = new PropertiesPlugin();
+
         this.snippet = snippet;
         this.config = config;
     }
@@ -49,6 +52,7 @@ export class Initialization {
         let appInsightsChannel: Sender = new Sender();
 
         extensions.push(appInsightsChannel);
+        extensions.push(this.properties);
         extensions.push(this.appInsights);
 
         // initialize core
@@ -115,10 +119,10 @@ export class Initialization {
 
                 //appInsightsInstance.context._sender.triggerSend();
 
-                this.core.getTransmissionControl().flush(true);
+                appInsightsInstance.core.getTransmissionControl().flush(true);
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
-                appInsightsInstance.context._sessionManager.backup();
+                this.properties._sessionManager.backup();
             };
 
             if (!Util.addEventHandler('beforeunload', performHousekeeping)) {

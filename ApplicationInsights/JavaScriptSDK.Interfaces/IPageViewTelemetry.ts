@@ -18,11 +18,6 @@ export interface IPageViewTelemetry {
     refUri?: string;
 
     /*
-     * duration  number - the number of milliseconds it took to load the page. Defaults to undefined. If set to default value, page load time is calculated internally.
-     */
-    duration?: number;
-
-    /*
      * pageType  String - page type
      */
     pageType?: string;

@@ -1,4 +1,4 @@
-﻿import { IOperation } from '../../JavaScriptSDK.Interfaces/Context/IOperation';
+﻿import { IOperation } from '../Interfaces/Context/IOperation';
 import { Util } from 'applicationinsights-common';
 
 export class Operation implements IOperation {

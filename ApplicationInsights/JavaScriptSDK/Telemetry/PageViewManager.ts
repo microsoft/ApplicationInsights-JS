@@ -1,8 +1,8 @@
 ﻿import {
-    PageViewData, PageViewPerformance,
-    Util, IChannelControlsAI
+    PageViewPerformance, Util,
+    IChannelControlsAI
 } from 'applicationinsights-common';
-import { IAppInsightsCore, CoreUtils, _InternalLogging, LoggingSeverity,
+import { IAppInsightsCore, CoreUtils, IDiagnosticLogger, LoggingSeverity,
     _InternalMessageId } from 'applicationinsights-core-js';
 import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../../JavascriptSDK.Interfaces/IPageViewTelemetry";
 
@@ -11,9 +11,8 @@ import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../../Javascript
 */
 export interface IAppInsightsInternal {
     sendPageViewInternal(pageViewItem: IPageViewTelemetryInternal, properties?: Object);
-    sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance);
+    sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance, properties?: Object);
 }
-
 
 /**
 * Class encapsulates sending page views and page view performance telemetry.
@@ -88,11 +87,15 @@ export class PageViewManager {
 
         // if the user has provided duration, send a page view telemetry with the provided duration. Otherwise, if
         // overridePageViewDuration is set to true, send a page view telemetry with the custom duration calculated earlier
-        let duration = pageView.duration
+        let duration = undefined;
+        if (!CoreUtils.isNullOrUndefined(customProperties) &&
+            !CoreUtils.isNullOrUndefined(customProperties.duration)) {
+            duration = customProperties.duration;
+        }
         if (this.overridePageViewDuration || !isNaN(duration)) {
             if (isNaN(duration)) {
                 // case 3
-                pageView.duration = customDuration
+                customProperties["duration"] = customDuration;
             }
             // case 2
             this.appInsights.sendPageViewInternal(
@@ -108,28 +111,26 @@ export class PageViewManager {
             try {
                 if (PageViewPerformance.isPerformanceTimingDataReady()) {
                     clearInterval(handle);
-                    // TODO: For now, sent undefined for measurements in the below code this package only supports pageViewTelemetry. Added task 
-                    // https://mseng.visualstudio.com/AppInsights/_workitems/edit/1310811
-                    var pageViewPerformance = new PageViewPerformance(name, uri, null, customProperties, undefined);
+                    var pageViewPerformance = new PageViewPerformance(name, uri, null);
 
                     if (!pageViewPerformance.getIsValid() && !pageViewSent) {
                         // If navigation timing gives invalid numbers, then go back to "override page view duration" mode.
                         // That's the best value we can get that makes sense.
-                        pageView.duration = customDuration;
+                        customProperties["duration"] = customDuration;
                         this.appInsights.sendPageViewInternal(
                             pageView,
                             customProperties);
                         this._channel.flush();
                     } else {
                         if (!pageViewSent) {
-                            pageView.duration = pageViewPerformance.getDurationMs();
+                            customProperties["duration"] = pageViewPerformance.getDurationMs();
                             this.appInsights.sendPageViewInternal(
                                 pageView,
                                 customProperties);
                         }
 
                         if (!this.pageViewPerformanceSent) {
-                            this.appInsights.sendPageViewPerformanceInternal(pageViewPerformance);
+                            this.appInsights.sendPageViewPerformanceInternal(pageViewPerformance, customProperties);
                             this.pageViewPerformanceSent = true;
                         }
                         this._channel.flush();
@@ -139,7 +140,7 @@ export class PageViewManager {
                     // with the maximum duration limit. Otherwise, keep waiting until performance timings are ready
                     clearInterval(handle);
                     if (!pageViewSent) {
-                        pageView.duration = maxDurationLimit;
+                        customProperties["duration"] = maxDurationLimit;
                         this.appInsights.sendPageViewInternal(
                             pageView,
                             customProperties);

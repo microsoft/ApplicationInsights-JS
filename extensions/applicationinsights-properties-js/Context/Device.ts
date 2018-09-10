@@ -1,4 +1,4 @@
-﻿import { IDevice } from '../../JavaScriptSDK.Interfaces/Context/IDevice';
+﻿import { IDevice } from '../Interfaces/Context/IDevice';
 
 export class Device implements IDevice {
 

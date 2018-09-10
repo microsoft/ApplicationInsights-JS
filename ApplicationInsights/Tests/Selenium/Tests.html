@@ -8,25 +8,44 @@
     <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css">
     <script src="http://sinonjs.org/releases/sinon-2.3.8.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script>
-    <script src="../../node_modules/applicationinsights-common/bundle/applicationinsights-common.js"></script>
-    <script src="../../node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js.js"></script>
     <script src="appinsights-analytics.tests.js"></script>
 
     <script>
         require.config({
+            baseUrl: '../../',
             paths: {
-                qunit: "../External/qunit-1.23.1",
-                bridge: "../../node_modules/grunt-contrib-qunit/phantomjs/bridge"
+                core: 'node_modules/applicationinsights-core-js/bundle/',
+                common: 'node_modules/applicationinsights-common/bundle/',
+                qunit: "Tests/External/qunit-1.23.1"
             }
         });
 
-        require(
-            ["qunit", "Tests/Selenium/appinsights-analytics.tests"],
-            function (QUnit, tests) {
-                QUnit.start();
-                tests.runTests();
-            }
-        );
+        // Load core & common before channel tests
+        require([
+            'qunit', // Load qunit here instead of with tests, otherwise will not work
+            'core/applicationinsights-core-js',
+        ], function (QUnit, aicore) {
+            // aichannel is expecting to import from i.e 'applicationinsights-core-js', so create a temp module
+            define('applicationinsights-core-js', function () { return aicore; });
+
+            require(['common/applicationinsights-common'], function (aicommon) {
+                define('applicationinsights-common', function () { return aicommon; });
+                require.config({
+                    baseUrl: './'
+                });
+
+                require([
+                    "Tests/Selenium/appinsights-analytics.tests"
+                ], function (tests) {
+                    QUnit.start();
+                    tests.runTests();
+                }, function (err) {
+                    console.log('REQUIRE ERROR:', err.toString());
+                });
+            })
+
+
+        });
     </script>
 </head>
 

@@ -1,13 +1,9 @@
-﻿export class extensions {
-    public static IsNullOrUndefined(obj) {
-        return typeof (obj) === "undefined" || obj === null;
-    }
-}
+﻿import { CoreUtils } from 'applicationinsights-core-js';
 
 export class stringUtils {
     public static GetLength(strObject) {
         var res = 0;
-        if (!extensions.IsNullOrUndefined(strObject)) {
+        if (!CoreUtils.isNullOrUndefined(strObject)) {
             var stringified = "";
             try {
                 stringified = strObject.toString();
@@ -23,28 +19,6 @@ export class stringUtils {
     }
 }
 
-export class dateTime {
-    ///<summary>Return the number of milliseconds since 1970/01/01 in local timezon</summary>
-    public static Now = (window.performance && window.performance.now && window.performance.timing) ?
-        function () {
-            return window.performance.now() + window.performance.timing.navigationStart;
-        }
-        :
-        function () {
-            return new Date().getTime();
-        }
-
-    ///<summary>Gets duration between two timestamps</summary>
-    public static GetDuration = function (start: number, end: number): number {
-        var result = null;
-        if (start !== 0 && end !== 0 && !extensions.IsNullOrUndefined(start) && !extensions.IsNullOrUndefined(end)) {
-            result = end - start;
-        }
-
-        return result;
-    }
-}
-
 export class EventHelper {
     ///<summary>Binds the specified function to an event, so that the function gets called whenever the event fires on the object</summary>
     ///<param name="obj">Object to which </param>
@@ -53,14 +27,14 @@ export class EventHelper {
     ///<returns>True if the function was bound successfully to the event, otherwise false</returns>
     public static AttachEvent(obj, eventNameWithoutOn, handlerRef) {
         var result = false;
-        if (!extensions.IsNullOrUndefined(obj)) {
-            if (!extensions.IsNullOrUndefined(obj.attachEvent)) {
+        if (!CoreUtils.isNullOrUndefined(obj)) {
+            if (!CoreUtils.isNullOrUndefined(obj.attachEvent)) {
                 // IE before version 9                    
                 obj.attachEvent("on" + eventNameWithoutOn, handlerRef);
                 result = true;
             }
             else {
-                if (!extensions.IsNullOrUndefined(obj.addEventListener)) {
+                if (!CoreUtils.isNullOrUndefined(obj.addEventListener)) {
                     // all browsers except IE before version 9
                     obj.addEventListener(eventNameWithoutOn, handlerRef, false);
                     result = true;
@@ -72,12 +46,12 @@ export class EventHelper {
     }
 
     public static DetachEvent(obj, eventNameWithoutOn, handlerRef) {
-        if (!extensions.IsNullOrUndefined(obj)) {
-            if (!extensions.IsNullOrUndefined(obj.detachEvent)) {
+        if (!CoreUtils.isNullOrUndefined(obj)) {
+            if (!CoreUtils.isNullOrUndefined(obj.detachEvent)) {
                 obj.detachEvent("on" + eventNameWithoutOn, handlerRef);
             }
             else {
-                if (!extensions.IsNullOrUndefined(obj.removeEventListener)) {
+                if (!CoreUtils.isNullOrUndefined(obj.removeEventListener)) {
                     obj.removeEventListener(eventNameWithoutOn, handlerRef, false);
                 }
             }

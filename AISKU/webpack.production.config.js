@@ -1,7 +1,7 @@
 // command to create bundle: npx webpack --config webpack.config.js
 var webpack = require('webpack');
 var package = require('./package.json')
-var filename_suffix = "./aisdk." + package.version;
+var filename_suffix = "./aisdk." + package.version + ".min";
 var filename;
 var entry = {};
 var plugins = [];

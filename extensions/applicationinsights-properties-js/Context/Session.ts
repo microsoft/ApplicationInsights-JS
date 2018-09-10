@@ -1,7 +1,8 @@
-﻿import { ISession } from '../../JavaScriptSDK.Interfaces/Context/ISession';
-import { Util } from 'applicationinsights-common';
-import { _InternalLogging, _InternalMessageId, LoggingSeverity } from 'applicationinsights-core-js';
-import { dateTime } from '../../JavaScriptSDK/Extensions/ajax/ajaxUtils';
+import { ISession } from '../Interfaces/Context/ISession';
+import {
+    Util, DateTimeUtils 
+} from 'applicationinsights-common';
+import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from 'applicationinsights-core-js';
 
 export interface ISessionConfig {
     sessionRenewalMs: () => number;
@@ -68,7 +69,7 @@ export class _SessionManager {
             this.initializeAutomaticSession();
         }
 
-        var now = dateTime.Now();
+        var now = DateTimeUtils.Now();
 
         var acquisitionExpired = now - this.automaticSession.acquisitionDate > this.config.sessionExpirationMs();
         var renewalExpired = now - this.automaticSession.renewalDate > this.config.sessionRenewalMs();
@@ -162,7 +163,7 @@ export class _SessionManager {
     }
 
     private renew() {
-        var now = dateTime.Now();
+        var now = DateTimeUtils.Now();
 
         this.automaticSession.id = Util.newId();
         this.automaticSession.acquisitionDate = now;
@@ -196,7 +197,7 @@ export class _SessionManager {
 
         Util.setCookie('ai_session', cookie.join('|') + ';expires=' + cookieExpiry.toUTCString(), cookieDomnain);
 
-        this.cookieUpdatedTimestamp = dateTime.Now();
+        this.cookieUpdatedTimestamp = DateTimeUtils.Now();
     }
 
     private setStorage(guid: string, acq: number, renewal: number) {

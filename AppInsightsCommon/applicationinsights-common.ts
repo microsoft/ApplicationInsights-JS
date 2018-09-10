@@ -1,4 +1,4 @@
-export { Util, CorrelationIdHelper, UrlHelper } from './Util';
+export { Util, CorrelationIdHelper, UrlHelper, DateTimeUtils } from './Util';
 export { FieldType } from './Enums';
 export { RequestHeaders } from './RequestResponseHeaders';
 export { DisabledPropertyName } from './Constants';

@@ -1,4 +1,4 @@
-﻿import { IApplication } from '../../JavaScriptSDK.Interfaces/Context/IApplication';
+﻿import { IApplication } from '../Interfaces/Context/IApplication';
 
 export class Application implements IApplication {
     /**
