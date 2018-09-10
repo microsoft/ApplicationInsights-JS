@@ -2,7 +2,7 @@
 
 import { TelemetryItemCreator } from "../JavaScriptSDK/TelemetryItemCreator";
 import { PageViewPerformance, PageView } from 'applicationinsights-common';
-import { IPageViewTelemetry } from "../JavascriptSDK.Interfaces/IPageViewTelemetry";
+import { IPageViewTelemetry } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
 
 export class TelemetryItemCreatorTests extends TestClass {
     public registerTests() {

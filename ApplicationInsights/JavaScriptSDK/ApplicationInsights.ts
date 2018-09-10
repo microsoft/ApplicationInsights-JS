@@ -15,8 +15,8 @@ import {
 } from "applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
-import { IAppInsights } from "../JavascriptSDK.Interfaces/IAppInsights";
-import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../JavascriptSDK.Interfaces/IPageViewTelemetry";
+import { IAppInsights } from "../JavaScriptSDK.Interfaces/IAppInsights";
+import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 import { TelemetryItemCreator } from "./TelemetryItemCreator";
 
