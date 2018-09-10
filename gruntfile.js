@@ -31,20 +31,20 @@ module.exports = function (grunt) {
             appinsightscjs: {
                 tsconfig: './ApplicationInsights/cjs/tsconfigcommonjs.json',
                 src: [
-                    'ApplicationInsights/JavascriptSDK.Interfaces/*.ts',
-                    'ApplicationInsights/JavascriptSDK/Extensions/*.ts',
-                    'ApplicationInsights/JavascriptSDK/Telemetry/*.ts',
-                    'ApplicationInsights/JavascriptSDK/*.ts',
+                    'ApplicationInsights/JavaScriptSDK.Interfaces/*.ts',
+                    'ApplicationInsights/JavaScriptSDK/Extensions/*.ts',
+                    'ApplicationInsights/JavaScriptSDK/Telemetry/*.ts',
+                    'ApplicationInsights/JavaScriptSDK/*.ts',
                     'ApplicationInsights/*.ts'
                 ]
             },
             appinsights: {
                 tsconfig: './ApplicationInsights/tsconfig.json',
                 src: [
-                    'ApplicationInsights/JavascriptSDK.Interfaces/*.ts',
-                    'ApplicationInsights/JavascriptSDK/Extensions/*.ts',
-                    'ApplicationInsights/JavascriptSDK/Telemetry/*.ts',
-                    'ApplicationInsights/JavascriptSDK/*.ts',
+                    'ApplicationInsights/JavaScriptSDK.Interfaces/*.ts',
+                    'ApplicationInsights/JavaScriptSDK/Extensions/*.ts',
+                    'ApplicationInsights/JavaScriptSDK/Telemetry/*.ts',
+                    'ApplicationInsights/JavaScriptSDK/*.ts',
                     'ApplicationInsights/*.ts'
                 ]
             },
