@@ -1,9 +1,9 @@
 import { Util, DataSanitizer, PageViewPerformance } from "applicationinsights-common";
-import { ITelemetryItem, CoreUtils } from "applicationinsights-core-js";
+import { IDiagnosticLogger, ITelemetryItem, CoreUtils } from "applicationinsights-core-js";
 import { IPageViewTelemetryInternal } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
 
 export interface ITelemetryItemCreator {
-    create(item: IPageViewTelemetryInternal | PageViewPerformance, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }): ITelemetryItem
+    create(logger: IDiagnosticLogger, item: IPageViewTelemetryInternal | PageViewPerformance, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }): ITelemetryItem
 }
 
 export class TelemetryItemCreator implements ITelemetryItemCreator {
@@ -18,7 +18,8 @@ export class TelemetryItemCreator implements ITelemetryItemCreator {
      * @param systemProperties system properties that are added to the context; part A
      * @returns ITelemetryItem that is sent to channel
      */
-    public static createItem(item: IPageViewTelemetryInternal | PageViewPerformance,
+    public static createItem(logger: IDiagnosticLogger,
+        item: IPageViewTelemetryInternal | PageViewPerformance,
         baseType: string,
         envelopeName: string,
         customProperties?: { [key: string]: any },
@@ -29,7 +30,7 @@ export class TelemetryItemCreator implements ITelemetryItemCreator {
             throw Error("pageView doesn't contain all required fields");
         };
 
-        return TelemetryItemCreator.creator.create(item, baseType, envelopeName, customProperties, systemProperties);
+        return TelemetryItemCreator.creator.create(logger, item, baseType, envelopeName, customProperties, systemProperties);
     }
 
     /**
@@ -41,12 +42,13 @@ export class TelemetryItemCreator implements ITelemetryItemCreator {
      * @param systemProperties system properties that are added to the context; part A
      * @returns ITelemetryItem that is sent to channel
      */
-    create(item: IPageViewTelemetryInternal | PageViewPerformance,
+    create(logger: IDiagnosticLogger,
+        item: IPageViewTelemetryInternal | PageViewPerformance,
         baseType: string,
         envelopeName: string,
         customProperties?: { [key: string]: any },
         systemProperties?: { [key: string]: any }): ITelemetryItem {
-        envelopeName = DataSanitizer.sanitizeString(envelopeName) || Util.NotSpecified;
+        envelopeName = DataSanitizer.sanitizeString(logger, envelopeName) || Util.NotSpecified;
 
         let telemetryItem: ITelemetryItem = {
             name: envelopeName,

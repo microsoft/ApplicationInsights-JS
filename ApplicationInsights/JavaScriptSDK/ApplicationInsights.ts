@@ -36,6 +36,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public core: IAppInsightsCore;
     public queue: (() => void)[];
 
+    private _logger: IDiagnosticLogger; // Initialized by Core
     private _globalconfig: IConfiguration;
     private _nextPlugin: ITelemetryPlugin;
     private _pageTracking: Timing;
@@ -68,7 +69,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             }
         } catch (e) {
             doNotSendItem = true;
-            _InternalLogging.throwInternal(
+            this._logger.throwInternal(
                 LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
                 { exception: Util.dump(e) }, true);
         }
@@ -96,7 +97,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 this._pageVisitTimeManager.trackPreviousPageVisit(pageView.name, pageView.uri);
             }
         } catch (e) {
-            _InternalLogging.throwInternal(
+            this._logger.throwInternal(
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.TrackPVFailed,
                 "trackPageView failed, page view will not be collected: " + Util.getExceptionName(e),
@@ -111,7 +112,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param systemProperties System level properties (Part A) that a user can add to the telemetry item
      */
     public sendPageViewInternal(pageView: IPageViewTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
-        let telemetryItem = TelemetryItemCreator.createItem(pageView,
+        let telemetryItem = TelemetryItemCreator.createItem(this._logger,
+            pageView,
             PageView.dataType,
             PageView.envelopeType,
             properties,
@@ -130,7 +132,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     }
 
     public sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance, properties?: { [key: string]: any }) {
-        let telemetryItem = TelemetryItemCreator.createItem(pageViewPerformance,
+        let telemetryItem = TelemetryItemCreator.createItem(this._logger,
+            pageViewPerformance,
             PageViewPerformance.dataType,
             PageViewPerformance.envelopeType,
             properties);
@@ -157,7 +160,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
             this._pageTracking.start(name);
         } catch (e) {
-            _InternalLogging.throwInternal(
+            this._logger.throwInternal(
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.StartTrackFailed,
                 "startTrackPage failed, page view may not be collected: " + Util.getExceptionName(e),
@@ -188,7 +191,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
             }
         } catch (e) {
-            _InternalLogging.throwInternal(
+            this._logger.throwInternal(
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.StopTrackFailed,
                 "stopTrackPage failed, page view will not be collected: " + Util.getExceptionName(e),
@@ -202,6 +205,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
 
         this.core = core;
+        this._logger = core.logger;
         this._globalconfig = {
             instrumentationKey: config.instrumentationKey,
             endpointUrl: config.endpointUrl
@@ -230,8 +234,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             }
         }
 
-        _InternalLogging.verboseLogging = () => this.config.verboseLogging;
-        _InternalLogging.enableDebugExceptions = () => this.config.enableDebug;
+        this._logger.consoleLoggingLevel = () => this.config.consoleLoggingLevel;
+        this._logger.telemetryLoggingLevel = () => this.config.telemetryLoggingLevel;
+        this._logger.enableDebugExceptions = () => this.config.enableDebug;
 
         // Todo: move this out of static state
         if (this.config.isCookieUseDisabled) {
@@ -287,7 +292,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         */
 
         // initialize page view timing
-        this._pageTracking = new Timing("trackPageView");
+        this._pageTracking = new Timing(this._logger, "trackPageView");
         this._pageTracking.action = (name, url, duration, properties) => {
             let pageViewItem: IPageViewTelemetry = {
                 name: name,
@@ -340,15 +345,17 @@ class Timing {
     private _events: {
         [key: string]: number;
     };
+    private _logger: IDiagnosticLogger;
 
-    constructor(name: string) {
+    constructor(logger: IDiagnosticLogger, name: string) {
         this._name = name;
         this._events = {};
+        this._logger = logger;
     }
 
     public start(name: string) {
         if (typeof this._events[name] !== "undefined") {
-            _InternalLogging.throwInternal(
+            this._logger.throwInternal(
                 LoggingSeverity.WARNING, _InternalMessageId.StartCalledMoreThanOnce, "start was called more than once for this event without calling stop.",
                 { name: this._name, key: name }, true);
         }
@@ -359,7 +366,7 @@ class Timing {
     public stop(name: string, url: string, properties?: Object) {
         var start = this._events[name];
         if (isNaN(start)) {
-            _InternalLogging.throwInternal(
+            this._logger.throwInternal(
                 LoggingSeverity.WARNING, _InternalMessageId.StopCalledWithoutStart, "stop was called without a corresponding start.",
                 { name: this._name, key: name }, true);
         } else {
