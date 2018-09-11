@@ -7,6 +7,7 @@ import { ajaxRecord } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
 import { ApplicationInsights } from '../../ApplicationInsights';
 import { CoreUtils } from '../../../node_modules/applicationinsights-core-js';
+import { DisabledPropertyName } from 'applicationinsights-common';
 
 export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;
@@ -41,9 +42,6 @@ export class AjaxMonitor {
     }
 
 
-    ///<summary>Function that returns property name which will identify that monitoring for given instance of XmlHttpRequest is disabled</summary>
-    public static DisabledPropertyName: string = "Microsoft_ApplicationInsights_BypassAjaxInstrumentation";
-
     ///<summary>Verifies that particalar instance of XMLHttpRequest needs to be monitored</summary>
     ///<param name="excludeAjaxDataValidation">Optional parameter. True if ajaxData must be excluded from verification</param>
     ///<returns type="bool">True if instance needs to be monitored, otherwise false</returns>
@@ -56,7 +54,7 @@ export class AjaxMonitor {
             && (excludeAjaxDataValidation === true || !CoreUtils.isNullOrUndefined(xhr.ajaxData))
 
             // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
-            && xhr[AjaxMonitor.DisabledPropertyName] !== true;
+            && xhr[DisabledPropertyName] !== true;
 
     }
 
