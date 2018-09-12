@@ -1,6 +1,7 @@
 ﻿import { IUser } from '../Interfaces/Context/IUser';
 import { ITelemetryConfig } from '../Interfaces/ITelemetryConfig';
-import { _InternalLogging, _InternalMessageId, LoggingSeverity, Util } from 'applicationinsights-common';
+import { Util } from 'applicationinsights-common';
+import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from 'applicationinsights-core-js';
 
 export class User implements IUser {
 

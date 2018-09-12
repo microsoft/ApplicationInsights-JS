@@ -5,6 +5,7 @@ import { FieldType } from '../Enums';
 import { DataPoint } from './Common/DataPoint';
 import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
 import { Util } from '../Util';
+import { IDiagnosticLogger } from 'applicationinsights-core-js';
 
 export class Metric extends MetricData implements ISerializable {
 
@@ -20,17 +21,17 @@ export class Metric extends MetricData implements ISerializable {
     /**
      * Constructs a new instance of the MetricTelemetry object
      */
-    constructor(name: string, value: number, count?: number, min?: number, max?: number, properties?: any) {
+    constructor(logger: IDiagnosticLogger, name: string, value: number, count?: number, min?: number, max?: number, properties?: any) {
         super();
 
         var dataPoint = new DataPoint();
         dataPoint.count = count > 0 ? count : undefined;
         dataPoint.max = isNaN(max) || max === null ? undefined : max;
         dataPoint.min = isNaN(min) || min === null ? undefined : min;
-        dataPoint.name = DataSanitizer.sanitizeString(name) || Util.NotSpecified;
+        dataPoint.name = DataSanitizer.sanitizeString(logger, name) || Util.NotSpecified;
         dataPoint.value = value;
 
         this.metrics = [dataPoint];
-        this.properties = DataSanitizer.sanitizeProperties(properties);
+        this.properties = DataSanitizer.sanitizeProperties(logger, properties);
     }
 }

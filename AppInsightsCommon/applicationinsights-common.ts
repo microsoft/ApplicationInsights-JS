@@ -1,6 +1,5 @@
 export { Util, CorrelationIdHelper, UrlHelper, DateTimeUtils } from './Util';
-export { _InternalMessageId, LoggingSeverity, FieldType } from './Enums';
-export { _InternalLogging, _InternalLogMessage } from './Logging';
+export { FieldType } from './Enums';
 export { RequestHeaders } from './RequestResponseHeaders';
 export { DisabledPropertyName } from './Constants';
 export { Data as AIData } from './Interfaces/Contracts/Generated/Data';

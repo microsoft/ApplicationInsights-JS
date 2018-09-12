@@ -1,7 +1,7 @@
 import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
 import { ISample } from '../Interfaces/Context/ISample';
-import { IEnvelope, _InternalLogging, _InternalMessageId, LoggingSeverity } from 'applicationinsights-common';
-import { ITelemetryItem } from 'applicationinsights-core-js';
+import { IEnvelope } from 'applicationinsights-common';
+import { ITelemetryItem, IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from 'applicationinsights-core-js';
 
 export class Sample implements ISample {
     public sampleRate: number;

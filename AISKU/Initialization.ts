@@ -3,9 +3,9 @@
 /// <reference types="applicationinsights-analytics-js" />
 /// <reference types="applicationinsights-channel-js" />
 
-import { IConfiguration, AppInsightsCore, IAppInsightsCore } from "applicationinsights-core-js";
+import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalLogging, _InternalMessageId } from "applicationinsights-core-js";
 import { ApplicationInsights } from "applicationinsights-analytics-js";
-import { Util, _InternalLogging, LoggingSeverity, _InternalMessageId, IConfig } from "applicationinsights-common";
+import { Util, IConfig } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
 import { PropertiesPlugin } from "applicationinsights-properties-js";
 

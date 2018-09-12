@@ -8,7 +8,8 @@ export interface IConfig {
     enableDebug?: boolean;
     disableExceptionTracking?: boolean;
     disableTelemetry?: boolean;
-    verboseLogging?: boolean;
+    consoleLoggingLevel?: number;
+    telemetryLoggingLevel?: number;
     diagnosticLogInterval?: number;
     samplingPercentage?: number;
     autoTrackPageVisitTime?: boolean;

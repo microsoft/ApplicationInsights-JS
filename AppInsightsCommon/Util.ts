@@ -1,6 +1,5 @@
-﻿import { CoreUtils } from "applicationinsights-core-js";
-import { StorageType, LoggingSeverity, _InternalMessageId } from "./Enums";
-import { _InternalLogging } from "./Logging";
+import { StorageType } from "./Enums";
+import { CoreUtils, _InternalMessageId, LoggingSeverity, IDiagnosticLogger } from "applicationinsights-core-js";
 import { IConfig } from "./Interfaces/IConfig";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
@@ -93,7 +92,7 @@ export class Util {
      *  @param {string} name - the name of the object to get from storage
      *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
      */
-    public static getStorage(name: string): string {
+    public static getStorage(logger: IDiagnosticLogger, name: string): string {
         var storage = Util._getLocalStorageObject();
         if (storage !== null) {
             try {
@@ -101,7 +100,7 @@ export class Util {
             } catch (e) {
                 Util._canUseLocalStorage = false;
 
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.BrowserCannotReadLocalStorage,
                     "Browser failed read of local storage. " + Util.getExceptionName(e),
@@ -118,7 +117,7 @@ export class Util {
      *  @param {string} data - the contents of the object to set in storage
      *  @returns {boolean} True if the storage object could be written.
      */
-    public static setStorage(name: string, data: string): boolean {
+    public static setStorage(logger: IDiagnosticLogger, name: string, data: string): boolean {
         var storage = Util._getLocalStorageObject();
         if (storage !== null) {
             try {
@@ -127,7 +126,7 @@ export class Util {
             } catch (e) {
                 Util._canUseLocalStorage = false;
 
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.BrowserCannotWriteLocalStorage,
                     "Browser failed write to local storage. " + Util.getExceptionName(e),
@@ -143,7 +142,7 @@ export class Util {
      *  @param {string} name - the name of the object to remove from storage
      *  @returns {boolean} True if the storage object could be removed.
      */
-    public static removeStorage(name: string): boolean {
+    public static removeStorage(logger: IDiagnosticLogger, name: string): boolean {
         var storage = Util._getLocalStorageObject();
         if (storage !== null) {
             try {
@@ -152,7 +151,7 @@ export class Util {
             } catch (e) {
                 Util._canUseLocalStorage = false;
 
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.BrowserFailedRemovalFromLocalStorage,
                     "Browser failed removal of local storage item. " + Util.getExceptionName(e),
@@ -209,7 +208,7 @@ export class Util {
      *  @param {string} name - the name of the object to get from storage
      *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
      */
-    public static getSessionStorage(name: string): string {
+    public static getSessionStorage(logger: IDiagnosticLogger, name: string): string {
         var storage = Util._getSessionStorageObject();
         if (storage !== null) {
             try {
@@ -217,7 +216,7 @@ export class Util {
             } catch (e) {
                 Util._canUseSessionStorage = false;
 
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.BrowserCannotReadSessionStorage,
                     "Browser failed read of session storage. " + Util.getExceptionName(e),
@@ -234,7 +233,7 @@ export class Util {
      *  @param {string} data - the contents of the object to set in storage
      *  @returns {boolean} True if the storage object could be written.
      */
-    public static setSessionStorage(name: string, data: string): boolean {
+    public static setSessionStorage(logger: IDiagnosticLogger, name: string, data: string): boolean {
         var storage = Util._getSessionStorageObject();
         if (storage !== null) {
             try {
@@ -243,7 +242,7 @@ export class Util {
             } catch (e) {
                 Util._canUseSessionStorage = false;
 
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.BrowserCannotWriteSessionStorage,
                     "Browser failed write to session storage. " + Util.getExceptionName(e),
@@ -259,7 +258,7 @@ export class Util {
      *  @param {string} name - the name of the object to remove from storage
      *  @returns {boolean} True if the storage object could be removed.
      */
-    public static removeSessionStorage(name: string): boolean {
+    public static removeSessionStorage(logger: IDiagnosticLogger, name: string): boolean {
         var storage = Util._getSessionStorageObject();
         if (storage !== null) {
             try {
@@ -268,7 +267,7 @@ export class Util {
             } catch (e) {
                 Util._canUseSessionStorage = false;
 
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.BrowserFailedRemovalFromSessionStorage,
                     "Browser failed removal of session storage item. " + Util.getExceptionName(e),
@@ -288,14 +287,14 @@ export class Util {
     /*
      * helper method to tell if document.cookie object is available
      */
-    public static canUseCookies(): any {
+    public static canUseCookies(logger: IDiagnosticLogger): any {
         if (Util._canUseCookies === undefined) {
             Util._canUseCookies = false;
 
             try {
                 Util._canUseCookies = Util.document.cookie !== undefined;
             } catch (e) {
-                _InternalLogging.throwInternal(
+                logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.CannotAccessCookie,
                     "Cannot access document.cookie - " + Util.getExceptionName(e),
@@ -309,7 +308,7 @@ export class Util {
     /**
      * helper method to set userId and sessionId cookie
      */
-    public static setCookie(name, value, domain?) {
+    public static setCookie(logger: IDiagnosticLogger, name, value, domain?) {
         var domainAttrib = "";
         var secureAttrib = "";
 
@@ -321,7 +320,7 @@ export class Util {
             secureAttrib = ";secure";
         }
 
-        if (Util.canUseCookies()) {
+        if (Util.canUseCookies(logger)) {
             Util.document.cookie = name + "=" + value + domainAttrib + ";path=/" + secureAttrib;
         }
     }
@@ -337,8 +336,8 @@ export class Util {
     /**
      * helper method to access userId and sessionId cookie
      */
-    public static getCookie(name) {
-        if (!Util.canUseCookies()) {
+    public static getCookie(logger: IDiagnosticLogger, name) {
+        if (!Util.canUseCookies(logger)) {
             return;
         }
 
@@ -363,8 +362,8 @@ export class Util {
      * Deletes a cookie by setting it's expiration time in the past.
      * @param name - The name of the cookie to delete.
      */
-    public static deleteCookie(name: string) {
-        if (Util.canUseCookies()) {
+    public static deleteCookie(logger: IDiagnosticLogger, name: string) {
+        if (Util.canUseCookies(logger)) {
             // Setting the expiration date in the past immediately removes the cookie
             Util.document.cookie = name + "=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT;";
         }
@@ -650,7 +649,7 @@ export class CorrelationIdHelper {
 }
 
 export class AjaxHelper {
-    public static ParseDependencyPath(absoluteUrl: string, method: string, pathName: string) {
+    public static ParseDependencyPath(logger: IDiagnosticLogger, absoluteUrl: string, method: string, pathName: string) {
         var target, name;
         if (absoluteUrl && absoluteUrl.length > 0) {
             var parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)
@@ -661,9 +660,9 @@ export class AjaxHelper {
                     pathName = "/" + pathName;
                 }
 
-                name = DataSanitizer.sanitizeString(method ? method + " " + pathName : pathName);
+                name = DataSanitizer.sanitizeString(logger, method ? method + " " + pathName : pathName);
             } else {
-                name = DataSanitizer.sanitizeString(absoluteUrl);
+                name = DataSanitizer.sanitizeString(logger, absoluteUrl);
             }
         } else {
             target = pathName;

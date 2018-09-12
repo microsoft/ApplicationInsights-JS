@@ -4,6 +4,7 @@ import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { Util } from '../Util';
 import { AjaxHelper } from '../Util';
 import { RemoteDependencyData as GeneratedRemoteDependencyData } from '../Interfaces/Contracts/Generated/RemoteDependencyData';
+import { IDiagnosticLogger } from 'applicationinsights-core-js';
 
 export class RemoteDependencyData extends GeneratedRemoteDependencyData implements ISerializable {
 
@@ -38,7 +39,7 @@ export class RemoteDependencyData extends GeneratedRemoteDependencyData implemen
     /**
      * Constructs a new instance of the RemoteDependencyData object
      */
-    constructor(id: string, absoluteUrl: string, commandName: string, value: number, success: boolean, resultCode: number, method?: string, properties?: Object, measurements?: Object) {
+    constructor(logger: IDiagnosticLogger, id: string, absoluteUrl: string, commandName: string, value: number, success: boolean, resultCode: number, method?: string, properties?: Object, measurements?: Object) {
         super();
 
         this.id = id;
@@ -48,13 +49,13 @@ export class RemoteDependencyData extends GeneratedRemoteDependencyData implemen
         this.resultCode = resultCode + "";
 
         this.type = "Ajax";
-        this.data = DataSanitizer.sanitizeUrl(commandName);
+        this.data = DataSanitizer.sanitizeUrl(logger, commandName);
 
-        var dependencyFields = AjaxHelper.ParseDependencyPath(absoluteUrl, method, commandName);
+        var dependencyFields = AjaxHelper.ParseDependencyPath(logger, absoluteUrl, method, commandName);
         this.target = dependencyFields.target;
         this.name = dependencyFields.name;
 
-        this.properties = DataSanitizer.sanitizeProperties(properties);
-        this.measurements = DataSanitizer.sanitizeMeasurements(measurements);
+        this.properties = DataSanitizer.sanitizeProperties(logger, properties);
+        this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
     }
 }
