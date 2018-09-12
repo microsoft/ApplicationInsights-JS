@@ -1,9 +1,8 @@
-﻿import { ISession } from '../Interfaces/Context/ISession';
-import { 
-    Util, _InternalLogging, 
-    _InternalMessageId, LoggingSeverity, 
-    DateTimeUtils 
+import { ISession } from '../Interfaces/Context/ISession';
+import {
+    Util, DateTimeUtils 
 } from 'applicationinsights-common';
+import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from 'applicationinsights-core-js';
 
 export interface ISessionConfig {
     sessionRenewalMs: () => number;

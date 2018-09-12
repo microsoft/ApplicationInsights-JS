@@ -1,4 +1,5 @@
-﻿import { EventData } from '../Interfaces/Contracts/Generated/EventData';
+﻿import { IDiagnosticLogger } from 'applicationinsights-core-js';
+import { EventData } from '../Interfaces/Contracts/Generated/EventData';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
@@ -19,12 +20,12 @@ export class Event extends EventData implements ISerializable {
     /**
      * Constructs a new instance of the EventTelemetry object
      */
-    constructor(name: string, properties?: any, measurements?: any) {
+    constructor(logger: IDiagnosticLogger, name: string, properties?: any, measurements?: any) {
 
         super();
 
-        this.name = DataSanitizer.sanitizeString(name) || Util.NotSpecified;
-        this.properties = DataSanitizer.sanitizeProperties(properties);
-        this.measurements = DataSanitizer.sanitizeMeasurements(measurements);
+        this.name = DataSanitizer.sanitizeString(logger, name) || Util.NotSpecified;
+        this.properties = DataSanitizer.sanitizeProperties(logger, properties);
+        this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
     }
 }

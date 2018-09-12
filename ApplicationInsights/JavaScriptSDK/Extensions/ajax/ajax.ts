@@ -1,12 +1,14 @@
 ﻿import {
-    RequestHeaders, Util, LoggingSeverity,
-    _InternalMessageId, _InternalLogging, CorrelationIdHelper,
+    RequestHeaders, Util, CorrelationIdHelper,
     RemoteDependencyData, DateTimeUtils, DisabledPropertyName, Data
 } from 'applicationinsights-common';
+import {
+    CoreUtils, LoggingSeverity, _InternalMessageId,IDiagnosticLogger,
+    IAppInsightsCore, ITelemetryPlugin, IConfiguration, IPlugin
+} from 'applicationinsights-core-js';
 import { ajaxRecord } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
 import { ApplicationInsights } from '../../ApplicationInsights';
-import { CoreUtils, IAppInsightsCore, ITelemetryPlugin, IConfiguration, IPlugin } from '../../../node_modules/applicationinsights-core-js';
 
 export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;

@@ -1,10 +1,10 @@
 ﻿import {
-    PageViewPerformance,
-    _InternalLogging, LoggingSeverity,
-    _InternalMessageId, Util, IChannelControlsAI
+    PageViewPerformance, Util,
+    IChannelControlsAI
 } from 'applicationinsights-common';
-import { IAppInsightsCore, CoreUtils } from 'applicationinsights-core-js';
-import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../../JavaScriptSDK.Interfaces/IPageViewTelemetry";
+import { IAppInsightsCore, CoreUtils, IDiagnosticLogger, LoggingSeverity,
+    _InternalMessageId } from 'applicationinsights-core-js';
+import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../../JavascriptSDK.Interfaces/IPageViewTelemetry";
 
 /**
 * Internal interface to pass appInsights object to subcomponents without coupling 
@@ -24,6 +24,7 @@ export class PageViewManager {
 
     private appInsights: IAppInsightsInternal;
     private _channel: IChannelControlsAI;
+    private _logger: IDiagnosticLogger;
 
     constructor(
         appInsights: IAppInsightsInternal,
@@ -32,6 +33,7 @@ export class PageViewManager {
         this.appInsights = appInsights;
         if (core) {
             this._channel = <IChannelControlsAI>(core.getTransmissionControl());
+            this._logger = core.logger;
         }
 
     }
@@ -67,7 +69,7 @@ export class PageViewManager {
             this._channel.flush();
 
             // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
-            _InternalLogging.throwInternal(
+            this._logger.throwInternal(
                 LoggingSeverity.WARNING,
                 _InternalMessageId.NavigationTimingNotSupported,
                 "trackPageView: navigation timing API used for calculation of page duration is not supported in this browser. This page view will be collected without duration and timing info.");
@@ -111,7 +113,7 @@ export class PageViewManager {
             try {
                 if (PageViewPerformance.isPerformanceTimingDataReady()) {
                     clearInterval(handle);
-                    var pageViewPerformance = new PageViewPerformance(name, uri, null);
+                    var pageViewPerformance = new PageViewPerformance(this._logger, name, uri, null);
 
                     if (!pageViewPerformance.getIsValid() && !pageViewSent) {
                         // If navigation timing gives invalid numbers, then go back to "override page view duration" mode.
@@ -148,7 +150,7 @@ export class PageViewManager {
                     }
                 }
             } catch (e) {
-                _InternalLogging.throwInternal(
+                this._logger.throwInternal(
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.TrackPVFailedCalc,
                     "trackPageView failed on page load calculation: " + Util.getExceptionName(e),

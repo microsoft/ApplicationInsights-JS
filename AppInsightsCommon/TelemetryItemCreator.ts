@@ -26,11 +26,7 @@ export class TelemetryItemCreator {
             throw Error("pageView doesn't contain all required fields");
         };
 
-        return TelemetryItemCreator.creator.create<T>(item, baseType, envelopeName, customProperties, systemProperties);
-    }
-
-    constructor(logger: IDiagnosticsLogger) {
-        
+        return TelemetryItemCreator.creator.create<T>(item, baseType, envelopeName, logger, customProperties, systemProperties);
     }
 
     /**
@@ -45,9 +41,10 @@ export class TelemetryItemCreator {
     create<T>(item: T,
         baseType: string,
         envelopeName: string,
+        logger: IDiagnosticsLogger,
         customProperties?: { [key: string]: any },
         systemProperties?: { [key: string]: any }): ITelemetryItem {
-        envelopeName = DataSanitizer.sanitizeString(envelopeName) || Util.NotSpecified;
+        envelopeName = DataSanitizer.sanitizeString(logger, envelopeName) || Util.NotSpecified;
 
         let telemetryItem: ITelemetryItem = {
             name: envelopeName,

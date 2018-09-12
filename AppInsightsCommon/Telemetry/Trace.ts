@@ -4,6 +4,7 @@ import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
 import { Util } from '../Util';
+import { IDiagnosticLogger } from 'applicationinsights-core-js';
 
 export class Trace extends MessageData implements ISerializable {
 
@@ -20,11 +21,11 @@ export class Trace extends MessageData implements ISerializable {
     /**
      * Constructs a new instance of the TraceTelemetry object
      */
-    constructor(message: string, properties?: any, severityLevel?: SeverityLevel) {
+    constructor(logger: IDiagnosticLogger, message: string, properties?: any, severityLevel?: SeverityLevel) {
         super();
         message = message || Util.NotSpecified;
-        this.message = DataSanitizer.sanitizeMessage(message);
-        this.properties = DataSanitizer.sanitizeProperties(properties);
+        this.message = DataSanitizer.sanitizeMessage(logger, message);
+        this.properties = DataSanitizer.sanitizeProperties(logger, properties);
 
         if (severityLevel) {
             this.severityLevel = severityLevel;

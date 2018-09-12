@@ -6,6 +6,7 @@ import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
 import { Util } from '../Util';
+import { IDiagnosticLogger } from 'applicationinsights-core-js';
 
 export class Exception extends ExceptionData implements ISerializable {
 
@@ -24,13 +25,13 @@ export class Exception extends ExceptionData implements ISerializable {
     /**
     * Constructs a new isntance of the ExceptionTelemetry object
     */
-    constructor(exception: Error, properties?: any, measurements?: any, severityLevel?: SeverityLevel) {
+    constructor(logger: IDiagnosticLogger, exception: Error, properties?: any, measurements?: any, severityLevel?: SeverityLevel) {
         super();
 
-        this.properties = DataSanitizer.sanitizeProperties(properties);
-        this.measurements = DataSanitizer.sanitizeMeasurements(measurements);
+        this.properties = DataSanitizer.sanitizeProperties(logger, properties);
+        this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
 
-        this.exceptions = [new _ExceptionDetails(exception)];
+        this.exceptions = [new _ExceptionDetails(logger, exception)];
 
         if (severityLevel) {
             this.severityLevel = severityLevel;
@@ -69,13 +70,13 @@ class _ExceptionDetails extends ExceptionDetails implements ISerializable {
         parsedStack: FieldType.Array
     };
 
-    constructor(exception: Error) {
+    constructor(logger: IDiagnosticLogger, exception: Error) {
         super();
-        this.typeName = DataSanitizer.sanitizeString(exception.name) || Util.NotSpecified;
-        this.message = DataSanitizer.sanitizeMessage(exception.message) || Util.NotSpecified;
+        this.typeName = DataSanitizer.sanitizeString(logger, exception.name) || Util.NotSpecified;
+        this.message = DataSanitizer.sanitizeMessage(logger, exception.message) || Util.NotSpecified;
         var stack = exception["stack"];
         this.parsedStack = this.parseStack(stack);
-        this.stack = DataSanitizer.sanitizeException(stack);
+        this.stack = DataSanitizer.sanitizeException(logger, stack);
         this.hasFullStack = Util.isArray(this.parsedStack) && this.parsedStack.length > 0;
     }
 
