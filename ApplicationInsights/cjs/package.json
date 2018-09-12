@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-analytics-js",
-    "version": "0.0.82",
+    "version": "0.0.88",
     "description": "Microsoft Application Insights Javascript SDK APIs for commonjs",
     "main": "bundle/applicationinsights-analytics-js.js",
     "types": "bundle/applicationinsights-analytics-js.d.ts",
