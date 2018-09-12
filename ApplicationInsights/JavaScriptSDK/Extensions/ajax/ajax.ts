@@ -1,26 +1,29 @@
 ﻿import {
     RequestHeaders, Util, LoggingSeverity,
     _InternalMessageId, _InternalLogging, CorrelationIdHelper,
-    RemoteDependencyData, DateTimeUtils
+    RemoteDependencyData, DateTimeUtils, DisabledPropertyName, Data
 } from 'applicationinsights-common';
 import { ajaxRecord } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
 import { ApplicationInsights } from '../../ApplicationInsights';
-import { CoreUtils } from '../../../node_modules/applicationinsights-core-js';
-import { DisabledPropertyName } from 'applicationinsights-common';
+import { CoreUtils, IAppInsightsCore, ITelemetryPlugin, IConfiguration, IPlugin } from '../../../node_modules/applicationinsights-core-js';
 
 export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;
 }
 
-export class AjaxMonitor {
+export class AjaxMonitor implements ITelemetryPlugin {
     private appInsights: ApplicationInsights;
     private initialized: boolean;
-    private static instrumentedByAppInsightsName = "InstrumentedByAppInsights";
     private currentWindowHost;
+    private _core;
+    private _config;
+    _trackAjaxAttempts: any;    
+
+    private static partAIdentifier = "AppInsightsPropertiesPlugin";
 
     constructor(appInsights: ApplicationInsights) {
-        this.currentWindowHost = window.location.host && window.location.host.toLowerCase();
+        this.currentWindowHost = window && window.location.host && window.location.host.toLowerCase();
         this.appInsights = appInsights;
         this.initialized = false;
         this.Init();
@@ -93,7 +96,7 @@ export class AjaxMonitor {
                     ajaxMonitorInstance.openHandler(this, method, url, async);
                 }
             } catch (e) {
-                _InternalLogging.throwInternal(
+                this._core.logger.throwInternal(
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.FailedMonitorAjaxOpen,
                     "Failed to monitor XMLHttpRequest.open, monitoring data for this ajax call may be incorrect.",
@@ -163,11 +166,11 @@ export class AjaxMonitor {
     private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
         xhr.ajaxData.requestSentTime = DateTimeUtils.Now();
 
-        if (CorrelationIdHelper.canIncludeCorrelationHeader(this.appInsights.config, xhr.ajaxData.getAbsoluteUrl(),
+        if (this.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(this.appInsights.config, xhr.ajaxData.getAbsoluteUrl(),
             this.currentWindowHost)) {
             xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
             if (this.appInsights.context) {
-                var appId = this.appInsights.context.appId();
+                var appId = this.appInsights.context.appId(); // Todo: fix
                 if (appId) {
                     xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
                 }
@@ -259,7 +262,7 @@ export class AjaxMonitor {
                 dependency.target = dependency.target + " | " + correlationContext;
             }
 
-            this.appInsights.trackDependencyData(dependency);
+            this.trackDependencyData(dependency);
 
             xhr.ajaxData = null;
         }
@@ -284,6 +287,38 @@ export class AjaxMonitor {
                     ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr),
                     exception: Util.dump(e)
                 });
+        }
+    }
+
+     /**
+         * Logs dependency call
+         * @param dependencyData dependency data object
+         */
+        public trackDependencyData(dependency: RemoteDependencyData) {
+            if (this._config.maxAjaxCallsPerView === -1 || this._trackAjaxAttempts < this._config.maxAjaxCallsPerView) {
+                var dependencyData = new Data<RemoteDependencyData>(
+                    RemoteDependencyData.dataType, dependency);
+                var envelope = new Telemetry.Common.Envelope(dependencyData, ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType);
+                this.context.track(envelope);
+            } else if (this._trackAjaxAttempts === this.config.maxAjaxCallsPerView) {
+                _InternalLogging.throwInternal(LoggingSeverity.CRITICAL,
+                    _InternalMessageId.MaxAjaxPerPVExceeded,
+                    "Maximum ajax per page view limit reached, ajax monitoring is paused until the next trackPageView(). In order to increase the limit set the maxAjaxCallsPerView configuration parameter.",
+                    true);
+            }
+
+            ++this._trackAjaxAttempts;
+        }
+
+    processTelemetry;
+    identifier: string;
+    setNextPlugin: (next: ITelemetryPlugin) => void;
+    priority: number;
+    public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
+        this._core = core;
+        if (config && config.extensionConfig) {
+            let c = config.extensionConfig[this.identifier];
+            this._config.maxAjaxCallsPerView = !isNaN(c.maxAjaxCallsPerView) ? c.maxAjaxCallsPerView : 500;
         }
     }
 }

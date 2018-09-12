@@ -1,9 +1,10 @@
-import { Util, DataSanitizer, PageViewPerformance } from "applicationinsights-common";
+import { Util, DataSanitizer, PageViewPerformance, RemoteDependencyData } from "applicationinsights-common";
 import { ITelemetryItem, CoreUtils } from "applicationinsights-core-js";
 import { IPageViewTelemetryInternal } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
 
 export interface ITelemetryItemCreator {
-    create(item: IPageViewTelemetryInternal | PageViewPerformance, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }): ITelemetryItem
+    create(item: IPageViewTelemetryInternal | PageViewPerformance, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }): ITelemetryItem;
+    create(item: RemoteDependencyData, baseType: string, envelopeName: string; customProperties?: { [key: string]: any }): ITelemetryItem;
 }
 
 export class TelemetryItemCreator implements ITelemetryItemCreator {
