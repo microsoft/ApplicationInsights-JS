@@ -32,7 +32,6 @@ module.exports = function (grunt) {
                 tsconfig: './ApplicationInsights/cjs/tsconfigcommonjs.json',
                 src: [
                     'ApplicationInsights/JavaScriptSDK.Interfaces/*.ts',
-                    'ApplicationInsights/JavaScriptSDK/Extensions/*.ts',
                     'ApplicationInsights/JavaScriptSDK/Telemetry/*.ts',
                     'ApplicationInsights/JavaScriptSDK/*.ts',
                     'ApplicationInsights/*.ts'
@@ -42,7 +41,6 @@ module.exports = function (grunt) {
                 tsconfig: './ApplicationInsights/tsconfig.json',
                 src: [
                     'ApplicationInsights/JavaScriptSDK.Interfaces/*.ts',
-                    'ApplicationInsights/JavaScriptSDK/Extensions/*.ts',
                     'ApplicationInsights/JavaScriptSDK/Telemetry/*.ts',
                     'ApplicationInsights/JavaScriptSDK/*.ts',
                     'ApplicationInsights/*.ts'
