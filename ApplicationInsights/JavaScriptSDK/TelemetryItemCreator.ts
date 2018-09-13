@@ -1,9 +1,12 @@
 import { Util, DataSanitizer, PageViewPerformance } from "applicationinsights-common";
 import { IDiagnosticLogger, ITelemetryItem, CoreUtils } from "applicationinsights-core-js";
 import { IPageViewTelemetryInternal } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
+import { IExceptionTelemetry, IAutoExceptionTelemetry } from "../JavaScriptSDK.Interfaces/IExceptionTelemetry";
+
+export type supportedTelemetryItemTypes = IPageViewTelemetryInternal | PageViewPerformance | IExceptionTelemetry | IAutoExceptionTelemetry;
 
 export interface ITelemetryItemCreator {
-    create(logger: IDiagnosticLogger, item: IPageViewTelemetryInternal | PageViewPerformance, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }): ITelemetryItem
+    create(logger: IDiagnosticLogger, item: supportedTelemetryItemTypes, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }): ITelemetryItem
 }
 
 export class TelemetryItemCreator implements ITelemetryItemCreator {
@@ -19,7 +22,7 @@ export class TelemetryItemCreator implements ITelemetryItemCreator {
      * @returns ITelemetryItem that is sent to channel
      */
     public static createItem(logger: IDiagnosticLogger,
-        item: IPageViewTelemetryInternal | PageViewPerformance,
+        item: supportedTelemetryItemTypes,
         baseType: string,
         envelopeName: string,
         customProperties?: { [key: string]: any },
@@ -43,7 +46,7 @@ export class TelemetryItemCreator implements ITelemetryItemCreator {
      * @returns ITelemetryItem that is sent to channel
      */
     create(logger: IDiagnosticLogger,
-        item: IPageViewTelemetryInternal | PageViewPerformance,
+        item: supportedTelemetryItemTypes,
         baseType: string,
         envelopeName: string,
         customProperties?: { [key: string]: any },

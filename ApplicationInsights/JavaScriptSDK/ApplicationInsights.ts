@@ -7,12 +7,12 @@ import {
     IConfig,
     Util, PageViewPerformance,
     PageView, IEnvelope, RemoteDependencyData,
-    Data, Metric
+    Data, Metric, Exception, SeverityLevel
 } from "applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     ITelemetryPlugin, CoreUtils, ITelemetryItem,
-    DiagnosticLogger, IDiagnosticLogger, 
+    IDiagnosticLogger, 
     LoggingSeverity, _InternalMessageId
 } from "applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
@@ -21,6 +21,7 @@ import { IAppInsights } from "../JavaScriptSDK.Interfaces/IAppInsights";
 import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 import { TelemetryItemCreator } from "./TelemetryItemCreator";
+import { IExceptionTelemetry, IAutoExceptionTelemetry } from "../JavaScriptSDK.Interfaces/IExceptionTelemetry";
 
 "use strict";
 
@@ -36,6 +37,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public core: IAppInsightsCore;
     public queue: (() => void)[];
 
+    private _isInitialized: boolean = false;
     private _logger: IDiagnosticLogger; // Initialized by Core
     private _globalconfig: IConfiguration;
     private _nextPlugin: ITelemetryPlugin;
@@ -199,7 +201,69 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
     }
 
+    /**
+     * Log an exception you have caught.
+     *
+     * @param {IExceptionTelemetry} exception   Object which contains exception to be sent
+     * @param {{[key: string]: any}} customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
+     *
+     * Any property of type double will be considered a measurement, and will be treated by Application Insights as a metric.
+     * @memberof ApplicationInsights
+     */
+    public trackException(exception: IExceptionTelemetry, customProperties?: {[key: string]: any}): void {
+        try {
+            let telemetryItem: ITelemetryItem = TelemetryItemCreator.createItem(
+                this._logger,
+                exception,
+                Exception.dataType,
+                Exception.envelopeType,
+                customProperties
+            );
+            this.core.track(telemetryItem);
+        } catch (e) {
+            this._logger.throwInternal(
+                LoggingSeverity.CRITICAL,
+                _InternalMessageId.TrackExceptionFailed,
+                "trackException failed, exception will not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) });
+        }
+    }
+
+    public _onerror(exception: IAutoExceptionTelemetry): void {
+        try {
+            const properties = { url: (exception && exception.url) || document.URL };
+
+            if (Util.isCrossOriginError(exception.message, exception.url, exception.lineNumber, exception.columnNumber, exception.error)) {
+                this._sendCORSException(properties.url);
+            } else {
+                if (!Util.isError(exception.error)) {
+                    const stack = "window.onerror@" + properties.url + ":" + exception.lineNumber + ":" + (exception.columnNumber || 0);
+                    exception.error = new Error(exception.message);
+                    exception.error.stack = stack;
+                }
+                this.trackException({error: exception.error, severityLevel: SeverityLevel.Error}, properties);
+            }
+        } catch (e) {
+            const errorString = exception.error ?
+                (exception.error.name + ", " + exception.error.message)
+                : "null";
+
+            this._logger.throwInternal(
+                LoggingSeverity.CRITICAL,
+                _InternalMessageId.ExceptionWhileLoggingError,
+                "_onError threw exception while logging error, error will not be collected: "
+                + Util.getExceptionName(e),
+                { exception: Util.dump(e), errorString: errorString }
+            );
+        }
+    }
+
     private _initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
+
+        if (this._isInitialized) {
+            return;
+        }
+
         if (CoreUtils.isNullOrUndefined(core)) {
             throw Error("Error initializing");
         }
@@ -211,7 +275,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             endpointUrl: config.endpointUrl
         };
 
-        this.config = config.extensions && config.extensions[this.identifier] ? config.extensions[this.identifier] : <IConfig>{};
+        this.config = config.extensionConfig && config.extensionConfig[this.identifier] ? config.extensionConfig[this.identifier] : <IConfig>{};
 
         // load default values if specified
         var defaults: IConfiguration = ApplicationInsights.appInsightsDefaultConfig;
@@ -234,9 +298,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             }
         }
 
-        this._logger.consoleLoggingLevel = () => this.config.consoleLoggingLevel;
-        this._logger.telemetryLoggingLevel = () => this.config.telemetryLoggingLevel;
-        this._logger.enableDebugExceptions = () => this.config.enableDebug;
+        // this._logger.consoleLoggingLevel = () => this.config.consoleLoggingLevel;
+        // this._logger.telemetryLoggingLevel = () => this.config.telemetryLoggingLevel;
+        // this._logger.enableDebugExceptions = () => this.config.enableDebug;
 
         // Todo: move this out of static state
         if (this.config.isCookieUseDisabled) {
@@ -306,6 +370,31 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             properties[durationProperty] = duration;
             this.sendPageViewInternal(pageViewItem, properties);
         }
+
+        if (this.config.disableExceptionTracking === false &&
+            !this.config.autoExceptionInstrumented) {
+            // We want to enable exception auto collection and it has not been done so yet
+
+            const onerror = "onerror";
+            const originalOnError = window[onerror];
+            window.onerror = function(message, url, lineNumber, columnNumber, error) {
+                const handled = originalOnError && <any>originalOnError(message, url, lineNumber, columnNumber, error);
+                if (handled !== true) { // handled could be typeof function
+                    this._onerror({
+                        message: message,
+                        url: url,
+                        lineNumber: lineNumber,
+                        columnNumber: columnNumber,
+                        error: error
+                    });
+                }
+
+                return handled;
+            }
+            this.config.autoExceptionInstrumented = true;
+        }
+
+        this._isInitialized = true;    
     }
 
     // Todo: move to separate extension
@@ -333,6 +422,24 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
     private addTelemetryInitializer(telemetryInitializer: (envelope: IEnvelope) => boolean | void) {
         this._telemetryInitializers.push(telemetryInitializer);
+    }
+
+    private _sendCORSException(url: string) {
+        const exception: IAutoExceptionTelemetry = {
+            message: "Script error: The browser's same-origin policy prevents us from getting the details of this exception. Consider using the 'crossorigin' attribute.",
+            url: url,
+            lineNumber: 0,
+            columnNumber: 0,
+            error: undefined
+        };
+        const telemetryItem: ITelemetryItem = TelemetryItemCreator.createItem(this._logger,
+            exception,
+            "Error",
+            "unknown",
+            {url: url}
+        );
+
+        this.core.track(telemetryItem);
     }
 }
 

@@ -31,12 +31,37 @@
                 // Invoke the real method with the captured original arguments
                 appInsights[name].apply(appInsights, originalArguments);
             });
-        }
-    };
+        };
+    }
 
-    var method = ["PageView"];
+    var method = ["PageView", "Exception"];
     while (method.length) {
         createLazyMethod("track" + method.pop());
+    }
+
+    // Collect global errors
+    if (aiConfig.extensionsConfig &&
+        aiConfig.extensionsConfig.ApplicationInsightsAnalytics &&
+        aiConfig.extensionsConfig.ApplicationInsightsAnalytics.disableExceptionTracking === false) {
+
+        method = "onerror";
+        createLazyMethod("_" + method);
+        var originalOnError = localWindow[method];
+        localWindow[method] = function(message, url, lineNumber, columnNumber, error) {
+            var handled = originalOnError && originalOnError(message, url, lineNumber, columnNumber, error);
+            if (handled !== true) {
+                appInsights["_" + method]({
+                    message: message,
+                    url: url,
+                    lineNumber: lineNumber,
+                    columnNumber: columnNumber,
+                    error: error
+                });
+            }
+
+            return handled;
+        };
+        aiConfig.extensionsConfig.ApplicationInsightsAnalytics.autoExceptionInstrumented = true;
     }
 
     return appInsights;
