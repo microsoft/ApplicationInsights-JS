@@ -7,20 +7,18 @@ import {
     IConfig,
     Util, PageViewPerformance,
     PageView, IEnvelope, RemoteDependencyData,
-    Data, Metric
+    Data, TelemetryItemCreator
 } from "applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     ITelemetryPlugin, CoreUtils, ITelemetryItem,
-    DiagnosticLogger, IDiagnosticLogger, 
-    LoggingSeverity, _InternalMessageId
+    IDiagnosticLogger, LoggingSeverity, _InternalMessageId
 } from "applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { IAppInsights } from "../JavaScriptSDK.Interfaces/IAppInsights";
 import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
-import { TelemetryItemCreator } from "./TelemetryItemCreator";
 
 "use strict";
 
@@ -52,6 +50,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
     constructor() {
         this.initialize = this._initialize.bind(this);
+
     }
 
     public processTelemetry(env: ITelemetryItem) {
@@ -112,10 +111,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param systemProperties System level properties (Part A) that a user can add to the telemetry item
      */
     public sendPageViewInternal(pageView: IPageViewTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
-        let telemetryItem = TelemetryItemCreator.createItem(this._logger,
+        let telemetryItem = TelemetryItemCreator.create<IPageViewTelemetryInternal>(
             pageView,
             PageView.dataType,
             PageView.envelopeType,
+            this._logger,
             properties,
             systemProperties);
 
@@ -132,10 +132,10 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     }
 
     public sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance, properties?: { [key: string]: any }) {
-        let telemetryItem = TelemetryItemCreator.createItem(this._logger,
-            pageViewPerformance,
+        let telemetryItem = TelemetryItemCreator.create<PageViewPerformance>(pageViewPerformance,
             PageViewPerformance.dataType,
             PageViewPerformance.envelopeType,
+            this._logger,
             properties);
 
         // set instrumentation key

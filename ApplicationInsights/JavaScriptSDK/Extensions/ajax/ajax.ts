@@ -1,14 +1,15 @@
 ﻿import {
-    RequestHeaders, Util, CorrelationIdHelper,
+    RequestHeaders, Util, CorrelationIdHelper, TelemetryItemCreator,
     RemoteDependencyData, DateTimeUtils, DisabledPropertyName, Data
 } from 'applicationinsights-common';
 import {
-    CoreUtils, LoggingSeverity, _InternalMessageId,IDiagnosticLogger,
+    CoreUtils, LoggingSeverity, _InternalMessageId, IDiagnosticLogger,
     IAppInsightsCore, ITelemetryPlugin, IConfiguration, IPlugin
 } from 'applicationinsights-core-js';
 import { ajaxRecord } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
 import { ApplicationInsights } from '../../ApplicationInsights';
+import { Envelope } from 'applicationinsights-common';
 
 export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;
@@ -22,30 +23,11 @@ export class AjaxMonitor implements ITelemetryPlugin {
     private _config;
     _trackAjaxAttempts: any;    
 
-    private static partAIdentifier = "AppInsightsPropertiesPlugin";
-
     constructor(appInsights: ApplicationInsights) {
         this.currentWindowHost = window && window.location.host && window.location.host.toLowerCase();
         this.appInsights = appInsights;
         this.initialized = false;
-        this.Init();
     }
-
-    ///<summary>The main function that needs to be called in order to start Ajax Monitoring</summary>
-    private Init() {
-
-        // if (!this.config.disableAjaxTracking) {
-        //     this._ajaxMonitor = new AjaxMonitor(this);
-        // }
-
-        if (this.supportsMonitoring()) {
-            this.instrumentOpen();
-            this.instrumentSend();
-            this.instrumentAbort();
-            this.initialized = true;
-        }
-    }
-
 
     ///<summary>Verifies that particalar instance of XMLHttpRequest needs to be monitored</summary>
     ///<param name="excludeAjaxDataValidation">Optional parameter. True if ajaxData must be excluded from verification</param>
@@ -151,7 +133,7 @@ export class AjaxMonitor implements ITelemetryPlugin {
                     ajaxMonitorInstance.sendHandler(this, content);
                 }
             } catch (e) {
-                _InternalLogging.throwInternal(
+                this._core.logger.throwInternal(
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.FailedMonitorAjaxSend,
                     "Failed to monitor XMLHttpRequest, monitoring data for this ajax call may be incorrect.",
@@ -171,11 +153,9 @@ export class AjaxMonitor implements ITelemetryPlugin {
         if (this.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(this.appInsights.config, xhr.ajaxData.getAbsoluteUrl(),
             this.currentWindowHost)) {
             xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
-            if (this.appInsights.context) {
-                var appId = this.appInsights.context.appId(); // Todo: fix
-                if (appId) {
-                    xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
-                }
+            var appId = this._config.appId || ;
+            if (appId) {
+                xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
             }
         }
         xhr.ajaxData.xhrMonitoringState.sendDone = true;
@@ -191,7 +171,7 @@ export class AjaxMonitor implements ITelemetryPlugin {
                     (<XMLHttpRequestInstrumented>this).ajaxData.xhrMonitoringState.abortDone = true;
                 }
             } catch (e) {
-                _InternalLogging.throwInternal(
+                this._core.logger.throwInternal(
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.FailedMonitorAjaxAbort,
                     "Failed to monitor XMLHttpRequest.abort, monitoring data for this ajax call may be incorrect.",
@@ -219,7 +199,7 @@ export class AjaxMonitor implements ITelemetryPlugin {
 
                 // ignore messages with c00c023f, as this a known IE9 XHR abort issue
                 if (!exceptionText || exceptionText.toLowerCase().indexOf("c00c023f") == -1) {
-                    _InternalLogging.throwInternal(
+                    this._core.logger.throwInternal(
                         LoggingSeverity.CRITICAL,
                         _InternalMessageId.FailedMonitorAjaxRSC,
                         "Failed to monitor XMLHttpRequest 'readystatechange' event handler, monitoring data for this ajax call may be incorrect.",
@@ -238,7 +218,7 @@ export class AjaxMonitor implements ITelemetryPlugin {
         xhr.ajaxData.CalculateMetrics();
 
         if (xhr.ajaxData.ajaxTotalDuration < 0) {
-            _InternalLogging.throwInternal(
+            this._core.logger.throwInternal(
                 LoggingSeverity.WARNING,
                 _InternalMessageId.FailedMonitorAjaxDur,
                 "Failed to calculate the duration of the ajax call, monitoring data for this ajax call won't be sent.",
@@ -281,7 +261,7 @@ export class AjaxMonitor implements ITelemetryPlugin {
                 }
             }
         } catch (e) {
-            _InternalLogging.throwInternal(
+            this._core.logger.throwInternal(
                 LoggingSeverity.WARNING,
                 _InternalMessageId.FailedMonitorAjaxGetCorrelationHeader,
                 "Failed to get Request-Context correlation header as it may be not included in the response or not accessible.",
@@ -296,14 +276,19 @@ export class AjaxMonitor implements ITelemetryPlugin {
          * Logs dependency call
          * @param dependencyData dependency data object
          */
-        public trackDependencyData(dependency: RemoteDependencyData) {
+        public trackDependencyData(dependency: RemoteDependencyData, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
             if (this._config.maxAjaxCallsPerView === -1 || this._trackAjaxAttempts < this._config.maxAjaxCallsPerView) {
-                var dependencyData = new Data<RemoteDependencyData>(
-                    RemoteDependencyData.dataType, dependency);
-                var envelope = new Telemetry.Common.Envelope(dependencyData, ApplicationInsights.Telemetry.RemoteDependencyData.envelopeType);
-                this.context.track(envelope);
-            } else if (this._trackAjaxAttempts === this.config.maxAjaxCallsPerView) {
-                _InternalLogging.throwInternal(LoggingSeverity.CRITICAL,
+                let item = TelemetryItemCreator.create<RemoteDependencyData>(
+                    dependency,
+                    RemoteDependencyData.dataType,
+                    RemoteDependencyData.envelopeType,
+                    this._logger,
+                    properties,
+                    systemProperties);
+                )
+                this._core.track(item);
+            } else if (this._trackAjaxAttempts === this._config.maxAjaxCallsPerView) {
+                this._core.logger.throwInternal(LoggingSeverity.CRITICAL,
                     _InternalMessageId.MaxAjaxPerPVExceeded,
                     "Maximum ajax per page view limit reached, ajax monitoring is paused until the next trackPageView(). In order to increase the limit set the maxAjaxCallsPerView configuration parameter.",
                     true);
@@ -317,10 +302,20 @@ export class AjaxMonitor implements ITelemetryPlugin {
     setNextPlugin: (next: ITelemetryPlugin) => void;
     priority: number;
     public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
-        this._core = core;
-        if (config && config.extensionConfig) {
-            let c = config.extensionConfig[this.identifier];
+        if (!this.initialized) {
+            this._core = core;
+            config.extensionConfig = config.extensionConfig ? config.extensionConfig : {};
+            let c = config.extensionConfig[this.identifier] ? config.extensionConfig[this.identifier] : {};
             this._config.maxAjaxCallsPerView = !isNaN(c.maxAjaxCallsPerView) ? c.maxAjaxCallsPerView : 500;
+            this._config.disableAjaxTracking = Util.stringToBoolOrDefault(c.disableAjaxTracking);
+            this._config.appId = c.appId;
+
+            if (this.supportsMonitoring() && !this._config.disableAjaxTracking) {
+                this.instrumentOpen();
+                this.instrumentSend();
+                this.instrumentAbort();
+                this.initialized = true;
+            }
         }
     }
 }
