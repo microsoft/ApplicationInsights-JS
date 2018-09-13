@@ -308,10 +308,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             }
         }
 
-        // this._logger.consoleLoggingLevel = () => this.config.consoleLoggingLevel;
-        // this._logger.telemetryLoggingLevel = () => this.config.telemetryLoggingLevel;
-        // this._logger.enableDebugExceptions = () => this.config.enableDebug;
-
         // Todo: move this out of static state
         if (this.config.isCookieUseDisabled) {
             Util.disableCookies();
