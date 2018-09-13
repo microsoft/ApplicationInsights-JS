@@ -229,6 +229,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
     }
 
+    /**
+     * @description Custom error handler for Application Insights Analytics
+     * @param {IAutoExceptionTelemetry} exception
+     * @memberof ApplicationInsights
+     */
     public _onerror(exception: IAutoExceptionTelemetry): void {
         try {
             const properties = {
