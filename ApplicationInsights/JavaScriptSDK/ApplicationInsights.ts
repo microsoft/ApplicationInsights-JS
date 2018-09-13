@@ -372,7 +372,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
 
         if (this.config.disableExceptionTracking === false &&
-            !this.config.autoExceptionInstrumented) {
+            !this.config.autoExceptionsInstrumented) {
             // We want to enable exception auto collection and it has not been done so yet
 
             const onerror = "onerror";
@@ -391,7 +391,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
                 return handled;
             }
-            this.config.autoExceptionInstrumented = true;
+            this.config.autoExceptionsInstrumented = true;
         }
 
         this._isInitialized = true;    
