@@ -33,5 +33,5 @@ export interface IConfig {
     enableCorsCorrelation?: boolean;
 
     // Internal
-    aiInstrumented?: boolean;
+    autoExceptionsInstrumented?: boolean;
 }
