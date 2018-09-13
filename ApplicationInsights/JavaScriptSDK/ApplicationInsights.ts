@@ -231,7 +231,12 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
     public _onerror(exception: IAutoExceptionTelemetry): void {
         try {
-            const properties = { url: (exception && exception.url) || document.URL };
+            const properties = {
+                url: (exception && exception.url) || document.URL,
+                lineNumber: exception.lineNumber,
+                columnNumber: exception.columnNumber,
+                message: exception.message
+            };
 
             if (Util.isCrossOriginError(exception.message, exception.url, exception.lineNumber, exception.columnNumber, exception.error)) {
                 this._sendCORSException(properties.url);
