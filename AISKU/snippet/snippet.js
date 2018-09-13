@@ -40,6 +40,8 @@
     }
 
     // Collect global errors
+    // Note: ApplicationInsightsAnalytics is the extension string identifier for
+    //  AppAnalytics. It is defined in ApplicationInsights.ts:ApplicationInsights.identifer
     if (aiConfig.extensionsConfig &&
         aiConfig.extensionsConfig.ApplicationInsightsAnalytics &&
         aiConfig.extensionsConfig.ApplicationInsightsAnalytics.disableExceptionTracking === false) {
