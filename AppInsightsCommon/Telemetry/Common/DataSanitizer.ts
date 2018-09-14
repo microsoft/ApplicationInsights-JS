@@ -74,7 +74,7 @@ export class DataSanitizer {
         return name;
     }
 
-    public static sanitizeString(logger: IDiagnosticLogger, value, maxLength: number = DataSanitizer.MAX_STRING_LENGTH) {
+    public static sanitizeString(logger: IDiagnosticLogger, value: any, maxLength: number = DataSanitizer.MAX_STRING_LENGTH) {
         if (value) {
             maxLength = maxLength ? maxLength : DataSanitizer.MAX_STRING_LENGTH; // in case default parameters dont work
             value = Util.trim(value);
@@ -127,7 +127,7 @@ export class DataSanitizer {
         if (properties) {
             var tempProps = {};
             for (var prop in properties) {
-                var value = DataSanitizer.sanitizeString(properties[prop], DataSanitizer.MAX_PROPERTY_LENGTH);
+                var value = DataSanitizer.sanitizeString(logger, properties[prop], DataSanitizer.MAX_PROPERTY_LENGTH);
                 prop = DataSanitizer.sanitizeKeyAndAddUniqueness(logger, prop, tempProps);
                 tempProps[prop] = value;
             }
