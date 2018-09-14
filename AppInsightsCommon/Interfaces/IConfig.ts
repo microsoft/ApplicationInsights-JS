@@ -31,4 +31,7 @@ export interface IConfig {
     isBrowserLinkTrackingEnabled?: boolean;
     appId?: string;
     enableCorsCorrelation?: boolean;
+
+    // Internal
+    autoExceptionsInstrumented?: boolean;
 }
