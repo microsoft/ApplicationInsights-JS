@@ -1,9 +1,9 @@
 /// <reference path="./TestFramework/Common.ts" />
 /// <reference path="../JavaScriptSDK/ApplicationInsights.ts" />
 
-import { Util, Exception, SeverityLevel } from "applicationinsights-common";
+import { Util, Exception, SeverityLevel, Envelope } from "applicationinsights-common";
 import {
-    ITelemetryItem, AppInsightsCore,
+    ITelemetryItem, AppInsightsCore, IAppInsightsCore,
     IPlugin, IConfiguration
 } from "applicationinsights-core-js";
 import { ApplicationInsights } from "../JavaScriptSDK/ApplicationInsights";
@@ -40,16 +40,86 @@ export class ApplicationInsightsTests extends TestClass {
                 }
 
                 // act
-                var members = ["config", "trackException", "_onerror", "trackPageView"];
+                var members = [
+                    "config",
+                    "trackException",
+                    "_onerror",
+                    "trackPageView"
+                ];
                 while (members.length) {
                     leTest(members.pop());
                 }
             }
         });
 
+        this.addGenericTests();
+        this.addTrackEventTests();
+        this.addStartStopTrackEventTests();
         this.addStartStopTrackPageTests();
         this.addTrackExceptionTests();
         this.addOnErrorTests();
+    }
+
+    private addGenericTests(): void {
+        this.testCase({
+            name: 'AppInsightsGenericTests: envelope type, data type, and ikey are correct',
+            test: () => {
+                // setup
+                var iKey: string = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                var iKeyNoDash: string = "BDC8736DD8E84B69B19BB0CE6B66A456";
+                var plugin = new TestPlugin();
+                var core = new AppInsightsCore();
+                core.initialize(
+                    {instrumentationKey: iKey},
+                    [plugin]
+                );
+                var appInsights = new ApplicationInsights();
+                appInsights.initialize({instrumentationKey: core.config.instrumentationKey}, core, []);
+                var trackStub = this.sandbox.stub(appInsights.core, "track");
+
+                var test = (action, expectedEnvelopeType, expectedDataType) => {
+                    action();
+                    var envelope: ITelemetryItem = this.getFirstResult(action, trackStub);
+                    Assert.equal(iKey, envelope.instrumentationKey, "envelope iKey");
+                    Assert.equal(expectedEnvelopeType.replace("{0}", iKeyNoDash), envelope.name, "envelope name");
+                    Assert.equal(expectedDataType, envelope.baseType, "data type name");
+                    trackStub.reset();
+                };
+
+                // Test
+                test(() => appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical}), Exception.envelopeType, Exception.dataType)
+            }
+        });
+
+        this.testCase({
+            name: 'AppInsightsGenericTests: public APIs call track',
+            test: () => {
+                // setup
+                const plugin = new TestPlugin();
+                var core = new AppInsightsCore();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin]
+                );
+                var appInsights = new ApplicationInsights();
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                const senderStub = this.sandbox.stub(appInsights.core, "track");
+
+                // Act
+                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                this.clock.tick(1);
+
+                // Test
+                Assert.ok(senderStub.calledOnce, "Telemetry is sent when master switch is on");
+            }
+        });
+    }
+
+    private addTrackEventTests(): any {
+    }
+
+    private addStartStopTrackEventTests(): any {
+        // throw new Error("StartStopTrackEventTests: Method not implemented.");
     }
 
     private addTrackExceptionTests(): void {
@@ -162,12 +232,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const plugin = new TestPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
-                    {instrumentationKey: "key",
-                    enableExceptionAutoCollection: true},
+                    {instrumentationKey: "key"},
                     [plugin]
                 );
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ instrumentationKey: "key", enableExceptionAutoCollection: true }, core, []);
+                appInsights.initialize({ instrumentationKey: "key" }, core, []);
 
                 const throwInternal = this.sandbox.spy(appInsights.core.logger, "throwInternal");
                 const nameStub = this.sandbox.stub(Util, "getExceptionName");
@@ -389,6 +458,13 @@ export class ApplicationInsightsTests extends TestClass {
                     Assert.ok(logStub.calledOnce, "calling stop without a corresponding start triggers warning to user");
                 }
         });
+    }
+
+    private getFirstResult(action: string, trackStub: SinonStub, skipSessionState?: boolean): ITelemetryItem {
+        const index: number = skipSessionState ? 1 : 0;
+
+        Assert.ok(trackStub.args && trackStub.args[index] && trackStub.args[index][0], "track was called for: " + action);
+        return <ITelemetryItem>trackStub.args[index][0];
     }
 }
 
