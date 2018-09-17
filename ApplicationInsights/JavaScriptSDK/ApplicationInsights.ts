@@ -123,11 +123,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             systemProperties);
 
         // set instrumentation key
-        telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
-
-        var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
-        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
-
+        this._setTelemetryNameAndIKey(telemetryItem);
         this.core.track(telemetryItem);
 
         // reset ajaxes counter
@@ -142,10 +138,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             properties);
 
         // set instrumentation key
-        telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
-
-        var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
-        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
+        this._setTelemetryNameAndIKey(telemetryItem);
 
         this.core.track(telemetryItem);
     }
@@ -384,12 +377,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 customProperties
             );
 
-            telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
-            
-            var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
-            telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
-
-            // envelope.baseType = "?";
+            this._setTelemetryNameAndIKey(telemetryItem);
             this.core.track(telemetryItem);
         };
         
