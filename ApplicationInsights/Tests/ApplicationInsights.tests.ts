@@ -44,7 +44,11 @@ export class ApplicationInsightsTests extends TestClass {
                     "config",
                     "trackException",
                     "_onerror",
-                    "trackPageView"
+                    "trackPageView",
+                    "startTrackEvent",
+                    "stopTrackEvent",
+                    "startTrackPage",
+                    "stopTrackPage"
                 ];
                 while (members.length) {
                     leTest(members.pop());
@@ -53,7 +57,6 @@ export class ApplicationInsightsTests extends TestClass {
         });
 
         this.addGenericTests();
-        this.addTrackEventTests();
         this.addStartStopTrackEventTests();
         this.addStartStopTrackPageTests();
         this.addTrackExceptionTests();
@@ -115,11 +118,170 @@ export class ApplicationInsightsTests extends TestClass {
         });
     }
 
-    private addTrackEventTests(): any {
-    }
+    private addStartStopTrackEventTests(): void {
+        const plugin = new TestPlugin();
+        var core = new AppInsightsCore();
+        core.initialize(
+            {instrumentationKey: "key"},
+            [plugin]
+        );
+        var appInsights = new ApplicationInsights();
+        appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
 
-    private addStartStopTrackEventTests(): any {
-        // throw new Error("StartStopTrackEventTests: Method not implemented.");
+        const testValues = {
+            name: "name",
+            url: "url",
+            duration: 200,
+            customProperties: {
+                "property1": 5,
+                "property2": 10,
+                "measurement": 300.0
+            }
+        }
+
+        this.testCase({
+            name: 'Timing Tests: Start/StopTrackEvent',
+            test: () => {
+                let trackStub = this.sandbox.stub(appInsights.core, "track");
+
+                // Act
+                appInsights.startTrackEvent(testValues.name);
+                this.clock.tick(testValues.duration);
+                appInsights.stopTrackEvent(testValues.name, testValues.customProperties);
+                Assert.ok(trackStub.calledOnce, "single page view tracking stopped");
+
+                // Test
+                var telemetry: ITelemetryItem = trackStub.args[0][0];
+                Assert.equal(testValues.name, telemetry.baseData.name);
+                Assert.deepEqual(testValues.customProperties, telemetry.data);
+
+                // Act
+                trackStub.reset();
+                appInsights.startTrackEvent(testValues.name);
+                this.clock.tick(testValues.duration);
+                appInsights.stopTrackEvent(testValues.name, testValues.customProperties);
+                Assert.ok(trackStub.calledOnce, "single page view tracking stopped");
+
+                // Test
+                telemetry = trackStub.args[0][0];
+                Assert.equal(testValues.name, telemetry.baseData.name);
+                Assert.deepEqual(testValues.customProperties, telemetry.data);
+            }
+        });
+
+        this.testCase({
+            name: 'Timing Tests: Multiple Start/StopTrackEvent',
+            test: () => {
+                // Setup
+                let trackStub = this.sandbox.stub(appInsights.core, "track");
+                const testValues2 = {
+                    name: "test2",
+                    duration: 500
+                };
+
+                // Act
+                appInsights.startTrackEvent(testValues.name);
+                appInsights.startTrackEvent(testValues2.name);
+
+                this.clock.tick(testValues2.duration);
+                appInsights.stopTrackEvent(testValues2.name);
+                Assert.ok(trackStub.calledOnce, "single event tracking stopped for " + testValues2.name);
+
+                this.clock.tick(testValues.duration);
+                appInsights.stopTrackEvent(testValues.name, testValues.customProperties);
+                Assert.ok(trackStub.calledTwice, "single event tracking stopped for " + testValues.name);
+
+                // Test "test2"
+                const firstEvent: ITelemetryItem = trackStub.args[0][0];
+                Assert.equal(testValues2.name, firstEvent.baseData.name);
+
+                // Test "test1"
+                const secondEvent: ITelemetryItem = trackStub.args[1][0];
+                Assert.equal(testValues.name, secondEvent.baseData.name);
+                Assert.deepEqual(testValues.customProperties, secondEvent.data)
+            }
+        });
+
+        this.testCase({
+            name: 'Timing Tests: stopTrackPage called without a corresponing start',
+            test: () => {
+                // Setup
+                var logStub = this.sandbox.stub(appInsights.core.logger, "throwInternal");
+
+                // Act
+                appInsights.stopTrackEvent("Event1");
+
+                // Test
+                Assert.ok(logStub.calledOnce, "calling stopTrackEvent without a corrensponding start triggers warning to user");
+            }
+        });
+
+        this.testCase({
+            name: 'Timing Tests: Start/StopTrackEvent has correct duration',
+            test: () => {
+                // Setup
+                var testValues1 = {
+                    name: "test1",
+                    duration: 300
+                };
+
+                var testValues2 = {
+                    name: "test2",
+                    duration: 200
+                };
+                let trackStub = this.sandbox.stub(appInsights.core, "track");
+                this.clock.tick(55);
+
+                // Act
+                appInsights.startTrackEvent(testValues1.name);
+                this.clock.tick(testValues1.duration);
+                appInsights.stopTrackEvent(testValues1.name);
+
+                appInsights.startTrackEvent(testValues2.name);
+                this.clock.tick(testValues2.duration);
+                appInsights.stopTrackEvent(testValues2.name);
+
+                // Test
+                // TestValues1
+                let telemetry: ITelemetryItem = trackStub.args[0][0];
+                Assert.equal(testValues1.name, telemetry.baseData.name);
+                Assert.equal(testValues1.duration, telemetry.data.duration);
+
+                // TestValues2
+                telemetry = trackStub.args[1][0];
+                Assert.equal(testValues2.name, telemetry.baseData.name);
+                Assert.equal(testValues2.duration, telemetry.data.duration);
+            }
+        });
+
+        this.testCase({
+            name: 'Timing Tests: Start/StopTrackEvent custom duration is not overridden',
+            test: () => {
+                // Setup
+                var testValues2 = {
+                    name: "name2",
+                    url: "url",
+                    duration: 345,
+                    customProperties: {
+                        "property1": 5,
+                        "duration": 777
+                    }
+                };
+                let trackStub = this.sandbox.stub(appInsights.core, "track");
+                this.clock.tick(10);
+
+                // Act
+                appInsights.startTrackEvent(testValues2.name);
+                this.clock.tick(testValues2.duration);
+                appInsights.stopTrackEvent(testValues2.name, testValues2.customProperties);
+                Assert.ok(trackStub.calledOnce, "single page view tracking stopped");
+
+                // Verify
+                let telemetry: ITelemetryItem = trackStub.args[0][0];
+                Assert.equal(testValues2.name, telemetry.baseData.name);
+                Assert.deepEqual(testValues2.customProperties, telemetry.data);
+            }
+        });
     }
 
     private addTrackExceptionTests(): void {

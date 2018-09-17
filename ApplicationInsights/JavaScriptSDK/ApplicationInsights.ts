@@ -244,6 +244,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 Exception.envelopeType,
                 customProperties
             );
+
+            this._setTelemetryNameAndIKey(telemetryItem);
+
             this.core.track(telemetryItem);
         } catch (e) {
             this._logger.throwInternal(
@@ -476,6 +479,14 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         );
 
         this.core.track(telemetryItem);
+    }
+
+    // Mutate telemetryItem inplace to add boilerplate iKey & name info
+    private _setTelemetryNameAndIKey(telemetryItem: ITelemetryItem): void {
+        telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
+
+        var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
+        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
     }
 }
 
