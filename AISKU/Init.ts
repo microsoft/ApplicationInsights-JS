@@ -1,9 +1,4 @@
-/// <reference types="applicationinsights-common" />
-/// <reference types="applicationinsights-core-js" />
-/// <reference types="applicationinsights-analytics-js" />
-/// <reference types="applicationinsights-channel-js" />
-
-import { _InternalLogging, PageView } from "applicationinsights-common";
+import { PageView } from "applicationinsights-common";
 import { AppInsightsCore, IConfiguration } from "applicationinsights-core-js";
 import { Sender } from "applicationinsights-channel-js";
 import { ApplicationInsights, IPageViewTelemetry } from "applicationinsights-analytics-js";
@@ -92,5 +87,5 @@ try {
     //     // core.track(telemetryItem);
     // }
 } catch (e) {
-    _InternalLogging.warnToConsole('Failed to initialize AppInsights JS SDK: ' + e.message);
+    // _InternalLogging.warnToConsole('Failed to initialize AppInsights JS SDK: ' + e.message);
 }
