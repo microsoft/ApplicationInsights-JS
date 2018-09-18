@@ -143,6 +143,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this.core.track(telemetryItem);
     }
 
+    /**
+     * @descriptionStart timing an extended event. Call {@link stopTrackEvent} to log the event when it
+     * @param {string} name A string that uniquely identifies this event within the document
+     * @memberof ApplicationInsights
+     */
     public startTrackEvent(name: string) {
         try {
             this._eventTracking.start(name);
@@ -155,6 +160,12 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
     }
 
+    /**
+     * @description Log an extended event that was started with {@link startTrackEvent}.
+     * @param {string} name The string that was used to uniquely identify this event with startTrackEvent
+     * @param {{[key: string]: any}} [customProperties]
+     * @memberof ApplicationInsights
+     */
     public stopTrackEvent(name: string, customProperties?: {[key: string]: any}) {
         try {
             this._eventTracking.stop(name, undefined, customProperties);
