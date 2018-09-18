@@ -9,7 +9,6 @@ import {
 import { ajaxRecord } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
 import { ApplicationInsights } from '../../ApplicationInsights';
-import { Envelope } from 'applicationinsights-common';
 
 export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;
@@ -150,10 +149,10 @@ export class AjaxMonitor implements ITelemetryPlugin {
     private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
         xhr.ajaxData.requestSentTime = DateTimeUtils.Now();
 
-        if (this.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(this.appInsights.config, xhr.ajaxData.getAbsoluteUrl(),
+        if (this.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(this._config, xhr.ajaxData.getAbsoluteUrl(),
             this.currentWindowHost)) {
             xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
-            var appId = this._config.appId || ;
+            var appId = this._config.appId || 
             if (appId) {
                 xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
             }
@@ -308,8 +307,14 @@ export class AjaxMonitor implements ITelemetryPlugin {
             let c = config.extensionConfig[this.identifier] ? config.extensionConfig[this.identifier] : {};
             this._config.maxAjaxCallsPerView = !isNaN(c.maxAjaxCallsPerView) ? c.maxAjaxCallsPerView : 500;
             this._config.disableAjaxTracking = Util.stringToBoolOrDefault(c.disableAjaxTracking);
-            this._config.appId = c.appId;
+            this._config.disableCorrelationHeaders = Util.stringToBoolOrDefault(c.disableCorrelationHeaders);
+            this._config.correlationHeaderExcludedDomains = c.correlationHeaderExcludedDomains || [
+                "*.blob.core.windows.net",
+                "*.blob.core.chinacloudapi.cn",
+                "*.blob.core.cloudapi.de",
+                "*.blob.core.usgovcloudapi.net"];
 
+            this._config.appId = c.appId;
             if (this.supportsMonitoring() && !this._config.disableAjaxTracking) {
                 this.instrumentOpen();
                 this.instrumentSend();
