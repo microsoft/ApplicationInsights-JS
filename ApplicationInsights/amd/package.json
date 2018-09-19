@@ -11,7 +11,7 @@
         "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
     },
     "dependencies": {
-        "applicationinsights-common": "0.0.77",
+        "applicationinsights-common": "0.0.79",
         "applicationinsights-core-js": "0.0.81"
     }
 }
