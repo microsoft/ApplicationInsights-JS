@@ -8,23 +8,20 @@ import {
 } from 'applicationinsights-core-js';
 import { ajaxRecord } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
-import { ApplicationInsights } from '../../ApplicationInsights';
 
 export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;
 }
 
 export class AjaxMonitor implements ITelemetryPlugin {
-    private appInsights: ApplicationInsights;
     private initialized: boolean;
     private currentWindowHost;
     private _core;
     private _config;
     _trackAjaxAttempts: any;    
 
-    constructor(appInsights: ApplicationInsights) {
+    constructor() {
         this.currentWindowHost = window && window.location.host && window.location.host.toLowerCase();
-        this.appInsights = appInsights;
         this.initialized = false;
     }
 
@@ -94,14 +91,14 @@ export class AjaxMonitor implements ITelemetryPlugin {
     }
 
     private openHandler(xhr: XMLHttpRequestInstrumented, method, url, async) {
-        /*
+        /* todo:
         Disabling the following block of code as CV is not yet supported in 1DS for 3rd Part. 
         // this format corresponds with activity logic on server-side and is required for the correct correlation
         var id = "|" + this.appInsights.context.operation.id + "." + Util.newId();
         */
        var id = Util.newId();
 
-        var ajaxData = new ajaxRecord(id);
+        var ajaxData = new ajaxRecord(id, this._core._logger);
         ajaxData.method = method;
         ajaxData.requestUrl = url;
         ajaxData.xhrMonitoringState.openDone = true
@@ -152,7 +149,7 @@ export class AjaxMonitor implements ITelemetryPlugin {
         if (this.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(this._config, xhr.ajaxData.getAbsoluteUrl(),
             this.currentWindowHost)) {
             xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
-            var appId = this._config.appId || 
+            var appId = this._config.appId; // Todo: also, get appId from channel as breeze returns it
             if (appId) {
                 xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
             }
@@ -228,7 +225,7 @@ export class AjaxMonitor implements ITelemetryPlugin {
                 });
         }
         else {
-            var dependency = new RemoteDependencyData(
+            var dependency = new RemoteDependencyData(this._core._logger, 
                 xhr.ajaxData.id,
                 xhr.ajaxData.getAbsoluteUrl(),
                 xhr.ajaxData.getPathName(),
@@ -281,10 +278,10 @@ export class AjaxMonitor implements ITelemetryPlugin {
                     dependency,
                     RemoteDependencyData.dataType,
                     RemoteDependencyData.envelopeType,
-                    this._logger,
+                    this._core._logger,
                     properties,
                     systemProperties);
-                )
+
                 this._core.track(item);
             } else if (this._trackAjaxAttempts === this._config.maxAjaxCallsPerView) {
                 this._core.logger.throwInternal(LoggingSeverity.CRITICAL,

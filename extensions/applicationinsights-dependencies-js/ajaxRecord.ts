@@ -1,4 +1,5 @@
 ﻿import { DataSanitizer, UrlHelper, DateTimeUtils } from 'applicationinsights-common';
+import { IDiagnosticLogger } from 'applicationinsights-core-js';
 
 export class XHRMonitoringState {
     public openDone: boolean = false;
@@ -46,14 +47,17 @@ export class ajaxRecord {
 
     public xhrMonitoringState: XHRMonitoringState = new XHRMonitoringState();
 
+    private _logger: IDiagnosticLogger;
+
     //<summary>Determines whether or not JavaScript exception occured in xhr.onreadystatechange code. 1 if occured, otherwise 0.</summary>
     public clientFailure = 0;
 
 
     public id: string;
 
-    constructor(id: string) {
+    constructor(id: string, logger: IDiagnosticLogger) {
         this.id = id;
+        this._logger = logger;
     }
 
 
@@ -62,7 +66,7 @@ export class ajaxRecord {
     }
 
     public getPathName() {
-        return this.requestUrl ? DataSanitizer.sanitizeUrl(UrlHelper.getCompleteUrl(this.method, this.requestUrl)) : null;
+        return this.requestUrl ? DataSanitizer.sanitizeUrl(this._logger, UrlHelper.getCompleteUrl(this.method, this.requestUrl)) : null;
     }
 
     public CalculateMetrics = function () {

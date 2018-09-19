@@ -9,7 +9,7 @@
     "alwaysStrict": true,
     "declaration": true,
     "outDir": "amd/bundle",
-    "rootDir": "applicationinsights-dependencies-js"
+    "rootDir": "extensions/applicationinsights-dependencies-js"
   },
   "files": []
 }

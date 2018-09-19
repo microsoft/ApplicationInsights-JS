@@ -69,6 +69,12 @@ module.exports = function (grunt) {
                     './extensions/applicationinsights-properties-js/Interfaces/*.ts'
                 ]
             },
+            deps: {
+                tsconfig: './extensions/applicationinsights-dependencies-js/tsconfig.json',
+                src: [
+                    './extensions/applicationinsights-dependencies-js/*.ts'
+                ]
+            },
             propertiescjs: {
                 tsconfig: './extensions/applicationinsights-properties-js/cjs/tsconfigcommonjs.json',
                 src: [
@@ -219,4 +225,5 @@ module.exports = function (grunt) {
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiescjs", ["ts:propertiescjs"]);
+    grunt.registerTask("deps", ["ts:deps"]);
 };
