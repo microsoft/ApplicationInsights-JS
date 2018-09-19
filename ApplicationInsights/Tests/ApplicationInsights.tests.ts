@@ -1,9 +1,9 @@
 /// <reference path="./TestFramework/Common.ts" />
 /// <reference path="../JavaScriptSDK/ApplicationInsights.ts" />
 
-import { Util, Exception, SeverityLevel } from "applicationinsights-common";
+import { Util, Exception, SeverityLevel, Envelope } from "applicationinsights-common";
 import {
-    ITelemetryItem, AppInsightsCore,
+    ITelemetryItem, AppInsightsCore, IAppInsightsCore,
     IPlugin, IConfiguration
 } from "applicationinsights-core-js";
 import { ApplicationInsights } from "../JavaScriptSDK/ApplicationInsights";
@@ -40,16 +40,248 @@ export class ApplicationInsightsTests extends TestClass {
                 }
 
                 // act
-                var members = ["config", "trackException", "_onerror", "trackPageView"];
+                var members = [
+                    "config",
+                    "trackException",
+                    "_onerror",
+                    "trackPageView",
+                    "startTrackEvent",
+                    "stopTrackEvent",
+                    "startTrackPage",
+                    "stopTrackPage"
+                ];
                 while (members.length) {
                     leTest(members.pop());
                 }
             }
         });
 
+        this.addGenericTests();
+        this.addStartStopTrackEventTests();
         this.addStartStopTrackPageTests();
         this.addTrackExceptionTests();
         this.addOnErrorTests();
+    }
+
+    private addGenericTests(): void {
+        this.testCase({
+            name: 'AppInsightsGenericTests: envelope type, data type, and ikey are correct',
+            test: () => {
+                // setup
+                var iKey: string = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                var iKeyNoDash: string = "BDC8736DD8E84B69B19BB0CE6B66A456";
+                var plugin = new TestPlugin();
+                var core = new AppInsightsCore();
+                core.initialize(
+                    {instrumentationKey: iKey},
+                    [plugin]
+                );
+                var appInsights = new ApplicationInsights();
+                appInsights.initialize({instrumentationKey: core.config.instrumentationKey}, core, []);
+                var trackStub = this.sandbox.stub(appInsights.core, "track");
+
+                var test = (action, expectedEnvelopeType, expectedDataType) => {
+                    action();
+                    var envelope: ITelemetryItem = this.getFirstResult(action, trackStub);
+                    Assert.equal(iKey, envelope.instrumentationKey, "envelope iKey");
+                    Assert.equal(expectedEnvelopeType.replace("{0}", iKeyNoDash), envelope.name, "envelope name");
+                    Assert.equal(expectedDataType, envelope.baseType, "data type name");
+                    trackStub.reset();
+                };
+
+                // Test
+                test(() => appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical}), Exception.envelopeType, Exception.dataType)
+            }
+        });
+
+        this.testCase({
+            name: 'AppInsightsGenericTests: public APIs call track',
+            test: () => {
+                // setup
+                const plugin = new TestPlugin();
+                var core = new AppInsightsCore();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin]
+                );
+                var appInsights = new ApplicationInsights();
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                const senderStub = this.sandbox.stub(appInsights.core, "track");
+
+                // Act
+                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                this.clock.tick(1);
+
+                // Test
+                Assert.ok(senderStub.calledOnce, "Telemetry is sent when master switch is on");
+            }
+        });
+    }
+
+    private addStartStopTrackEventTests(): void {
+        const plugin = new TestPlugin();
+        var core = new AppInsightsCore();
+        core.initialize(
+            {instrumentationKey: "key"},
+            [plugin]
+        );
+        var appInsights = new ApplicationInsights();
+        appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+
+        const testValues = {
+            name: "name",
+            url: "url",
+            duration: 200,
+            customProperties: {
+                "property1": 5,
+                "property2": 10,
+                "measurement": 300.0
+            }
+        }
+
+        this.testCase({
+            name: 'Timing Tests: Start/StopTrackEvent',
+            test: () => {
+                let trackStub = this.sandbox.stub(appInsights.core, "track");
+
+                // Act
+                appInsights.startTrackEvent(testValues.name);
+                this.clock.tick(testValues.duration);
+                appInsights.stopTrackEvent(testValues.name, testValues.customProperties);
+                Assert.ok(trackStub.calledOnce, "single page view tracking stopped");
+
+                // Test
+                var telemetry: ITelemetryItem = trackStub.args[0][0];
+                Assert.equal(testValues.name, telemetry.baseData.name);
+                Assert.deepEqual(testValues.customProperties, telemetry.data);
+
+                // Act
+                trackStub.reset();
+                appInsights.startTrackEvent(testValues.name);
+                this.clock.tick(testValues.duration);
+                appInsights.stopTrackEvent(testValues.name, testValues.customProperties);
+                Assert.ok(trackStub.calledOnce, "single page view tracking stopped");
+
+                // Test
+                telemetry = trackStub.args[0][0];
+                Assert.equal(testValues.name, telemetry.baseData.name);
+                Assert.deepEqual(testValues.customProperties, telemetry.data);
+            }
+        });
+
+        this.testCase({
+            name: 'Timing Tests: Multiple Start/StopTrackEvent',
+            test: () => {
+                // Setup
+                let trackStub = this.sandbox.stub(appInsights.core, "track");
+                const testValues2 = {
+                    name: "test2",
+                    duration: 500
+                };
+
+                // Act
+                appInsights.startTrackEvent(testValues.name);
+                appInsights.startTrackEvent(testValues2.name);
+
+                this.clock.tick(testValues2.duration);
+                appInsights.stopTrackEvent(testValues2.name);
+                Assert.ok(trackStub.calledOnce, "single event tracking stopped for " + testValues2.name);
+
+                this.clock.tick(testValues.duration);
+                appInsights.stopTrackEvent(testValues.name, testValues.customProperties);
+                Assert.ok(trackStub.calledTwice, "single event tracking stopped for " + testValues.name);
+
+                // Test "test2"
+                const firstEvent: ITelemetryItem = trackStub.args[0][0];
+                Assert.equal(testValues2.name, firstEvent.baseData.name);
+
+                // Test "test1"
+                const secondEvent: ITelemetryItem = trackStub.args[1][0];
+                Assert.equal(testValues.name, secondEvent.baseData.name);
+                Assert.deepEqual(testValues.customProperties, secondEvent.data)
+            }
+        });
+
+        this.testCase({
+            name: 'Timing Tests: stopTrackPage called without a corresponing start',
+            test: () => {
+                // Setup
+                var logStub = this.sandbox.stub(appInsights.core.logger, "throwInternal");
+
+                // Act
+                appInsights.stopTrackEvent("Event1");
+
+                // Test
+                Assert.ok(logStub.calledOnce, "calling stopTrackEvent without a corrensponding start triggers warning to user");
+            }
+        });
+
+        this.testCase({
+            name: 'Timing Tests: Start/StopTrackEvent has correct duration',
+            test: () => {
+                // Setup
+                var testValues1 = {
+                    name: "test1",
+                    duration: 300
+                };
+
+                var testValues2 = {
+                    name: "test2",
+                    duration: 200
+                };
+                let trackStub = this.sandbox.stub(appInsights.core, "track");
+                this.clock.tick(55);
+
+                // Act
+                appInsights.startTrackEvent(testValues1.name);
+                this.clock.tick(testValues1.duration);
+                appInsights.stopTrackEvent(testValues1.name);
+
+                appInsights.startTrackEvent(testValues2.name);
+                this.clock.tick(testValues2.duration);
+                appInsights.stopTrackEvent(testValues2.name);
+
+                // Test
+                // TestValues1
+                let telemetry: ITelemetryItem = trackStub.args[0][0];
+                Assert.equal(testValues1.name, telemetry.baseData.name);
+                Assert.equal(testValues1.duration, telemetry.data.duration);
+
+                // TestValues2
+                telemetry = trackStub.args[1][0];
+                Assert.equal(testValues2.name, telemetry.baseData.name);
+                Assert.equal(testValues2.duration, telemetry.data.duration);
+            }
+        });
+
+        this.testCase({
+            name: 'Timing Tests: Start/StopTrackEvent custom duration is not overridden',
+            test: () => {
+                // Setup
+                var testValues2 = {
+                    name: "name2",
+                    url: "url",
+                    duration: 345,
+                    customProperties: {
+                        "property1": 5,
+                        "duration": 777
+                    }
+                };
+                let trackStub = this.sandbox.stub(appInsights.core, "track");
+                this.clock.tick(10);
+
+                // Act
+                appInsights.startTrackEvent(testValues2.name);
+                this.clock.tick(testValues2.duration);
+                appInsights.stopTrackEvent(testValues2.name, testValues2.customProperties);
+                Assert.ok(trackStub.calledOnce, "single page view tracking stopped");
+
+                // Verify
+                let telemetry: ITelemetryItem = trackStub.args[0][0];
+                Assert.equal(testValues2.name, telemetry.baseData.name);
+                Assert.deepEqual(testValues2.customProperties, telemetry.data);
+            }
+        });
     }
 
     private addTrackExceptionTests(): void {
@@ -162,12 +394,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const plugin = new TestPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
-                    {instrumentationKey: "key",
-                    enableExceptionAutoCollection: true},
+                    {instrumentationKey: "key"},
                     [plugin]
                 );
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ instrumentationKey: "key", enableExceptionAutoCollection: true }, core, []);
+                appInsights.initialize({ instrumentationKey: "key" }, core, []);
 
                 const throwInternal = this.sandbox.spy(appInsights.core.logger, "throwInternal");
                 const nameStub = this.sandbox.stub(Util, "getExceptionName");
@@ -389,6 +620,13 @@ export class ApplicationInsightsTests extends TestClass {
                     Assert.ok(logStub.calledOnce, "calling stop without a corresponding start triggers warning to user");
                 }
         });
+    }
+
+    private getFirstResult(action: string, trackStub: SinonStub, skipSessionState?: boolean): ITelemetryItem {
+        const index: number = skipSessionState ? 1 : 0;
+
+        Assert.ok(trackStub.args && trackStub.args[index] && trackStub.args[index][0], "track was called for: " + action);
+        return <ITelemetryItem>trackStub.args[index][0];
     }
 }
 

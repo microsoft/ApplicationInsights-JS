@@ -5,7 +5,7 @@
 
 import {
     IConfig,
-    Util, PageViewPerformance,
+    Util, PageViewPerformance, Event,
     PageView, IEnvelope, RemoteDependencyData,
     Data, Metric, Exception, SeverityLevel
 } from "applicationinsights-common";
@@ -42,6 +42,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     private _globalconfig: IConfiguration;
     private _nextPlugin: ITelemetryPlugin;
     private _pageTracking: Timing;
+    private _eventTracking: Timing;
     private _telemetryInitializers: { (envelope: IEnvelope): boolean | void; }[]; // Internal telemetry initializers.
     private _pageViewManager: PageViewManager;
     private _pageVisitTimeManager: PageVisitTimeManager;
@@ -122,11 +123,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             systemProperties);
 
         // set instrumentation key
-        telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
-
-        var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
-        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
-
+        this._setTelemetryNameAndIKey(telemetryItem);
         this.core.track(telemetryItem);
 
         // reset ajaxes counter
@@ -141,12 +138,44 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             properties);
 
         // set instrumentation key
-        telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
-
-        var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
-        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
+        this._setTelemetryNameAndIKey(telemetryItem);
 
         this.core.track(telemetryItem);
+    }
+
+    /**
+     * @descriptionStart timing an extended event. Call {@link stopTrackEvent} to log the event when it
+     * @param {string} name A string that uniquely identifies this event within the document
+     * @memberof ApplicationInsights
+     */
+    public startTrackEvent(name: string) {
+        try {
+            this._eventTracking.start(name);
+        } catch (e) {
+            this._logger.throwInternal(LoggingSeverity.CRITICAL,
+                _InternalMessageId.StartTrackEventFailed,
+                "startTrackEvent failed, event will not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e)}
+            );
+        }
+    }
+
+    /**
+     * @description Log an extended event that was started with {@link startTrackEvent}.
+     * @param {string} name The string that was used to uniquely identify this event with startTrackEvent
+     * @param {{[key: string]: any}} [customProperties]
+     * @memberof ApplicationInsights
+     */
+    public stopTrackEvent(name: string, customProperties?: {[key: string]: any}) {
+        try {
+            this._eventTracking.stop(name, undefined, customProperties);
+        } catch (e) {
+            this._logger.throwInternal(LoggingSeverity.CRITICAL,
+                _InternalMessageId.StartTrackEventFailed,
+                "stopTrackEvent failed, event will not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e)}
+            );
+        }
     }
 
     /**
@@ -219,6 +248,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 Exception.envelopeType,
                 customProperties
             );
+
+            this._setTelemetryNameAndIKey(telemetryItem);
+
             this.core.track(telemetryItem);
         } catch (e) {
             this._logger.throwInternal(
@@ -335,31 +367,31 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this._telemetryInitializers = [];
         this._addDefaultTelemetryInitializers(configGetters);
 
-        /*
-        TODO: renable this trackEvent once we support trackEvent in this package. Created task to track this:
-        https://mseng.visualstudio.com/AppInsights/_workitems/edit/1310833
 
         // initialize event timing
-        this._eventTracking = new Timing("trackEvent");
-        this._eventTracking.action = (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
-            if (!measurements) {
-                measurements = { duration: duration };
-            }
-            else {
+        this._eventTracking = new Timing(this._logger, "trackEvent");
+        this._eventTracking.action = (name?: string, url?: string, duration?: number, customProperties?: {[key: string]: any}) => {
+            if (!customProperties) {
+                customProperties = { duration: duration };
+            } else {
                 // do not override existing duration value
-                if (isNaN(measurements["duration"])) {
-                    measurements["duration"] = duration;
+                if (isNaN(customProperties["duration"])) {
+                    customProperties["duration"] = duration;
                 }
             }
 
+            const telemetryItem: ITelemetryItem = TelemetryItemCreator.createItem(
+                this._logger,
+                {name: name},
+                Event.dataType,
+                Event.envelopeType,
+                customProperties
+            );
 
-            var event = new Event(name, properties, measurements);
-            var data = new Data<Event>(Event.dataType, event);
-            var envelope = new Envelope(data, Event.envelopeType);
-
-            this.context.track(envelope);
-        }
-        */
+            this._setTelemetryNameAndIKey(telemetryItem);
+            this.core.track(telemetryItem);
+        };
+        
 
         // initialize page view timing
         this._pageTracking = new Timing(this._logger, "trackPageView");
@@ -446,6 +478,14 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         );
 
         this.core.track(telemetryItem);
+    }
+
+    // Mutate telemetryItem inplace to add boilerplate iKey & name info
+    private _setTelemetryNameAndIKey(telemetryItem: ITelemetryItem): void {
+        telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
+
+        var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
+        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
     }
 }
 
