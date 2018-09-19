@@ -16,7 +16,7 @@ export class TelemetryItemCreatorTests extends TestClass {
     private _appInsights: ApplicationInsights;
 
     public testInitialize() {
-        const plugin: IPlugin = new TestPlugin();
+        const plugin: IPlugin = new ChannelPlugin();
         this._core = new AppInsightsCore();
         this._core.initialize(
             {instrumentationKey: "key"},
@@ -86,7 +86,7 @@ export class TelemetryItemCreatorTests extends TestClass {
     }
 }
 
-class TestPlugin implements IPlugin {
+class ChannelPlugin implements IPlugin {
 
     public isFlushInvoked = false;
     public isTearDownInvoked = false;

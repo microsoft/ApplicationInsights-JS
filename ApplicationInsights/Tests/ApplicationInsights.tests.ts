@@ -69,7 +69,7 @@ export class ApplicationInsightsTests extends TestClass {
                 // setup
                 var iKey: string = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
                 var iKeyNoDash: string = "BDC8736DD8E84B69B19BB0CE6B66A456";
-                var plugin = new TestPlugin();
+                var plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: iKey},
@@ -98,7 +98,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'AppInsightsGenericTests: public APIs call track',
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -123,7 +123,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "TrackExceptionTests: trackException accepts single exception and an array of exceptions",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -145,7 +145,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "TrackExceptionTests: trackException allows logging errors with different severity level",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -174,7 +174,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "OnErrorTests: _onerror creates a dump of unexpected error thrown by trackException for logging",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -199,7 +199,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "OnErrorTests: _onerror stringifies error object",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -225,7 +225,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "OnErrorTests: _onerror logs name of unexpected error thrown by trackException for diagnostics",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -254,7 +254,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "OnErrorTests: _onerror adds document URL in case of CORS error",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -276,7 +276,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "OnErrorTests: _onerror adds document URL in case of no CORS error",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -315,7 +315,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "Timing Tests: Start/StopPageView pass correct duration",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -409,7 +409,7 @@ export class ApplicationInsightsTests extends TestClass {
             test:
                 () => {
                     // setup
-                    const plugin = new TestPlugin();
+                    const plugin = new ChannelPlugin();
                     var core = new AppInsightsCore();
                     core.initialize(
                         {instrumentationKey: "key"},
@@ -434,7 +434,7 @@ export class ApplicationInsightsTests extends TestClass {
             test:
                 () => {
                     // setup
-                    const plugin = new TestPlugin();
+                    const plugin = new ChannelPlugin();
                     var core = new AppInsightsCore();
                     core.initialize(
                         {instrumentationKey: "key"},
@@ -459,7 +459,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'TrackMetricTests: treackMetric batches metrics sent in a hot loop',
             test: () => {
                 // Setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -498,7 +498,7 @@ export class ApplicationInsightsTests extends TestClass {
     }
 }
 
-class TestPlugin implements IPlugin {
+class ChannelPlugin implements IPlugin {
 
     public isFlushInvoked = false;
     public isTearDownInvoked = false;
