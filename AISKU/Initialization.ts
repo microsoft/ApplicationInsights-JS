@@ -1,9 +1,4 @@
-/// <reference types="applicationinsights-core-js" />
-/// <reference types="applicationinsights-common" />
-/// <reference types="applicationinsights-analytics-js" />
-/// <reference types="applicationinsights-channel-js" />
-
-import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalLogging, _InternalMessageId } from "applicationinsights-core-js";
+import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId } from "applicationinsights-core-js";
 import { ApplicationInsights } from "applicationinsights-analytics-js";
 import { Util, IConfig } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
@@ -49,7 +44,7 @@ export class Initialization {
 
         this.core = new AppInsightsCore();
         let extensions = [];
-        let appInsightsChannel: Sender = new Sender();
+        let appInsightsChannel: Sender = new Sender(this.core.logger);
 
         extensions.push(appInsightsChannel);
         extensions.push(this.properties);
@@ -126,7 +121,7 @@ export class Initialization {
             };
 
             if (!Util.addEventHandler('beforeunload', performHousekeeping)) {
-                _InternalLogging.throwInternal(
+                this.core.logger.throwInternal(
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.FailedToAddHandlerForOnBeforeUnload,
                     'Could not add handler for beforeunload');
@@ -152,7 +147,8 @@ export class Initialization {
 
         config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
         config.disableExceptionTracking = Util.stringToBoolOrDefault(config.disableExceptionTracking);
-        config.verboseLogging = Util.stringToBoolOrDefault(config.verboseLogging);
+        config.consoleLoggingLevel = config.consoleLoggingLevel || 1; // Show only CRITICAL level
+        config.telemetryLoggingLevel = config.telemetryLoggingLevel || 0; // Send nothing
         config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
         config.autoTrackPageVisitTime = Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
 
