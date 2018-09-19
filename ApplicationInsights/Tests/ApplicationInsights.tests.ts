@@ -1,5 +1,4 @@
 /// <reference path="./TestFramework/Common.ts" />
-/// <reference path="../JavaScriptSDK/ApplicationInsights.ts" />
 
 import { Util, Exception, SeverityLevel, Trace } from "applicationinsights-common";
 import {
@@ -500,11 +499,48 @@ export class ApplicationInsightsTests extends TestClass {
 }
 
 class TestPlugin implements IPlugin {
-    private _config: IConfiguration;
-    priority: number = 100;
 
-    public initialize(config: IConfiguration) {
-        this._config = config;
-        // do custom one time initialization
+    public isFlushInvoked = false;
+    public isTearDownInvoked = false;
+    public isResumeInvoked = false;
+    public isPauseInvoked = false;
+
+    constructor() {
+        this.processTelemetry = this._processTelemetry.bind(this);
+    }
+    public pause(): void {
+        this.isPauseInvoked = true;
+    }    
+    
+    public resume(): void {
+        this.isResumeInvoked = true;
+    }
+
+    public teardown(): void {
+        this.isTearDownInvoked = true;
+    }
+
+    flush(async?: boolean, callBack?: () => void): void {
+        this.isFlushInvoked = true;
+        if (callBack) {
+            callBack();
+        }
+    }
+
+    public processTelemetry;
+
+    public identifier = "Sender";
+    
+    setNextPlugin(next: any) {
+        // no next setup
+    }
+
+    public priority: number = 201;
+
+    public initialize = (config: IConfiguration) => {
+    }
+
+    private _processTelemetry(env: ITelemetryItem) {
+
     }
 }
