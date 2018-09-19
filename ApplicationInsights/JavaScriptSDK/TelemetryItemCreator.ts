@@ -2,8 +2,9 @@ import { Util, DataSanitizer, PageViewPerformance } from "applicationinsights-co
 import { IDiagnosticLogger, ITelemetryItem, CoreUtils } from "applicationinsights-core-js";
 import { IPageViewTelemetryInternal } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
 import { IExceptionTelemetry, IAutoExceptionTelemetry } from "../JavaScriptSDK.Interfaces/IExceptionTelemetry";
+import { ITraceTelemetry } from "../JavaScriptSDK.Interfaces/ITraceTelemetry";
 
-export type supportedTelemetryItemTypes = IPageViewTelemetryInternal | PageViewPerformance | IExceptionTelemetry | IAutoExceptionTelemetry;
+export type supportedTelemetryItemTypes = IPageViewTelemetryInternal | PageViewPerformance | IExceptionTelemetry | IAutoExceptionTelemetry | ITraceTelemetry;
 
 export interface ITelemetryItemCreator {
     create(logger: IDiagnosticLogger, item: supportedTelemetryItemTypes, baseType: string, envelopeName: string, customProperties?: { [key: string]: any }): ITelemetryItem
