@@ -87,5 +87,6 @@ try {
     //     // core.track(telemetryItem);
     // }
 } catch (e) {
+    // TODO: Find better place to warn to console when SDK initialization fails
     // _InternalLogging.warnToConsole('Failed to initialize AppInsights JS SDK: ' + e.message);
 }

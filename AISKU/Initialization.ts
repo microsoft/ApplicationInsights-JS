@@ -147,8 +147,8 @@ export class Initialization {
 
         config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
         config.disableExceptionTracking = Util.stringToBoolOrDefault(config.disableExceptionTracking);
-        config.consoleLoggingLevel = config.consoleLoggingLevel || 0;
-        config.telemetryLoggingLevel = config.telemetryLoggingLevel || 2;
+        config.consoleLoggingLevel = config.consoleLoggingLevel || 1; // Show only CRITICAL level
+        config.telemetryLoggingLevel = config.telemetryLoggingLevel || 0; // Send nothing
         config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
         config.autoTrackPageVisitTime = Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
 
