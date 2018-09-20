@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css">
     <script src="http://sinonjs.org/releases/sinon-2.3.8.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script>
-    <script src="aichannel.tests.js"></script>
+    <script src="dependencies.tests.js"></script>
 
     <script>
         require.config({
@@ -23,8 +23,7 @@
                 require([
             'qunit', // Load qunit here instead of with tests, otherwise will not work
             './node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js',
-        ], function (QUnit, aicore, aicommon) {
-            // aichannel is expecting to import from i.e 'applicationinsights-core-js', so create a temp module
+        ], function (QUnit, aicore) {
             define('applicationinsights-core-js', function () { return aicore; });
             require([  
             './node_modules/applicationinsights-common/bundle/applicationinsights-common'], function (aicommon) {

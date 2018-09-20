@@ -3,7 +3,7 @@
 /// <reference path="Assert.ts" />
 /// <reference path="./TestCase.ts"/>
 
-export class TestClass {
+class TestClass {
 
     constructor(name?: string) {
         QUnit.module(name);
@@ -64,7 +64,7 @@ export class TestClass {
 
                         // The callback which activates the next test step. 
                         var nextTestStepTrigger = () => {
-                            PollingAssert.setTimeout(() => {
+                            setTimeout(() => {
                                 trigger();
                             }, testInfo.stepDelay);
                         };

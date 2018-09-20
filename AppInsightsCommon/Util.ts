@@ -3,7 +3,7 @@ import { CoreUtils, _InternalMessageId, LoggingSeverity, IDiagnosticLogger } fro
 import { IConfig } from "./Interfaces/IConfig";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
-import { ICorrelationConfig } from "./Interfaces/CorrelationConfig";
+import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 
 export class Util {
     private static document: any = typeof document !== "undefined" ? document : {};

@@ -1,10 +1,10 @@
 ﻿import {
-    RequestHeaders, Util, CorrelationIdHelper, TelemetryItemCreator,
+    RequestHeaders, Util, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
     RemoteDependencyData, DateTimeUtils, DisabledPropertyName, Data
 } from 'applicationinsights-common';
 import {
     CoreUtils, LoggingSeverity, _InternalMessageId, IDiagnosticLogger,
-    IAppInsightsCore, ITelemetryPlugin, IConfiguration, IPlugin
+    IAppInsightsCore, ITelemetryPlugin, IConfiguration, IPlugin, ITelemetryItem
 } from 'applicationinsights-core-js';
 import { ajaxRecord } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
@@ -17,8 +17,9 @@ export class AjaxMonitor implements ITelemetryPlugin {
     private initialized: boolean;
     private currentWindowHost;
     private _core;
-    private _config;
-    _trackAjaxAttempts: any;    
+    private _config: ICorrelationConfig;
+    private _nextPlugin: ITelemetryPlugin;
+    private _trackAjaxAttempts: number = 0;    
 
     constructor() {
         this.currentWindowHost = window && window.location.host && window.location.host.toLowerCase();
@@ -293,25 +294,40 @@ export class AjaxMonitor implements ITelemetryPlugin {
             ++this._trackAjaxAttempts;
         }
 
-    processTelemetry;
-    identifier: string;
-    setNextPlugin: (next: ITelemetryPlugin) => void;
-    priority: number;
+    public processTelemetry(item: ITelemetryItem) {
+        if (this._nextPlugin && this._nextPlugin.processTelemetry) {
+            this._nextPlugin.processTelemetry(item);
+        }
+    }
+
+    public identifier: string = "AjaxDependencyPlugin";
+    
+    setNextPlugin(next: ITelemetryPlugin) {
+        if (next) {
+            this._nextPlugin = next;
+        }
+    }
+
+    priority: number = 110;
+    
     public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
         if (!this.initialized) {
             this._core = core;
             config.extensionConfig = config.extensionConfig ? config.extensionConfig : {};
             let c = config.extensionConfig[this.identifier] ? config.extensionConfig[this.identifier] : {};
-            this._config.maxAjaxCallsPerView = !isNaN(c.maxAjaxCallsPerView) ? c.maxAjaxCallsPerView : 500;
-            this._config.disableAjaxTracking = Util.stringToBoolOrDefault(c.disableAjaxTracking);
-            this._config.disableCorrelationHeaders = Util.stringToBoolOrDefault(c.disableCorrelationHeaders);
-            this._config.correlationHeaderExcludedDomains = c.correlationHeaderExcludedDomains || [
-                "*.blob.core.windows.net",
-                "*.blob.core.chinacloudapi.cn",
-                "*.blob.core.cloudapi.de",
-                "*.blob.core.usgovcloudapi.net"];
+            this._config = {
+                maxAjaxCallsPerView: !isNaN(c.maxAjaxCallsPerView) ? c.maxAjaxCallsPerView : 500,
+                disableAjaxTracking: Util.stringToBoolOrDefault(c.disableAjaxTracking),
+                disableCorrelationHeaders: Util.stringToBoolOrDefault(c.disableCorrelationHeaders),
+                correlationHeaderExcludedDomains: c.correlationHeaderExcludedDomains || [
+                    "*.blob.core.windows.net",
+                    "*.blob.core.chinacloudapi.cn",
+                    "*.blob.core.cloudapi.de",
+                    "*.blob.core.usgovcloudapi.net"],
+                appId: c.appId,
+                enableCorsCorrelation: Util.stringToBoolOrDefault(c.enableCorsCorrelation)
+            };
 
-            this._config.appId = c.appId;
             if (this.supportsMonitoring() && !this._config.disableAjaxTracking) {
                 this.instrumentOpen();
                 this.instrumentSend();
