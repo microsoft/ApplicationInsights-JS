@@ -32,7 +32,6 @@ module.exports = function (grunt) {
                 tsconfig: './ApplicationInsights/cjs/tsconfigcommonjs.json',
                 src: [
                     'ApplicationInsights/JavaScriptSDK.Interfaces/*.ts',
-                    'ApplicationInsights/JavaScriptSDK/Extensions/*.ts',
                     'ApplicationInsights/JavaScriptSDK/Telemetry/*.ts',
                     'ApplicationInsights/JavaScriptSDK/*.ts',
                     'ApplicationInsights/*.ts'
@@ -42,7 +41,6 @@ module.exports = function (grunt) {
                 tsconfig: './ApplicationInsights/tsconfig.json',
                 src: [
                     'ApplicationInsights/JavaScriptSDK.Interfaces/*.ts',
-                    'ApplicationInsights/JavaScriptSDK/Extensions/*.ts',
                     'ApplicationInsights/JavaScriptSDK/Telemetry/*.ts',
                     'ApplicationInsights/JavaScriptSDK/*.ts',
                     'ApplicationInsights/*.ts'
@@ -79,6 +77,20 @@ module.exports = function (grunt) {
                     './extensions/applicationinsights-properties-js/Interfaces/Context/*.ts',
                     './extensions/applicationinsights-properties-js/Interfaces/*.ts'
                 ]
+            },
+            deps: {
+                tsconfig: './extensions/applicationinsights-dependencies-js/tsconfig.json',
+                src: [
+                    './extensions/applicationinsights-dependencies-js/*.ts'
+                ]
+            },
+            depstest: {
+                tsconfig: './extensions/applicationinsights-dependencies-js/Tests/tsconfig.json',
+                src: [
+                    './extensions/applicationinsights-dependencies-js/Tests/Selenium/*.ts',
+                    './extensions/applicationinsights-dependencies-js/Tests/TestsFramework/*.ts'
+                ],
+                out: './extensions/applicationinsights-dependencies-js/Tests/Selenium/dependencies.tests.js'
             },
             module: {
                 // Use a different tsconfig for building module in order to not generate a declaration file for module, while keeping declaration for other modules
@@ -198,6 +210,17 @@ module.exports = function (grunt) {
                     summaryOnly: true,
                     '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
+            },
+            deps: {
+                options: {
+                    urls: [
+                        './extensions/applicationinsights-dependencies-js/Tests/Selenium/Tests.html'                       
+                    ],
+                    timeout: 300 * 1000, // 5 min
+                    console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false'
+                }
             }
         }
     });
@@ -221,4 +244,6 @@ module.exports = function (grunt) {
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiescjs", ["ts:propertiescjs"]);
+    grunt.registerTask("deps", ["ts:deps"]);
+    grunt.registerTask("depstest", ["ts:deps", "ts:depstest", "qunit:deps"]);
 };
