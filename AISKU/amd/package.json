@@ -17,9 +17,10 @@
     "dependencies": {
         "applicationinsights-analytics-js": "0.0.89",
         "applicationinsights-channel-js": "0.0.33",
-        "applicationinsights-common": "0.0.81",
-        "applicationinsights-core-js": "0.0.81",
-        "applicationinsights-properties-js": "0.0.5",
+        "applicationinsights-common": "0.0.83",
+        "applicationinsights-core-js": "0.0.83",
+        "applicationinsights-properties-js": "0.0.7",
+        "applicationinsights-dependencies-js": "0.0.1",
         "source-map-loader": "^0.2.3",
         "ts-loader": "^4.4.2",
         "webpack": "^4.16.4"
