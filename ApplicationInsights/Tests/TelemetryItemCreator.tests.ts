@@ -1,7 +1,6 @@
 /// <reference path="./TestFramework/Common.ts" />
 
-import { TelemetryItemCreator } from "../JavaScriptSDK/TelemetryItemCreator";
-import { PageViewPerformance, PageView } from 'applicationinsights-common';
+import { PageViewPerformance, PageView, TelemetryItemCreator } from 'applicationinsights-common';
 import { IPageViewTelemetry } from "../JavascriptSDK.Interfaces/IPageViewTelemetry";
 import { ApplicationInsights } from '../JavaScriptSDK/ApplicationInsights'
 import { 
@@ -40,10 +39,11 @@ export class TelemetryItemCreatorTests extends TestClass {
                 };
 
                 // act
-                let telemetryItem = TelemetryItemCreator.createItem(this._core.logger,
+                let telemetryItem = TelemetryItemCreator.create<PageViewPerformance>(
                     pageViewPerformance,
                     PageViewPerformance.dataType,
                     PageViewPerformance.envelopeType,
+                    this._core.logger,
                     properties);
 
                 // assert
@@ -70,10 +70,11 @@ export class TelemetryItemCreatorTests extends TestClass {
                 };
 
                 // act
-                let telemetryItem = TelemetryItemCreator.createItem(this._core.logger,
+                let telemetryItem = TelemetryItemCreator.create<IPageViewTelemetry>(
                     pageView,
                     PageView.dataType,
                     PageView.envelopeType,
+                    this._core.logger,
                     properties);
 
                 // assert

@@ -98,8 +98,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
             let telemetryItem = TelemetryItemCreator.create<ITraceTelemetry>(
                 trace,
-                RemoteDependencyData.dataType,
-                RemoteDependencyData.envelopeType,
+                Trace.dataType,
+                Trace.envelopeType,
                 this._logger,
                 customProperties);
           
