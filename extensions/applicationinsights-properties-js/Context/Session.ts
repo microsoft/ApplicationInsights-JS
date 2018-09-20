@@ -2,7 +2,7 @@ import { ISession } from '../Interfaces/Context/ISession';
 import {
     Util, DateTimeUtils 
 } from 'applicationinsights-common';
-import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from 'applicationinsights-core-js';
+import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity, CoreUtils, DiagnosticLogger } from 'applicationinsights-core-js';
 
 export interface ISessionConfig {
     sessionRenewalMs: () => number;
@@ -44,8 +44,14 @@ export class _SessionManager {
     public config: ISessionConfig;
 
     private cookieUpdatedTimestamp: number;
+    private _logger: IDiagnosticLogger;
 
-    constructor(config: ISessionConfig) {
+    constructor(config: ISessionConfig, logger?: IDiagnosticLogger) {
+        if(CoreUtils.isNullOrUndefined(logger)) {
+            this._logger = new DiagnosticLogger();
+        } else {
+            this._logger = logger;
+        }
 
         if (!config) {
             config = <any>{};
@@ -102,7 +108,7 @@ export class _SessionManager {
      *  initialize the automatic session.
      */
     private initializeAutomaticSession() {
-        var cookie = Util.getCookie('ai_session');
+        var cookie = Util.getCookie(this._logger, 'ai_session');
         if (cookie && typeof cookie.split === "function") {
             this.initializeAutomaticSessionWithData(cookie);
         } else {
@@ -110,7 +116,7 @@ export class _SessionManager {
             // This can happen if the session expired or the user actively deleted the cookie
             // We only want to recover data if the cookie is missing from expiry. We should respect the user's wishes if the cookie was deleted actively.
             // The User class handles this for us and deletes our local storage object if the persistent user cookie was removed.
-            var storage = Util.getStorage('ai_session');
+            var storage = Util.getStorage(this._logger, 'ai_session');
             if (storage) {
                 this.initializeAutomaticSessionWithData(storage);
             }
@@ -148,7 +154,7 @@ export class _SessionManager {
                 this.automaticSession.renewalDate = this.automaticSession.renewalDate > 0 ? this.automaticSession.renewalDate : 0;
             }
         } catch (e) {
-            _InternalLogging.throwInternal(LoggingSeverity.CRITICAL,
+            this._logger.throwInternal(LoggingSeverity.CRITICAL,
 
                 _InternalMessageId.ErrorParsingAISessionCookie,
                 "Error parsing ai_session cookie, session will be reset: " + Util.getExceptionName(e),
@@ -156,7 +162,7 @@ export class _SessionManager {
         }
 
         if (this.automaticSession.renewalDate == 0) {
-            _InternalLogging.throwInternal(LoggingSeverity.WARNING,
+            this._logger.throwInternal(LoggingSeverity.WARNING,
                 _InternalMessageId.SessionRenewalDateIsZero,
                 "AI session renewal date is 0, session will be reset.");
         }
@@ -173,7 +179,7 @@ export class _SessionManager {
 
         // If this browser does not support local storage, fire an internal log to keep track of it at this point
         if (!Util.canUseLocalStorage()) {
-            _InternalLogging.throwInternal(LoggingSeverity.WARNING,
+            this._logger.throwInternal(LoggingSeverity.WARNING,
                 _InternalMessageId.BrowserDoesNotSupportLocalStorage,
                 "Browser does not support local storage. Session durations will be inaccurate.");
         }
@@ -195,7 +201,7 @@ export class _SessionManager {
 
         var cookieDomnain = this.config.cookieDomain ? this.config.cookieDomain() : null;
 
-        Util.setCookie('ai_session', cookie.join('|') + ';expires=' + cookieExpiry.toUTCString(), cookieDomnain);
+        Util.setCookie(this._logger, 'ai_session', cookie.join('|') + ';expires=' + cookieExpiry.toUTCString(), cookieDomnain);
 
         this.cookieUpdatedTimestamp = DateTimeUtils.Now();
     }
@@ -204,6 +210,6 @@ export class _SessionManager {
         // Keep data in local storage to retain the last session id, allowing us to cleanly end the session when it expires
         // Browsers that don't support local storage won't be able to end sessions cleanly from the client
         // The server will notice this and end the sessions itself, with loss of accurate session duration
-        Util.setStorage('ai_session', [guid, acq, renewal].join('|'));
+        Util.setStorage(this._logger, 'ai_session', [guid, acq, renewal].join('|'));
     }
 }

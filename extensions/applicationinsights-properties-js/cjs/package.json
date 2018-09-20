@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-properties-js",
-    "version": "0.0.4",
+    "version": "0.0.6",
     "description": "Microsoft Application Insights properties (Part A) plugin",
     "main": "bundle/applicationinsights-properties-js.js",
     "types": "bundle/applicationinsights-properties-js.d.ts",
@@ -12,8 +12,8 @@
         "typescript": "2.5.3"
     },
     "dependencies": {
-        "applicationinsights-common": "^0.0.72",
-        "applicationinsights-core-js": "^0.0.68"
+        "applicationinsights-common": "0.0.82",
+        "applicationinsights-core-js": "0.0.82"
     },
     "publishConfig": {
          "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"

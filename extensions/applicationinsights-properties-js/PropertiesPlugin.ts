@@ -5,7 +5,7 @@
 
 import {
     ITelemetryPlugin, IConfiguration, CoreUtils,
-    IAppInsightsCore, IPlugin, ITelemetryItem
+    IAppInsightsCore, IPlugin, ITelemetryItem, IDiagnosticLogger
 } from 'applicationinsights-core-js';
 import { ContextTagKeys, Util, PageView } from 'applicationinsights-common';
 import { Session, _SessionManager } from './Context/Session';
@@ -53,15 +53,15 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
         };
         
         if (typeof window !== 'undefined') {
-            this._sessionManager = new _SessionManager(this._extensionConfig);
+            this._sessionManager = new _SessionManager(this._extensionConfig, core.logger);
             this.application = new Application();
             this.device = new Device();
             this.internal = new Internal(this._extensionConfig);
             this.location = new Location();
-            this.user = new User(this._extensionConfig);
+            this.user = new User(this._extensionConfig, core.logger);
             this.operation = new Operation();
             this.session = new Session();
-            this.sample = new Sample(this._extensionConfig.sampleRate());
+            this.sample = new Sample(this._extensionConfig.sampleRate(), core.logger);
         }
     }
 
