@@ -7,7 +7,7 @@ import {
     IConfig,
     Util, PageViewPerformance,
     PageView, IEnvelope, RemoteDependencyData,
-    TelemetryItemCreator, Data, Metric, Exception, SeverityLevel
+    TelemetryItemCreator, Data, Metric, Exception, SeverityLevel,     Trace
 } from "applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
@@ -20,6 +20,8 @@ import { IAppInsights } from "../JavaScriptSDK.Interfaces/IAppInsights";
 import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 import { IExceptionTelemetry, IAutoExceptionTelemetry } from "../JavaScriptSDK.Interfaces/IExceptionTelemetry";
+import { ITraceTelemetry } from "../JavaScriptSDK.Interfaces/ITraceTelemetry";
+import { IMetricTelemetry } from "../JavaScriptSDK.Interfaces/IMetricTelemetry";
 
 "use strict";
 
@@ -85,6 +87,63 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     }
 
     /**
+     * @description Log a diagnostic message
+     * @param {ITraceTelemetry} trace
+     * @param {{[key: string]: any}} [customProperties]
+     * @memberof ApplicationInsights
+     */
+    public trackTrace(trace: ITraceTelemetry, customProperties?: {[key: string]: any}): void {
+        try {
+            var telemetryItem: ITelemetryItem = TelemetryItemCreator.createItem
+            (
+                this._logger,
+                trace,
+                Trace.dataType,
+                Trace.envelopeType,
+                customProperties
+            );
+            this._setTelemetryNameAndIKey(telemetryItem);
+            this.core.track(telemetryItem);
+        } catch (e) {
+            this._logger.throwInternal(LoggingSeverity.WARNING,
+                _InternalMessageId.TrackTraceFailed,
+                "trackTrace failed, trace will not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) });
+        }
+    }
+
+    /**
+     * @description Log a numeric value that is not associated with a specific event. Typically 
+     * used to send regular reports of performance indicators. To send single measurement, just 
+     * use the name and average fields of {@link IMetricTelemetry}. If you take measurements 
+     * frequently, you can reduce the telemetry bandwidth by aggregating multiple measurements 
+     * and sending the resulting average at intervals
+     * @param {IMetricTelemetry} metric input object argument. Only name and average are mandatory.
+     * @param {{[key: string]: any}} customProperties additional data used to filter metrics in the
+     * portal. Defaults to empty.
+     * @memberof ApplicationInsights
+     */
+    public trackMetric(metric: IMetricTelemetry, customProperties?: {[key: string]: any}): void {
+        try {
+            var telemetryItem = TelemetryItemCreator.createItem(
+                this._logger,
+                metric,
+                Metric.dataType,
+                Metric.envelopeType,
+                customProperties
+            );
+
+            this._setTelemetryNameAndIKey(telemetryItem);
+            this.core.track(telemetryItem);
+        } catch (e) {
+            this._logger.throwInternal(LoggingSeverity.CRITICAL,
+                _InternalMessageId.TrackMetricFailed,
+                "trackMetric failed, metric will not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) });
+        }
+    }
+
+    /**
      * Logs that a page or other item was viewed. 
      * @param IPageViewTelemetry The string you used as the name in startTrackPage. Defaults to the document title.
      * @param customProperties Additional data used to filter events and metrics. Defaults to empty. If a user wants
@@ -122,11 +181,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             systemProperties);
 
         // set instrumentation key
-        telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
-
-        var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
-        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
-
+        this._setTelemetryNameAndIKey(telemetryItem);
         this.core.track(telemetryItem);
 
         // reset ajaxes counter
@@ -141,10 +196,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             properties);
 
         // set instrumentation key
-        telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
-
-        var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
-        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
+        this._setTelemetryNameAndIKey(telemetryItem);
 
         this.core.track(telemetryItem);
     }
@@ -219,6 +271,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 Exception.envelopeType,
                 customProperties
             );
+
+            this._setTelemetryNameAndIKey(telemetryItem);
+
             this.core.track(telemetryItem);
         } catch (e) {
             this._logger.throwInternal(
@@ -335,32 +390,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this._telemetryInitializers = [];
         this._addDefaultTelemetryInitializers(configGetters);
 
-        /*
-        TODO: renable this trackEvent once we support trackEvent in this package. Created task to track this:
-        https://mseng.visualstudio.com/AppInsights/_workitems/edit/1310833
-
-        // initialize event timing
-        this._eventTracking = new Timing("trackEvent");
-        this._eventTracking.action = (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
-            if (!measurements) {
-                measurements = { duration: duration };
-            }
-            else {
-                // do not override existing duration value
-                if (isNaN(measurements["duration"])) {
-                    measurements["duration"] = duration;
-                }
-            }
-
-
-            var event = new Event(name, properties, measurements);
-            var data = new Data<Event>(Event.dataType, event);
-            var envelope = new Envelope(data, Event.envelopeType);
-
-            this.context.track(envelope);
-        }
-        */
-
         // initialize page view timing
         this._pageTracking = new Timing(this._logger, "trackPageView");
         this._pageTracking.action = (name, url, duration, properties) => {
@@ -446,6 +475,14 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         );
 
         this.core.track(telemetryItem);
+    }
+
+    // Mutate telemetryItem inplace to add boilerplate iKey & name info
+    private _setTelemetryNameAndIKey(telemetryItem: ITelemetryItem): void {
+        telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
+
+        var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
+        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
     }
 }
 

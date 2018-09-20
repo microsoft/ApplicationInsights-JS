@@ -1,7 +1,6 @@
 /// <reference path="./TestFramework/Common.ts" />
-/// <reference path="../JavaScriptSDK/ApplicationInsights.ts" />
 
-import { Util, Exception, SeverityLevel } from "applicationinsights-common";
+import { Util, Exception, SeverityLevel, Trace } from "applicationinsights-common";
 import {
     ITelemetryItem, AppInsightsCore,
     IPlugin, IConfiguration
@@ -40,16 +39,83 @@ export class ApplicationInsightsTests extends TestClass {
                 }
 
                 // act
-                var members = ["config", "trackException", "_onerror", "trackPageView"];
+                var members = [
+                    "config",
+                    "trackException",
+                    "_onerror",
+                    "trackTrace",
+                    "trackMetric",
+                    "trackPageView",
+                    "startTrackPage",
+                    "stopTrackPage"
+                ];
                 while (members.length) {
                     leTest(members.pop());
                 }
             }
         });
 
+        this.addGenericTests();
         this.addStartStopTrackPageTests();
         this.addTrackExceptionTests();
         this.addOnErrorTests();
+        this.addTrackMetricTests();
+    }
+
+    private addGenericTests(): void {
+        this.testCase({
+            name: 'AppInsightsGenericTests: envelope type, data type, and ikey are correct',
+            test: () => {
+                // setup
+                var iKey: string = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                var iKeyNoDash: string = "BDC8736DD8E84B69B19BB0CE6B66A456";
+                var plugin = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                core.initialize(
+                    {instrumentationKey: iKey},
+                    [plugin]
+                );
+                var appInsights = new ApplicationInsights();
+                appInsights.initialize({instrumentationKey: core.config.instrumentationKey}, core, []);
+                var trackStub = this.sandbox.stub(appInsights.core, "track");
+
+                var test = (action, expectedEnvelopeType, expectedDataType) => {
+                    action();
+                    var envelope: ITelemetryItem = this.getFirstResult(action, trackStub);
+                    Assert.equal(iKey, envelope.instrumentationKey, "envelope iKey");
+                    Assert.equal(expectedEnvelopeType.replace("{0}", iKeyNoDash), envelope.name, "envelope name");
+                    Assert.equal(expectedDataType, envelope.baseType, "data type name");
+                    trackStub.reset();
+                };
+
+                // Test
+                test(() => appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical}), Exception.envelopeType, Exception.dataType)
+                test(() => appInsights.trackTrace({message: "some string"}), Trace.envelopeType, Trace.dataType);
+            }
+        });
+
+        this.testCase({
+            name: 'AppInsightsGenericTests: public APIs call track',
+            test: () => {
+                // setup
+                const plugin = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin]
+                );
+                var appInsights = new ApplicationInsights();
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                const senderStub = this.sandbox.stub(appInsights.core, "track");
+
+                // Act
+                appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
+                this.clock.tick(1);
+
+                // Test
+                Assert.ok(senderStub.calledOnce, "Telemetry is sent when master switch is on");
+            }
+        });
     }
 
     private addTrackExceptionTests(): void {
@@ -57,7 +123,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "TrackExceptionTests: trackException accepts single exception and an array of exceptions",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -79,7 +145,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "TrackExceptionTests: trackException allows logging errors with different severity level",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -108,7 +174,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "OnErrorTests: _onerror creates a dump of unexpected error thrown by trackException for logging",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -133,7 +199,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "OnErrorTests: _onerror stringifies error object",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -159,15 +225,14 @@ export class ApplicationInsightsTests extends TestClass {
             name: "OnErrorTests: _onerror logs name of unexpected error thrown by trackException for diagnostics",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
-                    {instrumentationKey: "key",
-                    enableExceptionAutoCollection: true},
+                    {instrumentationKey: "key"},
                     [plugin]
                 );
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ instrumentationKey: "key", enableExceptionAutoCollection: true }, core, []);
+                appInsights.initialize({ instrumentationKey: "key" }, core, []);
 
                 const throwInternal = this.sandbox.spy(appInsights.core.logger, "throwInternal");
                 const nameStub = this.sandbox.stub(Util, "getExceptionName");
@@ -189,7 +254,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "OnErrorTests: _onerror adds document URL in case of CORS error",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -211,7 +276,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "OnErrorTests: _onerror adds document URL in case of no CORS error",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -250,7 +315,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: "Timing Tests: Start/StopPageView pass correct duration",
             test: () => {
                 // setup
-                const plugin = new TestPlugin();
+                const plugin = new ChannelPlugin();
                 var core = new AppInsightsCore();
                 core.initialize(
                     {instrumentationKey: "key"},
@@ -277,7 +342,6 @@ export class ApplicationInsightsTests extends TestClass {
                 Assert.equal(testValues.properties.property2, actualProperties.property2);
             }
         });
-/* TODO: Commented until ai.context is valid
         this.testCase({
             name: "Timing Tests: Start/StopPageView tracks single page view with no parameters",
             test: () => {
@@ -286,7 +350,7 @@ export class ApplicationInsightsTests extends TestClass {
                 this.sandbox.stub(core, "getTransmissionControl");
                 var appInsights = new ApplicationInsights();
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
-                var trackStub = this.sandbox.stub(appInsights.context, "track");
+                var trackStub = this.sandbox.stub(appInsights.core, "track");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
 
                 // act
@@ -310,7 +374,7 @@ export class ApplicationInsightsTests extends TestClass {
                 this.sandbox.stub(core, "getTransmissionControl");
                 var appInsights = new ApplicationInsights();
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
-                var trackStub = this.sandbox.stub(appInsights.context, "track");
+                var trackStub = this.sandbox.stub(appInsights.core, "track");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
 
                 // act
@@ -339,14 +403,13 @@ export class ApplicationInsightsTests extends TestClass {
                 Assert.deepEqual(testValues.properties, telemetry.data);
             }
         });
-        */
 
         this.testCase({
             name: "Timing Tests: Multiple startTrackPage",
             test:
                 () => {
                     // setup
-                    const plugin = new TestPlugin();
+                    const plugin = new ChannelPlugin();
                     var core = new AppInsightsCore();
                     core.initialize(
                         {instrumentationKey: "key"},
@@ -371,7 +434,7 @@ export class ApplicationInsightsTests extends TestClass {
             test:
                 () => {
                     // setup
-                    const plugin = new TestPlugin();
+                    const plugin = new ChannelPlugin();
                     var core = new AppInsightsCore();
                     core.initialize(
                         {instrumentationKey: "key"},
@@ -390,14 +453,94 @@ export class ApplicationInsightsTests extends TestClass {
                 }
         });
     }
+
+    private addTrackMetricTests() {
+        this.testCase({
+            name: 'TrackMetricTests: treackMetric batches metrics sent in a hot loop',
+            test: () => {
+                // Setup
+                const plugin = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin]
+                );
+                var appInsights = new ApplicationInsights();
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                var trackStub = this.sandbox.stub(appInsights.core, "track");
+
+                // Act
+                appInsights.trackMetric({name: "test metric", average: 0});
+                this.clock.tick(1);
+
+                // Verify
+
+                Assert.ok(trackStub.calledOnce, "core.track was called once after sending one metric");
+                trackStub.reset();
+
+                // Act
+                for (var i = 0; i < 100; i++) {
+                    appInsights.trackMetric({name: "test metric", average: 0});
+                }
+                this.clock.tick(1);
+
+                // Test
+                Assert.equal(100, trackStub.callCount, "core.track was called 100 times for sending 100 metrics");
+            }
+        });
+    }
+
+    private getFirstResult(action: string, trackStub: SinonStub, skipSessionState?: boolean): ITelemetryItem {
+        const index: number = skipSessionState ? 1 : 0;
+
+        Assert.ok(trackStub.args && trackStub.args[index] && trackStub.args[index][0], "track was called for: " + action);
+        return <ITelemetryItem>trackStub.args[index][0];
+    }
 }
 
-class TestPlugin implements IPlugin {
-    private _config: IConfiguration;
-    priority: number = 100;
+class ChannelPlugin implements IPlugin {
 
-    public initialize(config: IConfiguration) {
-        this._config = config;
-        // do custom one time initialization
+    public isFlushInvoked = false;
+    public isTearDownInvoked = false;
+    public isResumeInvoked = false;
+    public isPauseInvoked = false;
+
+    constructor() {
+        this.processTelemetry = this._processTelemetry.bind(this);
+    }
+    public pause(): void {
+        this.isPauseInvoked = true;
+    }    
+    
+    public resume(): void {
+        this.isResumeInvoked = true;
+    }
+
+    public teardown(): void {
+        this.isTearDownInvoked = true;
+    }
+
+    flush(async?: boolean, callBack?: () => void): void {
+        this.isFlushInvoked = true;
+        if (callBack) {
+            callBack();
+        }
+    }
+
+    public processTelemetry;
+
+    public identifier = "Sender";
+    
+    setNextPlugin(next: any) {
+        // no next setup
+    }
+
+    public priority: number = 201;
+
+    public initialize = (config: IConfiguration) => {
+    }
+
+    private _processTelemetry(env: ITelemetryItem) {
+
     }
 }
