@@ -3,6 +3,7 @@ import { CoreUtils, _InternalMessageId, LoggingSeverity, IDiagnosticLogger } fro
 import { IConfig } from "./Interfaces/IConfig";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
+import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 
 export class Util {
     private static document: any = typeof document !== "undefined" ? document : {};
@@ -591,7 +592,7 @@ export class CorrelationIdHelper {
     /**
     * Checks if a request url is not on a excluded domain list and if it is safe to add correlation headers
     */
-    public static canIncludeCorrelationHeader(config: IConfig, requestUrl: string, currentHost: string) {
+    public static canIncludeCorrelationHeader(config: ICorrelationConfig, requestUrl: string, currentHost: string) {
         if (config && config.disableCorrelationHeaders) {
             return false;
         }

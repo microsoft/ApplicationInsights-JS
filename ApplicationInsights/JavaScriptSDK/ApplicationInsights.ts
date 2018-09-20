@@ -7,24 +7,22 @@ import {
     IConfig,
     Util, PageViewPerformance,
     PageView, IEnvelope, RemoteDependencyData,
-    Data, Metric, Exception, SeverityLevel,
-    Trace
+    TelemetryItemCreator, Data, Metric, Exception, SeverityLevel, Trace
 } from "applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     ITelemetryPlugin, CoreUtils, ITelemetryItem,
-    IDiagnosticLogger, 
-    LoggingSeverity, _InternalMessageId
+    IDiagnosticLogger, LoggingSeverity, _InternalMessageId
 } from "applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { IAppInsights } from "../JavaScriptSDK.Interfaces/IAppInsights";
 import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
-import { TelemetryItemCreator } from "./TelemetryItemCreator";
 import { IExceptionTelemetry, IAutoExceptionTelemetry } from "../JavaScriptSDK.Interfaces/IExceptionTelemetry";
 import { ITraceTelemetry } from "../JavaScriptSDK.Interfaces/ITraceTelemetry";
 import { IMetricTelemetry } from "../JavaScriptSDK.Interfaces/IMetricTelemetry";
+import { ExceptionData } from "applicationinsights-common/bundle/Interfaces/Contracts/Generated/ExceptionData";
 
 "use strict";
 
@@ -57,6 +55,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
     constructor() {
         this.initialize = this._initialize.bind(this);
+
     }
 
     public processTelemetry(env: ITelemetryItem) {
@@ -96,14 +95,14 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      */
     public trackTrace(trace: ITraceTelemetry, customProperties?: {[key: string]: any}): void {
         try {
-            var telemetryItem: ITelemetryItem = TelemetryItemCreator.createItem
-            (
-                this._logger,
+
+            let telemetryItem = TelemetryItemCreator.create<ITraceTelemetry>(
                 trace,
                 Trace.dataType,
                 Trace.envelopeType,
-                customProperties
-            );
+                this._logger,
+                customProperties);
+          
             this._setTelemetryNameAndIKey(telemetryItem);
             this.core.track(telemetryItem);
         } catch (e) {
@@ -127,11 +126,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      */
     public trackMetric(metric: IMetricTelemetry, customProperties?: {[key: string]: any}): void {
         try {
-            var telemetryItem = TelemetryItemCreator.createItem(
-                this._logger,
+            var telemetryItem = TelemetryItemCreator.create<IMetricTelemetry>(
                 metric,
                 Metric.dataType,
                 Metric.envelopeType,
+                this._logger,
                 customProperties
             );
 
@@ -174,10 +173,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param systemProperties System level properties (Part A) that a user can add to the telemetry item
      */
     public sendPageViewInternal(pageView: IPageViewTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
-        let telemetryItem = TelemetryItemCreator.createItem(this._logger,
+        let telemetryItem = TelemetryItemCreator.create<IPageViewTelemetryInternal>(
             pageView,
             PageView.dataType,
             PageView.envelopeType,
+            this._logger,
             properties,
             systemProperties);
 
@@ -190,10 +190,10 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     }
 
     public sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance, properties?: { [key: string]: any }) {
-        let telemetryItem = TelemetryItemCreator.createItem(this._logger,
-            pageViewPerformance,
+        let telemetryItem = TelemetryItemCreator.create<PageViewPerformance>(pageViewPerformance,
             PageViewPerformance.dataType,
             PageViewPerformance.envelopeType,
+            this._logger,
             properties);
 
         // set instrumentation key
@@ -265,11 +265,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      */
     public trackException(exception: IExceptionTelemetry, customProperties?: {[key: string]: any}): void {
         try {
-            let telemetryItem: ITelemetryItem = TelemetryItemCreator.createItem(
-                this._logger,
+            let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IExceptionTelemetry>(
                 exception,
                 Exception.dataType,
                 Exception.envelopeType,
+                this._logger,
                 customProperties
             );
 
@@ -468,10 +468,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             columnNumber: 0,
             error: undefined
         };
-        const telemetryItem: ITelemetryItem = TelemetryItemCreator.createItem(this._logger,
+        const telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IAutoExceptionTelemetry>(
             exception,
-            "Error",
-            "unknown",
+            Exception.dataType,
+            Exception.envelopeType,
+            this._logger,
             {url: url}
         );
 
