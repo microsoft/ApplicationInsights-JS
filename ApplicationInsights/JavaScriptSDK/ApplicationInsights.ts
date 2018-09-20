@@ -7,7 +7,7 @@ import {
     IConfig,
     Util, PageViewPerformance,
     PageView, IEnvelope, RemoteDependencyData,
-    TelemetryItemCreator, Data, Metric, Exception, SeverityLevel,     Trace
+    TelemetryItemCreator, Data, Metric, Exception, SeverityLevel, Trace
 } from "applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
@@ -22,6 +22,7 @@ import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 import { IExceptionTelemetry, IAutoExceptionTelemetry } from "../JavaScriptSDK.Interfaces/IExceptionTelemetry";
 import { ITraceTelemetry } from "../JavaScriptSDK.Interfaces/ITraceTelemetry";
 import { IMetricTelemetry } from "../JavaScriptSDK.Interfaces/IMetricTelemetry";
+import { ExceptionData } from "applicationinsights-common/bundle/Interfaces/Contracts/Generated/ExceptionData";
 
 "use strict";
 
@@ -94,14 +95,14 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      */
     public trackTrace(trace: ITraceTelemetry, customProperties?: {[key: string]: any}): void {
         try {
-            var telemetryItem: ITelemetryItem = TelemetryItemCreator.createItem
-            (
-                this._logger,
+
+            let telemetryItem = TelemetryItemCreator.create<ITraceTelemetry>(
                 trace,
-                Trace.dataType,
-                Trace.envelopeType,
-                customProperties
-            );
+                RemoteDependencyData.dataType,
+                RemoteDependencyData.envelopeType,
+                this._logger,
+                customProperties);
+          
             this._setTelemetryNameAndIKey(telemetryItem);
             this.core.track(telemetryItem);
         } catch (e) {
@@ -125,11 +126,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      */
     public trackMetric(metric: IMetricTelemetry, customProperties?: {[key: string]: any}): void {
         try {
-            var telemetryItem = TelemetryItemCreator.createItem(
-                this._logger,
+            var telemetryItem = TelemetryItemCreator.create<IMetricTelemetry>(
                 metric,
                 Metric.dataType,
                 Metric.envelopeType,
+                this._logger,
                 customProperties
             );
 
@@ -264,11 +265,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      */
     public trackException(exception: IExceptionTelemetry, customProperties?: {[key: string]: any}): void {
         try {
-            let telemetryItem: ITelemetryItem = TelemetryItemCreator.createItem(
-                this._logger,
+            let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IExceptionTelemetry>(
                 exception,
                 Exception.dataType,
                 Exception.envelopeType,
+                this._logger,
                 customProperties
             );
 
@@ -467,10 +468,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             columnNumber: 0,
             error: undefined
         };
-        const telemetryItem: ITelemetryItem = TelemetryItemCreator.createItem(this._logger,
+        const telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IAutoExceptionTelemetry>(
             exception,
-            "Error",
-            "unknown",
+            Exception.dataType,
+            Exception.envelopeType,
+            this._logger,
             {url: url}
         );
 

@@ -79,6 +79,7 @@ export class AjaxTests extends TestClass {
             }
         });
 
+        // Todo: uncomment tests
         // this.testCase({
         //     name: "Ajax: custom onreadystatechange gets called",
         //     test: () => {
