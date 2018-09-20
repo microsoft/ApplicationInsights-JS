@@ -44,6 +44,8 @@ export class User implements IUser {
      */
     public storeRegion: string;
 
+    private _logger: IDiagnosticLogger;
+
     /**
     * Sets the authenticated user id and the account id in this session.
     *   
@@ -55,7 +57,7 @@ export class User implements IUser {
         // Validate inputs to ensure no cookie control characters.
         var isInvalidInput = !this.validateUserInput(authenticatedUserId) || (accountId && !this.validateUserInput(accountId));
         if (isInvalidInput) {
-            _InternalLogging.throwInternal(
+            this._logger.throwInternal(
                 LoggingSeverity.WARNING,
                 _InternalMessageId.SetAuthContextFailedAccountName,
                 "Setting auth user context failed. " +
@@ -75,7 +77,7 @@ export class User implements IUser {
         if (storeInCookie) {
             // Set the cookie. No expiration date because this is a session cookie (expires when browser closed).
             // Encoding the cookie to handle unexpected unicode characters.
-            Util.setCookie(User.authUserCookieName, encodeURI(authCookie), this.config.cookieDomain());
+            Util.setCookie(this._logger, User.authUserCookieName, encodeURI(authCookie), this.config.cookieDomain());
         }
     }
 
@@ -86,13 +88,14 @@ export class User implements IUser {
     public clearAuthenticatedUserContext() {
         this.authenticatedId = null;
         this.accountId = null;
-        Util.deleteCookie(User.authUserCookieName);
+        Util.deleteCookie(this._logger, User.authUserCookieName);
     }
 
-    constructor(config: ITelemetryConfig) {
+    constructor(config: ITelemetryConfig, logger: IDiagnosticLogger) {
+        this._logger = logger;
 
         //get userId or create new one if none exists
-        var cookie = Util.getCookie(User.userCookieName);
+        var cookie = Util.getCookie(this._logger, User.userCookieName);
         if (cookie) {
             var params = cookie.split(User.cookieSeparator);
             if (params.length > 0) {
@@ -114,11 +117,11 @@ export class User implements IUser {
             var newCookie = [this.id, acqStr];
             var cookieDomain = this.config.cookieDomain ? this.config.cookieDomain() : undefined;
 
-            Util.setCookie(User.userCookieName, newCookie.join(User.cookieSeparator) + ';expires=' + date.toUTCString(), cookieDomain);
+            Util.setCookie(this._logger, User.userCookieName, newCookie.join(User.cookieSeparator) + ';expires=' + date.toUTCString(), cookieDomain);
 
             // If we have an ai_session in local storage this means the user actively removed our cookies.
             // We should respect their wishes and clear ourselves from local storage
-            Util.removeStorage('ai_session');
+            Util.removeStorage(this._logger, 'ai_session');
         }
 
         // We still take the account id from the ctor param for backward compatibility. 
@@ -127,7 +130,7 @@ export class User implements IUser {
 
         // Get the auth user id and account id from the cookie if exists
         // Cookie is in the pattern: <authenticatedId>|<accountId>
-        var authCookie = Util.getCookie(User.authUserCookieName);
+        var authCookie = Util.getCookie(this._logger, User.authUserCookieName);
         if (authCookie) {
             authCookie = decodeURI(authCookie);
             var authCookieString = authCookie.split(User.cookieSeparator);

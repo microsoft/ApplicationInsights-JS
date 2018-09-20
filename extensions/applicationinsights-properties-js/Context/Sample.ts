@@ -1,18 +1,24 @@
 import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
 import { ISample } from '../Interfaces/Context/ISample';
 import { IEnvelope } from 'applicationinsights-common';
-import { ITelemetryItem, IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from 'applicationinsights-core-js';
+import { ITelemetryItem, IDiagnosticLogger, _InternalMessageId, LoggingSeverity, DiagnosticLogger, CoreUtils } from 'applicationinsights-core-js';
 
 export class Sample implements ISample {
     public sampleRate: number;
     private samplingScoreGenerator: SamplingScoreGenerator;
+    private _logger: IDiagnosticLogger;
 
     // We're using 32 bit math, hence max value is (2^31 - 1)
     public INT_MAX_VALUE: number = 2147483647;
 
-    constructor(sampleRate: number) {
+    constructor(sampleRate: number, logger?: IDiagnosticLogger) {
+        if (CoreUtils.isNullOrUndefined(logger)) {
+            this._logger = new DiagnosticLogger();
+        } else {
+            this._logger = logger;
+        }
         if (sampleRate > 100 || sampleRate < 0) {
-            _InternalLogging.throwInternal(LoggingSeverity.WARNING,
+            this._logger.throwInternal(LoggingSeverity.WARNING,
                 _InternalMessageId.SampleRateOutOfRange,
                 "Sampling rate is out of range (0..100). Sampling will be disabled, you may be sending too much data which may affect your AI service level.",
                 { samplingRate: sampleRate }, true);
