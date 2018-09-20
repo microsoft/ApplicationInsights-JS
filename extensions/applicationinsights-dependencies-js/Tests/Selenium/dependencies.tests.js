@@ -786,6 +786,7 @@ define("Tests/Selenium/ajax.tests", ["require", "exports", "ajax", "applicationi
                     Assert.equal(4, xhr.readyState, "Expected readyState is 4 after request is finished");
                 }
             });
+            // Todo: uncomment tests
             // this.testCase({
             //     name: "Ajax: custom onreadystatechange gets called",
             //     test: () => {
