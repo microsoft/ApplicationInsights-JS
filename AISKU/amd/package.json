@@ -22,6 +22,6 @@
         "applicationinsights-common": "0.0.83",
         "applicationinsights-core-js": "0.0.83",
         "applicationinsights-properties-js": "0.0.7",
-        "applicationinsights-dependencies-js": "0.0.1"
+        "applicationinsights-dependencies-js": "0.0.3"
     }
 }
