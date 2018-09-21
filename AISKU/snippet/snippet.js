@@ -9,9 +9,9 @@ var appInsights = window[appInsightsSDK] || (function (aiConfig) {
     var localWindow = window, scriptText = "script",  track = "Track";
     setTimeout(function () {
         var scriptElement = localDocument.createElement(scriptText);
-        scriptElement.src = aiConfig.url || "https://jssdkvnext.azureedge.net/scripts/aisdk.min.0.0.10.js";
+        scriptElement.src = aiConfig.url || "https://1dsjssdk.blob.core.windows.net/scripts/aisdk.0.0.13.js";
         localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
-        AppInsightsSDK.Initialize(appInsightsSDK); // explicitly initialize sdk
+        window.AppInsightsSDK.Initialize(aiConfig, appInsightsSDK); // explicitly initialize sdk
     });
 
     // capture initial cookie

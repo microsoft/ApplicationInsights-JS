@@ -4,22 +4,22 @@ import { ApplicationInsights, Snippet } from "./Initialization";
 
 export class AppInsightsSDK {
 
-    public static Initialize(instanceName: string) : ApplicationInsights {
+    public static Initialize(aiConfig?: Snippet, aiName?: string) : ApplicationInsights {
         try {
 
             let appInsightsLocal: ApplicationInsights;
             // E2E sku on load initializes core and pipeline using snippet as input for configuration
 
-            if (typeof window !== "undefined" && typeof JSON !== "undefined") {
+            if (typeof window !== "undefined" && typeof JSON !== "undefined" && aiName) {
                 // get snippet or initialize to an empty object
 
-                // appinsights should not conflict if page uses existing sdk for a layer of instrumentation
-                var aiName = window[instanceName]; // const variable that defines the aiName to use
-
+                
                 if (window[aiName] === undefined) { // not initialized before
-                    // if no snippet is present, initialize default values
-                    var defaultConfig = ApplicationInsights.getDefaultConfig();
+                    
+                    // if no prior instance is present, initialize default values or with configuration passed in
+                    var defaultConfig = ApplicationInsights.getDefaultConfig(aiConfig.config);
                     appInsightsLocal = new ApplicationInsights(<Snippet>{ config: defaultConfig });
+
                 } else {
                     // this is the typical case for browser+snippet
                     var snippet: Snippet = window[aiName] || <any>{};
@@ -36,11 +36,10 @@ export class AppInsightsSDK {
                     appInsightsLocal.emptyQueue();
                     appInsightsLocal.addHousekeepingBeforeUnload();
                 }
-            } else {
-                // need to address non dom scenario to create SDK instance
             }
-            return appInsightsLocal;
-            
+
+            return appInsightsLocal; // for testing
+
         } catch (e) {
             if (console) {
                 console.warn('Failed to initialize AppInsights JS SDK: ' + e.message);
