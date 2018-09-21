@@ -11,7 +11,7 @@ export class AppInsightsSDK {
             let appInsightsLocal: ApplicationInsights;
             // E2E sku on load initializes core and pipeline using snippet as input for configuration
 
-            if (typeof window !== "undefined" && typeof JSON !== "undefined" && aiName) {
+            if (typeof window !== "undefined" && typeof JSON !== "undefined") {
                 // get snippet or initialize to an empty object
 
                 

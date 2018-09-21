@@ -1,5 +1,5 @@
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId } from "applicationinsights-core-js";
-import { ApplicationInsights  as AppInsightsInternal } from "applicationinsights-analytics-js";
+import { ApplicationInsights  as AppInsightsInternal, IAppInsights, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-analytics-js";
 import { Util, IConfig } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
 import { PropertiesPlugin } from "applicationinsights-properties-js";
@@ -12,7 +12,23 @@ export interface Snippet {
 }
 
 // ToDo: Implement the interfaces to expose apis
-export class ApplicationInsights {
+export class ApplicationInsights implements IAppInsights {
+    trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any; }) {
+        this.appInsights.trackPageView(pageView, customProperties);
+    }
+    trackException(exception: IExceptionTelemetry, customProperties?: { [key: string]: any; }): void {
+        this.appInsights.trackException(exception, customProperties);
+    }
+    _onerror(exception: IAutoExceptionTelemetry): void {
+        this.appInsights._onerror(exception);
+    }
+    trackTrace(trace: ITraceTelemetry, customProperties?: { [key: string]: any; }): void {
+        this.trackTrace(trace, customProperties);
+    }
+    trackMetric(metric: IMetricTelemetry, customProperties?: { [key: string]: any; }): void {
+        this.trackMetric(metric, customProperties);
+    }
+    
     public snippet: Snippet;
     public config: IConfiguration;
     private core: IAppInsightsCore;
