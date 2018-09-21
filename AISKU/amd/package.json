@@ -17,7 +17,7 @@
         "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
     },
     "dependencies": {
-        "applicationinsights-analytics-js": "0.0.91",
+        "applicationinsights-analytics-js": "0.0.93",
         "applicationinsights-channel-js": "0.0.35",
         "applicationinsights-common": "0.0.83",
         "applicationinsights-core-js": "0.0.83",
