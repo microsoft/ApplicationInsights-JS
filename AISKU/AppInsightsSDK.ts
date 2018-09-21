@@ -1,10 +1,11 @@
 import { ApplicationInsights, Snippet } from "./Initialization";
+import { IConfiguration } from "applicationinsights-core-js";
 
 "use strict";
 
 export class AppInsightsSDK {
 
-    public static Initialize(aiConfig?: Snippet, aiName?: string) : ApplicationInsights {
+    public static Initialize(aiConfig?: IConfiguration, aiName?: string) : ApplicationInsights {
         try {
 
             let appInsightsLocal: ApplicationInsights;
@@ -17,7 +18,7 @@ export class AppInsightsSDK {
                 if (window[aiName] === undefined) { // not initialized before
                     
                     // if no prior instance is present, initialize default values or with configuration passed in
-                    var defaultConfig = ApplicationInsights.getDefaultConfig(aiConfig.config);
+                    var defaultConfig = ApplicationInsights.getDefaultConfig(aiConfig);
                     appInsightsLocal = new ApplicationInsights(<Snippet>{ config: defaultConfig });
 
                 } else {
