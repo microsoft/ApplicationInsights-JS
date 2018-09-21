@@ -4,9 +4,10 @@ import { ApplicationInsights, Snippet } from "./Initialization";
 
 export class AppInsightsSDK {
 
-    public static Initialize(instanceName: string) {
+    public static Initialize(instanceName: string) : ApplicationInsights {
         try {
 
+            let appInsightsLocal: ApplicationInsights;
             // E2E sku on load initializes core and pipeline using snippet as input for configuration
 
             if (typeof window !== "undefined" && typeof JSON !== "undefined") {
@@ -15,7 +16,6 @@ export class AppInsightsSDK {
                 // appinsights should not conflict if page uses existing sdk for a layer of instrumentation
                 var aiName = window[instanceName]; // const variable that defines the aiName to use
 
-                let appInsightsLocal;
                 if (window[aiName] === undefined) { // not initialized before
                     // if no snippet is present, initialize default values
                     var defaultConfig = ApplicationInsights.getDefaultConfig();
@@ -34,12 +34,13 @@ export class AppInsightsSDK {
 
                     // Empty queue of all api calls logged prior to sdk download
                     appInsightsLocal.emptyQueue();
-
-                    appInsightsLocal.addHousekeepingBeforeUnload(appInsightsLocal);
+                    appInsightsLocal.addHousekeepingBeforeUnload();
                 }
             } else {
                 // need to address non dom scenario to create SDK instance
             }
+            return appInsightsLocal;
+            
         } catch (e) {
             if (console) {
                 console.warn('Failed to initialize AppInsights JS SDK: ' + e.message);
