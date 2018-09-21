@@ -6,9 +6,7 @@ var appInsights = window[appInsightsSDK] || (function (aiConfig) {
 
     // Assigning these to local variables allows them to be minified to save space:
     var localDocument = document;
-    var localWindow = window;
-    var scriptText = "script";
-    var track = "Track";
+    var localWindow = window, scriptText = "script",  track = "Track";
     setTimeout(function () {
         var scriptElement = localDocument.createElement(scriptText);
         scriptElement.src = aiConfig.url || "https://jssdkvnext.azureedge.net/scripts/aisdk.min.0.0.10.js";
