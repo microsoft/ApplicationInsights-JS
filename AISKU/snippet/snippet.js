@@ -1,4 +1,5 @@
-﻿var appInsights = window.appInsightsvNext || (function (aiConfig) {
+﻿var appInsightsSDK = "appInsights"; // change if required
+var appInsights = window[appInsightsSDK] || (function (aiConfig) {
     var appInsights = {
         config: aiConfig
     };
@@ -10,8 +11,9 @@
     var track = "Track";
     setTimeout(function () {
         var scriptElement = localDocument.createElement(scriptText);
-        scriptElement.src = aiConfig.url || "https://jssdkvnext.azureedge.net/scripts/aisdk.min.0.0.9.js";
+        scriptElement.src = aiConfig.url || "https://jssdkvnext.azureedge.net/scripts/aisdk.min.0.0.10.js";
         localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
+        AppInsightsSDK.Initialize(appInsightsSDK); // explicitly initialize sdk
     });
 
     // capture initial cookie
@@ -34,7 +36,7 @@
         };
     }
 
-    var method = ["PageView", "Exception"];
+    var method = ["PageView", "Exception", "Trace", "RemoteDependency", "Metric"];
     while (method.length) {
         createLazyMethod("track" + method.pop());
     }
@@ -72,7 +74,7 @@
 });
 
 // global instance must be set in this order to mitigate issues in ie8 and lower
-window.appInsightsvNext = appInsights;
+window[appInsightsSDK] = appInsights;
 
 // if somebody calls the snippet twice, don't report page view again
 if (appInsights.queue && appInsights.queue.length === 0) {
