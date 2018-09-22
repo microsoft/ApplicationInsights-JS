@@ -1,5 +1,5 @@
-﻿var appInsightsSDK = "appInsights"; // change if required
-var appInsights = window[appInsightsSDK] || (function (aiConfig) {
+﻿var instance = window.appInsightsSDK = "appInsights"; // change if required
+var appInsights = window[instance] || (function (aiConfig) {
     var appInsights = {
         config: aiConfig
     };
@@ -10,8 +10,7 @@ var appInsights = window[appInsightsSDK] || (function (aiConfig) {
     setTimeout(function () {
         var scriptElement = localDocument.createElement(scriptText);
         scriptElement.src = aiConfig.url || "https://1dsjssdk.blob.core.windows.net/scripts/aisdk.0.0.13.js";
-        localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
-        window.AppInsightsSDK.Initialize(aiConfig, appInsightsSDK); // explicitly initialize sdk
+        localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement)
     });
 
     // capture initial cookie
@@ -72,7 +71,7 @@ var appInsights = window[appInsightsSDK] || (function (aiConfig) {
 });
 
 // global instance must be set in this order to mitigate issues in ie8 and lower
-window[appInsightsSDK] = appInsights;
+window[instance] = appInsights;
 
 // if somebody calls the snippet twice, don't report page view again
 if (appInsights.queue && appInsights.queue.length === 0) {

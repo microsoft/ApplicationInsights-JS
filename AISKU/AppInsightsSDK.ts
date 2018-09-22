@@ -5,20 +5,16 @@ import { IConfiguration } from "applicationinsights-core-js";
 
 export class AppInsightsSDK {
 
-    public static Initialize(aiConfig?: IConfiguration, aiName?: string) : ApplicationInsights {
+    public static Initialize(aiConfig?: IConfiguration) : ApplicationInsights {
         try {
+            let appInsightsLocal: ApplicationInsights;            
+            if (typeof window !== "undefined" && typeof JSON !== "undefined") {                
+                var appInsightsSDK = "appInsightsSDK";
+                let aiName = window[appInsightsSDK]; // get variable name
 
-            let appInsightsLocal: ApplicationInsights;
-            // E2E sku on load initializes core and pipeline using snippet as input for configuration
-
-            if (typeof window !== "undefined" && typeof JSON !== "undefined") {
-                // get snippet or initialize to an empty object
-
-                
-                if (window[aiName] === undefined) { // not initialized before
-                    
+                if (!aiName || !window[aiName]) {
                     // if no prior instance is present, initialize default values or with configuration passed in
-                    var defaultConfig = ApplicationInsights.getDefaultConfig(aiConfig);
+                    var defaultConfig = ApplicationInsights.getDefaultConfig(aiConfig); // get config from input or default if nothing is passed in
                     appInsightsLocal = new ApplicationInsights(<Snippet>{ config: defaultConfig });
 
                 } else {
@@ -48,3 +44,5 @@ export class AppInsightsSDK {
         }
     }
 }
+
+AppInsightsSDK.Initialize();
