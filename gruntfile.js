@@ -60,6 +60,14 @@ module.exports = function (grunt) {
                     'AISKU/*.ts'
                 ]
             },
+            aiskutests: {
+                tsconfig: './AISKU/Tests/tsconfig.json',
+                src: [
+                    'AISKU/Tests/Selenium/*.ts',
+                    'AISKU/Tests/*.ts'
+                ],
+                out: 'AISKU/Tests/Selenium/appinsights-sdk.tests.js'
+            },
             properties: {
                 tsconfig: './extensions/applicationinsights-properties-js/tsconfigamd.json',
                 src: [
@@ -221,6 +229,17 @@ module.exports = function (grunt) {
                     summaryOnly: true,
                     '--web-security': 'false'
                 }
+            },
+            aisku: {
+                options: {
+                    urls: [
+                        './AISKU/Tests/Selenium/Tests.html'
+                    ],
+                    timeout: 5 * 60 * 1000, // 5 min
+                    console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false'
+                }
             }
         }
     });
@@ -240,6 +259,7 @@ module.exports = function (grunt) {
     grunt.registerTask("aitests", ["ts:appinsights", "ts:appinsightstests", "qunit:aitests"]);
     grunt.registerTask("aicjs", ["ts:appinsightscjs"]);
     grunt.registerTask("aisku", ["ts:aisku"]);
+    grunt.registerTask("aiskutests", ["ts:aisku", "ts:aiskutests", "qunit:aisku"]);
     grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
     grunt.registerTask("properties", ["ts:properties"]);
