@@ -1,5 +1,5 @@
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId } from "applicationinsights-core-js";
-import { ApplicationInsights } from "applicationinsights-analytics-js";
+import { ApplicationInsights  as AppInsightsInternal, IAppInsights, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-analytics-js";
 import { Util, IConfig } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
 import { PropertiesPlugin } from "applicationinsights-properties-js";
@@ -11,33 +11,51 @@ export interface Snippet {
     config: IConfiguration;
 }
 
-export class Initialization {
+// ToDo: Implement the interfaces to expose apis
+export class ApplicationInsights implements IAppInsights {
+    trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any; }) {
+        this.appInsights.trackPageView(pageView, customProperties);
+    }
+    trackException(exception: IExceptionTelemetry, customProperties?: { [key: string]: any; }): void {
+        this.appInsights.trackException(exception, customProperties);
+    }
+    _onerror(exception: IAutoExceptionTelemetry): void {
+        this.appInsights._onerror(exception);
+    }
+    trackTrace(trace: ITraceTelemetry, customProperties?: { [key: string]: any; }): void {
+        this.trackTrace(trace, customProperties);
+    }
+    trackMetric(metric: IMetricTelemetry, customProperties?: { [key: string]: any; }): void {
+        this.trackMetric(metric, customProperties);
+    }
+    
     public snippet: Snippet;
     public config: IConfiguration;
     private core: IAppInsightsCore;
-    private appInsights: ApplicationInsights;
+    private appInsights: AppInsightsInternal;
     private properties: PropertiesPlugin;
 
     constructor(snippet: Snippet) {
 
         // initialize the queue and config in case they are undefined
         snippet.queue = snippet.queue || [];
-        var config: IConfiguration = snippet.config || <any>{};
+        AppInsightsInternal.Version = "2.0.0";
 
+        let config : IConfiguration = snippet.config;
         // ensure instrumentationKey is specified
-        if (config && !config.instrumentationKey) {
-            config = <any>snippet;
-            ApplicationInsights.Version = "2.0.0";
+        if (!config) {
+            // set default values using config passed through snippet
+            config = ApplicationInsights.getDefaultConfig(config, this.appInsights.identifier);
         }
 
-        this.appInsights = new ApplicationInsights();
-        // set default values using config passed through snippet
-        config = Initialization.getDefaultConfig(config, this.appInsights.identifier);
+
+        this.appInsights = new AppInsightsInternal();
 
         this.properties = new PropertiesPlugin();
 
         this.snippet = snippet;
         this.config = config;
+        this.loadAppInsights();
     }
 
     public loadAppInsights() {
@@ -45,18 +63,20 @@ export class Initialization {
         this.core = new AppInsightsCore();
         let extensions = [];
         let appInsightsChannel: Sender = new Sender(this.core.logger);
-
+        
         extensions.push(appInsightsChannel);
         extensions.push(this.properties);
         extensions.push(this.appInsights);
-
+        
         // initialize core
         this.core.initialize(this.config, extensions);
+        if (!this.config.instrumentationKey) {
+            this.core.logger.warnToConsole("No instrumentation key specified");
+        }
 
         // initialize extensions
         this.appInsights.initialize(this.config, this.core, extensions);
         appInsightsChannel.initialize(this.config);
-        return this.appInsights;
     }
 
     public emptyQueue() {
@@ -80,16 +100,16 @@ export class Initialization {
                 properties.exception = exception.toString();
             }
 
-            // need from core
-            // Microsoft.ApplicationInsights._InternalLogging.throwInternal(
-            //     LoggingSeverity.WARNING,
-            //     _InternalMessageId.FailedToSendQueuedTelemetry,
-            //     "Failed to send queued telemetry",
-            //     properties);
+            this.core.logger.throwInternal(
+                LoggingSeverity.WARNING,
+                _InternalMessageId.FailedToSendQueuedTelemetry,
+                "Failed to send queued telemetry",
+                properties);
         }
     }
 
-    public pollInteralLogs(appInsightsInstance: ApplicationInsights) {
+    //public pollInteralLogs(appInsightsInstance: AppInsightsInternal) {
+        // remove when  e2e works
         // return setInterval(() => {
         //     var queue: Array<_InternalLogMessage> = ApplicationInsights._InternalLogging.queue;
         //     var length = queue.length;
@@ -98,12 +118,12 @@ export class Initialization {
         //     }
         //     queue.length = 0;
         // }, this.config.diagnosticLogInterval);
-    }
+    //}
 
-    public addHousekeepingBeforeUnload(appInsightsInstance: ApplicationInsights): void {
+    public addHousekeepingBeforeUnload(): void {
         // Add callback to push events when the user navigates away
 
-        if (!appInsightsInstance.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
+        if (!(<any>this.config).disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
             var performHousekeeping = function () {
                 // Adds the ability to flush all data before the page unloads.
                 // Note: This approach tries to push an async request with all the pending events onbeforeunload.
@@ -112,9 +132,11 @@ export class Initialization {
                 // Another approach would be to make this call sync with a acceptable timeout to reduce the 
                 // impact on user experience.
 
-                //appInsightsInstance.context._sender.triggerSend();
-
-                appInsightsInstance.core.getTransmissionControl().flush(true);
+                this.core.getTransmissionControls().forEach(element => {
+                    if (element.length > 0) {
+                        element.forEach(e => e.flush(true));
+                    }
+                });
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
                 this.properties._sessionManager.backup();
@@ -133,10 +155,8 @@ export class Initialization {
         if (!configuration) {
             configuration = <IConfiguration>{};
         }
+        identifier = identifier ? identifier : "ApplicationInsightsAnalytics";
 
-        if (configuration) {
-            identifier = identifier ? identifier : "AppAnalytics"; // To do: define constant        
-        }
 
         let config = configuration.extensions ? <IConfig>configuration.extensions[identifier] : {};
 
