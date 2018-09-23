@@ -44,7 +44,7 @@ export class Initialization {
 
         this.core = new AppInsightsCore();
         let extensions = [];
-        let appInsightsChannel: Sender = new Sender(this.core.logger);
+        let appInsightsChannel: Sender = new Sender();
 
         extensions.push(appInsightsChannel);
         extensions.push(this.properties);
@@ -55,7 +55,7 @@ export class Initialization {
 
         // initialize extensions
         this.appInsights.initialize(this.config, this.core, extensions);
-        appInsightsChannel.initialize(this.config);
+        appInsightsChannel.initialize(this.config, this.core, extensions);
         return this.appInsights;
     }
 
@@ -114,7 +114,10 @@ export class Initialization {
 
                 //appInsightsInstance.context._sender.triggerSend();
 
-                appInsightsInstance.core.getTransmissionControl().flush(true);
+                appInsightsInstance.core.getTransmissionControls().forEach(queues => {
+                    queues.forEach(channel => channel.flush(true));
+                });
+                
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
                 this.properties._sessionManager.backup();

@@ -22,7 +22,6 @@ import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 import { IExceptionTelemetry, IAutoExceptionTelemetry } from "../JavaScriptSDK.Interfaces/IExceptionTelemetry";
 import { ITraceTelemetry } from "../JavaScriptSDK.Interfaces/ITraceTelemetry";
 import { IMetricTelemetry } from "../JavaScriptSDK.Interfaces/IMetricTelemetry";
-import { ExceptionData } from "applicationinsights-common/bundle/Interfaces/Contracts/Generated/ExceptionData";
 
 "use strict";
 

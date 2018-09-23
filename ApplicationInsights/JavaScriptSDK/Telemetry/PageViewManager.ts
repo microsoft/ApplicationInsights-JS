@@ -97,6 +97,10 @@ export class PageViewManager {
         if (this.overridePageViewDuration || !isNaN(duration)) {
             if (isNaN(duration)) {
                 // case 3
+                if (!customProperties) {
+                    customProperties = {};
+                }
+                
                 customProperties["duration"] = customDuration;
             }
             // case 2
@@ -110,6 +114,9 @@ export class PageViewManager {
 
         // now try to send the page view performance telemetry
         var maxDurationLimit = 60000;
+        if (!customProperties) {
+            customProperties = {};
+        }
         var handle = setInterval(() => {
             try {
                 if (PageViewPerformance.isPerformanceTimingDataReady()) {
