@@ -32,7 +32,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public static Version = "0.0.1";
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
     public identifier: string = "ApplicationInsightsAnalytics";
-    public priority: number;
+    public priority: number = 160;// take from reserved priority range 100- 200
     public config: IConfig;
     public core: IAppInsightsCore;
     public queue: (() => void)[];
