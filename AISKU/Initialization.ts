@@ -1,5 +1,5 @@
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId } from "applicationinsights-core-js";
-import { ApplicationInsights } from "applicationinsights-analytics-js";
+import { ApplicationInsights, /*IAppInsights, */IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-analytics-js";
 import { Util, IConfig } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
 import { PropertiesPlugin } from "applicationinsights-properties-js";
@@ -11,7 +11,7 @@ export interface Snippet {
     config: IConfiguration;
 }
 
-export class Initialization {
+export class Initialization /*implements IAppInsights*/ {
     public snippet: Snippet;
     public config: IConfiguration;
     private core: IAppInsightsCore;
@@ -39,8 +39,24 @@ export class Initialization {
         this.snippet = snippet;
         this.config = config;
     }
+    
+    public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any; }) {
+        return this.appInsights.trackPageView(pageView, customProperties);
+    }
+    public trackException(exception: IExceptionTelemetry, customProperties?: { [key: string]: any; }): void {
+        return this.appInsights.trackException(exception, customProperties);
+    }
+    public _onerror(exception: IAutoExceptionTelemetry): void {
+        return this.appInsights._onerror(exception);
+    }
+    public trackTrace(trace: ITraceTelemetry, customProperties?: { [key: string]: any; }): void {
+        return this.appInsights.trackTrace(trace, customProperties);
+    }
+    public trackMetric(metric: IMetricTelemetry, customProperties?: { [key: string]: any; }): void {
+        return this.appInsights.trackMetric(metric, customProperties);
+    }
 
-    public loadAppInsights() {
+    public loadAppInsights(): ApplicationInsights {
 
         this.core = new AppInsightsCore();
         let extensions = [];

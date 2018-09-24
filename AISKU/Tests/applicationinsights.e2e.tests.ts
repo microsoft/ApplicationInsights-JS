@@ -1,82 +1,222 @@
 /// <reference path='./TestFramework/Common.ts' />
-import { AppInsightsSDK } from '../AppInsightsSDK'
-import { IAppInsights } from 'applicationinsights-analytics-js';
+import { Initialization } from '../Initialization'
+import { ApplicationInsights } from 'applicationinsights-analytics-js';
+import { Sender } from 'applicationinsights-channel-js';
 
 export class ApplicationInsightsTests extends TestClass {
-    private _ai: IAppInsights;
-    private _aiName: string = 'AppInsights';
+    private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
+    private static readonly _expectedTrackMethods = [
+        "startTrackPage",
+        "stopTrackPage",
+        "trackException",
+        "trackMetric",
+        "trackPageView",
+        "trackTrace"
+    ];
+    
+    private _ai: ApplicationInsights;
+    private _aiName: string = 'ApplicationInsightsAnalytics';
+
+    // Sinon
+    private errorSpy: SinonSpy;
+    private successSpy: SinonSpy;
+    private loggingSpy: SinonSpy;
 
     public testInitialize() {
         try{
-            this._ai = AppInsightsSDK.Initialize({instrumentationKey: 'abc'}, this._aiName);
+            this.useFakeServer = false;
+            (<any>sinon.fakeServer).restore();
+            this.useFakeTimers = false;
+            this.clock.restore();
+
+            var init = new Initialization({
+                config: {
+                    instrumentationKey: ApplicationInsightsTests._instrumentationKey,
+                    extensionConfig: {
+                        'AppInsightsChannelPlugin': {
+                            maxBatchInterval: 500
+                        }
+                    }
+                },
+                queue: []
+            });
+            this._ai = init.loadAppInsights();
+
+            // Setup Sinon stuff
+            const sender: Sender = this._ai.core['_extensions'][2].channelQueue[0][0];
+            this.errorSpy = this.sandbox.spy(sender, '_onError');
+            this.successSpy = this.sandbox.stub(sender, '_onSuccess');
+            this.loggingSpy = this.sandbox.stub(this._ai.core.logger, 'throwInternal');
         } catch (e) {
             console.error('Failed to initialize');
         }
     }
 
     public testCleanup() {
+        this.useFakeServer = true;
+        this.useFakeTimers = true;
     }
 
     public registerTests() {
-        // var boilerPlateAsserts = () => {
-        //     Assert.ok(this.successSpy.called, "success");
-        //     Assert.ok(!this.errorSpy.called, "no error sending");
-        //     var isValidCallCount = this.loggingSpy.callCount === 0;
-        //     Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
-        //     if (!isValidCallCount) {
-        //         while (this.loggingSpy.args.length) {
-        //             Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args.pop());
-        //         }
-        //     }
-        // }
 
-        // var asserts = [];
-        // asserts.push(() => {
-        //     var message = "polling: " + new Date().toISOString();
-        //     Assert.ok(true, message);
-        //     console.log(message);
+        this.addGenericE2ETests();
+        this.addAnalyticsApiTests();
+        this.addAsyncTests();
+    }
 
-        //     if (this.successSpy.called) {
-        //         boilerPlateAsserts();
-        //         this.testCleanup();
-        //     } else if (this.errorSpy.called || this.loggingSpy.called) {
-        //         boilerPlateAsserts();
-        //     }
-        // });
-
+    public addGenericE2ETests(): void {
         this.testCase({
             name: 'E2E.GenericTests: ApplicationInsightsAnalytics is loaded correctly',
             test: () => {
-                    Assert.ok(this._ai);
-                    Assert.deepEqual(this._ai, window[this._aiName]);
-                    Assert.ok(this._ai['core']);
-                    Assert.equal(true, this._ai['core']['_isInitialized']);
-                    Assert.equal(true, this._ai['appInsights']['_isInitialized']);
+                Assert.ok(this._ai, 'App Analytics exists');
+                Assert.equal(true, this._ai['_isInitialized'], 'App Analytics is initialized');
+
+                // Assert.deepEqual(this._ai, window[this._aiName], 'AI is available from window');
+
+                Assert.ok(this._ai.core, 'Core exists');
+                Assert.equal(true, this._ai.core['_isInitialized'], 
+                'Core is initialized');
             }
         });
-
-        this.addAnalyticsApiTests();
     }
 
     public addAnalyticsApiTests(): void {
         this.testCase({
             name: 'E2E.AnalyticsApiTests: Public Members exist',
             test: () => {
-                Assert.ok(this._ai.trackTrace);
-                Assert.ok(this._ai.trackException);
+                ApplicationInsightsTests._expectedTrackMethods.forEach(method => {
+                    Assert.ok(this._ai[method], `${method} exists`);
+                    Assert.equal('function', typeof this._ai[method], `${method} is a function`);
+                });
             }
         });
+    }
 
-        this.testCase({
-            name: 'E2E.AnalyicsApiTests: Track sends to backend',
-            test: () => {
-                // Act
-                this._ai.trackTrace({message: 'Test message'});
-                this._ai.trackMetric({name: 'test metric', average: 123});
-
-                // Verify
-                Assert.ok(true);
+    public addAsyncTests(): void {
+        var boilerPlateAsserts = () => {
+            Assert.ok(this.successSpy.called, "success");
+            Assert.ok(!this.errorSpy.called, "no error sending");
+            var isValidCallCount = this.loggingSpy.callCount === 0;
+            Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
+            if (!isValidCallCount) {
+                while (this.loggingSpy.args.length) {
+                    Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args.pop());
+                }
+            }
+        }
+        var asserts = [];
+        asserts.push(() => {
+            var message = "polling: " + new Date().toISOString();
+            Assert.ok(true, message);
+            console.log(message);
+    
+            if (this.successSpy.called) {
+                boilerPlateAsserts();
+                this.testCleanup();
+            } else if (this.errorSpy.called || this.loggingSpy.called) {
+                boilerPlateAsserts();
             }
         });
+        asserts.push(PollingAssert.createPollingAssert(() => {
+            Assert.ok(true, "* checking success spy " + new Date().toISOString());
+            return this.successSpy.called;
+        }, "sender succeeded", 2, 200));
+
+        this.testCaseAsync({
+            name: 'E2E.GenericTests: trackTrace sends to backend',
+            stepDelay: 1,
+            steps: [() => {
+                this._ai.trackTrace({message: 'trace'});
+            }].concat(asserts)
+        });
+
+        this.testCaseAsync({
+            name: 'E2E.GenericTests: trackException sends to backend',
+            stepDelay: 1,
+            steps: [() => {
+                let exception: Error = null;
+                try {
+                    window['a']['b']();
+                    Assert.ok(false, 'trackException test not run');
+                } catch (e) {
+                    exception = e;
+                    this._ai.trackException({error: exception});
+                }
+                Assert.ok(exception);
+            }].concat(asserts)
+        });
+
+        this.testCaseAsync({
+            name: "TelemetryContext: track metric",
+            stepDelay: 1,
+            steps: [
+                () => {
+                    console.log("* calling trackMetric " + new Date().toISOString());
+                    for (var i = 0; i < 100; i++) {
+                        this._ai.trackMetric({name: "test" + i, average: Math.round(100 * Math.random())});
+                    }
+                    console.log("* done calling trackMetric " + new Date().toISOString());
+                }
+            ].concat(asserts)
+        });
+
+        this.testCaseAsync({
+            name: "TelemetryContext: track page view",
+            stepDelay: 1,
+            steps: [
+                () => {
+                    this._ai.trackPageView({});
+                }
+            ].concat(asserts)
+        });
+
+        this.testCaseAsync({
+            name: "TelemetryContext: track all types in batch",
+            stepDelay: 1,
+            steps: [
+                () => {
+                    var exception = null;
+                    try {
+                        window["a"]["b"]();
+                    } catch (e) {
+                        exception = e;
+                    }
+
+                    Assert.ok(exception);
+
+                    this._ai.trackException({error: exception});
+                    this._ai.trackMetric({name: "test", average: Math.round(100 * Math.random())});
+                    this._ai.trackTrace({message: "test"});
+                    this._ai.trackPageView({});
+                }
+            ].concat(asserts)
+        });
+
+        this.testCaseAsync({
+            name: "TelemetryContext: track all types in a large batch",
+            stepDelay: 1,
+            steps: [
+                () => {
+                    var exception = null;
+                    try {
+                        window["a"]["b"]();
+                    } catch (e) {
+                        exception = e;
+                    }
+                    Assert.ok(exception);
+
+                    for (var i = 0; i < 100; i++) {
+                        this._ai.trackException({error: exception});
+                        this._ai.trackMetric({name: "test", average: Math.round(100 * Math.random())});
+                        this._ai.trackTrace({message: "test"});
+                        this._ai.trackPageView({name: `${i}`});
+                    }
+                }
+            ].concat(asserts)
+        });
+    }
+
+    public add(): void {
+
     }
 }
