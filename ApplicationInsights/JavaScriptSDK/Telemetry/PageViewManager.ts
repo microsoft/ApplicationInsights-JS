@@ -22,7 +22,7 @@ export class PageViewManager {
     private overridePageViewDuration: boolean = false;
 
     private appInsights: IAppInsightsInternal;
-    private _channel: IChannelControls[][];
+    private _channel: () => IChannelControls[][];
     private _logger: IDiagnosticLogger;
 
     constructor(
@@ -31,7 +31,7 @@ export class PageViewManager {
         this.overridePageViewDuration = overridePageViewDuration;
         this.appInsights = appInsights;
         if (core) {
-            this._channel = <IChannelControls[][]>(core.getTransmissionControls());
+            this._channel = () => <IChannelControls[][]>(core.getTransmissionControls());
             this._logger = core.logger;
         }
 
@@ -66,7 +66,7 @@ export class PageViewManager {
                 pageView,
                 customProperties
             );
-            this._channel.forEach(queues => {queues.forEach(q => q.flush(true))})
+            this._channel().forEach(queues => {queues.forEach(q => q.flush(true))})
 
             // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
             this._logger.throwInternal(
@@ -108,7 +108,7 @@ export class PageViewManager {
                 pageView,
                 customProperties
             );
-            this._channel.forEach(queues => {queues.forEach(q => q.flush(true))})
+            this._channel().forEach(queues => {queues.forEach(q => q.flush(true))})
             pageViewSent = true;
         }
 
@@ -117,7 +117,7 @@ export class PageViewManager {
         if (!customProperties) {
             customProperties = {};
         }
-        var handle = setInterval(() => {
+        var handle = setInterval((() => {
             try {
                 if (PageViewPerformance.isPerformanceTimingDataReady()) {
                     clearInterval(handle);
@@ -130,7 +130,7 @@ export class PageViewManager {
                         this.appInsights.sendPageViewInternal(
                             pageView,
                             customProperties);
-                        this._channel.forEach(queues => {queues.forEach(q => q.flush(true))})
+                        this._channel().forEach(queues => {queues.forEach(q => q.flush(true))})
                     } else {
                         if (!pageViewSent) {
                             customProperties["duration"] = pageViewPerformance.getDurationMs();
@@ -143,7 +143,8 @@ export class PageViewManager {
                             this.appInsights.sendPageViewPerformanceInternal(pageViewPerformance, customProperties);
                             this.pageViewPerformanceSent = true;
                         }
-                        this._channel.forEach(queues => {queues.forEach(q => q.flush(true))})
+                        console.log('Channel', this._channel())
+                        this._channel().forEach(queues => {queues.forEach(q => q.flush(true))})
                     }
                 } else if (PageViewPerformance.getDuration(start, +new Date) > maxDurationLimit) {
                     // if performance timings are not ready but we exceeded the maximum duration limit, just log a page view telemetry
@@ -155,7 +156,8 @@ export class PageViewManager {
                             pageView,
                             customProperties
                         );
-                        this._channel.forEach(queues => {queues.forEach(q => q.flush(true))})
+                        console.log('Channel', this._channel())
+                        this._channel().forEach(queues => {queues.forEach(q => q.flush(true))})
                     }
                 }
             } catch (e) {
@@ -165,6 +167,6 @@ export class PageViewManager {
                     "trackPageView failed on page load calculation: " + Util.getExceptionName(e),
                     { exception: Util.dump(e) });
             }
-        }, 100);
+        }).bind(this), 100);
     }
 }
