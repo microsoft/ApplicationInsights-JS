@@ -180,7 +180,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         Initialization.prototype.loadAppInsights = function () {
             this.core = new applicationinsights_core_js_1.AppInsightsCore();
             var extensions = [];
-            var appInsightsChannel = new applicationinsights_channel_js_1.Sender(this.core.logger);
+            var appInsightsChannel = new applicationinsights_channel_js_1.Sender();
             extensions.push(appInsightsChannel);
             extensions.push(this.properties);
             extensions.push(this.appInsights);
@@ -188,7 +188,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.core.initialize(this.config, extensions);
             // initialize extensions
             this.appInsights.initialize(this.config, this.core, extensions);
-            appInsightsChannel.initialize(this.config);
+            appInsightsChannel.initialize(this.config, this.core, extensions);
             return this.appInsights;
         };
         Initialization.prototype.emptyQueue = function () {
@@ -316,6 +316,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
     var ApplicationInsights = /** @class */ (function () {
         function ApplicationInsights() {
             this.identifier = "ApplicationInsightsAnalytics";
+            this.priority = 160; // take from reserved priority range 100- 200
             this._isInitialized = false;
             // Counts number of trackAjax invokations.
             // By default we only monitor X ajax call per view to avoid too much load.
@@ -759,7 +760,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             if (this.overridePageViewDuration || !isNaN(duration)) {
                 if (isNaN(duration)) {
                     // case 3
-                    customProperties = {};
+                    if (!customProperties) {
+                        customProperties = {};
+                    }
                     customProperties["duration"] = customDuration;
                 }
                 // case 2
@@ -1369,14 +1372,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Sender = /** @class */ (function () {
-        function Sender(logger) {
+        function Sender() {
             this.priority = 201;
             /**
              * Whether XMLHttpRequest object is supported. Older version of IE (8,9) do not support it.
              */
             this._XMLHttpRequestSupported = false;
-            this._logger = logger;
-            this._serializer = new Serializer_1.Serializer(logger);
         }
         Sender.prototype.pause = function () {
             throw new Error("Method not implemented.");
@@ -1395,8 +1396,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         Sender.prototype.teardown = function () {
             throw new Error("Method not implemented.");
         };
-        Sender.prototype.initialize = function (config) {
+        Sender.prototype.initialize = function (config, core, extensions) {
             this.identifier = "AppInsightsChannelPlugin";
+            this._logger = core.logger;
+            this._serializer = new Serializer_1.Serializer(core.logger);
             this._consecutiveErrors = 0;
             this._retryAt = null;
             this._lastSend = 0;
@@ -4894,10 +4897,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             if (this._isInitialized) {
                 throw Error("Core should not be initialized more than once");
             }
-            if (!extensions || extensions.length === 0) {
-                // throw error
-                throw Error("At least one extension channel is required");
-            }
             if (!config || CoreUtils_1.CoreUtils.isNullOrUndefined(config.instrumentationKey)) {
                 throw Error("Please provide instrumentation key");
             }
@@ -4925,7 +4924,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     throw Error(validationError);
                 }
             }
-            this._extensions = extensions.concat(this.config.extensions).sort(function (a, b) {
+            // Initial validation complete
+            // Concat all available extensions before sorting by priority
+            (_a = this._extensions).push.apply(_a, [this._channelController].concat(extensions, this.config.extensions));
+            this._extensions = this._extensions.sort(function (a, b) {
                 var extA = a;
                 var extB = b;
                 var typeExtA = typeof extA.processTelemetry;
@@ -4941,33 +4943,50 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     return -1;
                 }
             });
-            this._extensions.push(this._channelController);
-            // Check if any two extensions have the same priority, then throw console warning
+            // sort complete
+            // Check if any two extensions have the same priority, then warn to console
             var priority = {};
             this._extensions.forEach(function (ext) {
                 var t = ext;
                 if (t && t.priority) {
-                    if (!CoreUtils_1.CoreUtils.isNullOrUndefined(priority[t.priority])) {
-                        _this.logger.warnToConsole("Two extensions have same priority" + priority[t.priority] + ", " + t.identifier);
+                    if (priority[t.priority]) {
+                        throw new Error(duplicatePriority);
                     }
                     else {
-                        priority[t.priority] = t.identifier; // set a value
+                        priority[t.priority] = 1; // set a value
                     }
                 }
             });
-            this._extensions.forEach(function (ext) { return ext.initialize(_this.config, _this, _this._extensions); }); // initialize
-            // Set next plugin for all but last extension
+            // initialize plugins including channel controller
+            this._extensions.forEach(function (ext) {
+                var e = ext;
+                if (e && e.priority <= ChannelControllerPriority) {
+                    ext.initialize(_this.config, _this, _this._extensions); // initialize
+                }
+            });
+            var c = -1;
+            // Set next plugin for all until channel controller
             for (var idx = 0; idx < this._extensions.length - 1; idx++) {
-                if (this._extensions[idx] && typeof this._extensions[idx].processTelemetry !== 'function') {
+                var curr = (this._extensions[idx]);
+                if (curr && typeof curr.processTelemetry !== 'function') {
                     // these are initialized only, allowing an entry point for extensions to be initialized when SDK initializes
                     continue;
                 }
+                if (curr.priority === ChannelControllerPriority) {
+                    c = idx + 1;
+                    break; // channel controller will set remaining pipeline
+                }
                 this._extensions[idx].setNextPlugin(this._extensions[idx + 1]); // set next plugin
+            }
+            // Remove sender channels from main list
+            if (c < this._extensions.length) {
+                this._extensions.splice(c);
             }
             if (this.getTransmissionControls().length === 0) {
                 throw new Error("No channels available");
             }
             this._isInitialized = true;
+            var _a;
         };
         AppInsightsCore.prototype.getTransmissionControls = function () {
             return this._channelController.ChannelControls;
@@ -5068,12 +5087,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     var ChannelController = /** @class */ (function () {
         function ChannelController() {
             this.identifier = "ChannelControllerPlugin";
-            this.priority = 200; // in reserved range 100 to 200
+            this.priority = ChannelControllerPriority; // in reserved range 100 to 200
         }
         ChannelController.prototype.processTelemetry = function (item) {
             this.channelQueue.forEach(function (queues) {
                 // pass on to first item in queue
-                queues[0].processTelemetry(item);
+                if (queues.length > 0) {
+                    queues[0].processTelemetry(item);
+                }
             });
         };
         Object.defineProperty(ChannelController.prototype, "ChannelControls", {
@@ -5088,29 +5109,46 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.channelQueue = new Array();
             if (config.channels) {
                 config.channels.forEach(function (queue) {
-                    _this.channelQueue.push(queue);
+                    if (queue && queue.length > 0) {
+                        queue = queue.sort(function (a, b) {
+                            return a.priority - b.priority;
+                        });
+                        // Initialize each plugin
+                        queue.forEach(function (queueItem) { return queueItem.initialize(config, core, extensions); });
+                        for (var i = 1; i < queue.length; i++) {
+                            queue[i - 1].setNextPlugin(queue[i]); // setup processing chain
+                        }
+                        _this.channelQueue.push(queue);
+                    }
                 });
             }
             else {
-                var arr_1 = new Array();
-                extensions.forEach(function (ext) {
-                    var e = ext;
-                    if (e && e.priority > 200) {
-                        arr_1.push(e);
+                var arr = new Array();
+                for (var i = 0; i < extensions.length; i++) {
+                    var plugin = extensions[i];
+                    if (plugin.priority > ChannelControllerPriority) {
+                        arr.push(plugin);
                     }
-                });
-                if (arr_1.length > 0) {
+                }
+                if (arr.length > 0) {
                     // sort if not sorted
-                    arr_1 = arr_1.sort(function (a, b) {
+                    arr = arr.sort(function (a, b) {
                         return a.priority - b.priority;
                     });
-                    this.channelQueue.push(arr_1);
+                    // Initialize each plugin
+                    arr.forEach(function (queueItem) { return queueItem.initialize(config, core, extensions); });
+                    // setup next plugin
+                    for (var i = 1; i < arr.length - 1; i++) {
+                        arr[i - 1].setNextPlugin(arr[i]);
+                    }
+                    this.channelQueue.push(arr);
                 }
             }
         };
         return ChannelController;
     }());
     var validationError = "Extensions must provide callback to initialize";
+    var ChannelControllerPriority = 200;
     var duplicatePriority = "One or more extensions are set at same priority";
 }).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -5966,7 +6004,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
     Object.defineProperty(exports, "__esModule", { value: true });
     var PropertiesPlugin = /** @class */ (function () {
         function PropertiesPlugin() {
-            this.priority = 3;
+            this.priority = 170;
             this.identifier = "AppInsightsPropertiesPlugin";
         }
         PropertiesPlugin.prototype.initialize = function (config, core, extensions) {
