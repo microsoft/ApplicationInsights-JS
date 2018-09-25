@@ -23,7 +23,7 @@ export class ApplicationInsightsTests extends TestClass {
     private loggingSpy: SinonSpy;
 
     public testInitialize() {
-        try{
+        try {
             this.useFakeServer = false;
             (<any>sinon.fakeServer).restore();
             this.useFakeTimers = false;
@@ -104,8 +104,7 @@ export class ApplicationInsightsTests extends TestClass {
                 }
             }
         }
-        var asserts = [];
-        asserts.push(() => {
+        var asserts: any = (expectedCount: number) => [() => {
             var message = "polling: " + new Date().toISOString();
             Assert.ok(true, message);
             console.log(message);
@@ -116,18 +115,25 @@ export class ApplicationInsightsTests extends TestClass {
             } else if (this.errorSpy.called || this.loggingSpy.called) {
                 boilerPlateAsserts();
             }
-        });
-        asserts.push(PollingAssert.createPollingAssert(() => {
+        },
+        (PollingAssert.createPollingAssert(() => {
             Assert.ok(true, "* checking success spy " + new Date().toISOString());
-            return this.successSpy.called;
-        }, "sender succeeded", 2, 200));
+            if (this.successSpy.called) {
+                console.log(this.successSpy.args[0][1]);
+            }
+            if(this.successSpy.called && this.successSpy.args[0][1] === expectedCount) {
+                return true;
+            } else {
+                return false;
+            }
+        }, "sender succeeded", 2, 200))];
 
         this.testCaseAsync({
             name: 'E2E.GenericTests: trackTrace sends to backend',
             stepDelay: 1,
             steps: [() => {
                 this._ai.trackTrace({message: 'trace'});
-            }].concat(asserts)
+            }].concat(asserts(1))
         });
 
         this.testCaseAsync({
@@ -143,7 +149,7 @@ export class ApplicationInsightsTests extends TestClass {
                     this._ai.trackException({error: exception});
                 }
                 Assert.ok(exception);
-            }].concat(asserts)
+            }].concat(asserts(1))
         });
 
         this.testCaseAsync({
@@ -157,7 +163,7 @@ export class ApplicationInsightsTests extends TestClass {
                     }
                     console.log("* done calling trackMetric " + new Date().toISOString());
                 }
-            ].concat(asserts)
+            ].concat(asserts(100))
         });
 
         this.testCaseAsync({
@@ -167,7 +173,7 @@ export class ApplicationInsightsTests extends TestClass {
                 () => {
                     this._ai.trackPageView({});
                 }
-            ].concat(asserts)
+            ].concat(asserts(1))
         });
 
         this.testCaseAsync({
@@ -189,7 +195,7 @@ export class ApplicationInsightsTests extends TestClass {
                     this._ai.trackTrace({message: "test"});
                     this._ai.trackPageView({});
                 }
-            ].concat(asserts)
+            ].concat(asserts(4))
         });
 
         this.testCaseAsync({
@@ -212,11 +218,7 @@ export class ApplicationInsightsTests extends TestClass {
                         this._ai.trackPageView({name: `${i}`});
                     }
                 }
-            ].concat(asserts)
+            ].concat(asserts(400))
         });
-    }
-
-    public add(): void {
-
     }
 }
