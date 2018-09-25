@@ -136,7 +136,10 @@ export class Initialization /*implements IAppInsights*/ {
                 
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
-                this.properties._sessionManager.backup();
+                // Todo: move this against interface behavior
+                if (this.core.extensions["AppInsightsPropertiesPlugin"] && this.core.extensions["AppInsightsPropertiesPlugin"]._sessionManager) {
+                    this.core.extensions["AppInsightsPropertiesPlugin"]._sessionManager.backup();
+                }
             };
 
             if (!Util.addEventHandler('beforeunload', performHousekeeping)) {
@@ -154,7 +157,7 @@ export class Initialization /*implements IAppInsights*/ {
         }
 
         if (configuration) {
-            identifier = identifier ? identifier : "AppAnalytics"; // To do: define constant        
+            identifier = identifier ? identifier : "ApplicationInsightsAnalytics";
         }
 
         let config = configuration.extensions ? <IConfig>configuration.extensions[identifier] : {};
