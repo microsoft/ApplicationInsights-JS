@@ -74,7 +74,7 @@ var aisdk = window[aiName] || (function (aiConfig) {
 
     return appInsights;
 })({
-    instrumentationKey: "8e68dc94-34d1-4894-8697-be2ba6282b5b", // INSTRUMENTATION_KEY
+    instrumentationKey: "INSTRUMENTATION_KEY"
 });
 
 // global instance must be set in this order to mitigate issues in ie8 and lower
