@@ -38,7 +38,7 @@ export class SanitizerE2ETests extends TestClass {
             // Setup Sinon stuff
             const sender: Sender = this.appInsights.core['_extensions'][2].channelQueue[0][0];
             this.errorSpy = this.sandbox.spy(sender, '_onError');
-            this.successSpy = this.sandbox.stub(sender, '_onSuccess');
+            this.successSpy = this.sandbox.spy(sender, '_onSuccess');
             this.loggingSpy = this.sandbox.stub(this.appInsights.core.logger, 'throwInternal');
         } catch (e) {
             console.error('Failed to initialize');

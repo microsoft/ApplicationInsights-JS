@@ -34,7 +34,7 @@ export class ApplicationInsightsTests extends TestClass {
                     instrumentationKey: ApplicationInsightsTests._instrumentationKey,
                     extensionConfig: {
                         'AppInsightsChannelPlugin': {
-                            maxBatchInterval: 500
+                            maxBatchInterval: 2000
                         }
                     }
                 },
@@ -45,7 +45,7 @@ export class ApplicationInsightsTests extends TestClass {
             // Setup Sinon stuff
             const sender: Sender = this._ai.core['_extensions'][2].channelQueue[0][0];
             this.errorSpy = this.sandbox.spy(sender, '_onError');
-            this.successSpy = this.sandbox.stub(sender, '_onSuccess');
+            this.successSpy = this.sandbox.spy(sender, '_onSuccess');
             this.loggingSpy = this.sandbox.stub(this._ai.core.logger, 'throwInternal');
         } catch (e) {
             console.error('Failed to initialize');
@@ -58,7 +58,6 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public registerTests() {
-
         this.addGenericE2ETests();
         this.addAnalyticsApiTests();
         this.addAsyncTests();
@@ -118,15 +117,18 @@ export class ApplicationInsightsTests extends TestClass {
         },
         (PollingAssert.createPollingAssert(() => {
             Assert.ok(true, "* checking success spy " + new Date().toISOString());
-            if (this.successSpy.called) {
-                console.log(this.successSpy.args[0][1]);
-            }
-            if(this.successSpy.called && this.successSpy.args[0][1] === expectedCount) {
-                return true;
+
+            if(this.successSpy.called) {
+                let currentCount: number = 0;
+                this.successSpy.args.forEach(call => {
+                    currentCount += call[1];
+                });
+                console.log('curr: ' + currentCount + ' exp: ' + expectedCount);
+                return currentCount === expectedCount;
             } else {
                 return false;
             }
-        }, "sender succeeded", 2, 200))];
+        }, "sender succeeded", 10, 1000))];
 
         this.testCaseAsync({
             name: 'E2E.GenericTests: trackTrace sends to backend',
@@ -171,9 +173,9 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    this._ai.trackPageView({});
+                    this._ai.trackPageView({}); // sends 2
                 }
-            ].concat(asserts(1))
+            ].concat(asserts(2))
         });
 
         this.testCaseAsync({
@@ -193,9 +195,9 @@ export class ApplicationInsightsTests extends TestClass {
                     this._ai.trackException({error: exception});
                     this._ai.trackMetric({name: "test", average: Math.round(100 * Math.random())});
                     this._ai.trackTrace({message: "test"});
-                    this._ai.trackPageView({});
+                    this._ai.trackPageView({}); // sends 2
                 }
-            ].concat(asserts(4))
+            ].concat(asserts(5))
         });
 
         this.testCaseAsync({
@@ -215,10 +217,10 @@ export class ApplicationInsightsTests extends TestClass {
                         this._ai.trackException({error: exception});
                         this._ai.trackMetric({name: "test", average: Math.round(100 * Math.random())});
                         this._ai.trackTrace({message: "test"});
-                        this._ai.trackPageView({name: `${i}`});
+                        this._ai.trackPageView({name: `${i}`}); // sends 2 1st time
                     }
                 }
-            ].concat(asserts(400))
+            ].concat(asserts(401))
         });
     }
 }

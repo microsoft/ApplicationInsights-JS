@@ -143,7 +143,6 @@ export class PageViewManager {
                             this.appInsights.sendPageViewPerformanceInternal(pageViewPerformance, customProperties);
                             this.pageViewPerformanceSent = true;
                         }
-                        console.log('Channel', this._channel())
                         this._channel().forEach(queues => {queues.forEach(q => q.flush(true))})
                     }
                 } else if (PageViewPerformance.getDuration(start, +new Date) > maxDurationLimit) {
@@ -156,7 +155,6 @@ export class PageViewManager {
                             pageView,
                             customProperties
                         );
-                        console.log('Channel', this._channel())
                         this._channel().forEach(queues => {queues.forEach(q => q.flush(true))})
                     }
                 }
