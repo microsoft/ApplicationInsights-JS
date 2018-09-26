@@ -7,11 +7,11 @@ import { SeverityLevel } from 'applicationinsights-common';
  */
 export interface IExceptionTelemetry {
     /**
-     * @type {(Error | Error[])}
+     * @type {Error}
      * @memberof IExceptionTelemetry
      * @description Error Object(s)
      */
-    error: Error | Error[];
+    error: Error;
 
     /**
      * @description Specified severity of exception for use with
