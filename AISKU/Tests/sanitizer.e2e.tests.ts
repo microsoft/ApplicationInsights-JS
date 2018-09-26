@@ -36,7 +36,7 @@ export class SanitizerE2ETests extends TestClass {
             this._ai = init.loadAppInsights();
 
             // Setup Sinon stuff
-            const sender: Sender = this._ai.appInsights.core['_extensions'][2].channelQueue[0][0];
+            const sender: Sender = this._ai.appInsights.core['_extensions'][3].channelQueue[0][0];
             this.errorSpy = this.sandbox.spy(sender, '_onError');
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
             this.loggingSpy = this.sandbox.stub(this._ai.appInsights.core.logger, 'throwInternal');

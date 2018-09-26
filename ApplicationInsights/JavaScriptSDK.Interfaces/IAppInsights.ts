@@ -10,4 +10,6 @@ export interface IAppInsights {
     _onerror(exception: IAutoExceptionTelemetry): void;
     trackTrace(trace: ITraceTelemetry, customProperties?: {[key: string]: any}): void;
     trackMetric(metric: IMetricTelemetry, customProperties?: {[key: string]: any}): void;
+    startTrackPage(name?: string);
+    stopTrackPage(name?: string, url?: string, customProperties?: Object);
 }

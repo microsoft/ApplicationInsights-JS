@@ -63,6 +63,12 @@ export class Initialization implements IApplicationInsights {
     public trackMetric(metric: IMetricTelemetry, customProperties?: { [key: string]: any; }): void {
         return this.appInsights.trackMetric(metric, customProperties);
     }
+    public startTrackPage(name?: string): void {
+        return this.appInsights.startTrackPage(name);
+    }
+    public stopTrackPage(name?: string, url?: string, customProperties?: Object) {
+        return this.appInsights.stopTrackPage(name, url, customProperties);
+    }
 
     // Properties Plugin
     public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false): void {

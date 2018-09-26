@@ -42,7 +42,7 @@ export class SenderE2ETests extends TestClass {
             this._ai = init.loadAppInsights();
 
             // Setup Sinon stuff
-            this._sender = this._ai.appInsights.core['_extensions'][2].channelQueue[0][0];
+            this._sender = this._ai.appInsights.core['_extensions'][3].channelQueue[0][0];
             this._sender._buffer.clear();
             this.errorSpy = this.sandbox.spy(this._sender, '_onError');
             this.successSpy = this.sandbox.spy(this._sender, '_onSuccess');
