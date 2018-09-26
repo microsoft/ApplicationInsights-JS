@@ -19,7 +19,7 @@ export class ApplicationInsightsTests extends TestClass {
     ];
     
     private _ai: IApplicationInsights;
-    private _aiName: string = 'ApplicationInsightsAnalytics';
+    private _aiName: string = 'AppInsightsSDK';
 
     // Sinon
     private errorSpy: SinonSpy;
@@ -47,10 +47,10 @@ export class ApplicationInsightsTests extends TestClass {
             this._ai = init.loadAppInsights();
 
             // Setup Sinon stuff
-            const sender: Sender = this._ai.core['_extensions'][2].channelQueue[0][0];
+            const sender: Sender = this._ai.appInsights.core['_extensions'][3].channelQueue[0][0];
             this.errorSpy = this.sandbox.spy(sender, '_onError');
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
-            this.loggingSpy = this.sandbox.stub(this._ai.core.logger, 'throwInternal');
+            this.loggingSpy = this.sandbox.stub(this._ai['core'].logger, 'throwInternal');
         } catch (e) {
             console.error('Failed to initialize');
         }
@@ -73,13 +73,15 @@ export class ApplicationInsightsTests extends TestClass {
         this.testCase({
             name: 'E2E.GenericTests: ApplicationInsightsAnalytics is loaded correctly',
             test: () => {
-                Assert.ok(this._ai, 'App Analytics exists');
-                Assert.equal(true, this._ai['_isInitialized'], 'App Analytics is initialized');
+                Assert.ok(this._ai, 'ApplicationInsights SDK exists');
+                Assert.deepEqual(this._ai, window[this._aiName], `AI is available from window.${this._aiName}`);
 
-                // Assert.deepEqual(this._ai, window[this._aiName], 'AI is available from window');
+                Assert.ok(this._ai.appInsights, 'App Analytics exists');
+                Assert.equal(true, this._ai.appInsights['_isInitialized'], 'App Analytics is initialized');
 
-                Assert.ok(this._ai.core, 'Core exists');
-                Assert.equal(true, this._ai.core['_isInitialized'], 
+
+                Assert.ok(this._ai.appInsights.core, 'Core exists');
+                Assert.equal(true, this._ai.appInsights.core['_isInitialized'], 
                 'Core is initialized');
             }
         });
@@ -274,7 +276,7 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const data = new RemoteDependencyData(this._ai.core.logger, 'test', 'http://example.com', 'abc', 0, true, 200);
+                    const data = new RemoteDependencyData(this._ai.appInsights.core.logger, 'test', 'http://example.com', 'abc', 0, true, 200);
                     (<any>this._ai).trackDependencyData(data);
                 }
             ].concat(asserts(1))

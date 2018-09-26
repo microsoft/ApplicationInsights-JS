@@ -12,13 +12,15 @@ export interface Snippet {
     config: IConfiguration;
 }
 
-export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {};
+export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
+    appInsights: ApplicationInsights;
+};
 
 export class Initialization implements IApplicationInsights {
     public snippet: Snippet;
     public config: IConfiguration;
     private core: IAppInsightsCore;
-    private appInsights: ApplicationInsights;
+    public appInsights: ApplicationInsights;
     private properties: PropertiesPlugin;
     private dependencies: DependenciesPlugin;
 
@@ -75,7 +77,7 @@ export class Initialization implements IApplicationInsights {
         return this.dependencies.trackDependencyData(dependency, customProperties, systemProperties);
     }
 
-    public loadAppInsights(): IAppInsights {
+    public loadAppInsights(): IApplicationInsights {
 
         this.core = new AppInsightsCore();
         let extensions = [];
@@ -136,10 +138,10 @@ export class Initialization implements IApplicationInsights {
         // }, this.config.diagnosticLogInterval);
     }
 
-    public addHousekeepingBeforeUnload(appInsightsInstance: ApplicationInsights): void {
+    public addHousekeepingBeforeUnload(appInsightsInstance: IApplicationInsights): void {
         // Add callback to push events when the user navigates away
 
-        if (!appInsightsInstance.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
+        if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
             var performHousekeeping = function () {
                 // Adds the ability to flush all data before the page unloads.
                 // Note: This approach tries to push an async request with all the pending events onbeforeunload.
@@ -150,7 +152,7 @@ export class Initialization implements IApplicationInsights {
 
                 //appInsightsInstance.context._sender.triggerSend();
 
-                appInsightsInstance.core.getTransmissionControls().forEach(queues => {
+                appInsightsInstance.appInsights.core.getTransmissionControls().forEach(queues => {
                     queues.forEach(channel => channel.flush(true));
                 });
                 

@@ -1,6 +1,6 @@
 /// <reference path='./TestFramework/Common.ts' />
 "use strict"
-import { Initialization } from '../Initialization'
+import { Initialization, IApplicationInsights } from '../Initialization'
 import { ApplicationInsights } from 'applicationinsights-analytics-js';
 import { Sender } from 'applicationinsights-channel-js';
 
@@ -9,7 +9,7 @@ export class SenderE2ETests extends TestClass {
     private readonly _bufferName = 'AI_buffer';
     private readonly _sentBufferName = 'AI_sentBuffer';
     
-    private _ai: ApplicationInsights;
+    private _ai: IApplicationInsights;
     private _sender: Sender;
 
     // Sinon
@@ -42,11 +42,11 @@ export class SenderE2ETests extends TestClass {
             this._ai = init.loadAppInsights();
 
             // Setup Sinon stuff
-            this._sender = this._ai.core['_extensions'][2].channelQueue[0][0];
+            this._sender = this._ai.appInsights.core['_extensions'][2].channelQueue[0][0];
             this._sender._buffer.clear();
             this.errorSpy = this.sandbox.spy(this._sender, '_onError');
             this.successSpy = this.sandbox.spy(this._sender, '_onSuccess');
-            this.loggingSpy = this.sandbox.stub(this._ai.core.logger, 'throwInternal');
+            this.loggingSpy = this.sandbox.stub(this._ai.appInsights.core.logger, 'throwInternal');
             this.clearSpy = this.sandbox.spy(this._sender._buffer, 'clearSent');
         } catch (e) {
             console.error('Failed to initialize');
