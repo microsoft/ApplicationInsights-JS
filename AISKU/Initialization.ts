@@ -1,5 +1,5 @@
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId } from "applicationinsights-core-js";
-import { ApplicationInsights } from "applicationinsights-analytics-js";
+import { ApplicationInsights, /*IAppInsights, */IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-analytics-js";
 import { Util, IConfig } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
 import { PropertiesPlugin } from "applicationinsights-properties-js";
@@ -11,7 +11,7 @@ export interface Snippet {
     config: IConfiguration;
 }
 
-export class Initialization {
+export class Initialization /*implements IAppInsights*/ {
     public snippet: Snippet;
     public config: IConfiguration;
     private core: IAppInsightsCore;
@@ -39,12 +39,28 @@ export class Initialization {
         this.snippet = snippet;
         this.config = config;
     }
+    
+    public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any; }) {
+        return this.appInsights.trackPageView(pageView, customProperties);
+    }
+    public trackException(exception: IExceptionTelemetry, customProperties?: { [key: string]: any; }): void {
+        return this.appInsights.trackException(exception, customProperties);
+    }
+    public _onerror(exception: IAutoExceptionTelemetry): void {
+        return this.appInsights._onerror(exception);
+    }
+    public trackTrace(trace: ITraceTelemetry, customProperties?: { [key: string]: any; }): void {
+        return this.appInsights.trackTrace(trace, customProperties);
+    }
+    public trackMetric(metric: IMetricTelemetry, customProperties?: { [key: string]: any; }): void {
+        return this.appInsights.trackMetric(metric, customProperties);
+    }
 
-    public loadAppInsights() {
+    public loadAppInsights(): ApplicationInsights {
 
         this.core = new AppInsightsCore();
         let extensions = [];
-        let appInsightsChannel: Sender = new Sender(this.core.logger);
+        let appInsightsChannel: Sender = new Sender();
 
         extensions.push(appInsightsChannel);
         extensions.push(this.properties);
@@ -55,7 +71,7 @@ export class Initialization {
 
         // initialize extensions
         this.appInsights.initialize(this.config, this.core, extensions);
-        appInsightsChannel.initialize(this.config);
+        appInsightsChannel.initialize(this.config, this.core, extensions);
         return this.appInsights;
     }
 
@@ -114,10 +130,17 @@ export class Initialization {
 
                 //appInsightsInstance.context._sender.triggerSend();
 
-                appInsightsInstance.core.getTransmissionControl().flush(true);
+                appInsightsInstance.core.getTransmissionControls().forEach(queues => {
+                    queues.forEach(channel => channel.flush(true));
+                });
+                
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
-                this.properties._sessionManager.backup();
+                // Todo: move this against interface behavior
+                if (this.core.extensions["AppInsightsPropertiesPlugin"] &&
+                    this.core.extensions["AppInsightsPropertiesPlugin"]._sessionManager) {
+                    this.core.extensions["AppInsightsPropertiesPlugin"]._sessionManager.backup();
+                }
             };
 
             if (!Util.addEventHandler('beforeunload', performHousekeeping)) {
@@ -135,7 +158,7 @@ export class Initialization {
         }
 
         if (configuration) {
-            identifier = identifier ? identifier : "AppAnalytics"; // To do: define constant        
+            identifier = identifier ? identifier : "ApplicationInsightsAnalytics";
         }
 
         let config = configuration.extensions ? <IConfig>configuration.extensions[identifier] : {};

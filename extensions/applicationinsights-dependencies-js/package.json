@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-dependencies-js",
-    "version": "0.0.3",
+    "version": "0.0.9",
     "description": "Microsoft Application Insights XHR dependencies plugin",
     "main": "bundle/applicationinsights-dependencies-js.js",
     "types": "bundle/applicationinsights-dependencies-js.d.ts",
@@ -12,8 +12,8 @@
         "grunt-ts": "^6.0.0-beta.15"
     },
     "dependencies": {
-        "applicationinsights-core-js": "0.0.83",
-        "applicationinsights-common": "0.0.83"
+        "applicationinsights-core-js": "0.0.89",
+        "applicationinsights-common": "0.0.89"
     },
     "publishConfig": {
         "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"

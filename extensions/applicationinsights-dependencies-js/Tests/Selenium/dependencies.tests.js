@@ -469,7 +469,7 @@ define("ajax", ["require", "exports", "applicationinsights-common", "application
         function AjaxMonitor() {
             this._trackAjaxAttempts = 0;
             this.identifier = "AjaxDependencyPlugin";
-            this.priority = 110;
+            this.priority = 161;
             this.currentWindowHost = window && window.location.host && window.location.host.toLowerCase();
             this.initialized = false;
         }

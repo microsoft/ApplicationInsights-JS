@@ -22,7 +22,6 @@ import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 import { IExceptionTelemetry, IAutoExceptionTelemetry } from "../JavaScriptSDK.Interfaces/IExceptionTelemetry";
 import { ITraceTelemetry } from "../JavaScriptSDK.Interfaces/ITraceTelemetry";
 import { IMetricTelemetry } from "../JavaScriptSDK.Interfaces/IMetricTelemetry";
-import { ExceptionData } from "applicationinsights-common/bundle/Interfaces/Contracts/Generated/ExceptionData";
 
 "use strict";
 
@@ -30,10 +29,10 @@ const durationProperty: string = "duration";
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
     public static appInsightsDefaultConfig: IConfiguration;
-    public static Version = "0.0.1";
+    public static Version = "2.0.1-beta";
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
     public identifier: string = "ApplicationInsightsAnalytics";
-    public priority: number;
+    public priority: number = 160;// take from reserved priority range 100- 200
     public config: IConfig;
     public core: IAppInsightsCore;
     public queue: (() => void)[];

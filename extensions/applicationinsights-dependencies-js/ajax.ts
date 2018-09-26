@@ -308,7 +308,7 @@ export class AjaxMonitor implements ITelemetryPlugin {
         }
     }
 
-    priority: number = 110;
+    priority: number = 161;
     
     public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
         if (!this.initialized) {
