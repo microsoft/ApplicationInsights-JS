@@ -11,7 +11,8 @@
         "webpack": "^4.16.4",
         "webpack-cli": "^3.1.0",
         "webpack-command": "^0.4.1",
-        "rollup": "^0.66.2"
+        "rollup": "^0.66.2",
+        "grunt": "^1.0.3"
     },
     "publishConfig": {
         "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
