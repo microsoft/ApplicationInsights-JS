@@ -165,6 +165,6 @@ export class PageViewManager {
                     "trackPageView failed on page load calculation: " + Util.getExceptionName(e),
                     { exception: Util.dump(e) });
             }
-        }).bind(this), 100);
+        }), 100);
     }
 }
