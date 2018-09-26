@@ -1,7 +1,8 @@
 /// <reference path='./TestFramework/Common.ts' />
-import { Initialization } from '../Initialization'
-import { ApplicationInsights } from 'applicationinsights-analytics-js';
+import { Initialization, IApplicationInsights } from '../Initialization'
 import { Sender } from 'applicationinsights-channel-js';
+import { AjaxPlugin } from 'applicationinsights-dependencies-js';
+import { RemoteDependencyData } from 'applicationinsights-common';
 
 export class ApplicationInsightsTests extends TestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -11,10 +12,13 @@ export class ApplicationInsightsTests extends TestClass {
         "trackException",
         "trackMetric",
         "trackPageView",
-        "trackTrace"
+        "trackTrace",
+        "trackDependencyData",
+        "setAuthenticatedUserContext",
+        "clearAuthenticatedUserContext"
     ];
     
-    private _ai: ApplicationInsights;
+    private _ai: IApplicationInsights;
     private _aiName: string = 'ApplicationInsightsAnalytics';
 
     // Sinon
@@ -58,9 +62,11 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public registerTests() {
-        this.addGenericE2ETests();
-        this.addAnalyticsApiTests();
-        this.addAsyncTests();
+        // this.addGenericE2ETests();
+        // this.addAnalyticsApiTests();
+        // this.addAsyncTests();
+        this.addDependencyPluginTests();
+        this.addPropertiesPluginTests();
     }
 
     public addGenericE2ETests(): void {
@@ -223,4 +229,59 @@ export class ApplicationInsightsTests extends TestClass {
             ].concat(asserts(401))
         });
     }
+
+    public addDependencyPluginTests(): void {
+        var boilerPlateAsserts = () => {
+            Assert.ok(this.successSpy.called, "success");
+            Assert.ok(!this.errorSpy.called, "no error sending");
+            var isValidCallCount = this.loggingSpy.callCount === 0;
+            Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
+            if (!isValidCallCount) {
+                while (this.loggingSpy.args.length) {
+                    Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args.pop());
+                }
+            }
+        }
+        var asserts: any = (expectedCount: number) => [() => {
+            var message = "polling: " + new Date().toISOString();
+            Assert.ok(true, message);
+            console.log(message);
+    
+            if (this.successSpy.called) {
+                boilerPlateAsserts();
+                this.testCleanup();
+            } else if (this.errorSpy.called || this.loggingSpy.called) {
+                boilerPlateAsserts();
+            }
+        },
+        (PollingAssert.createPollingAssert(() => {
+            Assert.ok(true, "* checking success spy " + new Date().toISOString());
+
+            if(this.successSpy.called) {
+                let currentCount: number = 0;
+                this.successSpy.args.forEach(call => {
+                    currentCount += call[1];
+                });
+                console.log('curr: ' + currentCount + ' exp: ' + expectedCount);
+                return currentCount === expectedCount;
+            } else {
+                return false;
+            }
+        }, "sender succeeded", 10, 1000))];
+        
+        this.testCaseAsync({
+            name: "TelemetryContext: trackDependencyData",
+            stepDelay: 1,
+            steps: [
+                () => {
+                    const data = new RemoteDependencyData(this._ai.core.logger, 'test', 'http://example.com', 'abc', 0, true, 200);
+                    (<any>this._ai).trackDependencyData(data);
+                }
+            ].concat(asserts(1))
+        });
+    }
+
+    public addPropertiesPluginTests(): void {
+    }
+
 }

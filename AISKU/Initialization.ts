@@ -1,8 +1,9 @@
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId } from "applicationinsights-core-js";
-import { ApplicationInsights, /*IAppInsights, */IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-analytics-js";
-import { Util, IConfig } from "applicationinsights-common";
+import { ApplicationInsights, IAppInsights, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-analytics-js";
+import { Util, IConfig, RemoteDependencyData } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
-import { PropertiesPlugin } from "applicationinsights-properties-js";
+import { PropertiesPlugin, IPropertiesPlugin } from "applicationinsights-properties-js";
+import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from 'applicationinsights-dependencies-js';
 
 "use strict";
 
@@ -11,12 +12,15 @@ export interface Snippet {
     config: IConfiguration;
 }
 
-export class Initialization /*implements IAppInsights*/ {
+export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {};
+
+export class Initialization implements IApplicationInsights {
     public snippet: Snippet;
     public config: IConfiguration;
     private core: IAppInsightsCore;
     private appInsights: ApplicationInsights;
     private properties: PropertiesPlugin;
+    private dependencies: DependenciesPlugin;
 
     constructor(snippet: Snippet) {
 
@@ -35,11 +39,13 @@ export class Initialization /*implements IAppInsights*/ {
         config = Initialization.getDefaultConfig(config, this.appInsights.identifier);
 
         this.properties = new PropertiesPlugin();
+        this.dependencies = new DependenciesPlugin();
 
         this.snippet = snippet;
         this.config = config;
     }
     
+    // Analytics Plugin
     public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any; }) {
         return this.appInsights.trackPageView(pageView, customProperties);
     }
@@ -56,7 +62,20 @@ export class Initialization /*implements IAppInsights*/ {
         return this.appInsights.trackMetric(metric, customProperties);
     }
 
-    public loadAppInsights(): ApplicationInsights {
+    // Properties Plugin
+    public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false): void {
+        return this.properties.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
+    }
+    public clearAuthenticatedUserContext(): void {
+        return this.properties.user.clearAuthenticatedUserContext();
+    }
+
+    // Dependencies Plugin
+    public trackDependencyData(dependency: RemoteDependencyData, customProperties?: {[key: string]: any}, systemProperties?: {[key: string]: any}): void {
+        return this.dependencies.trackDependencyData(dependency, customProperties, systemProperties);
+    }
+
+    public loadAppInsights(): IAppInsights {
 
         this.core = new AppInsightsCore();
         let extensions = [];
@@ -64,6 +83,7 @@ export class Initialization /*implements IAppInsights*/ {
 
         extensions.push(appInsightsChannel);
         extensions.push(this.properties);
+        extensions.push(this.dependencies);
         extensions.push(this.appInsights);
 
         // initialize core
@@ -72,7 +92,7 @@ export class Initialization /*implements IAppInsights*/ {
         // initialize extensions
         this.appInsights.initialize(this.config, this.core, extensions);
         appInsightsChannel.initialize(this.config, this.core, extensions);
-        return this.appInsights;
+        return this;
     }
 
     public emptyQueue() {
