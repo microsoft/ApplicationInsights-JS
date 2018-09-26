@@ -20,6 +20,14 @@ module.exports = function (grunt) {
                     'AppInsightsCommon/Interfaces/*.ts'
                 ]
             },
+            commonumd: {
+                tsconfig: './AppInsightsCommon/umd/tsconfig.json',
+                src: [
+                    'AppInsightsCommon/applicationinsights-common.ts',
+                    'AppInsightsCommon/*.ts',
+                    'AppInsightsCommon/Interfaces/*.ts'
+                ]
+            },
             commoncjs: {
                 tsconfig: './AppInsightsCommon/cjs/tsconfigcommonjs.json',
                 src: [
@@ -58,6 +66,12 @@ module.exports = function (grunt) {
                 tsconfig: './AISKU/tsconfig.json',
                 src: [
                     'AISKU/*.ts'
+                ]
+            },
+            aiskulite: {
+                tsconfig: './AISKULight/tsconfig.json',
+                src: [
+                    'AISKULight/*.ts'
                 ]
             },
             properties: {
@@ -235,11 +249,13 @@ module.exports = function (grunt) {
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("commoncjs", ["ts:commoncjs"]);
+    grunt.registerTask("commonumd", ["ts:commonumd"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("ai", ["ts:appinsights"]);
     grunt.registerTask("aitests", ["ts:appinsights", "ts:appinsightstests", "qunit:aitests"]);
     grunt.registerTask("aicjs", ["ts:appinsightscjs"]);
     grunt.registerTask("aisku", ["ts:aisku"]);
+    grunt.registerTask("aiskulite", ["ts:aiskulite"]);
     grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
     grunt.registerTask("properties", ["ts:properties"]);
