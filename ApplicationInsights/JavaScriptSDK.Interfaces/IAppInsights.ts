@@ -3,6 +3,7 @@ import { IExceptionTelemetry } from './IExceptionTelemetry';
 import { IAutoExceptionTelemetry } from './IExceptionTelemetry'
 import { ITraceTelemetry } from './ITraceTelemetry';
 import { IMetricTelemetry } from './IMetricTelemetry';
+import { ITelemetryItem } from 'applicationinsights-core-js';
 
 export interface IAppInsights {
     trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any });
@@ -12,4 +13,5 @@ export interface IAppInsights {
     trackMetric(metric: IMetricTelemetry, customProperties?: {[key: string]: any}): void;
     startTrackPage(name?: string);
     stopTrackPage(name?: string, url?: string, customProperties?: Object);
+    addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void);
 }
