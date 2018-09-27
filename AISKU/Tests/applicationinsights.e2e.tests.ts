@@ -2,7 +2,7 @@
 import { Initialization, IApplicationInsights } from '../Initialization'
 import { Sender } from 'applicationinsights-channel-js';
 import { AjaxPlugin } from 'applicationinsights-dependencies-js';
-import { RemoteDependencyData } from 'applicationinsights-common';
+import { RemoteDependencyData, ContextTagKeys, Util } from 'applicationinsights-common';
 
 export class ApplicationInsightsTests extends TestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -17,7 +17,7 @@ export class ApplicationInsightsTests extends TestClass {
         "setAuthenticatedUserContext",
         "clearAuthenticatedUserContext"
     ];
-    
+
     private _ai: IApplicationInsights;
     private _aiName: string = 'AppInsightsSDK';
 
@@ -25,6 +25,10 @@ export class ApplicationInsightsTests extends TestClass {
     private errorSpy: SinonSpy;
     private successSpy: SinonSpy;
     private loggingSpy: SinonSpy;
+    private userSpy: SinonSpy;
+
+    // Context
+    private tagKeys = new ContextTagKeys();
 
     public testInitialize() {
         try {
@@ -101,50 +105,12 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public addAsyncTests(): void {
-        var boilerPlateAsserts = () => {
-            Assert.ok(this.successSpy.called, "success");
-            Assert.ok(!this.errorSpy.called, "no error sending");
-            var isValidCallCount = this.loggingSpy.callCount === 0;
-            Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
-            if (!isValidCallCount) {
-                while (this.loggingSpy.args.length) {
-                    Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args.pop());
-                }
-            }
-        }
-        var asserts: any = (expectedCount: number) => [() => {
-            var message = "polling: " + new Date().toISOString();
-            Assert.ok(true, message);
-            console.log(message);
-    
-            if (this.successSpy.called) {
-                boilerPlateAsserts();
-                this.testCleanup();
-            } else if (this.errorSpy.called || this.loggingSpy.called) {
-                boilerPlateAsserts();
-            }
-        },
-        (PollingAssert.createPollingAssert(() => {
-            Assert.ok(true, "* checking success spy " + new Date().toISOString());
-
-            if(this.successSpy.called) {
-                let currentCount: number = 0;
-                this.successSpy.args.forEach(call => {
-                    currentCount += call[1];
-                });
-                console.log('curr: ' + currentCount + ' exp: ' + expectedCount);
-                return currentCount === expectedCount;
-            } else {
-                return false;
-            }
-        }, "sender succeeded", 10, 1000))];
-
         this.testCaseAsync({
             name: 'E2E.GenericTests: trackTrace sends to backend',
             stepDelay: 1,
             steps: [() => {
                 this._ai.trackTrace({message: 'trace'});
-            }].concat(asserts(1))
+            }].concat(this.asserts(1))
         });
 
         this.testCaseAsync({
@@ -160,7 +126,7 @@ export class ApplicationInsightsTests extends TestClass {
                     this._ai.trackException({error: exception});
                 }
                 Assert.ok(exception);
-            }].concat(asserts(1))
+            }].concat(this.asserts(1))
         });
 
         this.testCaseAsync({
@@ -174,7 +140,7 @@ export class ApplicationInsightsTests extends TestClass {
                     }
                     console.log("* done calling trackMetric " + new Date().toISOString());
                 }
-            ].concat(asserts(100))
+            ].concat(this.asserts(100))
         });
 
         this.testCaseAsync({
@@ -184,7 +150,7 @@ export class ApplicationInsightsTests extends TestClass {
                 () => {
                     this._ai.trackPageView({}); // sends 2
                 }
-            ].concat(asserts(2))
+            ].concat(this.asserts(2))
         });
 
         this.testCaseAsync({
@@ -206,7 +172,7 @@ export class ApplicationInsightsTests extends TestClass {
                     this._ai.trackTrace({message: "test"});
                     this._ai.trackPageView({}); // sends 2
                 }
-            ].concat(asserts(5))
+            ].concat(this.asserts(5))
         });
 
         this.testCaseAsync({
@@ -229,48 +195,11 @@ export class ApplicationInsightsTests extends TestClass {
                         this._ai.trackPageView({name: `${i}`}); // sends 2 1st time
                     }
                 }
-            ].concat(asserts(401))
+            ].concat(this.asserts(401))
         });
     }
 
     public addDependencyPluginTests(): void {
-        var boilerPlateAsserts = () => {
-            Assert.ok(this.successSpy.called, "success");
-            Assert.ok(!this.errorSpy.called, "no error sending");
-            var isValidCallCount = this.loggingSpy.callCount === 0;
-            Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
-            if (!isValidCallCount) {
-                while (this.loggingSpy.args.length) {
-                    Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args.pop());
-                }
-            }
-        }
-        var asserts: any = (expectedCount: number) => [() => {
-            var message = "polling: " + new Date().toISOString();
-            Assert.ok(true, message);
-            console.log(message);
-    
-            if (this.successSpy.called) {
-                boilerPlateAsserts();
-                this.testCleanup();
-            } else if (this.errorSpy.called || this.loggingSpy.called) {
-                boilerPlateAsserts();
-            }
-        },
-        (PollingAssert.createPollingAssert(() => {
-            Assert.ok(true, "* checking success spy " + new Date().toISOString());
-
-            if(this.successSpy.called) {
-                let currentCount: number = 0;
-                this.successSpy.args.forEach(call => {
-                    currentCount += call[1];
-                });
-                console.log('curr: ' + currentCount + ' exp: ' + expectedCount);
-                return currentCount === expectedCount;
-            } else {
-                return false;
-            }
-        }, "sender succeeded", 10, 1000))];
         
         this.testCaseAsync({
             name: "TelemetryContext: trackDependencyData",
@@ -280,11 +209,180 @@ export class ApplicationInsightsTests extends TestClass {
                     const data = new RemoteDependencyData(this._ai.appInsights.core.logger, 'test', 'http://example.com', 'abc', 0, true, 200);
                     (<any>this._ai).trackDependencyData(data);
                 }
-            ].concat(asserts(1))
+            ].concat(this.asserts(1))
         });
     }
 
     public addPropertiesPluginTests(): void {
+        this.testCaseAsync({
+            name: 'AuthenticatedUserContext: setAuthenticatedUserContext authId',
+            stepDelay: 1,
+            steps: [
+                () => {
+                    this._ai.setAuthenticatedUserContext('10001');
+                    this._ai.trackTrace({message: 'authUserContext test'});
+                }
+            ]
+            .concat(this.asserts(1))
+            .concat(<any>PollingAssert.createPollingAssert(() => {
+                if (this.successSpy.called) {
+                    const payloadStr: string[] = this.successSpy.args[0][0];
+                    if (payloadStr.length !== 1) {
+                        // Only 1 track should be sent
+                        return false;
+                    }
+                    const payload = JSON.parse(payloadStr[0]);
+                    if (payload && payload.tags) {
+                        const tagName: string = this.tagKeys.userAuthUserId;
+                        return '10001' === payload.tags[tagName];
+                    }
+                }
+                return false;
+            }, 'user.authenticatedId', 5, 500))
+        });
+
+        this.testCaseAsync({
+            name: 'AuthenticatedUserContext: setAuthenticatedUserContext authId and accountId',
+            stepDelay: 1,
+            steps: [
+                () => {
+                    this._ai.setAuthenticatedUserContext('10001', 'account123');
+                    this._ai.trackTrace({message: 'authUserContext test'});
+                }
+            ]
+            .concat(this.asserts(1))
+            .concat(<any>PollingAssert.createPollingAssert(() => {
+                if (this.successSpy.called) {
+                    const payloadStr: string[] = this.successSpy.args[0][0];
+                    if (payloadStr.length !== 1) {
+                        // Only 1 track should be sent
+                        return false;
+                    }
+                    const payload = JSON.parse(payloadStr[0]);
+                    if (payload && payload.tags) {
+                        const authTag: string = this.tagKeys.userAuthUserId;
+                        const accountTag: string = this.tagKeys.userAccountId;
+                        return '10001' === payload.tags[authTag] &&
+                            'account123' === payload.tags[accountTag];
+                    }
+                }
+                return false;
+            }, 'user.authenticatedId', 5, 500))
+        });
+
+        this.testCaseAsync({
+            name: 'AuthenticatedUserContext: setAuthenticatedUserContext non-ascii authId and accountId',
+            stepDelay: 1,
+            steps: [
+                () => {
+                    this._ai.setAuthenticatedUserContext("\u0428", "\u0429");
+                    this._ai.trackTrace({message: 'authUserContext test'});
+                }
+            ]
+            .concat(this.asserts(1))
+            .concat(<any>PollingAssert.createPollingAssert(() => {
+                if (this.successSpy.called) {
+                    const payloadStr: string[] = this.successSpy.args[0][0];
+                    if (payloadStr.length !== 1) {
+                        // Only 1 track should be sent
+                        return false;
+                    }
+                    const payload = JSON.parse(payloadStr[0]);
+                    if (payload && payload.tags) {
+                        const authTag: string = this.tagKeys.userAuthUserId;
+                        const accountTag: string = this.tagKeys.userAccountId;
+                        return '\u0428' === payload.tags[authTag] &&
+                            '\u0429' === payload.tags[accountTag];
+                    }
+                }
+                return false;
+            }, 'user.authenticatedId', 5, 500))
+        });
+
+        this.testCaseAsync({
+            name: 'AuthenticatedUserContext: clearAuthenticatedUserContext',
+            stepDelay: 1,
+            steps: [
+                () => {
+                    this._ai.setAuthenticatedUserContext('10002', 'account567');
+                    this._ai.clearAuthenticatedUserContext();
+                    this._ai.trackTrace({message: 'authUserContext test'});
+                }
+            ]
+            .concat(this.asserts(1))
+            .concat(<any>PollingAssert.createPollingAssert(() => {
+                if (this.successSpy.called) {
+                    const payloadStr: string[] = this.successSpy.args[0][0];
+                    if (payloadStr.length !== 1) {
+                        // Only 1 track should be sent
+                        return false;
+                    }
+                    const payload = JSON.parse(payloadStr[0]);
+                    if (payload && payload.tags) {
+                        const authTag: string = this.tagKeys.userAuthUserId;
+                        const accountTag: string = this.tagKeys.userAccountId;
+                        return undefined === payload.tags[authTag] &&
+                            undefined === payload.tags[accountTag];
+                    }
+                }
+                return false;
+            }, 'user.authenticatedId', 5, 500))
+        });
+
+        // This doesn't need to be e2e
+        this.testCase({
+            name: 'AuthenticatedUserContext: setAuthenticatedUserContext does not set the cookie by default',
+            test: () => {
+                // Setup
+                const authSpy: SinonSpy = this.sandbox.spy(this._ai, 'setAuthenticatedUserContext');
+                const cookieSpy: SinonSpy = this.sandbox.spy(Util, 'setCookie');
+
+                // Act
+                this._ai.setAuthenticatedUserContext('10002', 'account567');
+
+                // Test
+                Assert.ok(authSpy.calledOnce, 'setAuthenticatedUserContext called');
+                Assert.equal(false, authSpy.calledWithExactly('10001', 'account567', false), 'Correct default args to setAuthenticatedUserContext');
+                Assert.ok(cookieSpy.notCalled, 'cookie never set');
+            }
+        });
     }
 
+    private boilerPlateAsserts = () => {
+        Assert.ok(this.successSpy.called, "success");
+        Assert.ok(!this.errorSpy.called, "no error sending");
+        var isValidCallCount = this.loggingSpy.callCount === 0;
+        Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
+        if (!isValidCallCount) {
+            while (this.loggingSpy.args.length) {
+                Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args.pop());
+            }
+        }
+    }
+    private asserts: any = (expectedCount: number) => [() => {
+        var message = "polling: " + new Date().toISOString();
+        Assert.ok(true, message);
+        console.log(message);
+
+        if (this.successSpy.called) {
+            this.boilerPlateAsserts();
+            this.testCleanup();
+        } else if (this.errorSpy.called || this.loggingSpy.called) {
+            this.boilerPlateAsserts();
+        }
+    },
+    (PollingAssert.createPollingAssert(() => {
+        Assert.ok(true, "* checking success spy " + new Date().toISOString());
+
+        if(this.successSpy.called) {
+            let currentCount: number = 0;
+            this.successSpy.args.forEach(call => {
+                currentCount += call[1];
+            });
+            console.log('curr: ' + currentCount + ' exp: ' + expectedCount);
+            return currentCount === expectedCount;
+        } else {
+            return false;
+        }
+    }, "sender succeeded", 10, 1000))];
 }
