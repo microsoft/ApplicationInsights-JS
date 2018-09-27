@@ -18,10 +18,10 @@
     },
     "dependencies": {
         "applicationinsights-analytics-js": "0.0.109",
-        "applicationinsights-channel-js": "0.0.45",
-        "applicationinsights-common": "0.0.89",
+        "applicationinsights-channel-js": "0.0.47",
+        "applicationinsights-common": "0.0.91",
         "applicationinsights-core-js": "0.0.89",
-        "applicationinsights-properties-js": "0.0.17",
+        "applicationinsights-properties-js": "0.0.19",
         "applicationinsights-dependencies-js": "0.0.11"
     }
 }

@@ -7,7 +7,7 @@ import {
     IConfig,
     Util, PageViewPerformance,
     PageView, IEnvelope, RemoteDependencyData,
-    TelemetryItemCreator, Data, Metric, Exception, SeverityLevel, Trace
+    TelemetryItemCreator, Data, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry
 } from "applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
@@ -440,10 +440,10 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             const browserLinkPaths = ['/browserLinkSignalR/', '/__browserLink/'];
             let dropBrowserLinkRequests = (envelope: ITelemetryItem) => {
                 if (envelope.baseType === RemoteDependencyData.dataType) {
-                    let remoteData = envelope.baseData as Data<RemoteDependencyData>;
+                    let remoteData = envelope.baseData as IDependencyTelemetry;
                     if (remoteData) {
                         for (let i = 0; i < browserLinkPaths.length; i++) {
-                            if (remoteData.baseData.name.indexOf(browserLinkPaths[i]) >= 0) {
+                            if (remoteData.absoluteUrl && remoteData.absoluteUrl.indexOf(browserLinkPaths[i]) >= 0) {
                                 return false;
                             }
                         }

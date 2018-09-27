@@ -156,10 +156,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(/*! applicationinsights-core-js */ "./node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js.js"), __webpack_require__(/*! applicationinsights-analytics-js */ "./node_modules/applicationinsights-analytics-js/bundle/applicationinsights-analytics-js.js"), __webpack_require__(/*! applicationinsights-common */ "./node_modules/applicationinsights-common/bundle/applicationinsights-common.js"), __webpack_require__(/*! applicationinsights-channel-js */ "./node_modules/applicationinsights-channel-js/bundle/applicationinsights-channel-js.js"), __webpack_require__(/*! applicationinsights-properties-js */ "./node_modules/applicationinsights-properties-js/bundle/applicationinsights-properties-js.js")], __WEBPACK_AMD_DEFINE_RESULT__ = (function (require, exports, applicationinsights_core_js_1, applicationinsights_analytics_js_1, applicationinsights_common_1, applicationinsights_channel_js_1, applicationinsights_properties_js_1) {
+var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(/*! applicationinsights-core-js */ "./node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js.js"), __webpack_require__(/*! applicationinsights-analytics-js */ "./node_modules/applicationinsights-analytics-js/bundle/applicationinsights-analytics-js.js"), __webpack_require__(/*! applicationinsights-common */ "./node_modules/applicationinsights-common/bundle/applicationinsights-common.js"), __webpack_require__(/*! applicationinsights-channel-js */ "./node_modules/applicationinsights-channel-js/bundle/applicationinsights-channel-js.js"), __webpack_require__(/*! applicationinsights-properties-js */ "./node_modules/applicationinsights-properties-js/bundle/applicationinsights-properties-js.js"), __webpack_require__(/*! applicationinsights-dependencies-js */ "./node_modules/applicationinsights-dependencies-js/bundle/applicationinsights-dependencies-js.js")], __WEBPACK_AMD_DEFINE_RESULT__ = (function (require, exports, applicationinsights_core_js_1, applicationinsights_analytics_js_1, applicationinsights_common_1, applicationinsights_channel_js_1, applicationinsights_properties_js_1, applicationinsights_dependencies_js_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     "use strict";
+    ;
     var Initialization = /** @class */ (function () {
         function Initialization(snippet) {
             // initialize the queue and config in case they are undefined
@@ -174,22 +175,61 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             // set default values using config passed through snippet
             config = Initialization.getDefaultConfig(config, this.appInsights.identifier);
             this.properties = new applicationinsights_properties_js_1.PropertiesPlugin();
+            this.dependencies = new applicationinsights_dependencies_js_1.AjaxPlugin();
             this.snippet = snippet;
             this.config = config;
         }
+        // Analytics Plugin
+        Initialization.prototype.trackPageView = function (pageView, customProperties) {
+            this.appInsights.trackPageView(pageView, customProperties);
+        };
+        Initialization.prototype.trackException = function (exception, customProperties) {
+            this.appInsights.trackException(exception, customProperties);
+        };
+        Initialization.prototype._onerror = function (exception) {
+            this.appInsights._onerror(exception);
+        };
+        Initialization.prototype.trackTrace = function (trace, customProperties) {
+            this.appInsights.trackTrace(trace, customProperties);
+        };
+        Initialization.prototype.trackMetric = function (metric, customProperties) {
+            this.appInsights.trackMetric(metric, customProperties);
+        };
+        Initialization.prototype.startTrackPage = function (name) {
+            this.appInsights.startTrackPage(name);
+        };
+        Initialization.prototype.stopTrackPage = function (name, url, customProperties) {
+            this.appInsights.stopTrackPage(name, url, customProperties);
+        };
+        Initialization.prototype.addTelemetryInitializer = function (telemetryInitializer) {
+            return this.appInsights.addTelemetryInitializer(telemetryInitializer);
+        };
+        // Properties Plugin
+        Initialization.prototype.setAuthenticatedUserContext = function (authenticatedUserId, accountId, storeInCookie) {
+            if (storeInCookie === void 0) { storeInCookie = false; }
+            this.properties.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
+        };
+        Initialization.prototype.clearAuthenticatedUserContext = function () {
+            this.properties.user.clearAuthenticatedUserContext();
+        };
+        // Dependencies Plugin
+        Initialization.prototype.trackDependencyData = function (dependency, customProperties, systemProperties) {
+            this.dependencies.trackDependencyData(dependency, customProperties, systemProperties);
+        };
         Initialization.prototype.loadAppInsights = function () {
             this.core = new applicationinsights_core_js_1.AppInsightsCore();
             var extensions = [];
             var appInsightsChannel = new applicationinsights_channel_js_1.Sender();
             extensions.push(appInsightsChannel);
             extensions.push(this.properties);
+            extensions.push(this.dependencies);
             extensions.push(this.appInsights);
             // initialize core
             this.core.initialize(this.config, extensions);
             // initialize extensions
             this.appInsights.initialize(this.config, this.core, extensions);
             appInsightsChannel.initialize(this.config, this.core, extensions);
-            return this.appInsights;
+            return this;
         };
         Initialization.prototype.emptyQueue = function () {
             // call functions that were queued before the main script was loaded
@@ -230,7 +270,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         };
         Initialization.prototype.addHousekeepingBeforeUnload = function (appInsightsInstance) {
             // Add callback to push events when the user navigates away
-            if (!appInsightsInstance.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
+            if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
                 var performHousekeeping = function () {
                     // Adds the ability to flush all data before the page unloads.
                     // Note: This approach tries to push an async request with all the pending events onbeforeunload.
@@ -239,12 +279,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     // Another approach would be to make this call sync with a acceptable timeout to reduce the 
                     // impact on user experience.
                     //appInsightsInstance.context._sender.triggerSend();
-                    appInsightsInstance.core.getTransmissionControls().forEach(function (queues) {
+                    appInsightsInstance.appInsights.core.getTransmissionControls().forEach(function (queues) {
                         queues.forEach(function (channel) { return channel.flush(true); });
                     });
                     // Back up the current session to local storage
                     // This lets us close expired sessions after the cookies themselves expire
-                    this.properties._sessionManager.backup();
+                    // Todo: move this against interface behavior
+                    if (this.core.extensions["AppInsightsPropertiesPlugin"] &&
+                        this.core.extensions["AppInsightsPropertiesPlugin"]._sessionManager) {
+                        this.core.extensions["AppInsightsPropertiesPlugin"]._sessionManager.backup();
+                    }
                 };
                 if (!applicationinsights_common_1.Util.addEventHandler('beforeunload', performHousekeeping)) {
                     this.core.logger.throwInternal(applicationinsights_core_js_1.LoggingSeverity.CRITICAL, applicationinsights_core_js_1._InternalMessageId.FailedToAddHandlerForOnBeforeUnload, 'Could not add handler for beforeunload');
@@ -256,7 +300,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 configuration = {};
             }
             if (configuration) {
-                identifier = identifier ? identifier : "AppAnalytics"; // To do: define constant        
+                identifier = identifier ? identifier : "ApplicationInsightsAnalytics";
             }
             var config = configuration.extensions ? configuration.extensions[identifier] : {};
             // set default values
@@ -516,6 +560,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
                     + applicationinsights_common_1.Util.getExceptionName(e), { exception: applicationinsights_common_1.Util.dump(e), errorString: errorString });
             }
         };
+        ApplicationInsights.prototype.addTelemetryInitializer = function (telemetryInitializer) {
+            this._telemetryInitializers.push(telemetryInitializer);
+        };
         ApplicationInsights.prototype._initialize = function (config, core, extensions) {
             var _this = this;
             if (this._isInitialized) {
@@ -608,16 +655,15 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
             }
             this._isInitialized = true;
         };
-        // Todo: move to separate extension
         ApplicationInsights.prototype._addDefaultTelemetryInitializers = function (configGetters) {
             if (!configGetters.isBrowserLinkTrackingEnabled()) {
                 var browserLinkPaths_1 = ['/browserLinkSignalR/', '/__browserLink/'];
                 var dropBrowserLinkRequests = function (envelope) {
-                    if (envelope.name === applicationinsights_common_1.RemoteDependencyData.envelopeType) {
-                        var remoteData = envelope.data;
-                        if (remoteData && remoteData.baseData) {
+                    if (envelope.baseType === applicationinsights_common_1.RemoteDependencyData.dataType) {
+                        var remoteData = envelope.baseData;
+                        if (remoteData) {
                             for (var i = 0; i < browserLinkPaths_1.length; i++) {
-                                if (remoteData.baseData.name.indexOf(browserLinkPaths_1[i]) >= 0) {
+                                if (remoteData.absoluteUrl && remoteData.absoluteUrl.indexOf(browserLinkPaths_1[i]) >= 0) {
                                     return false;
                                 }
                             }
@@ -625,10 +671,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
                     }
                     return true;
                 };
-                this.addTelemetryInitializer(dropBrowserLinkRequests);
+                this._addTelemetryInitializer(dropBrowserLinkRequests);
             }
         };
-        ApplicationInsights.prototype.addTelemetryInitializer = function (telemetryInitializer) {
+        ApplicationInsights.prototype._addTelemetryInitializer = function (telemetryInitializer) {
             this._telemetryInitializers.push(telemetryInitializer);
         };
         ApplicationInsights.prototype._sendCORSException = function (url) {
@@ -648,7 +694,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
             var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
             telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
         };
-        ApplicationInsights.Version = "0.0.1";
+        ApplicationInsights.Version = "2.0.1-beta";
         return ApplicationInsights;
     }());
     exports.ApplicationInsights = ApplicationInsights;
@@ -708,7 +754,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this.overridePageViewDuration = overridePageViewDuration;
             this.appInsights = appInsights;
             if (core) {
-                this._channel = (core.getTransmissionControls());
+                this._channel = function () { return (core.getTransmissionControls()); };
                 this._logger = core.logger;
             }
         }
@@ -737,7 +783,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             // Also this is case 4
             if (!applicationinsights_common_1.PageViewPerformance.isPerformanceTimingSupported()) {
                 this.appInsights.sendPageViewInternal(pageView, customProperties);
-                this._channel.forEach(function (queues) { queues.forEach(function (q) { return q.flush(true); }); });
+                this._channel().forEach(function (queues) { queues.forEach(function (q) { return q.flush(true); }); });
                 // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
                 this._logger.throwInternal(applicationinsights_core_js_1.LoggingSeverity.WARNING, applicationinsights_core_js_1._InternalMessageId.NavigationTimingNotSupported, "trackPageView: navigation timing API used for calculation of page duration is not supported in this browser. This page view will be collected without duration and timing info.");
                 return;
@@ -767,7 +813,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
                 // case 2
                 this.appInsights.sendPageViewInternal(pageView, customProperties);
-                this._channel.forEach(function (queues) { queues.forEach(function (q) { return q.flush(true); }); });
+                this._channel().forEach(function (queues) { queues.forEach(function (q) { return q.flush(true); }); });
                 pageViewSent = true;
             }
             // now try to send the page view performance telemetry
@@ -775,7 +821,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             if (!customProperties) {
                 customProperties = {};
             }
-            var handle = setInterval(function () {
+            var handle = setInterval((function () {
                 try {
                     if (applicationinsights_common_1.PageViewPerformance.isPerformanceTimingDataReady()) {
                         clearInterval(handle);
@@ -785,7 +831,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             // That's the best value we can get that makes sense.
                             customProperties["duration"] = customDuration;
                             _this.appInsights.sendPageViewInternal(pageView, customProperties);
-                            _this._channel.forEach(function (queues) { queues.forEach(function (q) { return q.flush(true); }); });
+                            _this._channel().forEach(function (queues) { queues.forEach(function (q) { return q.flush(true); }); });
                         }
                         else {
                             if (!pageViewSent) {
@@ -796,7 +842,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                 _this.appInsights.sendPageViewPerformanceInternal(pageViewPerformance, customProperties);
                                 _this.pageViewPerformanceSent = true;
                             }
-                            _this._channel.forEach(function (queues) { queues.forEach(function (q) { return q.flush(true); }); });
+                            _this._channel().forEach(function (queues) { queues.forEach(function (q) { return q.flush(true); }); });
                         }
                     }
                     else if (applicationinsights_common_1.PageViewPerformance.getDuration(start, +new Date) > maxDurationLimit) {
@@ -806,14 +852,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         if (!pageViewSent) {
                             customProperties["duration"] = maxDurationLimit;
                             _this.appInsights.sendPageViewInternal(pageView, customProperties);
-                            _this._channel.forEach(function (queues) { queues.forEach(function (q) { return q.flush(true); }); });
+                            _this._channel().forEach(function (queues) { queues.forEach(function (q) { return q.flush(true); }); });
                         }
                     }
                 }
                 catch (e) {
                     _this._logger.throwInternal(applicationinsights_core_js_1.LoggingSeverity.CRITICAL, applicationinsights_core_js_1._InternalMessageId.TrackPVFailedCalc, "trackPageView failed on page load calculation: " + applicationinsights_common_1.Util.getExceptionName(e), { exception: applicationinsights_common_1.Util.dump(e) });
                 }
-            }, 100);
+            }), 100);
         };
         return PageViewManager;
     }());
@@ -996,14 +1042,19 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = 
             var customMeasurements = {};
             var customProperties = {};
             EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
-            var id = telemetryItem.baseData.id;
-            var absoluteUrl = telemetryItem.baseData.absoluteUrl;
-            var command = telemetryItem.baseData.command;
-            var totalTime = telemetryItem.baseData.totalTime;
-            var success = telemetryItem.baseData.success;
-            var resultCode = telemetryItem.baseData.resultCode;
-            var method = telemetryItem.baseData.method;
-            var baseData = new applicationinsights_common_1.RemoteDependencyData(logger, id, absoluteUrl, command, totalTime, success, resultCode, method, customProperties, customMeasurements);
+            var bd = telemetryItem.baseData;
+            if (applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(bd)) {
+                logger.warnToConsole("Invalid input for dependency data");
+                return null;
+            }
+            var id = bd.id;
+            var absoluteUrl = bd.absoluteUrl;
+            var command = bd.commandName;
+            var duration = bd.duration;
+            var success = bd.success;
+            var resultCode = bd.resultCode;
+            var method = bd.method;
+            var baseData = new applicationinsights_common_1.RemoteDependencyData(logger, id, absoluteUrl, command, duration, success, resultCode, method, customProperties, customMeasurements);
             var data = new applicationinsights_common_1.Data(applicationinsights_common_1.RemoteDependencyData.dataType, baseData);
             return EnvelopeCreator.createEnvelope(logger, applicationinsights_common_1.RemoteDependencyData.envelopeType, telemetryItem, data);
         };
@@ -1023,6 +1074,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = 
             }
             var customProperties = {};
             var customMeasurements = {};
+            if (telemetryItem.baseType !== applicationinsights_common_1.Event.dataType) {
+                EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.baseData, customProperties, customMeasurements);
+            }
             EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
             var eventName = telemetryItem.baseData.name;
             var baseData = new applicationinsights_common_1.Event(logger, eventName, customProperties, customMeasurements);
@@ -1046,7 +1100,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = 
             var customProperties = {};
             var customMeasurements = {};
             EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
-            var exception = telemetryItem.baseData.exception;
+            var exception = telemetryItem.baseData.error;
             var severityLevel = telemetryItem.baseData.severityLevel;
             var baseData = new applicationinsights_common_1.Exception(logger, exception, customProperties, customMeasurements, severityLevel);
             var data = new applicationinsights_common_1.Data(applicationinsights_common_1.Exception.dataType, baseData);
@@ -1102,6 +1156,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var __extends = 
             EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
             var name = telemetryItem.baseData.name;
             var url = telemetryItem.baseData.uri;
+            // Todo: move IPageViewTelemetry to common as we are missing type checks on baseData here
             // refUri is a field that Breeze still does not recognize as part of Part B. For now, put it in Part C until it supports it as a domain property
             if (!applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(telemetryItem.baseData.refUri)) {
                 customProperties["refUri"] = telemetryItem.baseData.refUri;
@@ -1464,8 +1519,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 this._buffer.enqueue(payload);
                 // ensure an invocation timeout is set
                 this._setupTimer();
-                // Uncomment if you want to use DataLossanalyzer
-                // DataLossAnalyzer.incrementItemsQueued();
             }
             catch (e) {
                 this._logger.throwInternal(applicationinsights_core_js_1.LoggingSeverity.WARNING, applicationinsights_core_js_1._InternalMessageId.FailedAddingTelemetryToBuffer, "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + applicationinsights_common_1.Util.getExceptionName(e), { exception: applicationinsights_common_1.Util.dump(e) });
@@ -1593,8 +1646,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
          * success handler
          */
         Sender.prototype._onSuccess = function (payload, countOfItemsInPayload) {
-            // Uncomment if you want to use DataLossanalyzer
-            // DataLossAnalyzer.decrementItemsQueued(countOfItemsInPayload);
             this._buffer.clearSent(payload);
         };
         /**
@@ -1633,12 +1684,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 case applicationinsights_common_1.RemoteDependencyData.dataType:
                     return EnvelopeCreator_1.DependencyEnvelopeCreator.DependencyEnvelopeCreator.Create(this._logger, envelope);
                 default:
-                    return null;
+                    // default create custom event type
+                    return EnvelopeCreator_1.EventEnvelopeCreator.EventEnvelopeCreator.Create(this._logger, envelope);
             }
         };
         Sender._getDefaultAppInsightsChannelConfig = function (config, identifier) {
             var resultConfig = {};
-            var pluginConfig = config.extensions && config.extensions[identifier] ? config.extensions[identifier] : {};
+            var pluginConfig = config.extensionConfig && config.extensionConfig[identifier] ? config.extensionConfig[identifier] : {};
             // set default values
             resultConfig.endpointUrl = function () { return config.endpointUrl || "https://dc.services.visualstudio.com/v2/track"; };
             resultConfig.emitLineDelimitedJson = function () { return applicationinsights_common_1.Util.stringToBoolOrDefault(pluginConfig.emitLineDelimitedJson); };
@@ -1667,8 +1719,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     return PageViewPerformanceValidator_1.PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(envelope);
                 case applicationinsights_common_1.RemoteDependencyData.dataType:
                     return RemoteDepdencyValidator_1.RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(envelope);
+                default:
+                    return EventValidator_1.EventValidator.EventValidator.Validate(envelope);
             }
-            return false;
         };
         /**
          * Send Beacon API request
@@ -2120,7 +2173,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         function MetricValidator() {
         }
         MetricValidator.prototype.Validate = function (event) {
-            return false;
+            return true;
         };
         MetricValidator.MetricValidator = new MetricValidator();
         return MetricValidator;
@@ -4949,11 +5002,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             this._extensions.forEach(function (ext) {
                 var t = ext;
                 if (t && t.priority) {
-                    if (priority[t.priority]) {
-                        throw new Error(duplicatePriority);
+                    if (!CoreUtils_1.CoreUtils.isNullOrUndefined(priority[t.priority])) {
+                        _this.logger.warnToConsole("Two extensions have same priority" + priority[t.priority] + ", " + t.identifier);
                     }
                     else {
-                        priority[t.priority] = 1; // set a value
+                        priority[t.priority] = t.identifier; // set a value
                     }
                 }
             });
@@ -5138,7 +5191,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     // Initialize each plugin
                     arr.forEach(function (queueItem) { return queueItem.initialize(config, core, extensions); });
                     // setup next plugin
-                    for (var i = 1; i < arr.length - 1; i++) {
+                    for (var i = 1; i < arr.length; i++) {
                         arr[i - 1].setNextPlugin(arr[i]);
                     }
                     this.channelQueue.push(arr);
@@ -5491,6 +5544,450 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
 /***/ }),
 
+/***/ "./node_modules/applicationinsights-dependencies-js/bundle/ajax.js":
+/*!*************************************************************************!*\
+  !*** ./node_modules/applicationinsights-dependencies-js/bundle/ajax.js ***!
+  \*************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(/*! applicationinsights-common */ "./node_modules/applicationinsights-common/bundle/applicationinsights-common.js"), __webpack_require__(/*! applicationinsights-core-js */ "./node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js.js"), __webpack_require__(/*! ./ajaxRecord */ "./node_modules/applicationinsights-dependencies-js/bundle/ajaxRecord.js"), __webpack_require__(/*! ./ajaxUtils */ "./node_modules/applicationinsights-dependencies-js/bundle/ajaxUtils.js")], __WEBPACK_AMD_DEFINE_RESULT__ = (function (require, exports, applicationinsights_common_1, applicationinsights_core_js_1, ajaxRecord_1, ajaxUtils_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var AjaxMonitor = /** @class */ (function () {
+        function AjaxMonitor() {
+            this._trackAjaxAttempts = 0;
+            this.identifier = "AjaxDependencyPlugin";
+            this.priority = 161;
+            this.currentWindowHost = window && window.location.host && window.location.host.toLowerCase();
+            this.initialized = false;
+        }
+        ///<summary>Verifies that particalar instance of XMLHttpRequest needs to be monitored</summary>
+        ///<param name="excludeAjaxDataValidation">Optional parameter. True if ajaxData must be excluded from verification</param>
+        ///<returns type="bool">True if instance needs to be monitored, otherwise false</returns>
+        AjaxMonitor.prototype.isMonitoredInstance = function (xhr, excludeAjaxDataValidation) {
+            // checking to see that all interested functions on xhr were instrumented
+            return this.initialized
+                // checking on ajaxData to see that it was not removed in user code
+                && (excludeAjaxDataValidation === true || !applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(xhr.ajaxData))
+                // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
+                && xhr[applicationinsights_common_1.DisabledPropertyName] !== true;
+        };
+        ///<summary>Determines whether ajax monitoring can be enabled on this document</summary>
+        ///<returns>True if Ajax monitoring is supported on this page, otherwise false</returns>
+        AjaxMonitor.prototype.supportsMonitoring = function () {
+            var result = true;
+            if (applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(XMLHttpRequest) ||
+                applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype) ||
+                applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype.open) ||
+                applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype.send) ||
+                applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype.abort)) {
+                result = false;
+            }
+            // disable in IE8 or older (https://www.w3schools.com/jsref/jsref_trim_string.asp)
+            try {
+                " a ".trim();
+            }
+            catch (ex) {
+                result = false;
+            }
+            return result;
+        };
+        AjaxMonitor.prototype.instrumentOpen = function () {
+            var originalOpen = XMLHttpRequest.prototype.open;
+            var ajaxMonitorInstance = this;
+            XMLHttpRequest.prototype.open = function (method, url, async) {
+                try {
+                    if (ajaxMonitorInstance.isMonitoredInstance(this, true) &&
+                        (!this.ajaxData ||
+                            !this.ajaxData.xhrMonitoringState.openDone)) {
+                        ajaxMonitorInstance.openHandler(this, method, url, async);
+                    }
+                }
+                catch (e) {
+                    this._core.logger.throwInternal(applicationinsights_core_js_1.LoggingSeverity.CRITICAL, applicationinsights_core_js_1._InternalMessageId.FailedMonitorAjaxOpen, "Failed to monitor XMLHttpRequest.open, monitoring data for this ajax call may be incorrect.", {
+                        ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(this),
+                        exception: applicationinsights_common_1.Util.dump(e)
+                    });
+                }
+                return originalOpen.apply(this, arguments);
+            };
+        };
+        AjaxMonitor.prototype.openHandler = function (xhr, method, url, async) {
+            /* todo:
+            Disabling the following block of code as CV is not yet supported in 1DS for 3rd Part.
+            // this format corresponds with activity logic on server-side and is required for the correct correlation
+            var id = "|" + this.appInsights.context.operation.id + "." + Util.newId();
+            */
+            var id = applicationinsights_common_1.Util.newId();
+            var ajaxData = new ajaxRecord_1.ajaxRecord(id, this._core._logger);
+            ajaxData.method = method;
+            ajaxData.requestUrl = url;
+            ajaxData.xhrMonitoringState.openDone = true;
+            xhr.ajaxData = ajaxData;
+            this.attachToOnReadyStateChange(xhr);
+        };
+        AjaxMonitor.getFailedAjaxDiagnosticsMessage = function (xhr) {
+            var result = "";
+            try {
+                if (!applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(xhr) &&
+                    !applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(xhr.ajaxData) &&
+                    !applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(xhr.ajaxData.requestUrl)) {
+                    result += "(url: '" + xhr.ajaxData.requestUrl + "')";
+                }
+            }
+            catch (e) { }
+            return result;
+        };
+        AjaxMonitor.prototype.instrumentSend = function () {
+            var originalSend = XMLHttpRequest.prototype.send;
+            var ajaxMonitorInstance = this;
+            XMLHttpRequest.prototype.send = function (content) {
+                try {
+                    if (ajaxMonitorInstance.isMonitoredInstance(this) && !this.ajaxData.xhrMonitoringState.sendDone) {
+                        ajaxMonitorInstance.sendHandler(this, content);
+                    }
+                }
+                catch (e) {
+                    this._core.logger.throwInternal(applicationinsights_core_js_1.LoggingSeverity.CRITICAL, applicationinsights_core_js_1._InternalMessageId.FailedMonitorAjaxSend, "Failed to monitor XMLHttpRequest, monitoring data for this ajax call may be incorrect.", {
+                        ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(this),
+                        exception: applicationinsights_common_1.Util.dump(e)
+                    });
+                }
+                return originalSend.apply(this, arguments);
+            };
+        };
+        AjaxMonitor.prototype.sendHandler = function (xhr, content) {
+            xhr.ajaxData.requestSentTime = applicationinsights_common_1.DateTimeUtils.Now();
+            if (this.currentWindowHost && applicationinsights_common_1.CorrelationIdHelper.canIncludeCorrelationHeader(this._config, xhr.ajaxData.getAbsoluteUrl(), this.currentWindowHost)) {
+                xhr.setRequestHeader(applicationinsights_common_1.RequestHeaders.requestIdHeader, xhr.ajaxData.id);
+                var appId = this._config.appId; // Todo: also, get appId from channel as breeze returns it
+                if (appId) {
+                    xhr.setRequestHeader(applicationinsights_common_1.RequestHeaders.requestContextHeader, applicationinsights_common_1.RequestHeaders.requestContextAppIdFormat + appId);
+                }
+            }
+            xhr.ajaxData.xhrMonitoringState.sendDone = true;
+        };
+        AjaxMonitor.prototype.instrumentAbort = function () {
+            var originalAbort = XMLHttpRequest.prototype.abort;
+            var ajaxMonitorInstance = this;
+            XMLHttpRequest.prototype.abort = function () {
+                try {
+                    if (ajaxMonitorInstance.isMonitoredInstance(this) && !this.ajaxData.xhrMonitoringState.abortDone) {
+                        this.ajaxData.aborted = 1;
+                        this.ajaxData.xhrMonitoringState.abortDone = true;
+                    }
+                }
+                catch (e) {
+                    this._core.logger.throwInternal(applicationinsights_core_js_1.LoggingSeverity.CRITICAL, applicationinsights_core_js_1._InternalMessageId.FailedMonitorAjaxAbort, "Failed to monitor XMLHttpRequest.abort, monitoring data for this ajax call may be incorrect.", {
+                        ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(this),
+                        exception: applicationinsights_common_1.Util.dump(e)
+                    });
+                }
+                return originalAbort.apply(this, arguments);
+            };
+        };
+        AjaxMonitor.prototype.attachToOnReadyStateChange = function (xhr) {
+            var _this = this;
+            var ajaxMonitorInstance = this;
+            xhr.ajaxData.xhrMonitoringState.onreadystatechangeCallbackAttached = ajaxUtils_1.EventHelper.AttachEvent(xhr, "readystatechange", function () {
+                try {
+                    if (ajaxMonitorInstance.isMonitoredInstance(xhr)) {
+                        if (xhr.readyState === 4) {
+                            ajaxMonitorInstance.onAjaxComplete(xhr);
+                        }
+                    }
+                }
+                catch (e) {
+                    var exceptionText = applicationinsights_common_1.Util.dump(e);
+                    // ignore messages with c00c023f, as this a known IE9 XHR abort issue
+                    if (!exceptionText || exceptionText.toLowerCase().indexOf("c00c023f") == -1) {
+                        _this._core.logger.throwInternal(applicationinsights_core_js_1.LoggingSeverity.CRITICAL, applicationinsights_core_js_1._InternalMessageId.FailedMonitorAjaxRSC, "Failed to monitor XMLHttpRequest 'readystatechange' event handler, monitoring data for this ajax call may be incorrect.", {
+                            ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr),
+                            exception: applicationinsights_common_1.Util.dump(e)
+                        });
+                    }
+                }
+            });
+        };
+        AjaxMonitor.prototype.onAjaxComplete = function (xhr) {
+            xhr.ajaxData.responseFinishedTime = applicationinsights_common_1.DateTimeUtils.Now();
+            xhr.ajaxData.status = xhr.status;
+            xhr.ajaxData.CalculateMetrics();
+            if (xhr.ajaxData.ajaxTotalDuration < 0) {
+                this._core.logger.throwInternal(applicationinsights_core_js_1.LoggingSeverity.WARNING, applicationinsights_core_js_1._InternalMessageId.FailedMonitorAjaxDur, "Failed to calculate the duration of the ajax call, monitoring data for this ajax call won't be sent.", {
+                    ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr),
+                    requestSentTime: xhr.ajaxData.requestSentTime,
+                    responseFinishedTime: xhr.ajaxData.responseFinishedTime
+                });
+            }
+            else {
+                var dependency = {
+                    id: xhr.ajaxData.id,
+                    absoluteUrl: xhr.ajaxData.getAbsoluteUrl(),
+                    commandName: xhr.ajaxData.getPathName(),
+                    duration: xhr.ajaxData.ajaxTotalDuration,
+                    success: (+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
+                    resultCode: +xhr.ajaxData.status,
+                    method: xhr.ajaxData.method
+                };
+                // enrich dependency target with correlation context from the server
+                var correlationContext = this.getCorrelationContext(xhr);
+                if (correlationContext) {
+                    dependency.correlationContext = /* dependency.target + " | " + */ correlationContext;
+                }
+                this.trackDependencyData(dependency);
+                xhr.ajaxData = null;
+            }
+        };
+        AjaxMonitor.prototype.getCorrelationContext = function (xhr) {
+            try {
+                var responseHeadersString = xhr.getAllResponseHeaders();
+                if (responseHeadersString !== null) {
+                    var index = responseHeadersString.toLowerCase().indexOf(applicationinsights_common_1.RequestHeaders.requestContextHeaderLowerCase);
+                    if (index !== -1) {
+                        var responseHeader = xhr.getResponseHeader(applicationinsights_common_1.RequestHeaders.requestContextHeader);
+                        return applicationinsights_common_1.CorrelationIdHelper.getCorrelationContext(responseHeader);
+                    }
+                }
+            }
+            catch (e) {
+                this._core.logger.throwInternal(applicationinsights_core_js_1.LoggingSeverity.WARNING, applicationinsights_core_js_1._InternalMessageId.FailedMonitorAjaxGetCorrelationHeader, "Failed to get Request-Context correlation header as it may be not included in the response or not accessible.", {
+                    ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr),
+                    exception: applicationinsights_common_1.Util.dump(e)
+                });
+            }
+        };
+        /**
+            * Logs dependency call
+            * @param dependencyData dependency data object
+            */
+        AjaxMonitor.prototype.trackDependencyData = function (dependency, properties, systemProperties) {
+            if (this._config.maxAjaxCallsPerView === -1 || this._trackAjaxAttempts < this._config.maxAjaxCallsPerView) {
+                var item = applicationinsights_common_1.TelemetryItemCreator.create(dependency, applicationinsights_common_1.RemoteDependencyData.dataType, applicationinsights_common_1.RemoteDependencyData.envelopeType, this._core._logger, properties, systemProperties);
+                this._core.track(item);
+            }
+            else if (this._trackAjaxAttempts === this._config.maxAjaxCallsPerView) {
+                this._core.logger.throwInternal(applicationinsights_core_js_1.LoggingSeverity.CRITICAL, applicationinsights_core_js_1._InternalMessageId.MaxAjaxPerPVExceeded, "Maximum ajax per page view limit reached, ajax monitoring is paused until the next trackPageView(). In order to increase the limit set the maxAjaxCallsPerView configuration parameter.", true);
+            }
+            ++this._trackAjaxAttempts;
+        };
+        AjaxMonitor.prototype.processTelemetry = function (item) {
+            if (this._nextPlugin && this._nextPlugin.processTelemetry) {
+                this._nextPlugin.processTelemetry(item);
+            }
+        };
+        AjaxMonitor.prototype.setNextPlugin = function (next) {
+            if (next) {
+                this._nextPlugin = next;
+            }
+        };
+        AjaxMonitor.prototype.initialize = function (config, core, extensions) {
+            if (!this.initialized) {
+                this._core = core;
+                config.extensionConfig = config.extensionConfig ? config.extensionConfig : {};
+                var c = config.extensionConfig[this.identifier] ? config.extensionConfig[this.identifier] : {};
+                this._config = {
+                    maxAjaxCallsPerView: !isNaN(c.maxAjaxCallsPerView) ? c.maxAjaxCallsPerView : 500,
+                    disableAjaxTracking: applicationinsights_common_1.Util.stringToBoolOrDefault(c.disableAjaxTracking),
+                    disableCorrelationHeaders: applicationinsights_common_1.Util.stringToBoolOrDefault(c.disableCorrelationHeaders),
+                    correlationHeaderExcludedDomains: c.correlationHeaderExcludedDomains || [
+                        "*.blob.core.windows.net",
+                        "*.blob.core.chinacloudapi.cn",
+                        "*.blob.core.cloudapi.de",
+                        "*.blob.core.usgovcloudapi.net"
+                    ],
+                    appId: c.appId,
+                    enableCorsCorrelation: applicationinsights_common_1.Util.stringToBoolOrDefault(c.enableCorsCorrelation)
+                };
+                if (this.supportsMonitoring() && !this._config.disableAjaxTracking) {
+                    this.instrumentOpen();
+                    this.instrumentSend();
+                    this.instrumentAbort();
+                    this.initialized = true;
+                }
+            }
+        };
+        return AjaxMonitor;
+    }());
+    exports.AjaxMonitor = AjaxMonitor;
+}).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+//# sourceMappingURL=ajax.js.map
+
+/***/ }),
+
+/***/ "./node_modules/applicationinsights-dependencies-js/bundle/ajaxRecord.js":
+/*!*******************************************************************************!*\
+  !*** ./node_modules/applicationinsights-dependencies-js/bundle/ajaxRecord.js ***!
+  \*******************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(/*! applicationinsights-common */ "./node_modules/applicationinsights-common/bundle/applicationinsights-common.js")], __WEBPACK_AMD_DEFINE_RESULT__ = (function (require, exports, applicationinsights_common_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var XHRMonitoringState = /** @class */ (function () {
+        function XHRMonitoringState() {
+            this.openDone = false;
+            this.setRequestHeaderDone = false;
+            this.sendDone = false;
+            this.abortDone = false;
+            //<summary>True, if onreadyStateChangeCallback function attached to xhr, otherwise false</summary>
+            this.onreadystatechangeCallbackAttached = false;
+        }
+        return XHRMonitoringState;
+    }());
+    exports.XHRMonitoringState = XHRMonitoringState;
+    var ajaxRecord = /** @class */ (function () {
+        function ajaxRecord(id, logger) {
+            this.completed = false;
+            this.requestHeadersSize = null;
+            this.ttfb = null;
+            this.responseReceivingDuration = null;
+            this.callbackDuration = null;
+            this.ajaxTotalDuration = null;
+            this.aborted = null;
+            this.pageUrl = null;
+            this.requestUrl = null;
+            this.requestSize = 0;
+            this.method = null;
+            ///<summary>Returns the HTTP status code.</summary>
+            this.status = null;
+            //<summary>The timestamp when open method was invoked</summary>
+            this.requestSentTime = null;
+            //<summary>The timestamps when first byte was received</summary>
+            this.responseStartedTime = null;
+            //<summary>The timestamp when last byte was received</summary>
+            this.responseFinishedTime = null;
+            //<summary>The timestamp when onreadystatechange callback in readyState 4 finished</summary>
+            this.callbackFinishedTime = null;
+            //<summary>The timestamp at which ajax was ended</summary>
+            this.endTime = null;
+            //<summary>The original xhr onreadystatechange event</summary>
+            this.originalOnreadystatechage = null;
+            this.xhrMonitoringState = new XHRMonitoringState();
+            //<summary>Determines whether or not JavaScript exception occured in xhr.onreadystatechange code. 1 if occured, otherwise 0.</summary>
+            this.clientFailure = 0;
+            this.CalculateMetrics = function () {
+                var self = this;
+                // round to 3 decimal points
+                self.ajaxTotalDuration = Math.round(applicationinsights_common_1.DateTimeUtils.GetDuration(self.requestSentTime, self.responseFinishedTime) * 1000) / 1000;
+            };
+            this.id = id;
+            this._logger = logger;
+        }
+        ajaxRecord.prototype.getAbsoluteUrl = function () {
+            return this.requestUrl ? applicationinsights_common_1.UrlHelper.getAbsoluteUrl(this.requestUrl) : null;
+        };
+        ajaxRecord.prototype.getPathName = function () {
+            return this.requestUrl ? applicationinsights_common_1.DataSanitizer.sanitizeUrl(this._logger, applicationinsights_common_1.UrlHelper.getCompleteUrl(this.method, this.requestUrl)) : null;
+        };
+        return ajaxRecord;
+    }());
+    exports.ajaxRecord = ajaxRecord;
+    ;
+}).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+//# sourceMappingURL=ajaxRecord.js.map
+
+/***/ }),
+
+/***/ "./node_modules/applicationinsights-dependencies-js/bundle/ajaxUtils.js":
+/*!******************************************************************************!*\
+  !*** ./node_modules/applicationinsights-dependencies-js/bundle/ajaxUtils.js ***!
+  \******************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(/*! applicationinsights-core-js */ "./node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js.js")], __WEBPACK_AMD_DEFINE_RESULT__ = (function (require, exports, applicationinsights_core_js_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var stringUtils = /** @class */ (function () {
+        function stringUtils() {
+        }
+        stringUtils.GetLength = function (strObject) {
+            var res = 0;
+            if (!applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(strObject)) {
+                var stringified = "";
+                try {
+                    stringified = strObject.toString();
+                }
+                catch (ex) {
+                    // some troubles with complex object
+                }
+                res = stringified.length;
+                res = isNaN(res) ? 0 : res;
+            }
+            return res;
+        };
+        return stringUtils;
+    }());
+    exports.stringUtils = stringUtils;
+    var EventHelper = /** @class */ (function () {
+        function EventHelper() {
+        }
+        ///<summary>Binds the specified function to an event, so that the function gets called whenever the event fires on the object</summary>
+        ///<param name="obj">Object to which </param>
+        ///<param name="eventNameWithoutOn">String that specifies any of the standard DHTML Events without "on" prefix</param>
+        ///<param name="handlerRef">Pointer that specifies the function to call when event fires</param>
+        ///<returns>True if the function was bound successfully to the event, otherwise false</returns>
+        EventHelper.AttachEvent = function (obj, eventNameWithoutOn, handlerRef) {
+            var result = false;
+            if (!applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(obj)) {
+                if (!applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(obj.attachEvent)) {
+                    // IE before version 9                    
+                    obj.attachEvent("on" + eventNameWithoutOn, handlerRef);
+                    result = true;
+                }
+                else {
+                    if (!applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(obj.addEventListener)) {
+                        // all browsers except IE before version 9
+                        obj.addEventListener(eventNameWithoutOn, handlerRef, false);
+                        result = true;
+                    }
+                }
+            }
+            return result;
+        };
+        EventHelper.DetachEvent = function (obj, eventNameWithoutOn, handlerRef) {
+            if (!applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(obj)) {
+                if (!applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(obj.detachEvent)) {
+                    obj.detachEvent("on" + eventNameWithoutOn, handlerRef);
+                }
+                else {
+                    if (!applicationinsights_core_js_1.CoreUtils.isNullOrUndefined(obj.removeEventListener)) {
+                        obj.removeEventListener(eventNameWithoutOn, handlerRef, false);
+                    }
+                }
+            }
+        };
+        return EventHelper;
+    }());
+    exports.EventHelper = EventHelper;
+}).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+//# sourceMappingURL=ajaxUtils.js.map
+
+/***/ }),
+
+/***/ "./node_modules/applicationinsights-dependencies-js/bundle/applicationinsights-dependencies-js.js":
+/*!********************************************************************************************************!*\
+  !*** ./node_modules/applicationinsights-dependencies-js/bundle/applicationinsights-dependencies-js.js ***!
+  \********************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(/*! ./ajax */ "./node_modules/applicationinsights-dependencies-js/bundle/ajax.js")], __WEBPACK_AMD_DEFINE_RESULT__ = (function (require, exports, ajax_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.AjaxPlugin = ajax_1.AjaxMonitor;
+}).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+//# sourceMappingURL=applicationinsights-dependencies-js.js.map
+
+/***/ }),
+
 /***/ "./node_modules/applicationinsights-properties-js/bundle/Context/Application.js":
 /*!**************************************************************************************!*\
   !*** ./node_modules/applicationinsights-properties-js/bundle/Context/Application.js ***!
@@ -5553,7 +6050,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = (function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var Version = "0.0.1";
+    var Version = "2.0.1-beta";
     var Internal = /** @class */ (function () {
         /**
         * Constructs a new instance of the internal telemetry data class.

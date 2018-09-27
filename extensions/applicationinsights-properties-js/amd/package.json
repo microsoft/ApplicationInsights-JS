@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-properties-js",
-    "version": "0.0.17",
+    "version": "0.0.19",
     "description": "Microsoft Application Insights properties (Part A) plugin",
     "main": "bundle/applicationinsights-properties-js.js",
     "types": "bundle/applicationinsights-properties-js.d.ts",
@@ -12,7 +12,7 @@
         "grunt-ts": "^6.0.0-beta.15"
     },
     "dependencies": {
-        "applicationinsights-common": "0.0.89",
+        "applicationinsights-common": "0.0.91",
         "applicationinsights-core-js": "0.0.89"
     },
     "publishConfig": {

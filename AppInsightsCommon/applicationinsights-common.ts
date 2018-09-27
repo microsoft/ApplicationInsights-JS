@@ -13,6 +13,7 @@ export { Metric } from './Telemetry/Metric';
 export { PageView } from './Telemetry/PageView';
 export { PageViewData } from './Interfaces/Contracts/Generated/PageViewData';
 export { RemoteDependencyData } from './Telemetry/RemoteDependencyData';
+export { IDependencyTelemetry } from './Interfaces/IDependencyTelemetry';
 export { Trace } from './Telemetry/Trace';
 export { PageViewPerformance } from './Telemetry/PageViewPerformance';
 export { Data } from './Telemetry/Common/Data';

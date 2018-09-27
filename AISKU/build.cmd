@@ -1,8 +1,9 @@
 REM rd /s /q node_modules
 REM del package-lock.json
-REM rd /s /q amd\bundle
-echo "starting build"
+
+REM echo "starting build"
 REM npm install 
+rd /s /q amd\bundle
 call grunt aisku && echo "copy files"
 xcopy "node_modules/applicationinsights-analytics-js/bundle" "amd/bundle" /S
 

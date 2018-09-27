@@ -1,6 +1,6 @@
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem } from "applicationinsights-core-js";
 import { ApplicationInsights, IAppInsights, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-analytics-js";
-import { Util, IConfig, RemoteDependencyData } from "applicationinsights-common";
+import { Util, IConfig, RemoteDependencyData, IDependencyTelemetry } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
 import { PropertiesPlugin, IPropertiesPlugin } from "applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from 'applicationinsights-dependencies-js';
@@ -49,25 +49,25 @@ export class Initialization implements IApplicationInsights {
     
     // Analytics Plugin
     public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any; }) {
-        return this.appInsights.trackPageView(pageView, customProperties);
+        this.appInsights.trackPageView(pageView, customProperties);
     }
     public trackException(exception: IExceptionTelemetry, customProperties?: { [key: string]: any; }): void {
-        return this.appInsights.trackException(exception, customProperties);
+        this.appInsights.trackException(exception, customProperties);
     }
     public _onerror(exception: IAutoExceptionTelemetry): void {
-        return this.appInsights._onerror(exception);
+        this.appInsights._onerror(exception);
     }
     public trackTrace(trace: ITraceTelemetry, customProperties?: { [key: string]: any; }): void {
-        return this.appInsights.trackTrace(trace, customProperties);
+        this.appInsights.trackTrace(trace, customProperties);
     }
     public trackMetric(metric: IMetricTelemetry, customProperties?: { [key: string]: any; }): void {
-        return this.appInsights.trackMetric(metric, customProperties);
+        this.appInsights.trackMetric(metric, customProperties);
     }
     public startTrackPage(name?: string): void {
-        return this.appInsights.startTrackPage(name);
+        this.appInsights.startTrackPage(name);
     }
     public stopTrackPage(name?: string, url?: string, customProperties?: Object) {
-        return this.appInsights.stopTrackPage(name, url, customProperties);
+        this.appInsights.stopTrackPage(name, url, customProperties);
     }
     public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void) {
         return this.appInsights.addTelemetryInitializer(telemetryInitializer);
@@ -75,15 +75,15 @@ export class Initialization implements IApplicationInsights {
 
     // Properties Plugin
     public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false): void {
-        return this.properties.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
+         this.properties.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
     }
     public clearAuthenticatedUserContext(): void {
-        return this.properties.user.clearAuthenticatedUserContext();
+         this.properties.user.clearAuthenticatedUserContext();
     }
 
     // Dependencies Plugin
-    public trackDependencyData(dependency: RemoteDependencyData, customProperties?: {[key: string]: any}, systemProperties?: {[key: string]: any}): void {
-        return this.dependencies.trackDependencyData(dependency, customProperties, systemProperties);
+    public trackDependencyData(dependency: IDependencyTelemetry, customProperties?: {[key: string]: any}, systemProperties?: {[key: string]: any}): void {
+        this.dependencies.trackDependencyData(dependency, customProperties, systemProperties);
     }
 
     public loadAppInsights(): IApplicationInsights {
