@@ -1,4 +1,4 @@
-import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId } from "applicationinsights-core-js";
+import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem } from "applicationinsights-core-js";
 import { ApplicationInsights, IAppInsights, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-analytics-js";
 import { Util, IConfig, RemoteDependencyData } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
@@ -68,6 +68,9 @@ export class Initialization implements IApplicationInsights {
     }
     public stopTrackPage(name?: string, url?: string, customProperties?: Object) {
         return this.appInsights.stopTrackPage(name, url, customProperties);
+    }
+    public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void) {
+        return this.appInsights.addTelemetryInitializer(telemetryInitializer);
     }
 
     // Properties Plugin

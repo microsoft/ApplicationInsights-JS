@@ -15,7 +15,8 @@ export class ApplicationInsightsTests extends TestClass {
         "trackTrace",
         "trackDependencyData",
         "setAuthenticatedUserContext",
-        "clearAuthenticatedUserContext"
+        "clearAuthenticatedUserContext",
+        "addTelemetryInitializer"
     ];
 
     private _ai: IApplicationInsights;
@@ -196,6 +197,41 @@ export class ApplicationInsightsTests extends TestClass {
                     }
                 }
             ].concat(this.asserts(401))
+        });
+
+        this.testCaseAsync({
+            name: "TelemetryInitializer: E2E override envelope data",
+            stepDelay: 1,
+            steps: [
+                () => {
+                    // Setup
+                    var telemetryInitializer = {
+                        init: (envelope) => {
+                            envelope.baseData.name = 'other name'
+                            return true;
+                        }
+                    }
+
+                    // Act
+                    this._ai.addTelemetryInitializer(telemetryInitializer.init);
+                    this._ai.trackMetric({name: "test", average: Math.round(100 * Math.random())});
+                }
+            ]
+            .concat(this.asserts(1))
+            .concat(() => {
+                if (this.successSpy.called) {
+                    const payloadStr: string[] = this.successSpy.args[0][0];
+                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                    const payload = JSON.parse(payloadStr[0]);
+                    Assert.ok(payload);
+
+                    if (payload && payload.baseData) {
+                        const nameResult: string = payload.data.baseData.metrics[0].name;
+                        const nameExpect: string = 'other name';
+                        Assert.equal(nameExpect, nameResult, 'telemetryinitializer override successful');
+                    }
+                }
+            })
         });
     }
 

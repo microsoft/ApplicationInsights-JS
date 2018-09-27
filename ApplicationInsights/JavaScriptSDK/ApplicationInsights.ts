@@ -322,7 +322,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
     }
 
-    addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void) {
+    public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void) {
         this._telemetryInitializers.push(telemetryInitializer);
     }
 
