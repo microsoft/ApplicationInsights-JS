@@ -43,7 +43,7 @@ export class ApplicationInsightsTests extends TestClass {
                     instrumentationKey: ApplicationInsightsTests._instrumentationKey,
                     extensionConfig: {
                         'AppInsightsChannelPlugin': {
-                            maxBatchInterval: 2000
+                            maxBatchInterval: 5000
                         }
                     }
                 },
