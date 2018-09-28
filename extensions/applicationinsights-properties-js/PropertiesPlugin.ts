@@ -18,6 +18,7 @@ import { User } from './Context/User';
 import { Sample } from './Context/Sample';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 import { ITelemetryContext } from './Interfaces/ITelemetryContext';
+import { IPropertiesPlugin } from './Interfaces/IPropertiesPlugin';
 
 export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryContext {
     public priority = 170;

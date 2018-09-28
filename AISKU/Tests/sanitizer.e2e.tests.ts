@@ -1,12 +1,12 @@
 /// <reference path='./TestFramework/Common.ts' />
-import { Initialization } from '../Initialization'
+import { Initialization, IApplicationInsights } from '../Initialization'
 import { ApplicationInsights } from 'applicationinsights-analytics-js';
 import { Sender } from 'applicationinsights-channel-js';
 
 export class SanitizerE2ETests extends TestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
     
-    private appInsights: ApplicationInsights;
+    private _ai: IApplicationInsights;
 
     // Sinon
     private errorSpy: SinonSpy;
@@ -33,13 +33,13 @@ export class SanitizerE2ETests extends TestClass {
                 },
                 queue: []
             });
-            this.appInsights = init.loadAppInsights();
+            this._ai = init.loadAppInsights();
 
             // Setup Sinon stuff
-            const sender: Sender = this.appInsights.core['_extensions'][2].channelQueue[0][0];
+            const sender: Sender = this._ai.appInsights.core['_channelController'].channelQueue[0][0];
             this.errorSpy = this.sandbox.spy(sender, '_onError');
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
-            this.loggingSpy = this.sandbox.stub(this.appInsights.core.logger, 'throwInternal');
+            this.loggingSpy = this.sandbox.stub(this._ai.appInsights.core.logger, 'throwInternal');
         } catch (e) {
             console.error('Failed to initialize');
         }
@@ -75,7 +75,7 @@ export class SanitizerE2ETests extends TestClass {
                         "measurement@|": 300
                     };
 
-                    this.appInsights.trackMetric({name: "test", average: 5});
+                    this._ai.trackMetric({name: "test", average: 5});
                 },
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
@@ -100,7 +100,7 @@ export class SanitizerE2ETests extends TestClass {
                         "(1234567890/ \_-.)": 300
                     };
 
-                    this.appInsights.trackMetric({name: "test", average: 5});
+                    this._ai.trackMetric({name: "test", average: 5});
                 },
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
@@ -119,7 +119,7 @@ export class SanitizerE2ETests extends TestClass {
                     var len = 150;
                     var name = new Array(len + 1).join('a');
 
-                    this.appInsights.trackMetric({name: name, average: 5});
+                    this._ai.trackMetric({name: name, average: 5});
                 },
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
@@ -142,7 +142,7 @@ export class SanitizerE2ETests extends TestClass {
                         "testProp": value
                     };
 
-                    this.appInsights.trackMetric({name: "test", average: 5});
+                    this._ai.trackMetric({name: "test", average: 5});
                 },
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
@@ -162,7 +162,7 @@ export class SanitizerE2ETests extends TestClass {
                     var url = "http://hello.com/";
                     url = url + new Array(len - url.length + 1).join('a');
 
-                    this.appInsights.trackPageView({name: "test", uri: url});
+                    this._ai.trackPageView({name: "test", uri: url});
                 },
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
@@ -181,7 +181,7 @@ export class SanitizerE2ETests extends TestClass {
                     var len = 32768;
                     var message = new Array(len + 1).join('a');
 
-                    this.appInsights.trackTrace({message: message, severityLevel: 0});
+                    this._ai.trackTrace({message: message, severityLevel: 0});
                 },
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());

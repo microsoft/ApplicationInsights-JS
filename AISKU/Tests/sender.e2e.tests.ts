@@ -1,6 +1,6 @@
 /// <reference path='./TestFramework/Common.ts' />
 "use strict"
-import { Initialization } from '../Initialization'
+import { Initialization, IApplicationInsights } from '../Initialization'
 import { ApplicationInsights } from 'applicationinsights-analytics-js';
 import { Sender } from 'applicationinsights-channel-js';
 
@@ -9,7 +9,7 @@ export class SenderE2ETests extends TestClass {
     private readonly _bufferName = 'AI_buffer';
     private readonly _sentBufferName = 'AI_sentBuffer';
     
-    private _ai: ApplicationInsights;
+    private _ai: IApplicationInsights;
     private _sender: Sender;
 
     // Sinon
@@ -42,11 +42,11 @@ export class SenderE2ETests extends TestClass {
             this._ai = init.loadAppInsights();
 
             // Setup Sinon stuff
-            this._sender = this._ai.core['_extensions'][2].channelQueue[0][0];
+            this._sender = this._ai.appInsights.core['_channelController'].channelQueue[0][0];
             this._sender._buffer.clear();
             this.errorSpy = this.sandbox.spy(this._sender, '_onError');
             this.successSpy = this.sandbox.spy(this._sender, '_onSuccess');
-            this.loggingSpy = this.sandbox.stub(this._ai.core.logger, 'throwInternal');
+            this.loggingSpy = this.sandbox.stub(this._ai.appInsights.core.logger, 'throwInternal');
             this.clearSpy = this.sandbox.spy(this._sender._buffer, 'clearSent');
         } catch (e) {
             console.error('Failed to initialize');
@@ -84,7 +84,6 @@ export class SenderE2ETests extends TestClass {
     private addTrackEndpointTests(): void {
         const SENT_ITEMS: number = 100;
         const SENT_TYPES: number = 4;
-        const OFFSET: number = 1; // from trackPageView
 
         this.testCaseAsync({
             name: 'EndpointTests: telemetry sent to endpoint fills to maxBatchSize',
@@ -95,7 +94,7 @@ export class SenderE2ETests extends TestClass {
                         this._ai.trackException({error: new Error()});
                         this._ai.trackMetric({name: "test", average: Math.round(100 * Math.random())});
                         this._ai.trackTrace({message: "test"});
-                        this._ai.trackPageView({name: `${i}`});
+                        this._ai.trackTrace({message: "test2"});
                     }
                 }
             ]
@@ -109,7 +108,7 @@ export class SenderE2ETests extends TestClass {
                         const acceptedItems = call[1];
                         currentCount += acceptedItems; // number of accepted items
                     });
-                    return currentCount === SENT_ITEMS * SENT_TYPES + OFFSET;
+                    return currentCount === SENT_ITEMS * SENT_TYPES;
                 }
 
                 return false;

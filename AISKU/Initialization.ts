@@ -1,8 +1,9 @@
-import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId } from "applicationinsights-core-js";
-import { ApplicationInsights, /*IAppInsights, */IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-analytics-js";
-import { Util, IConfig } from "applicationinsights-common";
+import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem } from "applicationinsights-core-js";
+import { ApplicationInsights, IAppInsights, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-analytics-js";
+import { Util, IConfig, RemoteDependencyData, IDependencyTelemetry } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
-import { PropertiesPlugin } from "applicationinsights-properties-js";
+import { PropertiesPlugin, IPropertiesPlugin } from "applicationinsights-properties-js";
+import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from 'applicationinsights-dependencies-js';
 
 "use strict";
 
@@ -11,12 +12,17 @@ export interface Snippet {
     config: IConfiguration;
 }
 
-export class Initialization /*implements IAppInsights*/ {
+export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
+    appInsights: ApplicationInsights;
+};
+
+export class Initialization implements IApplicationInsights {
     public snippet: Snippet;
     public config: IConfiguration;
     private core: IAppInsightsCore;
-    private appInsights: ApplicationInsights;
+    public appInsights: ApplicationInsights;
     private properties: PropertiesPlugin;
+    private dependencies: DependenciesPlugin;
 
     constructor(snippet: Snippet) {
 
@@ -35,28 +41,52 @@ export class Initialization /*implements IAppInsights*/ {
         config = Initialization.getDefaultConfig(config, this.appInsights.identifier);
 
         this.properties = new PropertiesPlugin();
+        this.dependencies = new DependenciesPlugin();
 
         this.snippet = snippet;
         this.config = config;
     }
     
+    // Analytics Plugin
     public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any; }) {
-        return this.appInsights.trackPageView(pageView, customProperties);
+        this.appInsights.trackPageView(pageView, customProperties);
     }
     public trackException(exception: IExceptionTelemetry, customProperties?: { [key: string]: any; }): void {
-        return this.appInsights.trackException(exception, customProperties);
+        this.appInsights.trackException(exception, customProperties);
     }
     public _onerror(exception: IAutoExceptionTelemetry): void {
-        return this.appInsights._onerror(exception);
+        this.appInsights._onerror(exception);
     }
     public trackTrace(trace: ITraceTelemetry, customProperties?: { [key: string]: any; }): void {
-        return this.appInsights.trackTrace(trace, customProperties);
+        this.appInsights.trackTrace(trace, customProperties);
     }
     public trackMetric(metric: IMetricTelemetry, customProperties?: { [key: string]: any; }): void {
-        return this.appInsights.trackMetric(metric, customProperties);
+        this.appInsights.trackMetric(metric, customProperties);
+    }
+    public startTrackPage(name?: string): void {
+        this.appInsights.startTrackPage(name);
+    }
+    public stopTrackPage(name?: string, url?: string, customProperties?: Object) {
+        this.appInsights.stopTrackPage(name, url, customProperties);
+    }
+    public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void) {
+        return this.appInsights.addTelemetryInitializer(telemetryInitializer);
     }
 
-    public loadAppInsights(): ApplicationInsights {
+    // Properties Plugin
+    public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false): void {
+         this.properties.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
+    }
+    public clearAuthenticatedUserContext(): void {
+         this.properties.user.clearAuthenticatedUserContext();
+    }
+
+    // Dependencies Plugin
+    public trackDependencyData(dependency: IDependencyTelemetry, customProperties?: {[key: string]: any}, systemProperties?: {[key: string]: any}): void {
+        this.dependencies.trackDependencyData(dependency, customProperties, systemProperties);
+    }
+
+    public loadAppInsights(): IApplicationInsights {
 
         this.core = new AppInsightsCore();
         let extensions = [];
@@ -64,6 +94,7 @@ export class Initialization /*implements IAppInsights*/ {
 
         extensions.push(appInsightsChannel);
         extensions.push(this.properties);
+        extensions.push(this.dependencies);
         extensions.push(this.appInsights);
 
         // initialize core
@@ -72,7 +103,7 @@ export class Initialization /*implements IAppInsights*/ {
         // initialize extensions
         this.appInsights.initialize(this.config, this.core, extensions);
         appInsightsChannel.initialize(this.config, this.core, extensions);
-        return this.appInsights;
+        return this;
     }
 
     public emptyQueue() {
@@ -116,10 +147,10 @@ export class Initialization /*implements IAppInsights*/ {
         // }, this.config.diagnosticLogInterval);
     }
 
-    public addHousekeepingBeforeUnload(appInsightsInstance: ApplicationInsights): void {
+    public addHousekeepingBeforeUnload(appInsightsInstance: IApplicationInsights): void {
         // Add callback to push events when the user navigates away
 
-        if (!appInsightsInstance.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
+        if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
             var performHousekeeping = function () {
                 // Adds the ability to flush all data before the page unloads.
                 // Note: This approach tries to push an async request with all the pending events onbeforeunload.
@@ -130,7 +161,7 @@ export class Initialization /*implements IAppInsights*/ {
 
                 //appInsightsInstance.context._sender.triggerSend();
 
-                appInsightsInstance.core.getTransmissionControls().forEach(queues => {
+                appInsightsInstance.appInsights.core.getTransmissionControls().forEach(queues => {
                     queues.forEach(channel => channel.flush(true));
                 });
                 

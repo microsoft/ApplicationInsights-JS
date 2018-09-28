@@ -60,6 +60,7 @@ export class ApplicationInsightsTests extends TestClass {
         this.addTrackExceptionTests();
         this.addOnErrorTests();
         this.addTrackMetricTests();
+        this.addTelemetryInitializerTests();
     }
 
     private addGenericTests(): void {
@@ -120,7 +121,7 @@ export class ApplicationInsightsTests extends TestClass {
 
     private addTrackExceptionTests(): void {
         this.testCase({
-            name: "TrackExceptionTests: trackException accepts single exception and an array of exceptions",
+            name: "TrackExceptionTests: trackException accepts single exception",
             test: () => {
                 // setup
                 const plugin = new ChannelPlugin();
@@ -136,8 +137,6 @@ export class ApplicationInsightsTests extends TestClass {
                 // Test
                 appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
                 Assert.ok(trackStub.calledOnce, "single exception is tracked");
-                appInsights.trackException({error: [new Error()]});
-                Assert.ok(trackStub.calledTwice, "array of exceptions is tracked");
             }
         });
 
@@ -490,6 +489,324 @@ export class ApplicationInsightsTests extends TestClass {
         });
     }
 
+    private addTelemetryInitializerTests(): void {
+        this.testCase({
+            name: "TelemetryContext: onBeforeSendTelemetry is called within track() and gets the envelope as an argument",
+            test: () => {
+                // Setup
+                const plugin = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                var appInsights = new ApplicationInsights();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin, appInsights]
+                );
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+
+                var trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+                var telemetryInitializer = {
+                    initializer: (envelope) => { }
+                }
+                var spy = this.sandbox.spy(telemetryInitializer, "initializer");
+
+                // act
+                appInsights.addTelemetryInitializer(telemetryInitializer.initializer);
+                appInsights.trackTrace({message: 'test trace'});
+                this.clock.tick(1);
+
+                // verify
+                Assert.ok(spy.calledOnce, 'telemetryInitializer was called');
+                Assert.deepEqual(trackStub.args[0][0], spy.args[0][0], 'expected envelope is used');
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: onBeforeSendTelemetry changes the envelope props and sender gets them",
+            test: () => {
+                // Setup
+                const plugin = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                var appInsights = new ApplicationInsights();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin, appInsights]
+                );
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                var trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+                var nameOverride = "my unique name";
+                var telemetryInitializer = {
+                    initializer: (envelope) => {
+                        envelope.name = nameOverride;
+                        return true;}
+                }
+
+                // act
+                appInsights.addTelemetryInitializer(telemetryInitializer.initializer);
+                appInsights.trackTrace({message: 'test message'});
+                this.clock.tick(1);
+
+                // verify
+                Assert.ok(trackStub.calledOnce, "channel sender was called");
+
+                let envelope: ITelemetryItem = trackStub.args[0][0];
+                Assert.equal(envelope.name, nameOverride, 'expected envelope is used');
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer can modify the contents of an envelope",
+            test: () => {
+                // Setup
+                const plugin = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                var appInsights = new ApplicationInsights();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin, appInsights]
+                );
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                var trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+
+                var messageOverride = "my unique name";
+                var propOverride = "val1";
+                var telemetryInitializer = {
+                    // This illustrates how to use telemetry initializer (onBeforeSendTelemetry) 
+                    // to access/ modify the contents of an envelope.
+                    initializer: (envelope) => {
+                        if (envelope.baseType ===
+                            Trace.dataType) {
+                            var telemetryItem = envelope.baseData;
+                            telemetryItem.message = messageOverride;
+                            telemetryItem.properties = telemetryItem.properties || {};
+                            telemetryItem.properties["prop1"] = propOverride;
+                            return true;
+                        }
+                    }
+                }
+
+                appInsights.addTelemetryInitializer(telemetryInitializer.initializer);
+                    
+                // act
+                appInsights.trackTrace({message: 'test message'});
+
+                // verify
+                Assert.ok(trackStub.calledOnce, "sender should be called");
+
+                let envelope: ITelemetryItem = trackStub.args[0][0];
+                Assert.equal(messageOverride, envelope.baseData.message);
+                Assert.equal(propOverride, envelope.baseData.properties["prop1"]);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: all added telemetry initializers get invoked",
+            test: () => {
+                // Setup
+                const plugin = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                var appInsights = new ApplicationInsights();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin, appInsights]
+                );
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                var initializer1 = { init: () => { } };
+                var initializer2 = { init: () => { } };
+                var spy1 = this.sandbox.spy(initializer1, "init");
+                var spy2 = this.sandbox.spy(initializer2, "init");
+
+                // act
+                appInsights.addTelemetryInitializer(initializer1.init);
+                appInsights.addTelemetryInitializer(initializer2.init);
+
+                appInsights.trackTrace({message: 'test message'});
+
+                // verify
+                Assert.ok(spy1.calledOnce);
+                Assert.ok(spy2.calledOnce);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer - returning false means don't send an item",
+            test: () => {
+                // Setup
+                const plugin = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                var appInsights = new ApplicationInsights();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin, appInsights]
+                );
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                var trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+
+                // act
+                appInsights.addTelemetryInitializer(() => { return false; });
+                appInsights.trackTrace({message: 'test message'});
+
+                // verify
+                Assert.ok(trackStub.notCalled);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer - returning void means do send an item (back compact with older telemetry initializers)",
+            test: () => {
+                // Setup
+                const plugin = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                var appInsights = new ApplicationInsights();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin, appInsights]
+                );
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                var trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+
+                // act
+                appInsights.addTelemetryInitializer(() => { return; });
+                appInsights.trackTrace({message: 'test message'});
+
+                // verify
+                Assert.ok(trackStub.calledOnce); // TODO: use sender
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer - returning true means do send an item",
+            test: () => {
+                // Setup
+                const plugin = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                var appInsights = new ApplicationInsights();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin, appInsights]
+                );
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                var trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+
+                // act
+                appInsights.addTelemetryInitializer(() => { return true; });
+                appInsights.trackTrace({message: 'test message'});
+
+                // verify
+                Assert.ok(trackStub.calledOnce);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer - if one of initializers returns false than item is not sent",
+            test: () => {
+                // Setup
+                const plugin = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                var appInsights = new ApplicationInsights();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin, appInsights]
+                );
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                var trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+
+                // act
+                appInsights.addTelemetryInitializer(() => { return true; });
+                appInsights.addTelemetryInitializer(() => { return false; });
+
+                appInsights.trackTrace({message: 'test message'});
+
+                // verify
+                Assert.ok(trackStub.notCalled);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer - if one of initializers returns false (any order) than item is not sent",
+            test: () => {
+                // Setup
+                const plugin = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                var appInsights = new ApplicationInsights();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin, appInsights]
+                );
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                var trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+
+                // act
+                appInsights.addTelemetryInitializer(() => { return false; });
+                appInsights.addTelemetryInitializer(() => { return true; });
+
+                appInsights.trackTrace({message: 'test message'});
+
+                // verify
+                Assert.ok(trackStub.notCalled);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer - returning not boolean/undefined/null means do send an item (back compat with older telemetry initializers)",
+            test: () => {
+                // Setup
+                const plugin = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                var appInsights = new ApplicationInsights();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin, appInsights]
+                );
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                var trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+
+                // act
+                appInsights.addTelemetryInitializer(<any>(() => { return "asdf"; }));
+                appInsights.addTelemetryInitializer(() => { return null; });
+                appInsights.addTelemetryInitializer(() => { return undefined; });
+                appInsights.trackTrace({message: 'test message'});
+
+                // verify
+                Assert.ok(trackStub.calledOnce); // TODO: use sender
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: telemetry initializer - if one initializer fails then telemetry is not sent",
+            test: () => {
+                // Setup
+                const plugin = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                var appInsights = new ApplicationInsights();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin, appInsights]
+                );
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                var trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+
+                // act
+                appInsights.addTelemetryInitializer(() => { throw new Error(); });
+                appInsights.addTelemetryInitializer(() => { });
+                appInsights.trackTrace({message: 'test message'});
+
+                // verify
+                Assert.ok(trackStub.notCalled);
+            }
+        });
+    }
+
     private getFirstResult(action: string, trackStub: SinonStub, skipSessionState?: boolean): ITelemetryItem {
         const index: number = skipSessionState ? 1 : 0;
 
@@ -527,7 +844,7 @@ class ChannelPlugin implements IPlugin {
         }
     }
 
-    public processTelemetry;
+    public processTelemetry(env: ITelemetryItem) {}
 
     public identifier = "Sender";
     
@@ -537,7 +854,7 @@ class ChannelPlugin implements IPlugin {
 
     public priority: number = 201;
 
-    public initialize = (config: IConfiguration) => {
+    public initialize = (config: IConfiguration, core: AppInsightsCore, plugin: IPlugin[]) => {
     }
 
     private _processTelemetry(env: ITelemetryItem) {

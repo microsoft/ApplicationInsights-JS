@@ -1,12 +1,12 @@
 /// <reference path='./TestFramework/Common.ts' />
-import { Initialization } from '../Initialization'
+import { Initialization, IApplicationInsights } from '../Initialization'
 import { ApplicationInsights } from 'applicationinsights-analytics-js';
 import { Sender } from 'applicationinsights-channel-js';
 
 export class ValidateE2ETests extends TestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
     
-    private _ai: ApplicationInsights;
+    private _ai: IApplicationInsights;
 
     // Sinon
     private errorSpy: SinonSpy;
@@ -36,10 +36,10 @@ export class ValidateE2ETests extends TestClass {
             this._ai = init.loadAppInsights();
 
             // Setup Sinon stuff
-            const sender: Sender = this._ai.core['_extensions'][2].channelQueue[0][0];
+            const sender: Sender = this._ai.appInsights.core['_channelController'].channelQueue[0][0];
             this.errorSpy = this.sandbox.spy(sender, '_onError');
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
-            this.loggingSpy = this.sandbox.stub(this._ai.core.logger, 'throwInternal');
+            this.loggingSpy = this.sandbox.stub(this._ai.appInsights.core.logger, 'throwInternal');
         } catch (e) {
             console.error('Failed to initialize');
         }
