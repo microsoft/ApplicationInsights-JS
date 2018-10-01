@@ -9,6 +9,6 @@ export interface IDependencyTelemetry {
     success?: boolean;
     resultCode: number;
     method: string;
-    id?: string;
+    id: string;
     correlationContext?: string;
 }
