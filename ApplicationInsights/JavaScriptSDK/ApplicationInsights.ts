@@ -428,7 +428,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 }
 
                 return handled;
-            }
+            }.bind(this);
             this.config.autoExceptionsInstrumented = true;
         }
 
