@@ -494,7 +494,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
  */
 class Timing {
     private _name;
-    private _action: (ITimingDetail, number) => void;
     private _events: {
         [key: string]: number;
     };

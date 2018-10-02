@@ -385,6 +385,7 @@ export class Util {
         var base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
         var result = "";
+        // tslint:disable-next-line:insecure-random
         var random = Math.random() * 1073741824; //5 symbols in base64, almost maxint
 
         while (random > 0) {
@@ -424,8 +425,8 @@ export class Util {
             if (Date.prototype.toISOString) {
                 return date.toISOString();
             } else {
-                const pad = function (number) {
-                    var r = String(number);
+                const pad = function (num: number) {
+                    var r = String(num);
                     if (r.length === 1) {
                         r = "0" + r;
                     }

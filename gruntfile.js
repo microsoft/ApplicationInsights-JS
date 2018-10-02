@@ -1,5 +1,22 @@
 module.exports = function (grunt) {
     grunt.initConfig({
+        tslint: {
+            options: {
+                rulesDirectory: 'node_modules/tslint-microsoft-contrib',
+            },
+            files: {
+                src: [
+                    './ApplicationInsights/**/*.ts',
+                    './AppInsightsCommon/**/*.ts',
+                    './AISKU/**/*.ts',
+                    '!./**/node_modules/**',
+                    '!./**/Tests/**',
+                    '!./**/amd/**',
+                    '!./**/cjs/**',
+                    '!./**/Generated/**'
+                ],
+            }
+        },
         ts: {
             options: {
                 comments: true
@@ -249,6 +266,7 @@ module.exports = function (grunt) {
     });
 
     grunt.loadNpmTasks("grunt-ts");
+    grunt.loadNpmTasks('grunt-tslint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);

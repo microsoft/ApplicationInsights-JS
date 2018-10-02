@@ -28,6 +28,9 @@
                             "grunt-contrib-qunit":  "2.0.0",
                             "grunt-contrib-uglify":  "3.1.0",
                             "grunt-ts":  "^6.0.0-beta.15",
+                            "grunt-tslint": "^5.0.2",
+                            "tslint": "^5.11.0",
+                            "tslint-microsoft-contrib": "^5.2.1",
                             "typescript":  "2.5.3"
                         }
 }
