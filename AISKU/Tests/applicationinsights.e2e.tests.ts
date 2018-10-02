@@ -245,7 +245,7 @@ export class ApplicationInsightsTests extends TestClass {
     public addDependencyPluginTests(): void {
         
         this.testCaseAsync({
-            name: "TelemetryContext: auto collection of ajax requests",
+            name: "TelemetryContext: trackDependencyData",
             stepDelay: 1,
             steps: [
                 () => {
@@ -261,7 +261,7 @@ export class ApplicationInsightsTests extends TestClass {
         });
 
         this.testCaseAsync({
-            name: "TelemetryContext: trackDependencyData",
+            name: "TelemetryContext: auto collection of ajax requests",
             stepDelay: 1,
             steps: [
                 () => {
