@@ -17,6 +17,7 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
 };
 
 export class Initialization implements IApplicationInsights {
+    public static defaultName: string = "appInsights";
     public snippet: Snippet;
     public config: IConfiguration;
     private core: IAppInsightsCore;
@@ -45,6 +46,9 @@ export class Initialization implements IApplicationInsights {
 
         this.snippet = snippet;
         this.config = config;
+        // this.config.extensionConfig.ApplicationInsightsAnalytics = {
+        //     ...this.config.extensionConfig.ApplicationInsightsAnalytics,
+        // }
     }
     
     // Analytics Plugin
@@ -87,10 +91,10 @@ export class Initialization implements IApplicationInsights {
     }
 
     public loadAppInsights(): IApplicationInsights {
-
         this.core = new AppInsightsCore();
         let extensions = [];
         let appInsightsChannel: Sender = new Sender();
+        const windowName: string = this.config.extensionConfig.ApplicationInsightsAnalytics.sdkInstanceName || Initialization.defaultName;
 
         extensions.push(appInsightsChannel);
         extensions.push(this.properties);
@@ -98,11 +102,8 @@ export class Initialization implements IApplicationInsights {
         extensions.push(this.appInsights);
 
         // initialize core
+        window[windowName] = this;
         this.core.initialize(this.config, extensions);
-
-        // initialize extensions
-        this.appInsights.initialize(this.config, this.core, extensions);
-        appInsightsChannel.initialize(this.config, this.core, extensions);
         return this;
     }
 
@@ -192,7 +193,14 @@ export class Initialization implements IApplicationInsights {
             identifier = identifier ? identifier : "ApplicationInsightsAnalytics";
         }
 
-        let config = configuration.extensionConfig && configuration.extensionConfig[identifier] ? <IConfig>configuration.extensionConfig[identifier] : {};
+        // Undefined checks
+        if (!configuration.extensionConfig) {
+            configuration.extensionConfig = {};
+        }
+        if (!configuration.extensionConfig[identifier]) {
+            configuration.extensionConfig[identifier] = {};
+        }
+        const config: IConfig = configuration.extensionConfig[identifier]; // ref to main config
 
         // set default values
         configuration.endpointUrl = configuration.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
@@ -224,6 +232,7 @@ export class Initialization implements IApplicationInsights {
         config.isStorageUseDisabled = Util.stringToBoolOrDefault(config.isStorageUseDisabled);
         config.isBrowserLinkTrackingEnabled = Util.stringToBoolOrDefault(config.isBrowserLinkTrackingEnabled);
         config.enableCorsCorrelation = Util.stringToBoolOrDefault(config.enableCorsCorrelation);
+        config.sdkInstanceName = config.sdkInstanceName || Initialization.defaultName;
 
         return configuration;
     }

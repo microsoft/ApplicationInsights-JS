@@ -44,6 +44,13 @@ export class ApplicationInsightsTests extends TestClass {
                     extensionConfig: {
                         'AppInsightsChannelPlugin': {
                             maxBatchInterval: 5000
+                        },
+                        ApplicationInsightsAnalytics: {
+                            disableExceptionTracking: false,
+                            sdkInstanceName: 'abc'
+                        },
+                        AjaxDependencyPlugin: {
+                            disableAjaxTracking: false
                         }
                     }
                 },
@@ -67,11 +74,11 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public registerTests() {
-        // this.addGenericE2ETests();
-        // this.addAnalyticsApiTests();
-        // this.addAsyncTests();
+        this.addGenericE2ETests();
+        this.addAnalyticsApiTests();
+        this.addAsyncTests();
         this.addDependencyPluginTests();
-        // this.addPropertiesPluginTests();
+        this.addPropertiesPluginTests();
     }
 
     public addGenericE2ETests(): void {

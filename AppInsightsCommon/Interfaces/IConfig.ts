@@ -34,4 +34,5 @@ export interface IConfig {
 
     // Internal
     autoExceptionsInstrumented?: boolean;
+    sdkInstanceName?: string;
 }
