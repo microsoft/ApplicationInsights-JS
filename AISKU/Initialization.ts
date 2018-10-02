@@ -46,9 +46,6 @@ export class Initialization implements IApplicationInsights {
 
         this.snippet = snippet;
         this.config = config;
-        // this.config.extensionConfig.ApplicationInsightsAnalytics = {
-        //     ...this.config.extensionConfig.ApplicationInsightsAnalytics,
-        // }
     }
     
     // Analytics Plugin
@@ -91,6 +88,7 @@ export class Initialization implements IApplicationInsights {
     }
 
     public loadAppInsights(): IApplicationInsights {
+
         this.core = new AppInsightsCore();
         let extensions = [];
         let appInsightsChannel: Sender = new Sender();
