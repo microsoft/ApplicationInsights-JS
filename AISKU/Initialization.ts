@@ -192,7 +192,7 @@ export class Initialization implements IApplicationInsights {
             identifier = identifier ? identifier : "ApplicationInsightsAnalytics";
         }
 
-        let config = configuration.extensionConfig && configuration.extensionConfig[identifier] ? <IConfig>configuration.extensions[identifier] : {};
+        let config = configuration.extensionConfig && configuration.extensionConfig[identifier] ? <IConfig>configuration.extensionConfig[identifier] : {};
 
         // set default values
         configuration.endpointUrl = configuration.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
