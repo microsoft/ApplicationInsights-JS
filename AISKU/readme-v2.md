@@ -370,7 +370,7 @@ interface IConfiguration {
     extensionConfig?: { [key: string]: any }; // extension configs;
 
     /**
-     * Additional plugins that should be loaded by core at runtime
+     * Additional extensions that should be loaded by core at runtime
      */
     extensions?: ITelemetryPlugin[];
 
@@ -451,7 +451,7 @@ interface IConfiguration {
     extensionConfig?: { [key: string]: any }; // extension configs;
 
     /**
-     * Additional plugins that should be loaded by core at runtime
+     * Additional extensions that should be loaded by core at runtime
      */
     extensions?: ITelemetryPlugin[];
 
@@ -762,9 +762,9 @@ before the telemetry item is pushed for sending.
 If one of the telemetry initializers returns false then the telemetry item will not be sent.
 If one of the telemetry initializers throws an error then the telemetry item will not be sent.
 
-### Custom plugin
+### Custom extension
 
-A custom plugin can be loaded by the SDK through config.extensions. All plugins must implement ITelemetryPlugin interface.
+A custom plugin can be loaded by the SDK through config.extensions. All plugins must implement ITelemetryPlugin interface. These provide the capability of inspecting and updating data as it leaves the system, but also provides additional functionality to for one time initialization of extension state and pass in custom configuration through SKU configuration etc.
 
 ```ts
 interface ITelemetryPlugin {
