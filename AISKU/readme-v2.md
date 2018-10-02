@@ -22,6 +22,21 @@ Application Insights SDK v2 beta
 
 # Application Insights JavaScript SDK v2 beta
 
+### Use JS `snippet` and initialize dynamically (download full Application Insights script from CDN)  
+Use this method for an MVC application. Get "code to monitor my web pages" from the Quick Start page, 
+and insert it in the head of your web pages. Application Insights script will be downloaded 
+from CDN or you can override the script hosting location by specifying `url` parameter in the config.   
+
+```
+
+<script type="text/javascript">
+
+
+var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){i[e]=function(){var n=arguments;i.queue.push(function(){i[e].apply(i,n)})}}var i={config:e};i.initialize=!0;var t=document,a=window;setTimeout(function(){var n=t.createElement("script");n.src=e.url,t.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{i.cookie=t.cookie}catch(e){}i.queue=[];for(var s=["PageView","Exception","Trace","DependencyData","Metric"];s.length;)n("track"+s.pop());if(n("startTrackPage"),n("stopTrackPage"),e.extensionsConfig&&e.extensionsConfig.ApplicationInsightsAnalytics&&!1===e.extensionsConfig.ApplicationInsightsAnalytics.disableExceptionTracking){n("_"+(s="onerror"));var o=a[s];a[s]=function(e,n,t,a,r){var c=o&&o(e,n,t,a,r);return!0!==c&&i["_"+s]({message:e,url:n,lineNumber:t,columnNumber:a,error:r}),c},e.extensionsConfig.ApplicationInsightsAnalytics.autoExceptionInstrumented=!0}return i}({instrumentationKey:"INSTRUMENTATION_KEY"});if(window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length){var pageViewItem={name:document.title?document.title:"",uri:document.URL?document.URL:""};aisdk.trackPageView(pageViewItem)}
+
+</script>
+
+
 ### trackPageView
 
 ```ts
