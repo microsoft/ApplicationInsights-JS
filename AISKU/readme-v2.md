@@ -112,6 +112,7 @@ Parameter | Description
 `customProperties?` | Map of string to string: Additional data used to [filter events](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal.
 
 IMetricTelemetry is described below
+
 Parameter | Description
 ---|---
 `name` | A string that identifies the metric. In the portal, you can select metrics for display by name.
@@ -761,3 +762,34 @@ before the telemetry item is pushed for sending.
 If one of the telemetry initializers returns false then the telemetry item will not be sent.
 If one of the telemetry initializers throws an error then the telemetry item will not be sent.
 
+### Custom plugin
+
+A custom plugin can be loaded by the SDK through config.extensions. All plugins must implement ITelemetryPlugin interface.
+
+```ts
+interface ITelemetryPlugin {
+
+    /**
+    * Call back for telemetry processing before it is sent to next plugin for processing (needs to be invoked by caller)
+    */
+    processTelemetry: (env: ITelemetryItem) => void;
+
+    /**
+    * Extension name
+    */
+    identifier: string;
+
+    /**
+    * Set next extension for telemetry processing
+    */
+    setNextPlugin: (next: ITelemetryPlugin) => void;
+
+    /**
+    * Priority of the extension
+    *
+    * 1 - 100: customer plugins
+    * 100 – 199: reserved for internal plugins.
+    * > 200: channel plugins (that implement IChannelControls to send data to an endpoint)
+    */
+    priority: number;
+}
