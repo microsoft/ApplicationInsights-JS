@@ -9,6 +9,7 @@ module.exports = function (grunt) {
                     './ApplicationInsights/**/*.ts',
                     './AppInsightsCommon/**/*.ts',
                     './AISKU/**/*.ts',
+                    './extensions/**/*.ts',
                     '!./**/node_modules/**',
                     '!./**/Tests/**',
                     '!./**/amd/**',

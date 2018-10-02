@@ -16,6 +16,7 @@ export class SamplingScoreGenerator {
         } else if (envelope.tags[tagKeys.operationId]) {
             score = this.hashCodeGeneragor.getHashCodeScore(envelope.tags[tagKeys.operationId]);
         } else {
+            // tslint:disable-next-line:insecure-random
             score = Math.random()
         }
 
