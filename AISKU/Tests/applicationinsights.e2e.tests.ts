@@ -46,8 +46,7 @@ export class ApplicationInsightsTests extends TestClass {
                             maxBatchInterval: 5000
                         },
                         ApplicationInsightsAnalytics: {
-                            disableExceptionTracking: false,
-                            sdkInstanceName: 'abc'
+                            disableExceptionTracking: false
                         },
                         AjaxDependencyPlugin: {
                             disableAjaxTracking: false
