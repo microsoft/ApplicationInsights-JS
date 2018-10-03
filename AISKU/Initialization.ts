@@ -99,10 +99,6 @@ export class Initialization implements IApplicationInsights {
 
         // initialize core
         this.core.initialize(this.config, extensions);
-
-        // initialize extensions
-        this.appInsights.initialize(this.config, this.core, extensions);
-        appInsightsChannel.initialize(this.config, this.core, extensions);
         return this;
     }
 
@@ -192,38 +188,44 @@ export class Initialization implements IApplicationInsights {
             identifier = identifier ? identifier : "ApplicationInsightsAnalytics";
         }
 
-        let config = configuration.extensionConfig && configuration.extensionConfig[identifier] ? <IConfig>configuration.extensionConfig[identifier] : {};
-
+        // Undefined checks
+        if (!configuration.extensionConfig) {
+            configuration.extensionConfig = {};
+        }
+        if (!configuration.extensionConfig[identifier]) {
+            configuration.extensionConfig[identifier] = {};
+        }
+        const extensionConfig: IConfig = configuration.extensionConfig[identifier]; // ref to main config
         // set default values
         configuration.endpointUrl = configuration.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
-        config.sessionRenewalMs = 30 * 60 * 1000;
-        config.sessionExpirationMs = 24 * 60 * 60 * 1000;
+        extensionConfig.sessionRenewalMs = 30 * 60 * 1000;
+        extensionConfig.sessionExpirationMs = 24 * 60 * 60 * 1000;
 
-        config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
-        config.disableExceptionTracking = Util.stringToBoolOrDefault(config.disableExceptionTracking);
-        config.consoleLoggingLevel = config.consoleLoggingLevel || 1; // Show only CRITICAL level
-        config.telemetryLoggingLevel = config.telemetryLoggingLevel || 0; // Send nothing
-        config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
-        config.autoTrackPageVisitTime = Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
+        extensionConfig.enableDebug = Util.stringToBoolOrDefault(extensionConfig.enableDebug);
+        extensionConfig.disableExceptionTracking = Util.stringToBoolOrDefault(extensionConfig.disableExceptionTracking);
+        extensionConfig.consoleLoggingLevel = extensionConfig.consoleLoggingLevel || 1; // Show only CRITICAL level
+        extensionConfig.telemetryLoggingLevel = extensionConfig.telemetryLoggingLevel || 0; // Send nothing
+        extensionConfig.diagnosticLogInterval = extensionConfig.diagnosticLogInterval || 10000;
+        extensionConfig.autoTrackPageVisitTime = Util.stringToBoolOrDefault(extensionConfig.autoTrackPageVisitTime);
 
-        if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
-            config.samplingPercentage = 100;
+        if (isNaN(extensionConfig.samplingPercentage) || extensionConfig.samplingPercentage <= 0 || extensionConfig.samplingPercentage >= 100) {
+            extensionConfig.samplingPercentage = 100;
         }
 
-        config.disableAjaxTracking = Util.stringToBoolOrDefault(config.disableAjaxTracking)
-        config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
+        extensionConfig.disableAjaxTracking = Util.stringToBoolOrDefault(extensionConfig.disableAjaxTracking)
+        extensionConfig.maxAjaxCallsPerView = !isNaN(extensionConfig.maxAjaxCallsPerView) ? extensionConfig.maxAjaxCallsPerView : 500;
 
-        config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders);
-        config.correlationHeaderExcludedDomains = config.correlationHeaderExcludedDomains || [
+        extensionConfig.disableCorrelationHeaders = Util.stringToBoolOrDefault(extensionConfig.disableCorrelationHeaders);
+        extensionConfig.correlationHeaderExcludedDomains = extensionConfig.correlationHeaderExcludedDomains || [
             "*.blob.core.windows.net",
             "*.blob.core.chinacloudapi.cn",
             "*.blob.core.cloudapi.de",
             "*.blob.core.usgovcloudapi.net"];
-        config.disableFlushOnBeforeUnload = Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
-        config.isCookieUseDisabled = Util.stringToBoolOrDefault(config.isCookieUseDisabled);
-        config.isStorageUseDisabled = Util.stringToBoolOrDefault(config.isStorageUseDisabled);
-        config.isBrowserLinkTrackingEnabled = Util.stringToBoolOrDefault(config.isBrowserLinkTrackingEnabled);
-        config.enableCorsCorrelation = Util.stringToBoolOrDefault(config.enableCorsCorrelation);
+        extensionConfig.disableFlushOnBeforeUnload = Util.stringToBoolOrDefault(extensionConfig.disableFlushOnBeforeUnload);
+        extensionConfig.isCookieUseDisabled = Util.stringToBoolOrDefault(extensionConfig.isCookieUseDisabled);
+        extensionConfig.isStorageUseDisabled = Util.stringToBoolOrDefault(extensionConfig.isStorageUseDisabled);
+        extensionConfig.isBrowserLinkTrackingEnabled = Util.stringToBoolOrDefault(extensionConfig.isBrowserLinkTrackingEnabled);
+        extensionConfig.enableCorsCorrelation = Util.stringToBoolOrDefault(extensionConfig.enableCorsCorrelation);
 
         return configuration;
     }

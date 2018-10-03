@@ -2,7 +2,7 @@
 import { Initialization, IApplicationInsights } from '../Initialization'
 import { Sender } from 'applicationinsights-channel-js';
 import { AjaxPlugin } from 'applicationinsights-dependencies-js';
-import { RemoteDependencyData, ContextTagKeys, Util } from 'applicationinsights-common';
+import { IDependencyTelemetry, ContextTagKeys, Util } from 'applicationinsights-common';
 
 export class ApplicationInsightsTests extends TestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -44,6 +44,12 @@ export class ApplicationInsightsTests extends TestClass {
                     extensionConfig: {
                         'AppInsightsChannelPlugin': {
                             maxBatchInterval: 5000
+                        },
+                        ApplicationInsightsAnalytics: {
+                            disableExceptionTracking: false
+                        },
+                        AjaxDependencyPlugin: {
+                            disableAjaxTracking: false
                         }
                     }
                 },
@@ -242,11 +248,30 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const data = new RemoteDependencyData(this._ai.appInsights.core.logger, 'test', 'http://example.com', 'abc', 0, true, 200);
-                    (<any>this._ai).trackDependencyData(data);
+                    const data: IDependencyTelemetry = {
+                        absoluteUrl: 'http://abc',
+                        resultCode: 200,
+                        method: 'GET',
+                        id: 'abc'
+                    }
+                    this._ai.trackDependencyData(data);
                 }
             ].concat(this.asserts(1))
         });
+
+        this.testCaseAsync({
+            name: "TelemetryContext: auto collection of ajax requests",
+            stepDelay: 1,
+            steps: [
+                () => {
+                    let xhr = new XMLHttpRequest();
+                    xhr.open('GET', 'https://httpbin.org/status/200');
+                    xhr.send();
+                    Assert.ok(true);
+                }
+            ].concat(this.asserts(1))
+        });
+
     }
 
     public addPropertiesPluginTests(): void {

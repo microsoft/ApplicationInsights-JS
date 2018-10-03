@@ -25,7 +25,7 @@ import { IMetricTelemetry } from "../JavaScriptSDK.Interfaces/IMetricTelemetry";
 
 "use strict";
 
-const durationProperty: string = "duration";
+const durationProperty: string = "duration"; 
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
     public static appInsightsDefaultConfig: IConfiguration;
@@ -410,15 +410,15 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
 
         if (this.config.disableExceptionTracking === false &&
-            !this.config.autoExceptionsInstrumented) {
+            !this.config.autoExceptionInstrumented) {
             // We want to enable exception auto collection and it has not been done so yet
-
             const onerror = "onerror";
             const originalOnError = window[onerror];
+            const instance: IAppInsights = this;
             window.onerror = function(message, url, lineNumber, columnNumber, error) {
                 const handled = originalOnError && <any>originalOnError(message, url, lineNumber, columnNumber, error);
                 if (handled !== true) { // handled could be typeof function
-                    this._onerror({
+                    instance._onerror({
                         message: message,
                         url: url,
                         lineNumber: lineNumber,
@@ -429,10 +429,10 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
                 return handled;
             }
-            this.config.autoExceptionsInstrumented = true;
+            this.config.autoExceptionInstrumented = true;
         }
 
-        this._isInitialized = true;    
+        this._isInitialized = true;
     }
 
     private _addDefaultTelemetryInitializers(configGetters: ITelemetryConfig) {
@@ -494,7 +494,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
  */
 class Timing {
     private _name;
-    private _action: (ITimingDetail, number) => void;
     private _events: {
         [key: string]: number;
     };

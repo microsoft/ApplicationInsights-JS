@@ -6,6 +6,15 @@ module.exports = function (grunt) {
             },
             files: {
                 src: [
+                    './ApplicationInsights/**/*.ts',
+                    './AppInsightsCommon/**/*.ts',
+                    './AISKU/**/*.ts',
+                    './extensions/**/*.ts',
+                    '!./**/node_modules/**',
+                    '!./**/Tests/**',
+                    '!./**/amd/**',
+                    '!./**/cjs/**',
+                    '!./**/Generated/**',
                     './JavaScript/**/*.ts',
                     '!./JavaScript/JavaScriptSDK.Tests/**'
                 ],
@@ -260,7 +269,7 @@ module.exports = function (grunt) {
     });
 
     grunt.loadNpmTasks("grunt-ts");
-    grunt.loadNpmTasks("grunt-tslint");
+    grunt.loadNpmTasks('grunt-tslint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
