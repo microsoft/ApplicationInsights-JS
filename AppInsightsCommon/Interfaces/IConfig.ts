@@ -33,6 +33,5 @@ export interface IConfig {
     enableCorsCorrelation?: boolean;
 
     // Internal
-    autoExceptionsInstrumented?: boolean;
-    sdkInstanceName?: string;
+    autoExceptionInstrumented?: boolean;
 }

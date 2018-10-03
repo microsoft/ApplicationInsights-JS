@@ -410,12 +410,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
 
         if (this.config.disableExceptionTracking === false &&
-            !this.config.autoExceptionsInstrumented &&
-            this.config.sdkInstanceName) {
+            !this.config.autoExceptionInstrumented) {
             // We want to enable exception auto collection and it has not been done so yet
-            const instance: IAppInsights = window[this.config.sdkInstanceName];
             const onerror = "onerror";
             const originalOnError = window[onerror];
+            const instance: IAppInsights = this;
             window.onerror = function(message, url, lineNumber, columnNumber, error) {
                 const handled = originalOnError && <any>originalOnError(message, url, lineNumber, columnNumber, error);
                 if (handled !== true) { // handled could be typeof function
@@ -430,7 +429,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
                 return handled;
             }
-            this.config.autoExceptionsInstrumented = true;
+            this.config.autoExceptionInstrumented = true;
         }
 
         this._isInitialized = true;
