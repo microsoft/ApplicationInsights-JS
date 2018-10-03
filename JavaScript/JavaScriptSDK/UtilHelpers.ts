@@ -10,6 +10,7 @@ module Microsoft.ApplicationInsights {
             var base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
             var result = "";
+            // tslint:disable-next-line:insecure-random
             var random = Math.random() * 1073741824; //5 symbols in base64, almost maxint
 
             while (random > 0) {

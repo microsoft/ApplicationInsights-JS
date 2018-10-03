@@ -1,10 +1,6 @@
 {
     "defaultSeverity": "warning",
     "rules": {
-        /**
-         * Security Rules. The following rules should be turned on because they find security issues
-         * or are recommended in the Microsoft Secure Development Lifecycle (SDL)
-         */
        "insecure-random": true,
        "no-banned-terms": true,
        "no-cookies": true,
@@ -18,7 +14,6 @@
        "no-http-string": [true, "http://www.example.com/?.*", "http://localhost:?.*"],
        "no-inner-html": true,
        "no-octal-literal": true,
-       "no-reserved-keywords": true,
        "no-string-based-set-immediate": true,
        "no-string-based-set-interval": true,
        "no-string-based-set-timeout": true,

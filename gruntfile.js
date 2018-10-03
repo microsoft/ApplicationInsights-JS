@@ -14,7 +14,9 @@ module.exports = function (grunt) {
                     '!./**/Tests/**',
                     '!./**/amd/**',
                     '!./**/cjs/**',
-                    '!./**/Generated/**'
+                    '!./**/Generated/**',
+                    './JavaScript/**/*.ts',
+                    '!./JavaScript/JavaScriptSDK.Tests/**'
                 ],
             }
         },
