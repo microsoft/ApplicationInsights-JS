@@ -307,6 +307,7 @@ module Microsoft.ApplicationInsights {
                 delayInSeconds = SlotDelayInSeconds;
             } else {
                 var backOffSlot = (Math.pow(2, this._consecutiveErrors) - 1) / 2;
+                // tslint:disable-next-line:insecure-random 
                 var backOffDelay = Math.floor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
                 delayInSeconds = Math.max(Math.min(backOffDelay, 3600), SlotDelayInSeconds);
             }
