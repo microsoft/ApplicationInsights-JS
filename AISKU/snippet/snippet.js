@@ -11,7 +11,7 @@ var aisdk = window[aiName] || (function (aiConfig) {
     var localDocument = document, localWindow = window, scriptText = "script";
     setTimeout(function () {
         var scriptElement = localDocument.createElement(scriptText);
-        scriptElement.src = aiConfig.url || "https://1dsjssdk.blob.core.windows.net/scripts/aisdk.0.0.14-beta.min.js";
+        scriptElement.src = aiConfig.url || "https://1dsjssdk.blob.core.windows.net/scripts/aisdk.0.0.15.min.js";
         localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
     });
 
