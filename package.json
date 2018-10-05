@@ -11,6 +11,12 @@
                      "azure"
                  ],
     "scripts":  {
+                    "analytics": "cd ./ApplicationInsights/ && cpx amd/package.json . && npm i",
+                    "common": "cd ./AppInsightsCommon/ && cpx amd/package.json . && npm i",
+                    "dependencies": "cd ./extensions/applicationinsights-dependencies-js/ && npm i",
+                    "properties": "cd ./extensions/applicationinsights-properties-js/ && cpx amd/package.json . && npm i",
+                    "aisku": "cd ./AISKU && cpx amd/package.json . && npm i",
+                    "build-prefixes": "npm-run-all --serial analytics common dependencies properties aisku",
                     "test":  "grunt test"
                 },
     "repository":  {
@@ -29,6 +35,8 @@
                             "grunt-contrib-uglify":  "3.1.0",
                             "grunt-ts":  "^6.0.0-beta.15",
                             "grunt-tslint": "^5.0.2",
+                            "npm-run-all": "^4.1.3",
+                            "cpx": "^1.5.0",
                             "tslint": "^5.11.0",
                             "tslint-microsoft-contrib": "^5.2.1",
                             "typescript":  "2.5.3"
