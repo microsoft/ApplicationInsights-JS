@@ -3,3 +3,4 @@ node_js:
   - "6"
 before_script:
   - npm install grunt-cli -g
+  - npm run build-prefixes

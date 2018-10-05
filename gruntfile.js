@@ -298,7 +298,7 @@ module.exports = function (grunt) {
     grunt.registerTask("aisku", ["ts:aisku"]);
     grunt.registerTask("aiskutests", ["ts:aisku", "ts:aiskutests", "qunit:aisku"]);
     grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
-    grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
+    grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all", "common", "propertiestests", "depstest", "aitests", "aiskutests"]);
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiescjs", ["ts:propertiescjs"]);
     grunt.registerTask("propertiestests", ["ts:properties", "ts:propertiestests", "qunit:properties"]);
