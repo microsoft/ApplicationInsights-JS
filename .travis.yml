@@ -4,7 +4,6 @@ node_js:
 before_install:
   - echo "//pkgs.dev.azure.com/mseng/_packaging/ApplicationInsights-Team/npm/registry/:_authToken=\${REGISTRY}" > .npmrc
   - echo "//pkgs.dev.azure.com/mseng/_packaging/ApplicationInsights-Team/npm/:_authToken=\${NPM}" >> .npmrc
-after_install:
-  - npm run build-prefixes
 before_script:
+  - npm run build-prefixes
   - npm install grunt-cli -g
