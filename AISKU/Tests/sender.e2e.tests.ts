@@ -30,6 +30,7 @@ export class SenderE2ETests extends TestClass {
             var init = new Initialization({
                 config: {
                     instrumentationKey: this._instrumentationKey,
+                    loggingLevelConsole: 999,
                     extensionConfig: {
                         'AppInsightsChannelPlugin': {
                             maxBatchInterval: 2000,
@@ -63,6 +64,41 @@ export class SenderE2ETests extends TestClass {
     public registerTests() {
         this.addAsyncTests();
         this.addTrackEndpointTests();
+        this.addRetryTests();
+    }
+
+    private addRetryTests() {
+        var handle;
+        this.testCaseAsync({
+            name: 'Offline: offline telemetry is retried',
+            stepDelay: this.delay,
+            steps: [
+                () => {
+                    handle = setInterval(() => {this._ai.trackTrace({message: 'intermittent message'})}, 500);
+                    Assert.ok(true, 'sent event');
+                }
+            ]
+            .concat(this.waitForResponse())
+            .concat(this.boilerPlateAsserts)
+            .concat(<any>PollingAssert.createPollingAssert(() => {
+                let currentCount: number = 0;
+
+                if (this.successSpy.called) {
+                    this.successSpy.args.forEach(call => {
+                        const acceptedItems = call[1];
+                        currentCount += acceptedItems; // number of accepted items
+                    });
+                    console.log('currentCount', currentCount);
+                    return currentCount >= 20;
+                }
+
+                return false;
+            }, 'All items are sent', 600, 1000))
+            .concat(() => {
+                clearInterval(handle);
+                Assert.ok(true, 'handle cleared');
+            })
+        });
     }
 
     private addAsyncTests(): void {
