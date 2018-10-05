@@ -10,6 +10,6 @@ before_script:
   - cp .npmrc AppInsightsCommon/
   - cp .npmrc AISKU/
   - cp .npmrc extensions/applicationinsights-properties-js/
-  - cp .npmrc ApplicationInsights/applicationinsights-dependencies-js/
+  - cp .npmrc extensions/applicationinsights-dependencies-js/
   - npm run build-prefixes
   - npm install grunt-cli -g
