@@ -1,9 +1,9 @@
-﻿import { IUser } from '../Interfaces/Context/IUser';
+﻿import { IUser, IUserContextPlugin } from '../Interfaces/Context/IUser';
 import { ITelemetryConfig } from '../Interfaces/ITelemetryConfig';
 import { Util } from 'applicationinsights-common';
 import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from 'applicationinsights-core-js';
 
-export class User implements IUser {
+export class User implements IUser, IUserContextPlugin {
 
     static cookieSeparator: string = '|';
     static userCookieName: string = 'ai_user';

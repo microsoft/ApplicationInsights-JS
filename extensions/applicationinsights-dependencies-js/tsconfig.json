@@ -8,7 +8,7 @@
     "target": "es5",
     "alwaysStrict": true,
     "declaration": true,
-    "outDir": "amd/bundle",
+    "outDir": "bundle",
     "rootDir": "extensions/applicationinsights-dependencies-js"
   },
   "files": []

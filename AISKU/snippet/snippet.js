@@ -1,16 +1,17 @@
-﻿var appInsights = window.appInsightsvNext || (function (aiConfig) {
+﻿var sdkInstance = "appInsightsSDK";
+window[sdkInstance] = "appInsights";
+var aiName = window[sdkInstance]; // provide non default instance name through key appInsightsSDK
+var aisdk = window[aiName] || (function (aiConfig) {
     var appInsights = {
         config: aiConfig
     };
+    appInsights.initialize = true; // initialize sdk on download
 
     // Assigning these to local variables allows them to be minified to save space:
-    var localDocument = document;
-    var localWindow = window;
-    var scriptText = "script";
-    var track = "Track";
+    var localDocument = document, localWindow = window, scriptText = "script";
     setTimeout(function () {
         var scriptElement = localDocument.createElement(scriptText);
-        scriptElement.src = aiConfig.url || "https://jssdkvnext.azureedge.net/scripts/aisdk.min.0.0.9.js";
+        scriptElement.src = aiConfig.url || "https://1dsjssdk.blob.core.windows.net/scripts/aisdk.0.0.17.min.js";
         localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
     });
 
@@ -34,17 +35,22 @@
         };
     }
 
-    var method = ["PageView", "Exception"];
+    var method = ["PageView", "Exception", "Trace", "DependencyData", "Metric"];
     while (method.length) {
         createLazyMethod("track" + method.pop());
     }
 
+    var track = "Track";
+    var trackPage = track + "Page";
+    createLazyMethod("start" + trackPage);
+    createLazyMethod("stop" + trackPage);
+
     // Collect global errors
     // Note: ApplicationInsightsAnalytics is the extension string identifier for
     //  AppAnalytics. It is defined in ApplicationInsights.ts:ApplicationInsights.identifer
-    if (aiConfig.extensionsConfig &&
-        aiConfig.extensionsConfig.ApplicationInsightsAnalytics &&
-        aiConfig.extensionsConfig.ApplicationInsightsAnalytics.disableExceptionTracking === false) {
+    if (aiConfig.extensionConfig &&
+        aiConfig.extensionConfig.ApplicationInsightsAnalytics &&
+        aiConfig.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking === false) {
 
         method = "onerror";
         createLazyMethod("_" + method);
@@ -63,22 +69,22 @@
 
             return handled;
         };
-        aiConfig.extensionsConfig.ApplicationInsightsAnalytics.autoExceptionInstrumented = true;
+        aiConfig.extensionConfig.ApplicationInsightsAnalytics.autoExceptionInstrumented = true;
     }
 
     return appInsights;
 })({
-    instrumentationKey: "INSTRUMENTATION_KEY",
+    instrumentationKey: "INSTRUMENTATION_KEY"
 });
 
 // global instance must be set in this order to mitigate issues in ie8 and lower
-window.appInsightsvNext = appInsights;
+window[aiName] = aisdk;
 
 // if somebody calls the snippet twice, don't report page view again
-if (appInsights.queue && appInsights.queue.length === 0) {
+if (aisdk.queue && aisdk.queue.length === 0) {
     var pageViewItem = {
         name: document.title ? document.title : "",
         uri: document.URL ? document.URL : ""
     };
-    appInsights.trackPageView(pageViewItem);
+    aisdk.trackPageView(pageViewItem);
 }

@@ -7,7 +7,7 @@ import {
     IConfig,
     Util, PageViewPerformance,
     PageView, IEnvelope, RemoteDependencyData,
-    TelemetryItemCreator, Data, Metric, Exception, SeverityLevel, Trace
+    TelemetryItemCreator, Data, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry
 } from "applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
@@ -22,18 +22,17 @@ import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 import { IExceptionTelemetry, IAutoExceptionTelemetry } from "../JavaScriptSDK.Interfaces/IExceptionTelemetry";
 import { ITraceTelemetry } from "../JavaScriptSDK.Interfaces/ITraceTelemetry";
 import { IMetricTelemetry } from "../JavaScriptSDK.Interfaces/IMetricTelemetry";
-import { ExceptionData } from "applicationinsights-common/bundle/Interfaces/Contracts/Generated/ExceptionData";
 
 "use strict";
 
-const durationProperty: string = "duration";
+const durationProperty: string = "duration"; 
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
     public static appInsightsDefaultConfig: IConfiguration;
-    public static Version = "0.0.1";
+    public static Version = "2.0.1-beta";
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
     public identifier: string = "ApplicationInsightsAnalytics";
-    public priority: number;
+    public priority: number = 160;// take from reserved priority range 100- 200
     public config: IConfig;
     public core: IAppInsightsCore;
     public queue: (() => void)[];
@@ -43,7 +42,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     private _globalconfig: IConfiguration;
     private _nextPlugin: ITelemetryPlugin;
     private _pageTracking: Timing;
-    private _telemetryInitializers: { (envelope: IEnvelope): boolean | void; }[]; // Internal telemetry initializers.
+    private _telemetryInitializers: { (envelope: ITelemetryItem): boolean | void; }[]; // Internal telemetry initializers.
     private _pageViewManager: PageViewManager;
     private _pageVisitTimeManager: PageVisitTimeManager;
 
@@ -55,7 +54,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
     constructor() {
         this.initialize = this._initialize.bind(this);
-
     }
 
     public processTelemetry(env: ITelemetryItem) {
@@ -324,6 +322,10 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
     }
 
+    public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void) {
+        this._telemetryInitializers.push(telemetryInitializer);
+    }
+
     private _initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
 
         if (this._isInitialized) {
@@ -408,15 +410,15 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
 
         if (this.config.disableExceptionTracking === false &&
-            !this.config.autoExceptionsInstrumented) {
+            !this.config.autoExceptionInstrumented) {
             // We want to enable exception auto collection and it has not been done so yet
-
             const onerror = "onerror";
             const originalOnError = window[onerror];
+            const instance: IAppInsights = this;
             window.onerror = function(message, url, lineNumber, columnNumber, error) {
                 const handled = originalOnError && <any>originalOnError(message, url, lineNumber, columnNumber, error);
                 if (handled !== true) { // handled could be typeof function
-                    this._onerror({
+                    instance._onerror({
                         message: message,
                         url: url,
                         lineNumber: lineNumber,
@@ -427,22 +429,21 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
                 return handled;
             }
-            this.config.autoExceptionsInstrumented = true;
+            this.config.autoExceptionInstrumented = true;
         }
 
-        this._isInitialized = true;    
+        this._isInitialized = true;
     }
 
-    // Todo: move to separate extension
     private _addDefaultTelemetryInitializers(configGetters: ITelemetryConfig) {
         if (!configGetters.isBrowserLinkTrackingEnabled()) {
             const browserLinkPaths = ['/browserLinkSignalR/', '/__browserLink/'];
-            let dropBrowserLinkRequests = (envelope: IEnvelope) => {
-                if (envelope.name === RemoteDependencyData.envelopeType) {
-                    let remoteData = envelope.data as Data<RemoteDependencyData>;
-                    if (remoteData && remoteData.baseData) {
+            let dropBrowserLinkRequests = (envelope: ITelemetryItem) => {
+                if (envelope.baseType === RemoteDependencyData.dataType) {
+                    let remoteData = envelope.baseData as IDependencyTelemetry;
+                    if (remoteData) {
                         for (let i = 0; i < browserLinkPaths.length; i++) {
-                            if (remoteData.baseData.name.indexOf(browserLinkPaths[i]) >= 0) {
+                            if (remoteData.absoluteUrl && remoteData.absoluteUrl.indexOf(browserLinkPaths[i]) >= 0) {
                                 return false;
                             }
                         }
@@ -452,11 +453,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 return true;
             }
 
-            this.addTelemetryInitializer(dropBrowserLinkRequests)
+            this._addTelemetryInitializer(dropBrowserLinkRequests)
         }
     }
 
-    private addTelemetryInitializer(telemetryInitializer: (envelope: IEnvelope) => boolean | void) {
+    private _addTelemetryInitializer(telemetryInitializer: (envelope: ITelemetryItem) => boolean | void) {
         this._telemetryInitializers.push(telemetryInitializer);
     }
 
@@ -493,7 +494,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
  */
 class Timing {
     private _name;
-    private _action: (ITimingDetail, number) => void;
     private _events: {
         [key: string]: number;
     };

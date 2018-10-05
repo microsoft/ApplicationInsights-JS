@@ -1,5 +1,25 @@
 module.exports = function (grunt) {
     grunt.initConfig({
+        tslint: {
+            options: {
+                rulesDirectory: 'node_modules/tslint-microsoft-contrib',
+            },
+            files: {
+                src: [
+                    './ApplicationInsights/**/*.ts',
+                    './AppInsightsCommon/**/*.ts',
+                    './AISKU/**/*.ts',
+                    './extensions/**/*.ts',
+                    '!./**/node_modules/**',
+                    '!./**/Tests/**',
+                    '!./**/amd/**',
+                    '!./**/cjs/**',
+                    '!./**/Generated/**',
+                    './JavaScript/**/*.ts',
+                    '!./JavaScript/JavaScriptSDK.Tests/**'
+                ],
+            }
+        },
         ts: {
             options: {
                 comments: true
@@ -73,6 +93,14 @@ module.exports = function (grunt) {
                 src: [
                     'AISKULight/*.ts'
                 ]
+            },
+            aiskutests: {
+                tsconfig: './AISKU/Tests/tsconfig.json',
+                src: [
+                    'AISKU/Tests/Selenium/*.ts',
+                    'AISKU/Tests/*.ts'
+                ],
+                out: 'AISKU/Tests/Selenium/appinsights-sdk.tests.js'
             },
             properties: {
                 tsconfig: './extensions/applicationinsights-properties-js/tsconfigamd.json',
@@ -235,6 +263,17 @@ module.exports = function (grunt) {
                     summaryOnly: true,
                     '--web-security': 'false'
                 }
+            },
+            aisku: {
+                options: {
+                    urls: [
+                        './AISKU/Tests/Selenium/Tests.html'
+                    ],
+                    timeout: 5 * 60 * 1000, // 5 min
+                    console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false'
+                }
             }
         }
     });
@@ -244,6 +283,7 @@ module.exports = function (grunt) {
     });
 
     grunt.loadNpmTasks("grunt-ts");
+    grunt.loadNpmTasks('grunt-tslint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);

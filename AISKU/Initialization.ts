@@ -1,8 +1,9 @@
-import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId } from "applicationinsights-core-js";
-import { ApplicationInsights } from "applicationinsights-analytics-js";
-import { Util, IConfig } from "applicationinsights-common";
+import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem } from "applicationinsights-core-js";
+import { ApplicationInsights, IAppInsights, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-analytics-js";
+import { Util, IConfig, RemoteDependencyData, IDependencyTelemetry } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
-import { PropertiesPlugin } from "applicationinsights-properties-js";
+import { PropertiesPlugin, IPropertiesPlugin } from "applicationinsights-properties-js";
+import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from 'applicationinsights-dependencies-js';
 
 "use strict";
 
@@ -11,12 +12,17 @@ export interface Snippet {
     config: IConfiguration;
 }
 
-export class Initialization {
+export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
+    appInsights: ApplicationInsights;
+};
+
+export class Initialization implements IApplicationInsights {
     public snippet: Snippet;
     public config: IConfiguration;
     private core: IAppInsightsCore;
-    private appInsights: ApplicationInsights;
+    public appInsights: ApplicationInsights;
     private properties: PropertiesPlugin;
+    private dependencies: DependenciesPlugin;
 
     constructor(snippet: Snippet) {
 
@@ -35,28 +41,65 @@ export class Initialization {
         config = Initialization.getDefaultConfig(config, this.appInsights.identifier);
 
         this.properties = new PropertiesPlugin();
+        this.dependencies = new DependenciesPlugin();
 
         this.snippet = snippet;
         this.config = config;
     }
+    
+    // Analytics Plugin
+    public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any; }) {
+        this.appInsights.trackPageView(pageView, customProperties);
+    }
+    public trackException(exception: IExceptionTelemetry, customProperties?: { [key: string]: any; }): void {
+        this.appInsights.trackException(exception, customProperties);
+    }
+    public _onerror(exception: IAutoExceptionTelemetry): void {
+        this.appInsights._onerror(exception);
+    }
+    public trackTrace(trace: ITraceTelemetry, customProperties?: { [key: string]: any; }): void {
+        this.appInsights.trackTrace(trace, customProperties);
+    }
+    public trackMetric(metric: IMetricTelemetry, customProperties?: { [key: string]: any; }): void {
+        this.appInsights.trackMetric(metric, customProperties);
+    }
+    public startTrackPage(name?: string): void {
+        this.appInsights.startTrackPage(name);
+    }
+    public stopTrackPage(name?: string, url?: string, customProperties?: Object) {
+        this.appInsights.stopTrackPage(name, url, customProperties);
+    }
+    public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void) {
+        return this.appInsights.addTelemetryInitializer(telemetryInitializer);
+    }
 
-    public loadAppInsights() {
+    // Properties Plugin
+    public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false): void {
+         this.properties.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
+    }
+    public clearAuthenticatedUserContext(): void {
+         this.properties.user.clearAuthenticatedUserContext();
+    }
+
+    // Dependencies Plugin
+    public trackDependencyData(dependency: IDependencyTelemetry, customProperties?: {[key: string]: any}, systemProperties?: {[key: string]: any}): void {
+        this.dependencies.trackDependencyData(dependency, customProperties, systemProperties);
+    }
+
+    public loadAppInsights(): IApplicationInsights {
 
         this.core = new AppInsightsCore();
         let extensions = [];
-        let appInsightsChannel: Sender = new Sender(this.core.logger);
+        let appInsightsChannel: Sender = new Sender();
 
         extensions.push(appInsightsChannel);
         extensions.push(this.properties);
+        extensions.push(this.dependencies);
         extensions.push(this.appInsights);
 
         // initialize core
         this.core.initialize(this.config, extensions);
-
-        // initialize extensions
-        this.appInsights.initialize(this.config, this.core, extensions);
-        appInsightsChannel.initialize(this.config);
-        return this.appInsights;
+        return this;
     }
 
     public emptyQueue() {
@@ -100,10 +143,10 @@ export class Initialization {
         // }, this.config.diagnosticLogInterval);
     }
 
-    public addHousekeepingBeforeUnload(appInsightsInstance: ApplicationInsights): void {
+    public addHousekeepingBeforeUnload(appInsightsInstance: IApplicationInsights): void {
         // Add callback to push events when the user navigates away
 
-        if (!appInsightsInstance.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
+        if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
             var performHousekeeping = function () {
                 // Adds the ability to flush all data before the page unloads.
                 // Note: This approach tries to push an async request with all the pending events onbeforeunload.
@@ -114,10 +157,17 @@ export class Initialization {
 
                 //appInsightsInstance.context._sender.triggerSend();
 
-                appInsightsInstance.core.getTransmissionControl().flush(true);
+                appInsightsInstance.appInsights.core.getTransmissionControls().forEach(queues => {
+                    queues.forEach(channel => channel.flush(true));
+                });
+                
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
-                this.properties._sessionManager.backup();
+                // Todo: move this against interface behavior
+                if (this.core.extensions["AppInsightsPropertiesPlugin"] &&
+                    this.core.extensions["AppInsightsPropertiesPlugin"]._sessionManager) {
+                    this.core.extensions["AppInsightsPropertiesPlugin"]._sessionManager.backup();
+                }
             };
 
             if (!Util.addEventHandler('beforeunload', performHousekeeping)) {
@@ -135,41 +185,47 @@ export class Initialization {
         }
 
         if (configuration) {
-            identifier = identifier ? identifier : "AppAnalytics"; // To do: define constant        
+            identifier = identifier ? identifier : "ApplicationInsightsAnalytics";
         }
 
-        let config = configuration.extensions ? <IConfig>configuration.extensions[identifier] : {};
-
+        // Undefined checks
+        if (!configuration.extensionConfig) {
+            configuration.extensionConfig = {};
+        }
+        if (!configuration.extensionConfig[identifier]) {
+            configuration.extensionConfig[identifier] = {};
+        }
+        const extensionConfig: IConfig = configuration.extensionConfig[identifier]; // ref to main config
         // set default values
         configuration.endpointUrl = configuration.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
-        config.sessionRenewalMs = 30 * 60 * 1000;
-        config.sessionExpirationMs = 24 * 60 * 60 * 1000;
+        extensionConfig.sessionRenewalMs = 30 * 60 * 1000;
+        extensionConfig.sessionExpirationMs = 24 * 60 * 60 * 1000;
 
-        config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
-        config.disableExceptionTracking = Util.stringToBoolOrDefault(config.disableExceptionTracking);
-        config.consoleLoggingLevel = config.consoleLoggingLevel || 1; // Show only CRITICAL level
-        config.telemetryLoggingLevel = config.telemetryLoggingLevel || 0; // Send nothing
-        config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
-        config.autoTrackPageVisitTime = Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
+        extensionConfig.enableDebug = Util.stringToBoolOrDefault(extensionConfig.enableDebug);
+        extensionConfig.disableExceptionTracking = Util.stringToBoolOrDefault(extensionConfig.disableExceptionTracking);
+        extensionConfig.consoleLoggingLevel = extensionConfig.consoleLoggingLevel || 1; // Show only CRITICAL level
+        extensionConfig.telemetryLoggingLevel = extensionConfig.telemetryLoggingLevel || 0; // Send nothing
+        extensionConfig.diagnosticLogInterval = extensionConfig.diagnosticLogInterval || 10000;
+        extensionConfig.autoTrackPageVisitTime = Util.stringToBoolOrDefault(extensionConfig.autoTrackPageVisitTime);
 
-        if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
-            config.samplingPercentage = 100;
+        if (isNaN(extensionConfig.samplingPercentage) || extensionConfig.samplingPercentage <= 0 || extensionConfig.samplingPercentage >= 100) {
+            extensionConfig.samplingPercentage = 100;
         }
 
-        config.disableAjaxTracking = Util.stringToBoolOrDefault(config.disableAjaxTracking)
-        config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
+        extensionConfig.disableAjaxTracking = Util.stringToBoolOrDefault(extensionConfig.disableAjaxTracking)
+        extensionConfig.maxAjaxCallsPerView = !isNaN(extensionConfig.maxAjaxCallsPerView) ? extensionConfig.maxAjaxCallsPerView : 500;
 
-        config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders);
-        config.correlationHeaderExcludedDomains = config.correlationHeaderExcludedDomains || [
+        extensionConfig.disableCorrelationHeaders = Util.stringToBoolOrDefault(extensionConfig.disableCorrelationHeaders);
+        extensionConfig.correlationHeaderExcludedDomains = extensionConfig.correlationHeaderExcludedDomains || [
             "*.blob.core.windows.net",
             "*.blob.core.chinacloudapi.cn",
             "*.blob.core.cloudapi.de",
             "*.blob.core.usgovcloudapi.net"];
-        config.disableFlushOnBeforeUnload = Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
-        config.isCookieUseDisabled = Util.stringToBoolOrDefault(config.isCookieUseDisabled);
-        config.isStorageUseDisabled = Util.stringToBoolOrDefault(config.isStorageUseDisabled);
-        config.isBrowserLinkTrackingEnabled = Util.stringToBoolOrDefault(config.isBrowserLinkTrackingEnabled);
-        config.enableCorsCorrelation = Util.stringToBoolOrDefault(config.enableCorsCorrelation);
+        extensionConfig.disableFlushOnBeforeUnload = Util.stringToBoolOrDefault(extensionConfig.disableFlushOnBeforeUnload);
+        extensionConfig.isCookieUseDisabled = Util.stringToBoolOrDefault(extensionConfig.isCookieUseDisabled);
+        extensionConfig.isStorageUseDisabled = Util.stringToBoolOrDefault(extensionConfig.isStorageUseDisabled);
+        extensionConfig.isBrowserLinkTrackingEnabled = Util.stringToBoolOrDefault(extensionConfig.isBrowserLinkTrackingEnabled);
+        extensionConfig.enableCorsCorrelation = Util.stringToBoolOrDefault(extensionConfig.enableCorsCorrelation);
 
         return configuration;
     }

@@ -1,6 +1,6 @@
 ﻿import {
     RequestHeaders, Util, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
-    RemoteDependencyData, DateTimeUtils, DisabledPropertyName, Data
+    RemoteDependencyData, DateTimeUtils, DisabledPropertyName, Data, IDependencyTelemetry
 } from 'applicationinsights-common';
 import {
     CoreUtils, LoggingSeverity, _InternalMessageId, IDiagnosticLogger,
@@ -13,7 +13,11 @@ export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;
 }
 
-export class AjaxMonitor implements ITelemetryPlugin {
+export interface IDependenciesPlugin {
+    trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any });
+}
+
+export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
     private initialized: boolean;
     private currentWindowHost;
     private _core;
@@ -226,19 +230,20 @@ export class AjaxMonitor implements ITelemetryPlugin {
                 });
         }
         else {
-            var dependency = new RemoteDependencyData(this._core._logger, 
-                xhr.ajaxData.id,
-                xhr.ajaxData.getAbsoluteUrl(),
-                xhr.ajaxData.getPathName(),
-                xhr.ajaxData.ajaxTotalDuration,
-                (+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
-                +xhr.ajaxData.status,
-                xhr.ajaxData.method);
+            var dependency = <IDependencyTelemetry>{
+                id: xhr.ajaxData.id,
+                absoluteUrl: xhr.ajaxData.getAbsoluteUrl(),
+                commandName: xhr.ajaxData.getPathName(),
+                duration: xhr.ajaxData.ajaxTotalDuration,
+                success:(+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
+                resultCode: +xhr.ajaxData.status,
+                method: xhr.ajaxData.method
+            };
 
             // enrich dependency target with correlation context from the server
             var correlationContext = this.getCorrelationContext(xhr);
             if (correlationContext) {
-                dependency.target = dependency.target + " | " + correlationContext;
+                dependency.correlationContext = /* dependency.target + " | " + */ correlationContext;
             }
 
             this.trackDependencyData(dependency);
@@ -273,9 +278,9 @@ export class AjaxMonitor implements ITelemetryPlugin {
          * Logs dependency call
          * @param dependencyData dependency data object
          */
-        public trackDependencyData(dependency: RemoteDependencyData, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
+        public trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
             if (this._config.maxAjaxCallsPerView === -1 || this._trackAjaxAttempts < this._config.maxAjaxCallsPerView) {
-                let item = TelemetryItemCreator.create<RemoteDependencyData>(
+                let item = TelemetryItemCreator.create<IDependencyTelemetry>(
                     dependency,
                     RemoteDependencyData.dataType,
                     RemoteDependencyData.envelopeType,
@@ -308,7 +313,7 @@ export class AjaxMonitor implements ITelemetryPlugin {
         }
     }
 
-    priority: number = 110;
+    priority: number = 161;
     
     public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
         if (!this.initialized) {

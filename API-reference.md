@@ -343,6 +343,9 @@ interface IConfig {
     // CORS requests to correlate outgoing AJAX dependencies with corresponding requests on the server side.
     // Default false. 
     enableCorsCorrelation: boolean;
+    
+    // Disable correlation headers for specific domains
+    correlationHeaderExcludedDomains: string[];
 }
 ```
 

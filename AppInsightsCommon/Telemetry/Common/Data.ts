@@ -15,10 +15,10 @@ export class Data<TDomain> extends AIData<TDomain> implements ISerializable {
     /**
      * Constructs a new instance of telemetry data.
      */
-    constructor(type: string, data: TDomain) {
+    constructor(baseType: string, data: TDomain) {
         super();
 
-        this.baseType = type;
+        this.baseType = baseType;
         this.baseData = data;
     }
 }

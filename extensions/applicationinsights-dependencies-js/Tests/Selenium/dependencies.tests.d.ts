@@ -232,7 +232,14 @@ declare module "ajax" {
     export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
         ajaxData: ajaxRecord;
     }
-    export class AjaxMonitor implements ITelemetryPlugin {
+    export interface IDependenciesPlugin {
+        trackDependencyData(dependency: RemoteDependencyData, properties?: {
+            [key: string]: any;
+        }, systemProperties?: {
+            [key: string]: any;
+        }): any;
+    }
+    export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
         private initialized;
         private currentWindowHost;
         private _core;

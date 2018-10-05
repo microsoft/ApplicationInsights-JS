@@ -1,3 +1,3 @@
-import { AjaxMonitor } from "./ajax";
+import { AjaxMonitor, IDependenciesPlugin } from "./ajax";
 
-export { AjaxMonitor as AjaxPlugin };
+export { AjaxMonitor as AjaxPlugin, IDependenciesPlugin };

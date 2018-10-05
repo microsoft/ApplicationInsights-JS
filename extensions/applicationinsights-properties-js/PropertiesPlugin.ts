@@ -18,9 +18,10 @@ import { User } from './Context/User';
 import { Sample } from './Context/Sample';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 import { ITelemetryContext } from './Interfaces/ITelemetryContext';
+import { IPropertiesPlugin } from './Interfaces/IPropertiesPlugin';
 
 export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryContext {
-    public priority = 3;
+    public priority = 170;
     public identifier = "AppInsightsPropertiesPlugin";
     public application: Application; // The object describing a component tracked by this object.
     public device: Device; // The object describing a device tracked by this object.
