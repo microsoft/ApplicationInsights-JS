@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - "6"
+  - "10.9"
 before_script:
   - npm install grunt-cli -g
   - npm run build-prefixes
