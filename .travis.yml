@@ -2,7 +2,7 @@ language: node_js
 node_js:
   - "10.9"
 before_install:
-  - echo "//pkgs.dev.azure.com/mseng/_packaging/ApplicationInsights-Team/npm/registry/:_authToken=\${REGISTRY}" > .npmrc
+  - echo "//pkgs.dev.azure.com/mseng/_packaging/ApplicationInsights-Team/npm/registry/:_authToken=\${REGISTRY}" >> .npmrc
   - echo "//pkgs.dev.azure.com/mseng/_packaging/ApplicationInsights-Team/npm/:_authToken=\${NPM}" >> .npmrc
 before_script:
   - npm run build-prefixes
