@@ -2,5 +2,7 @@ language: node_js
 node_js:
   - "10.9"
 before_script:
+  - echo "//pkgs.dev.azure.com/mseng/_packaging/ApplicationInsights-Team/npm/registry/:_authToken=\${REGISTRY}" > .npmrc
+  - echo "//pkgs.dev.azure.com/mseng/_packaging/ApplicationInsights-Team/npm/:_authToken=\${NPM}" >> .npmrc
   - npm install grunt-cli -g
   - npm run build-prefixes
