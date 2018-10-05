@@ -106,6 +106,11 @@ module.exports = function (grunt) {
                     './extensions/applicationinsights-properties-js/Interfaces/*.ts'
                 ]
             },
+            propertiestests: {
+                tsconfig: './extensions/applicationinsights-properties-js/Tests/tsconfig.json',
+                src: './extensions/applicationinsights-properties-js/Tests/**/*.ts',
+                out: './extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
+            },
             deps: {
                 tsconfig: './extensions/applicationinsights-dependencies-js/tsconfig.json',
                 src: [
@@ -250,6 +255,17 @@ module.exports = function (grunt) {
                     '--web-security': 'false'
                 }
             },
+            properties: {
+                options: {
+                    urls: [
+                        './extensions/applicationinsights-properties-js/Tests/Selenium/Tests.html'
+                    ],
+                    timout: 5 * 60 * 1000, // 5 min
+                    console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false'
+                }
+            },
             aisku: {
                 options: {
                     urls: [
@@ -285,6 +301,7 @@ module.exports = function (grunt) {
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all"]);
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiescjs", ["ts:propertiescjs"]);
+    grunt.registerTask("propertiestests", ["ts:properties", "ts:propertiestests", "qunit:properties"]);
     grunt.registerTask("deps", ["ts:deps"]);
     grunt.registerTask("depstest", ["ts:deps", "ts:depstest", "qunit:deps"]);
 };
