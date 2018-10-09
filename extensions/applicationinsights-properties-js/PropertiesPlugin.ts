@@ -37,9 +37,9 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
     private _extensionConfig: ITelemetryConfig;
 
     initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
-        let extensionConfig = config.extensions &&
-            config.extensions[this.identifier] ?
-            config.extensions[this.identifier] : {};
+        let extensionConfig = config.extensionConfig &&
+            config.extensionConfig[this.identifier] ?
+            config.extensionConfig[this.identifier] : {};
 
         this._extensionConfig = {
             instrumentationKey: () => extensionConfig.instrumentationKey,
