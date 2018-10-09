@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+    "noImplicitAny": false,
+    "module": "umd",
+    "target": "es5",
+    "moduleResolution": "Node",
+    "alwaysStrict": true,
+    "declaration": true,
+    "outDir": "bundle",
+    "rootDir": "AISKULight"
+  },
+  "files": []
+}

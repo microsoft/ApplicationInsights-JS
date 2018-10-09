@@ -1,4 +1,4 @@
-import { SeverityLevel } from 'applicationinsights-common';
+import { SeverityLevel } from './Contracts/Generated/SeverityLevel'
 
 export interface ITraceTelemetry {
     /**

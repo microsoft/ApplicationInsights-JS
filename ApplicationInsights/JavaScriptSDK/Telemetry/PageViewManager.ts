@@ -1,9 +1,8 @@
 ﻿import {
-    PageViewPerformance, Util
+    PageViewPerformance, Util, IPageViewTelemetry, IPageViewTelemetryInternal
 } from 'applicationinsights-common';
 import { IAppInsightsCore, CoreUtils, IDiagnosticLogger, LoggingSeverity,
     _InternalMessageId, IChannelControls } from 'applicationinsights-core-js';
-import { IPageViewTelemetry, IPageViewTelemetryInternal } from "../../JavaScriptSDK.Interfaces/IPageViewTelemetry";
 
 /**
 * Internal interface to pass appInsights object to subcomponents without coupling 

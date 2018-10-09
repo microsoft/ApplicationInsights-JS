@@ -1,8 +1,10 @@
-import { IPageViewTelemetry } from './IPageViewTelemetry';
-import { IExceptionTelemetry } from './IExceptionTelemetry';
-import { IAutoExceptionTelemetry } from './IExceptionTelemetry'
-import { ITraceTelemetry } from './ITraceTelemetry';
-import { IMetricTelemetry } from './IMetricTelemetry';
+import { 
+    IPageViewTelemetry,
+    IExceptionTelemetry,
+    IAutoExceptionTelemetry,
+    ITraceTelemetry,
+    IMetricTelemetry
+} from 'applicationinsights-common';
 import { ITelemetryItem } from 'applicationinsights-core-js';
 
 export interface IAppInsights {
