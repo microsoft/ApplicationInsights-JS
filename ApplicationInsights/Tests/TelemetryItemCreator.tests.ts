@@ -1,7 +1,11 @@
 /// <reference path="./TestFramework/Common.ts" />
 
-import { PageViewPerformance, PageView, TelemetryItemCreator } from 'applicationinsights-common';
-import { IPageViewTelemetry } from "../JavaScriptSDK.Interfaces/IPageViewTelemetry";
+import {
+    PageViewPerformance,
+    PageView,
+    TelemetryItemCreator,
+    IPageViewTelemetry
+} from 'applicationinsights-common';
 import { ApplicationInsights } from '../JavaScriptSDK/ApplicationInsights'
 import { 
     IAppInsightsCore, AppInsightsCore,
