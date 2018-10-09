@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-sdk-light.js",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "description": "Microsoft Application Insights Javascript SDK core and channel",
     "main": "bundle/index.js",
     "types": "bundle/applicationinsights-sdk-light.d.ts",
@@ -18,7 +18,7 @@
         "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
     },
     "dependencies": {
-        "applicationinsights-channel-js": "0.0.201",
-        "applicationinsights-core-js": "0.0.201"
+        "applicationinsights-channel-js": "0.0.53",
+        "applicationinsights-core-js": "0.0.91"
     }
 }
