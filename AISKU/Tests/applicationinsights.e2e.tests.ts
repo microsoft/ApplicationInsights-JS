@@ -1,7 +1,6 @@
 /// <reference path='./TestFramework/Common.ts' />
 import { Initialization, IApplicationInsights } from '../Initialization'
 import { Sender } from 'applicationinsights-channel-js';
-import { AjaxPlugin } from 'applicationinsights-dependencies-js';
 import { IDependencyTelemetry, ContextTagKeys, Util } from 'applicationinsights-common';
 
 export class ApplicationInsightsTests extends TestClass {
@@ -16,6 +15,7 @@ export class ApplicationInsightsTests extends TestClass {
         "trackDependencyData",
         "setAuthenticatedUserContext",
         "clearAuthenticatedUserContext",
+        "trackPageViewPerformance",
         "addTelemetryInitializer"
     ];
 
@@ -161,6 +161,16 @@ export class ApplicationInsightsTests extends TestClass {
         });
 
         this.testCaseAsync({
+            name: "TelemetryContext: track page view performance",
+            stepDelay: 1,
+            steps: [
+                () => {
+                    this._ai.trackPageViewPerformance({name: 'name', url: 'url'});
+                }
+            ].concat(this.asserts(1))
+        });
+
+        this.testCaseAsync({
             name: "TelemetryContext: track all types in batch",
             stepDelay: 1,
             steps: [
@@ -178,8 +188,9 @@ export class ApplicationInsightsTests extends TestClass {
                     this._ai.trackMetric({name: "test", average: Math.round(100 * Math.random())});
                     this._ai.trackTrace({message: "test"});
                     this._ai.trackPageView({}); // sends 2
+                    this._ai.trackPageViewPerformance({name: 'name', url:'http://someurl'});
                 }
-            ].concat(this.asserts(5))
+            ].concat(this.asserts(6))
         });
 
         this.testCaseAsync({

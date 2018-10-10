@@ -1,6 +1,6 @@
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem } from "applicationinsights-core-js";
-import { ApplicationInsights, IAppInsights, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-analytics-js";
-import { Util, IConfig, RemoteDependencyData, IDependencyTelemetry } from "applicationinsights-common";
+import { ApplicationInsights, IAppInsights } from "applicationinsights-analytics-js";
+import { Util, IConfig, IDependencyTelemetry, PageViewPerformance, IPageViewPerformanceTelemetry, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
 import { PropertiesPlugin, IPropertiesPlugin } from "applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from 'applicationinsights-dependencies-js';
@@ -14,6 +14,7 @@ export interface Snippet {
 
 export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
     appInsights: ApplicationInsights;
+    trackPageViewPerformance: (pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: { [key:string]: any }) => void; // 
 };
 
 export class Initialization implements IApplicationInsights {
@@ -50,6 +51,15 @@ export class Initialization implements IApplicationInsights {
     // Analytics Plugin
     public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any; }) {
         this.appInsights.trackPageView(pageView, customProperties);
+    }
+    public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: { [key:string]: any }): void {
+        const item: PageViewPerformance = new PageViewPerformance(this.core.logger, 
+            pageViewPerformance.name,
+            pageViewPerformance.url,
+            undefined,
+            customProperties
+        );
+        this.appInsights.sendPageViewPerformanceInternal(item, customProperties);
     }
     public trackException(exception: IExceptionTelemetry, customProperties?: { [key: string]: any; }): void {
         this.appInsights.trackException(exception, customProperties);
