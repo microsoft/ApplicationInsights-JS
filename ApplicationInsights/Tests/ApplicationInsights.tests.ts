@@ -46,6 +46,7 @@ export class ApplicationInsightsTests extends TestClass {
                     "trackTrace",
                     "trackMetric",
                     "trackPageView",
+                    "trackPageViewPerformance",
                     "startTrackPage",
                     "stopTrackPage"
                 ];

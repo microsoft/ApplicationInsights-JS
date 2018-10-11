@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-common",
-    "version": "0.0.94",
+    "version": "0.0.96",
     "description": "Microsoft Application Insights Common JavaScript Library - CommonJs version",
     "main": "bundle/applicationinsights-common.js",
     "types": "bundle/applicationinsights-common.d.ts",
@@ -12,10 +12,7 @@
         "grunt-tslint": "^5.0.2",
         "typescript": "2.5.3"
     },
-    "publishConfig": {
-        "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
-    },
     "dependencies": {
-        "applicationinsights-core-js": "0.0.90"
+        "applicationinsights-core-js": "0.0.92"
     }
 }

@@ -22,6 +22,9 @@ Application Insights SDK v2 beta
 
 # Application Insights JavaScript SDK v2 beta
 
+[![Build status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/1DS%20JavaScript%20SDK%20-%20SKU%20+%20Common%20+%20Extensions?branchName=master)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=7610)
+[![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
+
 ### Use JS `snippet` and initialize dynamically (download full Application Insights script from CDN)  
 Use this method for an MVC application. Get "code to monitor my web pages" from the Quick Start page, 
 and insert it in the head of your web pages. Application Insights script will be downloaded 
