@@ -14,7 +14,6 @@ export interface Snippet {
 
 export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
     appInsights: ApplicationInsights;
-    trackPageViewPerformance: (pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: { [key:string]: any }) => void; // 
 };
 
 export class Initialization implements IApplicationInsights {
@@ -53,13 +52,7 @@ export class Initialization implements IApplicationInsights {
         this.appInsights.trackPageView(pageView, customProperties);
     }
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: { [key:string]: any }): void {
-        const item: PageViewPerformance = new PageViewPerformance(this.core.logger, 
-            pageViewPerformance.name,
-            pageViewPerformance.url,
-            undefined,
-            customProperties
-        );
-        this.appInsights.sendPageViewPerformanceInternal(item, customProperties);
+        this.appInsights.trackPageViewPerformance(pageViewPerformance, customProperties);
     }
     public trackException(exception: IExceptionTelemetry, customProperties?: { [key: string]: any; }): void {
         this.appInsights.trackException(exception, customProperties);
