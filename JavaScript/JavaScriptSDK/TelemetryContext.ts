@@ -110,6 +110,13 @@ module Microsoft.ApplicationInsights {
 
             this._addDefaultTelemetryInitializers();
         }
+        
+        /**
+        * Used to manually generate a new operation context
+        */
+        public newOperation() {
+            this.operation = new Context.Operation();
+        }
 
         /**
         * Adds telemetry initializer to the collection. Telemetry initializers will be called one by one
