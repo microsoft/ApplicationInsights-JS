@@ -14,8 +14,5 @@
     "dependencies": {
         "applicationinsights-core-js": "0.0.93",
         "applicationinsights-common": "0.0.97"
-    },
-    "publishConfig": {
-        "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
     }
 }

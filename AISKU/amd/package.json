@@ -13,12 +13,9 @@
         "source-map-loader": "^0.2.3",
         "ts-loader": "^4.4.2"
     },
-    "publishConfig": {
-        "registry": "https://mseng.pkgs.visualstudio.com/_packaging/ApplicationInsights-Team/npm/registry"
-    },
     "dependencies": {
         "applicationinsights-analytics-js": "0.0.115",
-        "applicationinsights-channel-js": "0.0.53",
+        "applicationinsights-channel-js": "0.0.55",
         "applicationinsights-common": "0.0.97",
         "applicationinsights-core-js": "0.0.93",
         "applicationinsights-properties-js": "0.0.23",
