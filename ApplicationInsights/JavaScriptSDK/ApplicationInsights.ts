@@ -8,7 +8,7 @@ import {
     Util, PageViewPerformance,
     PageView, IEnvelope, RemoteDependencyData,
     TelemetryItemCreator, Data, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
-    IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry, IPageViewTelemetryInternal, IPageViewTelemetry
+    IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry, IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry
 } from "applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
@@ -195,6 +195,17 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this._setTelemetryNameAndIKey(telemetryItem);
 
         this.core.track(telemetryItem);
+    }
+    
+    public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: { [key: string]: any }): void {
+        const item: PageViewPerformance = new PageViewPerformance(this.core.logger, 
+            pageViewPerformance.name,
+            pageViewPerformance.url,
+            undefined,
+            customProperties
+        );
+
+        this.sendPageViewPerformanceInternal(item, customProperties);
     }
 
     /**

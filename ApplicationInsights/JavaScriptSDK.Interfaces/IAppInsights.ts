@@ -3,7 +3,8 @@ import {
     IExceptionTelemetry,
     IAutoExceptionTelemetry,
     ITraceTelemetry,
-    IMetricTelemetry
+    IMetricTelemetry,
+    IPageViewPerformanceTelemetry
 } from 'applicationinsights-common';
 import { ITelemetryItem } from 'applicationinsights-core-js';
 
@@ -16,4 +17,5 @@ export interface IAppInsights {
     startTrackPage(name?: string);
     stopTrackPage(name?: string, url?: string, customProperties?: Object);
     addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void);
+    trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: { [key: string]: any }): void;
 }

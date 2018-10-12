@@ -18,6 +18,7 @@ export { IMetricTelemetry } from './Interfaces/IMetricTelemetry';
 export { IDependencyTelemetry } from './Interfaces/IDependencyTelemetry';
 export { IExceptionTelemetry, IAutoExceptionTelemetry } from './Interfaces/IExceptionTelemetry';
 export { IPageViewTelemetry, IPageViewTelemetryInternal } from './Interfaces/IPageViewTelemetry';
+export { IPageViewPerformanceTelemetry } from './Interfaces/IPageViewPerformanceTelemetry';
 export { Trace } from './Telemetry/Trace';
 export { PageViewPerformance } from './Telemetry/PageViewPerformance';
 export { Data } from './Telemetry/Common/Data';
