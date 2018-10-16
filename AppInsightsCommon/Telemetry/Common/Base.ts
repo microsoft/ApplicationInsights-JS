@@ -1,4 +1,4 @@
-﻿import { ISerializable } from '../../Interfaces/ISerializable';
+﻿import { ISerializable } from '../../Interfaces/Telemetry/ISerializable';
 import { Base as AIBase } from '../../Interfaces/Contracts/Generated/Base'
 
 

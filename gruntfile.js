@@ -228,6 +228,21 @@ module.exports = function (grunt) {
                 }
             }
         },
+        copy: {
+            commonBundleToTypes: {
+                expand: true,
+                cwd: 'AppInsightsCommon/amd/bundle',
+                src: './**/*.d.ts',
+                dest: 'AppInsightsCommon/amd/types/'
+            }
+        },
+        rename: {
+            commonBundleToTypes: {
+                files: [
+                    {src: 'AppInsightsCommon/amd/types/applicationinsights-common.d.ts', dest: 'AppInsightsCommon/amd/types/index.d.ts'}
+                ]
+            }
+        },
         qunit: {
             all: {
                 options: {
@@ -302,6 +317,8 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-tslint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
+    grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-rename');
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("commoncjs", ["ts:commoncjs"]);
@@ -314,6 +331,7 @@ module.exports = function (grunt) {
     grunt.registerTask("aiskulite", ["ts:aiskulite"]);
     grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
     grunt.registerTask("aiskutests", ["ts:aisku", "ts:aiskutests", "qunit:aisku"]);
+    grunt.registerTask("types", ["copy:commonBundleToTypes", "rename:commonBundleToTypes"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "ts:types", "qunit:all", "common", "propertiestests", "depstest", "aitests", "aiskutests"]);
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiescjs", ["ts:propertiescjs"]);
