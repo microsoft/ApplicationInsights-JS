@@ -1,4 +1,7 @@
-﻿import { MessageData } from '../Interfaces/Contracts/Generated/MessageData';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { MessageData } from '../Interfaces/Contracts/Generated/MessageData';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';

@@ -1,4 +1,7 @@
-﻿/// <reference path="../AppInsights.ts" />
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+/// <reference path="../AppInsights.ts" />
 
 module Microsoft.ApplicationInsights.Telemetry {
     "use strict";

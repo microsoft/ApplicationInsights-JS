@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 export { Util, CorrelationIdHelper, UrlHelper, DateTimeUtils } from './Util';
 export { FieldType } from './Enums';
 export { RequestHeaders } from './RequestResponseHeaders';

@@ -1,4 +1,7 @@
-﻿/// <reference path="./Contracts/Generated/Envelope.ts" />
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+/// <reference path="./Contracts/Generated/Envelope.ts" />
 /// <reference path="./Context/IApplication.ts"/>
 /// <reference path="./Context/IDevice.ts"/>
 /// <reference path="./Context/IInternal.ts"/>

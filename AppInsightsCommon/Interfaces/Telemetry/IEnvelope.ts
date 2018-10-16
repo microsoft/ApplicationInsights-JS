@@ -1,4 +1,7 @@
-﻿import { ISerializable } from './ISerializable';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { ISerializable } from './ISerializable';
 
 export interface IEnvelope extends ISerializable {
     ver: number;

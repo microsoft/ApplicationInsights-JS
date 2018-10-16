@@ -1,4 +1,7 @@
-﻿import { MetricData } from '../Interfaces/Contracts/Generated/MetricData';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { MetricData } from '../Interfaces/Contracts/Generated/MetricData';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';

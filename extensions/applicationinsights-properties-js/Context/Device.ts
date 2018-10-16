@@ -1,4 +1,7 @@
-﻿import { IDevice } from '../Interfaces/Context/IDevice';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { IDevice } from '../Interfaces/Context/IDevice';
 
 export class Device implements IDevice {
 

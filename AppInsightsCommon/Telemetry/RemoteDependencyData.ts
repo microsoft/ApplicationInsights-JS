@@ -1,4 +1,7 @@
-﻿import { DataSanitizer } from './Common/DataSanitizer';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { Util } from '../Util';

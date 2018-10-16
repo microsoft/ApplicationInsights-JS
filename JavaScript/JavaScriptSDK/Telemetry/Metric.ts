@@ -1,4 +1,7 @@
-﻿/// <reference path="../../JavaScriptSDK.Interfaces/Telemetry/ISerializable.ts" />
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+/// <reference path="../../JavaScriptSDK.Interfaces/Telemetry/ISerializable.ts" />
 /// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/MetricData.ts" />
 /// <reference path="../Serializer.ts" />
 /// <reference path="./Common/DataSanitizer.ts" />
