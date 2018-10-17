@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-sdk-js",
-    "version": "0.0.19",
+    "version": "0.0.19-beta",
     "description": "Microsoft Application Insights Javascript SDK apis 2.0 beta",
     "main": "bundle/applicationinsights-sdk-js.js",
     "types": "bundle/applicationinsights-sdk-js.d.ts",
@@ -14,11 +14,11 @@
         "ts-loader": "^4.4.2"
     },
     "dependencies": {
-        "applicationinsights-analytics-js": "0.0.119",
-        "applicationinsights-channel-js": "0.0.55",
-        "applicationinsights-common": "0.0.97",
-        "applicationinsights-core-js": "0.0.93",
-        "applicationinsights-properties-js": "0.0.23",
-        "applicationinsights-dependencies-js": "0.0.15"
+        "applicationinsights-analytics-js": "0.0.119-beta",
+        "applicationinsights-channel-js": "0.0.55-beta",
+        "applicationinsights-common": "0.0.97-beta",
+        "applicationinsights-core-js": "0.0.93-beta",
+        "applicationinsights-properties-js": "0.0.23-beta",
+        "applicationinsights-dependencies-js": "0.0.15-beta"
     }
 }
