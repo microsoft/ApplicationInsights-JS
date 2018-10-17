@@ -14,11 +14,11 @@
         "ts-loader": "^4.4.2"
     },
     "dependencies": {
-        "applicationinsights-analytics-js": "0.0.119-beta",
-        "applicationinsights-channel-js": "0.0.55-beta",
-        "applicationinsights-common": "0.0.99-beta",
-        "applicationinsights-core-js": "0.0.93-beta",
-        "applicationinsights-properties-js": "0.0.23-beta",
-        "applicationinsights-dependencies-js": "0.0.15-beta"
+        "applicationinsights-analytics-js-amd": "0.0.119-beta",
+        "applicationinsights-channel-js-amd": "0.0.55-beta",
+        "applicationinsights-common-amd": "0.0.99-beta",
+        "applicationinsights-core-js-amd": "0.0.93-beta",
+        "applicationinsights-properties-js-amd": "0.0.23-beta",
+        "applicationinsights-dependencies-js-amd": "0.0.15-beta"
     }
 }

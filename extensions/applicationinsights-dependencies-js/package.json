@@ -1,5 +1,5 @@
 {
-    "name": "applicationinsights-dependencies-js",
+    "name": "applicationinsights-dependencies-js-amd",
     "version": "0.0.15-beta",
     "description": "Microsoft Application Insights XHR dependencies plugin",
     "main": "bundle/applicationinsights-dependencies-js.js",
@@ -12,7 +12,7 @@
         "grunt-ts": "^6.0.0-beta.15"
     },
     "dependencies": {
-        "applicationinsights-core-js": "0.0.93-beta",
-        "applicationinsights-common": "0.0.99-beta"
+        "applicationinsights-core-js-amd": "0.0.93-beta",
+        "applicationinsights-common-amd": "0.0.99-beta"
     }
 }

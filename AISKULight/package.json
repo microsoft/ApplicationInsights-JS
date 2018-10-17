@@ -15,7 +15,7 @@
         "grunt": "^1.0.3"
     },
     "dependencies": {
-        "applicationinsights-channel-js": "0.0.55-beta",
-        "applicationinsights-core-js": "0.0.93-beta"
+        "applicationinsights-channel-js-amd": "0.0.55-beta",
+        "applicationinsights-core-js-amd": "0.0.93-beta"
     }
 }

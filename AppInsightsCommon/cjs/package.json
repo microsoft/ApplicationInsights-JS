@@ -1,5 +1,5 @@
 {
-    "name": "applicationinsights-common",
+    "name": "applicationinsights-common-cjs",
     "version": "0.0.96",
     "description": "Microsoft Application Insights Common JavaScript Library - CommonJs version",
     "main": "bundle/applicationinsights-common.js",
@@ -13,6 +13,6 @@
         "typescript": "2.5.3"
     },
     "dependencies": {
-        "applicationinsights-core-js": "0.0.92"
+        "applicationinsights-core-js-cjs": "0.0.92-beta"
     }
 }
