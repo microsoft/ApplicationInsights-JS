@@ -1,6 +1,6 @@
 {
     "name": "applicationinsights-common-cjs",
-    "version": "0.0.96",
+    "version": "0.0.98-beta",
     "description": "Microsoft Application Insights Common JavaScript Library - CommonJs version",
     "main": "bundle/applicationinsights-common.js",
     "types": "bundle/applicationinsights-common.d.ts",

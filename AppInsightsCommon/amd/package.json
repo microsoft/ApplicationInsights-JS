@@ -1,5 +1,11 @@
 {
     "name": "applicationinsights-common-amd",
+    "author": "Microsoft Corporation",
+    "keywords": [
+        "azure",
+        "cloud",
+        "application insights common"
+    ],
     "version": "0.0.99-beta",
     "description": "Microsoft Application Insights Common JavaScript Library - AMD version",
     "main": "./bundle/applicationinsights-common.js",
@@ -14,5 +20,8 @@
     },
     "dependencies": {
         "applicationinsights-core-js-amd": "0.0.93-beta"
-    }
+    },
+    "repository": "github:Microsoft/ApplicationInsights-JS",
+    "license": "MIT",
+    "sideEffects": false
 }
