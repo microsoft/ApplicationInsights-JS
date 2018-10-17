@@ -5,10 +5,6 @@ before_install:
   - echo "registry=https://pkgs.dev.azure.com/mseng/_packaging/ApplicationInsights-Team/npm/registry/" > .npmrc
   - echo "" >> .npmrc
 before_script:
-  - cp .npmrc ApplicationInsights/
-  - cp .npmrc AppInsightsCommon/
   - cp .npmrc AISKU/
-  - cp .npmrc extensions/applicationinsights-properties-js/
-  - cp .npmrc extensions/applicationinsights-dependencies-js/
   - npm run build-prefixes
   - npm install grunt-cli -g
