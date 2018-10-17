@@ -1,4 +1,7 @@
-﻿import { IApplication } from '../Interfaces/Context/IApplication';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { IApplication } from '../Interfaces/Context/IApplication';
 
 export class Application implements IApplication {
     /**

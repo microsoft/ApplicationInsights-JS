@@ -1,4 +1,7 @@
-﻿import { IUser, IUserContextPlugin } from '../Interfaces/Context/IUser';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { IUser, IUserContextPlugin } from '../Interfaces/Context/IUser';
 import { ITelemetryConfig } from '../Interfaces/ITelemetryConfig';
 import { Util } from 'applicationinsights-common';
 import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from 'applicationinsights-core-js';

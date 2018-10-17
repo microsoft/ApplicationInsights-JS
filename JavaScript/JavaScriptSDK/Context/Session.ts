@@ -1,4 +1,7 @@
-﻿/// <reference path="../Util.ts" />
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+/// <reference path="../Util.ts" />
 /// <reference path="../../JavaScriptSDK.Interfaces/Context/ISession.ts" />
 
 module Microsoft.ApplicationInsights.Context {

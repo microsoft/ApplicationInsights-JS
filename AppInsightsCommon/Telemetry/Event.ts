@@ -1,4 +1,7 @@
-﻿import { IDiagnosticLogger } from 'applicationinsights-core-js';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { IDiagnosticLogger } from 'applicationinsights-core-js';
 import { EventData } from '../Interfaces/Contracts/Generated/EventData';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';

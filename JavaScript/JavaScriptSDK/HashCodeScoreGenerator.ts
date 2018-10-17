@@ -1,4 +1,7 @@
-﻿module Microsoft.ApplicationInsights {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+module Microsoft.ApplicationInsights {
     export class HashCodeScoreGenerator {
         // We're using 32 bit math, hence max value is (2^31 - 1)
         public static INT_MAX_VALUE: number = 2147483647;

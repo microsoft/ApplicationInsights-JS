@@ -1,4 +1,7 @@
-﻿import { Envelope as AIEnvelope } from '../../Interfaces/Contracts/Generated/Envelope';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { Envelope as AIEnvelope } from '../../Interfaces/Contracts/Generated/Envelope';
 import { Base } from '../../Interfaces/Contracts/Generated/Base';
 import { IEnvelope } from '../../Interfaces/Telemetry/IEnvelope';
 import { DataSanitizer } from './DataSanitizer';

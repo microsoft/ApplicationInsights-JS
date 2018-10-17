@@ -1,4 +1,7 @@
-﻿import { DataSanitizer, UrlHelper, DateTimeUtils } from 'applicationinsights-common';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { DataSanitizer, UrlHelper, DateTimeUtils } from 'applicationinsights-common';
 import { IDiagnosticLogger } from 'applicationinsights-core-js';
 
 export class XHRMonitoringState {

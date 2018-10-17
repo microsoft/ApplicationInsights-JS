@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 export { Util, CorrelationIdHelper, UrlHelper, DateTimeUtils } from './Util';
 export { FieldType } from './Enums';
 export { RequestHeaders } from './RequestResponseHeaders';
@@ -29,3 +32,4 @@ export { ContextTagKeys } from './Interfaces/Contracts/Generated/ContextTagKeys'
 export { DataSanitizer } from './Telemetry/Common/DataSanitizer';
 export { TelemetryItemCreator } from './TelemetryItemCreator';
 export { ICorrelationConfig } from './Interfaces/ICorrelationConfig';
+export { IAppInsights } from './Interfaces/IAppInsights';

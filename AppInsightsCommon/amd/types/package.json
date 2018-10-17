@@ -1,0 +1,6 @@
+{
+  "name": "applicationinsights-sdk-js-types",
+  "description": "Type definitions for Microsoft Application Insights JavaScript SDK",
+  "version": "0.0.1",
+  "license": "MIT"
+}
