@@ -1,4 +1,7 @@
-﻿/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/PageViewData.ts" />
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+/// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/PageViewData.ts" />
 /// <reference path="./Common/DataSanitizer.ts"/>
 
 module Microsoft.ApplicationInsights.Telemetry {

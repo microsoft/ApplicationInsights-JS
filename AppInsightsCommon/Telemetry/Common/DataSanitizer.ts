@@ -1,4 +1,7 @@
-﻿import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId } from 'applicationinsights-core-js';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId } from 'applicationinsights-core-js';
 import { Util } from '../../Util';
 
 export class DataSanitizer {

@@ -1,6 +1,6 @@
 {
-    "name": "applicationinsights-analytics-js",
-    "version": "0.0.118",
+    "name": "applicationinsights-analytics-js-cjs",
+    "version": "0.0.118-beta",
     "description": "Microsoft Application Insights Javascript SDK APIs for commonjs",
     "main": "bundle/applicationinsights-analytics-js.js",
     "types": "bundle/applicationinsights-analytics-js.d.ts",
@@ -8,7 +8,7 @@
         "typescript": "2.5.3"
     },
     "dependencies": {
-        "applicationinsights-common": "0.0.96",
-        "applicationinsights-core-js": "0.0.92"
+        "applicationinsights-common-cjs": "0.0.98-beta",
+        "applicationinsights-core-js-cjs": "0.0.92-beta"
     }
 }

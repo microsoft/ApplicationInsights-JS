@@ -1,6 +1,9 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem } from "applicationinsights-core-js";
-import { ApplicationInsights, IAppInsights } from "applicationinsights-analytics-js";
-import { Util, IConfig, IDependencyTelemetry, PageViewPerformance, IPageViewPerformanceTelemetry, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-common";
+import { ApplicationInsights } from "applicationinsights-analytics-js";
+import { Util, IConfig, IDependencyTelemetry, PageViewPerformance, IPageViewPerformanceTelemetry, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAppInsights } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
 import { PropertiesPlugin, IPropertiesPlugin } from "applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from 'applicationinsights-dependencies-js';
@@ -135,15 +138,8 @@ export class Initialization implements IApplicationInsights {
         }
     }
 
-    public pollInteralLogs(appInsightsInstance: ApplicationInsights) {
-        // return setInterval(() => {
-        //     var queue: Array<_InternalLogMessage> = ApplicationInsights._InternalLogging.queue;
-        //     var length = queue.length;
-        //     for (var i = 0; i < length; i++) {
-        //         appInsightsInstance.trackTrace(queue[i].message);
-        //     }
-        //     queue.length = 0;
-        // }, this.config.diagnosticLogInterval);
+    public pollInternalLogs(): void {
+        this.core.pollInternalLogs();
     }
 
     public addHousekeepingBeforeUnload(appInsightsInstance: IApplicationInsights): void {
@@ -167,14 +163,14 @@ export class Initialization implements IApplicationInsights {
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
                 // Todo: move this against interface behavior
-                if (this.core.extensions["AppInsightsPropertiesPlugin"] &&
-                    this.core.extensions["AppInsightsPropertiesPlugin"]._sessionManager) {
-                    this.core.extensions["AppInsightsPropertiesPlugin"]._sessionManager.backup();
+                if (appInsightsInstance.appInsights.core['_extensions']["AppInsightsPropertiesPlugin"] &&
+                    appInsightsInstance.appInsights.core['_extensions']["AppInsightsPropertiesPlugin"]._sessionManager) {
+                    appInsightsInstance.appInsights.core['_extensions']["AppInsightsPropertiesPlugin"]._sessionManager.backup();
                 }
             };
 
             if (!Util.addEventHandler('beforeunload', performHousekeeping)) {
-                this.core.logger.throwInternal(
+                appInsightsInstance.appInsights.core.logger.throwInternal(
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.FailedToAddHandlerForOnBeforeUnload,
                     'Could not add handler for beforeunload');
@@ -201,6 +197,7 @@ export class Initialization implements IApplicationInsights {
         const extensionConfig: IConfig = configuration.extensionConfig[identifier]; // ref to main config
         // set default values
         configuration.endpointUrl = configuration.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
+        configuration.diagnosticLoggingInterval = configuration.diagnosticLoggingInterval || 10000;
         extensionConfig.sessionRenewalMs = 30 * 60 * 1000;
         extensionConfig.sessionExpirationMs = 24 * 60 * 60 * 1000;
 
@@ -208,7 +205,6 @@ export class Initialization implements IApplicationInsights {
         extensionConfig.disableExceptionTracking = Util.stringToBoolOrDefault(extensionConfig.disableExceptionTracking);
         extensionConfig.consoleLoggingLevel = extensionConfig.consoleLoggingLevel || 1; // Show only CRITICAL level
         extensionConfig.telemetryLoggingLevel = extensionConfig.telemetryLoggingLevel || 0; // Send nothing
-        extensionConfig.diagnosticLogInterval = extensionConfig.diagnosticLogInterval || 10000;
         extensionConfig.autoTrackPageVisitTime = Util.stringToBoolOrDefault(extensionConfig.autoTrackPageVisitTime);
 
         if (isNaN(extensionConfig.samplingPercentage) || extensionConfig.samplingPercentage <= 0 || extensionConfig.samplingPercentage >= 100) {

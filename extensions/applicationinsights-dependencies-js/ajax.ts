@@ -1,4 +1,7 @@
-﻿import {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import {
     RequestHeaders, Util, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
     RemoteDependencyData, DateTimeUtils, DisabledPropertyName, Data, IDependencyTelemetry
 } from 'applicationinsights-common';

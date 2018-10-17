@@ -1,4 +1,7 @@
-﻿/// <reference path="../SamplingScoreGenerator.ts" />
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+/// <reference path="../SamplingScoreGenerator.ts" />
 /// <reference path="../../JavaScriptSDK.Interfaces/Contracts/Generated/Envelope.ts" />
 /// <reference path="../../JavaScriptSDK.Interfaces/Context/ISample.ts" />
 
