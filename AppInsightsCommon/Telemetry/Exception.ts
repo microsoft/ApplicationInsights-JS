@@ -1,4 +1,7 @@
-﻿import { StackFrame } from '../Interfaces/Contracts/Generated/StackFrame';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { StackFrame } from '../Interfaces/Contracts/Generated/StackFrame';
 import { ExceptionData } from '../Interfaces/Contracts/Generated/ExceptionData';
 import { ExceptionDetails } from '../Interfaces/Contracts/Generated/ExceptionDetails';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';

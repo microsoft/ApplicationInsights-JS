@@ -1,4 +1,7 @@
-﻿export interface IDevice {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+export interface IDevice {
     /**
      * The type for the current device.
      */

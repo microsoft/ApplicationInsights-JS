@@ -1,4 +1,7 @@
-﻿module Microsoft.ApplicationInsights {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+module Microsoft.ApplicationInsights {
     "use strict";
 
     /* Data loss analyzer is disabled by default.

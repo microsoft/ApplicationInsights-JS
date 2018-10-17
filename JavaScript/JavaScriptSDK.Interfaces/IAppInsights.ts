@@ -1,4 +1,7 @@
-﻿/// <reference path="./IConfig.ts" />
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+/// <reference path="./IConfig.ts" />
 /// <reference path="./ITelemetryContext.ts" />
 /// <reference path="./Contracts/Generated/SeverityLevel.ts" />
 

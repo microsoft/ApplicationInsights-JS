@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { 
-    IPageViewTelemetry,
-    IExceptionTelemetry,
-    IAutoExceptionTelemetry,
-    ITraceTelemetry,
-    IMetricTelemetry,
-    IPageViewPerformanceTelemetry
-} from 'applicationinsights-common';
+import { IPageViewTelemetry } from './IPageViewTelemetry';
+import { IExceptionTelemetry } from './IExceptionTelemetry';
+import { IAutoExceptionTelemetry } from './IExceptionTelemetry';
+import { ITraceTelemetry } from './ITraceTelemetry';
+import { IMetricTelemetry } from  './IMetricTelemetry';
+import { IPageViewPerformanceTelemetry } from './IPageViewPerformanceTelemetry';
 import { ITelemetryItem } from 'applicationinsights-core-js';
 
 export interface IAppInsights {

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem } from "applicationinsights-core-js";
 import { ApplicationInsights, IAppInsights } from "applicationinsights-analytics-js";
 import { Util, IConfig, IDependencyTelemetry, PageViewPerformance, IPageViewPerformanceTelemetry, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-common";

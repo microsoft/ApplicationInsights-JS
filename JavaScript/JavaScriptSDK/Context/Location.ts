@@ -1,4 +1,7 @@
-﻿/// <reference path="../../JavaScriptSDK.Interfaces/Context/ILocation.ts" />
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+/// <reference path="../../JavaScriptSDK.Interfaces/Context/ILocation.ts" />
 
 module Microsoft.ApplicationInsights.Context {
 
