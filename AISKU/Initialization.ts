@@ -138,15 +138,8 @@ export class Initialization implements IApplicationInsights {
         }
     }
 
-    public pollInteralLogs(appInsightsInstance: ApplicationInsights) {
-        // return setInterval(() => {
-        //     var queue: Array<_InternalLogMessage> = ApplicationInsights._InternalLogging.queue;
-        //     var length = queue.length;
-        //     for (var i = 0; i < length; i++) {
-        //         appInsightsInstance.trackTrace(queue[i].message);
-        //     }
-        //     queue.length = 0;
-        // }, this.config.diagnosticLogInterval);
+    public pollInternalLogs(): void {
+        this.core.pollInternalLogs();
     }
 
     public addHousekeepingBeforeUnload(appInsightsInstance: IApplicationInsights): void {

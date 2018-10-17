@@ -36,6 +36,8 @@ try {
                 // Empty queue of all api calls logged prior to sdk download
                 initialization.emptyQueue();
 
+                initialization.pollInternalLogs();
+
                 initialization.addHousekeepingBeforeUnload(appInsightsLocal);
             }
         }
