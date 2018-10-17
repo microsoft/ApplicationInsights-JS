@@ -163,14 +163,14 @@ export class Initialization implements IApplicationInsights {
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
                 // Todo: move this against interface behavior
-                if (this.core.extensions["AppInsightsPropertiesPlugin"] &&
-                    this.core.extensions["AppInsightsPropertiesPlugin"]._sessionManager) {
-                    this.core.extensions["AppInsightsPropertiesPlugin"]._sessionManager.backup();
+                if (appInsightsInstance.appInsights.core['_extensions']["AppInsightsPropertiesPlugin"] &&
+                    appInsightsInstance.appInsights.core['_extensions']["AppInsightsPropertiesPlugin"]._sessionManager) {
+                    appInsightsInstance.appInsights.core['_extensions']["AppInsightsPropertiesPlugin"]._sessionManager.backup();
                 }
             };
 
             if (!Util.addEventHandler('beforeunload', performHousekeeping)) {
-                this.core.logger.throwInternal(
+                appInsightsInstance.appInsights.core.logger.throwInternal(
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.FailedToAddHandlerForOnBeforeUnload,
                     'Could not add handler for beforeunload');
