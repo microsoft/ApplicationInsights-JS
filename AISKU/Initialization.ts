@@ -197,6 +197,7 @@ export class Initialization implements IApplicationInsights {
         const extensionConfig: IConfig = configuration.extensionConfig[identifier]; // ref to main config
         // set default values
         configuration.endpointUrl = configuration.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
+        configuration.diagnosticLoggingInterval = configuration.diagnosticLoggingInterval || 10000;
         extensionConfig.sessionRenewalMs = 30 * 60 * 1000;
         extensionConfig.sessionExpirationMs = 24 * 60 * 60 * 1000;
 
@@ -204,7 +205,6 @@ export class Initialization implements IApplicationInsights {
         extensionConfig.disableExceptionTracking = Util.stringToBoolOrDefault(extensionConfig.disableExceptionTracking);
         extensionConfig.consoleLoggingLevel = extensionConfig.consoleLoggingLevel || 1; // Show only CRITICAL level
         extensionConfig.telemetryLoggingLevel = extensionConfig.telemetryLoggingLevel || 0; // Send nothing
-        extensionConfig.diagnosticLogInterval = extensionConfig.diagnosticLogInterval || 10000;
         extensionConfig.autoTrackPageVisitTime = Util.stringToBoolOrDefault(extensionConfig.autoTrackPageVisitTime);
 
         if (isNaN(extensionConfig.samplingPercentage) || extensionConfig.samplingPercentage <= 0 || extensionConfig.samplingPercentage >= 100) {
