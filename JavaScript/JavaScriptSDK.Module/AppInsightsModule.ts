@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 /// <reference path="../JavaScriptSDK.Interfaces/IConfig.ts"/>
 /// <reference path="../JavaScriptSDK.Interfaces/IAppInsights.ts"/>
 /// <reference path="../JavaScriptSDK/UtilHelpers.ts"/>

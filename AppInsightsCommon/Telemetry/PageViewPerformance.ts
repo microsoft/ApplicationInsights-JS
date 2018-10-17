@@ -1,4 +1,7 @@
-﻿import { PageViewPerfData } from '../Interfaces/Contracts/Generated/PageViewPerfData';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { PageViewPerfData } from '../Interfaces/Contracts/Generated/PageViewPerfData';
 import { FieldType } from '../Enums';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';

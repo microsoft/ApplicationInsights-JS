@@ -1,4 +1,7 @@
-﻿/// <reference path="Initialization.ts" />
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+/// <reference path="Initialization.ts" />
 
 module Microsoft.ApplicationInsights {
     "use strict";

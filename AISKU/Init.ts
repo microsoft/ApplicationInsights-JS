@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { ApplicationInsights } from "applicationinsights-analytics-js";
 import { Initialization, Snippet } from "./Initialization";
 
@@ -32,6 +35,8 @@ try {
 
                 // Empty queue of all api calls logged prior to sdk download
                 initialization.emptyQueue();
+
+                initialization.pollInternalLogs();
 
                 initialization.addHousekeepingBeforeUnload(appInsightsLocal);
             }

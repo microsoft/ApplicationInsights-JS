@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { PageViewPerformance } from "./Telemetry/PageViewPerformance";
 import { Util } from "./Util";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";

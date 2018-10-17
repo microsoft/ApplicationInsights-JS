@@ -1,4 +1,7 @@
-﻿import { ILocation } from '../Interfaces/Context/ILocation';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { ILocation } from '../Interfaces/Context/ILocation';
 
 export class Location implements ILocation {
 

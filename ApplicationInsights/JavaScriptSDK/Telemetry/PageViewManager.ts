@@ -1,4 +1,7 @@
-﻿import {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import {
     PageViewPerformance, Util, IPageViewTelemetry, IPageViewTelemetryInternal
 } from 'applicationinsights-common';
 import { IAppInsightsCore, CoreUtils, IDiagnosticLogger, LoggingSeverity,

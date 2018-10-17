@@ -1,4 +1,7 @@
-﻿/// <reference path="Sender.ts"/>
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+/// <reference path="Sender.ts"/>
 /// <reference path="Telemetry/Trace.ts" />
 /// <reference path="Telemetry/Event.ts" />
 /// <reference path="Telemetry/Exception.ts" />

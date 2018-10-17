@@ -1,4 +1,7 @@
-﻿import { IApplication } from './Context/IApplication';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { IApplication } from './Context/IApplication';
 import { IDevice } from './Context/IDevice';
 import { IInternal } from './Context/IInternal';
 import { ILocation } from './Context/ILocation';

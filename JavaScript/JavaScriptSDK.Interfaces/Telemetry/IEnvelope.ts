@@ -1,4 +1,7 @@
-﻿/// <reference path="./ISerializable.ts" />
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+/// <reference path="./ISerializable.ts" />
 
 module Microsoft.ApplicationInsights {
 

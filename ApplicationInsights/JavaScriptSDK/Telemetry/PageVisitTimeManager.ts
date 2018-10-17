@@ -1,4 +1,7 @@
-﻿import { Util } from 'applicationinsights-common';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { Util } from 'applicationinsights-common';
 import { IDiagnosticLogger } from 'applicationinsights-core-js';
 
 /**
