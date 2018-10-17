@@ -13,6 +13,6 @@
     },
     "dependencies": {
         "applicationinsights-core-js": "0.0.93-beta",
-        "applicationinsights-common": "0.0.97-beta"
+        "applicationinsights-common": "0.0.99-beta"
     }
 }

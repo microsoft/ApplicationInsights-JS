@@ -6,6 +6,7 @@
 import {
     IConfig,
     Util, PageViewPerformance,
+    IAppInsights,
     PageView, IEnvelope, RemoteDependencyData,
     TelemetryItemCreator, Data, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry, IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry
@@ -17,7 +18,6 @@ import {
 } from "applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
-import { IAppInsights } from "../JavaScriptSDK.Interfaces/IAppInsights";
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 
 "use strict";

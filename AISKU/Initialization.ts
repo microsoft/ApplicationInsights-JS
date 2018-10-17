@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem } from "applicationinsights-core-js";
-import { ApplicationInsights, IAppInsights } from "applicationinsights-analytics-js";
-import { Util, IConfig, IDependencyTelemetry, PageViewPerformance, IPageViewPerformanceTelemetry, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry } from "applicationinsights-common";
+import { ApplicationInsights } from "applicationinsights-analytics-js";
+import { Util, IConfig, IDependencyTelemetry, PageViewPerformance, IPageViewPerformanceTelemetry, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAppInsights } from "applicationinsights-common";
 import { Sender } from "applicationinsights-channel-js";
 import { PropertiesPlugin, IPropertiesPlugin } from "applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from 'applicationinsights-dependencies-js';
