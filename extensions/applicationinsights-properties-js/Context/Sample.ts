@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
 import { ISample } from '../Interfaces/Context/ISample';
 import { IEnvelope } from 'applicationinsights-common';

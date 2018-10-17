@@ -1,4 +1,7 @@
-﻿import { HashCodeScoreGenerator } from './HashCodeScoreGenerator';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { HashCodeScoreGenerator } from './HashCodeScoreGenerator';
 import { IEnvelope, ContextTagKeys } from 'applicationinsights-common';
 
 export class SamplingScoreGenerator {

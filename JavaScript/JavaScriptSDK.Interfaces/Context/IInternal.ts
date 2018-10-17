@@ -1,4 +1,7 @@
-﻿module Microsoft.ApplicationInsights.Context {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+module Microsoft.ApplicationInsights.Context {
 
     "use strict";
 

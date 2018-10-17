@@ -1,4 +1,7 @@
-﻿/// <reference path="../../Logging.ts" />
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+/// <reference path="../../Logging.ts" />
 /// <reference path="../../Util.ts"/>
 
 module Microsoft.ApplicationInsights.Telemetry.Common {

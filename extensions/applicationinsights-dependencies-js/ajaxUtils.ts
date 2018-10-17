@@ -1,4 +1,7 @@
-﻿import { CoreUtils } from 'applicationinsights-core-js';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { CoreUtils } from 'applicationinsights-core-js';
 
 export class stringUtils {
     public static GetLength(strObject) {

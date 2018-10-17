@@ -8,8 +8,14 @@
     "target": "es5",
     "alwaysStrict": true,
     "declaration": true,
+    "declarationMap": true,
     "outDir": "amd/bundle",
     "rootDir": "AppInsightsCommon"
   },
-  "files": []
+  "include": [
+    "./*.ts",
+    "Interfaces/**/*",
+    "Telemetry/**/*"
+  ],
+  "exclude": ["node_modules"]
 }

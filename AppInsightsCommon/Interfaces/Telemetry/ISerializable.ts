@@ -1,4 +1,7 @@
-﻿export interface ISerializable {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+export interface ISerializable {
     /**
      * The set of fields for a serializable object. 
      * This defines the serialization order and a value of true/false

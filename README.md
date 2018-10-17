@@ -10,8 +10,8 @@
 To use this SDK, you'll need a subscription to [Microsoft Azure](https://azure.com). Application Insights has a free subscription option.
 In the [Azure Preview Portal](https://portal.azure.com), create new or open an existing Application Insights resource.
 
-## Initializing Application Insights JS SDK script   
-There are several ways to initialize Aplication Insights.     
+## Initializing Application Insights JS SDK script
+There are several ways to initialize Application Insights.
 
 |                                    | **Dynamic loading.** JS script tag is inserted in the head of the page. This is the recommended approach as our CDN is getting frequent updates.                                                                                                           | **Static loading.** You are responsible for including JS script tag or bundling the script with your other scripts. |
 |------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|

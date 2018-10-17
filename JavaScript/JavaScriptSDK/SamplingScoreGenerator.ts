@@ -1,4 +1,7 @@
-﻿/// <reference path="./HashCodeScoreGenerator.ts" />
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+/// <reference path="./HashCodeScoreGenerator.ts" />
 /// <reference path="../JavaScriptSDK.Interfaces/Contracts/Generated/Envelope.ts" />
 
 module Microsoft.ApplicationInsights {
