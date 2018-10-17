@@ -2,9 +2,4 @@ language: node_js
 node_js:
   - "10.9"
 before_script:
-  - cp .npmrc ApplicationInsights/
-  - cp .npmrc AppInsightsCommon/
-  - cp .npmrc AISKU/
-  - cp .npmrc extensions/applicationinsights-properties-js/
-  - cp .npmrc extensions/applicationinsights-dependencies-js/
   - npm install grunt-cli -g
