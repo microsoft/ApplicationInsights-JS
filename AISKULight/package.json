@@ -1,11 +1,14 @@
 {
-    "name": "applicationinsights-sdk-light.js",
-    "version": "0.0.5-beta",
+    "name": "applicationinsights-sdk-basic",
+    "version": "1.0.0-beta",
     "description": "Microsoft Application Insights Javascript SDK core and channel",
-    "main": "bundle/index.js",
-    "types": "bundle/applicationinsights-sdk-light.d.ts",
+    "main": "dist-esm/index.js",
+    "browser": "browser/index.js",
+    "types": "types/index.d.ts",
     "devDependencies": {
         "rollup-plugin-node-resolve": "^3.4.0",
+        "rollup-plugin-uglify": "^6.0.0",
+        "rollup-plugin-visualizer": "^0.9.2",
         "source-map-loader": "^0.2.3",
         "typescript": "2.5.3",
         "webpack": "^4.16.4",
@@ -15,7 +18,7 @@
         "grunt": "^1.0.3"
     },
     "dependencies": {
-        "applicationinsights-channel-js-amd": "0.0.55-beta",
-        "applicationinsights-core-js-amd": "0.0.93-beta"
+        "applicationinsights-channel-js": "^1.0.0-beta",
+        "applicationinsights-core-js": "^1.0.0-beta"
     }
 }
