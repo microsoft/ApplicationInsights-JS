@@ -3,19 +3,18 @@
     "sourceMap": true,
     "inlineSources": true,
     "noImplicitAny": false,
-    "module": "amd",
+    "module": "es6",
     "moduleResolution": "Node",
     "target": "es5",
     "alwaysStrict": true,
     "declaration": true,
     "declarationMap": true,
-    "outDir": "amd/bundle",
-    "rootDir": "AppInsightsCommon"
+    "declarationDir": "AppInsightsCommon/types",
+    "outDir": "dist-esm",
+    "rootDir": "AppInsightsCommon/src"
   },
   "include": [
-    "./*.ts",
-    "Interfaces/**/*",
-    "Telemetry/**/*"
+    "./src/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

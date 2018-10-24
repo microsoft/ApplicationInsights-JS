@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { StorageType } from "./Enums";
-import { CoreUtils, _InternalMessageId, LoggingSeverity, IDiagnosticLogger } from "applicationinsights-core-js";
+import { CoreUtils, _InternalMessageId, LoggingSeverity, IDiagnosticLogger,  } from "applicationinsights-core-js";
 import { IConfig } from "./Interfaces/IConfig";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";

@@ -4,7 +4,9 @@
 *
 
 # ... but these files
-!package.json
-!bundle/applicationinsights-common.js
-!bundle/applicationinsights-common.js.map
-!bundle/applicationinsights-common.d.ts
+!/package.json
+!/tsconfig.json
+!/browser/**
+!/dist-esm/**
+!/types/**
+!/src/**
