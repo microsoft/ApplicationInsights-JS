@@ -1,6 +1,5 @@
 /// <reference path='./TestFramework/Common.ts' />
-import { Initialization, IApplicationInsights } from '../Initialization'
-import { ApplicationInsights } from 'applicationinsights-analytics-js';
+import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-sdk'
 import { Sender } from 'applicationinsights-channel-js';
 
 export class SanitizerE2ETests extends TestClass {
@@ -22,7 +21,7 @@ export class SanitizerE2ETests extends TestClass {
             this.useFakeTimers = false;
             this.clock.restore();
 
-            var init = new Initialization({
+            var init = new ApplicationInsights({
                 config: {
                     instrumentationKey: this._instrumentationKey,
                     extensionConfig: {

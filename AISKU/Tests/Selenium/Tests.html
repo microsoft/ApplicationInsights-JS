@@ -24,21 +24,21 @@
         });
         require([
             'qunit',
-            'node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js',
+            'node_modules/applicationinsights-core-js/browser/applicationinsights-core-js',
         ], function(QUnit, core) {
             console.log('core', core);
             console.log('Qunit', QUnit);
             define('applicationinsights-core-js', function(){return core;})
             require([
-                'node_modules/applicationinsights-common/bundle/applicationinsights-common'
+                'node_modules/applicationinsights-common/browser/applicationinsights-common'
             ], function(common) {
                 console.log('common', common);
                 define('applicationinsights-common', common);
                 require([
-                    'node_modules/applicationinsights-analytics-js/bundle/applicationinsights-analytics-js',
-                    'node_modules/applicationinsights-channel-js/bundle/applicationinsights-channel-js',
-                    'node_modules/applicationinsights-properties-js/bundle/applicationinsights-properties-js',
-                    'node_modules/applicationinsights-dependencies-js/bundle/applicationinsights-dependencies-js'
+                    'node_modules/applicationinsights-analytics-js/browser/applicationinsights-analytics-js',
+                    'node_modules/applicationinsights-channel-js/browser/applicationinsights-channel-js',
+                    'node_modules/applicationinsights-properties-js/browser/applicationinsights-properties-js',
+                    'node_modules/applicationinsights-dependencies-js/browser/applicationinsights-dependencies-js'
                 ], function(analytics, channel, properties, dependencies) {
                     console.log('analytics', analytics);
                     console.log('channel', channel);

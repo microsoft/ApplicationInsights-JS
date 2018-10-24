@@ -1,5 +1,5 @@
 /// <reference path='./TestFramework/Common.ts' />
-import { Initialization, IApplicationInsights } from '../Initialization'
+import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-sdk'
 import { Sender } from 'applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Util } from 'applicationinsights-common';
 
@@ -38,7 +38,7 @@ export class ApplicationInsightsTests extends TestClass {
             this.useFakeTimers = false;
             this.clock.restore();
 
-            var init = new Initialization({
+            var init = new ApplicationInsights({
                 config: {
                     instrumentationKey: ApplicationInsightsTests._instrumentationKey,
                     extensionConfig: {
