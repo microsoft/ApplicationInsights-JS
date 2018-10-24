@@ -1,10 +1,10 @@
 {
-    "name": "applicationinsights-dependencies-js",
+    "name": "applicationinsights-properties-js",
     "version": "1.0.0-beta",
-    "description": "Microsoft Application Insights XHR dependencies plugin",
-    "main": "dist-esm/applicationinsights-dependencies-js.js",
-    "browser": "browser/applicationinsights-dependencies-js.js",
-    "types": "types/applicationinsights-dependencies-js.d.ts",
+    "description": "Microsoft Application Insights properties (Part A) plugin",
+    "main": "dist-esm/applicationinsights-properties-js.js",
+    "types": "types/applicationinsights-properties-js.d.ts",
+    "browser": "browser/applicationinsights-properties-js.min.js",
     "sideEffects": false,
     "devDependencies": {
         "typescript": "2.5.3",

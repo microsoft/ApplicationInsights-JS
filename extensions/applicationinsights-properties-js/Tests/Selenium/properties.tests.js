@@ -332,11 +332,15 @@ sinon.config = {
     useFakeTimers: true,
     useFakeServer: true
 };
-define("Interfaces/Context/ISession", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Interfaces/Context/ISession", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
-define("Context/Session", ["require", "exports", "applicationinsights-common", "applicationinsights-core-js"], function (require, exports, applicationinsights_common_1, applicationinsights_core_js_1) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Context/Session", ["require", "exports", "applicationinsights-common", "applicationinsights-core-js"], function (require, exports, applicationinsights_common_1, applicationinsights_core_js_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Session = /** @class */ (function () {
@@ -489,11 +493,15 @@ define("Context/Session", ["require", "exports", "applicationinsights-common", "
     }());
     exports._SessionManager = _SessionManager;
 });
-define("Interfaces/Context/IApplication", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Interfaces/Context/IApplication", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
-define("Context/Application", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Context/Application", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Application = /** @class */ (function () {
@@ -503,11 +511,15 @@ define("Context/Application", ["require", "exports"], function (require, exports
     }());
     exports.Application = Application;
 });
-define("Interfaces/Context/IDevice", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Interfaces/Context/IDevice", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
-define("Context/Device", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Context/Device", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Device = /** @class */ (function () {
@@ -525,15 +537,21 @@ define("Context/Device", ["require", "exports"], function (require, exports) {
     }());
     exports.Device = Device;
 });
-define("Interfaces/Context/IInternal", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Interfaces/Context/IInternal", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
-define("Interfaces/ITelemetryConfig", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Interfaces/ITelemetryConfig", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
-define("Context/Internal", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Context/Internal", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Version = "2.0.1-beta";
@@ -548,11 +566,15 @@ define("Context/Internal", ["require", "exports"], function (require, exports) {
     }());
     exports.Internal = Internal;
 });
-define("Interfaces/Context/ILocation", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Interfaces/Context/ILocation", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
-define("Context/Location", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Context/Location", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Location = /** @class */ (function () {
@@ -562,11 +584,15 @@ define("Context/Location", ["require", "exports"], function (require, exports) {
     }());
     exports.Location = Location;
 });
-define("Interfaces/Context/IOperation", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Interfaces/Context/IOperation", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
-define("Context/Operation", ["require", "exports", "applicationinsights-common"], function (require, exports, applicationinsights_common_2) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Context/Operation", ["require", "exports", "applicationinsights-common"], function (require, exports, applicationinsights_common_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Operation = /** @class */ (function () {
@@ -580,11 +606,15 @@ define("Context/Operation", ["require", "exports", "applicationinsights-common"]
     }());
     exports.Operation = Operation;
 });
-define("Interfaces/Context/IUser", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Interfaces/Context/IUser", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
-define("Context/User", ["require", "exports", "applicationinsights-common", "applicationinsights-core-js"], function (require, exports, applicationinsights_common_3, applicationinsights_core_js_2) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Context/User", ["require", "exports", "applicationinsights-common", "applicationinsights-core-js"], function (require, exports, applicationinsights_common_3, applicationinsights_core_js_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var User = /** @class */ (function () {
@@ -687,7 +717,9 @@ define("Context/User", ["require", "exports", "applicationinsights-common", "app
     }());
     exports.User = User;
 });
-define("HashCodeScoreGenerator", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/HashCodeScoreGenerator", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var HashCodeScoreGenerator = /** @class */ (function () {
@@ -722,7 +754,9 @@ define("HashCodeScoreGenerator", ["require", "exports"], function (require, expo
     }());
     exports.HashCodeScoreGenerator = HashCodeScoreGenerator;
 });
-define("SamplingScoreGenerator", ["require", "exports", "HashCodeScoreGenerator", "applicationinsights-common"], function (require, exports, HashCodeScoreGenerator_1, applicationinsights_common_4) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/SamplingScoreGenerator", ["require", "exports", "src/HashCodeScoreGenerator", "applicationinsights-common"], function (require, exports, HashCodeScoreGenerator_1, applicationinsights_common_4) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var SamplingScoreGenerator = /** @class */ (function () {
@@ -748,11 +782,15 @@ define("SamplingScoreGenerator", ["require", "exports", "HashCodeScoreGenerator"
     }());
     exports.SamplingScoreGenerator = SamplingScoreGenerator;
 });
-define("Interfaces/Context/ISample", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Interfaces/Context/ISample", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
-define("Context/Sample", ["require", "exports", "SamplingScoreGenerator", "applicationinsights-core-js"], function (require, exports, SamplingScoreGenerator_1, applicationinsights_core_js_3) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Context/Sample", ["require", "exports", "src/SamplingScoreGenerator", "applicationinsights-core-js"], function (require, exports, SamplingScoreGenerator_1, applicationinsights_core_js_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Sample = /** @class */ (function () {
@@ -783,11 +821,15 @@ define("Context/Sample", ["require", "exports", "SamplingScoreGenerator", "appli
     }());
     exports.Sample = Sample;
 });
-define("Interfaces/ITelemetryContext", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Interfaces/ITelemetryContext", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
-define("Interfaces/IPropertiesPlugin", ["require", "exports"], function (require, exports) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/Interfaces/IPropertiesPlugin", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
@@ -795,7 +837,7 @@ define("Interfaces/IPropertiesPlugin", ["require", "exports"], function (require
  * PropertiesPlugin.ts
  * @copyright Microsoft 2018
  */
-define("PropertiesPlugin", ["require", "exports", "applicationinsights-core-js", "applicationinsights-common", "Context/Session", "Context/Application", "Context/Device", "Context/Internal", "Context/Location", "Context/Operation", "Context/User", "Context/Sample"], function (require, exports, applicationinsights_core_js_4, applicationinsights_common_5, Session_1, Application_1, Device_1, Internal_1, Location_1, Operation_1, User_1, Sample_1) {
+define("src/PropertiesPlugin", ["require", "exports", "applicationinsights-core-js", "applicationinsights-common", "src/Context/Session", "src/Context/Application", "src/Context/Device", "src/Context/Internal", "src/Context/Location", "src/Context/Operation", "src/Context/User", "src/Context/Sample"], function (require, exports, applicationinsights_core_js_4, applicationinsights_common_5, Session_1, Application_1, Device_1, Internal_1, Location_1, Operation_1, User_1, Sample_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var PropertiesPlugin = /** @class */ (function () {
@@ -1016,7 +1058,7 @@ define("PropertiesPlugin", ["require", "exports", "applicationinsights-core-js",
     exports.default = PropertiesPlugin;
 });
 /// <reference path="../TestFramework/TestClass.ts" />
-define("Tests/Selenium/properties.tests", ["require", "exports", "applicationinsights-core-js", "PropertiesPlugin", "applicationinsights-common"], function (require, exports, applicationinsights_core_js_5, PropertiesPlugin_1, applicationinsights_common_6) {
+define("Tests/Selenium/properties.tests", ["require", "exports", "applicationinsights-core-js", "src/PropertiesPlugin", "applicationinsights-common"], function (require, exports, applicationinsights_core_js_5, PropertiesPlugin_1, applicationinsights_common_6) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var PropertiesTests = /** @class */ (function (_super) {

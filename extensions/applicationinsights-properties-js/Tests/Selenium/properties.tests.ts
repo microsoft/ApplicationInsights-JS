@@ -1,7 +1,7 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 
 import { AppInsightsCore, IConfiguration, DiagnosticLogger } from "applicationinsights-core-js";
-import PropertiesPlugin from "../../PropertiesPlugin";
+import PropertiesPlugin from "../../src/PropertiesPlugin";
 import { Util } from "applicationinsights-common";
 
 export class PropertiesTests extends TestClass {

@@ -178,7 +178,7 @@ declare class TestClass {
     sendJsonResponse(request: SinonFakeXMLHttpRequest, data: any, errorCode?: number): void;
     protected setUserAgent(userAgent: string): void;
 }
-declare module "Interfaces/Context/ISession" {
+declare module "src/Interfaces/Context/ISession" {
     export interface ISession {
         /**
         * The session ID.
@@ -201,8 +201,8 @@ declare module "Interfaces/Context/ISession" {
         renewalDate: number;
     }
 }
-declare module "Context/Session" {
-    import { ISession } from "Interfaces/Context/ISession";
+declare module "src/Context/Session" {
+    import { ISession } from "src/Interfaces/Context/ISession";
     import { IDiagnosticLogger } from 'applicationinsights-core-js';
     export interface ISessionConfig {
         sessionRenewalMs: () => number;
@@ -263,7 +263,7 @@ declare module "Context/Session" {
         private setStorage(guid, acq, renewal);
     }
 }
-declare module "Interfaces/Context/IApplication" {
+declare module "src/Interfaces/Context/IApplication" {
     export interface IApplication {
         /**
          * The application version.
@@ -275,8 +275,8 @@ declare module "Interfaces/Context/IApplication" {
         build: string;
     }
 }
-declare module "Context/Application" {
-    import { IApplication } from "Interfaces/Context/IApplication";
+declare module "src/Context/Application" {
+    import { IApplication } from "src/Interfaces/Context/IApplication";
     export class Application implements IApplication {
         /**
          * The application version.
@@ -288,7 +288,7 @@ declare module "Context/Application" {
         build: string;
     }
 }
-declare module "Interfaces/Context/IDevice" {
+declare module "src/Interfaces/Context/IDevice" {
     export interface IDevice {
         /**
          * The type for the current device.
@@ -336,8 +336,8 @@ declare module "Interfaces/Context/IDevice" {
         osversion: string;
     }
 }
-declare module "Context/Device" {
-    import { IDevice } from "Interfaces/Context/IDevice";
+declare module "src/Context/Device" {
+    import { IDevice } from "src/Interfaces/Context/IDevice";
     export class Device implements IDevice {
         /**
          * The type for the current device.
@@ -389,7 +389,7 @@ declare module "Context/Device" {
         constructor();
     }
 }
-declare module "Interfaces/Context/IInternal" {
+declare module "src/Interfaces/Context/IInternal" {
     export interface IInternal {
         /**
         * The SDK version used to create this telemetry item.
@@ -401,7 +401,7 @@ declare module "Interfaces/Context/IInternal" {
         agentVersion: string;
     }
 }
-declare module "Interfaces/ITelemetryConfig" {
+declare module "src/Interfaces/ITelemetryConfig" {
     export interface ITelemetryConfig {
         instrumentationKey: () => string;
         accountId: () => string;
@@ -414,9 +414,9 @@ declare module "Interfaces/ITelemetryConfig" {
         appId: () => string;
     }
 }
-declare module "Context/Internal" {
-    import { IInternal } from "Interfaces/Context/IInternal";
-    import { ITelemetryConfig } from "Interfaces/ITelemetryConfig";
+declare module "src/Context/Internal" {
+    import { IInternal } from "src/Interfaces/Context/IInternal";
+    import { ITelemetryConfig } from "src/Interfaces/ITelemetryConfig";
     export class Internal implements IInternal {
         /**
          * The SDK version used to create this telemetry item.
@@ -432,7 +432,7 @@ declare module "Context/Internal" {
         constructor(config: ITelemetryConfig);
     }
 }
-declare module "Interfaces/Context/ILocation" {
+declare module "src/Interfaces/Context/ILocation" {
     export interface ILocation {
         /**
          * Client IP address for reverse lookup
@@ -440,8 +440,8 @@ declare module "Interfaces/Context/ILocation" {
         ip: string;
     }
 }
-declare module "Context/Location" {
-    import { ILocation } from "Interfaces/Context/ILocation";
+declare module "src/Context/Location" {
+    import { ILocation } from "src/Interfaces/Context/ILocation";
     export class Location implements ILocation {
         /**
          * Client IP address for reverse lookup
@@ -449,7 +449,7 @@ declare module "Context/Location" {
         ip: string;
     }
 }
-declare module "Interfaces/Context/IOperation" {
+declare module "src/Interfaces/Context/IOperation" {
     export interface IOperation {
         /**
          * Operation id
@@ -473,8 +473,8 @@ declare module "Interfaces/Context/IOperation" {
         syntheticSource: string;
     }
 }
-declare module "Context/Operation" {
-    import { IOperation } from "Interfaces/Context/IOperation";
+declare module "src/Context/Operation" {
+    import { IOperation } from "src/Interfaces/Context/IOperation";
     export class Operation implements IOperation {
         id: string;
         name: string;
@@ -484,7 +484,7 @@ declare module "Context/Operation" {
         constructor();
     }
 }
-declare module "Interfaces/Context/IUser" {
+declare module "src/Interfaces/Context/IUser" {
     export interface IUser {
         /**
         * The telemetry configuration.
@@ -520,9 +520,9 @@ declare module "Interfaces/Context/IUser" {
         clearAuthenticatedUserContext(): any;
     }
 }
-declare module "Context/User" {
-    import { IUser, IUserContextPlugin } from "Interfaces/Context/IUser";
-    import { ITelemetryConfig } from "Interfaces/ITelemetryConfig";
+declare module "src/Context/User" {
+    import { IUser, IUserContextPlugin } from "src/Interfaces/Context/IUser";
+    import { ITelemetryConfig } from "src/Interfaces/ITelemetryConfig";
     import { IDiagnosticLogger } from 'applicationinsights-core-js';
     export class User implements IUser, IUserContextPlugin {
         static cookieSeparator: string;
@@ -573,7 +573,7 @@ declare module "Context/User" {
         private validateUserInput(id);
     }
 }
-declare module "HashCodeScoreGenerator" {
+declare module "src/HashCodeScoreGenerator" {
     export class HashCodeScoreGenerator {
         static INT_MAX_VALUE: number;
         private static MIN_INPUT_LENGTH;
@@ -581,7 +581,7 @@ declare module "HashCodeScoreGenerator" {
         getHashCode(input: string): number;
     }
 }
-declare module "SamplingScoreGenerator" {
+declare module "src/SamplingScoreGenerator" {
     import { IEnvelope } from 'applicationinsights-common';
     export class SamplingScoreGenerator {
         private hashCodeGeneragor;
@@ -589,7 +589,7 @@ declare module "SamplingScoreGenerator" {
         getSamplingScore(envelope: IEnvelope): number;
     }
 }
-declare module "Interfaces/Context/ISample" {
+declare module "src/Interfaces/Context/ISample" {
     export interface ISample {
         /**
         * Sample rate
@@ -597,8 +597,8 @@ declare module "Interfaces/Context/ISample" {
         sampleRate: number;
     }
 }
-declare module "Context/Sample" {
-    import { ISample } from "Interfaces/Context/ISample";
+declare module "src/Context/Sample" {
+    import { ISample } from "src/Interfaces/Context/ISample";
     import { ITelemetryItem, IDiagnosticLogger } from 'applicationinsights-core-js';
     export class Sample implements ISample {
         sampleRate: number;
@@ -612,14 +612,14 @@ declare module "Context/Sample" {
         isSampledIn(envelope: ITelemetryItem): boolean;
     }
 }
-declare module "Interfaces/ITelemetryContext" {
-    import { IApplication } from "Interfaces/Context/IApplication";
-    import { IDevice } from "Interfaces/Context/IDevice";
-    import { IInternal } from "Interfaces/Context/IInternal";
-    import { ILocation } from "Interfaces/Context/ILocation";
-    import { IOperation } from "Interfaces/Context/IOperation";
-    import { IUser } from "Interfaces/Context/IUser";
-    import { ISession } from "Interfaces/Context/ISession";
+declare module "src/Interfaces/ITelemetryContext" {
+    import { IApplication } from "src/Interfaces/Context/IApplication";
+    import { IDevice } from "src/Interfaces/Context/IDevice";
+    import { IInternal } from "src/Interfaces/Context/IInternal";
+    import { ILocation } from "src/Interfaces/Context/ILocation";
+    import { IOperation } from "src/Interfaces/Context/IOperation";
+    import { IUser } from "src/Interfaces/Context/IUser";
+    import { ISession } from "src/Interfaces/Context/ISession";
     export interface ITelemetryContext {
         /**
         * The object describing a component tracked by this object.
@@ -651,26 +651,26 @@ declare module "Interfaces/ITelemetryContext" {
         session: ISession;
     }
 }
-declare module "Interfaces/IPropertiesPlugin" {
-    import { IUserContextPlugin } from "Interfaces/Context/IUser";
+declare module "src/Interfaces/IPropertiesPlugin" {
+    import { IUserContextPlugin } from "src/Interfaces/Context/IUser";
     export interface IPropertiesPlugin extends IUserContextPlugin {
     }
 }
-declare module "PropertiesPlugin" {
+declare module "src/PropertiesPlugin" {
     /**
      * PropertiesPlugin.ts
      * @copyright Microsoft 2018
      */
     import { ITelemetryPlugin, IConfiguration, IAppInsightsCore, IPlugin, ITelemetryItem } from 'applicationinsights-core-js';
-    import { Session, _SessionManager } from "Context/Session";
-    import { Application } from "Context/Application";
-    import { Device } from "Context/Device";
-    import { Internal } from "Context/Internal";
-    import { Location } from "Context/Location";
-    import { Operation } from "Context/Operation";
-    import { User } from "Context/User";
-    import { Sample } from "Context/Sample";
-    import { ITelemetryContext } from "Interfaces/ITelemetryContext";
+    import { Session, _SessionManager } from "src/Context/Session";
+    import { Application } from "src/Context/Application";
+    import { Device } from "src/Context/Device";
+    import { Internal } from "src/Context/Internal";
+    import { Location } from "src/Context/Location";
+    import { Operation } from "src/Context/Operation";
+    import { User } from "src/Context/User";
+    import { Sample } from "src/Context/Sample";
+    import { ITelemetryContext } from "src/Interfaces/ITelemetryContext";
     export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryContext {
         priority: number;
         identifier: string;

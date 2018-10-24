@@ -332,7 +332,9 @@ sinon.config = {
     useFakeTimers: true,
     useFakeServer: true
 };
-define("ajaxRecord", ["require", "exports", "applicationinsights-common"], function (require, exports, applicationinsights_common_1) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/ajaxRecord", ["require", "exports", "applicationinsights-common"], function (require, exports, applicationinsights_common_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var XHRMonitoringState = /** @class */ (function () {
@@ -396,7 +398,9 @@ define("ajaxRecord", ["require", "exports", "applicationinsights-common"], funct
     exports.ajaxRecord = ajaxRecord;
     ;
 });
-define("ajaxUtils", ["require", "exports", "applicationinsights-core-js"], function (require, exports, applicationinsights_core_js_1) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/ajaxUtils", ["require", "exports", "applicationinsights-core-js"], function (require, exports, applicationinsights_core_js_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var stringUtils = /** @class */ (function () {
@@ -462,7 +466,9 @@ define("ajaxUtils", ["require", "exports", "applicationinsights-core-js"], funct
     }());
     exports.EventHelper = EventHelper;
 });
-define("ajax", ["require", "exports", "applicationinsights-common", "applicationinsights-core-js", "ajaxRecord", "ajaxUtils"], function (require, exports, applicationinsights_common_2, applicationinsights_core_js_2, ajaxRecord_1, ajaxUtils_1) {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+define("src/ajax", ["require", "exports", "applicationinsights-common", "applicationinsights-core-js", "src/ajaxRecord", "src/ajaxUtils"], function (require, exports, applicationinsights_common_2, applicationinsights_core_js_2, ajaxRecord_1, ajaxUtils_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var AjaxMonitor = /** @class */ (function () {
@@ -633,11 +639,19 @@ define("ajax", ["require", "exports", "applicationinsights-common", "application
                 });
             }
             else {
-                var dependency = new applicationinsights_common_2.RemoteDependencyData(this._core._logger, xhr.ajaxData.id, xhr.ajaxData.getAbsoluteUrl(), xhr.ajaxData.getPathName(), xhr.ajaxData.ajaxTotalDuration, (+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400, +xhr.ajaxData.status, xhr.ajaxData.method);
+                var dependency = {
+                    id: xhr.ajaxData.id,
+                    absoluteUrl: xhr.ajaxData.getAbsoluteUrl(),
+                    commandName: xhr.ajaxData.getPathName(),
+                    duration: xhr.ajaxData.ajaxTotalDuration,
+                    success: (+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
+                    resultCode: +xhr.ajaxData.status,
+                    method: xhr.ajaxData.method
+                };
                 // enrich dependency target with correlation context from the server
                 var correlationContext = this.getCorrelationContext(xhr);
                 if (correlationContext) {
-                    dependency.target = dependency.target + " | " + correlationContext;
+                    dependency.correlationContext = /* dependency.target + " | " + */ correlationContext;
                 }
                 this.trackDependencyData(dependency);
                 xhr.ajaxData = null;
@@ -715,7 +729,7 @@ define("ajax", ["require", "exports", "applicationinsights-common", "application
     }());
     exports.AjaxMonitor = AjaxMonitor;
 });
-define("Tests/Selenium/ajax.tests", ["require", "exports", "ajax", "applicationinsights-core-js"], function (require, exports, ajax_1, applicationinsights_core_js_3) {
+define("Tests/Selenium/ajax.tests", ["require", "exports", "src/ajax", "applicationinsights-core-js"], function (require, exports, ajax_1, applicationinsights_core_js_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var AjaxTests = /** @class */ (function (_super) {

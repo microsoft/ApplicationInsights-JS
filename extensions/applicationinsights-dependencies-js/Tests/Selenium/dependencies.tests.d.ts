@@ -178,7 +178,7 @@ declare class TestClass {
     sendJsonResponse(request: SinonFakeXMLHttpRequest, data: any, errorCode?: number): void;
     protected setUserAgent(userAgent: string): void;
 }
-declare module "ajaxRecord" {
+declare module "src/ajaxRecord" {
     import { IDiagnosticLogger } from 'applicationinsights-core-js';
     export class XHRMonitoringState {
         openDone: boolean;
@@ -216,7 +216,7 @@ declare module "ajaxRecord" {
         CalculateMetrics: () => void;
     }
 }
-declare module "ajaxUtils" {
+declare module "src/ajaxUtils" {
     export class stringUtils {
         static GetLength(strObject: any): number;
     }
@@ -225,15 +225,15 @@ declare module "ajaxUtils" {
         static DetachEvent(obj: any, eventNameWithoutOn: any, handlerRef: any): void;
     }
 }
-declare module "ajax" {
-    import { RemoteDependencyData } from 'applicationinsights-common';
+declare module "src/ajax" {
+    import { IDependencyTelemetry } from 'applicationinsights-common';
     import { IAppInsightsCore, ITelemetryPlugin, IConfiguration, IPlugin, ITelemetryItem } from 'applicationinsights-core-js';
-    import { ajaxRecord } from "ajaxRecord";
+    import { ajaxRecord } from "src/ajaxRecord";
     export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
         ajaxData: ajaxRecord;
     }
     export interface IDependenciesPlugin {
-        trackDependencyData(dependency: RemoteDependencyData, properties?: {
+        trackDependencyData(dependency: IDependencyTelemetry, properties?: {
             [key: string]: any;
         }, systemProperties?: {
             [key: string]: any;
@@ -262,7 +262,7 @@ declare module "ajax" {
             * Logs dependency call
             * @param dependencyData dependency data object
             */
-        trackDependencyData(dependency: RemoteDependencyData, properties?: {
+        trackDependencyData(dependency: IDependencyTelemetry, properties?: {
             [key: string]: any;
         }, systemProperties?: {
             [key: string]: any;

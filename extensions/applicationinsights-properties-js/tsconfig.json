@@ -8,14 +8,15 @@
     "target": "es5",
     "alwaysStrict": true,
     "declaration": true,
+    "declarationMap": true,
+    "declarationDir": "extensions/applicationinsights-properties-js/types",
     "outDir": "dist-esm",
-    "declarationDir": "extensions/applicationinsights-dependencies-js/types",
-    "rootDir": "extensions/applicationinsights-dependencies-js/src"
+    "rootDir": "extensions/applicationinsights-properties-js/src"
   },
   "include": [
-    "./src/**"
+    "./src/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "./node_modules/**"
   ]
 }
