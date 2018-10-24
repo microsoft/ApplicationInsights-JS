@@ -12,8 +12,7 @@ module.exports = function (grunt) {
                     './extensions/**/*.ts',
                     '!./**/node_modules/**',
                     '!./**/Tests/**',
-                    '!./**/amd/**',
-                    '!./**/cjs/**',
+                    '!./**/dist-esm/**',
                     '!./**/Generated/**',
                     './JavaScript/**/*.ts',
                     '!./JavaScript/JavaScriptSDK.Tests/**'
@@ -33,46 +32,10 @@ module.exports = function (grunt) {
                 out: 'bundle/ai.js',
             },
             common: {
-                tsconfig: './AppInsightsCommon/tsconfig.json',
-                src: [
-                    'AppInsightsCommon/applicationinsights-common.ts',
-                    'AppInsightsCommon/*.ts',
-                    'AppInsightsCommon/Interfaces/*.ts'
-                ]
-            },
-            commonumd: {
-                tsconfig: './AppInsightsCommon/umd/tsconfig.json',
-                src: [
-                    'AppInsightsCommon/applicationinsights-common.ts',
-                    'AppInsightsCommon/*.ts',
-                    'AppInsightsCommon/Interfaces/*.ts'
-                ]
-            },
-            commoncjs: {
-                tsconfig: './AppInsightsCommon/cjs/tsconfigcommonjs.json',
-                src: [
-                    'AppInsightsCommon/applicationinsights-common.ts',
-                    'AppInsightsCommon/*.ts',
-                    'AppInsightsCommon/Interfaces/*.ts'
-                ]
-            },
-            appinsightscjs: {
-                tsconfig: './ApplicationInsights/cjs/tsconfigcommonjs.json',
-                src: [
-                    'ApplicationInsights/JavaScriptSDK.Interfaces/*.ts',
-                    'ApplicationInsights/JavaScriptSDK/Telemetry/*.ts',
-                    'ApplicationInsights/JavaScriptSDK/*.ts',
-                    'ApplicationInsights/*.ts'
-                ]
+                tsconfig: './AppInsightsCommon/tsconfig.json'
             },
             appinsights: {
                 tsconfig: './ApplicationInsights/tsconfig.json',
-                src: [
-                    'ApplicationInsights/JavaScriptSDK.Interfaces/*.ts',
-                    'ApplicationInsights/JavaScriptSDK/Telemetry/*.ts',
-                    'ApplicationInsights/JavaScriptSDK/*.ts',
-                    'ApplicationInsights/*.ts'
-                ]
             },
             appinsightstests: {
                 tsconfig: './ApplicationInsights/Tests/tsconfig.json',
@@ -103,16 +66,7 @@ module.exports = function (grunt) {
                 out: 'AISKU/Tests/Selenium/appinsights-sdk.tests.js'
             },
             properties: {
-                tsconfig: './extensions/applicationinsights-properties-js/tsconfigamd.json',
-                src: [
-                    './extensions/applicationinsights-properties-js/*.ts',
-                    './extensions/applicationinsights-properties-js/Context/*.ts',
-                    './extensions/applicationinsights-properties-js/Interfaces/Context/*.ts',
-                    './extensions/applicationinsights-properties-js/Interfaces/*.ts'
-                ]
-            },
-            propertiescjs: {
-                tsconfig: './extensions/applicationinsights-properties-js/cjs/tsconfigcommonjs.json',
+                tsconfig: './extensions/applicationinsights-properties-js/tsconfig.json',
                 src: [
                     './extensions/applicationinsights-properties-js/*.ts',
                     './extensions/applicationinsights-properties-js/Context/*.ts',
@@ -126,10 +80,7 @@ module.exports = function (grunt) {
                 out: './extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
             },
             deps: {
-                tsconfig: './extensions/applicationinsights-dependencies-js/tsconfig.json',
-                src: [
-                    './extensions/applicationinsights-dependencies-js/*.ts'
-                ]
+                tsconfig: './extensions/applicationinsights-dependencies-js/tsconfig.json'
             },
             depstest: {
                 tsconfig: './extensions/applicationinsights-dependencies-js/Tests/tsconfig.json',
@@ -228,21 +179,6 @@ module.exports = function (grunt) {
                 }
             }
         },
-        copy: {
-            commonBundleToTypes: {
-                expand: true,
-                cwd: 'AppInsightsCommon/amd/bundle',
-                src: './**/*.d.ts',
-                dest: 'AppInsightsCommon/amd/types/'
-            }
-        },
-        rename: {
-            commonBundleToTypes: {
-                files: [
-                    {src: 'AppInsightsCommon/amd/types/applicationinsights-common.d.ts', dest: 'AppInsightsCommon/amd/types/index.d.ts'}
-                ]
-            }
-        },
         qunit: {
             all: {
                 options: {
@@ -317,25 +253,18 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-tslint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
-    grunt.loadNpmTasks('grunt-contrib-copy');
-    grunt.loadNpmTasks('grunt-contrib-rename');
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("common", ["ts:common"]);
-    grunt.registerTask("commoncjs", ["ts:commoncjs"]);
-    grunt.registerTask("commonumd", ["ts:commonumd"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("ai", ["ts:appinsights"]);
     grunt.registerTask("aitests", ["ts:appinsights", "ts:appinsightstests", "qunit:aitests"]);
-    grunt.registerTask("aicjs", ["ts:appinsightscjs"]);
     grunt.registerTask("aisku", ["ts:aisku"]);
     grunt.registerTask("aiskulite", ["ts:aiskulite"]);
     grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
     grunt.registerTask("aiskutests", ["ts:aisku", "ts:aiskutests", "qunit:aisku"]);
-    grunt.registerTask("types", ["copy:commonBundleToTypes", "rename:commonBundleToTypes"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
     grunt.registerTask("test1ds", ["common", "propertiestests", "depstest", "aitests", "aiskutests"]);
     grunt.registerTask("properties", ["ts:properties"]);
-    grunt.registerTask("propertiescjs", ["ts:propertiescjs"]);
     grunt.registerTask("propertiestests", ["ts:properties", "ts:propertiestests", "qunit:properties"]);
     grunt.registerTask("deps", ["ts:deps"]);
     grunt.registerTask("depstest", ["ts:deps", "ts:depstest", "qunit:deps"]);

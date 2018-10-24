@@ -6,7 +6,7 @@ import {
     TelemetryItemCreator,
     IPageViewTelemetry
 } from 'applicationinsights-common';
-import { ApplicationInsights } from '../JavaScriptSDK/ApplicationInsights'
+import { ApplicationInsights } from '../src/JavaScriptSDK/ApplicationInsights'
 import { 
     IAppInsightsCore, AppInsightsCore,
     ITelemetryItem,

@@ -5,7 +5,7 @@ import {
     ITelemetryItem, AppInsightsCore,
     IPlugin, IConfiguration
 } from "applicationinsights-core-js";
-import { ApplicationInsights } from "../JavaScriptSDK/ApplicationInsights";
+import { ApplicationInsights } from "../src/JavaScriptSDK/ApplicationInsights";
 
 export class ApplicationInsightsTests extends TestClass {
     public testInitialize() {
@@ -798,7 +798,7 @@ export class ApplicationInsightsTests extends TestClass {
                 var trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
 
                 // act
-                appInsights.addTelemetryInitializer(() => { throw new Error(); });
+                appInsights.addTelemetryInitializer(() => { throw new Error("Test error IGNORE"); });
                 appInsights.addTelemetryInitializer(() => { });
                 appInsights.trackTrace({message: 'test message'});
 

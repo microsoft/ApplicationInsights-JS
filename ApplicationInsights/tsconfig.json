@@ -3,13 +3,20 @@
     "sourceMap": true,
     "inlineSources": true,
     "noImplicitAny": false,
-    "module": "amd",
+    "module": "es6",
     "moduleResolution": "Node",
     "target": "es5",
     "alwaysStrict": true,
     "declaration": true,
-    "outDir": "amd/bundle",
-    "rootDir": "ApplicationInsights"
+    "declarationMap": true,
+    "declarationDir": "ApplicationInsights/types",
+    "outDir": "./dist-esm",
+    "rootDir": "./ApplicationInsights/src"
   },
-  "files": []
+  "include": [
+    "./src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

@@ -1,0 +1,20 @@
+{
+    "name": "applicationinsights-analytics-js",
+    "version": "1.0.0-beta",
+    "description": "Microsoft Application Insights Javascript SDK apis",
+    "main": "dist-esm/applicationinsights-analytics-js.js",
+    "browser": "browser/applicationinsights-analytics-js.min.js",
+    "types": "types/applicationinsights-analytics-js.d.ts",
+    "sideEffects": false,
+    "devDependencies": {
+        "typescript": "2.5.3",
+        "rollup-plugin-node-resolve": "^3.4.0",
+        "rollup-plugin-replace": "^2.1.0",
+        "rollup-plugin-uglify": "^6.0.0",
+        "rollup-plugin-visualizer": "^0.9.2"
+    },
+    "dependencies": {
+        "applicationinsights-core-js": "^1.0.0-beta",
+        "applicationinsights-common": "^1.0.0-beta"
+    }
+}
