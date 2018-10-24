@@ -35,7 +35,7 @@ var aisdk = window[aiName] || (function (aiConfig) {
         };
     }
 
-    var method = ["PageView", "Exception", "Trace", "DependencyData", "Metric"];
+    var method = ["PageView", "Exception", "Trace", "DependencyData", "Metric", "PageViewPerformance"];
     while (method.length) {
         createLazyMethod("track" + method.pop());
     }
