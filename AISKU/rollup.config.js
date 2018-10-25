@@ -6,7 +6,7 @@ import replace from "rollup-plugin-replace";
 const version = require("./package.json").version;
 const banner = [
   "/*!",
-  ` * Application Insights JavaScript SDK, ${version}`,
+  ` * Application Insights JavaScript SDK - Web, ${version}`,
   " * Copyright (c) Microsoft and contributors. All rights reserved.",
   " */"
 ].join("\n");
@@ -57,5 +57,6 @@ const browserRollupConfigFactory = (isProduction, libVersion = '1') => {
 export default [
   browserRollupConfigFactory(true),
   browserRollupConfigFactory(false),
-  browserRollupConfigFactory(true, version)
+  browserRollupConfigFactory(true, version),
+  browserRollupConfigFactory(false, version)
 ];

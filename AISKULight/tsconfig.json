@@ -7,11 +7,16 @@
     "target": "es5",
     "moduleResolution": "Node",
     "alwaysStrict": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "allowSyntheticDefaultImports": true,
+    "importHelpers": true,
+    "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "declarationMap": true,
     "declarationDir": "AISKULight/types",
     "outDir": "dist-esm",
     "rootDir": "AISKULight"
   },
-  "files": []
+  "include": ["index.ts"],
+  "exclude": ["node_modules"]
 }

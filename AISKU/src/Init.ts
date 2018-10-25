@@ -4,6 +4,8 @@
 import { ApplicationInsights } from "applicationinsights-analytics-js";
 import { Initialization, Snippet } from "./Initialization";
 
+export { Initialization as ApplicationInsights, Snippet } from "./Initialization";
+
 "use strict";
 //should be global function that should load as soon as SDK loads
 try {

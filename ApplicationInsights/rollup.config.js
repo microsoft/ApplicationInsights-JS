@@ -18,7 +18,7 @@ const browserRollupConfigFactory = isProduction => {
       file: "browser/applicationinsights-analytics-js.js",
       banner: banner,
       format: "umd",
-      name: "aicommon",
+      name: "aianalytics",
       sourcemap: true
     },
     plugins: [

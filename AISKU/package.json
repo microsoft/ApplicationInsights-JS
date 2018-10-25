@@ -1,7 +1,7 @@
 {
     "name": "applicationinsights-web",
     "version": "1.0.0-beta",
-    "description": "Microsoft Application Insights Javascript SDK apis 2.0 beta",
+    "description": "Microsoft Application Insights Javascript SDK API 1.0 beta",
     "main": "dist-esm/applicationinsights-sdk-js.js",
     "types": "types/applicationinsights-sdk-js.d.ts",
     "browser": "browser/ai.1.min.js",
