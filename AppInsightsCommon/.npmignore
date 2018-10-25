@@ -6,6 +6,8 @@
 # ... but these files
 !/package.json
 !/tsconfig.json
+!/README.md
+!/LICENSE
 !/browser/**
 !/dist-esm/**
 !/types/**
