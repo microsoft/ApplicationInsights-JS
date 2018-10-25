@@ -4,11 +4,11 @@
 import {
     RequestHeaders, Util, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
     RemoteDependencyData, DateTimeUtils, DisabledPropertyName, Data, IDependencyTelemetry
-} from 'applicationinsights-common';
+} from '@microsoft/applicationinsights-common';
 import {
     CoreUtils, LoggingSeverity, _InternalMessageId, IDiagnosticLogger,
     IAppInsightsCore, ITelemetryPlugin, IConfiguration, IPlugin, ITelemetryItem
-} from 'applicationinsights-core-js';
+} from '@microsoft/applicationinsights-core-js';
 import { ajaxRecord } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
 

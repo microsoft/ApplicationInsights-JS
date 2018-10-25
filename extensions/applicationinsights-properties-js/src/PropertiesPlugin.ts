@@ -6,8 +6,8 @@
 import {
     ITelemetryPlugin, IConfiguration, CoreUtils,
     IAppInsightsCore, IPlugin, ITelemetryItem, IDiagnosticLogger
-} from 'applicationinsights-core-js';
-import { ContextTagKeys, Util, PageView } from 'applicationinsights-common';
+} from '@microsoft/applicationinsights-core-js';
+import { ContextTagKeys, Util, PageView } from '@microsoft/applicationinsights-common';
 import { Session, _SessionManager } from './Context/Session';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';

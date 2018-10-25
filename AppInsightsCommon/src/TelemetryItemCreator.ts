@@ -4,7 +4,7 @@
 import { PageViewPerformance } from "./Telemetry/PageViewPerformance";
 import { Util } from "./Util";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
-import { ITelemetryItem, CoreUtils, IDiagnosticLogger } from "applicationinsights-core-js";
+import { ITelemetryItem, CoreUtils, IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
 
 
 export class TelemetryItemCreator {

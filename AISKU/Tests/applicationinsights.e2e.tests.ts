@@ -1,7 +1,7 @@
 /// <reference path='./TestFramework/Common.ts' />
 import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-sdk'
-import { Sender } from 'applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Util } from 'applicationinsights-common';
+import { Sender } from '@microsoft/applicationinsights-channel-js';
+import { IDependencyTelemetry, ContextTagKeys, Util } from '@microsoft/applicationinsights-common';
 
 export class ApplicationInsightsTests extends TestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';

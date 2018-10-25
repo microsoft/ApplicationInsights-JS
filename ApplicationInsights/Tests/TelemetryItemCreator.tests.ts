@@ -5,13 +5,13 @@ import {
     PageView,
     TelemetryItemCreator,
     IPageViewTelemetry
-} from 'applicationinsights-common';
+} from '@microsoft/applicationinsights-common';
 import { ApplicationInsights } from '../src/JavaScriptSDK/ApplicationInsights'
 import { 
     IAppInsightsCore, AppInsightsCore,
     ITelemetryItem,
     IConfiguration, IPlugin
-} from 'applicationinsights-core-js';
+} from '@microsoft/applicationinsights-core-js';
 
 
 export class TelemetryItemCreatorTests extends TestClass {

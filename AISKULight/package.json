@@ -1,5 +1,5 @@
 {
-    "name": "applicationinsights-web-basic",
+    "name": "@microsoft/applicationinsights-web-basic",
     "version": "1.0.0-beta",
     "description": "Microsoft Application Insights Javascript SDK core and channel",
     "main": "dist-esm/index.js",
@@ -18,15 +18,11 @@
         "rollup-plugin-node-resolve": "^3.4.0",
         "rollup-plugin-replace": "^2.1.0",
         "rollup-plugin-uglify": "^6.0.0",
-        "rollup-plugin-visualizer": "^0.9.2",
         "source-map-loader": "^0.2.3",
-        "typescript": "2.5.3",
-        "webpack": "^4.16.4",
-        "webpack-cli": "^3.1.0",
-        "webpack-command": "^0.4.1"
+        "typescript": "2.5.3"
     },
     "dependencies": {
-        "applicationinsights-channel-js": "^1.0.0-beta",
-        "applicationinsights-core-js": "^1.0.0-beta"
+        "@microsoft/applicationinsights-channel-js": "^1.0.0-beta",
+        "@microsoft/applicationinsights-core-js": "^1.0.0-beta"
     }
 }

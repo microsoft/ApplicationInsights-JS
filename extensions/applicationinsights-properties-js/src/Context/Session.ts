@@ -4,8 +4,8 @@
 import { ISession } from '../Interfaces/Context/ISession';
 import {
     Util, DateTimeUtils 
-} from 'applicationinsights-common';
-import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity, CoreUtils, DiagnosticLogger } from 'applicationinsights-core-js';
+} from '@microsoft/applicationinsights-common';
+import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity, CoreUtils, DiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 
 export interface ISessionConfig {
     sessionRenewalMs: () => number;

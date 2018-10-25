@@ -1,5 +1,5 @@
 {
-    "name": "applicationinsights-analytics-js",
+    "name": "@microsoft/applicationinsights-analytics-js",
     "version": "1.0.0-beta-2",
     "description": "Microsoft Application Insights Javascript SDK apis",
     "main": "dist-esm/applicationinsights-analytics-js.js",
@@ -20,7 +20,7 @@
         "rollup-plugin-visualizer": "^0.9.2"
     },
     "dependencies": {
-        "applicationinsights-core-js": "^1.0.0-beta",
-        "applicationinsights-common": "^1.0.0-beta-2"
+        "@microsoft/applicationinsights-core-js": "^1.0.0-beta",
+        "@microsoft/applicationinsights-common": "^1.0.0-beta-2"
     }
 }

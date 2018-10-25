@@ -9,7 +9,7 @@ import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
 import { Util } from '../Util';
-import { IDiagnosticLogger } from 'applicationinsights-core-js';
+import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 
 export class Exception extends ExceptionData implements ISerializable {
 

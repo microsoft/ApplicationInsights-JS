@@ -8,7 +8,7 @@ import { IAutoExceptionTelemetry } from './IExceptionTelemetry';
 import { ITraceTelemetry } from './ITraceTelemetry';
 import { IMetricTelemetry } from  './IMetricTelemetry';
 import { IPageViewPerformanceTelemetry } from './IPageViewPerformanceTelemetry';
-import { ITelemetryItem } from 'applicationinsights-core-js';
+import { ITelemetryItem } from '@microsoft/applicationinsights-core-js';
 
 export interface IAppInsights {
     trackEvent(event: IEventTelemetry, customProperties?: {[key: string]: any});

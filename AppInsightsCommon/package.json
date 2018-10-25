@@ -1,5 +1,5 @@
 {
-    "name": "applicationinsights-common",
+    "name": "@microsoft/applicationinsights-common",
     "version": "1.0.0-beta-2",
     "description": "Microsoft Application Insights Common JavaScript Library",
     "main": "./dist-esm/applicationinsights-common.js",
@@ -25,6 +25,6 @@
         "typescript": "2.5.3"
     },
     "dependencies": {
-        "applicationinsights-core-js": "^1.0.0-beta"
+        "@microsoft/applicationinsights-core-js": "^1.0.0-beta"
     }
 }

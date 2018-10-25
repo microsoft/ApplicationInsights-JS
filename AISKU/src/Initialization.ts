@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem } from "applicationinsights-core-js";
-import { ApplicationInsights } from "applicationinsights-analytics-js";
-import { Util, IConfig, IDependencyTelemetry, PageViewPerformance, IPageViewPerformanceTelemetry, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IEventTelemetry, IAppInsights } from "applicationinsights-common";
-import { Sender } from "applicationinsights-channel-js";
-import { PropertiesPlugin, IPropertiesPlugin } from "applicationinsights-properties-js";
-import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from 'applicationinsights-dependencies-js';
+import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
+import { Util, IConfig, IDependencyTelemetry, PageViewPerformance, IPageViewPerformanceTelemetry, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IEventTelemetry, IAppInsights } from "@microsoft/applicationinsights-common";
+import { Sender } from "@microsoft/applicationinsights-channel-js";
+import { PropertiesPlugin, IPropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
 
 "use strict";
 

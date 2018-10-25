@@ -6,7 +6,7 @@ import { DataSanitizer } from './Common/DataSanitizer';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { FieldType } from '../Enums';
 import { Util } from '../Util';
-import { IDiagnosticLogger } from 'applicationinsights-core-js';
+import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 
 export class PageView extends PageViewData implements ISerializable {
 

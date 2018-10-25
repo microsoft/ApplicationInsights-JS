@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Util } from 'applicationinsights-common';
-import { IDiagnosticLogger } from 'applicationinsights-core-js';
+import { Util } from '@microsoft/applicationinsights-common';
+import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 
 /**
  * Used to track page visit durations

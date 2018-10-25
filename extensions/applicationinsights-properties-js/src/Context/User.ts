@@ -3,8 +3,8 @@
 
 import { IUser, IUserContextPlugin } from '../Interfaces/Context/IUser';
 import { ITelemetryConfig } from '../Interfaces/ITelemetryConfig';
-import { Util } from 'applicationinsights-common';
-import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from 'applicationinsights-core-js';
+import { Util } from '@microsoft/applicationinsights-common';
+import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from '@microsoft/applicationinsights-core-js';
 
 export class User implements IUser, IUserContextPlugin {
 

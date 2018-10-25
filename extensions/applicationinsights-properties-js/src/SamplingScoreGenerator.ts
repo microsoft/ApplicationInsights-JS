@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { HashCodeScoreGenerator } from './HashCodeScoreGenerator';
-import { IEnvelope, ContextTagKeys } from 'applicationinsights-common';
+import { IEnvelope, ContextTagKeys } from '@microsoft/applicationinsights-common';
 
 export class SamplingScoreGenerator {
     private hashCodeGeneragor: HashCodeScoreGenerator;

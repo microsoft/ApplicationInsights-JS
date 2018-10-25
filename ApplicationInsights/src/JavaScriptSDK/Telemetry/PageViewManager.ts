@@ -3,9 +3,9 @@
 
 import {
     PageViewPerformance, Util, IPageViewTelemetry, IPageViewTelemetryInternal
-} from 'applicationinsights-common';
+} from '@microsoft/applicationinsights-common';
 import { IAppInsightsCore, CoreUtils, IDiagnosticLogger, LoggingSeverity,
-    _InternalMessageId, IChannelControls } from 'applicationinsights-core-js';
+    _InternalMessageId, IChannelControls } from '@microsoft/applicationinsights-core-js';
 
 /**
 * Internal interface to pass appInsights object to subcomponents without coupling 

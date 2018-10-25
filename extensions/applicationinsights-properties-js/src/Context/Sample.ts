@@ -3,8 +3,8 @@
 
 import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
 import { ISample } from '../Interfaces/Context/ISample';
-import { IEnvelope } from 'applicationinsights-common';
-import { ITelemetryItem, IDiagnosticLogger, _InternalMessageId, LoggingSeverity, DiagnosticLogger, CoreUtils } from 'applicationinsights-core-js';
+import { IEnvelope } from '@microsoft/applicationinsights-common';
+import { ITelemetryItem, IDiagnosticLogger, _InternalMessageId, LoggingSeverity, DiagnosticLogger, CoreUtils } from '@microsoft/applicationinsights-core-js';
 
 export class Sample implements ISample {
     public sampleRate: number;

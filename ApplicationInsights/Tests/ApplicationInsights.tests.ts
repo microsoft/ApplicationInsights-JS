@@ -1,10 +1,10 @@
 /// <reference path="./TestFramework/Common.ts" />
 
-import { Util, Exception, SeverityLevel, Trace } from "applicationinsights-common";
+import { Util, Exception, SeverityLevel, Trace } from "@microsoft/applicationinsights-common";
 import {
     ITelemetryItem, AppInsightsCore,
     IPlugin, IConfiguration
-} from "applicationinsights-core-js";
+} from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "../src/JavaScriptSDK/ApplicationInsights";
 
 export class ApplicationInsightsTests extends TestClass {

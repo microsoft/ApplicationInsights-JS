@@ -11,12 +11,12 @@ import {
     TelemetryItemCreator, Data, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry
-} from "applicationinsights-common";
+} from "@microsoft/applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     ITelemetryPlugin, CoreUtils, ITelemetryItem,
     IDiagnosticLogger, LoggingSeverity, _InternalMessageId
-} from "applicationinsights-core-js";
+} from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";

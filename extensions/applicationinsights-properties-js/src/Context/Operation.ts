@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IOperation } from '../Interfaces/Context/IOperation';
-import { Util } from 'applicationinsights-common';
+import { Util } from '@microsoft/applicationinsights-common';
 
 export class Operation implements IOperation {
 

@@ -7,7 +7,7 @@ import { IEnvelope } from '../../Interfaces/Telemetry/IEnvelope';
 import { DataSanitizer } from './DataSanitizer';
 import { FieldType } from '../../Enums';
 import { Util } from '../../Util';
-import { IDiagnosticLogger } from 'applicationinsights-core-js';
+import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 
 export class Envelope extends AIEnvelope implements IEnvelope {
 

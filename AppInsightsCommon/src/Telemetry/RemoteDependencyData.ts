@@ -7,7 +7,7 @@ import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { Util } from '../Util';
 import { AjaxHelper } from '../Util';
 import { RemoteDependencyData as GeneratedRemoteDependencyData } from '../Interfaces/Contracts/Generated/RemoteDependencyData';
-import { IDiagnosticLogger } from 'applicationinsights-core-js';
+import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 
 export class RemoteDependencyData extends GeneratedRemoteDependencyData implements ISerializable {
 
