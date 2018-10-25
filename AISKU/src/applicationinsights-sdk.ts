@@ -1,1 +1,5 @@
-export { Initialization as ApplicationInsights, IApplicationInsights, Snippet } from './Initialization';
+export { 
+    Initialization as ApplicationInsights,
+    IApplicationInsights,
+    Snippet
+} from './Initialization';
