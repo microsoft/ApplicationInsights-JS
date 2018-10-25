@@ -1,5 +1,5 @@
 {
-    "name": "applicationinsights-basic",
+    "name": "applicationinsights-web-basic",
     "version": "1.0.0-beta",
     "description": "Microsoft Application Insights Javascript SDK core and channel",
     "main": "dist-esm/index.js",

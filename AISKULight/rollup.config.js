@@ -6,7 +6,7 @@ import replace from "rollup-plugin-replace";
 const version = require("./package.json").version;
 const banner = [
   "/*!",
-  ` * Application Insights JavaScript SDK - Basic, ${version}`,
+  ` * Application Insights JavaScript Web SDK - Basic, ${version}`,
   " * Copyright (c) Microsoft and contributors. All rights reserved.",
   " */"
 ].join("\n");
