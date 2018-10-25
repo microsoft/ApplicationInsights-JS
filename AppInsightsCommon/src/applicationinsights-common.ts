@@ -16,6 +16,7 @@ export { Metric } from './Telemetry/Metric';
 export { PageView } from './Telemetry/PageView';
 export { PageViewData } from './Interfaces/Contracts/Generated/PageViewData';
 export { RemoteDependencyData } from './Telemetry/RemoteDependencyData';
+export { IEventTelemetry } from './Interfaces/IEventTelemetry';
 export { ITraceTelemetry } from './Interfaces/ITraceTelemetry';
 export { IMetricTelemetry } from './Interfaces/IMetricTelemetry';
 export { IDependencyTelemetry } from './Interfaces/IDependencyTelemetry';

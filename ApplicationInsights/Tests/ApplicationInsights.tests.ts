@@ -43,6 +43,7 @@ export class ApplicationInsightsTests extends TestClass {
                     "config",
                     "trackException",
                     "_onerror",
+                    "trackEvent",
                     "trackTrace",
                     "trackMetric",
                     "trackPageView",
@@ -513,7 +514,7 @@ export class ApplicationInsightsTests extends TestClass {
 
                 // act
                 appInsights.addTelemetryInitializer(telemetryInitializer.initializer);
-                appInsights.trackTrace({message: 'test trace'});
+                appInsights.trackEvent({event: 'test event'});
                 this.clock.tick(1);
 
                 // verify

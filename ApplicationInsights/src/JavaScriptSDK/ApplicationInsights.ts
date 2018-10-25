@@ -7,9 +7,10 @@ import {
     IConfig,
     Util, PageViewPerformance,
     IAppInsights,
-    PageView, IEnvelope, RemoteDependencyData,
+    PageView, IEnvelope, RemoteDependencyData, Event, IEventTelemetry,
     TelemetryItemCreator, Data, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
-    IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry, IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry
+    IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
+    IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry
 } from "applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
@@ -82,6 +83,25 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this._nextPlugin = next;
     }
 
+    public trackEvent(event: IEventTelemetry, customProperties?: {[key: string]: any}): void {
+        try {
+            let telemetryItem = TelemetryItemCreator.create<IEventTelemetry>(
+                event,
+                Event.dataType,
+                Event.envelopeType,
+                this._logger,
+                customProperties);
+          
+            this._setTelemetryNameAndIKey(telemetryItem);
+            this.core.track(telemetryItem);
+        } catch (e) {
+            this._logger.throwInternal(LoggingSeverity.WARNING,
+                _InternalMessageId.TrackTraceFailed,
+                "trackTrace failed, trace will not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) });
+        }
+    }
+
     /**
      * @description Log a diagnostic message
      * @param {ITraceTelemetry} trace
@@ -90,7 +110,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      */
     public trackTrace(trace: ITraceTelemetry, customProperties?: {[key: string]: any}): void {
         try {
-
             let telemetryItem = TelemetryItemCreator.create<ITraceTelemetry>(
                 trace,
                 Trace.dataType,

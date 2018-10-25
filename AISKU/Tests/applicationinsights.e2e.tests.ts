@@ -9,6 +9,7 @@ export class ApplicationInsightsTests extends TestClass {
         "startTrackPage",
         "stopTrackPage",
         "trackException",
+        "trackEvent",
         "trackMetric",
         "trackPageView",
         "trackTrace",
@@ -112,6 +113,14 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public addAsyncTests(): void {
+        this.testCaseAsync({
+            name: 'E2E.GenericTests: trackEvent sends to backend',
+            stepDelay: 1,
+            steps: [() => {
+                this._ai.trackEvent({event: 'event'});
+            }].concat(this.asserts(1))
+        });
+        
         this.testCaseAsync({
             name: 'E2E.GenericTests: trackTrace sends to backend',
             stepDelay: 1,

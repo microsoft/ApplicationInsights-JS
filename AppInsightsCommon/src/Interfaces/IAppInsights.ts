@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IEventTelemetry } from './IEventTelemetry';
 import { IPageViewTelemetry } from './IPageViewTelemetry';
 import { IExceptionTelemetry } from './IExceptionTelemetry';
 import { IAutoExceptionTelemetry } from './IExceptionTelemetry';
@@ -10,6 +11,7 @@ import { IPageViewPerformanceTelemetry } from './IPageViewPerformanceTelemetry';
 import { ITelemetryItem } from 'applicationinsights-core-js';
 
 export interface IAppInsights {
+    trackEvent(event: IEventTelemetry, customProperties?: {[key: string]: any});
     trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any });
     trackException(exception: IExceptionTelemetry, customProperties?: {[key: string]: any}): void;
     _onerror(exception: IAutoExceptionTelemetry): void;
