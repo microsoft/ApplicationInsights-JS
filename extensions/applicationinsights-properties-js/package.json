@@ -6,6 +6,12 @@
     "types": "types/applicationinsights-properties-js.d.ts",
     "browser": "browser/applicationinsights-properties-js.min.js",
     "sideEffects": false,
+    "scripts": {
+        "build": "npm run build:esm && npm run build:browser",
+        "build:esm": "grunt properties",
+        "build:browser": "rollup -c",
+        "test": "grunt propertiestests"
+    },
     "devDependencies": {
         "typescript": "2.5.3",
         "grunt": "1.0.1",

@@ -6,6 +6,12 @@
     "browser": "browser/applicationinsights-analytics-js.min.js",
     "types": "types/applicationinsights-analytics-js.d.ts",
     "sideEffects": false,
+    "scripts": {
+        "build": "npm run build:esm && npm run build:browser",
+        "build:esm": "grunt ai",
+        "build:browser": "rollup -c",
+        "test": "grunt aitests"
+    },
     "devDependencies": {
         "typescript": "2.5.3",
         "rollup-plugin-node-resolve": "^3.4.0",

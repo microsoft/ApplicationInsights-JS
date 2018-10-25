@@ -7,9 +7,14 @@
     "moduleResolution": "Node",
     "target": "es5",
     "alwaysStrict": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "allowSyntheticDefaultImports": true,
+    "importHelpers": true,
+    "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "outDir": "dist-esm",
+    "declarationMap": true,
     "declarationDir": "extensions/applicationinsights-dependencies-js/types",
+    "outDir": "dist-esm",
     "rootDir": "extensions/applicationinsights-dependencies-js/src"
   },
   "include": [

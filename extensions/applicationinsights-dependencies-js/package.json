@@ -3,9 +3,15 @@
     "version": "1.0.0-beta",
     "description": "Microsoft Application Insights XHR dependencies plugin",
     "main": "dist-esm/applicationinsights-dependencies-js.js",
-    "browser": "browser/applicationinsights-dependencies-js.js",
+    "browser": "browser/applicationinsights-dependencies-js.min.js",
     "types": "types/applicationinsights-dependencies-js.d.ts",
     "sideEffects": false,
+    "scripts": {
+        "build": "npm run build:esm && npm run build:browser",
+        "build:esm": "grunt deps",
+        "build:browser": "rollup -c",
+        "test": "grunt depstest"
+    },
     "devDependencies": {
         "typescript": "2.5.3",
         "grunt": "1.0.1",

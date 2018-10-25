@@ -11,11 +11,11 @@ const banner = [
   " */"
 ].join("\n");
 
-const browserRollupConfigFactory = isProduction => {
+const browserRollupConfigFactory = (isProduction, libVersion = '1') => {
   const browserRollupConfig = {
     input: "dist-esm/Init.js",
     output: {
-      file: "browser/aisdk.js",
+      file: `browser/ai.${libVersion}.js`,
       banner: banner,
       format: "umd",
       name: "aisdk",
@@ -37,7 +37,7 @@ const browserRollupConfigFactory = isProduction => {
   };
 
   if (isProduction) {
-    browserRollupConfig.output.file = "browser/aisdk.min.js";
+    browserRollupConfig.output.file = `browser/ai.${libVersion}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
         output: {
@@ -56,5 +56,6 @@ const browserRollupConfigFactory = isProduction => {
 
 export default [
   browserRollupConfigFactory(true),
-  browserRollupConfigFactory(false)
+  browserRollupConfigFactory(false),
+  browserRollupConfigFactory(true, version)
 ];
