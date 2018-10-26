@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
-import { Initialization, Snippet } from "./Initialization";
+import { ApplicationInsights as AppAnalytics } from "@microsoft/applicationinsights-analytics-js";
+import { Initialization as ApplicationInsights, Snippet } from "./Initialization";
 
 export { Initialization as ApplicationInsights, Snippet } from "./Initialization";
 
@@ -20,14 +20,14 @@ try {
 
         if (window[aiName] === undefined) {
             // if no snippet is present, initialize default values
-            ApplicationInsights.appInsightsDefaultConfig = Initialization.getDefaultConfig();
+            AppAnalytics.appInsightsDefaultConfig = ApplicationInsights.getDefaultConfig();
         } else {
             if (window[aiName].initialize) { // initialize if required
                 // this is the typical case for browser+snippet
                 var snippet: Snippet = window[aiName] || <any>{};
 
                 // overwrite snippet with full appInsights
-                var initialization = new Initialization(snippet);
+                var initialization = new ApplicationInsights(snippet);
                 var appInsightsLocal = initialization.loadAppInsights();
 
                 // apply full appInsights to the global instance that was initialized in the snippet

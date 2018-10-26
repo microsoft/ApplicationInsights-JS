@@ -3,9 +3,9 @@
 
 export interface IEventTelemetry {
     /**
-     * @description An event string
+     * @description An event name string
      * @type {string}
      * @memberof IEventTelemetry
      */
-    event: string;
+    name: string;
 }

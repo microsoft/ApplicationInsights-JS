@@ -117,7 +117,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'E2E.GenericTests: trackEvent sends to backend',
             stepDelay: 1,
             steps: [() => {
-                this._ai.trackEvent({event: 'event'});
+                this._ai.trackEvent({name: 'event'});
             }].concat(this.asserts(1))
         });
         

@@ -514,7 +514,7 @@ export class ApplicationInsightsTests extends TestClass {
 
                 // act
                 appInsights.addTelemetryInitializer(telemetryInitializer.initializer);
-                appInsights.trackEvent({event: 'test event'});
+                appInsights.trackEvent({name: 'test event'});
                 this.clock.tick(1);
 
                 // verify
