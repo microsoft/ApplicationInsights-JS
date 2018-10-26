@@ -1,11 +1,11 @@
 /// <reference path="./TestFramework/Common.ts" />
 
-import { Util, Exception, SeverityLevel, Trace } from "applicationinsights-common";
+import { Util, Exception, SeverityLevel, Trace } from "@microsoft/applicationinsights-common";
 import {
     ITelemetryItem, AppInsightsCore,
     IPlugin, IConfiguration
-} from "applicationinsights-core-js";
-import { ApplicationInsights } from "../JavaScriptSDK/ApplicationInsights";
+} from "@microsoft/applicationinsights-core-js";
+import { ApplicationInsights } from "../src/JavaScriptSDK/ApplicationInsights";
 
 export class ApplicationInsightsTests extends TestClass {
     public testInitialize() {
@@ -43,6 +43,7 @@ export class ApplicationInsightsTests extends TestClass {
                     "config",
                     "trackException",
                     "_onerror",
+                    "trackEvent",
                     "trackTrace",
                     "trackMetric",
                     "trackPageView",
@@ -513,7 +514,7 @@ export class ApplicationInsightsTests extends TestClass {
 
                 // act
                 appInsights.addTelemetryInitializer(telemetryInitializer.initializer);
-                appInsights.trackTrace({message: 'test trace'});
+                appInsights.trackEvent({name: 'test event'});
                 this.clock.tick(1);
 
                 // verify
@@ -798,7 +799,7 @@ export class ApplicationInsightsTests extends TestClass {
                 var trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
 
                 // act
-                appInsights.addTelemetryInitializer(() => { throw new Error(); });
+                appInsights.addTelemetryInitializer(() => { throw new Error("Test error IGNORE"); });
                 appInsights.addTelemetryInitializer(() => { });
                 appInsights.trackTrace({message: 'test message'});
 

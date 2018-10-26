@@ -11,7 +11,7 @@ var aisdk = window[aiName] || (function (aiConfig) {
     var localDocument = document, localWindow = window, scriptText = "script";
     setTimeout(function () {
         var scriptElement = localDocument.createElement(scriptText);
-        scriptElement.src = aiConfig.url || "https://1dsjssdk.blob.core.windows.net/scripts/aisdk.0.0.19.min.js";
+        scriptElement.src = aiConfig.url || "https://az416426.vo.msecnd.net/beta/ai.1.min.js";
         localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
     });
 
@@ -35,7 +35,7 @@ var aisdk = window[aiName] || (function (aiConfig) {
         };
     }
 
-    var method = ["PageView", "Exception", "Trace", "DependencyData", "Metric"];
+    var method = ["Event", "PageView", "Exception", "Trace", "DependencyData", "Metric", "PageViewPerformance"];
     while (method.length) {
         createLazyMethod("track" + method.pop());
     }

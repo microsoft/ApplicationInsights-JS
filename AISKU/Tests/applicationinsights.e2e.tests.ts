@@ -1,7 +1,7 @@
 /// <reference path='./TestFramework/Common.ts' />
-import { Initialization, IApplicationInsights } from '../Initialization'
-import { Sender } from 'applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Util } from 'applicationinsights-common';
+import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-sdk'
+import { Sender } from '@microsoft/applicationinsights-channel-js';
+import { IDependencyTelemetry, ContextTagKeys, Util } from '@microsoft/applicationinsights-common';
 
 export class ApplicationInsightsTests extends TestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -9,6 +9,7 @@ export class ApplicationInsightsTests extends TestClass {
         "startTrackPage",
         "stopTrackPage",
         "trackException",
+        "trackEvent",
         "trackMetric",
         "trackPageView",
         "trackTrace",
@@ -38,7 +39,7 @@ export class ApplicationInsightsTests extends TestClass {
             this.useFakeTimers = false;
             this.clock.restore();
 
-            var init = new Initialization({
+            var init = new ApplicationInsights({
                 config: {
                     instrumentationKey: ApplicationInsightsTests._instrumentationKey,
                     extensionConfig: {
@@ -112,6 +113,14 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public addAsyncTests(): void {
+        this.testCaseAsync({
+            name: 'E2E.GenericTests: trackEvent sends to backend',
+            stepDelay: 1,
+            steps: [() => {
+                this._ai.trackEvent({name: 'event'});
+            }].concat(this.asserts(1))
+        });
+        
         this.testCaseAsync({
             name: 'E2E.GenericTests: trackTrace sends to backend',
             stepDelay: 1,

@@ -1,8 +1,8 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 
-import { AppInsightsCore, IConfiguration, DiagnosticLogger } from "applicationinsights-core-js";
-import PropertiesPlugin from "../../PropertiesPlugin";
-import { Util } from "applicationinsights-common";
+import { AppInsightsCore, IConfiguration, DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import PropertiesPlugin from "../../src/PropertiesPlugin";
+import { Util } from "@microsoft/applicationinsights-common";
 
 export class PropertiesTests extends TestClass {
     private properties: PropertiesPlugin;

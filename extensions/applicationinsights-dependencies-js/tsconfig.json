@@ -3,13 +3,24 @@
     "sourceMap": true,
     "inlineSources": true,
     "noImplicitAny": false,
-    "module": "amd",
+    "module": "es6",
     "moduleResolution": "Node",
     "target": "es5",
     "alwaysStrict": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "allowSyntheticDefaultImports": true,
+    "importHelpers": true,
+    "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "outDir": "bundle",
-    "rootDir": "extensions/applicationinsights-dependencies-js"
+    "declarationMap": true,
+    "declarationDir": "extensions/applicationinsights-dependencies-js/types",
+    "outDir": "dist-esm",
+    "rootDir": "extensions/applicationinsights-dependencies-js/src"
   },
-  "files": []
+  "include": [
+    "./src/**"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

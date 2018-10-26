@@ -1,7 +1,7 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
-import { AjaxMonitor } from "../../ajax";
-import { RemoteDependencyData } from "applicationinsights-common";
-import { AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls } from "applicationinsights-core-js";
+import { AjaxMonitor } from "../../src/ajax";
+import { RemoteDependencyData } from "@microsoft/applicationinsights-common";
+import { AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls } from "@microsoft/applicationinsights-core-js";
 
 export class AjaxTests extends TestClass {
     

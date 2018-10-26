@@ -1,14 +1,57 @@
-import resolve from 'rollup-plugin-node-resolve';
+import nodeResolve from "rollup-plugin-node-resolve";
+import {uglify} from "rollup-plugin-uglify";
+import replace from "rollup-plugin-replace";
 
-export default [
-  {
-    input: "bundle/index.js",
+const version = require("./package.json").version;
+const banner = [
+  "/*!",
+  ` * Application Insights JavaScript Web SDK - Basic, ${version}`,
+  " * Copyright (c) Microsoft and contributors. All rights reserved.",
+  " */"
+].join("\n");
+
+const browserRollupConfigFactory = (isProduction, libV = '1') => {
+  const browserRollupConfig = {
+    input: "dist-esm/index.js",
     output: {
-      file: "dist/aisdklight.js",
+      file: `browser/aib.${libV}.js`,
+      banner: banner,
       format: "umd",
-      name: "aisdklite",
+      name: "aibasic",
       sourcemap: true
     },
-    plugins: [resolve()]
+    plugins: [
+      replace({
+        delimiters: ["", ""],
+        values: {
+          "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
+          "// Licensed under the MIT License.": ""
+        }
+      }),
+      nodeResolve({
+        browser: false,
+        preferBuiltins: false
+      })
+    ]
+  };
+
+  if (isProduction) {
+    browserRollupConfig.output.file = `browser/aib.${libV}.min.js`;
+    browserRollupConfig.plugins.push(
+      uglify({
+        output: {
+          preamble: banner
+        }
+      })
+    );
   }
+
+  return browserRollupConfig;
+};
+
+export default [
+  browserRollupConfigFactory(true),
+  browserRollupConfigFactory(false),
+  browserRollupConfigFactory(true, version),
+  browserRollupConfigFactory(false, version)
 ];

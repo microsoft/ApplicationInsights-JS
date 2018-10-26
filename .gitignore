@@ -170,9 +170,15 @@ bundle/
 node_modules/
 out/
 coreSDK/node_modules
+dist-esm/
+browser/
+types/
 
 # Grunt
 .tscache
 ApplicationInsights/Tests/Selenium/*.tests.js
 ApplicationInsights/Tests/Selenium/*.tests.d.ts
 ApplicationInsights/Tests/Selenium/*.tests.js.map
+
+# Misc
+statistics.html
