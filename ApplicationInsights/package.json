@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-analytics-js",
-    "version": "1.0.0-beta-2",
+    "version": "1.0.0-beta.3",
     "description": "Microsoft Application Insights Javascript SDK apis",
     "main": "dist-esm/applicationinsights-analytics-js.js",
     "browser": "browser/applicationinsights-analytics-js.min.js",
@@ -21,6 +21,6 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-core-js": "^1.0.0-beta",
-        "@microsoft/applicationinsights-common": "^1.0.0-beta-2"
+        "@microsoft/applicationinsights-common": "^1.0.0-beta.3"
     }
 }
