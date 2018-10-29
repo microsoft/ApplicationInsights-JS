@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web-basic",
-    "version": "1.0.0-beta",
+    "version": "0.0.1",
     "description": "Microsoft Application Insights Javascript SDK core and channel",
     "main": "dist-esm/index.js",
     "browser": "browser/aib.1.min.js",

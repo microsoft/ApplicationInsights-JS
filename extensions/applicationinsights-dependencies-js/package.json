@@ -1,8 +1,9 @@
 {
     "name": "@microsoft/applicationinsights-dependencies-js",
-    "version": "1.0.0-beta",
+    "version": "0.0.1",
     "description": "Microsoft Application Insights XHR dependencies plugin",
-    "main": "dist-esm/applicationinsights-dependencies-js.js",
+    "main": "dist/applicationinsights-dependencies-js.min.js",
+    "module": "dist-esm/applicationinsights-dependencies-js.js",
     "browser": "browser/applicationinsights-dependencies-js.min.js",
     "types": "types/applicationinsights-dependencies-js.d.ts",
     "sideEffects": false,
