@@ -51,24 +51,74 @@ export class Initialization implements IApplicationInsights {
     }
     
     // Analytics Plugin
+    /**
+     * Log a user action or other occurrence.
+     *
+     * @param {IEventTelemetry} event
+     * @param {{ [key:string]: any }} [customProperties]
+     * @memberof Initialization
+     */
     public trackEvent(event: IEventTelemetry, customProperties?: { [key:string]: any }) {
         this.appInsights.trackEvent(event, customProperties);
     }
+
+    /**
+     * Logs that a page, or similar container was displayed to the user.
+     *
+     * @param {IPageViewTelemetry} pageView
+     * @param {{ [key: string]: any; }} [customProperties]
+     * @memberof Initialization
+     */
     public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any; }) {
         this.appInsights.trackPageView(pageView, customProperties);
     }
+    
+    /**
+     * Log a bag of performance information via the customProperties field.
+     *
+     * @param {IPageViewPerformanceTelemetry} pageViewPerformance
+     * @param {{ [key:string]: any }} [customProperties]
+     * @memberof Initialization
+     */
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: { [key:string]: any }): void {
         this.appInsights.trackPageViewPerformance(pageViewPerformance, customProperties);
     }
+
+    /**
+     * Log an exception that you have caught.
+     *
+     * @param {IExceptionTelemetry} exception
+     * @param {{ [key: string]: any; }} [customProperties]
+     * @memberof Initialization
+     */
     public trackException(exception: IExceptionTelemetry, customProperties?: { [key: string]: any; }): void {
         this.appInsights.trackException(exception, customProperties);
     }
+
     public _onerror(exception: IAutoExceptionTelemetry): void {
         this.appInsights._onerror(exception);
     }
+    
+
+    /**
+     * Log a diagnostic scenario such entering or leaving a function.
+     *
+     * @param {ITraceTelemetry} trace
+     * @param {{ [key: string]: any; }} [customProperties]
+     * @memberof Initialization
+     */
     public trackTrace(trace: ITraceTelemetry, customProperties?: { [key: string]: any; }): void {
         this.appInsights.trackTrace(trace, customProperties);
     }
+
+
+    /**
+     * Log a numeric value that is not associated with a specific event. Typically used to send regular reports of performance indicators.
+     *
+     * @param {IMetricTelemetry} metric
+     * @param {{ [key: string]: any; }} [customProperties]
+     * @memberof Initialization
+     */
     public trackMetric(metric: IMetricTelemetry, customProperties?: { [key: string]: any; }): void {
         this.appInsights.trackMetric(metric, customProperties);
     }
@@ -83,18 +133,52 @@ export class Initialization implements IApplicationInsights {
     }
 
     // Properties Plugin
+
+    /**
+     * Set the authenticated user id and the account id. Used for identifying a specific signed-in user. Parameters must not contain whitespace or ,;=|
+     * 
+     * The method will only set the `authenicatedUserId` and `accountId` in the curent page view. To set them for the whole sesion, you should set `storeInCookie = true`
+     *
+     * @param {string} authenticatedUserId
+     * @param {string} [accountId]
+     * @param {boolean} [storeInCookie=false]
+     * @memberof Initialization
+     */
     public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false): void {
          this.properties.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
     }
+
+
+    /**
+     * Clears the authenticated user id and account id. The associated cookie is cleared, if present.
+     *
+     * @memberof Initialization
+     */
     public clearAuthenticatedUserContext(): void {
          this.properties.user.clearAuthenticatedUserContext();
     }
 
     // Dependencies Plugin
+
+    /**
+     * Log a dependency call (e.g. ajax)
+     *
+     * @param {IDependencyTelemetry} dependency
+     * @param {{[key: string]: any}} [customProperties]
+     * @param {{[key: string]: any}} [systemProperties]
+     * @memberof Initialization
+     */
     public trackDependencyData(dependency: IDependencyTelemetry, customProperties?: {[key: string]: any}, systemProperties?: {[key: string]: any}): void {
         this.dependencies.trackDependencyData(dependency, customProperties, systemProperties);
     }
 
+
+    /**
+     * Initialize this instance of ApplicationInsights
+     *
+     * @returns {IApplicationInsights}
+     * @memberof Initialization
+     */
     public loadAppInsights(): IApplicationInsights {
 
         this.core = new AppInsightsCore();
@@ -111,6 +195,12 @@ export class Initialization implements IApplicationInsights {
         return this;
     }
 
+
+    /**
+     * Call any functions that were queued before the main script was loaded
+     *
+     * @memberof Initialization
+     */
     public emptyQueue() {
 
         // call functions that were queued before the main script was loaded
