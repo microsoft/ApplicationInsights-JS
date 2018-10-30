@@ -1,5 +1,16 @@
 module.exports = function (grunt) {
     grunt.initConfig({
+        typedoc: {
+            build: {
+                options: {
+                    module: 'umd',
+                    target: 'es5',
+                    out: 'AISKU/docs/',
+                    name: 'Application Insights Web SDK'
+                },
+                src: 'AISKU/src/**/*'
+            }
+        },
         tslint: {
             options: {
                 rulesDirectory: 'node_modules/tslint-microsoft-contrib',
@@ -253,6 +264,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-tslint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
+    grunt.loadNpmTasks('grunt-typedoc');
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("module", ["ts:module"]);

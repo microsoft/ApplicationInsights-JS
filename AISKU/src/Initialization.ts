@@ -113,9 +113,17 @@ export class Initialization implements IApplicationInsights {
 
 
     /**
-     * Log a numeric value that is not associated with a specific event. Typically used to send regular reports of performance indicators.
+     * Log a numeric value that is not associated with a specific event. Typically used
+     * to send regular reports of performance indicators.
+     * 
+     * To send a single measurement, just use the `name` and `average` fields
+     * of {@link IMetricTelemetry}.
+     * 
+     * If you take measurements frequently, you can reduce the telemetry bandwidth by
+     * aggregating multiple measurements and sending the resulting average and modifying
+     * the `sampleCount` field of {@link IMetricTelemetry}.
      *
-     * @param {IMetricTelemetry} metric
+     * @param {IMetricTelemetry} metric input object argument. Only `name` and `average` are mandatory.
      * @param {{ [key: string]: any; }} [customProperties]
      * @memberof Initialization
      */
