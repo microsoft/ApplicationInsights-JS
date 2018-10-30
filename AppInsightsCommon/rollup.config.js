@@ -38,7 +38,7 @@ const browserRollupConfigFactory = isProduction => {
   };
 
   if (isProduction) {
-    browserRollupConfig.output.file = "browser/applicationinsights-common.min.js";
+    browserRollupConfig.output.file = `browser/${outputName}.js`;
     browserRollupConfig.plugins.push(
       uglify({
         output: {
