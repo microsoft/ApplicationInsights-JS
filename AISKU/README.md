@@ -1,7 +1,3 @@
-Application Insights SDK v2 beta
-
-
-
 <properties 
 	pageTitle="Application Insights SDK JavaScript API" 
 	description="Reference doc" 
@@ -20,10 +16,11 @@ Application Insights SDK v2 beta
 	ms.author="awills"/>
  
 
-# Application Insights JavaScript SDK v2 beta
+# Application Insights JavaScript SDK - Web
 
-[![Build status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/1DS%20JavaScript%20SDK%20-%20SKU%20+%20Common%20+%20Extensions?branchName=master)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=7610)
+[![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/1DS%20JavaScript%20SDK%20-%20SKU%20+%20Common%20+%20Extensions)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=7610)
 [![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
+[![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web)
 
 ### Use JS `snippet` and initialize dynamically (download full Application Insights script from CDN)  
 Use this method for an MVC application. Get "code to monitor my web pages" from the Quick Start page, 
@@ -33,16 +30,16 @@ from CDN or you can override the script hosting location by specifying `url` par
 ```
 
 <script type="text/javascript">
-var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){i[e]=function(){var n=arguments;i.queue.push(function(){i[e].apply(i,n)})}}var i={config:e};i.initialize=!0;var t=document,a=window;setTimeout(function(){var n=t.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/beta/aisdk.0.0.17.min.js",t.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{i.cookie=t.cookie}catch(e){}i.queue=[];for(var s=["PageView","Exception","Trace","DependencyData","Metric"];s.length;)n("track"+s.pop());if(n("startTrackPage"),n("stopTrackPage"),e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!1===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking){n("_"+(s="onerror"));var o=a[s];a[s]=function(e,n,t,a,r){var c=o&&o(e,n,t,a,r);return!0!==c&&i["_"+s]({message:e,url:n,lineNumber:t,columnNumber:a,error:r}),c},e.extensionConfig.ApplicationInsightsAnalytics.autoExceptionInstrumented=!0}return i}
+var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){i[e]=function(){var n=arguments;i.queue.push(function(){i[e].apply(i,n)})}}var i={config:e};i.initialize=!0;var t=document,a=window;setTimeout(function(){var n=t.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/beta/ai.1.min.js",t.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{i.cookie=t.cookie}catch(e){}i.queue=[];for(var s=["PageView","Exception","Trace","DependencyData","Metric"];s.length;)n("track"+s.pop());if(n("startTrackPage"),n("stopTrackPage"),e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!1===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking){n("_"+(s="onerror"));var o=a[s];a[s]=function(e,n,t,a,r){var c=o&&o(e,n,t,a,r);return!0!==c&&i["_"+s]({message:e,url:n,lineNumber:t,columnNumber:a,error:r}),c},e.extensionConfig.ApplicationInsightsAnalytics.autoExceptionInstrumented=!0}return i}
 (
     {instrumentationKey:"INSTRUMENTATION_KEY"}
 );
 if(window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length){var pageViewItem={name:document.title?document.title:"",uri:document.URL?document.URL:""};aisdk.trackPageView(pageViewItem)}
 </script>
+```
 
 ### trackPageView
 
-```ts
 ```ts
 /**
  * Logs that a page or other item was viewed. 
@@ -786,7 +783,6 @@ A custom plugin can be loaded by the SDK through config.extensions. All plugins 
 
 ```ts
 interface ITelemetryPlugin {
-
     /**
     * Call back for telemetry processing before it is sent to next plugin for processing (needs to be invoked by caller)
     */
@@ -811,3 +807,4 @@ interface ITelemetryPlugin {
     */
     priority: number;
 }
+```

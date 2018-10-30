@@ -1,6 +1,6 @@
 /// <reference path='./TestFramework/Common.ts' />
 "use strict"
-import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-sdk'
+import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 
 export class SenderE2ETests extends TestClass {

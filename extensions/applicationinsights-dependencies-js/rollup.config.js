@@ -1,5 +1,4 @@
 import nodeResolve from "rollup-plugin-node-resolve";
-import visualizer from "rollup-plugin-visualizer";
 import {uglify} from "rollup-plugin-uglify";
 import replace from "rollup-plugin-replace";
 
@@ -44,10 +43,6 @@ const browserRollupConfigFactory = isProduction => {
         output: {
           preamble: banner
         }
-      }),
-      visualizer({
-        filename: "./statistics.html",
-        sourcemap: true
       })
     );
   }

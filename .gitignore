@@ -173,6 +173,7 @@ coreSDK/node_modules
 dist-esm/
 browser/
 types/
+dist/
 
 # Grunt
 .tscache

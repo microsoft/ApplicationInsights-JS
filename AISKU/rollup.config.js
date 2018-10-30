@@ -43,6 +43,10 @@ const browserRollupConfigFactory = (isProduction, libVersion = '1') => {
         output: {
           preamble: banner
         }
+      }),
+      visualizer({
+        filename: "./statistics.html",
+        sourcemap: true
       })
     );
   }
@@ -52,9 +56,9 @@ const browserRollupConfigFactory = (isProduction, libVersion = '1') => {
 
 const nodeUmdRollupConfigFactory = (isProduction) => {
   const nodeRollupConfig = {
-    input: `dist-esm/applicationinsights-sdk-js.js`,
+    input: `dist-esm/applicationinsights-web.js`,
     output: {
-      file: `dist/applicationinsights-sdk-js.js`,
+      file: `dist/applicationinsights-web.js`,
       banner: banner,
       format: "umd",
       name: "ai",
@@ -73,7 +77,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
   };
 
   if (isProduction) {
-    nodeRollupConfig.output.file = `dist/applicationinsights-sdk-js.min.js`;
+    nodeRollupConfig.output.file = `dist/applicationinsights-web.min.js`;
     nodeRollupConfig.plugins.push(
       uglify({
         output: {

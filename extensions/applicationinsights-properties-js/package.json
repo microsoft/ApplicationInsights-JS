@@ -1,12 +1,16 @@
 {
     "name": "@microsoft/applicationinsights-properties-js",
-    "version": "0.0.1",
+    "version": "1.0.0-beta",
     "description": "Microsoft Application Insights properties (Part A) plugin",
     "main": "dist/applicationinsights-properties-js.min.js",
     "module": "dist-esm/applicationinsights-properties-js.js",
     "types": "types/applicationinsights-properties-js.d.ts",
     "browser": "browser/applicationinsights-properties-js.min.js",
     "sideEffects": false,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-properties-js"
+    },
     "scripts": {
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "grunt properties",
@@ -21,11 +25,11 @@
         "grunt-ts": "^6.0.0-beta.15",
         "rollup-plugin-node-resolve": "^3.4.0",
         "rollup-plugin-replace": "^2.1.0",
-        "rollup-plugin-uglify": "^6.0.0",
-        "rollup-plugin-visualizer": "^0.9.2"
+        "rollup-plugin-uglify": "^6.0.0"
     },
     "dependencies": {
         "@microsoft/applicationinsights-core-js": "^1.0.0-beta",
         "@microsoft/applicationinsights-common": "^1.0.0-beta"
-    }
+    },
+    "license": "MIT"
 }
