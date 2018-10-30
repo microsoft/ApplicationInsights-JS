@@ -1,12 +1,16 @@
 {
     "name": "@microsoft/applicationinsights-common",
-    "version": "0.0.1",
+    "version": "1.0.0-beta.3",
     "description": "Microsoft Application Insights Common JavaScript Library",
     "main": "./dist/applicationinsights-common.min.js",
     "module": "./dist-esm/applicationinsights-common.js",
     "types": "./types/applicationinsights-common.d.ts",
     "browser": "./browser/applicationinsights-common.min.js",
     "sideEffects": false,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/ApplicationInsights-JS/tree/master/AppInsightsCommon"
+    },
     "scripts": {
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "grunt common",
@@ -22,7 +26,6 @@
         "rollup-plugin-node-resolve": "^3.4.0",
         "rollup-plugin-replace": "^2.1.0",
         "rollup-plugin-uglify": "^6.0.0",
-        "rollup-plugin-visualizer": "^0.9.2",
         "typescript": "2.5.3"
     },
     "dependencies": {
