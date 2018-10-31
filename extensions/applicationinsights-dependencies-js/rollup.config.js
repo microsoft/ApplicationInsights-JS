@@ -1,9 +1,9 @@
 import nodeResolve from "rollup-plugin-node-resolve";
-import visualizer from "rollup-plugin-visualizer";
 import {uglify} from "rollup-plugin-uglify";
 import replace from "rollup-plugin-replace";
 
 const version = require("./package.json").version;
+const outputName = "applicationinsights-dependencies-js";
 const banner = [
   "/*!",
   ` * Application Insights JavaScript SDK - Dependencies Plugin, ${version}`,
@@ -13,9 +13,9 @@ const banner = [
 
 const browserRollupConfigFactory = isProduction => {
   const browserRollupConfig = {
-    input: "dist-esm/applicationinsights-dependencies-js.js",
+    input: `dist-esm/${outputName}.js`,
     output: {
-      file: "browser/applicationinsights-dependencies-js.js",
+      file: `browser/${outputName}.js`,
       banner: banner,
       format: "umd",
       name: "aidependencies",
@@ -37,16 +37,12 @@ const browserRollupConfigFactory = isProduction => {
   };
 
   if (isProduction) {
-    browserRollupConfig.output.file = "browser/applicationinsights-dependencies-js.min.js";
+    browserRollupConfig.output.file = `browser/${outputName}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
         output: {
           preamble: banner
         }
-      }),
-      visualizer({
-        filename: "./statistics.html",
-        sourcemap: true
       })
     );
   }
@@ -54,7 +50,45 @@ const browserRollupConfigFactory = isProduction => {
   return browserRollupConfig;
 };
 
+const nodeUmdRollupConfigFactory = (isProduction) => {
+  const nodeRollupConfig = {
+    input: `dist-esm/${outputName}.js`,
+    output: {
+      file: `dist/${outputName}.js`,
+      banner: banner,
+      format: "umd",
+      name: "aidependencies",
+      sourcemap: true
+    },
+    plugins: [
+      replace({
+        delimiters: ["", ""],
+        values: {
+          "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
+          "// Licensed under the MIT License.": ""
+        }
+      }),
+      nodeResolve()
+    ]
+  };
+
+  if (isProduction) {
+    nodeRollupConfig.output.file = `dist/${outputName}.min.js`;
+    nodeRollupConfig.plugins.push(
+      uglify({
+        output: {
+          preamble: banner
+        }
+      })
+    );
+  }
+
+  return nodeRollupConfig;
+};
+
 export default [
+  nodeUmdRollupConfigFactory(true),
+  nodeUmdRollupConfigFactory(false),
   browserRollupConfigFactory(true),
   browserRollupConfigFactory(false)
 ];

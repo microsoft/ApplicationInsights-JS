@@ -6,10 +6,19 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 
 "use strict";
 
+/**
+ * @export
+ * @class ApplicationInsights
+ */
 export class ApplicationInsights {
     public config: IConfiguration;
     private core: IAppInsightsCore;
 
+    /**
+     * Creates an instance of ApplicationInsights.
+     * @param {IConfiguration} config
+     * @memberof ApplicationInsights
+     */
     constructor(config: IConfiguration) {
 
         // initialize the queue and config in case they are undefined
@@ -20,6 +29,11 @@ export class ApplicationInsights {
         this.initialize();
     }
 
+    /**
+     * Initialize this instance of ApplicationInsights 
+     *
+     * @memberof ApplicationInsights
+     */
     public initialize(): void {
 
         this.core = new AppInsightsCore();
@@ -35,6 +49,12 @@ export class ApplicationInsights {
         appInsightsChannel.initialize(this.config, this.core, extensions);
     }
 
+    /**
+     * Send a manually constructed custom event
+     *
+     * @param {ITelemetryItem} item
+     * @memberof ApplicationInsights
+     */
     public track(item: ITelemetryItem) {
         this.core.track(item);
     }

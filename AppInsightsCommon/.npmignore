@@ -10,5 +10,6 @@
 !/LICENSE
 !/browser/**
 !/dist-esm/**
+!/dist/**
 !/types/**
 !/src/**

@@ -175,7 +175,7 @@ module.exports = function (grunt) {
             },
             snippetvNext: {
                 files: {
-                    'AISKU/dist/snippet.min.js': ['AISKU/snippet/snippet.js']
+                    'AISKU/dist-history/snippet.min.js': ['AISKU/snippet/snippet.js']
                 }
             }
         },

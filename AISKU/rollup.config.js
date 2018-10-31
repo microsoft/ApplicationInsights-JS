@@ -54,7 +54,45 @@ const browserRollupConfigFactory = (isProduction, libVersion = '1') => {
   return browserRollupConfig;
 };
 
+const nodeUmdRollupConfigFactory = (isProduction) => {
+  const nodeRollupConfig = {
+    input: `dist-esm/applicationinsights-web.js`,
+    output: {
+      file: `dist/applicationinsights-web.js`,
+      banner: banner,
+      format: "umd",
+      name: "ai",
+      sourcemap: true
+    },
+    plugins: [
+      replace({
+        delimiters: ["", ""],
+        values: {
+          "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
+          "// Licensed under the MIT License.": ""
+        }
+      }),
+      nodeResolve()
+    ]
+  };
+
+  if (isProduction) {
+    nodeRollupConfig.output.file = `dist/applicationinsights-web.min.js`;
+    nodeRollupConfig.plugins.push(
+      uglify({
+        output: {
+          preamble: banner
+        }
+      })
+    );
+  }
+
+  return nodeRollupConfig;
+};
+
 export default [
+  nodeUmdRollupConfigFactory(true),
+  nodeUmdRollupConfigFactory(false),
   browserRollupConfigFactory(true),
   browserRollupConfigFactory(false),
   browserRollupConfigFactory(true, version),
