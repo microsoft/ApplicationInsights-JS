@@ -590,7 +590,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
                 this.instrumentXhr();
             }
 
-            if (!this._config.disableFetchTracking === false) {
+            if (this._config.disableFetchTracking === false) {
                 this.instrumentFetch();
             }
         }
