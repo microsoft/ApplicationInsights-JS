@@ -20,7 +20,11 @@ export interface IDependenciesPlugin {
     trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any });
 }
 
-export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
+export interface IInstrumentationRequirements extends IDependenciesPlugin {
+    includeCorrelationHeaders: (ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) => any;
+}
+
+export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInstrumentationRequirements {
     private currentWindowHost;
     protected initialized: boolean; // ajax monitoring initialized
     protected _fetchInitialized: boolean; // fetch monitoring initialized
@@ -37,8 +41,15 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
         this.addHeadersCB = this.includeCorrelationHeaders;
     }
 
-    public setAddHeadersCB(CB: (fetchData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) => any) {
-        this.addHeadersCB = CB;
+    /**
+     * Set a callback function to modify the headers of the request, e.g. to add some correlation vector information. 
+     * The callback is invoked before sending the XHR/Fetch Request.
+     * @returns {RequestInit || XMLHttpRequestInstrumented}
+     * @param {((fetchData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) => any)} CB
+     * @memberof AjaxMonitor
+     */
+    public setAddHeadersCB(cb: (fetchData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) => any) {
+        this.addHeadersCB = cb;
     }
 
     ///<summary>Verifies that particalar instance of XMLHttpRequest needs to be monitored</summary>
@@ -59,7 +70,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
 
     ///<summary>Determines whether ajax monitoring can be enabled on this document</summary>
     ///<returns>True if Ajax monitoring is supported on this page, otherwise false</returns>
-    private supportsMonitoring(): boolean {
+    private supportsAjaxMonitoring(): boolean {
         var result = true;
         if (CoreUtils.isNullOrUndefined(XMLHttpRequest) ||
             CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype) ||
@@ -244,7 +255,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
             };
 
             // enrich dependency target with correlation context from the server
-            var correlationContext = this.getCorrelationContext(xhr);
+            var correlationContext = this.getAjaxCorrelationContext(xhr);
             if (correlationContext) {
                 dependency.correlationContext = /* dependency.target + " | " + */ correlationContext;
             }
@@ -255,7 +266,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
         }
     }
 
-    private getCorrelationContext(xhr: XMLHttpRequestInstrumented) {
+    private getAjaxCorrelationContext(xhr: XMLHttpRequestInstrumented) {
         try {
             var responseHeadersString = xhr.getAllResponseHeaders();
             if (responseHeadersString !== null) {
@@ -308,7 +319,8 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
         }
     }
 
-    public identifier: string = "AjaxDependencyPlugin";
+    public static identifier: string = "AjaxDependencyPlugin";
+    public identifier: string = AjaxMonitor.identifier;
     
     setNextPlugin(next: ITelemetryPlugin) {
         if (next) {
@@ -395,7 +407,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
         return ajaxData;
     }
 
-    private includeCorrelationHeaders(ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) {
+    public includeCorrelationHeaders(ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) {
         if (input) { // Fetch
             if (CorrelationIdHelper.canIncludeCorrelationHeader(this._config, ajaxData.getAbsoluteUrl(), this.currentWindowHost)) {
                 if (!init) {
@@ -559,7 +571,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
     }
 
     protected instrumentXhr() {
-        if (this.supportsMonitoring() || this.initialized) {
+        if (this.supportsAjaxMonitoring() && !this.initialized) {
             this.instrumentOpen();
             this.instrumentSend();
             this.instrumentAbort();
