@@ -181,8 +181,8 @@ export class Initialization implements IApplicationInsights {
      * @param {{[key: string]: any}} [systemProperties]
      * @memberof Initialization
      */
-    public trackDependencyData(dependency: IDependencyTelemetry, customProperties?: {[key: string]: any}, systemProperties?: {[key: string]: any}): void {
-        this.dependencies.trackDependencyData(dependency, customProperties, systemProperties);
+    public trackDependencyData(dependency: IDependencyTelemetry, customProperties?: {[key: string]: any}): void {
+        this.dependencies.trackDependencyData(dependency, customProperties);
     }
 
     // Misc
@@ -213,7 +213,7 @@ export class Initialization implements IApplicationInsights {
 
         extensions.push(appInsightsChannel);
         extensions.push(this.properties);
-        extensions.push(this.dependencies);
+        // extensions.push(this.dependencies);
         extensions.push(this.appInsights);
 
         // initialize core

@@ -17,7 +17,7 @@ export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
 }
 
 export interface IDependenciesPlugin {
-    trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any });
+    trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any });
 }
 
 export interface IInstrumentationRequirements extends IDependenciesPlugin {
@@ -260,7 +260,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 dependency.correlationContext = /* dependency.target + " | " + */ correlationContext;
             }
 
-            this.trackDependencyData(dependency);
+            this.trackDependencyDataInternal(dependency);
 
             xhr.ajaxData = null;
         }
@@ -292,7 +292,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
      * Logs dependency call
      * @param dependencyData dependency data object
      */
-    public trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
+    public trackDependencyDataInternal(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         if (this._config.maxAjaxCallsPerView === -1 || this._trackAjaxAttempts < this._config.maxAjaxCallsPerView) {
             let item = TelemetryItemCreator.create<IDependencyTelemetry>(
                 dependency,
@@ -311,6 +311,10 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         }
 
         ++this._trackAjaxAttempts;
+    }
+
+    trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any }) {
+        this.trackDependencyDataInternal(dependency, properties);
     }
 
     public processTelemetry(item: ITelemetryItem) {
@@ -496,7 +500,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     dependency.correlationContext = correlationContext;
                 }
 
-                this.trackDependencyData(dependency);
+                this.trackDependencyDataInternal(dependency);
             }
         } catch (e) {
             this._core.logger.throwInternal(
@@ -540,7 +544,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     method: ajaxData.method
                 };
                 
-                this.trackDependencyData(dependency, { error: reason.message });
+                this.trackDependencyDataInternal(dependency, { error: reason.message });
             }
         } catch (e) {
             this._core.logger.throwInternal(
@@ -583,7 +587,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         if (!this.initialized && !this._fetchInitialized) {
             this._core = core;
             config.extensionConfig = config.extensionConfig ? config.extensionConfig : {};
-            let c = config.extensionConfig[this.identifier] ? config.extensionConfig[this.identifier] : {};
+            let c = config.extensionConfig[AjaxMonitor.identifier] ? config.extensionConfig[AjaxMonitor.identifier] : {};
             this._config = {
                 maxAjaxCallsPerView: !isNaN(c.maxAjaxCallsPerView) ? c.maxAjaxCallsPerView : 500,
                 disableAjaxTracking: Util.stringToBoolOrDefault(c.disableAjaxTracking),
