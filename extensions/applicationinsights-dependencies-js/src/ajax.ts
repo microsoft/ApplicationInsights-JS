@@ -32,24 +32,11 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     protected _config: ICorrelationConfig;
     protected _nextPlugin: ITelemetryPlugin;
     protected _trackAjaxAttempts: number = 0;
-    protected addHeadersCB: (fetchData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) => any;
 
     constructor() {
         this.currentWindowHost = window && window.location.host && window.location.host.toLowerCase();
         this.initialized = false;
         this._fetchInitialized = false;
-        this.addHeadersCB = this.includeCorrelationHeaders;
-    }
-
-    /**
-     * Set a callback function to modify the headers of the request, e.g. to add some correlation vector information. 
-     * The callback is invoked before sending the XHR/Fetch Request.
-     * @returns {RequestInit || XMLHttpRequestInstrumented}
-     * @param {((fetchData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) => any)} CB
-     * @memberof AjaxMonitor
-     */
-    public setAddHeadersCB(cb: (fetchData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) => any) {
-        this.addHeadersCB = cb;
     }
 
     ///<summary>Verifies that particalar instance of XMLHttpRequest needs to be monitored</summary>
@@ -172,7 +159,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
 
     private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
         xhr.ajaxData.requestSentTime = DateTimeUtils.Now();
-        xhr = this.addHeadersCB(xhr.ajaxData, undefined, undefined, xhr);
+        xhr = this.includeCorrelationHeaders(xhr.ajaxData, undefined, undefined, xhr);
         xhr.ajaxData.xhrMonitoringState.sendDone = true;
     }
 
@@ -346,7 +333,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             if (fetchMonitorInstance.isFetchInstrumented(input)) {
                 try {
                     fetchData = fetchMonitorInstance.createFetchRecord(input, init);
-                    init = fetchMonitorInstance.addHeadersCB(fetchData, input, init);
+                    init = fetchMonitorInstance.includeCorrelationHeaders(fetchData, input, init);
                 } catch (e) {
                     fetchMonitorInstance._core.logger.throwInternal(
                         LoggingSeverity.CRITICAL,
@@ -411,7 +398,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         return ajaxData;
     }
 
-    public includeCorrelationHeaders(ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) {
+    public includeCorrelationHeaders(ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any {
         if (input) { // Fetch
             if (CorrelationIdHelper.canIncludeCorrelationHeader(this._config, ajaxData.getAbsoluteUrl(), this.currentWindowHost)) {
                 if (!init) {

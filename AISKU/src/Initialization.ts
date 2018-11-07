@@ -213,7 +213,7 @@ export class Initialization implements IApplicationInsights {
 
         extensions.push(appInsightsChannel);
         extensions.push(this.properties);
-        // extensions.push(this.dependencies);
+        extensions.push(this.dependencies);
         extensions.push(this.appInsights);
 
         // initialize core
