@@ -1,10 +1,9 @@
 {
     "name": "@microsoft/applicationinsights-web-basic",
-    "version": "1.0.0-beta",
+    "version": "1.0.0-beta.3",
     "description": "Microsoft Application Insights Javascript SDK core and channel",
-    "main": "dist/applicationinsights-web-basic.min.js",
+    "main": "dist/applicationinsights-web-basic.js",
     "module": "dist-esm/index.js",
-    "browser": "browser/aib.1.min.js",
     "types": "types/index.d.ts",
     "sideEffects": false,
     "scripts": {
@@ -23,7 +22,7 @@
         "typescript": "2.5.3"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-channel-js": "^1.0.0-beta",
+        "@microsoft/applicationinsights-channel-js": "^1.0.0-beta.2",
         "@microsoft/applicationinsights-core-js": "^1.0.0-beta.2"
     }
 }

@@ -688,7 +688,7 @@ export class DateTimeUtils {
     /**
      * Get the number of milliseconds since 1970/01/01 in local timezone
      */
-    public static Now = (window.performance && window.performance.now && window.performance.timing) ?
+    public static Now = (window && window.performance && window.performance.now && window.performance.timing) ?
         function () {
             return window.performance.now() + window.performance.timing.navigationStart;
         }
