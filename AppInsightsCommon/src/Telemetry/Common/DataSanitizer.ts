@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId } from '@microsoft/applicationinsights-core-js';
-import { Util } from '../../Util';
 
 export class DataSanitizer {
 
@@ -61,7 +60,7 @@ export class DataSanitizer {
     public static sanitizeKey(logger: IDiagnosticLogger, name) {
         if (name) {
             // Remove any leading or trailing whitepace
-            name = Util.trim(name.toString());
+            name = DataSanitizer.trim(name.toString());
 
             // truncate the string to 150 chars
             if (name.length > DataSanitizer.MAX_NAME_LENGTH) {
@@ -80,7 +79,7 @@ export class DataSanitizer {
     public static sanitizeString(logger: IDiagnosticLogger, value: any, maxLength: number = DataSanitizer.MAX_STRING_LENGTH) {
         if (value) {
             maxLength = maxLength ? maxLength : DataSanitizer.MAX_STRING_LENGTH; // in case default parameters dont work
-            value = Util.trim(value);
+            value = DataSanitizer.trim(value);
             if (value.toString().length > maxLength) {
                 value = value.toString().substring(0, maxLength);
                 logger.throwInternal(
@@ -160,7 +159,7 @@ export class DataSanitizer {
 
     public static sanitizeInput(logger: IDiagnosticLogger, input: any, maxLength: number, _msgId: _InternalMessageId) {
         if (input) {
-            input = Util.trim(input);
+            input = DataSanitizer.trim(input);
             if (input.length > maxLength) {
                 input = input.substring(0, maxLength);
                 logger.throwInternal(
@@ -178,5 +177,13 @@ export class DataSanitizer {
     public static padNumber(num) {
         var s = "00" + num;
         return s.substr(s.length - 3);
+    }
+
+    /**
+     * helper method to trim strings (IE8 does not implement String.prototype.trim)
+     */
+    public static trim(str: any): string {
+        if (typeof str !== "string") return str;
+        return str.replace(/^\s+|\s+$/g, "");
     }
 }

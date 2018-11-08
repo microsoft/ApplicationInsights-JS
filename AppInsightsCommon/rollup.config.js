@@ -37,7 +37,7 @@ const browserRollupConfigFactory = isProduction => {
   };
 
   if (isProduction) {
-    browserRollupConfig.output.file = `browser/${outputName}.js`;
+    browserRollupConfig.output.file = `browser/${outputName}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
         output: {

@@ -22,6 +22,7 @@ export interface Snippet {
 
 export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
     appInsights: ApplicationInsights;
+    flush: (async?: boolean) => void;
 };
 
 /**
@@ -180,10 +181,24 @@ export class Initialization implements IApplicationInsights {
      * @param {{[key: string]: any}} [systemProperties]
      * @memberof Initialization
      */
-    public trackDependencyData(dependency: IDependencyTelemetry, customProperties?: {[key: string]: any}, systemProperties?: {[key: string]: any}): void {
-        this.dependencies.trackDependencyData(dependency, customProperties, systemProperties);
+    public trackDependencyData(dependency: IDependencyTelemetry, customProperties?: {[key: string]: any}): void {
+        this.dependencies.trackDependencyData(dependency, customProperties);
     }
 
+    // Misc
+
+    /**
+     * Manually trigger an immediate send of all telemetry still in the buffer.
+     * @param {boolean} [async=true]
+     * @memberof Initialization
+     */
+    public flush(async: boolean = true) {
+        this.core.getTransmissionControls().forEach(channels => {
+            channels.forEach(channel => {
+                channel.flush(async);
+            })
+        })
+    }
 
     /**
      * Initialize this instance of ApplicationInsights
@@ -315,6 +330,7 @@ export class Initialization implements IApplicationInsights {
         }
 
         extensionConfig.disableAjaxTracking = Util.stringToBoolOrDefault(extensionConfig.disableAjaxTracking)
+        extensionConfig.disableFetchTracking = Util.stringToBoolOrDefault(extensionConfig.disableFetchTracking, false);
         extensionConfig.maxAjaxCallsPerView = !isNaN(extensionConfig.maxAjaxCallsPerView) ? extensionConfig.maxAjaxCallsPerView : 500;
 
         extensionConfig.disableCorrelationHeaders = Util.stringToBoolOrDefault(extensionConfig.disableCorrelationHeaders);
