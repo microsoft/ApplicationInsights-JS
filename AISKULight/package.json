@@ -4,7 +4,6 @@
     "description": "Microsoft Application Insights Javascript SDK core and channel",
     "main": "dist/applicationinsights-web-basic.js",
     "module": "dist-esm/index.js",
-    "browser": "browser/aib.1.js",
     "types": "types/index.d.ts",
     "sideEffects": false,
     "scripts": {
