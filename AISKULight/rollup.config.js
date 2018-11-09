@@ -17,7 +17,7 @@ const browserRollupConfigFactory = (isProduction, libV = '1') => {
       file: `browser/aib.${libV}.js`,
       banner: banner,
       format: "umd",
-      name: "aibasic",
+      name: "Microsoft.Azure",
       sourcemap: true
     },
     plugins: [
