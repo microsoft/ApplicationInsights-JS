@@ -17,7 +17,8 @@ export class ApplicationInsightsTests extends TestClass {
         "setAuthenticatedUserContext",
         "clearAuthenticatedUserContext",
         "trackPageViewPerformance",
-        "addTelemetryInitializer"
+        "addTelemetryInitializer",
+        "flush"
     ];
 
     private _ai: IApplicationInsights;
@@ -43,14 +44,15 @@ export class ApplicationInsightsTests extends TestClass {
                 config: {
                     instrumentationKey: ApplicationInsightsTests._instrumentationKey,
                     extensionConfig: {
-                        'AppInsightsChannelPlugin': {
+                        AppInsightsChannelPlugin: {
                             maxBatchInterval: 5000
                         },
                         ApplicationInsightsAnalytics: {
                             disableExceptionTracking: false
                         },
                         AjaxDependencyPlugin: {
-                            disableAjaxTracking: false
+                            disableAjaxTracking: false,
+                            disableFetchTracking: false
                         }
                     }
                 },
@@ -291,7 +293,25 @@ export class ApplicationInsightsTests extends TestClass {
                 }
             ].concat(this.asserts(1))
         });
-
+        if (window && window.fetch) {
+            this.testCaseAsync({
+                name: "DependenciesPlugin: auto collection of outgoing fetch requests",
+                stepDelay: 1,
+                steps: [
+                    () => {
+                        fetch('https://httpbin.org/status/200', { method: 'GET' });
+                        Assert.ok(true, "fetch monitoring is instrumented");
+                    }
+                ].concat(this.asserts(1))
+            });
+        } else {
+            this.testCase({
+                name: "DependenciesPlugin: No crash when fetch not supported",
+                test: () => {
+                    Assert.ok(true, "fetch monitoring is correctly not instrumented")
+                }
+            });
+        }
     }
 
     public addPropertiesPluginTests(): void {
@@ -465,5 +485,5 @@ export class ApplicationInsightsTests extends TestClass {
         } else {
             return false;
         }
-    }, "sender succeeded", 10, 1000))];
+    }, "sender succeeded", 15, 1000))];
 }

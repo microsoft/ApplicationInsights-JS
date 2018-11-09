@@ -7,5 +7,6 @@ export interface ICorrelationConfig {
     disableCorrelationHeaders: boolean;
     maxAjaxCallsPerView: number;
     disableAjaxTracking: boolean;
+    disableFetchTracking: boolean;
     appId?: string;
 }

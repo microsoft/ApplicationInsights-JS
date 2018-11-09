@@ -25,6 +25,7 @@ export class ApplicationInsights {
         if (CoreUtils.isNullOrUndefined(config) || CoreUtils.isNullOrUndefined(config.instrumentationKey)) {
             throw new Error("Invalid input configuration");
         }
+        this.config = config;
 
         this.initialize();
     }
@@ -58,4 +59,19 @@ export class ApplicationInsights {
     public track(item: ITelemetryItem) {
         this.core.track(item);
     }
+
+    /**
+     * Immediately send all batched telemetry
+     * @param {boolean} [async=true]
+     * @memberof ApplicationInsights
+     */
+    public flush(async: boolean = true) {
+        this.core.getTransmissionControls().forEach(controls => {
+            controls.forEach(plugin => {
+                async ? (<Sender>plugin).flush() : (<Sender>plugin).triggerSend(async);
+            });
+        });
+    }
 }
+
+export { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, CoreUtils, ITelemetryItem };
