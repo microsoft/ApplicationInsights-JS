@@ -1,11 +1,10 @@
 {
     "name": "@microsoft/applicationinsights-common",
-    "version": "1.0.0-beta.3",
+    "version": "1.0.0-beta.5",
     "description": "Microsoft Application Insights Common JavaScript Library",
-    "main": "./dist/applicationinsights-common.min.js",
+    "main": "./dist/applicationinsights-common.js",
     "module": "./dist-esm/applicationinsights-common.js",
     "types": "./types/applicationinsights-common.d.ts",
-    "browser": "./browser/applicationinsights-common.min.js",
     "sideEffects": false,
     "repository": {
         "type": "git",
