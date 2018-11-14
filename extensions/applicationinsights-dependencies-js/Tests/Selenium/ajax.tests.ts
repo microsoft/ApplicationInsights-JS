@@ -31,6 +31,19 @@ export class AjaxTests extends TestClass {
     }
 
     public registerTests() {
+        this.testCase({
+            name: "Dependencies Configuration: Config can be set from root config",
+            test: () => {
+                let ajaxMonitor = new AjaxMonitor();
+                ajaxMonitor.initialize({
+                    instrumentationKey: "instrumentation_key",
+                    maxAjaxCallsPerView: 999,
+                }, new AppInsightsCore(), []);
+
+                Assert.equal(999, ajaxMonitor["_config"].maxAjaxCallsPerView, "Config options can be set from root config");
+        }
+
+        });
 
         this.testCase({
             name: "Ajax: xhr.open gets instrumented",

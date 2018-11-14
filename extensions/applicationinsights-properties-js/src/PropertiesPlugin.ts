@@ -42,15 +42,15 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
             config.extensionConfig[this.identifier] : {};
 
         this._extensionConfig = {
-            instrumentationKey: () => extensionConfig.instrumentationKey,
-            accountId: () => extensionConfig.accountId,
-            sessionRenewalMs: () => extensionConfig.sessionRenewalMs,
-            sampleRate: () => extensionConfig.sampleRate,
-            sessionExpirationMs: () => extensionConfig.sessionExpirationMs,
-            cookieDomain: () => extensionConfig.cookieDomain,
-            sdkExtension: () => extensionConfig.sdkExtension,
-            isBrowserLinkTrackingEnabled: () => extensionConfig.isBrowserLinkTrackingEnabled,
-            appId: () => extensionConfig.appId
+            instrumentationKey: () => extensionConfig.instrumentationKey || config.instrumentationKey,
+            accountId: () => extensionConfig.accountId || config.accountId,
+            sessionRenewalMs: () => extensionConfig.sessionRenewalMs || config.sessionRenewalMs,
+            sampleRate: () => extensionConfig.samplingPercentage || config.samplingPercentage,
+            sessionExpirationMs: () => extensionConfig.sessionExpirationMs || config.sessionExpirationMs,
+            cookieDomain: () => extensionConfig.cookieDomain || config.cookieDomain || null, // tests expect null instead of undefined
+            sdkExtension: () => extensionConfig.sdkExtension || config.sdkExtension,
+            isBrowserLinkTrackingEnabled: () => extensionConfig.isBrowserLinkTrackingEnabled || config.isBrowserLinkTrackingEnabled,
+            appId: () => extensionConfig.appId || config.appId
         };
         
         if (typeof window !== 'undefined') {

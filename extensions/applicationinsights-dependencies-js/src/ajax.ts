@@ -576,17 +576,17 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             config.extensionConfig = config.extensionConfig ? config.extensionConfig : {};
             let c = config.extensionConfig[AjaxMonitor.identifier] ? config.extensionConfig[AjaxMonitor.identifier] : {};
             this._config = {
-                maxAjaxCallsPerView: !isNaN(c.maxAjaxCallsPerView) ? c.maxAjaxCallsPerView : 500,
-                disableAjaxTracking: Util.stringToBoolOrDefault(c.disableAjaxTracking),
-                disableFetchTracking: Util.stringToBoolOrDefault(c.disableFetchTracking, true),
-                disableCorrelationHeaders: Util.stringToBoolOrDefault(c.disableCorrelationHeaders),
-                correlationHeaderExcludedDomains: c.correlationHeaderExcludedDomains || [
+                maxAjaxCallsPerView: !isNaN(c.maxAjaxCallsPerView || config.maxAjaxCallsPerView) ? c.maxAjaxCallsPerView || config.maxAjaxCallsPerView : 500,
+                disableAjaxTracking: Util.stringToBoolOrDefault(c.disableAjaxTracking || config.disableAjaxTracking),
+                disableFetchTracking: Util.stringToBoolOrDefault(c.disableFetchTracking || config.disableFetchTracking, true),
+                disableCorrelationHeaders: Util.stringToBoolOrDefault(c.disableCorrelationHeaders || config.disableCorrelationHeaders),
+                correlationHeaderExcludedDomains: c.correlationHeaderExcludedDomains || config.correlationHeaderExcludedDomains || [
                     "*.blob.core.windows.net",
                     "*.blob.core.chinacloudapi.cn",
                     "*.blob.core.cloudapi.de",
                     "*.blob.core.usgovcloudapi.net"],
-                appId: c.appId,
-                enableCorsCorrelation: Util.stringToBoolOrDefault(c.enableCorsCorrelation)
+                appId: c.appId || config.appId,
+                enableCorsCorrelation: Util.stringToBoolOrDefault(c.enableCorsCorrelation || config.enableCorsCorrelation)
             };
 
             if (this._config.disableAjaxTracking === false) {

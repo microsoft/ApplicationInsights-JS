@@ -26,7 +26,6 @@ import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 const durationProperty: string = "duration"; 
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
-    public static appInsightsDefaultConfig: IConfiguration;
     public static Version = "2.0.1-beta";
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
     public identifier: string = "ApplicationInsightsAnalytics";
@@ -52,6 +51,30 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
     constructor() {
         this.initialize = this._initialize.bind(this);
+    }
+
+    public static getDefaultConfig(config?: IConfiguration): IConfiguration {
+        if (!config) {
+            config = { instrumentationKey: undefined };
+        }
+        
+        config.endpointUrl = config.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
+
+        // set default values
+        config.sessionRenewalMs = 30 * 60 * 1000;
+        config.sessionExpirationMs = 24 * 60 * 60 * 1000;
+        config.disableExceptionTracking = Util.stringToBoolOrDefault(config.disableExceptionTracking);
+        config.autoTrackPageVisitTime = Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
+
+        if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
+            config.samplingPercentage = 100;
+        }
+
+        config.isCookieUseDisabled = Util.stringToBoolOrDefault(config.isCookieUseDisabled);
+        config.isStorageUseDisabled = Util.stringToBoolOrDefault(config.isStorageUseDisabled);
+        config.isBrowserLinkTrackingEnabled = Util.stringToBoolOrDefault(config.isBrowserLinkTrackingEnabled);
+
+        return config;
     }
 
     public processTelemetry(env: ITelemetryItem) {
@@ -373,15 +396,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this.config = config.extensionConfig && config.extensionConfig[this.identifier] ? config.extensionConfig[this.identifier] : <IConfig>{};
 
         // load default values if specified
-        var defaults: IConfiguration = ApplicationInsights.appInsightsDefaultConfig;
+        var defaults: IConfiguration = ApplicationInsights.getDefaultConfig();
         if (defaults !== undefined) {
-            if (defaults.extensions && defaults.extensions[this.identifier]) {
-                for (var field in defaults.extensions[this.identifier]) {
-                    // for each unspecified field, set the default value
-                    if (this.config[field] === undefined) {
-                        this.config[field] = defaults[field];
-                    }
-                }
+            for (var field in defaults) {
+                // for each unspecified field, set the default value
+                this.config[field] = this.config[field] || config[field] || defaults[field];
             }
 
             if (this._globalconfig) {
@@ -405,14 +424,14 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
         var configGetters: ITelemetryConfig = {
             instrumentationKey: () => config.instrumentationKey,
-            accountId: () => this.config.accountId,
-            sessionRenewalMs: () => this.config.sessionRenewalMs,
-            sessionExpirationMs: () => this.config.sessionExpirationMs,
-            sampleRate: () => this.config.samplingPercentage,
-            cookieDomain: () => this.config.cookieDomain,
-            sdkExtension: () => this.config.sdkExtension,
-            isBrowserLinkTrackingEnabled: () => this.config.isBrowserLinkTrackingEnabled,
-            appId: () => this.config.appId
+            accountId: () => this.config.accountId || config.accountId,
+            sessionRenewalMs: () => this.config.sessionRenewalMs || config.sessionRenewalMs,
+            sessionExpirationMs: () => this.config.sessionExpirationMs || config.sessionExpirationMs,
+            sampleRate: () => this.config.samplingPercentage || config.samplingPercentage,
+            cookieDomain: () => this.config.cookieDomain || config.cookieDomain,
+            sdkExtension: () => this.config.sdkExtension || config.sdkExtension,
+            isBrowserLinkTrackingEnabled: () => this.config.isBrowserLinkTrackingEnabled || config.isBrowserLinkTrackingEnabled,
+            appId: () => this.config.appId || config.appId
         }
 
         this._pageViewManager = new PageViewManager(this, this.config.overridePageViewDuration, this.core);
