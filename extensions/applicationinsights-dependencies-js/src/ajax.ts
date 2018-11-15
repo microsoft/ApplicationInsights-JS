@@ -3,7 +3,8 @@
 
 import {
     RequestHeaders, Util, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
-    RemoteDependencyData, DateTimeUtils, DisabledPropertyName, Data, IDependencyTelemetry
+    RemoteDependencyData, DateTimeUtils, DisabledPropertyName, Data, IDependencyTelemetry,
+    IConfig, ConfigurationManager
 } from '@microsoft/applicationinsights-common';
 import {
     CoreUtils, LoggingSeverity, _InternalMessageId, IDiagnosticLogger,
@@ -569,25 +570,44 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             this.initialized = true;
         }
     }
+
+    public static getDefaultConfig(): ICorrelationConfig {
+        const config: ICorrelationConfig = {
+            maxAjaxCallsPerView: 500,
+            disableAjaxTracking: false,
+            disableFetchTracking: true,
+            disableCorrelationHeaders: false,
+            correlationHeaderExcludedDomains: [
+                "*.blob.core.windows.net",
+                "*.blob.core.chinacloudapi.cn",
+                "*.blob.core.cloudapi.de",
+                "*.blob.core.usgovcloudapi.net"],
+            appId: undefined,
+            enableCorsCorrelation: false
+        }
+        return config;
+    }
+
+    public static getEmptyConfig(): ICorrelationConfig {
+        return {
+            maxAjaxCallsPerView: undefined,
+            disableAjaxTracking: undefined,
+            disableFetchTracking: undefined,
+            disableCorrelationHeaders: undefined,
+            correlationHeaderExcludedDomains: undefined,
+            appId: undefined,
+            enableCorsCorrelation: undefined
+        }
+    }
     
-    public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
+    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) {
         if (!this.initialized && !this._fetchInitialized) {
             this._core = core;
-            config.extensionConfig = config.extensionConfig ? config.extensionConfig : {};
-            let c = config.extensionConfig[AjaxMonitor.identifier] ? config.extensionConfig[AjaxMonitor.identifier] : {};
-            this._config = {
-                maxAjaxCallsPerView: !isNaN(c.maxAjaxCallsPerView || config.maxAjaxCallsPerView) ? c.maxAjaxCallsPerView || config.maxAjaxCallsPerView : 500,
-                disableAjaxTracking: Util.stringToBoolOrDefault(c.disableAjaxTracking || config.disableAjaxTracking),
-                disableFetchTracking: Util.stringToBoolOrDefault(c.disableFetchTracking || config.disableFetchTracking, true),
-                disableCorrelationHeaders: Util.stringToBoolOrDefault(c.disableCorrelationHeaders || config.disableCorrelationHeaders),
-                correlationHeaderExcludedDomains: c.correlationHeaderExcludedDomains || config.correlationHeaderExcludedDomains || [
-                    "*.blob.core.windows.net",
-                    "*.blob.core.chinacloudapi.cn",
-                    "*.blob.core.cloudapi.de",
-                    "*.blob.core.usgovcloudapi.net"],
-                appId: c.appId || config.appId,
-                enableCorsCorrelation: Util.stringToBoolOrDefault(c.enableCorsCorrelation || config.enableCorsCorrelation)
-            };
+            const defaultConfig = AjaxMonitor.getDefaultConfig();
+            this._config = AjaxMonitor.getEmptyConfig();
+            for (let field in defaultConfig) {
+                this._config[field] = ConfigurationManager.getConfig(config, field, AjaxMonitor.identifier) || defaultConfig[field];
+            }
 
             if (this._config.disableAjaxTracking === false) {
                 this.instrumentXhr();

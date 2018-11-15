@@ -5,7 +5,7 @@ export interface ITelemetryConfig {
     instrumentationKey: () => string;
     accountId: () => string;
     sessionRenewalMs: () => number;
-    sampleRate: () => number;
+    samplingPercentage: () => number;
     sessionExpirationMs: () => number;
     cookieDomain: () => string;
     sdkExtension: () => string;

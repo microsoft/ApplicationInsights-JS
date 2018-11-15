@@ -41,7 +41,7 @@ export class PropertiesTests extends TestClass {
                     }
                 }, this.core, []);
                 const config: ITelemetryConfig = this.properties['_extensionConfig'];
-                Assert.equal(15, config.sampleRate(), 'Extension configs can be set via root config (number)');
+                Assert.equal(15, config.samplingPercentage(), 'Extension configs can be set via root config (number)');
                 Assert.equal('abc', config.accountId(), 'Extension configs can be set via root config (string)');
                 Assert.equal(88888, config.sessionExpirationMs(), 'Root config does not override extensionConfig field when both are present')
                 Assert.notEqual(99999, config.sessionExpirationMs(), 'extensionConfig overrides root config field when both are present');

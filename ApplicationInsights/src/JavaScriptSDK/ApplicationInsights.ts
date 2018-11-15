@@ -53,12 +53,10 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this.initialize = this._initialize.bind(this);
     }
 
-    public static getDefaultConfig(config?: IConfiguration): IConfiguration {
+    public static getDefaultConfig(config?: IConfig): IConfig {
         if (!config) {
-            config = { instrumentationKey: undefined };
+            config = {};
         }
-        
-        config.endpointUrl = config.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
 
         // set default values
         config.sessionRenewalMs = 30 * 60 * 1000;
@@ -376,7 +374,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this._telemetryInitializers.push(telemetryInitializer);
     }
 
-    private _initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
+    private _initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) {
 
         if (this._isInitialized) {
             return;
@@ -390,13 +388,13 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this._logger = core.logger;
         this._globalconfig = {
             instrumentationKey: config.instrumentationKey,
-            endpointUrl: config.endpointUrl
+            endpointUrl: config.endpointUrl || "https://dc.services.visualstudio.com/v2/track"
         };
 
         this.config = config.extensionConfig && config.extensionConfig[this.identifier] ? config.extensionConfig[this.identifier] : <IConfig>{};
 
         // load default values if specified
-        var defaults: IConfiguration = ApplicationInsights.getDefaultConfig();
+        var defaults: IConfig = ApplicationInsights.getDefaultConfig();
         if (defaults !== undefined) {
             for (var field in defaults) {
                 // for each unspecified field, set the default value
