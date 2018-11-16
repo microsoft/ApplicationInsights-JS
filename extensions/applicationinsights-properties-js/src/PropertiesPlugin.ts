@@ -38,15 +38,15 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
 
     public static getDefaultConfig(): ITelemetryConfig {
         const defaultConfig: ITelemetryConfig = {
-            instrumentationKey: null,
-            accountId: null,
-            sessionRenewalMs: null,
-            samplingPercentage: null,
-            sessionExpirationMs: null,
-            cookieDomain: null,
-            sdkExtension: null,
-            isBrowserLinkTrackingEnabled: null,
-            appId: null
+            instrumentationKey: () => undefined,
+            accountId: () => null,
+            sessionRenewalMs: () => 30 * 60 * 1000,
+            samplingPercentage: () => 100,
+            sessionExpirationMs: () => 24 * 60 * 60 * 1000,
+            cookieDomain: () => null,
+            sdkExtension: () => null,
+            isBrowserLinkTrackingEnabled: () => false,
+            appId: () => null
         }
         return defaultConfig;
     }
@@ -55,7 +55,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
         const defaultConfig: ITelemetryConfig = PropertiesPlugin.getDefaultConfig();
         this._extensionConfig = this._extensionConfig || PropertiesPlugin.getDefaultConfig();
         for (let field in defaultConfig) {
-            this._extensionConfig[field] = () => ConfigurationManager.getConfig(config, field, this.identifier, defaultConfig[field]);
+            this._extensionConfig[field] = () => ConfigurationManager.getConfig(config, field, this.identifier, defaultConfig[field]());
         }
         
         if (typeof window !== 'undefined') {
