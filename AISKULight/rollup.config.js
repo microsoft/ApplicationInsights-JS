@@ -17,7 +17,7 @@ const browserRollupConfigFactory = (isProduction, libV = '1') => {
       file: `browser/aib.${libV}.js`,
       banner: banner,
       format: "umd",
-      name: "aibasic",
+      name: "Microsoft",
       sourcemap: true
     },
     plugins: [
@@ -56,7 +56,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       file: `dist/applicationinsights-web-basic.js`,
       banner: banner,
       format: "umd",
-      name: "aib",
+      name: "Microsoft",
       sourcemap: true
     },
     plugins: [

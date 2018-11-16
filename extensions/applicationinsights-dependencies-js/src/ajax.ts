@@ -17,20 +17,26 @@ export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
 }
 
 export interface IDependenciesPlugin {
-    trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any });
+    trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any });
 }
 
-export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
-    private initialized: boolean;
+export interface IInstrumentationRequirements extends IDependenciesPlugin {
+    includeCorrelationHeaders: (ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented) => any;
+}
+
+export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInstrumentationRequirements {
     private currentWindowHost;
-    private _core;
-    private _config: ICorrelationConfig;
-    private _nextPlugin: ITelemetryPlugin;
-    private _trackAjaxAttempts: number = 0;    
+    protected initialized: boolean; // ajax monitoring initialized
+    protected _fetchInitialized: boolean; // fetch monitoring initialized
+    protected _core: IAppInsightsCore;
+    protected _config: ICorrelationConfig;
+    protected _nextPlugin: ITelemetryPlugin;
+    protected _trackAjaxAttempts: number = 0;
 
     constructor() {
         this.currentWindowHost = window && window.location.host && window.location.host.toLowerCase();
         this.initialized = false;
+        this._fetchInitialized = false;
     }
 
     ///<summary>Verifies that particalar instance of XMLHttpRequest needs to be monitored</summary>
@@ -51,7 +57,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
 
     ///<summary>Determines whether ajax monitoring can be enabled on this document</summary>
     ///<returns>True if Ajax monitoring is supported on this page, otherwise false</returns>
-    private supportsMonitoring(): boolean {
+    private supportsAjaxMonitoring(): boolean {
         var result = true;
         if (CoreUtils.isNullOrUndefined(XMLHttpRequest) ||
             CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype) ||
@@ -106,7 +112,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
         */
        var id = Util.newId();
 
-        var ajaxData = new ajaxRecord(id, this._core._logger);
+        var ajaxData = new ajaxRecord(id, this._core.logger);
         ajaxData.method = method;
         ajaxData.requestUrl = url;
         ajaxData.xhrMonitoringState.openDone = true
@@ -153,15 +159,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
 
     private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
         xhr.ajaxData.requestSentTime = DateTimeUtils.Now();
-
-        if (this.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(this._config, xhr.ajaxData.getAbsoluteUrl(),
-            this.currentWindowHost)) {
-            xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
-            var appId = this._config.appId; // Todo: also, get appId from channel as breeze returns it
-            if (appId) {
-                xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
-            }
-        }
+        xhr = this.includeCorrelationHeaders(xhr.ajaxData, undefined, undefined, xhr);
         xhr.ajaxData.xhrMonitoringState.sendDone = true;
     }
 
@@ -244,18 +242,18 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
             };
 
             // enrich dependency target with correlation context from the server
-            var correlationContext = this.getCorrelationContext(xhr);
+            var correlationContext = this.getAjaxCorrelationContext(xhr);
             if (correlationContext) {
                 dependency.correlationContext = /* dependency.target + " | " + */ correlationContext;
             }
 
-            this.trackDependencyData(dependency);
+            this.trackDependencyDataInternal(dependency);
 
             xhr.ajaxData = null;
         }
     }
 
-    private getCorrelationContext(xhr: XMLHttpRequestInstrumented) {
+    private getAjaxCorrelationContext(xhr: XMLHttpRequestInstrumented) {
         try {
             var responseHeadersString = xhr.getAllResponseHeaders();
             if (responseHeadersString !== null) {
@@ -277,30 +275,34 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
         }
     }
 
-     /**
-         * Logs dependency call
-         * @param dependencyData dependency data object
-         */
-        public trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
-            if (this._config.maxAjaxCallsPerView === -1 || this._trackAjaxAttempts < this._config.maxAjaxCallsPerView) {
-                let item = TelemetryItemCreator.create<IDependencyTelemetry>(
-                    dependency,
-                    RemoteDependencyData.dataType,
-                    RemoteDependencyData.envelopeType,
-                    this._core._logger,
-                    properties,
-                    systemProperties);
+    /**
+     * Logs dependency call
+     * @param dependencyData dependency data object
+     */
+    public trackDependencyDataInternal(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
+        if (this._config.maxAjaxCallsPerView === -1 || this._trackAjaxAttempts < this._config.maxAjaxCallsPerView) {
+            let item = TelemetryItemCreator.create<IDependencyTelemetry>(
+                dependency,
+                RemoteDependencyData.dataType,
+                RemoteDependencyData.envelopeType,
+                this._core.logger,
+                properties,
+                systemProperties);
 
-                this._core.track(item);
-            } else if (this._trackAjaxAttempts === this._config.maxAjaxCallsPerView) {
-                this._core.logger.throwInternal(LoggingSeverity.CRITICAL,
-                    _InternalMessageId.MaxAjaxPerPVExceeded,
-                    "Maximum ajax per page view limit reached, ajax monitoring is paused until the next trackPageView(). In order to increase the limit set the maxAjaxCallsPerView configuration parameter.",
-                    true);
-            }
-
-            ++this._trackAjaxAttempts;
+            this._core.track(item);
+        } else if (this._trackAjaxAttempts === this._config.maxAjaxCallsPerView) {
+            this._core.logger.throwInternal(LoggingSeverity.CRITICAL,
+                _InternalMessageId.MaxAjaxPerPVExceeded,
+                "Maximum ajax per page view limit reached, ajax monitoring is paused until the next trackPageView(). In order to increase the limit set the maxAjaxCallsPerView configuration parameter.",
+                true);
         }
+
+        ++this._trackAjaxAttempts;
+    }
+
+    trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any }) {
+        this.trackDependencyDataInternal(dependency, properties);
+    }
 
     public processTelemetry(item: ITelemetryItem) {
         if (this._nextPlugin && this._nextPlugin.processTelemetry) {
@@ -308,7 +310,8 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
         }
     }
 
-    public identifier: string = "AjaxDependencyPlugin";
+    public static identifier: string = "AjaxDependencyPlugin";
+    public identifier: string = AjaxMonitor.identifier;
     
     setNextPlugin(next: ITelemetryPlugin) {
         if (next) {
@@ -317,15 +320,265 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
     }
 
     priority: number = 161;
+
+    // Fetch Stuff
+    protected instrumentFetch(): void {
+        if (!this.supportsFetch() || this._fetchInitialized) {
+            return;
+        }
+        const originalFetch: (input?: Request | string, init?: RequestInit) => Promise<Response> = window.fetch;
+        const fetchMonitorInstance: AjaxMonitor = this;
+        window.fetch = function fetch(input?: Request | string , init?: RequestInit): Promise<Response> {
+            let fetchData: ajaxRecord;
+            if (fetchMonitorInstance.isFetchInstrumented(input)) {
+                try {
+                    fetchData = fetchMonitorInstance.createFetchRecord(input, init);
+                    init = fetchMonitorInstance.includeCorrelationHeaders(fetchData, input, init);
+                } catch (e) {
+                    fetchMonitorInstance._core.logger.throwInternal(
+                        LoggingSeverity.CRITICAL,
+                        _InternalMessageId.FailedMonitorAjaxOpen,
+                        "Failed to monitor Window.fetch, monitoring data for this fetch call may be incorrect.",
+                        {
+                            ajaxDiagnosticsMessage: this.getFailedFetchDiagnosticsMessage(input),
+                            exception: Util.dump(e)
+                        });
+                }
+            }
+            return originalFetch(input, init)
+                .then(response => {
+                    fetchMonitorInstance.onFetchComplete(response, fetchData);
+                    return response;
+                })
+                .catch(reason => {
+                    fetchMonitorInstance.onFetchFailed(input, fetchData, reason);
+                    throw reason;
+                });
+        }
+        this._fetchInitialized = true;
+    }
+
+    private isFetchInstrumented(input: Request | string): boolean {
+        return this._fetchInitialized && input[DisabledPropertyName] !== true;
+    }
+
+    private supportsFetch(): boolean {
+        let result: boolean = true;
+        if (!window || CoreUtils.isNullOrUndefined((window as any).Request) ||
+            CoreUtils.isNullOrUndefined((window as any).Request.prototype) ||
+            CoreUtils.isNullOrUndefined(window.fetch)) {
+            result = false;
+        }
+        return result;
+    }
+
+    private createFetchRecord(input?: Request | string, init?: RequestInit): ajaxRecord {
+        /* todo:
+        Disabling the following block of code as CV is not yet supported in 1DS for 3rd Part. 
+        // this format corresponds with activity logic on server-side and is required for the correct correlation
+        var id = "|" + this.appInsights.context.operation.id + "." + Util.newId();
+        */
+        const id: string = Util.newId();
+        let ajaxData: ajaxRecord = new ajaxRecord(id, this._core.logger);
+        ajaxData.requestSentTime = DateTimeUtils.Now();
+
+        if (input instanceof Request) {
+            ajaxData.requestUrl = input ? input.url : "";
+        } else {
+            ajaxData.requestUrl = input;
+        }
+        
+        if (init && init.method) {
+            ajaxData.method = init.method;
+        } else if (input && input instanceof Request) {
+            ajaxData.method = input.method;
+        } else {
+            ajaxData.method = "GET";
+        }
+        return ajaxData;
+    }
+
+    public includeCorrelationHeaders(ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any {
+        if (input) { // Fetch
+            if (CorrelationIdHelper.canIncludeCorrelationHeader(this._config, ajaxData.getAbsoluteUrl(), this.currentWindowHost)) {
+                if (!init) {
+                    init = {};
+                }
+                // init headers override original request headers
+                // so, if they exist use only them, otherwise use request's because they should have been applied in the first place
+                // not using original request headers will result in them being lost
+                init.headers = new Headers(init.headers || (input instanceof Request ? (input.headers || {}) : {}));
+                init.headers.set(RequestHeaders.requestIdHeader, ajaxData.id);
+                // let appId: string = this.appInsights.context ? this.appInsights.context.appId() : null;
+                // if (appId) {
+                //     init.headers.set(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
+                // }
+
+                return init;
+            }
+        } else if (xhr) { // XHR
+            if (this.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(this._config, xhr.ajaxData.getAbsoluteUrl(),
+                this.currentWindowHost)) {
+                xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
+                var appId = this._config.appId; // Todo: also, get appId from channel as breeze returns it
+                if (appId) {
+                    xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
+                }
+            }
+
+            return xhr;
+        }
+        return undefined;
+    }
+
+    private getFailedFetchDiagnosticsMessage(input: Request | Response | string): string {
+        let result: string = "";
+        try {
+            if (!CoreUtils.isNullOrUndefined(input)) {
+                if (typeof (input) === "string") {
+                    result += `(url: '${input}')`;
+                } else {
+                    result += `(url: '${input.url}')`;
+                }
+            }
+        } catch (e) {
+            this._core.logger.throwInternal(
+                LoggingSeverity.CRITICAL,
+                _InternalMessageId.FailedMonitorAjaxOpen,
+                "Failed to grab failed fetch diagnostics message",
+                {exception: Util.dump(e)}
+            );
+        }
+        return result;
+    }
+
+    private onFetchComplete(response: Response, ajaxData: ajaxRecord): void {
+        if (!ajaxData) {
+            return;
+        }
+        try {
+            ajaxData.responseFinishedTime = DateTimeUtils.Now();
+            ajaxData.CalculateMetrics();
+
+            if (ajaxData.ajaxTotalDuration < 0) {
+                this._core.logger.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.FailedMonitorAjaxDur,
+                    "Failed to calculate the duration of the fetch call, monitoring data for this fetch call won't be sent.",
+                    {
+                        fetchDiagnosticsMessage: this.getFailedFetchDiagnosticsMessage(response),
+                        requestSentTime: ajaxData.requestSentTime,
+                        responseFinishedTime: ajaxData.responseFinishedTime
+                    });
+            } else {
+                let dependency: IDependencyTelemetry = {
+                    id: ajaxData.id,
+                    absoluteUrl: ajaxData.getAbsoluteUrl(),
+                    commandName: ajaxData.getPathName(),
+                    duration: ajaxData.ajaxTotalDuration,
+                    success: response.status >= 200 && response.status < 400,
+                    resultCode: response.status,
+                    method: ajaxData.method
+                };
+
+                // enrich dependency target with correlation context from the server
+                let correlationContext: string = this.getFetchCorrelationContext(response);
+                if (correlationContext) {
+                    dependency.correlationContext = correlationContext;
+                }
+
+                this.trackDependencyDataInternal(dependency);
+            }
+        } catch (e) {
+            this._core.logger.throwInternal(
+                LoggingSeverity.WARNING,
+                _InternalMessageId.FailedMonitorAjaxGetCorrelationHeader,
+                "Failed to calculate the duration of the fetch call, monitoring data for this fetch call won't be sent.",
+                {
+                    fetchDiagnosticsMessage: this.getFailedFetchDiagnosticsMessage(response),
+                    exception: Util.dump(e)
+                }
+            );
+        }
+    }
+
+    private onFetchFailed(input: Request | string, ajaxData: ajaxRecord, reason: any): void {
+        if (!ajaxData) {
+            return;
+        }
+        try {
+            ajaxData.responseFinishedTime = DateTimeUtils.Now();
+            ajaxData.CalculateMetrics();
+
+            if (ajaxData.ajaxTotalDuration < 0) {
+                this._core.logger.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.FailedMonitorAjaxDur,
+                    "Failed to calculate the duration of the failed fetch call, monitoring data for this fetch call won't be sent.",
+                    {
+                        fetchDiagnosticsMessage: this.getFailedFetchDiagnosticsMessage(input),
+                        requestSentTime: ajaxData.requestSentTime,
+                        responseFinishedTime: ajaxData.responseFinishedTime
+                    });
+            } else {
+                let dependency: IDependencyTelemetry = {
+                    id: ajaxData.id,
+                    absoluteUrl: ajaxData.getAbsoluteUrl(),
+                    commandName: ajaxData.getPathName(),
+                    duration: ajaxData.ajaxTotalDuration,
+                    success: false,
+                    resultCode: 0,
+                    method: ajaxData.method
+                };
+                
+                this.trackDependencyDataInternal(dependency, { error: reason.message });
+            }
+        } catch (e) {
+            this._core.logger.throwInternal(
+                LoggingSeverity.WARNING,
+                _InternalMessageId.FailedMonitorAjaxGetCorrelationHeader,
+                "Failed to calculate the duration of the failed fetch call, monitoring data for this fetch call won't be sent.",
+                {
+                    fetchDiagnosticsMessage: this.getFailedFetchDiagnosticsMessage(input),
+                    exception: Util.dump(e)
+                });
+        }
+    }
+
+    private getFetchCorrelationContext(response: Response): string {
+        try {
+            let responseHeader: string = response.headers.get(RequestHeaders.requestContextHeader);
+            return CorrelationIdHelper.getCorrelationContext(responseHeader);
+        } catch (e) {
+            this._core.logger.throwInternal(
+                LoggingSeverity.WARNING,
+                _InternalMessageId.FailedMonitorAjaxGetCorrelationHeader,
+                "Failed to get Request-Context correlation header as it may be not included in the response or not accessible.",
+                {
+                    fetchDiagnosticsMessage: this.getFailedFetchDiagnosticsMessage(response),
+                    exception: Util.dump(e)
+                });
+        }
+    }
+
+    protected instrumentXhr() {
+        if (this.supportsAjaxMonitoring() && !this.initialized) {
+            this.instrumentOpen();
+            this.instrumentSend();
+            this.instrumentAbort();
+            this.initialized = true;
+        }
+    }
     
     public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
-        if (!this.initialized) {
+        if (!this.initialized && !this._fetchInitialized) {
             this._core = core;
             config.extensionConfig = config.extensionConfig ? config.extensionConfig : {};
-            let c = config.extensionConfig[this.identifier] ? config.extensionConfig[this.identifier] : {};
+            let c = config.extensionConfig[AjaxMonitor.identifier] ? config.extensionConfig[AjaxMonitor.identifier] : {};
             this._config = {
                 maxAjaxCallsPerView: !isNaN(c.maxAjaxCallsPerView) ? c.maxAjaxCallsPerView : 500,
                 disableAjaxTracking: Util.stringToBoolOrDefault(c.disableAjaxTracking),
+                disableFetchTracking: Util.stringToBoolOrDefault(c.disableFetchTracking, true),
                 disableCorrelationHeaders: Util.stringToBoolOrDefault(c.disableCorrelationHeaders),
                 correlationHeaderExcludedDomains: c.correlationHeaderExcludedDomains || [
                     "*.blob.core.windows.net",
@@ -336,11 +589,12 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin {
                 enableCorsCorrelation: Util.stringToBoolOrDefault(c.enableCorsCorrelation)
             };
 
-            if (this.supportsMonitoring() && !this._config.disableAjaxTracking) {
-                this.instrumentOpen();
-                this.instrumentSend();
-                this.instrumentAbort();
-                this.initialized = true;
+            if (this._config.disableAjaxTracking === false) {
+                this.instrumentXhr();
+            }
+
+            if (this._config.disableFetchTracking === false) {
+                this.instrumentFetch();
             }
         }
     }

@@ -52,6 +52,9 @@ export class Util {
         var fail: boolean;
         var uid;
         try {
+            if (typeof window === 'undefined') {
+                return null;
+            }
             uid = new Date;
             storage = storageType === StorageType.LocalStorage ? window.localStorage : window.sessionStorage;
             storage.setItem(uid, uid);
@@ -520,7 +523,7 @@ export class Util {
      * @return {boolean} - true if the handler was successfully added
      */
     public static addEventHandler(eventName: string, callback: any): boolean {
-        if (!window || typeof eventName !== 'string' || typeof callback !== 'function') {
+        if (typeof window === 'undefined' || !window || typeof eventName !== 'string' || typeof callback !== 'function') {
             return false;
         }
 
@@ -688,7 +691,8 @@ export class DateTimeUtils {
     /**
      * Get the number of milliseconds since 1970/01/01 in local timezone
      */
-    public static Now = (window.performance && window.performance.now && window.performance.timing) ?
+    public static Now = (typeof window === 'undefined') ? function () { return new Date().getTime(); } :
+        (window.performance && window.performance.now && window.performance.timing) ?
         function () {
             return window.performance.now() + window.performance.timing.navigationStart;
         }

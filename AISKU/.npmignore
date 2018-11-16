@@ -11,5 +11,4 @@
 !dist-esm/**
 !dist/**
 !browser/**
-!types/**
 !src/**

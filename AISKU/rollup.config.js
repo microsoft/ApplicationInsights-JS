@@ -1,5 +1,4 @@
 import nodeResolve from "rollup-plugin-node-resolve";
-import visualizer from "rollup-plugin-visualizer";
 import {uglify} from "rollup-plugin-uglify";
 import replace from "rollup-plugin-replace";
 
@@ -18,7 +17,7 @@ const browserRollupConfigFactory = (isProduction, libVersion = '1') => {
       file: `browser/ai.${libVersion}.js`,
       banner: banner,
       format: "umd",
-      name: "aisdk",
+      name: "Microsoft",
       sourcemap: true
     },
     plugins: [
@@ -43,10 +42,6 @@ const browserRollupConfigFactory = (isProduction, libVersion = '1') => {
         output: {
           preamble: banner
         }
-      }),
-      visualizer({
-        filename: "./statistics.html",
-        sourcemap: true
       })
     );
   }
@@ -61,7 +56,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       file: `dist/applicationinsights-web.js`,
       banner: banner,
       format: "umd",
-      name: "ai",
+      name: "Microsoft",
       sourcemap: true
     },
     plugins: [
