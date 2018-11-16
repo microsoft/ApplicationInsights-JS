@@ -606,7 +606,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             const defaultConfig = AjaxMonitor.getDefaultConfig();
             this._config = AjaxMonitor.getEmptyConfig();
             for (let field in defaultConfig) {
-                this._config[field] = ConfigurationManager.getConfig(config, field, AjaxMonitor.identifier) || defaultConfig[field];
+                this._config[field] = ConfigurationManager.getConfig(config, field, AjaxMonitor.identifier, defaultConfig[field]);
             }
 
             if (this._config.disableAjaxTracking === false) {

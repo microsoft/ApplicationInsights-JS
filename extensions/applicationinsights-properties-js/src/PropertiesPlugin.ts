@@ -55,7 +55,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
         const defaultConfig: ITelemetryConfig = PropertiesPlugin.getDefaultConfig();
         this._extensionConfig = this._extensionConfig || PropertiesPlugin.getDefaultConfig();
         for (let field in defaultConfig) {
-            this._extensionConfig[field] = () => ConfigurationManager.getConfig(config, field, this.identifier) || defaultConfig[field];
+            this._extensionConfig[field] = () => ConfigurationManager.getConfig(config, field, this.identifier, defaultConfig[field]);
         }
         
         if (typeof window !== 'undefined') {

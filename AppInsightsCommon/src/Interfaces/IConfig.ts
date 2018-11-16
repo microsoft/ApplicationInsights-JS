@@ -42,10 +42,13 @@ export interface IConfig {
 }
 
 export class ConfigurationManager {
-    public static getConfig(config: IConfiguration & IConfig, field: string, identifier?: string): number | string | boolean {
+    public static getConfig(config: IConfiguration & IConfig, field: string, identifier?: string, defaultValue: any = false): number | string | boolean {
+        let configValue;
         if (!identifier || !config.extensionConfig || !config.extensionConfig[identifier]) {
-            return config[field];
+            configValue = config[field];
+        } else {
+            configValue = config.extensionConfig[identifier][field] || config[field];
         }
-        return config.extensionConfig[identifier][field] || config[field];
+        return configValue !== undefined ? configValue : defaultValue;
     }
 }

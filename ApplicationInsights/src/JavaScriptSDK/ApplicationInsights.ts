@@ -10,7 +10,8 @@ import {
     PageView, IEnvelope, RemoteDependencyData, Event, IEventTelemetry,
     TelemetryItemCreator, Data, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
-    IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry
+    IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry,
+    ConfigurationManager
 } from "@microsoft/applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
@@ -398,7 +399,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         if (defaults !== undefined) {
             for (var field in defaults) {
                 // for each unspecified field, set the default value
-                this.config[field] = this.config[field] || config[field] || defaults[field];
+                this.config[field] = ConfigurationManager.getConfig(config, field, this.identifier, defaults[field]);
             }
 
             if (this._globalconfig) {
