@@ -9,6 +9,7 @@ import {
     CoreUtils,
     ITelemetryItem
 } from "@microsoft/applicationinsights-core-js";
+import { IConfig } from "@microsoft/applicationinsights-common";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 
 "use strict";
@@ -23,10 +24,10 @@ export class ApplicationInsights {
 
     /**
      * Creates an instance of ApplicationInsights.
-     * @param {IConfiguration} config
+     * @param {IConfiguration & IConfig} config
      * @memberof ApplicationInsights
      */
-    constructor(config: IConfiguration) {
+    constructor(config: IConfiguration & IConfig) {
         // initialize the queue and config in case they are undefined
         if (
             CoreUtils.isNullOrUndefined(config) ||

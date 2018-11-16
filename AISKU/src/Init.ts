@@ -18,10 +18,7 @@ try {
         // get sdk instance name should not conflict if page uses existing sdk for a layer of instrumentation
         aiName = window["appInsightsSDK"];
 
-        if (window[aiName] === undefined) {
-            // if no snippet is present, initialize default values
-            AppAnalytics.appInsightsDefaultConfig = ApplicationInsights.getDefaultConfig();
-        } else {
+        if (window[aiName] !== undefined) {
             if (window[aiName].initialize) { // initialize if required
                 // this is the typical case for browser+snippet
                 var snippet: Snippet = window[aiName] || <any>{};
