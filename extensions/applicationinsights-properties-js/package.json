@@ -29,7 +29,7 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-core-js": "^1.0.0-beta",
-        "@microsoft/applicationinsights-common": "^1.0.0-beta"
+        "@microsoft/applicationinsights-common": "file:../../appinsightscommon/microsoft-applicationinsights-common-1.0.0-beta.3.tgz"
     },
     "license": "MIT"
 }

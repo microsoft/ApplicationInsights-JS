@@ -34,4 +34,4 @@ export { DataSanitizer } from './Telemetry/Common/DataSanitizer';
 export { TelemetryItemCreator } from './TelemetryItemCreator';
 export { ICorrelationConfig } from './Interfaces/ICorrelationConfig';
 export { IAppInsights } from './Interfaces/IAppInsights';
-export {PartAExtensions, UserExt, WebExt, AppExt, UserTags } from './Interfaces/ContractsCS4';
+export { UserTagsCS4 } from './Interfaces/ContractsCS4';

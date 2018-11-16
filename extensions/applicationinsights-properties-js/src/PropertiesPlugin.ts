@@ -7,7 +7,7 @@ import {
     ITelemetryPlugin, IConfiguration, CoreUtils,
     IAppInsightsCore, IPlugin, ITelemetryItem
 } from '@microsoft/applicationinsights-core-js';
-import { ContextTagKeys, PageView, UserTags, UserExt } from '@microsoft/applicationinsights-common';
+import { ContextTagKeys, PageView, UserExt, UserTagsCS4 } from '@microsoft/applicationinsights-common';
 import { Session, _SessionManager } from './Context/Session';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
@@ -35,7 +35,6 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
 
     private _nextPlugin: ITelemetryPlugin;
     private _extensionConfig: ITelemetryConfig;
-    private static contextTagKeys = new ContextTagKeys();
 
     initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
         let extensionConfig = config.extensionConfig &&
@@ -244,28 +243,31 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
     }
 
     private _applyUserContext(event: ITelemetryItem, userContext: User) {
-        let userExt = new UserTags(PropertiesPlugin.contextTagKeys);
-        let tagsItem: { [key: string]: any } = {};
+        let userExt = <UserExt>{};
         if (userContext) {
+            if (!event.tags) {
+                event.tags = [];
+            }
+            
             var tagKeys: ContextTagKeys = new ContextTagKeys();
         
             // stays in tags under User extension
             if (typeof userContext.accountId === "string") {
-                if (!event.tags) {
-                    event.tags = [];
-                }
-
                 let item = {};
-                item[ UserTags.tags.AccountId] = userContext.accountId;
+                item[UserTagsCS4.tags.AccountId] = userContext.accountId;
                 event.tags.push(item);
             }
 
             if (typeof userContext.agent === "string") {
-                event.tags[tagKeys.userAgent] = userContext.agent;
+                let val = userContext.agent;
+                let ky = tagKeys.userAgent;
+                event.tags.push({ ky: val });
             }
 
             if (typeof userContext.storeRegion === "string") {
-                event.tags[tagKeys.userStoreRegion] = userContext.storeRegion;
+                let ky = tagKeys.userStoreRegion;
+                let val = userContext.storeRegion;
+                event.tags.push({ky: val});
             }
 
             // CS 4.0            
@@ -277,7 +279,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
                 userExt.authId = userContext.authenticatedId;
             }
             
-            event.ctx[UserTags.ExtensionName] = JSON.stringify(<UserExt>userExt); // part A extension
+            event.ctx[UserTagsCS4.ExtensionName] = JSON.stringify(<UserExt>userExt); // part A extension
             // CS 4.0
         }
     }
