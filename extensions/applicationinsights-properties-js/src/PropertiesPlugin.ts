@@ -38,15 +38,15 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
 
     public static getDefaultConfig(): ITelemetryConfig {
         const defaultConfig: ITelemetryConfig = {
-            instrumentationKey: undefined,
-            accountId: undefined,
-            sessionRenewalMs: undefined,
-            samplingPercentage: undefined,
-            sessionExpirationMs: undefined,
+            instrumentationKey: null,
+            accountId: null,
+            sessionRenewalMs: null,
+            samplingPercentage: null,
+            sessionExpirationMs: null,
             cookieDomain: null,
-            sdkExtension: undefined,
-            isBrowserLinkTrackingEnabled: undefined,
-            appId: undefined
+            sdkExtension: null,
+            isBrowserLinkTrackingEnabled: null,
+            appId: null
         }
         return defaultConfig;
     }
