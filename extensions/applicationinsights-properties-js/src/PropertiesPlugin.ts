@@ -7,7 +7,7 @@ import {
     ITelemetryPlugin, IConfiguration, CoreUtils,
     IAppInsightsCore, IPlugin, ITelemetryItem
 } from '@microsoft/applicationinsights-core-js';
-import { ContextTagKeys, PageView, UserExt, UserTagsCS4 } from '@microsoft/applicationinsights-common';
+import { ContextTagKeys, PageView, UserTagsCS4 } from '@microsoft/applicationinsights-common';
 import { Session, _SessionManager } from './Context/Session';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
@@ -27,7 +27,6 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
     public location: Location; // The object describing a location tracked by this object.
     public operation: Operation; // The object describing a operation tracked by this object.
     public user: User; // The object describing a user tracked by this object.
-    public userExt: UserExt; // The object describing user in CS 4.0
     public internal: Internal;
     public session: Session; // The object describing a session tracked by this object.
     public sample: Sample;
@@ -243,7 +242,6 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
     }
 
     private _applyUserContext(event: ITelemetryItem, userContext: User) {
-        let userExt = <UserExt>{};
         if (userContext) {
             if (!event.tags) {
                 event.tags = [];
@@ -254,7 +252,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
             // stays in tags under User extension
             if (typeof userContext.accountId === "string") {
                 let item = {};
-                item[UserTagsCS4.tags.AccountId] = userContext.accountId;
+                item[UserTagsCS4.accountIdTag] = userContext.accountId;
                 event.tags.push(item);
             }
 
@@ -270,16 +268,17 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
                 event.tags.push({ky: val});
             }
 
+            let ctxExt = <any>{};
             // CS 4.0            
             if (typeof userContext.id === "string") {
-                userExt.localId = userContext.id;
+                ctxExt.localId = userContext.id;
             }
             
             if (typeof userContext.authenticatedId === "string") {
-                userExt.authId = userContext.authenticatedId;
+                ctxExt.authId = userContext.authenticatedId;
             }
             
-            event.ctx[UserTagsCS4.ExtensionName] = JSON.stringify(<UserExt>userExt); // part A extension
+            event.ctx[UserTagsCS4.ExtensionName] = JSON.stringify(ctxExt); // part A extension
             // CS 4.0
         }
     }
