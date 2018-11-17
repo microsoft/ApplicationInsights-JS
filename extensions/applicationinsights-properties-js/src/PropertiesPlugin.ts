@@ -7,7 +7,7 @@ import {
     ITelemetryPlugin, IConfiguration, CoreUtils,
     IAppInsightsCore, IPlugin, ITelemetryItem
 } from '@microsoft/applicationinsights-core-js';
-import { ContextTagKeys, PageView, UserTagsCS4 } from '@microsoft/applicationinsights-common';
+import { ContextTagKeys, PageView, partAExtensions } from '@microsoft/applicationinsights-common';
 import { Session, _SessionManager } from './Context/Session';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
@@ -125,7 +125,17 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
         PropertiesPlugin._applySampleContext(tagsItem, this.sample);
         this._applyUserContext(event, this.user);
         PropertiesPlugin._applyOperationContext(tagsItem, this.operation);
-        event.tags = { ...event.tags, ...tagsItem };
+        let tgs = [];
+        Object.keys(tagsItem).forEach(item => {
+            var p = {}; p[item]=tagsItem[item];
+            tgs.push(p)
+        });
+
+        event.tags.forEach(item => {
+                tgs.push(item);
+        });
+
+        event.tags = tgs;
     }
 
     private static _applySessionContext(tags: { [key: string]: any }, sessionContext: Session) {
@@ -252,7 +262,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
             // stays in tags under User extension
             if (typeof userContext.accountId === "string") {
                 let item = {};
-                item[UserTagsCS4.accountIdTag] = userContext.accountId;
+                item[partAExtensions.accountIdTag] = userContext.accountId;
                 event.tags.push(item);
             }
 
@@ -278,7 +288,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
                 ctxExt.authId = userContext.authenticatedId;
             }
             
-            event.ctx[UserTagsCS4.ExtensionName] = JSON.stringify(ctxExt); // part A extension
+            event.ctx[partAExtensions.UserExtensionName] = ctxExt; // part A extension
             // CS 4.0
         }
     }
