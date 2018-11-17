@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-properties-js",
-    "version": "1.0.0-beta",
+    "version": "1.0.0-beta.3",
     "description": "Microsoft Application Insights properties (Part A) plugin",
     "main": "dist/applicationinsights-properties-js.min.js",
     "module": "dist-esm/applicationinsights-properties-js.js",
@@ -28,8 +28,8 @@
         "rollup-plugin-uglify": "^6.0.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "^1.0.0-beta",
-        "@microsoft/applicationinsights-common": "file:../../appinsightscommon/microsoft-applicationinsights-common-1.0.0-beta.3.tgz"
+        "@microsoft/applicationinsights-core-js": "^1.0.0-beta.2",
+        "@microsoft/applicationinsights-common": "^1.0.0-beta.7"
     },
     "license": "MIT"
 }

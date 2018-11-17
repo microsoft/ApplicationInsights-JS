@@ -17,7 +17,7 @@ import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsof
  */
 export interface Snippet {
     queue: Array<() => void>;
-    config: IConfiguration;
+    config: IConfiguration & IConfig;
 }
 
 export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
@@ -41,7 +41,7 @@ export class Initialization implements IApplicationInsights {
     constructor(snippet: Snippet) {
         // initialize the queue and config in case they are undefined
         snippet.queue = snippet.queue || [];
-        var config: IConfiguration = snippet.config || <any>{};
+        var config: IConfiguration & IConfig = snippet.config || <any>{};
 
         // ensure instrumentationKey is specified
         if (config && !config.instrumentationKey) {
@@ -50,8 +50,6 @@ export class Initialization implements IApplicationInsights {
         }
 
         this.appInsights = new ApplicationInsights();
-        // set default values using config passed through snippet
-        config = Initialization.getDefaultConfig(config, this.appInsights.identifier);
 
         this.properties = new PropertiesPlugin();
         this.dependencies = new DependenciesPlugin();
@@ -294,57 +292,5 @@ export class Initialization implements IApplicationInsights {
                     'Could not add handler for beforeunload');
             }
         }
-    }
-
-    public static getDefaultConfig(configuration?: IConfiguration, identifier?: string): IConfiguration {
-        if (!configuration) {
-            configuration = <IConfiguration>{};
-        }
-
-        if (configuration) {
-            identifier = identifier ? identifier : "ApplicationInsightsAnalytics";
-        }
-
-        // Undefined checks
-        if (!configuration.extensionConfig) {
-            configuration.extensionConfig = {};
-        }
-        if (!configuration.extensionConfig[identifier]) {
-            configuration.extensionConfig[identifier] = {};
-        }
-        const extensionConfig: IConfig = configuration.extensionConfig[identifier]; // ref to main config
-        // set default values
-        configuration.endpointUrl = configuration.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
-        configuration.diagnosticLoggingInterval = configuration.diagnosticLoggingInterval || 10000;
-        extensionConfig.sessionRenewalMs = 30 * 60 * 1000;
-        extensionConfig.sessionExpirationMs = 24 * 60 * 60 * 1000;
-
-        extensionConfig.enableDebug = Util.stringToBoolOrDefault(extensionConfig.enableDebug);
-        extensionConfig.disableExceptionTracking = Util.stringToBoolOrDefault(extensionConfig.disableExceptionTracking);
-        extensionConfig.consoleLoggingLevel = extensionConfig.consoleLoggingLevel || 1; // Show only CRITICAL level
-        extensionConfig.telemetryLoggingLevel = extensionConfig.telemetryLoggingLevel || 0; // Send nothing
-        extensionConfig.autoTrackPageVisitTime = Util.stringToBoolOrDefault(extensionConfig.autoTrackPageVisitTime);
-
-        if (isNaN(extensionConfig.samplingPercentage) || extensionConfig.samplingPercentage <= 0 || extensionConfig.samplingPercentage >= 100) {
-            extensionConfig.samplingPercentage = 100;
-        }
-
-        extensionConfig.disableAjaxTracking = Util.stringToBoolOrDefault(extensionConfig.disableAjaxTracking)
-        extensionConfig.disableFetchTracking = Util.stringToBoolOrDefault(extensionConfig.disableFetchTracking, false);
-        extensionConfig.maxAjaxCallsPerView = !isNaN(extensionConfig.maxAjaxCallsPerView) ? extensionConfig.maxAjaxCallsPerView : 500;
-
-        extensionConfig.disableCorrelationHeaders = Util.stringToBoolOrDefault(extensionConfig.disableCorrelationHeaders);
-        extensionConfig.correlationHeaderExcludedDomains = extensionConfig.correlationHeaderExcludedDomains || [
-            "*.blob.core.windows.net",
-            "*.blob.core.chinacloudapi.cn",
-            "*.blob.core.cloudapi.de",
-            "*.blob.core.usgovcloudapi.net"];
-        extensionConfig.disableFlushOnBeforeUnload = Util.stringToBoolOrDefault(extensionConfig.disableFlushOnBeforeUnload);
-        extensionConfig.isCookieUseDisabled = Util.stringToBoolOrDefault(extensionConfig.isCookieUseDisabled);
-        extensionConfig.isStorageUseDisabled = Util.stringToBoolOrDefault(extensionConfig.isStorageUseDisabled);
-        extensionConfig.isBrowserLinkTrackingEnabled = Util.stringToBoolOrDefault(extensionConfig.isBrowserLinkTrackingEnabled);
-        extensionConfig.enableCorsCorrelation = Util.stringToBoolOrDefault(extensionConfig.enableCorsCorrelation);
-
-        return configuration;
     }
 }

@@ -7,7 +7,7 @@ import {
     ITelemetryPlugin, IConfiguration, CoreUtils,
     IAppInsightsCore, IPlugin, ITelemetryItem
 } from '@microsoft/applicationinsights-core-js';
-import { ContextTagKeys, PageView, partAExtensions } from '@microsoft/applicationinsights-common';
+import { ContextTagKeys, Util, PageView, ConfigurationManager, IConfig, partAExtensions } from '@microsoft/applicationinsights-common';
 import { Session, _SessionManager } from './Context/Session';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
@@ -35,22 +35,27 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
     private _nextPlugin: ITelemetryPlugin;
     private _extensionConfig: ITelemetryConfig;
 
-    initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
-        let extensionConfig = config.extensionConfig &&
-            config.extensionConfig[this.identifier] ?
-            config.extensionConfig[this.identifier] : {};
+    public static getDefaultConfig(): ITelemetryConfig {
+        const defaultConfig: ITelemetryConfig = {
+            instrumentationKey: () => undefined,
+            accountId: () => null,
+            sessionRenewalMs: () => 30 * 60 * 1000,
+            samplingPercentage: () => 100,
+            sessionExpirationMs: () => 24 * 60 * 60 * 1000,
+            cookieDomain: () => null,
+            sdkExtension: () => null,
+            isBrowserLinkTrackingEnabled: () => false,
+            appId: () => null
+        }
+        return defaultConfig;
+    }
 
-        this._extensionConfig = {
-            instrumentationKey: () => extensionConfig.instrumentationKey,
-            accountId: () => extensionConfig.accountId,
-            sessionRenewalMs: () => extensionConfig.sessionRenewalMs,
-            sampleRate: () => extensionConfig.sampleRate,
-            sessionExpirationMs: () => extensionConfig.sessionExpirationMs,
-            cookieDomain: () => extensionConfig.cookieDomain,
-            sdkExtension: () => extensionConfig.sdkExtension,
-            isBrowserLinkTrackingEnabled: () => extensionConfig.isBrowserLinkTrackingEnabled,
-            appId: () => extensionConfig.appId
-        };
+    initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) {
+        const defaultConfig: ITelemetryConfig = PropertiesPlugin.getDefaultConfig();
+        this._extensionConfig = this._extensionConfig || PropertiesPlugin.getDefaultConfig();
+        for (let field in defaultConfig) {
+            this._extensionConfig[field] = () => ConfigurationManager.getConfig(config, field, this.identifier, defaultConfig[field]());
+        }
         
         if (typeof window !== 'undefined') {
             this._sessionManager = new _SessionManager(this._extensionConfig, core.logger);
@@ -61,7 +66,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
             this.user = new User(this._extensionConfig, core.logger);
             this.operation = new Operation();
             this.session = new Session();
-            this.sample = new Sample(this._extensionConfig.sampleRate(), core.logger);
+            this.sample = new Sample(this._extensionConfig.samplingPercentage(), core.logger);
         }
     }
 

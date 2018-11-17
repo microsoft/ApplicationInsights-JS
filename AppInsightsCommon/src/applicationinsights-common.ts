@@ -27,7 +27,7 @@ export { Trace } from './Telemetry/Trace';
 export { PageViewPerformance } from './Telemetry/PageViewPerformance';
 export { Data } from './Telemetry/Common/Data';
 export { SeverityLevel } from './Interfaces/Contracts/Generated/SeverityLevel';
-export { IConfig } from './Interfaces/IConfig';
+export { IConfig, ConfigurationManager } from './Interfaces/IConfig';
 export { IChannelControlsAI } from './Interfaces/IChannelControlsAI';
 export { ContextTagKeys } from './Interfaces/Contracts/Generated/ContextTagKeys';
 export { DataSanitizer } from './Telemetry/Common/DataSanitizer';

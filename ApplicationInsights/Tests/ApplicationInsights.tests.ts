@@ -27,6 +27,33 @@ export class ApplicationInsightsTests extends TestClass {
 
     public registerTests() {
         this.testCase({
+            name: 'AppInsightsTests: config can be set from root',
+            test: () => {
+                // Setup
+                var appInsights: ApplicationInsights = new ApplicationInsights();
+
+                // Act
+                var config = {
+                    instrumentationKey: 'instrumentation_key',
+                    samplingPercentage: 12,
+                    accountId: 'aaa',
+                    extensionConfig: {
+                        [appInsights.identifier]: {
+                            accountId: 'def'
+                        }
+                    }
+                };
+                appInsights.initialize(config, new AppInsightsCore(), []);
+                
+                // Assert
+                Assert.equal(12, appInsights.config.samplingPercentage);
+                Assert.notEqual('aaa', appInsights.config.accountId);
+                Assert.equal('def', appInsights.config.accountId);
+                Assert.equal('instrumentation_key', appInsights['_globalconfig'].instrumentationKey);
+            }
+        });
+
+        this.testCase({
             name: "AppInsightsTests: public members are correct",
             test: () => {
                 // setup
