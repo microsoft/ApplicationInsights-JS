@@ -1,13 +1,5 @@
 import { ContextTagKeys } from '../applicationinsights-common';
 
-// export class PartAExtensions {
-//     public user?: UserExt;
-//     public web?: WebExt;
-//     public app?: AppExt;
-//     public os?: OSExt;
-//     public device?: DeviceExt;
-// }
-
 export interface UserExt {
     id?: string;
     localId?: string;
@@ -61,4 +53,4 @@ export interface AppExt {
 }
 
 var kys = new ContextTagKeys();
-export var partAExtensions = new PartAExtensions(kys);
+export var partAExtensions = new PartAExtensions(kys); // export global instance
