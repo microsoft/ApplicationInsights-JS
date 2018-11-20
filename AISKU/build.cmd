@@ -1,31 +1,52 @@
-echo ON
+echo OFF
 echo %1
+
 if "%1" EQU "" (
-   echo "Usage: build amd|cjs"
-   echo "Please use amd or cjs as input"
+   echo "Usage: build <path to channel repo>"
   goto END
 )
 
-rd /s /q node_modules
-del package-lock.json
+pushd .
 
-echo "starting build"
-xcopy %1\package.json . /Y /S
-call npm install 
-rd /s /q amd\bundle
-call grunt aisku && echo "copy files"
-xcopy "node_modules/applicationinsights-analytics-js/bundle" "amd/bundle" /S
+for %%i in (%1, "..\AppInsightsCommon", "..\extensions\applicationinsights-properties-js", "..\extensions\applicationinsights-dependencies-js", "..\ApplicationInsights", "..\AISKU") do (
+    echo "Change directory to %%i"
+    cd %%i
+    echo "Cleaning up node_modules directory"
+    rd /s /q node_modules
+    echo "Deleting package-lock.json"
+    del package-lock.json
 
-xcopy "node_modules/applicationinsights-channel-js/bundle" "amd/bundle" /S
+    echo Installing packages>> npm i
+    call npm i
+    IF %ERRORLEVEL% NEQ 0 (
+        goto :ERRORFOUND
+    )
 
-xcopy "node_modules/applicationinsights-common/bundle" "amd/bundle" /S
-xcopy "node_modules/applicationinsights-core-js/bundle" "amd/bundle" /S
-xcopy "node_modules/applicationinsights-dependencies-js/bundle" "amd/bundle" /S
-xcopy "node_modules/applicationinsights-properties-js/bundle" "amd/bundle" /S
+    echo "Building>> npm run build --silent"
+    call npm run build --silent
+    IF %ERRORLEVEL% NEQ 0 (
+        goto :ERRORFOUND
+    )
 
-call npx webpack --config webpack.production.config.js
+    echo "Packing>> npm pack"
+    call npm pack
+    IF %ERRORLEVEL% NEQ 0 (
+        goto :ERRORFOUND
+    )
 
-call npx webpack --config webpack-dev.config.js
+    popd
+    echo "Current directory"
+    call cd
+    echo "Push current directory"
+    pushd .
+)
+ echo "Completed all builds successfully"
+ exit /B %ERRORLEVEL%
 
-:END
-echo "Exiting script"
+:ERRORFOUND
+ echo "Failed to build"
+ exit /B %ERRORLEVEL%
+
+ :END
+ echo "Please see usage"
+ exit /B %ERRORLEVEL%
