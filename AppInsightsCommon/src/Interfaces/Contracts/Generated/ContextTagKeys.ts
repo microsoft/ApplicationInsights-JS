@@ -234,6 +234,7 @@ export class ContextTagKeys {
         this.operationRootId = "ai.operation.rootId";
         this.operationSyntheticSource = "ai.operation.syntheticSource";
         this.operationCorrelationVector = "ai.operation.correlationVector";
+                
         this.sessionId = "ai.session.id";
         this.sessionIsFirst = "ai.session.isFirst";
         this.sessionIsNew = "ai.session.isNew";
@@ -245,6 +246,7 @@ export class ContextTagKeys {
         this.userAuthUserId = "ai.user.authUserId";
         this.userAnonymousUserAcquisitionDate = "ai.user.anonUserAcquisitionDate";
         this.userAuthenticatedUserAcquisitionDate = "ai.user.authUserAcquisitionDate";
+        
         this.cloudName = "ai.cloud.name";
         this.cloudRole = "ai.cloud.role";
         this.cloudRoleVer = "ai.cloud.roleVer";
@@ -252,8 +254,8 @@ export class ContextTagKeys {
         this.cloudEnvironment = "ai.cloud.environment";
         this.cloudLocation = "ai.cloud.location";
         this.cloudDeploymentUnit = "ai.cloud.deploymentUnit";
+        this.internalNodeName = "ai.internal.nodeName";
         this.internalSdkVersion = "ai.internal.sdkVersion";
         this.internalAgentVersion = "ai.internal.agentVersion";
-        this.internalNodeName = "ai.internal.nodeName";
     }
 }

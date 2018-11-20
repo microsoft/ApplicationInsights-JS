@@ -5,9 +5,9 @@
 
 import {
     ITelemetryPlugin, IConfiguration, CoreUtils,
-    IAppInsightsCore, IPlugin, ITelemetryItem, IDiagnosticLogger
+    IAppInsightsCore, IPlugin, ITelemetryItem
 } from '@microsoft/applicationinsights-core-js';
-import { ContextTagKeys, Util, PageView, ConfigurationManager, IConfig } from '@microsoft/applicationinsights-common';
+import { ContextTagKeys, Util, PageView, ConfigurationManager, IConfig, partAExtensions } from '@microsoft/applicationinsights-common';
 import { Session, _SessionManager } from './Context/Session';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
@@ -18,7 +18,6 @@ import { User } from './Context/User';
 import { Sample } from './Context/Sample';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 import { ITelemetryContext } from './Interfaces/ITelemetryContext';
-import { IPropertiesPlugin } from './Interfaces/IPropertiesPlugin';
 
 export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryContext {
     public priority = 170;
@@ -46,7 +45,8 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
             cookieDomain: () => null,
             sdkExtension: () => null,
             isBrowserLinkTrackingEnabled: () => false,
-            appId: () => null
+            appId: () => null,
+            enableOldTags: () => false
         }
         return defaultConfig;
     }
@@ -123,15 +123,28 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
             }
         }
 
-        // set part A  fields
-        PropertiesPlugin._applyApplicationContext(tagsItem, this.application);
-        PropertiesPlugin._applyDeviceContext(tagsItem, this.device);
-        PropertiesPlugin._applyInternalContext(tagsItem, this.internal);
-        PropertiesPlugin._applyLocationContext(tagsItem, this.location);
-        PropertiesPlugin._applySampleContext(tagsItem, this.sample);
-        PropertiesPlugin._applyUserContext(tagsItem, this.user);
-        PropertiesPlugin._applyOperationContext(tagsItem, this.operation);
-        event.tags.push(tagsItem);
+        if (this._extensionConfig.enableOldTags()) {
+            // set part A  fields
+            PropertiesPlugin._applyApplicationContext(tagsItem, this.application);
+            PropertiesPlugin._applyDeviceContext(tagsItem, this.device);
+            PropertiesPlugin._applyInternalContext(tagsItem, this.internal);
+            PropertiesPlugin._applyLocationContext(tagsItem, this.location);
+            PropertiesPlugin._applySampleContext(tagsItem, this.sample);
+            PropertiesPlugin._applyOperationContext(tagsItem, this.operation);
+        }
+
+        this._applyUserContext(event, this.user);
+        let tgs = [];
+        Object.keys(tagsItem).forEach(item => {
+            var p = {}; p[item]=tagsItem[item];
+            tgs.push(p)
+        });
+
+        event.tags.forEach(item => {
+                tgs.push(item);
+        });
+
+        event.tags = tgs;
     }
 
     private static _applySessionContext(tags: { [key: string]: any }, sessionContext: Session) {
@@ -247,24 +260,48 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
         }
     }
 
-    private static _applyUserContext(tagsItem: { [key: string]: any }, userContext: User) {
+    private _applyUserContext(event: ITelemetryItem, userContext: User) {
         if (userContext) {
+            if (!event.tags) {
+                event.tags = [];
+            }
+            
             var tagKeys: ContextTagKeys = new ContextTagKeys();
+        
+            if (this._extensionConfig.enableOldTags()) {
+                if (typeof userContext.agent === "string") {
+                    let val = userContext.agent;
+                    let ky = tagKeys.userAgent;
+                    event.tags.push({ ky: val });
+                }
+
+                if (typeof userContext.storeRegion === "string") {
+                    let ky = tagKeys.userStoreRegion;
+                    let val = userContext.storeRegion;
+                    event.tags.push({ky: val});
+                }
+            }
+
+            // stays in tags under User extension
             if (typeof userContext.accountId === "string") {
-                tagsItem[tagKeys.userAccountId] = userContext.accountId;
+                let item = {};
+                item[partAExtensions.accountIdTag] = userContext.accountId;
+                event.tags.push(item);
             }
-            if (typeof userContext.agent === "string") {
-                tagsItem[tagKeys.userAgent] = userContext.agent;
-            }
+            
+
+            let ctxExt = <any>{};
+            // CS 4.0            
             if (typeof userContext.id === "string") {
-                tagsItem[tagKeys.userId] = userContext.id;
+                ctxExt.localId = userContext.id;
             }
+            
             if (typeof userContext.authenticatedId === "string") {
-                tagsItem[tagKeys.userAuthUserId] = userContext.authenticatedId;
+                ctxExt.authId = userContext.authenticatedId;
             }
-            if (typeof userContext.storeRegion === "string") {
-                tagsItem[tagKeys.userStoreRegion] = userContext.storeRegion;
-            }
+            
+            event.ctx[partAExtensions.UserExtensionName] = ctxExt; // part A extension
+            // CS 4.0
         }
     }
 }
