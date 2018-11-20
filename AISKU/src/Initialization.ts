@@ -302,5 +302,7 @@ export class Initialization implements IApplicationInsights {
     public getSKUDefaults() {
         let enableOldTags = ConfigurationManager.getConfig(this.config, "enableOldTags", propertiesPlugin, true);
         this.config.enableOldTags = <boolean>enableOldTags;
+        this.config.diagnosticLoggingInterval = 
+            this.config.diagnosticLoggingInterval && this.config.diagnosticLoggingInterval > 0 ? this.config.diagnosticLoggingInterval : 10000;
     }
 }
