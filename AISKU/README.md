@@ -18,9 +18,9 @@
 
 # Application Insights JavaScript SDK - Web
 
-[![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/1DS%20JavaScript%20SDK%20-%20SKU%20+%20Common%20+%20Extensions)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=7610)
+<!-- [![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/1DS%20JavaScript%20SDK%20-%20SKU%20+%20Common%20+%20Extensions)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=7610)
 [![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
-[![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web)
+[![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web) -->
 
 
 ## Getting Started
@@ -33,7 +33,22 @@
     ```
     > *Note:* **Typings are included with this package**, so you do not not need to install a separate typings package.
 
-### Snippet
+## Basic Usage
+
+### Setup (NPM only)
+```js
+import { ApplicationInsights } from '@microsoft/applicationinsights-web'
+```
+
+```js
+const appInsights = new ApplicationInsights({ config: {
+  instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+  /* ...Other Configuration Options... */
+}});
+appInsights.loadAppInsights();
+```
+
+### Snippet Setup (Ignore if using NPM)
 If your app does not use NPM, you can directly instrument your webpages with Application Insights by pasting this snippet at the top of each your pages. Preferably, it should be the first script in your `<head>` section so that it can monitor any potential issues with all of your dependencies.
 ```html
 <script type="text/javascript">
@@ -43,21 +58,6 @@ var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=wi
 );
 if(window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length){var pageViewItem={name:document.title?document.title:"",uri:document.URL?document.URL:""};aisdk.trackPageView(pageViewItem)}
 </script>
-```
-
-## Basic Usage
-
-### Setup (NPM only)
-```js
-import { ApplicationInsights } from '@microsoft/applicationinsights-web'
-```
-
-```js
-const appInsights = new ApplicationInsights({config: {
-	instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
-	/* ...Other IConfig or IConfiguration options... */
-}});
-appInsights.loadAppInsights();
 ```
 
 ### Sending Telemetry to the Azure Portal
@@ -128,7 +128,7 @@ Most configuration fields are named such that they can be defaulted to falsey.
 
 ## Examples
 
-### React
+For runnable examples, see our [Application Insights Demos Page](../Examples/)
 
 ## Application Insights Web Basic
 
@@ -136,7 +136,7 @@ For a lightweight experience, you can instead install the basic version of Appli
 ```
 npm i --save @microsoft/applicationinsights-web-basic
 ```
-This version comes with the bare minimum amount of features and functionalities and relies on you to build it up as you see fit. For example, it performs no auto-collection of exceptions or outgoing server requests. The APIs to send certain telemetry types, like `trackTrace`, `trackEvent`, etc, are not included in this version, but you can write your own wrapper.
+This version comes with the bare minimum amount of features and functionalities and relies on you to build it up as you see fit. For example, it performs no auto-collection (uncaught exceptions, ajax, etc). The APIs to send certain telemetry types, like `trackTrace`, `trackEvent`, etc, are not included in this version, so you will need to provide your own wrapper.
 
 ## Contributing
 
@@ -148,7 +148,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 [GitFlow]: http://nvie.com/posts/a-successful-git-branching-model/
 [GitHubIssue]: https://github.com/Microsoft/ApplicationInsights-JS/issues
 
-### Build & Test
+## Build & Test
 
 1. Install all dependencies
 	```
