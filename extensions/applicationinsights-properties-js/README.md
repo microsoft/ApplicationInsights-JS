@@ -9,7 +9,7 @@ Properties Plugin (Part A) for the Application Insights Javascript SDK
 ```
 npm install -g grunt-cli
 npm install
-npm run build
+npm run build --silent
 ```  
 
 ## Run unit tests:
