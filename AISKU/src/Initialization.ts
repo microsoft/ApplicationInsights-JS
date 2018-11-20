@@ -3,7 +3,9 @@
 
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
-import { Util, IConfig, IDependencyTelemetry, PageViewPerformance, IPageViewPerformanceTelemetry, IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IEventTelemetry, IAppInsights } from "@microsoft/applicationinsights-common";
+import { Util, IConfig, IDependencyTelemetry, PageViewPerformance, IPageViewPerformanceTelemetry, 
+         IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry,
+         IMetricTelemetry, IEventTelemetry, IAppInsights, ConfigurationManager } from "@microsoft/applicationinsights-common";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { PropertiesPlugin, IPropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
@@ -25,6 +27,8 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
     flush: (async?: boolean) => void;
 };
 
+const propertiesPlugin = "AppInsightsPropertiesPlugin";
+
 /**
  * Application Insights API
  * @class Initialization
@@ -32,7 +36,7 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
  */
 export class Initialization implements IApplicationInsights {
     public snippet: Snippet;
-    public config: IConfiguration;
+    public config: IConfiguration & IConfig;
     public appInsights: ApplicationInsights;
     private properties: PropertiesPlugin;
     private dependencies: DependenciesPlugin;
@@ -56,6 +60,7 @@ export class Initialization implements IApplicationInsights {
 
         this.snippet = snippet;
         this.config = config;
+        this.getSKUDefaults();
     }
     
     // Analytics Plugin
@@ -279,9 +284,9 @@ export class Initialization implements IApplicationInsights {
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
                 // Todo: move this against interface behavior
-                if (appInsightsInstance.appInsights.core['_extensions']["AppInsightsPropertiesPlugin"] &&
-                    appInsightsInstance.appInsights.core['_extensions']["AppInsightsPropertiesPlugin"]._sessionManager) {
-                    appInsightsInstance.appInsights.core['_extensions']["AppInsightsPropertiesPlugin"]._sessionManager.backup();
+                if (appInsightsInstance.appInsights.core['_extensions'][propertiesPlugin] &&
+                    appInsightsInstance.appInsights.core['_extensions'][propertiesPlugin]._sessionManager) {
+                    appInsightsInstance.appInsights.core['_extensions'][propertiesPlugin]._sessionManager.backup();
                 }
             };
 
@@ -292,5 +297,10 @@ export class Initialization implements IApplicationInsights {
                     'Could not add handler for beforeunload');
             }
         }
+    }
+
+    public getSKUDefaults() {
+        let enableOldTags = ConfigurationManager.getConfig(this.config, "enableOldTags", propertiesPlugin, true);
+        this.config.enableOldTags = <boolean>enableOldTags;
     }
 }

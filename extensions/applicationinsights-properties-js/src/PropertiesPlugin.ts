@@ -45,7 +45,8 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
             cookieDomain: () => null,
             sdkExtension: () => null,
             isBrowserLinkTrackingEnabled: () => false,
-            appId: () => null
+            appId: () => null,
+            enableOldTags: () => false
         }
         return defaultConfig;
     }
@@ -122,14 +123,17 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
             }
         }
 
-        // set part A  fields
-        PropertiesPlugin._applyApplicationContext(tagsItem, this.application);
-        PropertiesPlugin._applyDeviceContext(tagsItem, this.device);
-        PropertiesPlugin._applyInternalContext(tagsItem, this.internal);
-        PropertiesPlugin._applyLocationContext(tagsItem, this.location);
-        PropertiesPlugin._applySampleContext(tagsItem, this.sample);
+        if (this._extensionConfig.enableOldTags()) {
+            // set part A  fields
+            PropertiesPlugin._applyApplicationContext(tagsItem, this.application);
+            PropertiesPlugin._applyDeviceContext(tagsItem, this.device);
+            PropertiesPlugin._applyInternalContext(tagsItem, this.internal);
+            PropertiesPlugin._applyLocationContext(tagsItem, this.location);
+            PropertiesPlugin._applySampleContext(tagsItem, this.sample);
+            PropertiesPlugin._applyOperationContext(tagsItem, this.operation);
+        }
+
         this._applyUserContext(event, this.user);
-        PropertiesPlugin._applyOperationContext(tagsItem, this.operation);
         let tgs = [];
         Object.keys(tagsItem).forEach(item => {
             var p = {}; p[item]=tagsItem[item];
@@ -264,24 +268,27 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
             
             var tagKeys: ContextTagKeys = new ContextTagKeys();
         
+            if (this._extensionConfig.enableOldTags()) {
+                if (typeof userContext.agent === "string") {
+                    let val = userContext.agent;
+                    let ky = tagKeys.userAgent;
+                    event.tags.push({ ky: val });
+                }
+
+                if (typeof userContext.storeRegion === "string") {
+                    let ky = tagKeys.userStoreRegion;
+                    let val = userContext.storeRegion;
+                    event.tags.push({ky: val});
+                }
+            }
+
             // stays in tags under User extension
             if (typeof userContext.accountId === "string") {
                 let item = {};
                 item[partAExtensions.accountIdTag] = userContext.accountId;
                 event.tags.push(item);
             }
-
-            if (typeof userContext.agent === "string") {
-                let val = userContext.agent;
-                let ky = tagKeys.userAgent;
-                event.tags.push({ ky: val });
-            }
-
-            if (typeof userContext.storeRegion === "string") {
-                let ky = tagKeys.userStoreRegion;
-                let val = userContext.storeRegion;
-                event.tags.push({ky: val});
-            }
+            
 
             let ctxExt = <any>{};
             // CS 4.0            
