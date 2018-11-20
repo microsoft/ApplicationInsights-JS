@@ -10,7 +10,7 @@ Application Insights - Web Basic SDK
 ```
 npm install -g grunt-cli
 npm install
-npm run build
+npm run build --silent
 ```  
 
 ## Run unit tests:
