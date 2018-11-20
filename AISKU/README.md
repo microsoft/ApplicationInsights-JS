@@ -712,13 +712,8 @@ more than one user if they use different machines or browsers, or delete cookies
 
 Property | Description
 ---|---
-`user.id` | Unique, cookie-based user id, automatically assigned.
-`user.authenticatedId` | Id set by your app using [`setAuthenticatedUserContext`](#setAuthenticatedUserContext) when the user signs in.
-`user.accountId` | Set by your app when the user signs in, if your app groups users into accounts.
-`user.accountAcquisitionDate` |
-`user.agent` | 
-`user.storeRegion` | 
-
+`user.localId` | Unique, cookie-based user id, automatically assigned.
+`user.authUserId` | Id set by your app using [`setAuthenticatedUserContext`](#setAuthenticatedUserContext) when the user signs in.
 
 ### context.session
 
