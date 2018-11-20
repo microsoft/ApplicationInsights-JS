@@ -27,7 +27,7 @@
 1. Create an Application Insights resource in Azure by following [these instructions](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-javascript?toc=/azure/azure-monitor/toc.json).
 2. Grab the _Instrumentation Key_ (aka "ikey") from the resource you created in
    step 1. Later, you'll add it .
-3. Add Application Insights to your app via NPM or by [pasting a script snippet at the beginning of every `<head>` tag of each of your pages.](#snippet) 
+3. Add Application Insights to your app via NPM or by [pasting a script snippet at the beginning of every `<head>` tag of each of your pages.](#snippet-setup-(ignore-if-using-npm)) 
     ```sh
     npm i --save @microsoft/applicationinsights-web
     ```
@@ -88,6 +88,7 @@ All autocollection is on by default. By using the full version of the JavaScript
 	- Correlation context (if any) where request is made
 
 ### Telemetry Initializers
+TODO
 
 ## Configuration
 Most configuration fields are named such that they can be defaulted to falsey.
@@ -102,9 +103,9 @@ Most configuration fields are named such that they can be defaulted to falsey.
 | enableDebug | false | If true, internal debugging data is thrown as an exception by the logger. Default is false. |
 | disableExceptionTracking | false | If true, exceptions are no autocollected. Default is false. |
 | disableTelemetry | false | If true, telemetry is not collected or sent. Default is false. |
-| consoleLoggingLevel | 0 |  |
-| telemetryLoggingLevel | 1 |  |
-| diagnosticLogInterval | false |  |
+| consoleLoggingLevel | 0 | (internal) Logs internal Application Insights errors to console. 0: off, 1: Critical errors only, 2: Everything (errors & warnings) |
+| telemetryLoggingLevel | 1 | (internal) Sends internal Application Insights errors as telemetry. 0: off, 1: Critical errors only, 2: Everything (errors & warnings) |
+| diagnosticLogInterval | false | (internal) Polling interval (in ms) for internal logging queue |
 | samplingPercentage | 100 | Percentage of events that will be sent. Default is 100, meaning all events are sent. Set this if you wish to preserve your datacap for large-scale applications. |
 | autoTrackPageVisitTime | false | |
 | disableAjaxTracking | false | If true, Ajax calls are not autocollected. Default is false. |
