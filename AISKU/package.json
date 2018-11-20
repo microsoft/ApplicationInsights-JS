@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web",
-    "version": "1.0.0-beta.2",
+    "version": "1.0.0-beta.3",
     "description": "Microsoft Application Insights Javascript SDK API 1.0 beta",
     "main": "dist/applicationinsights-web.js",
     "module": "dist-esm/applicationinsights-web.js",
@@ -27,10 +27,10 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-core-js": "^1.0.0-beta.2",
-        "@microsoft/applicationinsights-common": "file:../AppInsightsCommon",
-        "@microsoft/applicationinsights-analytics-js": "file:../ApplicationInsights",
-        "@microsoft/applicationinsights-channel-js": "file:../../ccc",
-        "@microsoft/applicationinsights-properties-js": "file:../extensions/applicationinsights-properties-js",
-        "@microsoft/applicationinsights-dependencies-js": "file:../extensions/applicationinsights-dependencies-js"
+        "@microsoft/applicationinsights-common": "^1.0.0-beta.8",
+        "@microsoft/applicationinsights-analytics-js": "^1.0.0-beta.6",
+        "@microsoft/applicationinsights-channel-js": "^1.0.0-beta.7",
+        "@microsoft/applicationinsights-properties-js": "^1.0.0-beta.4",
+        "@microsoft/applicationinsights-dependencies-js": "^1.0.0-beta.4"
     }
 }
