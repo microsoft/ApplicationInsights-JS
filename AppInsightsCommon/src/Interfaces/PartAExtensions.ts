@@ -8,7 +8,7 @@ export interface UserExt {
 
 export class PartAExtensions {
     public UserExtensionName:string = "User";
-    public WebxtensionName = "Web";
+    public WebExtensionName = "Web";
     public AppExtensionName = "App";
 
     // Tag map for 2.1    
