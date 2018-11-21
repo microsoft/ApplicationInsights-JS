@@ -48,7 +48,9 @@ Parameter | Type | Description
 trackMetric(metric: IMetricTelemetry, customProperties?: {[name: string]: any})
 ```
 
-Log a positive numeric value that is not associated with a specific event. Typically used to send regular reports of performance indicators. 
+Log a positive numeric value that is not associated with a specific event. Typically used to send regular reports of performance indicators.  
+
+To send a single measurement, use just the first two parameters. If you take measurements very frequently, you can reduce the telemetry bandwidth by aggregating multiple measurements and sending the resulting `average` and `sampleCount` at intervals.
 
 `IMetricTelemetry` is described below
 
@@ -60,21 +62,21 @@ Parameter | Type | Description
 `min?` | number | **Optional**<br>The smallest measurement in the sample. Defaults to the average. Should be >= 0.
 `max?` | number | **Optional**<br>The largest measurement in the sample. Defaults to the average. Should be >= 0.
 
-To send a single measurement, use just the first two parameters. If you take measurements very frequently, you can reduce the telemetry bandwidth by aggregating multiple measurements and sending the resulting average at intervals.
-
 ### trackException
 
 ```ts
 trackException(exception: IExceptionTelemtry, customProperties?: {[key: string]: any})
 ```
 
-Log an exception you have caught. (Exceptions caught by the browser are also logged. `IExceptionTelemetry` is described below
+Log an exception you have caught. Exceptions caught by the browser are also automatically logged. 
+
+`IExceptionTelemetry` is described below
 Parameter | Type | Description
 ---|---|---
 `error` | [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) | **Required**<br>Error object
-`severityLevel?` | [SeverityLevel (number)](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts) |  **Optional**<br>Severity of the Error, ranging from verbose to critical
+`severityLevel?` | [SeverityLevel (number)](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts) | **Optional**<br>Severity of the error, ranging from verbose to critical
 
-By default, uncaught browser exceptions are caught by the SDK and reported to the portal. To disable this behavior, insert the following line in the config section below your instrumentation key. You can't set this anywhere else:
+By default, uncaught browser exceptions are caught by the SDK and reported to the portal. To disable this behavior, insert the following line in the config section below your instrumentation key:
 
 ```ts
 {
@@ -94,7 +96,7 @@ Log a diagnostic event such as entering or leaving a method.
 
 The `ITraceTelemetry` interface is described below
 
- Parameter | Type | Description
+Parameter | Type | Description
 ---|---|---
 `message` | string | **Required**<br>Diagnostic data. Can be much longer than an event's name.
 `severityLevel?` | [SeverityLevel (number)](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts) | **Optional**<br>Severity of the message, ranging from verbose to critical
@@ -131,7 +133,7 @@ flush(async?: boolean = true)
 
 Immediately send all queued telemetry. By default, it is sent async.
 
-> *Note:* You don't have to use flush, as it is automatically called at an interval and on window closing.
+> *Note:* You don't have to use flush, as it is automatically called at an interval and when the user closes the window.
 
 <a name="setAuthenticatedUserContext"></a>
 ### setAuthenticatedUserContext
