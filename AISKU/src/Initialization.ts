@@ -221,6 +221,12 @@ export class Initialization implements IApplicationInsights {
 
         // initialize core
         this.core.initialize(this.config, extensions);
+        
+        // Empty queue of all api calls logged prior to sdk download
+        this.emptyQueue();
+        this.pollInternalLogs();
+        this.addHousekeepingBeforeUnload(this);
+
         return this;
     }
 

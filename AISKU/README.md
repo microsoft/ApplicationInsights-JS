@@ -35,7 +35,7 @@
 
 ## Basic Usage
 
-### Setup (NPM only)
+### Setup (NPM only, ignore if using Snippet)
 ```js
 import { ApplicationInsights } from '@microsoft/applicationinsights-web'
 ```
@@ -74,12 +74,12 @@ appInsights.trackDependencyData({absoluteUrl: 'some url', resultCode: 200, metho
 
 ### Setting Up Autocollection
 All autocollection is on by default. By using the full version of the JavaScript Application Insights SDK, we collect for you
-- Uncaught exceptions in your app, including information on
+- **Uncaught exceptions** in your app, including information on
 	- Stack trace
 	- Exception details and message accompanying the error
 	- Line & column number of error
 	- URL where error was raised
-- Network Dependency Requests made by your app XHR and Fetch (disabled by default) requests, include information on
+- **Network Dependency Requests** made by your app **XHR** and **Fetch** (fetch collection is disabled by default) requests, include information on
 	- Url of dependency source
 	- Command & Method used to request the dependency
 	- Duration of the request
@@ -88,7 +88,21 @@ All autocollection is on by default. By using the full version of the JavaScript
 	- Correlation context (if any) where request is made
 
 ### Telemetry Initializers
-TODO
+Telemetry initializers are used to modify the contents of collected telemetry before being sent from the user's browser. They can also be used to prevent certain telemetry from being sent, by returning `false`. Multiple telemetry initializers can be added to your Application Insights instance, and they are executed in order of adding them. 
+
+The input argument to `addTelemetryInitializer` is a callback that takes a [`ITelemetryItem`](./API.md#addTelemetryInitializer) as an argument and returns a `boolean` or `void`. If returning `false`, the telemetry item is not sent, else it proceeds to the next telemetry initializer, if any, or is sent to the telemetry collection endpoint.
+
+An example of using telemetry initializers:
+```ts
+var telemetryInitializer = (envelope) => {
+	envelope.data.someField = 'This telemetry item passed through my telemetry initializer';
+};
+appInsights.addTelemetryInitializer(telemetryInitializer);
+appInsights.trackTrace({message: 'This message will use a telemetry initializer'});
+
+appInsights.addTelemetryInitializer(() => false); // Nothing is sent after this is executed
+appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent 
+```
 
 ## Configuration
 Most configuration fields are named such that they can be defaulted to falsey.
@@ -107,7 +121,7 @@ Most configuration fields are named such that they can be defaulted to falsey.
 | telemetryLoggingLevel | 1 | (internal) Sends internal Application Insights errors as telemetry. 0: off, 1: Critical errors only, 2: Everything (errors & warnings) |
 | diagnosticLogInterval | false | (internal) Polling interval (in ms) for internal logging queue |
 | samplingPercentage | 100 | Percentage of events that will be sent. Default is 100, meaning all events are sent. Set this if you wish to preserve your datacap for large-scale applications. |
-| autoTrackPageVisitTime | false | |
+| autoTrackPageVisitTime | false | If true, on a pageview,the previous instrumented page's view time is tracked and sent as telemetry and a new timer is started for the current pageview. Default is false. |
 | disableAjaxTracking | false | If true, Ajax calls are not autocollected. Default is false. |
 | disableFetchTracking | true | If true, Fetch requests are not autocollected. Default is true |
 | overridePageViewDuration | false | If true, default behavior of trackPageView is changed to record end of page view duration interval when trackPageView is called. If false and no custom duration is provided to trackPageView, the page view performance is calculated using the navigation timing API. Default is false. |
