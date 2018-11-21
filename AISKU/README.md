@@ -88,6 +88,9 @@ All autocollection is on by default. By using the full version of the JavaScript
 	- Result code and success status of the request
 	- ID (if any) of user making the request
 	- Correlation context (if any) where request is made
+- **User information** (e.g. Location, network, IP)
+- **Device information** (e.g. Browser, OS, version, language, resolution, model)
+- **Session information**
 
 ### Telemetry Initializers
 Telemetry initializers are used to modify the contents of collected telemetry before being sent from the user's browser. They can also be used to prevent certain telemetry from being sent, by returning `false`. Multiple telemetry initializers can be added to your Application Insights instance, and they are executed in order of adding them. 
@@ -122,7 +125,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | disableTelemetry | false | If true, telemetry is not collected or sent. Default is false. |
 | consoleLoggingLevel | 0 | (internal) Logs internal Application Insights errors to console. 0: off, 1: Critical errors only, 2: Everything (errors & warnings) |
 | telemetryLoggingLevel | 1 | (internal) Sends internal Application Insights errors as telemetry. 0: off, 1: Critical errors only, 2: Everything (errors & warnings) |
-| diagnosticLogInterval | false | (internal) Polling interval (in ms) for internal logging queue |
+| diagnosticLogInterval | 10000 | (internal) Polling interval (in ms) for internal logging queue |
 | samplingPercentage | 100 | Percentage of events that will be sent. Default is 100, meaning all events are sent. Set this if you wish to preserve your datacap for large-scale applications. |
 | autoTrackPageVisitTime | false | If true, on a pageview,the previous instrumented page's view time is tracked and sent as telemetry and a new timer is started for the current pageview. Default is false. |
 | disableAjaxTracking | false | If true, Ajax calls are not autocollected. Default is false. |

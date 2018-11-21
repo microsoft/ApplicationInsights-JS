@@ -4,7 +4,7 @@
 applicationInsights.trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any })
 ```
 
-The IPageViewTelemetry interface is below: 
+The `IPageViewTelemetry` interface is below: 
 
 Parameter | Type | Description
 ---|---|---
@@ -114,7 +114,7 @@ trackDependencyData(dependency: IDependencyTelemetry, customProperties?: {[key: 
     
 Log a dependency call (for instance: ajax)
 
-The **IDependencyTelemetry** type is described below
+The `IDependencyTelemetry` interface is described below
 
 Parameter | Type | Description
 ---|---|---

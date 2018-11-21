@@ -1,9 +1,13 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-> *Note:* Only [**App.jsx**](./App.jsx) was modified in this repo for the **Application Insights Demo**
+> *Note:* Only [**App.jsx**](./src/App.jsx) was modified in this repo for the **Application Insights Demo**
 
 ## Available Scripts
 
 In the project directory, you can run:
+
+### `npm install`
+
+Installs dependencies. You can also use `yarn install`.
 
 ### `npm start`
 
