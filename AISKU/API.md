@@ -189,10 +189,10 @@ Set the authenticated user id and the account id. Use this when you have identif
 
 The method will only set the `authenticatedUserId` and `accountId` for all events in the current page view. To set them for all events within the whole session, you should either call this method on every page view or set `storeInCookie = true`. 
 
- Parameter | Description
----|---
-`authenticatedUserId` | An id that uniquely identifies a user of your app. No spaces, comma, semicolon, equals or vertical bar.
-`accountId` | An optional account id, if your app groups users into accounts. No spaces, comma, semicolon, equals or vertical bar.
+ Parameter | Type |Description
+---|---|--
+`authenticatedUserId` | string |An id that uniquely identifies a user of your app. No spaces, comma, semicolon, equals or vertical bar.
+`accountId` | string | An optional account id, if your app groups users into accounts. No spaces, comma, semicolon, equals or vertical bar.
     
 In the portal, this will add to the count of authenticated users. Authenticated users provide a more reliable count of the number of real users than the count of anonymous users.
 

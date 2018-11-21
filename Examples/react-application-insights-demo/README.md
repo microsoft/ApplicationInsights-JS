@@ -1,4 +1,5 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+> *Note:* Only [**App.jsx**](./App.jsx) was modified in this repo for the **Application Insights Demo**
 
 ## Available Scripts
 
