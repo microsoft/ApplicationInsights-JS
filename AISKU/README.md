@@ -27,7 +27,7 @@
 1. Create an Application Insights resource in Azure by following [these instructions](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-javascript?toc=/azure/azure-monitor/toc.json).
 2. Grab the _Instrumentation Key_ (aka "ikey") from the resource you created in
    step 1. Later, you'll add it .
-3. Add Application Insights to your app via NPM or by [pasting a script snippet at the beginning of every `<head>` tag of each of your pages.](#snippet-setup-(ignore-if-using-npm)) 
+3. Add Application Insights to your app via NPM or by [pasting a script snippet at the beginning of every `<head>` tag in each of your pages.](#snippet-setup-(ignore-if-using-npm)) 
     ```sh
     npm i --save @microsoft/applicationinsights-web
     ```
