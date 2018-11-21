@@ -29,10 +29,10 @@
    step 1. Later, you'll add it to the `instrumentationKey` setting of the Application Insights JavaScript SDK.
 3. Add Application Insights to your app. There are 2 ways to do this. 
 	1. Install via NPM. Then, [setup an instance Application Insights in your app](#setup-npm-only-ignore-if-using-snippet)
-    ```sh
-    npm i --save @microsoft/applicationinsights-web
-    ```
-    > *Note:* **Typings are included with this package**, so you do **not** need to install a separate typings package.
+		> *Note:* **Typings are included with this package**, so you do **not** need to install a separate typings package.
+		```sh
+		npm i --save @microsoft/applicationinsights-web
+		```
 	2. [Pasting a script snippet at the beginning of every `<head>` tag in each of the pages of your app.](#snippet-setup-ignore-if-using-npm) 
 
 ## Basic Usage
@@ -97,7 +97,7 @@ The input argument to `addTelemetryInitializer` is a callback that takes a [`ITe
 An example of using telemetry initializers:
 ```ts
 var telemetryInitializer = (envelope) => {
-	envelope.data.someField = 'This telemetry item passed through my telemetry initializer';
+  envelope.data.someField = 'This item passed through my telemetry initializer';
 };
 appInsights.addTelemetryInitializer(telemetryInitializer);
 appInsights.trackTrace({message: 'This message will use a telemetry initializer'});
@@ -107,11 +107,12 @@ appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
 ```
 
 ## Configuration
-Most configuration fields are named such that they can be defaulted to falsey.
+Most configuration fields are named such that they can be defaulted to falsey. All fields are optional except for `instrumentationKey`.
 
 | Name | Default | Description |
 |------|---------|-------------|
-| accountId | null | An optional account id, if your app groups users int oaccounts. No spaces, commas, semicolons, equals, or vertical bars |
+| instrumentationKey | null | **Required**<br>Instrumentation key that you obtained from the Azure Portal. |
+| accountId | null | An optional account id, if your app groups users into accounts. No spaces, commas, semicolons, equals, or vertical bars |
 | sessionRenewalMs | 30000 | A session is logged if the user is inactive for this amount of time in milliseconds. Default is 30 minutes |
 | sessionExpirationMs | 86400000 | A session is logged if it has continued for this amount of time in milliseconds. Default is 24 hours |
 | maxBatchSizeInBytes | 10000 | Max size of telemetry batch. If a batch exceeds this limit, it is immediately sent and a new batch is started |

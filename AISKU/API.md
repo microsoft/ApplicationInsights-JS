@@ -8,12 +8,12 @@ The IPageViewTelemetry interface is below:
 
 Parameter | Type | Description
 ---|---|---
-`name?` | string | Name of the pageview. Defaults to the document `title`.
-`uri?` | string | A relative or absolute URL that identifies the page or other item. Defaults to the window location.
-`refUri?` | string | The URL of the source page where the current page is loaded from
-`pageType?` | string | Page Type
-`isLoggedIn?` | boolean | Whether or not the user is logged in
-`pageTags?` | dictionary | Property bag to contain an extension to domain properties - extension to Part B
+`name?` | string | **Optional**<br>Name of the pageview. Defaults to the document `title`.
+`uri?` | string | **Optional**<br>A relative or absolute URL that identifies the page or other item. Defaults to the window location.
+`refUri?` | string | **Optional**<br>The URL of the previous page that sent the user to the current page.
+`pageType?` | string | **Optional**<br>Page Type string. Describes how you classify this page, e.g. errorPage, formPage, etc.
+`isLoggedIn?` | boolean | **Optional**<br>Whether or not the user is logged in
+`pageTags?` | dictionary | **Optional**<br>Property bag to contain an extension to domain properties - extension to Part B
 
 
 ### startTrackPage
@@ -26,7 +26,7 @@ Starts the timer for tracking a page view. Use this instead of ```trackPageView`
 
 Parameter | Type | Description
 ---|---|---
-`name` | string | The name used to identify the page in the portal. Defaults to the document title.
+`name?` | string | **Optional**<br>The name used to identify the page in the portal. Defaults to the document title.
 
 ### stopTrackPage
 
@@ -38,9 +38,9 @@ Stops the timer that was started by calling ```startTrackPage``` and sends the p
 
 Parameter | Type | Description
 ---|---|---
-`name` | string |The name used to identify the page in the portal. Defaults to the document title.
-`url` |  string | A relative or absolute URL that identifies the page or similar item. Defaults to the window location.
-`customProperties?` | dictionary | Map of string to string: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
+`name?` | string | **Optional**<br>The name used to identify the page in the portal. Defaults to the document title.
+`url?` |  string | **Optional**<br>A relative or absolute URL that identifies the page or similar item. Defaults to the window location.
+`customProperties?` | dictionary | **Optional**<br>Map of string to string: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
 ### trackMetric
 
@@ -54,11 +54,11 @@ Log a positive numeric value that is not associated with a specific event. Typic
 
 Parameter | Type | Description
 ---|---|---
-`name` | string | A string that identifies the metric. In the portal, you can select metrics for display by name.
-`average` | number | Either a single measurement, or the average of several measurements. Should be >=0 to be correctly displayed.
-`sampleCount?` | number | Count of measurements represented by the average. Defaults to 1. Should be >=1.
-`min?` | number | The smallest measurement in the sample. Defaults to the average. Should be >= 0.
-`max?` | number | The largest measurement in the sample. Defaults to the average. Should be >= 0.
+`name` | string | **Required**<br>A string that identifies the metric. In the portal, you can select metrics for display by name.
+`average` | number | **Required**<br>Either a single measurement, or the average of several measurements. Should be >=0 to be correctly displayed.
+`sampleCount?` | number | **Optional**<br>Count of measurements represented by the average. Defaults to 1. Should be >=1.
+`min?` | number | **Optional**<br>The smallest measurement in the sample. Defaults to the average. Should be >= 0.
+`max?` | number | **Optional**<br>The largest measurement in the sample. Defaults to the average. Should be >= 0.
 
 To send a single measurement, use just the first two parameters. If you take measurements very frequently, you can reduce the telemetry bandwidth by aggregating multiple measurements and sending the resulting average at intervals.
 
@@ -71,8 +71,8 @@ trackException(exception: IExceptionTelemtry, customProperties?: {[key: string]:
 Log an exception you have caught. (Exceptions caught by the browser are also logged. `IExceptionTelemetry` is described below
 Parameter | Type | Description
 ---|---|---
-`error` | [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) |Error object
-`severityLevel?` | [SeverityLevel (number)](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts) | Severity of the Error, ranging from verbose to critical
+`error` | [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) | **Required**<br>Error object
+`severityLevel?` | [SeverityLevel (number)](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts) |  **Optional**<br>Severity of the Error, ranging from verbose to critical
 
 By default, uncaught browser exceptions are caught by the SDK and reported to the portal. To disable this behavior, insert the following line in the config section below your instrumentation key. You can't set this anywhere else:
 
@@ -96,8 +96,8 @@ The `ITraceTelemetry` interface is described below
 
  Parameter | Type | Description
 ---|---|---
-`message` | string | Diagnostic data. Can be much longer than an event's name.
-`severityLevel?` | [SeverityLevel (number)](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts) | Severity of the message, ranging from verbose to critical
+`message` | string | **Required**<br>Diagnostic data. Can be much longer than an event's name.
+`severityLevel?` | [SeverityLevel (number)](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts) | **Optional**<br>Severity of the message, ranging from verbose to critical
 
 In the portal, you can search on message content and [display individual trackTrace events](https://azure.microsoft.com/documentation/articles/app-insights-diagnostic-search/).
 (Unlike `trackEvent`, you can't filter on the message content in the portal.)
@@ -115,13 +115,13 @@ The **IDependencyTelemetry** type is described below
 
 Parameter | Type | Description
 ---|---|---
+`id` | string | **Required**<br>Unique id, this is used by the backend to correlate server requests.
 `absoluteUrl` | string | **Required**<br>Absolute url used to make the dependency request
 `success` | boolean | **Required**<br>Whether or not the request was successful or not (e.g., `responseCode` in the range 200-299)
 `resultCode` | number | **Required**<br>Response code returned by the dependency request (e.g., `200` for a success)
 `commandName?` | string| **Optional**<br>Command used to make the dependency request
 `duration?` | number | **Optional**<br>Elapsed time of request & reply
 `method?` | string | **Optional**<br>Represents request verb (GET, POST, etc.)
-`id` | string | <br>Unique id, this is used by the backend to correlate server requests.
 
 ### flush
 
@@ -146,8 +146,8 @@ The method will only set the `authenticatedUserId` and `accountId` for all event
 
  Parameter | Type |Description
 ---|---|--
-`authenticatedUserId` | string |An id that uniquely identifies a user of your app. No spaces, comma, semicolon, equals or vertical bar.
-`accountId` | string | An optional account id, if your app groups users into accounts. No spaces, comma, semicolon, equals or vertical bar.
+`authenticatedUserId` | string | **Required**<br>An id that uniquely identifies a user of your app. No spaces, comma, semicolon, equals or vertical bar.
+`accountId?` | string | **Optional**<br>An optional account id, if your app groups users into accounts. No spaces, comma, semicolon, equals or vertical bar.
     
 In the portal, this will add to the count of authenticated users. Authenticated users provide a more reliable count of the number of real users than the count of anonymous users.
 
