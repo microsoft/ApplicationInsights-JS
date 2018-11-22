@@ -221,6 +221,12 @@ export class Initialization implements IApplicationInsights {
 
         // initialize core
         this.core.initialize(this.config, extensions);
+        
+        // Empty queue of all api calls logged prior to sdk download
+        this.emptyQueue();
+        this.pollInternalLogs();
+        this.addHousekeepingBeforeUnload(this);
+
         return this;
     }
 
@@ -302,7 +308,7 @@ export class Initialization implements IApplicationInsights {
     public getSKUDefaults() {
         let enableOldTags = ConfigurationManager.getConfig(this.config, "enableOldTags", propertiesPlugin, true);
         this.config.enableOldTags = <boolean>enableOldTags;
-        this.config.diagnosticLoggingInterval = 
-            this.config.diagnosticLoggingInterval && this.config.diagnosticLoggingInterval > 0 ? this.config.diagnosticLoggingInterval : 10000;
+        this.config.diagnosticLogInterval = 
+            this.config.diagnosticLogInterval && this.config.diagnosticLogInterval > 0 ? this.config.diagnosticLogInterval : 10000;
     }
 }

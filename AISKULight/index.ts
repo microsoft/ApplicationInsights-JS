@@ -19,7 +19,7 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
  * @class ApplicationInsights
  */
 export class ApplicationInsights {
-    public config: IConfiguration;
+    public config: IConfiguration & IConfig;
     private core: IAppInsightsCore;
 
     /**
@@ -36,6 +36,7 @@ export class ApplicationInsights {
             throw new Error("Invalid input configuration");
         }
         this.config = config;
+        this.getSKUDefaults();
 
         this.initialize();
     }
@@ -57,6 +58,8 @@ export class ApplicationInsights {
 
         // initialize extensions
         appInsightsChannel.initialize(this.config, this.core, extensions);
+
+        this.pollInternalLogs();
     }
 
     /**
@@ -83,6 +86,17 @@ export class ApplicationInsights {
             });
         });
     }
+
+    private pollInternalLogs(): void {
+        this.core.pollInternalLogs()
+    }
+
+    private getSKUDefaults() {
+        this.config.diagnosticLogInterval = 
+            this.config.diagnosticLogInterval && this.config.diagnosticLogInterval > 0 ? this.config.diagnosticLogInterval : 10000;
+    }
+
+
 }
 
 export {
