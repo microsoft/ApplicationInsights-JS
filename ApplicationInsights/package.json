@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-analytics-js",
-    "version": "1.0.0-beta.6",
+    "version": "1.0.0-beta.7",
     "description": "Microsoft Application Insights Javascript SDK apis",
     "main": "dist/applicationinsights-analytics-js.min.js",
     "module": "dist-esm/applicationinsights-analytics-js.js",
@@ -24,8 +24,8 @@
         "rollup-plugin-uglify": "^6.0.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "^1.0.0-beta.2",
-        "@microsoft/applicationinsights-common": "^1.0.0-beta.8"
+        "@microsoft/applicationinsights-core-js": "^1.0.0-beta.3",
+        "@microsoft/applicationinsights-common": "^1.0.0-beta.9"
     },
     "license": "MIT"
 }
