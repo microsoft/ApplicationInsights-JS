@@ -43,16 +43,14 @@ export class ApplicationInsightsTests extends TestClass {
             var init = new ApplicationInsights({
                 config: {
                     instrumentationKey: ApplicationInsightsTests._instrumentationKey,
+                    disableAjaxTracking: false,
+                    disableFetchTracking: false,
                     extensionConfig: {
                         AppInsightsChannelPlugin: {
                             maxBatchInterval: 5000
                         },
                         ApplicationInsightsAnalytics: {
                             disableExceptionTracking: false
-                        },
-                        AjaxDependencyPlugin: {
-                            disableAjaxTracking: false,
-                            disableFetchTracking: false
                         }
                     }
                 },
