@@ -1,39 +1,42 @@
-<properties 
-	pageTitle="Application Insights SDK JavaScript API" 
-	description="Reference doc" 
-	services="application-insights" 
+<properties
+	pageTitle="Application Insights SDK JavaScript API"
+	description="Reference doc"
+	services="application-insights"
     documentationCenter=".net"
-	authors="alancameronwills" 
+	authors="alancameronwills"
 	manager="douge"/>
 
-<tags 
-	ms.service="application-insights" 
-	ms.workload="tbd" 
-	ms.tgt_pltfrm="ibiza" 
-	ms.devlang="na" 
-	ms.topic="article" 
-	ms.date="08/24/2015" 
+<tags
+	ms.service="application-insights"
+	ms.workload="tbd"
+	ms.tgt_pltfrm="ibiza"
+	ms.devlang="na"
+	ms.topic="article"
+	ms.date="08/24/2015"
 	ms.author="awills"/>
- 
+
 
 # Application Insights JavaScript SDK - Web
 
 [![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/AppInsights%20-%20DevTools/1DS%20JavaScript%20SDK%20-%20SKU%20Web)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=7760)
 [![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web)
+[![minified size size](https://img.badgesize.io/https://1dsjssdk.blob.core.windows.net/scripts/ai.1.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://1dsjssdk.blob.core.windows.net/scripts/ai.1.min.js.svg?label=minified%20size)
+[![gzip size](https://img.badgesize.io/https://1dsjssdk.blob.core.windows.net/scripts/ai.1.min.js.svg?compression=gzip&softmax=24000&max=25000)](https://img.badgesize.io/https://1dsjssdk.blob.core.windows.net/scripts/ai.1.min.js.svg?compression=gzip&softmax=24000&max=25000)
+
 
 
 ## Getting Started
 1. Create an Application Insights resource in Azure by following [these instructions](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-javascript?toc=/azure/azure-monitor/toc.json).
 2. Grab the _Instrumentation Key_ (aka "ikey") from the resource you created in
    step 1. Later, you'll add it to the `instrumentationKey` setting of the Application Insights JavaScript SDK.
-3. Add Application Insights to your app. There are 2 ways to do this. 
+3. Add Application Insights to your app. There are 2 ways to do this.
 	1. Install via NPM. Then, [setup an instance Application Insights in your app](#setup-npm-only-ignore-if-using-snippet)
 		> *Note:* **Typings are included with this package**, so you do **not** need to install a separate typings package.
 		```sh
 		npm i --save @microsoft/applicationinsights-web
 		```
-	2. [Pasting a script snippet at the beginning of every `<head>` tag in each of the pages of your app.](#snippet-setup-ignore-if-using-npm) 
+	2. [Pasting a script snippet at the beginning of every `<head>` tag in each of the pages of your app.](#snippet-setup-ignore-if-using-npm)
 
 ## Basic Usage
 
@@ -93,7 +96,7 @@ All autocollection is on by default. By using the full version of the JavaScript
 - **Session information**
 
 ### Telemetry Initializers
-Telemetry initializers are used to modify the contents of collected telemetry before being sent from the user's browser. They can also be used to prevent certain telemetry from being sent, by returning `false`. Multiple telemetry initializers can be added to your Application Insights instance, and they are executed in order of adding them. 
+Telemetry initializers are used to modify the contents of collected telemetry before being sent from the user's browser. They can also be used to prevent certain telemetry from being sent, by returning `false`. Multiple telemetry initializers can be added to your Application Insights instance, and they are executed in order of adding them.
 
 The input argument to `addTelemetryInitializer` is a callback that takes a [`ITelemetryItem`](./API.md#addTelemetryInitializer) as an argument and returns a `boolean` or `void`. If returning `false`, the telemetry item is not sent, else it proceeds to the next telemetry initializer, if any, or is sent to the telemetry collection endpoint.
 
@@ -106,7 +109,7 @@ appInsights.addTelemetryInitializer(telemetryInitializer);
 appInsights.trackTrace({message: 'This message will use a telemetry initializer'});
 
 appInsights.addTelemetryInitializer(() => false); // Nothing is sent after this is executed
-appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent 
+appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
 ```
 
 ## Configuration
@@ -161,7 +164,7 @@ This version comes with the bare minimum amount of features and functionalities 
 
 ## Contributing
 
-We strongly welcome and encourage contributions to this project. Please read the [contributor's guide][ContribGuide] located in the ApplicationInsights-Home repository. If making a large change we request that you open an [issue][GitHubIssue] first. We follow the [Git Flow][GitFlow] approach to branching. 
+We strongly welcome and encourage contributions to this project. Please read the [contributor's guide][ContribGuide] located in the ApplicationInsights-Home repository. If making a large change we request that you open an [issue][GitHubIssue] first. We follow the [Git Flow][GitFlow] approach to branching.
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
@@ -180,3 +183,11 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 	npm run build
 	npm run test
 	```
+
+## Browser Support
+![Chrome](https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png) | ![Firefox](https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png) | ![IE](https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png) | ![Opera](https://raw.githubusercontent.com/alrra/browser-logos/master/src/opera/opera_48x48.png) | ![Safari](https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png)
+--- | --- | --- | --- | --- |
+Latest ✔ | Latest ✔ | 9+ ✔ | Latest ✔ | Latest ✔ |
+
+## Performance
+TODO
