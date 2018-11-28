@@ -189,5 +189,5 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 --- | --- | --- | --- | --- |
 Latest ✔ | Latest ✔ | 9+ ✔ | Latest ✔ | Latest ✔ |
 
-## Performance
-TODO
+<!-- ## Performance
+Application Insights JavaScript SDK adds less than 15ms to page load. -->
