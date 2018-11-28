@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ApplicationInsights as AppAnalytics } from "@microsoft/applicationinsights-analytics-js";
 import { Initialization as ApplicationInsights, Snippet } from "./Initialization";
 
 export { Initialization as ApplicationInsights, Snippet } from "./Initialization";
@@ -25,13 +24,12 @@ try {
 
                 // overwrite snippet with full appInsights
                 var initialization = new ApplicationInsights(snippet);
-                var appInsightsLocal = initialization.loadAppInsights();
 
                 // apply full appInsights to the global instance that was initialized in the snippet
-                for (var field in appInsightsLocal) {
-                    snippet[field] = appInsightsLocal[field];
+                for (var field in initialization) {
+                    snippet[field] = initialization[field];
                 }
-
+                initialization.loadAppInsights();
             }
         }
     }

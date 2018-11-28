@@ -1,4 +1,4 @@
-import { ContextTagKeys } from '../applicationinsights-common';
+import { ContextTagKeys } from '../Interfaces/Contracts/Generated/ContextTagKeys';
 
 export interface UserExt {
     id?: string;
@@ -11,7 +11,7 @@ export class PartAExtensions {
     public WebExtensionName = "Web";
     public AppExtensionName = "App";
 
-    // Tag map for 2.1    
+    // Tag map for 2.1
     public userTagsKeysMap: { [key: string]: any };
     public userExtKeysMap: { [key: string]: any };
 
@@ -33,7 +33,7 @@ export class PartAExtensions {
 
         // user.ctx mapping
         this.userExtKeysMap = {};
-        this.userExtKeysMap[this.ctxKeys.localId] = mapTags.userId; 
+        this.userExtKeysMap[this.ctxKeys.localId] = mapTags.userId;
         this.userExtKeysMap[this.ctxKeys.authId] = mapTags.userAuthUserId;
     }
 }
