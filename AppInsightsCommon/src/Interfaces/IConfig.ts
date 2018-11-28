@@ -267,7 +267,7 @@ export class ConfigurationManager {
         if (!identifier || !config.extensionConfig || !config.extensionConfig[identifier]) {
             configValue = config[field];
         } else {
-            configValue = config.extensionConfig[identifier][field] || config[field];
+            configValue = config.extensionConfig[identifier][field];
         }
 
         return !CoreUtils.isNullOrUndefined(configValue) ? configValue : defaultValue;
