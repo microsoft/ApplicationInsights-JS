@@ -88,7 +88,7 @@ export interface IConfig {
     samplingPercentage?: number;
 
     /**
-     * @description 
+     * @description
      * @type {boolean}
      * @memberof IConfig
      */
@@ -246,9 +246,9 @@ export interface IConfig {
     enableCorsCorrelation?: boolean;
 
     enableOldTags?: boolean;
-  
+
     // Internal
-  
+
     /**
      * @ignore
      * @description Internal only
@@ -264,10 +264,10 @@ export interface IConfig {
 export class ConfigurationManager {
     public static getConfig(config: IConfiguration & IConfig, field: string, identifier?: string, defaultValue: number | string | boolean = false): number | string | boolean {
         let configValue;
-        if (!identifier || !config.extensionConfig || !config.extensionConfig[identifier]) {
-            configValue = config[field];
-        } else {
+        if (identifier && config.extensionConfig && config.extensionConfig[identifier] && config.extensionConfig[identifier][field]) {
             configValue = config.extensionConfig[identifier][field];
+        } else {
+            configValue = config[field];
         }
 
         return !CoreUtils.isNullOrUndefined(configValue) ? configValue : defaultValue;
