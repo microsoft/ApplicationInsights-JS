@@ -264,7 +264,7 @@ export interface IConfig {
 export class ConfigurationManager {
     public static getConfig(config: IConfiguration & IConfig, field: string, identifier?: string, defaultValue: number | string | boolean = false): number | string | boolean {
         let configValue;
-        if (identifier && config.extensionConfig && config.extensionConfig[identifier] && config.extensionConfig[identifier][field]) {
+        if (identifier && config.extensionConfig && config.extensionConfig[identifier] && !CoreUtils.isNullOrUndefined(config.extensionConfig[identifier][field])) {
             configValue = config.extensionConfig[identifier][field];
         } else {
             configValue = config[field];
