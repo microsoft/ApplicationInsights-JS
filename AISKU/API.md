@@ -4,7 +4,7 @@
 applicationInsights.trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any })
 ```
 
-The `IPageViewTelemetry` interface is below: 
+The `IPageViewTelemetry` interface is below:
 
 Parameter | Type | Description
 ---|---|---
@@ -21,8 +21,8 @@ Parameter | Type | Description
 ```ts
 startTrackPage(name?: string)
 ```
-    
-Starts the timer for tracking a page view. Use this instead of ```trackPageView``` if you want to control when the page view timer starts and stops, but don't want to calculate the duration yourself. This method doesn't send any telemetry. Manually call ```stopTrackPage``` to signify the end of the pageview and to send the telemetry.
+
+Starts the timer for tracking a page load time. Use this instead of `trackPageView` if you want to control when the page view timer starts and stops, but don't want to calculate the duration yourself. This method doesn't send any telemetry. Call `stopTrackPage` to log the end of the page view and send the event.
 
 Parameter | Type | Description
 ---|---|---
@@ -34,7 +34,7 @@ Parameter | Type | Description
 stopTrackPage(name?: string, url?: string, customProperties?: { [name: string]: any; });
 ```
 
-Stops the timer that was started by calling ```startTrackPage``` and sends the page view telemetry with the specified properties and measurements. The duration of the page view will be the time between calling ```startTrackPage``` and ```stopTrackPage```.
+Stops the timer that was started by calling `startTrackPage` and sends the pageview load time telemetry with the specified properties and measurements. The duration of the page view will be the time between calling `startTrackPage` and `stopTrackPage`.
 
 Parameter | Type | Description
 ---|---|---
@@ -48,7 +48,7 @@ Parameter | Type | Description
 trackMetric(metric: IMetricTelemetry, customProperties?: {[name: string]: any})
 ```
 
-Log a positive numeric value that is not associated with a specific event. Typically used to send regular reports of performance indicators.  
+Log a positive numeric value that is not associated with a specific event. Typically used to send regular reports of performance indicators.
 
 To send a single measurement, use just the first two parameters. If you take measurements very frequently, you can reduce the telemetry bandwidth by aggregating multiple measurements and sending the resulting `average` and `sampleCount` at intervals.
 
@@ -68,7 +68,7 @@ Parameter | Type | Description
 trackException(exception: IExceptionTelemtry, customProperties?: {[key: string]: any})
 ```
 
-Log an exception you have caught. Exceptions caught by the browser are also automatically logged. 
+Log an exception you have caught. Exceptions caught by the browser are also automatically logged.
 
 `IExceptionTelemetry` is described below
 
@@ -111,7 +111,7 @@ In the portal, you can search on message content and [display individual trackTr
 ```ts
 trackDependencyData(dependency: IDependencyTelemetry, customProperties?: {[key: string]: any}, systemProperties?: {[key: string]: any})
 ```
-    
+
 Log a dependency call (for instance: ajax)
 
 The `IDependencyTelemetry` interface is described below
@@ -145,13 +145,13 @@ setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, sto
 
 Set the authenticated user id and the account id. Use this when you have identified a specific signed-in user. Parameters must not contain spaces or ,;=|
 
-The method will only set the `authenticatedUserId` and `accountId` for all events in the current page view. To set them for all events within the whole session, you should either call this method on every page view or set `storeInCookie = true`. 
+The method will only set the `authenticatedUserId` and `accountId` for all events in the current page view. To set them for all events within the whole session, you should either call this method on every page view or set `storeInCookie = true`.
 
  Parameter | Type |Description
 ---|---|--
 `authenticatedUserId` | string | **Required**<br>An id that uniquely identifies a user of your app. No spaces, comma, semicolon, equals or vertical bar.
 `accountId?` | string | **Optional**<br>An optional account id, if your app groups users into accounts. No spaces, comma, semicolon, equals or vertical bar.
-    
+
 In the portal, this will add to the count of authenticated users. Authenticated users provide a more reliable count of the number of real users than the count of anonymous users.
 
 The authenticated user id will be available as part of the context of the telemetry sent to the portal, so that you can filter and search on it. It will also be saved as a cookie and sent to the server, where the server SDK (if installed) will attach it to server telemetry.
@@ -179,22 +179,22 @@ If one of the telemetry initializers returns false or throws an error, then the 
 interface ITelemetryItem {
     /**
      * Unique name of the telemetry item
-     */ 
+     */
     name: string;
 
     /**
      * Timestamp when item was sent
-     */ 
+     */
     timestamp?: Date;
 
     /**
      * Identifier of the resource that uniquely identifies which resource data is sent to
-     */ 
+     */
     instrumentationKey?: string;
 
     /**
-     * System properties with well defined extensions, documentation coming soon 
-     */ 
+     * System properties with well defined extensions, documentation coming soon
+     */
     ctx?: {[key: string]: any};
 
     /**
@@ -209,9 +209,9 @@ interface ITelemetryItem {
 
     /**
      * Based on schema for part B
-     */ 
+     */
     baseData?: { [key: string]: any };
-    
+
     /**
      * Telemetry data used for Part C
      */
@@ -267,15 +267,15 @@ Details of the app you're monitoring.
  context.application.ver: string
  context.application.build : string
 ```
-        
+
 ### context.device
 
 ```ts
 device : Context.Device
 ```
-    
+
 The device the app is running on.
- 
+
 Property | Description
 ---|---
 `device.type`  | Type of device
@@ -288,7 +288,7 @@ Property | Description
 `device.ip` |
 `device.language` |
 `device.os` |  OS running on the device
-`device.osversion` | 
+`device.osversion` |
 
 ### context.user
 
@@ -296,7 +296,7 @@ Property | Description
 user: Context.User
 ```
 
-Data about the current user. Users are identified by cookie, so one person can look like 
+Data about the current user. Users are identified by cookie, so one person can look like
 more than one user if they use different machines or browsers, or delete cookies.
 
 Property | Description
@@ -305,8 +305,8 @@ Property | Description
 `user.authenticatedId` | Id set by your app using [`setAuthenticatedUserContext`](#setAuthenticatedUserContext) when the user signs in.
 `user.accountId` | Set by your app when the user signs in, if your app groups users into accounts.
 `user.accountAcquisitionDate` |
-`user.agent` | 
-`user.storeRegion` | 
+`user.agent` |
+`user.storeRegion` |
 
 
 ### context.session
@@ -314,7 +314,7 @@ Property | Description
 ```ts
 session: Context.Session
 ```
-    
+
 The user session. A session represents a series of user actions. A session starts with a user action.
 It ends at the last user activity when there is no more activity for sessionRenewalMs, or if it lasts longer than sessionExpirationMs.
 
@@ -343,13 +343,13 @@ Property | Description
 ```ts
 operation: Context.Operation;
 ```
-        
+
 Represents the user request. Operation id is used to tie together related events in diagnostic search.
 
 Property | Description
 ---|---
 `id` | Unique id
-`name` | 
+`name` |
 `parentId` |
 `rootId` |
 `syntheticSource` | String identifying the bot or test agent.
