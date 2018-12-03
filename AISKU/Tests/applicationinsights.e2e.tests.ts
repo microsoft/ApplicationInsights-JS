@@ -94,7 +94,7 @@ export class ApplicationInsightsTests extends TestClass {
 
 
                 Assert.ok(this._ai.appInsights.core, 'Core exists');
-                Assert.equal(true, this._ai.appInsights.core['_isInitialized'], 
+                Assert.equal(true, this._ai.appInsights.core['_isInitialized'],
                 'Core is initialized');
             }
         });
@@ -120,7 +120,7 @@ export class ApplicationInsightsTests extends TestClass {
                 this._ai.trackEvent({name: 'event'});
             }].concat(this.asserts(1))
         });
-        
+
         this.testCaseAsync({
             name: 'E2E.GenericTests: trackTrace sends to backend',
             stepDelay: 1,
@@ -262,7 +262,7 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public addDependencyPluginTests(): void {
-        
+
         this.testCaseAsync({
             name: "TelemetryContext: trackDependencyData",
             stepDelay: 1,
@@ -483,5 +483,5 @@ export class ApplicationInsightsTests extends TestClass {
         } else {
             return false;
         }
-    }, "sender succeeded", 15, 1000))];
+    }, "sender succeeded", 30, 1000))];
 }
