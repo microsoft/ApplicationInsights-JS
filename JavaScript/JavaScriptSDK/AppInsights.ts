@@ -237,7 +237,7 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
-         * Start timing an extended event. Call {@link stopTrackEvent} to log the event when it ends.
+         * Start timing an extended event. Call `stopTrackEvent` to log the event when it ends.
          * @param   name    A string that identifies this event uniquely within the document.
          */
         public startTrackEvent(name: string) {
@@ -252,8 +252,8 @@ module Microsoft.ApplicationInsights {
         }
 
         /**
-         * Log an extended event that you started timing with {@link startTrackEvent}.
-         * @param   name    The string you used to identify this event in startTrackEvent.
+         * Log an extended event that you started timing with `startTrackEvent`.
+         * @param   name    The string you used to identify this event in `startTrackEvent`.
          * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
          */
