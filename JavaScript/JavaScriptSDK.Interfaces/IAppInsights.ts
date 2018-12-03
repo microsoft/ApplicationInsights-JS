@@ -26,13 +26,13 @@ module Microsoft.ApplicationInsights {
 
         /**
         * Starts timing how long the user views a page or other item. Call this when the page opens.
-        * This method doesn't send any telemetry. Call [`stopTrackPage`](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/API-reference.md#stoptrackpage) to log the page when it closes.
+        * This method doesn't send any telemetry. Call `stopTrackPage` to log the page when it closes.
         * @param   name  A string that idenfities this item, unique within this HTML document. Defaults to the document title.
         */
         startTrackPage(name?: string);
 
         /**
-        * Logs how long a page or other item was visible, after [`startTrackPage`](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/API-reference.md#starttrackpage). Call this when the page closes.
+        * Logs how long a page or other item was visible, after `startTrackPage`. Call this when the page closes.
         * @param   name  The string you used as the name in startTrackPage. Defaults to the document title.
         * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
         * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
@@ -51,14 +51,14 @@ module Microsoft.ApplicationInsights {
         trackPageView(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, duration?: number);
 
         /**
-         * Start timing an extended event. Call [`stopTrackEvent`](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/API-reference.md#stoptrackevent) to log the event when it ends.
+         * Start timing an extended event. Call `stopTrackEvent` to log the event when it ends.
          * @param   name    A string that identifies this event uniquely within the document.
          */
         startTrackEvent(name: string);
 
 
         /**
-         * Log an extended event that you started timing with [`startTrackEvent`](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/API-reference.md#starttrackevent).
+         * Log an extended event that you started timing with `startTrackEvent`.
          * @param   name    The string you used to identify this event in `startTrackEvent`.
          * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
