@@ -242,8 +242,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         const item: PageViewPerformance = new PageViewPerformance(this.core.logger,
             pageViewPerformance.name,
             pageViewPerformance.url,
-            undefined,
-            customProperties
+            undefined
         );
 
         this.sendPageViewPerformanceInternal(item, customProperties);
