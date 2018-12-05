@@ -1,8 +1,11 @@
 export {
-    Initialization as ApplicationInsights,
     IApplicationInsights,
-    Snippet
+    Snippet,
+    Initialization as ApplicationInsights
 } from "./Initialization";
+
+export { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
+
 
 // Re-exports
 export {

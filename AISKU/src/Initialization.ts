@@ -3,7 +3,7 @@
 
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
-import { Util, IConfig, IDependencyTelemetry, PageViewPerformance, IPageViewPerformanceTelemetry,
+import { Util, IConfig, IDependencyTelemetry, IPageViewPerformanceTelemetry,
          IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry,
          IMetricTelemetry, IEventTelemetry, IAppInsights, ConfigurationManager } from "@microsoft/applicationinsights-common";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -38,9 +38,10 @@ export class Initialization implements IApplicationInsights {
     public snippet: Snippet;
     public config: IConfiguration & IConfig;
     public appInsights: ApplicationInsights;
-    private properties: PropertiesPlugin;
+    public core: IAppInsightsCore;
+    
     private dependencies: DependenciesPlugin;
-    private core: IAppInsightsCore;
+    private properties: PropertiesPlugin;
 
     constructor(snippet: Snippet) {
         // initialize the queue and config in case they are undefined
@@ -181,7 +182,6 @@ export class Initialization implements IApplicationInsights {
          this.properties.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
     }
 
-
     /**
      * Clears the authenticated user id and account id. The associated cookie is cleared, if present.
      * @memberof Initialization
@@ -298,9 +298,7 @@ export class Initialization implements IApplicationInsights {
 
                 //appInsightsInstance.context._sender.triggerSend();
 
-                appInsightsInstance.appInsights.core.getTransmissionControls().forEach(queues => {
-                    queues.forEach(channel => channel.flush(true));
-                });
+                appInsightsInstance.flush(false);
 
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
@@ -320,7 +318,7 @@ export class Initialization implements IApplicationInsights {
         }
     }
 
-    public getSKUDefaults() {
+    private getSKUDefaults() {
         let enableOldTags = ConfigurationManager.getConfig(this.config, "enableOldTags", propertiesPlugin, true);
         this.config.enableOldTags = <boolean>enableOldTags;
         this.config.diagnosticLogInterval =
