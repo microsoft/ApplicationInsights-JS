@@ -33,7 +33,7 @@ export class ApplicationInsightsDeprecatedTests extends TestClass {
             }
 
             let container = new ApplicationInsightsContainer();
-            this._aiDeprecated = <IAppInsightsDeprecated>(container.getAppInsights(this._snippet, true));
+            this._aiDeprecated = <IAppInsightsDeprecated>(container.getAppInsights(this._snippet, true)); // second parameter indicates provide existing api support, default is false
             // Setup Sinon stuff
             let appInsights = (<any>this._aiDeprecated).appInsightsNew;
             const sender: Sender = appInsights.core['_channelController'].channelQueue[0][0];
