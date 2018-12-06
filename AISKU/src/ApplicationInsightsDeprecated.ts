@@ -1,6 +1,6 @@
 import { IConfig, PageViewPerformance, SeverityLevel, Util, IPageViewPerformanceTelemetry, 
     IPageViewTelemetry, ITraceTelemetry, IMetricTelemetry, 
-    IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry } from "@microsoft/applicationinsights-common";
+    IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry, IEventTelemetry } from "@microsoft/applicationinsights-common";
 import { ITelemetryContext } from "@microsoft/applicationinsights-properties-js/types/Interfaces/ITelemetryContext";
 import { Snippet, IApplicationInsights } from "./Initialization";
 
@@ -35,7 +35,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     }
 
     trackEvent(name: string, properties?: Object, measurements?: Object) {
-        throw new Error("Method not implemented.");
+        this.appInsightsNew.trackEvent(<IEventTelemetry>{ name: name});
     }
     trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
         this.appInsightsNew.trackDependencyData(
