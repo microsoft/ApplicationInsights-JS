@@ -1,4 +1,6 @@
-import { IConfig, PageViewPerformance, SeverityLevel, Util, IPageViewPerformanceTelemetry, IPageViewTelemetry, IEventTelemetry, ITraceTelemetry, IMetricTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry } from "@microsoft/applicationinsights-common";
+import { IConfig, PageViewPerformance, SeverityLevel, Util, IPageViewPerformanceTelemetry, 
+    IPageViewTelemetry, ITraceTelemetry, IMetricTelemetry, 
+    IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry } from "@microsoft/applicationinsights-common";
 import { ITelemetryContext } from "@microsoft/applicationinsights-properties-js/types/Interfaces/ITelemetryContext";
 import { Snippet, IApplicationInsights } from "./Initialization";
 
@@ -32,22 +34,26 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
         this.appInsightsNew.trackPageView(telemetry);
     }
 
-    startTrackEvent(name: string) {
-        this.appInsightsNew.trackEvent(<IEventTelemetry>{ name: name});
-    }
-
-    stopTrackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }) {
-        throw new Error("Method not implemented.");
-    }
-
     trackEvent(name: string, properties?: Object, measurements?: Object) {
         throw new Error("Method not implemented.");
     }
     trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
-        throw new Error("Method not implemented.");
+        this.appInsightsNew.trackDependencyData(
+            <IDependencyTelemetry>{ 
+                id: id, 
+                absoluteUrl: absoluteUrl, 
+                commandName: pathName, 
+                duration: totalTime,
+                method: method, 
+                success: success, 
+                resultCode: resultCode
+            });
     }
+
     trackException(exception: Error, handledAt?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, severityLevel?: any) {
-        throw new Error("Method not implemented.");
+        this.appInsightsNew.trackException(<IExceptionTelemetry>{
+            error: exception
+        });
     }
 
     trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: { [name: string]: string; }) {
@@ -75,6 +81,14 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     }
     
     
+    startTrackEvent(name: string) {
+        throw new Error("Method not implemented.");
+    }
+
+    stopTrackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }) {
+        throw new Error("Method not implemented.");
+    }
+
     downloadAndSetup?(config: IConfig): void {
         throw new Error("downloadAndSetup not implemented in web SKU");
     }
@@ -184,6 +198,7 @@ export interface IAppInsightsDeprecated {
     * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
     * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
     * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
+    * @deprecated API is deprecated; supported only if input configuration specifies deprecated=true
     */
     stopTrackPage(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
 

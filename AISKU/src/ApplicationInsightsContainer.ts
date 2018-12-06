@@ -1,14 +1,16 @@
 import { IAppInsightsDeprecated, AppInsightsDeprecated } from "./ApplicationInsightsDeprecated";
-import { Initialization, Snippet, IApplicationInsights } from "./Initialization";
+import { Initialization as ApplicationInsights, Snippet, IApplicationInsights } from "./Initialization";
 
 export class ApplicationInsightsContainer {
 
-    getAppInsights(snippet: Snippet, hasDeprecatedSupport: boolean = false) : IApplicationInsights | IAppInsightsDeprecated {
-        let init = new Initialization(snippet);
-        if (!hasDeprecatedSupport) {
-            return init;
+    getAppInsights(snippet: Snippet, oldApiSupport: boolean = false) : IApplicationInsights | IAppInsightsDeprecated {
+        let initialization = new ApplicationInsights(snippet);
+        initialization.loadAppInsights();
+        
+        if (!oldApiSupport) {
+            return initialization;
         } else {
-            return new AppInsightsDeprecated(snippet, init.loadAppInsights());
+            return new AppInsightsDeprecated(snippet, initialization);
         }
     }
 }
