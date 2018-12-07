@@ -3,7 +3,7 @@
 
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
-import { Util, IConfig, IDependencyTelemetry, PageViewPerformance, IPageViewPerformanceTelemetry,
+import { Util, IConfig, IDependencyTelemetry, IPageViewPerformanceTelemetry,
          IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry,
          IMetricTelemetry, IEventTelemetry, IAppInsights, ConfigurationManager } from "@microsoft/applicationinsights-common";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -20,6 +20,7 @@ import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsof
 export interface Snippet {
     queue: Array<() => void>;
     config: IConfiguration & IConfig;
+    oldApiSupport?: boolean;
 }
 
 export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
@@ -38,9 +39,10 @@ export class Initialization implements IApplicationInsights {
     public snippet: Snippet;
     public config: IConfiguration & IConfig;
     public appInsights: ApplicationInsights;
-    private properties: PropertiesPlugin;
+    public core: IAppInsightsCore;
+    
     private dependencies: DependenciesPlugin;
-    private core: IAppInsightsCore;
+    private properties: PropertiesPlugin;
 
     constructor(snippet: Snippet) {
         // initialize the queue and config in case they are undefined
@@ -162,6 +164,21 @@ export class Initialization implements IApplicationInsights {
     public stopTrackPage(name?: string, url?: string, customProperties?: Object) {
         this.appInsights.stopTrackPage(name, url, customProperties);
     }
+
+    public startTrackEvent(name?: string): void {
+        this.appInsights.startTrackEvent(name);
+    }
+
+    /**
+     * Log an extended event that you started timing with `startTrackEvent`.
+     * @param   name    The string you used to identify this event in `startTrackEvent`.
+     * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
+     * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
+     */
+    public stopTrackEvent(name: string, properties?: Object, measurements?: Object) {
+        this.appInsights.stopTrackEvent(name, undefined, properties); // Todo: Fix to pass measurements once type is updated
+    }
+
     public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void) {
         return this.appInsights.addTelemetryInitializer(telemetryInitializer);
     }
@@ -180,7 +197,6 @@ export class Initialization implements IApplicationInsights {
     public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false): void {
          this.properties.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
     }
-
 
     /**
      * Clears the authenticated user id and account id. The associated cookie is cleared, if present.
@@ -298,9 +314,7 @@ export class Initialization implements IApplicationInsights {
 
                 //appInsightsInstance.context._sender.triggerSend();
 
-                appInsightsInstance.appInsights.core.getTransmissionControls().forEach(queues => {
-                    queues.forEach(channel => channel.flush(true));
-                });
+                appInsightsInstance.flush(false);
 
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
@@ -320,7 +334,7 @@ export class Initialization implements IApplicationInsights {
         }
     }
 
-    public getSKUDefaults() {
+    private getSKUDefaults() {
         let enableOldTags = ConfigurationManager.getConfig(this.config, "enableOldTags", propertiesPlugin, true);
         this.config.enableOldTags = <boolean>enableOldTags;
         this.config.diagnosticLogInterval =

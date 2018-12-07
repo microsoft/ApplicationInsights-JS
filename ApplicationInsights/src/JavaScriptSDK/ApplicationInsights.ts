@@ -39,6 +39,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     private _logger: IDiagnosticLogger; // Initialized by Core
     private _globalconfig: IConfiguration;
     private _nextPlugin: ITelemetryPlugin;
+    private _eventTracking: Timing;
     private _pageTracking: Timing;
     private _telemetryInitializers: { (envelope: ITelemetryItem): boolean | void; }[]; // Internal telemetry initializers.
     private _pageViewManager: PageViewManager;
@@ -120,6 +121,38 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             this._logger.throwInternal(LoggingSeverity.WARNING,
                 _InternalMessageId.TrackTraceFailed,
                 "trackTrace failed, trace will not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) });
+        }
+    }
+
+    /**
+      * Start timing an extended event. Call `stopTrackEvent` to log the event when it ends.
+      * @param   name    A string that identifies this event uniquely within the document.
+    */
+    public startTrackEvent(name: string) {
+        try {
+            this._eventTracking.start(name);
+        } catch (e) {
+            this._logger.throwInternal(LoggingSeverity.CRITICAL,
+                _InternalMessageId.StartTrackEventFailed,
+                "startTrackEvent failed, event will not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) });
+        }
+    }
+
+    /**
+     * Log an extended event that you started timing with `startTrackEvent`.
+     * @param   name    The string you used to identify this event in `startTrackEvent`.
+     * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
+     * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
+     */
+    public stopTrackEvent(name: string, properties?: Object, measurements?: Object) {
+        try {
+            this._eventTracking.stop(name, undefined, properties); // Todo: Fix to pass measurements once type is updated
+        } catch (e) {
+            this._logger.throwInternal(LoggingSeverity.CRITICAL,
+                _InternalMessageId.StopTrackEventFailed,
+                "stopTrackEvent failed, event will not be collected: " + Util.getExceptionName(e),
                 { exception: Util.dump(e) });
         }
     }
@@ -440,6 +473,18 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
         this._telemetryInitializers = [];
         this._addDefaultTelemetryInitializers(configGetters);
+
+
+        this._eventTracking = new Timing(this._logger, "trackEvent");
+        this._eventTracking.action = 
+            (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
+                if (!measurements) {
+                    measurements = {};
+                }
+
+                measurements["duration"] = duration ; // ToDo: fix once IEventTelemetry is updated                
+                this.trackEvent(<IEventTelemetry>{ name: name });
+            }
 
         // initialize page view timing
         this._pageTracking = new Timing(this._logger, "trackPageView");
