@@ -26,7 +26,7 @@ try {
                 // overwrite snippet with full appInsights
 
                 let appInsightsContainer = new ApplicationInsightsContainer();
-                var initialization = appInsightsContainer.getAppInsights(snippet, oldApiSupport);
+                var initialization = appInsightsContainer.getAppInsights(snippet);
                 
                 // apply full appInsights to the global instance that was initialized in the snippet
                 for (var field in initialization) {

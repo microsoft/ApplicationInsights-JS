@@ -29,11 +29,12 @@ export class ApplicationInsightsDeprecatedTests extends TestClass {
                     disableAjaxTracking: false,
                     disableFetchTracking: false
                 },
-                queue: []
+                queue: [],
+                oldApiSupport: true // parameter indicates provide existing api support, default is false
             }
 
             let container = new ApplicationInsightsContainer();
-            this._aiDeprecated = <IAppInsightsDeprecated>(container.getAppInsights(this._snippet, true)); // second parameter indicates provide existing api support, default is false
+            this._aiDeprecated = <IAppInsightsDeprecated>(container.getAppInsights(this._snippet)); 
             // Setup Sinon stuff
             let appInsights = (<any>this._aiDeprecated).appInsightsNew;
             const sender: Sender = appInsights.core['_channelController'].channelQueue[0][0];
@@ -53,14 +54,14 @@ export class ApplicationInsightsDeprecatedTests extends TestClass {
     public registerTests() {
 
         this.addApiTests();
-        // this.testCase({
-        //     name: 'config.oldApiSupport set to true returns support for 1.0 apis',
-        //     test: () => {
+        this.testCase({
+            name: 'config.oldApiSupport set to true returns support for 1.0 apis',
+            test: () => {
 
-        //         Assert.ok(this._aiDeprecated, 'ApplicationInsights SDK exists');
-        //         Assert.ok((<IAppInsightsDeprecated>this._aiDeprecated).downloadAndSetup); // has legacy method
-        //     }
-        // });
+                Assert.ok(this._aiDeprecated, 'ApplicationInsights SDK exists');
+                Assert.ok((<IAppInsightsDeprecated>this._aiDeprecated).downloadAndSetup); // has legacy method
+            }
+        });
     }
 
     public addApiTests(): void {
