@@ -180,7 +180,7 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
         }
 
         if (isGoogleBot) {
-            // Don't report durations for GoogleBot, it is returning invalid values in performance.timing API. 
+            // Don't report durations for GoogleBot, it is returning invalid values in performance.timing API.
             return false;
         } else {
             // for other page views, don't report if it's outside of a reasonable range

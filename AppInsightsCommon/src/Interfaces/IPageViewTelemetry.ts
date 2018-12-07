@@ -34,16 +34,21 @@ export interface IPageViewTelemetry {
      * property bag to contain an extension to domain properties - extension to Part B
      */
     properties?: { [key: string]: any };
+
+    /**
+     * Property bag to contain additional custom measurements (Part C)
+     */
+    measurements?: { [key: string]: number };
 }
 
 
 export interface IPageViewTelemetryInternal extends IPageViewTelemetry {
 
-    /* An identifier assigned to each pageview 
+    /* An identifier assigned to each pageview
      */
     id?: string;
-    
-    /* Version of the part B schema, todo: set this value in trackpageView 
+
+    /* Version of the part B schema, todo: set this value in trackpageView
      */
     ver?: string;
 }
