@@ -22,7 +22,7 @@ try {
             if (window[aiName].initialize) { // initialize if required
                 // this is the typical case for browser+snippet
                 var snippet: Snippet = window[aiName] || <any>{};
-                let oldApiSupport = snippet && snippet.config && snippet.config.oldApiSupport === true;
+                let oldApiSupport = snippet && snippet.oldApiSupport === true;
                 // overwrite snippet with full appInsights
 
                 let appInsightsContainer = new ApplicationInsightsContainer();

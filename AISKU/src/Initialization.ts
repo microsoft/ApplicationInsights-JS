@@ -20,6 +20,7 @@ import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsof
 export interface Snippet {
     queue: Array<() => void>;
     config: IConfiguration & IConfig;
+    oldApiSupport?: boolean;
 }
 
 export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
@@ -163,6 +164,21 @@ export class Initialization implements IApplicationInsights {
     public stopTrackPage(name?: string, url?: string, customProperties?: Object) {
         this.appInsights.stopTrackPage(name, url, customProperties);
     }
+
+    public startTrackEvent(name?: string): void {
+        this.appInsights.startTrackEvent(name);
+    }
+
+    /**
+     * Log an extended event that you started timing with `startTrackEvent`.
+     * @param   name    The string you used to identify this event in `startTrackEvent`.
+     * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
+     * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
+     */
+    public stopTrackEvent(name: string, properties?: Object, measurements?: Object) {
+        this.appInsights.stopTrackEvent(name, undefined, properties); // Todo: Fix to pass measurements once type is updated
+    }
+
     public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void) {
         return this.appInsights.addTelemetryInitializer(telemetryInitializer);
     }

@@ -4,6 +4,7 @@ import { IConfig, PageViewPerformance, SeverityLevel, Util, IPageViewPerformance
 import { ITelemetryContext } from "@microsoft/applicationinsights-properties-js/types/Interfaces/ITelemetryContext";
 import { Snippet, IApplicationInsights } from "./Initialization";
 
+// ToDo: fix properties and measurements once updates are done to common
 export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     public config: IConfig;
     public snippet: Snippet;
