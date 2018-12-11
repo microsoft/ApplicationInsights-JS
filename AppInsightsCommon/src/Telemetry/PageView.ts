@@ -20,7 +20,7 @@ export class PageView extends PageViewData implements ISerializable {
         duration: FieldType.Default,
         properties: FieldType.Default,
         measurements: FieldType.Default,
-        id: FieldType.Default,
+        id: FieldType.Default
     }
 
     /**

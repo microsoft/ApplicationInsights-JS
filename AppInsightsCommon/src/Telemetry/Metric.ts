@@ -18,15 +18,13 @@ export class Metric extends MetricData implements ISerializable {
     public aiDataContract = {
         ver: FieldType.Required,
         metrics: FieldType.Required,
-        id: FieldType.Default,
-        properties: FieldType.Default,
-        measurements: FieldType.Default
+        properties: FieldType.Default
     }
 
     /**
      * Constructs a new instance of the MetricTelemetry object
      */
-    constructor(logger: IDiagnosticLogger, name: string, value: number, count?: number, min?: number, max?: number, properties?: {[key: string]: string}, measurements?: {[key: string]: number}, id?: string) {
+    constructor(logger: IDiagnosticLogger, name: string, value: number, count?: number, min?: number, max?: number, properties?: any) {
         super();
 
         var dataPoint = new DataPoint();
@@ -37,8 +35,6 @@ export class Metric extends MetricData implements ISerializable {
         dataPoint.value = value;
 
         this.metrics = [dataPoint];
-        this.id = DataSanitizer.sanitizeId(logger, id);
         this.properties = DataSanitizer.sanitizeProperties(logger, properties);
-        this.measurements = DataSanitizer.sanitizeProperties(logger, measurements);
     }
 }

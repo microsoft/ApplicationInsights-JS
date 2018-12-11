@@ -18,21 +18,16 @@ export class Trace extends MessageData implements ISerializable {
         ver: FieldType.Required,
         message: FieldType.Required,
         severityLevel: FieldType.Default,
-        id: FieldType.Default,
-        properties: FieldType.Default,
-        measurements: FieldType.Default
     };
 
     /**
      * Constructs a new instance of the TraceTelemetry object
      */
-    constructor(logger: IDiagnosticLogger, message: string, severityLevel?: SeverityLevel, properties?: {[key: string]: string}, measurements?: {[key: string]: number}, id?: string) {
+    constructor(logger: IDiagnosticLogger, message: string, severityLevel?: SeverityLevel, properties?: {[key: string]: string}) {
         super();
         message = message || Util.NotSpecified;
         this.message = DataSanitizer.sanitizeMessage(logger, message);
-        this.id = DataSanitizer.sanitizeId(logger, id);
         this.properties = DataSanitizer.sanitizeProperties(logger, properties);
-        this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
 
         if (severityLevel) {
             this.severityLevel = severityLevel;
