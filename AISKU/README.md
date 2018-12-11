@@ -119,7 +119,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 |------|---------|-------------|
 | instrumentationKey | null | **Required**<br>Instrumentation key that you obtained from the Azure Portal. |
 | accountId | null | An optional account id, if your app groups users into accounts. No spaces, commas, semicolons, equals, or vertical bars |
-| sessionRenewalMs | 30000 | A session is logged if the user is inactive for this amount of time in milliseconds. Default is 30 minutes |
+| sessionRenewalMs | 1800000 | A session is logged if the user is inactive for this amount of time in milliseconds. Default is 30 minutes |
 | sessionExpirationMs | 86400000 | A session is logged if it has continued for this amount of time in milliseconds. Default is 24 hours |
 | maxBatchSizeInBytes | 10000 | Max size of telemetry batch. If a batch exceeds this limit, it is immediately sent and a new batch is started |
 | maxBatchInterval | 15000 | How long to batch telemetry for before sending (milliseconds) |
@@ -183,6 +183,16 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 	npm run build
 	npm run test
 	```
+
+## Performance
+At just 22 KB gzipped, and taking only ~15 ms to initialize, Application Insights adds a neglible amount of loadtime to your website. By using the snippet, the essential components of the script are loaded inline synchronously, so it does not require a network roundtrip to begin tracking your page.
+
+While the script is downloading from the CDN, all tracking on your page is queued. Once the downloaded script finishes (asynchronously) initializing, all events that were queued are tracked, so you will not lose any telemetry during the life cycle of your page. The time to initialize the script is included in the 15 ms total initialization time.
+> Summary:
+> - **22 KB** gzipped
+> - **15 ms** overall initialize time
+> - **Zero** tracking missed during life cycle of page
+
 
 ## Browser Support
 ![Chrome](https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png) | ![Firefox](https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png) | ![IE](https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png) | ![Opera](https://raw.githubusercontent.com/alrra/browser-logos/master/src/opera/opera_48x48.png) | ![Safari](https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png)
