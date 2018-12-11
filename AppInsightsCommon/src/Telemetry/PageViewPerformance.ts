@@ -54,7 +54,7 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
     /**
      * Constructs a new instance of the PageEventTelemetry object
      */
-    constructor(logger: IDiagnosticLogger, name: string, url: string, unused: number, properties?: {[key: string]: string}, measurements?: {[key: string]: number}, id?: string) {
+    constructor(logger: IDiagnosticLogger, name: string, url: string, unused: number, properties?: {[key: string]: string}, measurements?: {[key: string]: number}) {
         super();
 
         this.isValid = false;
@@ -121,7 +121,6 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
 
         this.properties = DataSanitizer.sanitizeProperties(logger, properties);
         this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
-        this.id = DataSanitizer.sanitizeId(logger, id);
     }
 
     public static getPerformanceTiming(): PerformanceTiming {
