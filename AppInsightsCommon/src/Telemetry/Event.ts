@@ -16,6 +16,7 @@ export class Event extends EventData implements ISerializable {
     public aiDataContract = {
         ver: FieldType.Required,
         name: FieldType.Required,
+        id: FieldType.Default,
         properties: FieldType.Default,
         measurements: FieldType.Default
     }
@@ -23,11 +24,12 @@ export class Event extends EventData implements ISerializable {
     /**
      * Constructs a new instance of the EventTelemetry object
      */
-    constructor(logger: IDiagnosticLogger, name: string, properties?: any, measurements?: any) {
+    constructor(logger: IDiagnosticLogger, name: string, properties?: any, measurements?: any, id?: string) {
 
         super();
 
         this.name = DataSanitizer.sanitizeString(logger, name) || Util.NotSpecified;
+        this.id = DataSanitizer.sanitizeId(logger, id);
         this.properties = DataSanitizer.sanitizeProperties(logger, properties);
         this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
     }

@@ -127,9 +127,6 @@ export class ApplicationInsightsTests extends TestClass {
                 test(() => appInsights.trackPageViewPerformance({name: undefined, url: undefined, measurements: {somefield: 123}}, {vpHeight: 123}), PageViewPerformance.envelopeType, PageViewPerformance.dataType, () => {
                     Assert.deepEqual(undefined, envelope.baseData.properties, 'Properties does not exist in Part B');
                 });
-                test(() => appInsights.trackPageView({properties: {somefield: 'somestring'}}), PageView.envelopeType, PageView.dataType, () => {
-                    Assert.deepEqual({somefield: 'somestring'}, envelope.baseData.properties, 'Property bag is present in Part B properties')
-                });
             }
         });
 

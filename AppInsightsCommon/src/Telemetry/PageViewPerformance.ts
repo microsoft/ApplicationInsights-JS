@@ -18,6 +18,7 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
 
     public aiDataContract = {
         ver: FieldType.Required,
+        id: FieldType.Default,
         name: FieldType.Default,
         url: FieldType.Default,
         duration: FieldType.Default,
@@ -54,7 +55,7 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
     /**
      * Constructs a new instance of the PageEventTelemetry object
      */
-    constructor(logger: IDiagnosticLogger, name: string, url: string, unused: number, properties?: any, measurements?: any) {
+    constructor(logger: IDiagnosticLogger, name: string, url: string, unused: number, properties?: any, measurements?: any, id?: string) {
         super();
 
         this.isValid = false;
@@ -121,6 +122,7 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
 
         this.properties = DataSanitizer.sanitizeProperties(logger, properties);
         this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
+        this.id = DataSanitizer.sanitizeId(logger, id);
     }
 
     public static getPerformanceTiming(): PerformanceTiming {

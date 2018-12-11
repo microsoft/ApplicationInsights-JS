@@ -20,6 +20,7 @@ export class Exception extends ExceptionData implements ISerializable {
     public aiDataContract = {
         ver: FieldType.Required,
         exceptions: FieldType.Required,
+        id: FieldType.Default,
         severityLevel: FieldType.Default,
         properties: FieldType.Default,
         measurements: FieldType.Default
@@ -28,9 +29,10 @@ export class Exception extends ExceptionData implements ISerializable {
     /**
     * Constructs a new isntance of the ExceptionTelemetry object
     */
-    constructor(logger: IDiagnosticLogger, exception: Error, properties?: any, measurements?: any, severityLevel?: SeverityLevel) {
+    constructor(logger: IDiagnosticLogger, exception: Error, properties?: {[key: string]: string}, measurements?: {[key: string]: number}, severityLevel?: SeverityLevel, id?: string) {
         super();
 
+        this.id = DataSanitizer.sanitizeId(logger, id);
         this.properties = DataSanitizer.sanitizeProperties(logger, properties);
         this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
 
