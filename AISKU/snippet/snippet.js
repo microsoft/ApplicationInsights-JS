@@ -48,9 +48,10 @@ var aisdk = window[aiName] || (function (aiConfig) {
     // Collect global errors
     // Note: ApplicationInsightsAnalytics is the extension string identifier for
     //  AppAnalytics. It is defined in ApplicationInsights.ts:ApplicationInsights.identifer
-    if (aiConfig.extensionConfig &&
+    if (!(aiConfig.disableExceptionTracking === true ||
+        (aiConfig.extensionConfig &&
         aiConfig.extensionConfig.ApplicationInsightsAnalytics &&
-        aiConfig.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking === false) {
+        aiConfig.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking === true))) {
 
         method = "onerror";
         createLazyMethod("_" + method);
@@ -69,7 +70,7 @@ var aisdk = window[aiName] || (function (aiConfig) {
 
             return handled;
         };
-        aiConfig.extensionConfig.ApplicationInsightsAnalytics.autoExceptionInstrumented = true;
+        aiConfig.autoExceptionInstrumented = true;
     }
 
     return appInsights;
