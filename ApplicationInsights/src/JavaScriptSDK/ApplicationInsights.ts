@@ -258,6 +258,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this._trackAjaxAttempts = 0;
     }
 
+    /**
+     * @ignore INTERNAL ONLY
+     * @param pageViewPerformance
+     * @param properties
+     */
     public sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance, properties?: { [key: string]: any }) {
         let telemetryItem = TelemetryItemCreator.create<PageViewPerformance>(pageViewPerformance,
             PageViewPerformance.dataType,
@@ -271,12 +276,16 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this.core.track(telemetryItem);
     }
 
+    /**
+     * Send browser performance metrics.
+     * @param pageViewPerformance
+     * @param customProperties
+     */
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: { [key: string]: any }): void {
         const item: PageViewPerformance = new PageViewPerformance(this.core.logger,
             pageViewPerformance.name,
             pageViewPerformance.url,
-            undefined,
-            customProperties
+            undefined
         );
 
         this.sendPageViewPerformanceInternal(item, customProperties);
