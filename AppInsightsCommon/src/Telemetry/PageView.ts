@@ -20,13 +20,13 @@ export class PageView extends PageViewData implements ISerializable {
         duration: FieldType.Default,
         properties: FieldType.Default,
         measurements: FieldType.Default,
-        id: FieldType.Default,
+        id: FieldType.Default
     }
 
     /**
      * Constructs a new instance of the PageEventTelemetry object
      */
-    constructor(logger: IDiagnosticLogger, name?: string, url?: string, durationMs?: number, properties?: any, measurements?: any, id?: string) {
+    constructor(logger: IDiagnosticLogger, name?: string, url?: string, durationMs?: number, properties?: {[key: string]: string}, measurements?: {[key: string]: number}, id?: string) {
         super();
 
         this.id = DataSanitizer.sanitizeId(logger, id);

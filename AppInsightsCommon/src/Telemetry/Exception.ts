@@ -28,7 +28,7 @@ export class Exception extends ExceptionData implements ISerializable {
     /**
     * Constructs a new isntance of the ExceptionTelemetry object
     */
-    constructor(logger: IDiagnosticLogger, exception: Error, properties?: any, measurements?: any, severityLevel?: SeverityLevel) {
+    constructor(logger: IDiagnosticLogger, exception: Error, properties?: {[key: string]: string}, measurements?: {[key: string]: number}, severityLevel?: SeverityLevel) {
         super();
 
         this.properties = DataSanitizer.sanitizeProperties(logger, properties);
