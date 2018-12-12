@@ -31,7 +31,7 @@ export class TelemetryItemCreator {
             CoreUtils.isNullOrUndefined(envelopeName)) {
                 throw Error("Input doesn't contain all required fields");
         }
-        
+
         let telemetryItem: ITelemetryItem = {
             name: envelopeName,
             timestamp: new Date(),

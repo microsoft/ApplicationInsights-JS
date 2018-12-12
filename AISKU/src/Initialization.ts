@@ -40,7 +40,7 @@ export class Initialization implements IApplicationInsights {
     public config: IConfiguration & IConfig;
     public appInsights: ApplicationInsights;
     public core: IAppInsightsCore;
-    
+
     private dependencies: DependenciesPlugin;
     private properties: PropertiesPlugin;
 
@@ -82,8 +82,8 @@ export class Initialization implements IApplicationInsights {
      * @param {{ [key: string]: any; }} [customProperties]
      * @memberof Initialization
      */
-    public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any; }) {
-        this.appInsights.trackPageView(pageView, customProperties);
+    public trackPageView(pageView: IPageViewTelemetry) {
+        this.appInsights.trackPageView(pageView);
     }
 
     /**
@@ -92,8 +92,8 @@ export class Initialization implements IApplicationInsights {
      * @param {{ [key:string]: any }} [customProperties]
      * @memberof Initialization
      */
-    public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: { [key:string]: any }): void {
-        this.appInsights.trackPageViewPerformance(pageViewPerformance, customProperties);
+    public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry): void {
+        this.appInsights.trackPageViewPerformance(pageViewPerformance);
     }
 
     /**
@@ -102,8 +102,8 @@ export class Initialization implements IApplicationInsights {
      * @param {{ [key: string]: any; }} [customProperties]
      * @memberof Initialization
      */
-    public trackException(exception: IExceptionTelemetry, customProperties?: { [key: string]: any; }): void {
-        this.appInsights.trackException(exception, customProperties);
+    public trackException(exception: IExceptionTelemetry): void {
+        this.appInsights.trackException(exception);
     }
 
     /**

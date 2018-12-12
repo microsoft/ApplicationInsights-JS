@@ -23,8 +23,21 @@ export interface IExceptionTelemetry {
      * @memberof IExceptionTelemetry
      */
     severityLevel?: SeverityLevel | number;
-}
 
+    /**
+     * Collection of custom properties
+     * @type {{ [key: string]: string}}
+     * @memberof IExceptionTelemetry
+     */
+    properties?: { [key: string]: string};
+
+    /**
+     * Collection of custom measurements
+     * @type {{ [key: string]: number}}
+     * @memberof IExceptionTelemetry
+     */
+    measurements?: { [key: string]: number};
+}
 
 /**
  * @description window.onerror function parameters

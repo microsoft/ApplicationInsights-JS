@@ -1,11 +1,12 @@
 /// <reference path="./TestFramework/Common.ts" />
 
-import { Util, Exception, SeverityLevel, Trace } from "@microsoft/applicationinsights-common";
+import { Util, Exception, SeverityLevel, Trace, PageViewPerformance, PageView } from "@microsoft/applicationinsights-common";
 import {
     ITelemetryItem, AppInsightsCore,
     IPlugin, IConfiguration
 } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "../src/JavaScriptSDK/ApplicationInsights";
+import { ITelemetryConfig } from "../src/JavaScriptSDK.Interfaces/ITelemetryConfig";
 
 export class ApplicationInsightsTests extends TestClass {
     public testInitialize() {
@@ -44,7 +45,7 @@ export class ApplicationInsightsTests extends TestClass {
                     }
                 };
                 appInsights.initialize(config, new AppInsightsCore(), []);
-                
+
                 // Assert
                 Assert.equal(12, appInsights.config.samplingPercentage);
                 Assert.notEqual('aaa', appInsights.config.accountId);
@@ -109,18 +110,23 @@ export class ApplicationInsightsTests extends TestClass {
                 appInsights.initialize({instrumentationKey: core.config.instrumentationKey}, core, []);
                 var trackStub = this.sandbox.stub(appInsights.core, "track");
 
-                var test = (action, expectedEnvelopeType, expectedDataType) => {
+                let envelope: ITelemetryItem;
+                var test = (action, expectedEnvelopeType, expectedDataType, test?: () => void) => {
                     action();
-                    var envelope: ITelemetryItem = this.getFirstResult(action, trackStub);
+                    envelope = this.getFirstResult(action, trackStub);
                     Assert.equal(iKey, envelope.instrumentationKey, "envelope iKey");
                     Assert.equal(expectedEnvelopeType.replace("{0}", iKeyNoDash), envelope.name, "envelope name");
                     Assert.equal(expectedDataType, envelope.baseType, "data type name");
+                    if (typeof test === 'function') {test();}
                     trackStub.reset();
                 };
 
                 // Test
                 test(() => appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical}), Exception.envelopeType, Exception.dataType)
                 test(() => appInsights.trackTrace({message: "some string"}), Trace.envelopeType, Trace.dataType);
+                test(() => appInsights.trackPageViewPerformance({name: undefined, url: undefined, measurements: {somefield: 123}}, {vpHeight: 123}), PageViewPerformance.envelopeType, PageViewPerformance.dataType, () => {
+                    Assert.deepEqual(undefined, envelope.baseData.properties, 'Properties does not exist in Part B');
+                });
             }
         });
 
@@ -602,7 +608,7 @@ export class ApplicationInsightsTests extends TestClass {
                 var messageOverride = "my unique name";
                 var propOverride = "val1";
                 var telemetryInitializer = {
-                    // This illustrates how to use telemetry initializer (onBeforeSendTelemetry) 
+                    // This illustrates how to use telemetry initializer (onBeforeSendTelemetry)
                     // to access/ modify the contents of an envelope.
                     initializer: (envelope) => {
                         if (envelope.baseType ===
@@ -617,7 +623,7 @@ export class ApplicationInsightsTests extends TestClass {
                 }
 
                 appInsights.addTelemetryInitializer(telemetryInitializer.initializer);
-                    
+
                 // act
                 appInsights.trackTrace({message: 'test message'});
 
@@ -856,8 +862,8 @@ class ChannelPlugin implements IPlugin {
     }
     public pause(): void {
         this.isPauseInvoked = true;
-    }    
-    
+    }
+
     public resume(): void {
         this.isResumeInvoked = true;
     }
@@ -876,7 +882,7 @@ class ChannelPlugin implements IPlugin {
     public processTelemetry(env: ITelemetryItem) {}
 
     public identifier = "Sender";
-    
+
     setNextPlugin(next: any) {
         // no next setup
     }
