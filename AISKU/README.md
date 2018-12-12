@@ -57,11 +57,11 @@ appInsights.loadAppInsights();
 If your app does not use NPM, you can directly instrument your webpages with Application Insights by pasting this snippet at the top of each your pages. Preferably, it should be the first script in your `<head>` section so that it can monitor any potential issues with all of your dependencies.
 ```html
 <script type="text/javascript">
-var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){i[e]=function(){var n=arguments;i.queue.push(function(){i[e].apply(i,n)})}}var i={config:e};i.initialize=!0;var t=document,a=window;setTimeout(function(){var n=t.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/beta/ai.1.min.js",t.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{i.cookie=t.cookie}catch(e){}i.queue=[];for(var s=["PageView","Exception","Trace","DependencyData","Metric"];s.length;)n("track"+s.pop());if(n("startTrackPage"),n("stopTrackPage"),e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!1===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking){n("_"+(s="onerror"));var o=a[s];a[s]=function(e,n,t,a,r){var c=o&&o(e,n,t,a,r);return!0!==c&&i["_"+s]({message:e,url:n,lineNumber:t,columnNumber:a,error:r}),c},e.extensionConfig.ApplicationInsightsAnalytics.autoExceptionInstrumented=!0}return i}
-(
-    {instrumentationKey:"INSTRUMENTATION_KEY"}
-);
-if(window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length){var pageViewItem={name:document.title?document.title:"",uri:document.URL?document.URL:""};aisdk.trackPageView(pageViewItem)}
+var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(n){var r={config:n,initialize:!0},i=document,e=window,t="script";setTimeout(function(){var e=i.createElement(t);e.src=n.url||"https://az416426.vo.msecnd.net/beta/ai.1.min.js",i.getElementsByTagName(t)[0].parentNode.appendChild(e)});try{r.cookie=i.cookie}catch(e){}function a(n){r[n]=function(){var e=arguments;r.queue.push(function(){r[n].apply(r,e)})}}r.queue=[];for(var c=["Event","PageView","Exception","Trace","DependencyData","Metric","PageViewPerformance"];c.length;)a("track"+c.pop());var o="TrackPage";if(a("start"+o),a("stop"+o),!(!0===n.disableExceptionTracking||n.extensionConfig&&n.extensionConfig.ApplicationInsightsAnalytics&&!0===n.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking)){a("_"+(c="onerror"));var s=e[c];e[c]=function(e,n,i,t,a){var o=s&&s(e,n,i,t,a);return!0!==o&&r["_"+c]({message:e,url:n,lineNumber:i,columnNumber:t,error:a}),o},n.autoExceptionInstrumented=!0}return r}(
+{
+	instrumentationKey:"INSTRUMENTATION_KEY"
+}
+);if((window[aiName]=aisdk).queue&&0===aisdk.queue.length){var pageViewItem={name:document.title?document.title:"",uri:document.URL?document.URL:""};aisdk.trackPageView(pageViewItem)}
 </script>
 ```
 
