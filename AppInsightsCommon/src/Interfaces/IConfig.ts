@@ -27,7 +27,7 @@ export interface IConfig {
      * @description A session is logged if the user is inactive for this amount of time in milliseconds. Default 30 mins.
      * @type {number}
      * @memberof IConfig
-     * @default 30*1000
+     * @default 30*60*1000
      */
     sessionRenewalMs?: number;
 
