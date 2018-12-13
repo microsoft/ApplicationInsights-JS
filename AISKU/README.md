@@ -185,9 +185,10 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 	```
 
 ## Performance
-At just 22 KB gzipped, and taking only ~15 ms to initialize, Application Insights adds a neglible amount of loadtime to your website. By using the snippet, the essential components of the script are loaded inline synchronously, so it does not require a network roundtrip to begin tracking your page.
+At just 22 KB gzipped, and taking only ~15 ms to initialize, Application Insights adds a neglible amount of loadtime to your website. By using the snippet, minimal components of the library are quickly loaded, synchronously. In the meantime, the full script is downloaded in the background.
 
-While the script is downloading from the CDN, all tracking on your page is queued. Once the downloaded script finishes (asynchronously) initializing, all events that were queued are tracked, so you will not lose any telemetry during the life cycle of your page. The time to initialize the script is included in the 15 ms total initialization time.
+While the script is downloading from the CDN, all tracking of your page is queued. Once the downloaded script finishes asynchronously initializing, all events that were queued are tracked. As a result, you will not lose any telemetry during the entire life cycle of your page. This setup process provides your page with a seamless tracking system, invisible to your users. 
+
 > Summary:
 > - **22 KB** gzipped
 > - **15 ms** overall initialize time
