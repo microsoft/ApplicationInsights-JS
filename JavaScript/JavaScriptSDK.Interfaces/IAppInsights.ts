@@ -124,7 +124,7 @@ module Microsoft.ApplicationInsights {
 
 
         /**
-        * Sets the autheticated user id and the account id in this session.
+        * Sets the authenticated user id and the account id in this session.
         * User auth id and account id should be of type string. They should not contain commas, semi-colons, equal signs, spaces, or vertical-bars.
         *
         * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
