@@ -1,10 +1,10 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 import { AjaxMonitor } from "../../src/ajax";
-import { RemoteDependencyData } from "@microsoft/applicationinsights-common";
+import { RemoteDependencyData, DisabledPropertyName, IConfig } from "@microsoft/applicationinsights-common";
 import { AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls } from "@microsoft/applicationinsights-core-js";
 
 export class AjaxTests extends TestClass {
-    
+
     private appInsightsMock = {
         trackDependency: (id: string, method: string, absoluteUrl: string, isAsync: boolean, totalTime: number, success: boolean) => { },
         trackDependencyData: (dependency: RemoteDependencyData) => { },
@@ -52,14 +52,70 @@ export class AjaxTests extends TestClass {
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
                 appInsightsCore.initialize(coreConfig, [ajaxMonitor, new TestChannelPlugin()]);
-        
+
                 // act
-                var xhr = new XMLHttpRequest();                
+                var xhr = new XMLHttpRequest();
                 xhr.open("GET", "http://microsoft.com");
 
                 // assert
+                Assert.ok((<any>xhr).ajaxData)
                 var ajaxData = (<any>xhr).ajaxData;
                 Assert.equal("http://microsoft.com", ajaxData.requestUrl, "RequestUrl is collected correctly");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: xhr with disabled flag isn't tracked",
+            test: () => {
+                let ajaxMonitor = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: false };
+                appInsightsCore.initialize(coreConfig, [ajaxMonitor, new TestChannelPlugin()]);
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr[DisabledPropertyName] = true;
+                xhr.open("GET", "http://microsoft.com");
+
+                // assert
+                Assert.equal(undefined, (<any>xhr).ajaxData, "RequestUrl is collected correctly");
+            }
+        });
+
+        this.testCase({
+            name: "Fetch: fetch with disabled flag isn't tracked",
+            test: () => {
+                let ajaxMonitor = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [ajaxMonitor, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(ajaxMonitor, "createFetchRecord")
+
+                // Act
+                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: true});
+
+                // Assert
+                Assert.ok(fetchSpy.notCalled, "createFetchRecord called once after using fetch");
+            }
+        });
+
+        this.testCase({
+            name: "Fetch: fetch gets instrumented",
+            test: () => {
+                let ajaxMonitor = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [ajaxMonitor, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(ajaxMonitor, "createFetchRecord")
+
+                // Act
+                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false});
+
+
+                // Assert
+                Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
             }
         });
 
@@ -78,11 +134,11 @@ export class AjaxTests extends TestClass {
                 xhr.open("GET", "/bla");
                 xhr.send();
 
-                
+
                 // Emulate response
                 (<any>xhr).respond(200, { "Content-Type": "application/json" }, "bla");
                 Assert.ok((<any>ajaxMonitor)._trackAjaxAttempts === 1, "TrackAjax is called");
-                                
+
                 // Assert
                 var result = callback.args[0][0].target;
                 Assert.ok(callback.called, "Ajax callback is called");
@@ -107,7 +163,7 @@ export class AjaxTests extends TestClass {
 
         //         Assert.ok(!this.trackDependencySpy.called, "TrackAjax should not be called yet");
 
-        //         // Emulate response                
+        //         // Emulate response
         //         (<any>xhr).respond();
 
         //         // Assert
@@ -125,8 +181,8 @@ export class AjaxTests extends TestClass {
         //         var xhr = new XMLHttpRequest();
         //         xhr.open("GET", "/bla");
         //         xhr.send();
-                
-        //         // Emulate response                
+
+        //         // Emulate response
         //         (<any>xhr).respond(200, {}, "");
 
         //         // Assert
@@ -144,8 +200,8 @@ export class AjaxTests extends TestClass {
         //         var xhr = new XMLHttpRequest();
         //         xhr.open("GET", "/bla");
         //         xhr.send();
-                
-        //         // Emulate response                
+
+        //         // Emulate response
         //         (<any>xhr).respond(404, {}, "");
 
         //         // Assert
@@ -198,7 +254,7 @@ export class AjaxTests extends TestClass {
 
         //         Assert.ok(!this.trackDependencySpy.called, "TrackAjax should not be called yet");
 
-        //         // Emulate response                
+        //         // Emulate response
         //         (<any>xhr).respond(404, {}, "");
 
         //         // Assert
@@ -238,7 +294,7 @@ export class AjaxTests extends TestClass {
         //             var ajax = new AjaxMonitor();
         //             // tick to set the initial time be non zero
         //             (<any>window.performance).tick(23);
-                
+
         //             // Act
         //             var xhr = new XMLHttpRequest();
         //             var clock = this.clock;
@@ -250,7 +306,7 @@ export class AjaxTests extends TestClass {
         //             }
         //             xhr.open("GET", "/bla");
         //             xhr.send();
-        //             // Emulate response                
+        //             // Emulate response
         //             (<any>xhr).respond(404, {}, "");
 
         //             // Assert
@@ -267,7 +323,7 @@ export class AjaxTests extends TestClass {
         //     test: () => {
         //         var ajax = new AjaxMonitor();
         //         var spy = this.sandbox.spy(ajax, "sendHandler");
-                
+
         //         // Act
         //         var xhr = new XMLHttpRequest();
         //         xhr.open("GET", "/bla");
@@ -276,7 +332,7 @@ export class AjaxTests extends TestClass {
         //         try {
         //             xhr.send();
         //         } catch (e) { }
-                                
+
 
         //         // Assert
         //         Assert.ok(spy.calledOnce, "sendPrefixInstrumentor should be called only once");
@@ -288,7 +344,7 @@ export class AjaxTests extends TestClass {
         //     test: () => {
         //         var ajax = new AjaxMonitor();
         //         var spy = this.sandbox.spy(ajax, "openHandler");
-                
+
         //         // Act
         //         var xhr = new XMLHttpRequest();
         //         xhr.open("GET", "/bla");
@@ -296,7 +352,7 @@ export class AjaxTests extends TestClass {
         //         try {
         //             xhr.open("GET", "/bla");
         //         } catch (e) { }
-                                
+
 
         //         // Assert
         //         Assert.ok(spy.calledOnce, "sendPrefixInstrumentor should be called only once");
@@ -311,8 +367,8 @@ export class AjaxTests extends TestClass {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "/bla");
         xhr.send();
-                
-        // Emulate response                
+
+        // Emulate response
         (<any>xhr).respond(responseCode, {}, "");
 
         // Assert
@@ -332,8 +388,8 @@ class TestChannelPlugin implements IChannelControls {
     }
     public pause(): void {
         this.isPauseInvoked = true;
-    }    
-    
+    }
+
     public resume(): void {
         this.isResumeInvoked = true;
     }
@@ -352,7 +408,7 @@ class TestChannelPlugin implements IChannelControls {
     public processTelemetry;
 
     public identifier = "Sender";
-    
+
     setNextPlugin(next: ITelemetryPlugin) {
         // no next setup
     }
