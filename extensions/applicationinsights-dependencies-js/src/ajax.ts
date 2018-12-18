@@ -43,16 +43,27 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     ///<summary>Verifies that particalar instance of XMLHttpRequest needs to be monitored</summary>
     ///<param name="excludeAjaxDataValidation">Optional parameter. True if ajaxData must be excluded from verification</param>
     ///<returns type="bool">True if instance needs to be monitored, otherwise false</returns>
-    private isMonitoredInstance(xhr: XMLHttpRequestInstrumented, excludeAjaxDataValidation?: boolean): boolean {
+    private isMonitoredInstance(xhr?: XMLHttpRequestInstrumented, excludeAjaxDataValidation?: boolean, request?: Request | string, init?: RequestInit): boolean {
+
+        let disabledProperty = false;
+        let ajaxValidation = true;
+        if (typeof request !== 'undefined') { // fetch
+            // Look for DisabledPropertyName in either Request or RequestInit
+            disabledProperty = (typeof request === 'object' ? request[DisabledPropertyName] === true : false) ||
+                (init ? init[DisabledPropertyName] === true : false);
+        } else if (typeof xhr !== 'undefined') {
+            disabledProperty = xhr[DisabledPropertyName] === true;
+            ajaxValidation = excludeAjaxDataValidation === true || !CoreUtils.isNullOrUndefined(xhr.ajaxData);
+        }
 
         // checking to see that all interested functions on xhr were instrumented
         return this.initialized
 
             // checking on ajaxData to see that it was not removed in user code
-            && (excludeAjaxDataValidation === true || !CoreUtils.isNullOrUndefined(xhr.ajaxData))
+            && ajaxValidation
 
             // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
-            && xhr[DisabledPropertyName] !== true;
+            && !disabledProperty;
 
     }
 
@@ -107,7 +118,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
 
     private openHandler(xhr: XMLHttpRequestInstrumented, method, url, async) {
         /* todo:
-        Disabling the following block of code as CV is not yet supported in 1DS for 3rd Part. 
+        Disabling the following block of code as CV is not yet supported in 1DS for 3rd Part.
         // this format corresponds with activity logic on server-side and is required for the correct correlation
         var id = "|" + this.appInsights.context.operation.id + "." + Util.newId();
         */
@@ -313,7 +324,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
 
     public static identifier: string = "AjaxDependencyPlugin";
     public identifier: string = AjaxMonitor.identifier;
-    
+
     setNextPlugin(next: ITelemetryPlugin) {
         if (next) {
             this._nextPlugin = next;
@@ -331,7 +342,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         const fetchMonitorInstance: AjaxMonitor = this;
         window.fetch = function fetch(input?: Request | string , init?: RequestInit): Promise<Response> {
             let fetchData: ajaxRecord;
-            if (fetchMonitorInstance.isFetchInstrumented(input)) {
+            if (fetchMonitorInstance.isFetchInstrumented(input) && fetchMonitorInstance.isMonitoredInstance(undefined, undefined, input, init)) {
                 try {
                     fetchData = fetchMonitorInstance.createFetchRecord(input, init);
                     init = fetchMonitorInstance.includeCorrelationHeaders(fetchData, input, init);
@@ -375,7 +386,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
 
     private createFetchRecord(input?: Request | string, init?: RequestInit): ajaxRecord {
         /* todo:
-        Disabling the following block of code as CV is not yet supported in 1DS for 3rd Part. 
+        Disabling the following block of code as CV is not yet supported in 1DS for 3rd Part.
         // this format corresponds with activity logic on server-side and is required for the correct correlation
         var id = "|" + this.appInsights.context.operation.id + "." + Util.newId();
         */
@@ -388,7 +399,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         } else {
             ajaxData.requestUrl = input;
         }
-        
+
         if (init && init.method) {
             ajaxData.method = init.method;
         } else if (input && input instanceof Request) {
@@ -531,7 +542,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     responseCode: 0,
                     properties: { HttpMethod: ajaxData.method }
                 };
-                
+
                 this.trackDependencyDataInternal(dependency, { error: reason.message });
             }
         } catch (e) {
@@ -599,7 +610,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             enableCorsCorrelation: undefined
         }
     }
-    
+
     public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) {
         if (!this.initialized && !this._fetchInitialized) {
             this._core = core;
