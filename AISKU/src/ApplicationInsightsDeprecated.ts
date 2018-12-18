@@ -1,10 +1,9 @@
-import { IConfig, PageViewPerformance, SeverityLevel, Util, IPageViewPerformanceTelemetry, 
+import { IConfig, PageViewPerformance, SeverityLevel, Util, 
     IPageViewTelemetry, ITraceTelemetry, IMetricTelemetry, 
     IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry, 
     IEventTelemetry, IEnvelope, ProcessLegacy, HttpMethod } from "@microsoft/applicationinsights-common";
-import { ITelemetryContext as IPropertiesContext } from "@microsoft/applicationinsights-properties-js";
 import { Snippet, IApplicationInsights } from "./Initialization";
-import { ITelemetryItem, IDiagnosticLogger, LoggingSeverity, _InternalMessageId, IConfiguration } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, IDiagnosticLogger, IConfiguration } from "@microsoft/applicationinsights-core-js";
 
 // ToDo: fix properties and measurements once updates are done to common
 export class AppInsightsDeprecated implements IAppInsightsDeprecated {
@@ -67,7 +66,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     constructor(snippet: Snippet, appInsightsNew: IApplicationInsights) {
         this.config = AppInsightsDeprecated.getDefaultConfig(snippet.config);
         this.appInsightsNew = appInsightsNew;
-        this.context.addTelemetryInitializer.bind(this);
+        this.context = { addTelemetryInitializer: this.addTelemetryInitializers.bind(this) }
     }
 
     startTrackPage(name?: string) {
@@ -374,7 +373,7 @@ export interface IAppInsightsDeprecated {
     _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error);
 }
 
-export interface ITelemetryContext extends IPropertiesContext {
+export interface ITelemetryContext {
     
     /**
     * Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one, 
