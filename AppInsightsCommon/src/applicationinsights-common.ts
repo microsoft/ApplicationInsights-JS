@@ -4,7 +4,7 @@
 export { Util, CorrelationIdHelper, UrlHelper, DateTimeUtils } from './Util';
 export { FieldType } from './Enums';
 export { RequestHeaders } from './RequestResponseHeaders';
-export { DisabledPropertyName } from './Constants';
+export { DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod } from './Constants';
 export { Data as AIData } from './Interfaces/Contracts/Generated/Data';
 export { Base as AIBase } from './Interfaces/Contracts/Generated/Base';
 export { ISerializable } from './Interfaces/Telemetry/ISerializable';
@@ -34,4 +34,6 @@ export { DataSanitizer } from './Telemetry/Common/DataSanitizer';
 export { TelemetryItemCreator } from './TelemetryItemCreator';
 export { ICorrelationConfig } from './Interfaces/ICorrelationConfig';
 export { IAppInsights } from './Interfaces/IAppInsights';
-export { partAExtensions, UserExt } from './Interfaces/PartAExtensions';
+export { WebExtensionKeys, DeviceExtensionKeys, CtxTagKeys, UnmappedKeys,
+    UserExtensionKeys, UserTagKeys, AppExtensionKeys,
+    IngestExtKeys, OSExtKeys } from './Interfaces/PartAExtensions';
