@@ -4,7 +4,7 @@
 import {
     RequestHeaders, Util, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
     RemoteDependencyData, DateTimeUtils, DisabledPropertyName, Data, IDependencyTelemetry,
-    IConfig, ConfigurationManager
+    IConfig, ConfigurationManager, HttpMethod
 } from '@microsoft/applicationinsights-common';
 import {
     CoreUtils, LoggingSeverity, _InternalMessageId, IDiagnosticLogger,
@@ -238,7 +238,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 commandName: xhr.ajaxData.getPathName(),
                 duration: xhr.ajaxData.ajaxTotalDuration,
                 success:(+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
-                resultCode: +xhr.ajaxData.status,
+                responseCode: +xhr.ajaxData.status,
                 method: xhr.ajaxData.method
             };
 
@@ -475,11 +475,11 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 let dependency: IDependencyTelemetry = {
                     id: ajaxData.id,
                     absoluteUrl: ajaxData.getAbsoluteUrl(),
-                    commandName: ajaxData.getPathName(),
+                    type: ajaxData.getPathName(),
                     duration: ajaxData.ajaxTotalDuration,
                     success: response.status >= 200 && response.status < 400,
-                    resultCode: response.status,
-                    method: ajaxData.method
+                    responseCode: response.status,
+                    properties: { HttpMethod: ajaxData.method }
                 };
 
                 // enrich dependency target with correlation context from the server
@@ -525,11 +525,11 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 let dependency: IDependencyTelemetry = {
                     id: ajaxData.id,
                     absoluteUrl: ajaxData.getAbsoluteUrl(),
-                    commandName: ajaxData.getPathName(),
+                    type: ajaxData.getPathName(),
                     duration: ajaxData.ajaxTotalDuration,
                     success: false,
-                    resultCode: 0,
-                    method: ajaxData.method
+                    responseCode: 0,
+                    properties: { HttpMethod: ajaxData.method }
                 };
                 
                 this.trackDependencyDataInternal(dependency, { error: reason.message });

@@ -22,11 +22,10 @@ try {
             if (window[aiName].initialize) { // initialize if required
                 // this is the typical case for browser+snippet
                 var snippet: Snippet = window[aiName] || <any>{};
-                let oldApiSupport = snippet && snippet.oldApiSupport === true;
                 // overwrite snippet with full appInsights
 
                 let appInsightsContainer = new ApplicationInsightsContainer();
-                var initialization = appInsightsContainer.getAppInsights(snippet);
+                var initialization = appInsightsContainer.getAppInsights(snippet, snippet.version);
                 
                 // apply full appInsights to the global instance that was initialized in the snippet
                 for (var field in initialization) {

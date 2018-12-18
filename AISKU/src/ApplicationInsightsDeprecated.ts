@@ -1,20 +1,73 @@
 import { IConfig, PageViewPerformance, SeverityLevel, Util, IPageViewPerformanceTelemetry, 
     IPageViewTelemetry, ITraceTelemetry, IMetricTelemetry, 
-    IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry, IEventTelemetry } from "@microsoft/applicationinsights-common";
-import { ITelemetryContext } from "@microsoft/applicationinsights-properties-js/types/Interfaces/ITelemetryContext";
+    IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry, 
+    IEventTelemetry, IEnvelope, ProcessLegacy, HttpMethod } from "@microsoft/applicationinsights-common";
+import { ITelemetryContext as IPropertiesContext } from "@microsoft/applicationinsights-properties-js";
 import { Snippet, IApplicationInsights } from "./Initialization";
+import { ITelemetryItem, IDiagnosticLogger, LoggingSeverity, _InternalMessageId, IConfiguration } from "@microsoft/applicationinsights-core-js";
 
 // ToDo: fix properties and measurements once updates are done to common
 export class AppInsightsDeprecated implements IAppInsightsDeprecated {
-    public config: IConfig;
+    public config: IConfig & IConfiguration;
     public snippet: Snippet;
     public context: ITelemetryContext;
+    public logger: IDiagnosticLogger;
     queue: (() => void)[];
     private appInsightsNew: IApplicationInsights;
+    private _hasLegacyInitializers = false;
+    private _queue = [];
+
+    /**
+    * The array of telemetry initializers to call before sending each telemetry item.
+    */
+
+    public addTelemetryInitializers(callBack: (env: IEnvelope) => boolean | void) {
+
+        // Add initializer to current processing only if there is any old telemetry initializer
+        if (!this._hasLegacyInitializers) {
+            
+            this.appInsightsNew.addTelemetryInitializer(item => {
+                this._processLegacyInitializers(item); // setup call back for each legacy processor
+            })
+            
+            this._hasLegacyInitializers = true;
+        }
+
+        this._queue.push(callBack);
+    }
+
+    private _processLegacyInitializers(item: ITelemetryItem): ITelemetryItem {
+        
+        // instead of mapping new to legacy and then back again and repeating in channel, attach callback for channel to call
+        item.tags[ProcessLegacy] = this._queue;
+
+        return item;
+        // // construct legacy envelope
+        // let envelope = Sender.constructEnvelope(null, this.config.instrumentationKey, this.logger);
+        // let doNotSendItem = false;
+
+        // for (let i = 0; i < this._queue.length; i++) {
+        //     // run all processors
+        //     let callBack = this._queue[i];
+        //     try {
+        //         doNotSendItem = (callBack(envelope) !== true);
+        //     } catch (e) {
+        //         this.logger.throwInternal(
+        //             LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, continue processing next: " + Util.getExceptionName(e),
+        //             { exception: Util.dump(e) }, true);
+        //     }
+        // }
+
+        // // construct ItelemetryItem
+        // item = TelemetryItemCreator.convertFrom(envelope, this.logger);
+        // return !doNotSendItem ? null : item;
+        
+    }
 
     constructor(snippet: Snippet, appInsightsNew: IApplicationInsights) {
         this.config = AppInsightsDeprecated.getDefaultConfig(snippet.config);
         this.appInsightsNew = appInsightsNew;
+        this.context.addTelemetryInitializer.bind(this);
     }
 
     startTrackPage(name?: string) {
@@ -25,10 +78,12 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
         this.appInsightsNew.stopTrackPage(name, url, properties); // update
     }
 
-    trackPageView(name?: string, url?: string, properties?: Object, measurements?: Object, duration?: number) {
+    trackPageView(name?: string, url?: string, properties?: {[key: string]: string }, measurements?: {[key: string]: number }, duration?: number) {
         let telemetry: IPageViewTelemetry = {
             name: name,
-            uri: url
+            uri: url,
+            properties: properties,
+            measurements: measurements
         };
 
         // fix for props, measurements, duration
@@ -38,16 +93,17 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     trackEvent(name: string, properties?: Object, measurements?: Object) {
         this.appInsightsNew.trackEvent(<IEventTelemetry>{ name: name});
     }
+
     trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
         this.appInsightsNew.trackDependencyData(
             <IDependencyTelemetry>{ 
                 id: id, 
                 absoluteUrl: absoluteUrl, 
-                commandName: pathName, 
+                type: pathName, 
                 duration: totalTime,
-                method: method, 
+                properties: { HttpMethod: method },
                 success: success, 
-                resultCode: resultCode
+                responseCode: resultCode
             });
     }
 
@@ -94,6 +150,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
         throw new Error("downloadAndSetup not implemented in web SKU");
     }
 
+
     // note: these are split into methods to enable unit tests
     public loadAppInsights() {
 
@@ -111,7 +168,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
         // implement legacy pageView interface if it is present in the snippet
         var legacyPageView = "logPageView";
         if (typeof this.snippet[legacyPageView] === "function") {
-            this[legacyPageView] = (pagePath?: string, properties?: Object, measurements?: Object) => {
+            this[legacyPageView] = (pagePath?: string, properties?: {[key: string]: string }, measurements?: {[key: string]: number }) => {
                 this.trackPageView(null, pagePath, properties, measurements);
             }
         }
@@ -315,4 +372,14 @@ export interface IAppInsightsDeprecated {
      * @param {Error}  error - The Error object
      */
     _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error);
+}
+
+export interface ITelemetryContext extends IPropertiesContext {
+    
+    /**
+    * Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one, 
+    * in the order they were added, before the telemetry item is pushed for sending. 
+    * If one of the telemetry initializers returns false or throws an error then the telemetry item will not be sent.
+    */
+   addTelemetryInitializer(telemetryInitializer: (IEnvelope) => boolean | void);
 }

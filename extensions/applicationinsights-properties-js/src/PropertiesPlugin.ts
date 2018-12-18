@@ -7,7 +7,10 @@ import {
     ITelemetryPlugin, IConfiguration, CoreUtils,
     IAppInsightsCore, IPlugin, ITelemetryItem
 } from '@microsoft/applicationinsights-core-js';
-import { ContextTagKeys, Util, PageView, ConfigurationManager, IConfig, partAExtensions } from '@microsoft/applicationinsights-common';
+import { PageView, ConfigurationManager,
+    WebExtensionKeys, DeviceExtensionKeys, 
+    IConfig, UserExtensionKeys, UserTagKeys, AppExtensionKeys,
+    IngestExtKeys, OSExtKeys, CtxTagKeys  } from '@microsoft/applicationinsights-common';
 import { Session, _SessionManager } from './Context/Session';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
@@ -112,150 +115,140 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
     }
 
     private _processTelemetryInternal(event: ITelemetryItem) {
-        let tagsItem: { [key: string]: any } = {};
 
         if (this.session) {
             // If customer set id, apply his context; otherwise apply context generated from cookies 
             if (typeof this.session.id === "string") {
-                PropertiesPlugin._applySessionContext(tagsItem, this.session);
+                this._applySessionContext(event, this.session);
             } else {
-                PropertiesPlugin._applySessionContext(tagsItem, this._sessionManager.automaticSession);
+                this._applySessionContext(event, this._sessionManager.automaticSession);
             }
         }
 
-        if (this._extensionConfig.enableOldTags()) {
-            // set part A  fields
-            PropertiesPlugin._applyApplicationContext(tagsItem, this.application);
-            PropertiesPlugin._applyDeviceContext(tagsItem, this.device);
-            PropertiesPlugin._applyInternalContext(tagsItem, this.internal);
-            PropertiesPlugin._applyLocationContext(tagsItem, this.location);
-            PropertiesPlugin._applySampleContext(tagsItem, this.sample);
-            PropertiesPlugin._applyOperationContext(tagsItem, this.operation);
+        //if (this._extensionConfig.enableOldTags()) 
+        // set part A  fields
+        if (!event.tags) {
+            event.tags = [];
         }
 
+        if (!event.ctx) {
+            event.ctx = {};
+        }
+
+        this._applyApplicationContext(event, this.application);
+        this._applyDeviceContext(event, this.device);
+        this._applyInternalContext(event, this.internal);
+        this._applyLocationContext(event, this.location);
+        this._applySampleContext(event, this.sample);
+        this._applyOperationContext(event, this.operation);
         this._applyUserContext(event, this.user);
-        let tgs = [];
-        Object.keys(tagsItem).forEach(item => {
-            var p = {}; p[item]=tagsItem[item];
-            tgs.push(p)
-        });
-
-        event.tags.forEach(item => {
-                tgs.push(item);
-        });
-
-        event.tags = tgs;
     }
 
-    private static _applySessionContext(tags: { [key: string]: any }, sessionContext: Session) {
+    private _applySessionContext(event: ITelemetryItem, sessionContext: Session) {
         if (sessionContext) {
-            var tagKeys: ContextTagKeys = new ContextTagKeys();
             if (typeof sessionContext.id === "string") {
-                tags[tagKeys.sessionId] = sessionContext.id;
+                event.ctx[AppExtensionKeys.sessionId] = sessionContext.id;
             }
             if (typeof sessionContext.isFirst !== "undefined") {
-                tags[tagKeys.sessionIsFirst] = sessionContext.isFirst;
+                event.tags[CtxTagKeys.sessionIsFirst] = sessionContext.isFirst;
             }
         }
     }
 
-    private static _applyApplicationContext(tagsItem: { [key: string]: any }, appContext: Application) {
+    private _applyApplicationContext(event: ITelemetryItem, appContext: Application) {
         if (appContext) {
-            var tagKeys: ContextTagKeys = new ContextTagKeys();
 
             if (typeof appContext.ver === "string") {
-                tagsItem[tagKeys.applicationVersion] = appContext.ver;
+                event.tags[CtxTagKeys.applicationVersion] = appContext.ver;
             }
             if (typeof appContext.build === "string") {
-                tagsItem[tagKeys.applicationBuild] = appContext.build;
+                event.tags[CtxTagKeys.applicationBuild] = appContext.build;
             }
         }
     }
 
-    private static _applyDeviceContext(tagsItem: { [key: string]: any }, deviceContext: Device) {
-        var tagKeys: ContextTagKeys = new ContextTagKeys();
+    private _applyDeviceContext(event: ITelemetryItem, deviceContext: Device) {
 
         if (deviceContext) {
             if (typeof deviceContext.id === "string") {
-                tagsItem[tagKeys.deviceId] = deviceContext.id;
+                event.ctx[DeviceExtensionKeys.localId] = deviceContext.id;
             }
+
             if (typeof deviceContext.ip === "string") {
-                tagsItem[tagKeys.deviceIp] = deviceContext.ip;
+                event.ctx[IngestExtKeys.clientIp] = deviceContext.ip;
             }
             if (typeof deviceContext.language === "string") {
-                tagsItem[tagKeys.deviceLanguage] = deviceContext.language;
+                event.ctx[WebExtensionKeys.browserLang] = deviceContext.language;
             }
             if (typeof deviceContext.locale === "string") {
-                tagsItem[tagKeys.deviceLocale] = deviceContext.locale;
+                event.tags[CtxTagKeys.deviceLocale] = deviceContext.locale;
             }
             if (typeof deviceContext.model === "string") {
-                tagsItem[tagKeys.deviceModel] = deviceContext.model;
+                event.ctx[DeviceExtensionKeys.model] = deviceContext.model;
             }
             if (typeof deviceContext.network !== "undefined") {
-                tagsItem[tagKeys.deviceNetwork] = deviceContext.network;
+                event.tags[CtxTagKeys.deviceNetwork] = deviceContext.network; // not mapped in CS 4.0
             }
             if (typeof deviceContext.oemName === "string") {
-                tagsItem[tagKeys.deviceOEMName] = deviceContext.oemName;
+                event.tags[CtxTagKeys.deviceOEMName] = deviceContext.oemName; // not mapped in CS 4.0
             }
             if (typeof deviceContext.os === "string") {
-                tagsItem[tagKeys.deviceOS] = deviceContext.os;
+                event.ctx[OSExtKeys.deviceOS] = deviceContext.os;
             }
             if (typeof deviceContext.osversion === "string") {
-                tagsItem[tagKeys.deviceOSVersion] = deviceContext.osversion;
+                event.tags[CtxTagKeys.deviceOSVersion] = deviceContext.osversion; // not mapped in CS 4.0
             }
             if (typeof deviceContext.resolution === "string") {
-                tagsItem[tagKeys.deviceScreenResolution] = deviceContext.resolution;
+                event.ctx[WebExtensionKeys.screenRes] = deviceContext.resolution;
             }
             if (typeof deviceContext.type === "string") {
-                tagsItem[tagKeys.deviceType] = deviceContext.type;
+                event.ctx[DeviceExtensionKeys.deviceType] = deviceContext.type;
             }
         }
     }
 
-    private static _applyInternalContext(tagsItem: { [key: string]: any }, internalContext: Internal) {
+    private _applyInternalContext(event: ITelemetryItem, internalContext: Internal) {
         if (internalContext) {
-            var tagKeys: ContextTagKeys = new ContextTagKeys();
             if (typeof internalContext.agentVersion === "string") {
-                tagsItem[tagKeys.internalAgentVersion] = internalContext.agentVersion;
+                event.tags[CtxTagKeys.internalAgentVersion] = internalContext.agentVersion; // not mapped in CS 4.0
             }
             if (typeof internalContext.sdkVersion === "string") {
-                tagsItem[tagKeys.internalSdkVersion] = internalContext.sdkVersion;
+                event.tags[CtxTagKeys.internalSdkVersion] = internalContext.sdkVersion; // not mapped in CS 4.0
             }
         }
     }
 
-    private static _applyLocationContext(tagsItem: { [key: string]: any }, locationContext: Location) {
+    private _applyLocationContext(event: ITelemetryItem, locationContext: Location) {
         if (locationContext) {
-            var tagKeys: ContextTagKeys = new ContextTagKeys();
+
             if (typeof locationContext.ip === "string") {
-                tagsItem[tagKeys.locationIp] = locationContext.ip;
+                event.tags[CtxTagKeys.locationIp] = locationContext.ip; // not mapped in CS 4.0
             }
         }
     }
 
-    private static _applySampleContext(tagsItem: { [key: string]: any }, sampleContext: Sample) {
+    private _applySampleContext(event: ITelemetryItem, sampleContext: Sample) {
         if (sampleContext) {
-            tagsItem.sampleRate = sampleContext.sampleRate;
+            event.tags["sampleRate"] = sampleContext.sampleRate; // tags.sampleRate -> mapped in CS 4.0
         }
     }
 
-    private static _applyOperationContext(tagsItem: { [key: string]: any }, operationContext: Operation) {
+    private _applyOperationContext(event: ITelemetryItem, operationContext: Operation) {
         if (operationContext) {
-            var tagKeys: ContextTagKeys = new ContextTagKeys();
             if (typeof operationContext.id === "string") {
-                tagsItem[tagKeys.operationId] = operationContext.id;
+                event.tags[CtxTagKeys.operationId] = operationContext.id; // not mapped in CS 4.0
             }
             if (typeof operationContext.name === "string") {
-                tagsItem[tagKeys.operationName] = operationContext.name;
+                event.tags[CtxTagKeys.operationName] = operationContext.name; // not mapped in CS 4.0
             }
             if (typeof operationContext.parentId === "string") {
-                tagsItem[tagKeys.operationParentId] = operationContext.parentId;
+                event.tags[CtxTagKeys.operationParentId] = operationContext.parentId; // not mapped in CS 4.0
             }
             if (typeof operationContext.rootId === "string") {
-                tagsItem[tagKeys.operationRootId] = operationContext.rootId;
+                event.tags[CtxTagKeys.operationRootId] = operationContext.rootId; // not mapped in CS 4.0
             }
             if (typeof operationContext.syntheticSource === "string") {
-                tagsItem[tagKeys.operationSyntheticSource] = operationContext.syntheticSource;
+                event.tags[CtxTagKeys.operationSyntheticSource] = operationContext.syntheticSource; // not mapped in CS 4.0
             }
         }
     }
@@ -266,42 +259,33 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
                 event.tags = [];
             }
             
-            var tagKeys: ContextTagKeys = new ContextTagKeys();
-        
-            if (this._extensionConfig.enableOldTags()) {
-                if (typeof userContext.agent === "string") {
-                    let val = userContext.agent;
-                    let ky = tagKeys.userAgent;
-                    event.tags.push({ ky: val });
-                }
+            if (typeof userContext.agent === "string") {
+                let val = userContext.agent;
+                let ky = CtxTagKeys.userAgent;
+                event.tags.push({ ky: val }); // ai.user.agent stays under tags
+            }
 
-                if (typeof userContext.storeRegion === "string") {
-                    let ky = tagKeys.userStoreRegion;
-                    let val = userContext.storeRegion;
-                    event.tags.push({ky: val});
-                }
+            if (typeof userContext.storeRegion === "string") {
+                let ky = CtxTagKeys.userStoreRegion; // "ai.user.storeRegion" stays under tags
+                let val = userContext.storeRegion;
+                event.tags.push({ky: val});
             }
 
             // stays in tags under User extension
             if (typeof userContext.accountId === "string") {
                 let item = {};
-                item[partAExtensions.accountIdTag] = userContext.accountId;
+                item[UserTagKeys.accountId] = userContext.accountId;
                 event.tags.push(item);
             }
             
-
-            let ctxExt = <any>{};
             // CS 4.0            
             if (typeof userContext.id === "string") {
-                ctxExt.localId = userContext.id;
+                event.ctx[UserExtensionKeys.id] = userContext.id;
             }
             
             if (typeof userContext.authenticatedId === "string") {
-                ctxExt.authId = userContext.authenticatedId;
-            }
-            
-            event.ctx[partAExtensions.UserExtensionName] = ctxExt; // part A extension
-            // CS 4.0
+                event.ctx[UserExtensionKeys.authId] = userContext.authenticatedId;
+            }            
         }
     }
 }

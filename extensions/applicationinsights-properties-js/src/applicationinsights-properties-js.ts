@@ -3,5 +3,6 @@
 
 import PropertiesPlugin from "./PropertiesPlugin";
 import { IPropertiesPlugin } from "./Interfaces/IPropertiesPlugin";
+import { ITelemetryContext } from "./Interfaces/ITelemetryContext";
 
-export { PropertiesPlugin, IPropertiesPlugin };
+export { PropertiesPlugin, IPropertiesPlugin, ITelemetryContext };

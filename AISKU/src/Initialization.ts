@@ -20,7 +20,7 @@ import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsof
 export interface Snippet {
     queue: Array<() => void>;
     config: IConfiguration & IConfig;
-    oldApiSupport?: boolean;
+    version: number;
 }
 
 export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
@@ -52,7 +52,7 @@ export class Initialization implements IApplicationInsights {
         // ensure instrumentationKey is specified
         if (config && !config.instrumentationKey) {
             config = <any>snippet;
-            ApplicationInsights.Version = "2.0.0";
+            ApplicationInsights.Version = "2.0.1-beta";
         }
 
         this.appInsights = new ApplicationInsights();
