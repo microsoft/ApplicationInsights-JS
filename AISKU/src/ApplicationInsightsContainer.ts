@@ -3,7 +3,7 @@ import { Initialization as ApplicationInsights, Snippet, IApplicationInsights } 
 
 export class ApplicationInsightsContainer {
 
-    getAppInsights(snippet: Snippet, version: number = 2.0) : IApplicationInsights | IAppInsightsDeprecated {
+    getAppInsights(snippet: Snippet, version: number) : IApplicationInsights | IAppInsightsDeprecated {
         let initialization = new ApplicationInsights(snippet);
         initialization.loadAppInsights();
         
