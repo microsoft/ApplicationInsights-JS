@@ -19,6 +19,8 @@ export interface IAppInsights {
     trackMetric(metric: IMetricTelemetry, customProperties?: {[key: string]: any}): void;
     startTrackPage(name?: string);
     stopTrackPage(name?: string, url?: string, customProperties?: Object);
+    startTrackEvent(name: string);
+    stopTrackEvent(name: string, properties?: Object, measurements?: Object);
     addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void);
     trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: { [key: string]: any }): void;
 }
