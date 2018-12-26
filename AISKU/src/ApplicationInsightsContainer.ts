@@ -1,17 +1,21 @@
 import { IAppInsightsDeprecated, AppInsightsDeprecated } from "./ApplicationInsightsDeprecated";
 import { Initialization as ApplicationInsights, Snippet, IApplicationInsights } from "./Initialization";
-import { CoreUtils } from "@microsoft/applicationinsights-core-js";
 
 export class ApplicationInsightsContainer {
 
-    getAppInsights(snippet: Snippet) : IApplicationInsights | IAppInsightsDeprecated {
+    public static getAppInsights(snippet: Snippet, version: number) : IApplicationInsights | IAppInsightsDeprecated {
         let initialization = new ApplicationInsights(snippet);
         initialization.loadAppInsights();
         
-        if (snippet && CoreUtils.isNullOrUndefined(snippet.oldApiSupport)) {
-            return initialization;
+        // Two target scenarios:
+        // 1. Customer runs v1 snippet + runtime. If customer updates just cdn location to new SDK, it will run in compat mode so old apis work
+        // 2. Customer updates to new snippet (that uses cdn location to new SDK. This is same as a new customer onboarding 
+        // and all api signatures are expected to map to new SDK
+
+        if (version === 2.0) {
+            return initialization; // default behavior with new snippet
         } else {
-            return new AppInsightsDeprecated(snippet, initialization);
+            return new AppInsightsDeprecated(snippet, initialization); // target scenario old snippet + updated endpoint
         }
     }
 }

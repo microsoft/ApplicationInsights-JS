@@ -1,6 +1,6 @@
 import { IAppInsightsDeprecated } from "../src/ApplicationInsightsDeprecated";
 import { ApplicationInsightsContainer } from "../src/ApplicationInsightsContainer";
-import { Snippet, IApplicationInsights } from "../src/Initialization";
+import { Snippet } from "../src/Initialization";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 
 export class ApplicationInsightsDeprecatedTests extends TestClass {
@@ -30,11 +30,10 @@ export class ApplicationInsightsDeprecatedTests extends TestClass {
                     disableFetchTracking: false
                 },
                 queue: [],
-                oldApiSupport: true // parameter indicates provide existing api support, default is false
+                version: 1.0
             }
 
-            let container = new ApplicationInsightsContainer();
-            this._aiDeprecated = <IAppInsightsDeprecated>(container.getAppInsights(this._snippet)); 
+            this._aiDeprecated = <IAppInsightsDeprecated>(ApplicationInsightsContainer.getAppInsights(this._snippet, this._snippet.version)); 
             // Setup Sinon stuff
             let appInsights = (<any>this._aiDeprecated).appInsightsNew;
             const sender: Sender = appInsights.core['_channelController'].channelQueue[0][0];

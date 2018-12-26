@@ -54,7 +54,8 @@ export class ApplicationInsightsTests extends TestClass {
                         }
                     }
                 },
-                queue: []
+                queue: [],
+                version: 2.0
             });
             this._ai = init.loadAppInsights();
 
@@ -270,8 +271,8 @@ export class ApplicationInsightsTests extends TestClass {
                 () => {
                     const data: IDependencyTelemetry = {
                         absoluteUrl: 'http://abc',
-                        resultCode: 200,
-                        method: 'GET',
+                        responseCode: 200,
+                        type: 'GET',
                         id: 'abc'
                     }
                     this._ai.trackDependencyData(data);
