@@ -234,7 +234,7 @@ export class ContextTagKeys {
         this.operationRootId = "ai.operation.rootId";
         this.operationSyntheticSource = "ai.operation.syntheticSource";
         this.operationCorrelationVector = "ai.operation.correlationVector";
-                
+
         this.sessionId = "ai.session.id";
         this.sessionIsFirst = "ai.session.isFirst";
         this.sessionIsNew = "ai.session.isNew";

@@ -2498,12 +2498,12 @@ declare module Microsoft.ApplicationInsights {
         queue: Array<() => void>;
         /**
         * Starts timing how long the user views a page or other item. Call this when the page opens.
-        * This method doesn't send any telemetry. Call {@link stopTrackTelemetry} to log the page when it closes.
+        * This method doesn't send any telemetry. Call `stopTrackPage` to log the page when it closes.
         * @param   name  A string that idenfities this item, unique within this HTML document. Defaults to the document title.
         */
         startTrackPage(name?: string): any;
         /**
-        * Logs how long a page or other item was visible, after {@link startTrackPage}. Call this when the page closes.
+        * Logs how long a page or other item was visible, after `startTrackPage`. Call this when the page closes.
         * @param   name  The string you used as the name in startTrackPage. Defaults to the document title.
         * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
         * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
@@ -2516,7 +2516,7 @@ declare module Microsoft.ApplicationInsights {
         }): any;
         /**
          * Logs that a page or other item was viewed.
-         * @param   name  The string you used as the name in startTrackPage. Defaults to the document title.
+         * @param   name  The string you used as the name in `startTrackPage`. Defaults to the document title.
          * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
          * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
@@ -2528,13 +2528,13 @@ declare module Microsoft.ApplicationInsights {
             [name: string]: number;
         }, duration?: number): any;
         /**
-         * Start timing an extended event. Call {@link stopTrackEvent} to log the event when it ends.
+         * Start timing an extended event. Call `stopTrackEvent` to log the event when it ends.
          * @param   name    A string that identifies this event uniquely within the document.
          */
         startTrackEvent(name: string): any;
         /**
-         * Log an extended event that you started timing with {@link startTrackEvent}.
-         * @param   name    The string you used to identify this event in startTrackEvent.
+         * Log an extended event that you started timing with `startTrackEvent`.
+         * @param   name    The string you used to identify this event in `startTrackEvent`.
          * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
          */
@@ -2606,7 +2606,7 @@ declare module Microsoft.ApplicationInsights {
          */
         flush(async?: boolean): any;
         /**
-        * Sets the autheticated user id and the account id in this session.
+        * Sets the authenticated user id and the account id in this session.
         * User auth id and account id should be of type string. They should not contain commas, semi-colons, equal signs, spaces, or vertical-bars.
         *
         * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
@@ -2658,13 +2658,15 @@ declare module Microsoft.ApplicationInsights {
         sendPageViewInternal(name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object): void;
         sendPageViewPerformanceInternal(pageViewPerformance: ApplicationInsights.Telemetry.PageViewPerformance): void;
         /**
-         * Starts timing how long the user views a page or other item. Call this when the page opens.
-         * This method doesn't send any telemetry. Call {@link stopTrackTelemetry} to log the page when it closes.
-         * @param   name  A string that idenfities this item, unique within this HTML document. Defaults to the document title.
+         * Starts the timer for tracking a page load time. Use this instead of `trackPageView` if you want to control when the page view timer starts and stops,
+         * but don't want to calculate the duration yourself. This method doesn't send any telemetry. Call `stopTrackPage` to log the end of the page view
+         * and send the event.
+         * @param name A string that idenfities this item, unique within this HTML document. Defaults to the document title.
          */
         startTrackPage(name?: string): void;
         /**
-         * Logs how long a page or other item was visible, after {@link startTrackPage}. Call this when the page closes.
+         * Stops the timer that was started by calling `startTrackPage` and sends the pageview load time telemetry with the specified properties and measurements.
+         * The duration of the page view will be the time between calling `startTrackPage` and `stopTrackPage`.
          * @param   name  The string you used as the name in startTrackPage. Defaults to the document title.
          * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
          * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
@@ -2681,13 +2683,13 @@ declare module Microsoft.ApplicationInsights {
          */
         trackPageView(name?: string, url?: string, properties?: Object, measurements?: Object, duration?: number): void;
         /**
-         * Start timing an extended event. Call {@link stopTrackEvent} to log the event when it ends.
+         * Start timing an extended event. Call `stopTrackEvent` to log the event when it ends.
          * @param   name    A string that identifies this event uniquely within the document.
          */
         startTrackEvent(name: string): void;
         /**
-         * Log an extended event that you started timing with {@link startTrackEvent}.
-         * @param   name    The string you used to identify this event in startTrackEvent.
+         * Log an extended event that you started timing with `startTrackEvent`.
+         * @param   name    The string you used to identify this event in `startTrackEvent`.
          * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
          * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
          */

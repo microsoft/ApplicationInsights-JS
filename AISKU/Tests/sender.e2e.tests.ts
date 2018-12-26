@@ -37,7 +37,8 @@ export class SenderE2ETests extends TestClass {
                         }
                     }
                 },
-                queue: []
+                queue: [],
+                version: 2.0
             });
             this._ai = init.loadAppInsights();
 

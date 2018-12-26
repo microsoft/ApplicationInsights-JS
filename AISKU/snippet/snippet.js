@@ -21,6 +21,7 @@ var aisdk = window[aiName] || (function (aiConfig) {
     } catch (e) { }
 
     appInsights.queue = [];
+    appInsights.version = 2.0;
 
     function createLazyMethod(name) {
         // Define a temporary method that queues-up a the real method call
@@ -44,6 +45,10 @@ var aisdk = window[aiName] || (function (aiConfig) {
     var trackPage = track + "Page";
     createLazyMethod("start" + trackPage);
     createLazyMethod("stop" + trackPage);
+
+    var trackEvent = track + method[0];
+    createLazyMethod("start" + trackEvent);
+    createLazyMethod("stop" + trackEvent);
 
     // Collect global errors
     // Note: ApplicationInsightsAnalytics is the extension string identifier for
@@ -76,7 +81,7 @@ var aisdk = window[aiName] || (function (aiConfig) {
     return appInsights;
 })({
     instrumentationKey: "INSTRUMENTATION_KEY"
-});
+   });
 
 // global instance must be set in this order to mitigate issues in ie8 and lower
 window[aiName] = aisdk;

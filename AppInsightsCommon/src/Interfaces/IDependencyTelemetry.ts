@@ -6,12 +6,16 @@
  */
 
 export interface IDependencyTelemetry {
+    id: string;
     absoluteUrl: string;
-    commandName?: string;
+    name?: string;
     duration?: number;
     success?: boolean;
-    resultCode: number;
-    method: string;
-    id: string;
+    responseCode: number;
     correlationContext?: string;
+    type?: string;
+    data?: string;
+    target?: string;
+    properties?: {[key: string]: string};
+    measurements?: {[key: string]: string};
 }
