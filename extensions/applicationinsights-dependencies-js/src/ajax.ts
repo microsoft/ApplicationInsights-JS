@@ -47,17 +47,20 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
 
         let disabledProperty = false;
         let ajaxValidation = true;
+        let initialized = false;
         if (typeof request !== 'undefined') { // fetch
+            initialized = this._fetchInitialized;
             // Look for DisabledPropertyName in either Request or RequestInit
             disabledProperty = (typeof request === 'object' ? request[DisabledPropertyName] === true : false) ||
                 (init ? init[DisabledPropertyName] === true : false);
         } else if (typeof xhr !== 'undefined') {
+            initialized = this.initialized;
             disabledProperty = xhr[DisabledPropertyName] === true;
             ajaxValidation = excludeAjaxDataValidation === true || !CoreUtils.isNullOrUndefined(xhr.ajaxData);
         }
 
         // checking to see that all interested functions on xhr were instrumented
-        return this.initialized
+        return initialized
 
             // checking on ajaxData to see that it was not removed in user code
             && ajaxValidation
@@ -428,6 +431,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
 
                 return init;
             }
+            return init;
         } else if (xhr) { // XHR
             if (this.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(this._config, xhr.ajaxData.getAbsoluteUrl(),
                 this.currentWindowHost)) {
