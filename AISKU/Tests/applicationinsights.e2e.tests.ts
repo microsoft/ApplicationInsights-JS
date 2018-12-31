@@ -53,9 +53,7 @@ export class ApplicationInsightsTests extends TestClass {
                             disableExceptionTracking: false
                         }
                     }
-                },
-                queue: [],
-                version: 2.0
+                }
             });
             this._ai = init.loadAppInsights();
 
