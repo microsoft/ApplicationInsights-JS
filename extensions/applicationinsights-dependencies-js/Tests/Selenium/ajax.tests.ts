@@ -85,6 +85,11 @@ export class AjaxTests extends TestClass {
         this.testCase({
             name: "Fetch: fetch with disabled flag isn't tracked",
             test: () => {
+                if (typeof fetch === 'undefined') {
+                    Assert.ok(true);
+                    return;
+                }
+
                 let ajaxMonitor = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
@@ -103,6 +108,11 @@ export class AjaxTests extends TestClass {
         this.testCase({
             name: "Fetch: fetch gets instrumented",
             test: () => {
+                if (typeof fetch === 'undefined') {
+                    Assert.ok(true);
+                    return;
+                }
+
                 let ajaxMonitor = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
@@ -116,6 +126,45 @@ export class AjaxTests extends TestClass {
 
                 // Assert
                 Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
+            }
+        });
+
+        this.testCase({
+            name: "Fetch: fetch keeps custom headers",
+            test: () => {
+                if (typeof fetch === 'undefined') {
+                    Assert.ok(true);
+                    return;
+                }
+                let ajaxMonitor = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "",
+                    disableFetchTracking: false,
+                    disableAjaxTracking: true
+                };
+                appInsightsCore.initialize(coreConfig, [ajaxMonitor, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(window, "fetch");
+
+                // Setup                
+                let headers = new Headers();
+                headers.append('My-Header', 'Header field');
+                let init = {
+                    method: 'get',
+                    headers: headers
+                };
+                const url = 'https://httpbin.org/status/200';
+
+                let headerSpy = this.sandbox.spy(ajaxMonitor, "includeCorrelationHeaders");
+
+                // Act
+                Assert.ok(fetchSpy.notCalled);
+                fetch(url, init);
+
+                // Assert
+                Assert.ok(fetchSpy.calledOnce);
+                Assert.deepEqual(headerSpy.returnValue, init);
+
             }
         });
 

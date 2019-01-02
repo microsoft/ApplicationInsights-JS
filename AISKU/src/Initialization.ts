@@ -18,9 +18,9 @@ import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsof
  * @interface Snippet
  */
 export interface Snippet {
-    queue: Array<() => void>;
     config: IConfiguration & IConfig;
-    version: number;
+    queue?: Array<() => void>;
+    version?: number;
 }
 
 export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
@@ -47,6 +47,7 @@ export class Initialization implements IApplicationInsights {
     constructor(snippet: Snippet) {
         // initialize the queue and config in case they are undefined
         snippet.queue = snippet.queue || [];
+        snippet.version = snippet.version || 2.0; // Default to new version
         var config: IConfiguration & IConfig = snippet.config || <any>{};
 
         // ensure instrumentationKey is specified
