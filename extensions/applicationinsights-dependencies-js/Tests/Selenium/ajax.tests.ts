@@ -123,7 +123,6 @@ export class AjaxTests extends TestClass {
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                 fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false});
 
-
                 // Assert
                 Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
             }
