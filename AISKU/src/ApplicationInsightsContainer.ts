@@ -3,9 +3,9 @@ import { Initialization as ApplicationInsights, Snippet, IApplicationInsights } 
 
 export class ApplicationInsightsContainer {
 
-    public static getAppInsights(snippet: Snippet, version: number = 2.0, applyAppInsights?: () => void) : IApplicationInsights | IAppInsightsDeprecated {
+    public static getAppInsights(snippet: Snippet, version: number = 2.0) : IApplicationInsights | IAppInsightsDeprecated {
         const initialization = new ApplicationInsights(snippet);
-        if (applyAppInsights) { applyAppInsights(); }
+        initialization.updateSnippetDefinitions(snippet);
         initialization.loadAppInsights();
 
         // Two target scenarios:

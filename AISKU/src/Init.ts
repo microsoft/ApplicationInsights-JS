@@ -24,17 +24,7 @@ try {
             // overwrite snippet with full appInsights
             // for 2.0 initialize only if required
             if ((snippet.version === 2.0 && window[aiName].initialize) || snippet.version === undefined ) {
-                let initialization;
-
-                const applyAppInsights = function() {
-                    // apply full appInsights to the global instance
-                    // Note: This must be called before loadAppInsights is called
-                    for (var field in initialization) {
-                        snippet[field] = initialization[field];
-                    }
-                }
-
-                initialization = ApplicationInsightsContainer.getAppInsights(snippet, snippet.version, applyAppInsights);
+                ApplicationInsightsContainer.getAppInsights(snippet, snippet.version);
             }
         }
     }
