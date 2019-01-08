@@ -23,7 +23,7 @@
         "rollup-plugin-uglify": "^6.0.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "^1.0.0-beta.4",
+        "@microsoft/applicationinsights-core-js": "^1.0.0-beta.5",
         "@microsoft/applicationinsights-common": "^1.0.0-beta.14"
     },
     "license": "MIT"

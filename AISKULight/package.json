@@ -24,6 +24,6 @@
     "dependencies": {
         "@microsoft/applicationinsights-common": "^1.0.0-beta.14",
         "@microsoft/applicationinsights-channel-js": "^1.0.0-beta.12",
-        "@microsoft/applicationinsights-core-js": "^1.0.0-beta.4"
+        "@microsoft/applicationinsights-core-js": "^1.0.0-beta.5"
     }
 }

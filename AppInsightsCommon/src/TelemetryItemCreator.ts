@@ -40,7 +40,7 @@ export class TelemetryItemCreator {
         let telemetryItem: ITelemetryItem = {
             name: envelopeName,
             time: new Date().toISOString(),
-            ikey: "", // this will be set in TelemetryContext
+            iKey: "", // this will be set in TelemetryContext
             ctx: systemProperties ? systemProperties : {}, // part A
             tags: [],
             data: {

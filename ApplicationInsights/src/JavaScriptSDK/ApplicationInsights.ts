@@ -584,7 +584,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
     // Mutate telemetryItem inplace to add boilerplate iKey & name info
     private _setTelemetryNameAndIKey(telemetryItem: ITelemetryItem): void {
-        telemetryItem.ikey = this._globalconfig.instrumentationKey;
+        telemetryItem.iKey = this._globalconfig.instrumentationKey;
 
         var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
         telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
