@@ -4,15 +4,12 @@
  */
 
 import {
-    IConfig,
-    Util, PageViewPerformance,
-    IAppInsights,
-    PageView, IEnvelope, RemoteDependencyData, Event, IEventTelemetry,
+    IConfig, Util, PageViewPerformance, IAppInsights, PageView, RemoteDependencyData, Event, IEventTelemetry,
     TelemetryItemCreator, Data, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
-    IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry,
-    ConfigurationManager
+    IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, ConfigurationManager
 } from "@microsoft/applicationinsights-common";
+
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     ITelemetryPlugin, CoreUtils, ITelemetryItem,
