@@ -39,28 +39,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
 
         // instead of mapping new to legacy and then back again and repeating in channel, attach callback for channel to call
         item.tags[ProcessLegacy] = this._queue;
-
         return item;
-        // // construct legacy envelope
-        // let envelope = Sender.constructEnvelope(null, this.config.instrumentationKey, this.logger);
-        // let doNotSendItem = false;
-
-        // for (let i = 0; i < this._queue.length; i++) {
-        //     // run all processors
-        //     let callBack = this._queue[i];
-        //     try {
-        //         doNotSendItem = (callBack(envelope) !== true);
-        //     } catch (e) {
-        //         this.logger.throwInternal(
-        //             LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, continue processing next: " + Util.getExceptionName(e),
-        //             { exception: Util.dump(e) }, true);
-        //     }
-        // }
-
-        // // construct ItelemetryItem
-        // item = TelemetryItemCreator.convertFrom(envelope, this.logger);
-        // return !doNotSendItem ? null : item;
-
     }
 
     constructor(snippet: Snippet, appInsightsNew: IApplicationInsights) {
@@ -138,17 +117,16 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
 
 
     startTrackEvent(name: string) {
-        throw new Error("Method not implemented.");
+        this.appInsightsNew.startTrackEvent(name);
     }
 
     stopTrackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }) {
-        throw new Error("Method not implemented.");
+        this.appInsightsNew.stopTrackEvent(name, properties, measurements);
     }
 
     downloadAndSetup?(config: IConfig): void {
         throw new Error("downloadAndSetup not implemented in web SKU");
     }
-
 
     // note: these are split into methods to enable unit tests
     public loadAppInsights() {

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Initialization as ApplicationInsights, Snippet, IApplicationInsights } from "./Initialization";
+import { Initialization as ApplicationInsights, Snippet } from "./Initialization";
 import { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
 
 export { Initialization as ApplicationInsights, Snippet } from "./Initialization";
