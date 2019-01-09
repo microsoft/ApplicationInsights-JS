@@ -11,5 +11,4 @@ export interface ITelemetryConfig {
     sdkExtension: () => string;
     isBrowserLinkTrackingEnabled: () => boolean;
     appId: () => string;
-    enableOldTags?: () => boolean;
 }

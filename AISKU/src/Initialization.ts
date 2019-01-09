@@ -240,7 +240,12 @@ export class Initialization implements IApplicationInsights {
      * @returns {IApplicationInsights}
      * @memberof Initialization
      */
-    public loadAppInsights(): IApplicationInsights {
+    public loadAppInsights(legacyMode: boolean = false): IApplicationInsights {
+
+        // dont allow additional channels/other extensions for legacy mode; legacy mode is only to allow users to switch with no code changes!
+        if (legacyMode && this.config.extensions && this.config.extensions.length > 0) {
+            throw new Error("Extensions not allowed in legacy mode");
+        }
 
         this.core = new AppInsightsCore();
         let extensions = [];
@@ -336,8 +341,6 @@ export class Initialization implements IApplicationInsights {
     }
 
     private getSKUDefaults() {
-        let enableOldTags = ConfigurationManager.getConfig(this.config, "enableOldTags", propertiesPlugin, true);
-        this.config.enableOldTags = <boolean>enableOldTags;
         this.config.diagnosticLogInterval =
             this.config.diagnosticLogInterval && this.config.diagnosticLogInterval > 0 ? this.config.diagnosticLogInterval : 10000;
     }
