@@ -8,7 +8,7 @@
     "sideEffects": false,
     "scripts": {
         "clean": "rm -rfv browser types dist-esm",
-        "build": "npm run build:esm && npm run build:browser",
+        "build": "npm run build:esm && npm run build:browser && grunt snippetvnext",
         "build:esm": "grunt aisku",
         "build:browser": "rollup -c",
         "test": "grunt aiskutests"
@@ -21,11 +21,11 @@
         "typescript": "2.5.3"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-analytics-js": "^1.0.0-beta.12",
-        "@microsoft/applicationinsights-channel-js": "^1.0.0-beta.12",
-        "@microsoft/applicationinsights-common": "^1.0.0-beta.14",
-        "@microsoft/applicationinsights-core-js": "^1.0.0-beta.5",
-        "@microsoft/applicationinsights-dependencies-js": "^1.0.0-beta.12",
-        "@microsoft/applicationinsights-properties-js": "^1.0.0-beta.9"
+        "@microsoft/applicationinsights-analytics-js": "^1.0.0-beta.11",
+        "@microsoft/applicationinsights-channel-js": "^1.0.0-beta.11",
+        "@microsoft/applicationinsights-common": "file:../AppInsightsCommon",
+        "@microsoft/applicationinsights-core-js": "^1.0.0-beta.3",
+        "@microsoft/applicationinsights-dependencies-js": "^1.0.0-beta.11",
+        "@microsoft/applicationinsights-properties-js": "^1.0.0-beta.8"
     }
 }
