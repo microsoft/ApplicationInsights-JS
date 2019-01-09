@@ -424,10 +424,10 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 // not using original request headers will result in them being lost
                 init.headers = new Headers(init.headers || (input instanceof Request ? (input.headers || {}) : {}));
                 init.headers.set(RequestHeaders.requestIdHeader, ajaxData.id);
-                // let appId: string = this.appInsights.context ? this.appInsights.context.appId() : null;
-                // if (appId) {
-                //     init.headers.set(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
-                // }
+                let appId: string = this._config.appId;
+                if (appId) {
+                    init.headers.set(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
+                }
 
                 return init;
             }

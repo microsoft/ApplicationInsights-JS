@@ -1,6 +1,6 @@
-import { IConfig, PageViewPerformance, SeverityLevel, Util, 
-    IPageViewTelemetry, ITraceTelemetry, IMetricTelemetry, 
-    IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry, 
+import { IConfig, PageViewPerformance, SeverityLevel, Util,
+    IPageViewTelemetry, ITraceTelemetry, IMetricTelemetry,
+    IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry,
     IEventTelemetry, IEnvelope, ProcessLegacy, HttpMethod } from "@microsoft/applicationinsights-common";
 import { Snippet, IApplicationInsights } from "./Initialization";
 import { ITelemetryItem, IDiagnosticLogger, IConfiguration } from "@microsoft/applicationinsights-core-js";
@@ -24,11 +24,11 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
 
         // Add initializer to current processing only if there is any old telemetry initializer
         if (!this._hasLegacyInitializers) {
-            
+
             this.appInsightsNew.addTelemetryInitializer(item => {
                 this._processLegacyInitializers(item); // setup call back for each legacy processor
             })
-            
+
             this._hasLegacyInitializers = true;
         }
 
@@ -36,7 +36,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     }
 
     private _processLegacyInitializers(item: ITelemetryItem): ITelemetryItem {
-        
+
         // instead of mapping new to legacy and then back again and repeating in channel, attach callback for channel to call
         item.tags[ProcessLegacy] = this._queue;
         return item;
@@ -74,13 +74,13 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
 
     trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
         this.appInsightsNew.trackDependencyData(
-            <IDependencyTelemetry>{ 
-                id: id, 
-                absoluteUrl: absoluteUrl, 
-                type: pathName, 
+            <IDependencyTelemetry>{
+                id: id,
+                absoluteUrl: absoluteUrl,
+                type: pathName,
                 duration: totalTime,
                 properties: { HttpMethod: method },
-                success: success, 
+                success: success,
                 responseCode: resultCode
             });
     }
@@ -110,12 +110,12 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     clearAuthenticatedUserContext() {
         this.appInsightsNew.clearAuthenticatedUserContext();
     }
-    
+
     _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
         this.appInsightsNew._onerror(<IAutoExceptionTelemetry>{ message: message, url: url, lineNumber: lineNumber, columnNumber: columnNumber, error: error });
     }
-    
-    
+
+
     startTrackEvent(name: string) {
         this.appInsightsNew.startTrackEvent(name);
     }
@@ -186,11 +186,11 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
 
         config.disableAjaxTracking = Util.stringToBoolOrDefault(config.disableAjaxTracking);
         config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
-      
+
         config.isBeaconApiDisabled = Util.stringToBoolOrDefault(config.isBeaconApiDisabled, true);
         config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders);
         config.correlationHeaderExcludedDomains = config.correlationHeaderExcludedDomains || [
-            "*.blob.core.windows.net", 
+            "*.blob.core.windows.net",
             "*.blob.core.chinacloudapi.cn",
             "*.blob.core.cloudapi.de",
             "*.blob.core.usgovcloudapi.net"];
@@ -352,11 +352,11 @@ export interface IAppInsightsDeprecated {
 }
 
 export interface ITelemetryContext {
-    
+
     /**
-    * Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one, 
-    * in the order they were added, before the telemetry item is pushed for sending. 
+    * Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one,
+    * in the order they were added, before the telemetry item is pushed for sending.
     * If one of the telemetry initializers returns false or throws an error then the telemetry item will not be sent.
     */
-   addTelemetryInitializer(telemetryInitializer: (IEnvelope) => boolean | void);
+   addTelemetryInitializer(telemetryInitializer: (envelope: IEnvelope) => boolean | void);
 }

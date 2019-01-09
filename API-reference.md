@@ -157,7 +157,7 @@ Log an exception you have caught. (Exceptions caught by the browser are also log
 Parameter | Description
 ---|---
 `exception` | An Error from a catch clause.
-`handledAt` | Defaults to "unhandled".
+`handledAt` | Deprecated. This argument is ignored. Please pass `null`.
 `properties` | Map of string to string: Additional data used to [filter exceptions](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 `measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
 `severityLevel` | Supported values: [SeverityLevel.ts](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts)

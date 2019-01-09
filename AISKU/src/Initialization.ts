@@ -267,6 +267,22 @@ export class Initialization implements IApplicationInsights {
         return this;
     }
 
+    /**
+     * Overwrite the lazy loaded fields of global window snippet to contain the
+     * actual initialized API methods
+     * @param {Snippet} snippet
+     * @memberof Initialization
+     */
+    public updateSnippetDefinitions(snippet: Snippet) {
+        // apply full appInsights to the global instance
+        // Note: This must be called before loadAppInsights is called
+        for (var field in this) {
+            if (typeof field === 'string') {
+                snippet[field as string] = this[field];
+            }
+        }
+
+    }
 
     /**
      * Call any functions that were queued before the main script was loaded

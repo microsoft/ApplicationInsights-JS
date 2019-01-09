@@ -20,17 +20,11 @@ try {
         if (window[aiName] !== undefined) {
             // this is the typical case for browser+snippet
             var snippet: Snippet = window[aiName] || <any>{ version: 2.0 };
-            
+
             // overwrite snippet with full appInsights
             // for 2.0 initialize only if required
             if ((snippet.version === 2.0 && window[aiName].initialize) || snippet.version === undefined ) {
-            
-                var initialization = ApplicationInsightsContainer.getAppInsights(snippet, snippet.version);
-                
-                // apply full appInsights to the global instance that was initialized in the snippet
-                for (var field in initialization) {
-                    snippet[field] = initialization[field];
-                }
+                ApplicationInsightsContainer.getAppInsights(snippet, snippet.version);
             }
         }
     }
