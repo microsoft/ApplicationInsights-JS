@@ -240,11 +240,11 @@ export class Initialization implements IApplicationInsights {
      * @returns {IApplicationInsights}
      * @memberof Initialization
      */
-    public loadAppInsights(): IApplicationInsights {
+    public loadAppInsights(core?: AppInsightsCore, sender?:Sender): IApplicationInsights {
 
-        this.core = new AppInsightsCore();
+        this.core = core || new AppInsightsCore();
         let extensions = [];
-        let appInsightsChannel: Sender = new Sender();
+        let appInsightsChannel: Sender = sender|| new Sender();
 
         extensions.push(appInsightsChannel);
         extensions.push(this.properties);
@@ -252,7 +252,7 @@ export class Initialization implements IApplicationInsights {
         extensions.push(this.appInsights);
 
         // initialize core
-        this.core.initialize(this.config, extensions);
+        core || this.core.initialize(this.config, extensions);
 
         // Empty queue of all api calls logged prior to sdk download
         this.emptyQueue();
@@ -304,7 +304,7 @@ export class Initialization implements IApplicationInsights {
     public addHousekeepingBeforeUnload(appInsightsInstance: IApplicationInsights): void {
         // Add callback to push events when the user navigates away
 
-        if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
+        if (('onbeforeunload' in window) && !appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload) {
             var performHousekeeping = function () {
                 // Adds the ability to flush all data before the page unloads.
                 // Note: This approach tries to push an async request with all the pending events onbeforeunload.
