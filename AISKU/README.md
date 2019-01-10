@@ -3,8 +3,7 @@
 	description="Reference doc"
 	services="application-insights"
     documentationCenter=".net"
-	authors="alancameronwills"
-	manager="douge"/>
+	authors="markwolff"/>
 
 <tags
 	ms.service="application-insights"
@@ -12,11 +11,10 @@
 	ms.tgt_pltfrm="ibiza"
 	ms.devlang="na"
 	ms.topic="article"
-	ms.date="08/24/2015"
-	ms.author="awills"/>
+	ms.date="08/24/2015"/>
 
 
-# Application Insights JavaScript SDK - Web
+# Application Insights JavaScript SDK (Beta SDK)
 
 [![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/AppInsights%20-%20DevTools/1DS%20JavaScript%20SDK%20-%20SKU%20Web)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=7760)
 [![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
@@ -56,12 +54,13 @@ appInsights.loadAppInsights();
 ### Snippet Setup (Ignore if using NPM)
 If your app does not use NPM, you can directly instrument your webpages with Application Insights by pasting this snippet at the top of each your pages. Preferably, it should be the first script in your `<head>` section so that it can monitor any potential issues with all of your dependencies.
 ```html
-<script type="text/javascript">
-var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(n){var r={config:n,initialize:!0},i=document,e=window,t="script";setTimeout(function(){var e=i.createElement(t);e.src=n.url||"https://az416426.vo.msecnd.net/beta/ai.1.min.js",i.getElementsByTagName(t)[0].parentNode.appendChild(e)});try{r.cookie=i.cookie}catch(e){}function a(n){r[n]=function(){var e=arguments;r.queue.push(function(){r[n].apply(r,e)})}}r.queue=[];for(var c=["Event","PageView","Exception","Trace","DependencyData","Metric","PageViewPerformance"];c.length;)a("track"+c.pop());var o="TrackPage";if(a("start"+o),a("stop"+o),!(!0===n.disableExceptionTracking||n.extensionConfig&&n.extensionConfig.ApplicationInsightsAnalytics&&!0===n.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking)){a("_"+(c="onerror"));var s=e[c];e[c]=function(e,n,i,t,a){var o=s&&s(e,n,i,t,a);return!0!==o&&r["_"+c]({message:e,url:n,lineNumber:i,columnNumber:t,error:a}),o},n.autoExceptionInstrumented=!0}return r}(
-{
+<script type="text/javascript">    
+var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){t[e]=function(){var n=arguments;t.queue.push(function(){t[e].apply(t,n)})}}var t={config:e};t.initialize=!0;var i=document,a=window;setTimeout(function(){var n=i.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/beta/ai.1.min.js",i.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{t.cookie=i.cookie}catch(e){}t.queue=[],t.version=2;
+for(var r=["Event","PageView","Exception","Trace","DependencyData","Metric","PageViewPerformance"];r.length;)n("track"+r.pop());n("startTrackPage"),n("stopTrackPage");var o="Track"+r[0];
+if(n("start"+o),n("stop"+o),!(!0===e.disableExceptionTracking||e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!0===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking)){n("_"+(r="onerror"));var c=a[r];a[r]=function(e,n,i,a,o){var s=c&&c(e,n,i,a,o);return!0!==s&&t["_"+r]({message:e,url:n,lineNumber:i,columnNumber:a,error:o}),s},e.autoExceptionInstrumented=!0}return t}
+({
 	instrumentationKey:"INSTRUMENTATION_KEY"
-}
-);if((window[aiName]=aisdk).queue&&0===aisdk.queue.length){var pageViewItem={name:document.title?document.title:"",uri:document.URL?document.URL:""};aisdk.trackPageView(pageViewItem)}
+});if(window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length){var pageViewItem={name:document.title?document.title:"",uri:document.URL?document.URL:""};aisdk.trackPageView(pageViewItem)}
 </script>
 ```
 
@@ -75,6 +74,10 @@ appInsights.trackException({error: new Error('some error')}, customProperties);
 appInsights.trackTrace({message: 'some trace'});
 appInsights.trackMetric({name: 'some metric', average: 42});
 appInsights.trackDependencyData({absoluteUrl: 'some url', resultCode: 200, method: 'GET', id: 'some id'});
+appInsights.startTrackPage("pageName");
+appInsights.stopTrackPage("pageName", {customProp1: "some value"});
+appInsights.startTrackEvent("event");
+appInsights.stopTrackEvent("event", {customProp1: "some value"});
 ```
 
 ### Setting Up Autocollection
@@ -152,7 +155,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 
 ## Examples
 
-For runnable examples, see our [Application Insights Demos Page](../Examples/)
+For runnable examples, see [Application Insights Javascript SDK samples](https://github.com/Azure-Samples?utf8=%E2%9C%93&q=application+insights+sdk&type=&language=)
 
 ## Application Insights Web Basic
 
@@ -160,7 +163,27 @@ For a lightweight experience, you can instead install the basic version of Appli
 ```
 npm i --save @microsoft/applicationinsights-web-basic
 ```
-This version comes with the bare minimum amount of features and functionalities and relies on you to build it up as you see fit. For example, it performs no auto-collection (uncaught exceptions, ajax, etc). The APIs to send certain telemetry types, like `trackTrace`, `trackEvent`, etc, are not included in this version, so you will need to provide your own wrapper.
+This version comes with the bare minimum amount of features and functionalities and relies on you to build it up as you see fit. For example, it performs no auto-collection (uncaught exceptions, ajax, etc). The APIs to send certain telemetry types, like `trackTrace`, `trackException`, etc, are not included in this version, so you will need to provide your own wrapper. The only api that is available is `track`.
+
+
+## Application Insights backward compatibility
+Breaking changes in the SDK:
+1. To allow for better api signatures and due to data schema updates, some of the apis such as trackPageView, trackException have been updated. List of breaking changes:
+
+a) Running in IE8 or lower versions of the browser is not supported.
+b) There are 
+
+If you are using the current application insights PRODUCTION SDK (1.0.20) and want to see if the new SDK works in runtime, 
+
+a) Download via CDN scenario:
+Update code snippet that you currently use to point to the following URL:
+"https://az416426.vo.msecnd.net/beta/ai.1.min.js"
+
+b) NPM scenario:
+Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key
+AppInsights.downloadAndSetup({ instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx", url:  "https://az416426.vo.msecnd.net/beta/ai.1.min.js" });
+
+Test in internal environment to verify monitoring is working as expected. If all works, please update your api signatures appropriately to SDK V2 version and deploy in your production environments.
 
 ## Contributing
 
