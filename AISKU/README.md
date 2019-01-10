@@ -166,14 +166,12 @@ npm i --save @microsoft/applicationinsights-web-basic
 This version comes with the bare minimum amount of features and functionalities and relies on you to build it up as you see fit. For example, it performs no auto-collection (uncaught exceptions, ajax, etc). The APIs to send certain telemetry types, like `trackTrace`, `trackException`, etc, are not included in this version, so you will need to provide your own wrapper. The only api that is available is `track`.
 
 
-## Application Insights backward compatibility
-Breaking changes in the SDK:
-1. To allow for better api signatures and due to data schema updates, some of the apis such as trackPageView, trackException have been updated. List of breaking changes:
+## Application Insights backward compatibility validation
+Breaking changes in the SDK in V2:
+To allow for better api signatures, some of the apis such as trackPageView, trackException have been updated. Running in IE8 or lower versions of the browser is not supported.
+Telemetry envelope has some changes due to data schema updates.
 
-a) Running in IE8 or lower versions of the browser is not supported.
-b) There are 
-
-If you are using the current application insights PRODUCTION SDK (1.0.20) and want to see if the new SDK works in runtime, 
+If you are using the current application insights PRODUCTION SDK (1.0.20) and want to see if the new SDK works in runtime, please update URL depending on your current SDK loading scenario:
 
 a) Download via CDN scenario:
 Update code snippet that you currently use to point to the following URL:
@@ -183,7 +181,7 @@ b) NPM scenario:
 Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key
 AppInsights.downloadAndSetup({ instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx", url:  "https://az416426.vo.msecnd.net/beta/ai.1.min.js" });
 
-Test in internal environment to verify monitoring is working as expected. If all works, please update your api signatures appropriately to SDK V2 version and deploy in your production environments.
+Test in internal environment to verify monitoring telemetry is working as expected. If all works, please update your api signatures appropriately to SDK V2 version and deploy in your production environments.
 
 ## Contributing
 
