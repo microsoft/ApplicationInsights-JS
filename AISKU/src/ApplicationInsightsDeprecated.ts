@@ -1,6 +1,6 @@
-import { IConfig, PageViewPerformance, SeverityLevel, Util, 
-    IPageViewTelemetry, ITraceTelemetry, IMetricTelemetry, 
-    IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry, 
+import { IConfig, PageViewPerformance, SeverityLevel, Util,
+    IPageViewTelemetry, ITraceTelemetry, IMetricTelemetry,
+    IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry,
     IEventTelemetry, IEnvelope, ProcessLegacy, HttpMethod } from "@microsoft/applicationinsights-common";
 import { Snippet, IApplicationInsights } from "./Initialization";
 import { ITelemetryItem, IDiagnosticLogger, IConfiguration } from "@microsoft/applicationinsights-core-js";
@@ -24,11 +24,11 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
 
         // Add initializer to current processing only if there is any old telemetry initializer
         if (!this._hasLegacyInitializers) {
-            
+
             this.appInsightsNew.addTelemetryInitializer(item => {
                 this._processLegacyInitializers(item); // setup call back for each legacy processor
             })
-            
+
             this._hasLegacyInitializers = true;
         }
 
@@ -36,31 +36,10 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     }
 
     private _processLegacyInitializers(item: ITelemetryItem): ITelemetryItem {
-        
+
         // instead of mapping new to legacy and then back again and repeating in channel, attach callback for channel to call
         item.tags[ProcessLegacy] = this._queue;
-
         return item;
-        // // construct legacy envelope
-        // let envelope = Sender.constructEnvelope(null, this.config.instrumentationKey, this.logger);
-        // let doNotSendItem = false;
-
-        // for (let i = 0; i < this._queue.length; i++) {
-        //     // run all processors
-        //     let callBack = this._queue[i];
-        //     try {
-        //         doNotSendItem = (callBack(envelope) !== true);
-        //     } catch (e) {
-        //         this.logger.throwInternal(
-        //             LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, continue processing next: " + Util.getExceptionName(e),
-        //             { exception: Util.dump(e) }, true);
-        //     }
-        // }
-
-        // // construct ItelemetryItem
-        // item = TelemetryItemCreator.convertFrom(envelope, this.logger);
-        // return !doNotSendItem ? null : item;
-        
     }
 
     constructor(snippet: Snippet, appInsightsNew: IApplicationInsights) {
@@ -95,13 +74,13 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
 
     trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
         this.appInsightsNew.trackDependencyData(
-            <IDependencyTelemetry>{ 
-                id: id, 
-                absoluteUrl: absoluteUrl, 
-                type: pathName, 
+            <IDependencyTelemetry>{
+                id: id,
+                absoluteUrl: absoluteUrl,
+                type: pathName,
                 duration: totalTime,
                 properties: { HttpMethod: method },
-                success: success, 
+                success: success,
                 responseCode: resultCode
             });
     }
@@ -131,24 +110,23 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     clearAuthenticatedUserContext() {
         this.appInsightsNew.clearAuthenticatedUserContext();
     }
-    
+
     _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
         this.appInsightsNew._onerror(<IAutoExceptionTelemetry>{ message: message, url: url, lineNumber: lineNumber, columnNumber: columnNumber, error: error });
     }
-    
-    
+
+
     startTrackEvent(name: string) {
-        throw new Error("Method not implemented.");
+        this.appInsightsNew.startTrackEvent(name);
     }
 
     stopTrackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }) {
-        throw new Error("Method not implemented.");
+        this.appInsightsNew.stopTrackEvent(name, properties, measurements);
     }
 
     downloadAndSetup?(config: IConfig): void {
         throw new Error("downloadAndSetup not implemented in web SKU");
     }
-
 
     // note: these are split into methods to enable unit tests
     public loadAppInsights() {
@@ -208,11 +186,11 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
 
         config.disableAjaxTracking = Util.stringToBoolOrDefault(config.disableAjaxTracking);
         config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
-      
+
         config.isBeaconApiDisabled = Util.stringToBoolOrDefault(config.isBeaconApiDisabled, true);
         config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders);
         config.correlationHeaderExcludedDomains = config.correlationHeaderExcludedDomains || [
-            "*.blob.core.windows.net", 
+            "*.blob.core.windows.net",
             "*.blob.core.chinacloudapi.cn",
             "*.blob.core.cloudapi.de",
             "*.blob.core.usgovcloudapi.net"];
@@ -374,11 +352,11 @@ export interface IAppInsightsDeprecated {
 }
 
 export interface ITelemetryContext {
-    
+
     /**
-    * Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one, 
-    * in the order they were added, before the telemetry item is pushed for sending. 
+    * Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one,
+    * in the order they were added, before the telemetry item is pushed for sending.
     * If one of the telemetry initializers returns false or throws an error then the telemetry item will not be sent.
     */
-   addTelemetryInitializer(telemetryInitializer: (IEnvelope) => boolean | void);
+   addTelemetryInitializer(telemetryInitializer: (envelope: IEnvelope) => boolean | void);
 }

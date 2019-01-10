@@ -4,15 +4,12 @@
  */
 
 import {
-    IConfig,
-    Util, PageViewPerformance,
-    IAppInsights,
-    PageView, IEnvelope, RemoteDependencyData, Event, IEventTelemetry,
+    IConfig, Util, PageViewPerformance, IAppInsights, PageView, RemoteDependencyData, Event, IEventTelemetry,
     TelemetryItemCreator, Data, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
-    IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry,
-    ConfigurationManager
+    IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, ConfigurationManager
 } from "@microsoft/applicationinsights-common";
+
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     ITelemetryPlugin, CoreUtils, ITelemetryItem,
@@ -485,13 +482,13 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
 
         this._eventTracking = new Timing(this._logger, "trackEvent");
-        this._eventTracking.action = 
+        this._eventTracking.action =
             (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
                 if (!measurements) {
                     measurements = {};
                 }
 
-                measurements["duration"] = duration ; // ToDo: fix once IEventTelemetry is updated                
+                measurements["duration"] = duration ; // ToDo: fix once IEventTelemetry is updated
                 this.trackEvent(<IEventTelemetry>{ name: name });
             }
 
@@ -584,7 +581,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
     // Mutate telemetryItem inplace to add boilerplate iKey & name info
     private _setTelemetryNameAndIKey(telemetryItem: ITelemetryItem): void {
-        telemetryItem.instrumentationKey = this._globalconfig.instrumentationKey;
+        telemetryItem.iKey = this._globalconfig.instrumentationKey;
 
         var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
         telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);

@@ -48,8 +48,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
             cookieDomain: () => null,
             sdkExtension: () => null,
             isBrowserLinkTrackingEnabled: () => false,
-            appId: () => null,
-            enableOldTags: () => false
+            appId: () => null
         }
         return defaultConfig;
     }
@@ -125,7 +124,6 @@ export default class PropertiesPlugin implements ITelemetryPlugin, ITelemetryCon
             }
         }
 
-        //if (this._extensionConfig.enableOldTags()) 
         // set part A  fields
         if (!event.tags) {
             event.tags = [];

@@ -39,8 +39,8 @@ export class TelemetryItemCreator {
 
         let telemetryItem: ITelemetryItem = {
             name: envelopeName,
-            timestamp: new Date(),
-            instrumentationKey: "", // this will be set in TelemetryContext
+            time: new Date().toISOString(),
+            iKey: "", // this will be set in TelemetryContext
             ctx: systemProperties ? systemProperties : {}, // part A
             tags: [],
             data: {
@@ -79,10 +79,10 @@ export class TelemetryItemCreator {
 
                 let dependencyTelemetry = <IDependencyTelemetry>(env.data.baseType);
                 telemetryItem = TelemetryItemCreator.create<IDependencyTelemetry>(
-                    dependencyTelemetry, 
-                    RemoteDependencyData.dataType, 
+                    dependencyTelemetry,
+                    RemoteDependencyData.dataType,
                     RemoteDependencyData.envelopeType,
-                    logger, 
+                    logger,
                     customProperties);
         }
 
@@ -216,18 +216,18 @@ export class TelemetryItemCreator {
         }
 
 
-                
+
         if (env.tags[CtxTagKeys.operationRootId]) {
             item.tags[CtxTagKeys.operationRootId] = env.tags[CtxTagKeys.operationRootId];
             keysFound.push(CtxTagKeys.operationRootId);
         }
 
-                
+
         if (env.tags[CtxTagKeys.operationSyntheticSource]) {
             item.tags[CtxTagKeys.operationSyntheticSource] = env.tags[CtxTagKeys.operationSyntheticSource];
             keysFound.push(CtxTagKeys.operationSyntheticSource);
         }
-                
+
         if (env.tags[CtxTagKeys.operationParentId]) {
             item.tags[CtxTagKeys.operationParentId] = env.tags[CtxTagKeys.operationParentId];
             keysFound.push(CtxTagKeys.operationParentId);

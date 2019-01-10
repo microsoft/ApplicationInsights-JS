@@ -240,7 +240,12 @@ export class Initialization implements IApplicationInsights {
      * @returns {IApplicationInsights}
      * @memberof Initialization
      */
-    public loadAppInsights(core?: AppInsightsCore, sender?:Sender): IApplicationInsights {
+    public loadAppInsights(legacyMode: boolean = false, core?: AppInsightsCore, sender?:Sender): IApplicationInsights {
+
+        // dont allow additional channels/other extensions for legacy mode; legacy mode is only to allow users to switch with no code changes!
+        if (legacyMode && this.config.extensions && this.config.extensions.length > 0) {
+            throw new Error("Extensions not allowed in legacy mode");
+        }
 
         this.core = core || new AppInsightsCore();
         let extensions = [];
@@ -262,6 +267,22 @@ export class Initialization implements IApplicationInsights {
         return this;
     }
 
+    /**
+     * Overwrite the lazy loaded fields of global window snippet to contain the
+     * actual initialized API methods
+     * @param {Snippet} snippet
+     * @memberof Initialization
+     */
+    public updateSnippetDefinitions(snippet: Snippet) {
+        // apply full appInsights to the global instance
+        // Note: This must be called before loadAppInsights is called
+        for (var field in this) {
+            if (typeof field === 'string') {
+                snippet[field as string] = this[field];
+            }
+        }
+
+    }
 
     /**
      * Call any functions that were queued before the main script was loaded
@@ -336,8 +357,6 @@ export class Initialization implements IApplicationInsights {
     }
 
     private getSKUDefaults() {
-        let enableOldTags = ConfigurationManager.getConfig(this.config, "enableOldTags", propertiesPlugin, true);
-        this.config.enableOldTags = <boolean>enableOldTags;
         this.config.diagnosticLogInterval =
             this.config.diagnosticLogInterval && this.config.diagnosticLogInterval > 0 ? this.config.diagnosticLogInterval : 10000;
     }

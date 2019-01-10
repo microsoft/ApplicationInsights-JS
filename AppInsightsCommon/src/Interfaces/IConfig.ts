@@ -245,8 +245,6 @@ export interface IConfig {
      */
     enableCorsCorrelation?: boolean;
 
-    enableOldTags?: boolean;
-
     // Internal
 
     /**
