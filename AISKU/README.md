@@ -181,13 +181,13 @@ If you are using the current application insights PRODUCTION SDK (1.0.20) and wa
 
 **b)** NPM scenario:
 	Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key.  
-	```
-	appInsights.downloadAndSetup({  
-  
-		instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx",  
-		url: "https://az416426.vo.msecnd.net/beta/ai.1.min.js"  
-	});  
-	```
+```ts
+appInsights.downloadAndSetup({
+
+	instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx",  
+	url: "https://az416426.vo.msecnd.net/beta/ai.1.min.js"  	
+});  
+```
 
 Test in internal environment to verify monitoring telemetry is working as expected. If all works, please update your api signatures appropriately to SDK V2 version and deploy in your production environments.
 
