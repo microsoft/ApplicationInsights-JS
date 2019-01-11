@@ -60,6 +60,7 @@ export class Initialization implements IApplicationInsights {
 
         this.properties = new PropertiesPlugin();
         this.dependencies = new DependenciesPlugin();
+        this.core = new AppInsightsCore();
 
         this.snippet = snippet;
         this.config = config;
@@ -247,7 +248,6 @@ export class Initialization implements IApplicationInsights {
             throw new Error("Extensions not allowed in legacy mode");
         }
 
-        this.core = new AppInsightsCore();
         let extensions = [];
         let appInsightsChannel: Sender = new Sender();
 
