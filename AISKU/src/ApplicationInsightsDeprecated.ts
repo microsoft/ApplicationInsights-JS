@@ -128,6 +128,17 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
         throw new Error("downloadAndSetup not implemented in web SKU");
     }
 
+    public updateSnippetDefinitions(snippet: Snippet) {
+        // apply full appInsights to the global instance
+        // Note: This must be called before loadAppInsights is called
+        for (var field in this) {
+            if (typeof field === 'string') {
+                snippet[field as string] = this[field];
+            }
+        }
+
+    }
+
     // note: these are split into methods to enable unit tests
     public loadAppInsights() {
 
