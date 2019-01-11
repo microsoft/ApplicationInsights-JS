@@ -181,10 +181,10 @@ If you are using the current application insights PRODUCTION SDK (1.0.20) and wa
 
 **b)** NPM scenario:
 	Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key.  
-	appInsights.downloadAndSetup({  
+	appInsights.downloadAndSetup({  <br/>
 			```
-			instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx",  
-			url: "https://az416426.vo.msecnd.net/beta/ai.1.min.js" 
+			instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx",  <br/>
+			url: "https://az416426.vo.msecnd.net/beta/ai.1.min.js" <br/>
 			```  
 	});  
 
