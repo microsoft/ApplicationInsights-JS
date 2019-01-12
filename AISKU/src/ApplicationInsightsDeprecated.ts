@@ -136,7 +136,6 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
                 snippet[field as string] = this[field];
             }
         }
-
     }
 
     // note: these are split into methods to enable unit tests
