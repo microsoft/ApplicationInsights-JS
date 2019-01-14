@@ -7,7 +7,6 @@
 
 export interface IDependencyTelemetry {
     id: string;
-    absoluteUrl: string;
     name?: string;
     duration?: number;
     success?: boolean;
