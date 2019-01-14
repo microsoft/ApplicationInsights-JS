@@ -268,7 +268,7 @@ export class ApplicationInsightsTests extends TestClass {
             steps: [
                 () => {
                     const data: IDependencyTelemetry = {
-                        absoluteUrl: 'http://abc',
+                        target: 'http://abc',
                         responseCode: 200,
                         type: 'GET',
                         id: 'abc'
