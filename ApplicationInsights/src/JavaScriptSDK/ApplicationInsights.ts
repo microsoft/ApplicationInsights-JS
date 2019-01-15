@@ -143,7 +143,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
      * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
-    public stopTrackEvent(name: string, properties?: Object, measurements?: Object) {
+    public stopTrackEvent(name: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) {
         try {
             this._eventTracking.stop(name, undefined, properties); // Todo: Fix to pass measurements once type is updated
         } catch (e) {
@@ -319,7 +319,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
      * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
-    public stopTrackPage(name?: string, url?: string, properties?: Object) {
+    public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: string }) {
         try {
             if (typeof name !== "string") {
                 name = window.document && window.document.title || "";
@@ -329,7 +329,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 url = window.location && window.location.href || "";
             }
 
-            this._pageTracking.stop(name, url, properties);
+            this._pageTracking.stop(name, url, properties, measurement);
 
             if (this.config.autoTrackPageVisitTime) {
                 this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
@@ -483,29 +483,33 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
         this._eventTracking = new Timing(this._logger, "trackEvent");
         this._eventTracking.action =
-            (name?: string, url?: string, duration?: number, properties?: Object, measurements?: Object) => {
-                if (!measurements) {
-                    measurements = {};
+            (name?: string, url?: string, duration?: number, properties?: { [key: string]: string }) => {
+                if (!properties) {
+                    properties = {};
                 }
 
-                measurements["duration"] = duration ; // ToDo: fix once IEventTelemetry is updated
-                this.trackEvent(<IEventTelemetry>{ name: name });
+                properties[durationProperty] = duration.toString();
+                this.trackEvent(<IEventTelemetry>{ name: name, properties: properties });
             }
 
         // initialize page view timing
         this._pageTracking = new Timing(this._logger, "trackPageView");
-        this._pageTracking.action = (name, url, duration, properties) => {
-            let pageViewItem: IPageViewTelemetry = {
-                name: name,
-                uri: url
-            };
-
+        this._pageTracking.action = (name, url, duration, properties, measurements) => {
+            
             // duration must be a custom property in order for the collector to extract it
             if (CoreUtils.isNullOrUndefined(properties)) {
                 properties = {};
             }
-            properties[durationProperty] = duration;
-            this.sendPageViewInternal(pageViewItem, properties);
+            properties[durationProperty] = duration.toString();
+
+            let pageViewItem: IPageViewTelemetry = {
+                name: name,
+                uri: url,
+                properties: properties, 
+                measurements: measurements
+            };
+
+            this.sendPageViewInternal(pageViewItem);
         }
 
         if (this.config.disableExceptionTracking === false &&
@@ -614,7 +618,7 @@ class Timing {
         this._events[name] = +new Date;
     }
 
-    public stop(name: string, url: string, properties?: Object) {
+    public stop(name: string, url: string, properties?: {[key: string]: string}, measurements?: { [key: string]: number }) {
         var start = this._events[name];
         if (isNaN(start)) {
             this._logger.throwInternal(
@@ -623,12 +627,12 @@ class Timing {
         } else {
             var end = +new Date;
             var duration = PageViewPerformance.getDuration(start, end);
-            this.action(name, url, duration, properties);
+            this.action(name, url, duration, properties, measurements);
         }
 
         delete this._events[name];
         this._events[name] = undefined;
     }
 
-    public action: (name?: string, url?: string, duration?: number, properties?: Object) => void;
+    public action: (name?: string, url?: string, duration?: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => void;
 }
