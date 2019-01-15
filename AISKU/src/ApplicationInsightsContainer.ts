@@ -3,11 +3,9 @@ import { Initialization as ApplicationInsights, Snippet, IApplicationInsights } 
 
 export class ApplicationInsightsContainer {
 
-    public static getAppInsights(snippet: Snippet, version: number = 2.0) : IApplicationInsights | IAppInsightsDeprecated {
+    public static getAppInsights(snippet: Snippet, version: number) : IApplicationInsights | IAppInsightsDeprecated {
         let initialization = new ApplicationInsights(snippet);
-        let legacyMode = version === 2.0 ? false : true;
-        initialization.updateSnippetDefinitions(snippet);
-        initialization.loadAppInsights(legacyMode);
+        let legacyMode = version !== 2.0 ? true : false;
 
         // Two target scenarios:
         // 1. Customer runs v1 snippet + runtime. If customer updates just cdn location to new SDK, it will run in compat mode so old apis work
@@ -15,9 +13,14 @@ export class ApplicationInsightsContainer {
         // and all api signatures are expected to map to new SDK. Note new snippet specifies version
 
         if (version === 2.0) {
+            initialization.updateSnippetDefinitions(snippet);
+            initialization.loadAppInsights(legacyMode);
             return initialization; // default behavior with new snippet
         } else {
-            return new AppInsightsDeprecated(snippet, initialization); // target scenario old snippet + updated endpoint
+            let legacy = new AppInsightsDeprecated(snippet, initialization); // target scenario old snippet + updated endpoint
+            legacy.updateSnippetDefinitions(snippet);
+            initialization.loadAppInsights(legacyMode);
+            return legacy;
         }
     }
 }
