@@ -76,22 +76,23 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
     public processTelemetry(env: ITelemetryItem) {
         var doNotSendItem = false;
-        try {
-            var telemetryInitializersCount = this._telemetryInitializers.length;
-            for (var i = 0; i < telemetryInitializersCount; ++i) {
-                var telemetryInitializer = this._telemetryInitializers[i];
-                if (telemetryInitializer) {
+        var telemetryInitializersCount = this._telemetryInitializers.length;
+        for (var i = 0; i < telemetryInitializersCount; ++i) {
+            var telemetryInitializer = this._telemetryInitializers[i];
+            if (telemetryInitializer) {
+                try {
                     if (telemetryInitializer.apply(null, [env]) === false) {
                         doNotSendItem = true;
                         break;
                     }
+                } catch (e) {
+                        // log error but dont stop executing rest of the telemetry initializers
+                        // doNotSendItem = true;
+                        this._logger.throwInternal(
+                            LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
+                            { exception: Util.dump(e) }, true);
                 }
             }
-        } catch (e) {
-            doNotSendItem = true;
-            this._logger.throwInternal(
-                LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
-                { exception: Util.dump(e) }, true);
         }
 
         if (!doNotSendItem && !CoreUtils.isNullOrUndefined(this._nextPlugin)) {
