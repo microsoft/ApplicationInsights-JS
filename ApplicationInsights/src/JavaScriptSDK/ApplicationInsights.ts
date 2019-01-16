@@ -320,7 +320,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
      * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
-    public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: string }) {
+    public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: number }) {
         try {
             if (typeof name !== "string") {
                 name = window.document && window.document.title || "";
@@ -547,7 +547,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                     let remoteData = envelope.baseData as IDependencyTelemetry;
                     if (remoteData) {
                         for (let i = 0; i < browserLinkPaths.length; i++) {
-                            if (remoteData.absoluteUrl && remoteData.absoluteUrl.indexOf(browserLinkPaths[i]) >= 0) {
+                            if (remoteData.target && remoteData.target.indexOf(browserLinkPaths[i]) >= 0) {
                                 return false;
                             }
                         }
