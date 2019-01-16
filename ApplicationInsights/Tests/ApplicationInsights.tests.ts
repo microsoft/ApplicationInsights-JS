@@ -337,8 +337,8 @@ export class ApplicationInsightsTests extends TestClass {
             url: "url",
             duration: 200,
             properties: {
-                "property1": 5,
-                "property2": 10
+                "property1": "5",
+                "property2": "10"
             },
             measurements: {
                 "measurement": 300
@@ -370,7 +370,7 @@ export class ApplicationInsightsTests extends TestClass {
                 Assert.equal(testValues.name, actual.name);
                 Assert.equal(testValues.url, actual.uri);
 
-                var actualProperties = spy.args[0][1];
+                var actualProperties = actual.properties;
                 Assert.equal(testValues.duration, actualProperties.duration, "duration is calculated and sent correctly");
                 Assert.equal(testValues.properties.property1, actualProperties.property1);
                 Assert.equal(testValues.properties.property2, actualProperties.property2);
@@ -396,7 +396,7 @@ export class ApplicationInsightsTests extends TestClass {
                 // verify
                 var telemetry: ITelemetryItem = trackStub.args[0][0];
                 Assert.equal(window.document.title, telemetry.baseData.name);
-                Assert.equal(testValues.duration, telemetry.data.duration);
+                Assert.equal(testValues.duration, telemetry.baseData.properties.duration);
             }
         });
 
@@ -434,7 +434,7 @@ export class ApplicationInsightsTests extends TestClass {
                 telemetry = trackStub.args[1][0];
                 Assert.equal(testValues.name, telemetry.baseData.name);
                 Assert.equal(testValues.url, telemetry.baseData.uri);
-                Assert.deepEqual(testValues.properties, telemetry.data);
+                Assert.deepEqual(testValues.properties, telemetry.baseData.properties);
             }
         });
 
@@ -817,7 +817,7 @@ export class ApplicationInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "TelemetryContext: telemetry initializer - if one initializer fails then telemetry is not sent",
+            name: "TelemetryContext: telemetry initializer - if one initializer fails then error logged and is still sent",
             test: () => {
                 // Setup
                 const plugin = new ChannelPlugin();
@@ -830,14 +830,16 @@ export class ApplicationInsightsTests extends TestClass {
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
                 plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
                 var trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
-
+                var logStub = this.sandbox.spy(appInsights.core.logger, "throwInternal")
                 // act
                 appInsights.addTelemetryInitializer(() => { throw new Error("Test error IGNORE"); });
                 appInsights.addTelemetryInitializer(() => { });
                 appInsights.trackTrace({message: 'test message'});
 
                 // verify
-                Assert.ok(trackStub.notCalled);
+                Assert.ok(trackStub.calledOnce);
+                Assert.ok(logStub.calledOnce);
+
             }
         });
     }
