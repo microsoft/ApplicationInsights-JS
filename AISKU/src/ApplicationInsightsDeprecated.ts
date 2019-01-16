@@ -76,7 +76,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
         this.appInsightsNew.trackDependencyData(
             <IDependencyTelemetry>{
                 id: id,
-                absoluteUrl: absoluteUrl,
+                target: absoluteUrl,
                 type: pathName,
                 duration: totalTime,
                 properties: { HttpMethod: method },

@@ -4,7 +4,7 @@
 import { IInternal } from '../Interfaces/Context/IInternal';
 import { ITelemetryConfig } from '../Interfaces/ITelemetryConfig';
 
-const Version = "2.0.1-beta";
+const Version = "2.0.2-beta";
 
 export class Internal implements IInternal {
 
