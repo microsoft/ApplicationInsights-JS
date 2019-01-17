@@ -250,7 +250,7 @@ export class Initialization implements IApplicationInsights {
 
         this.core = core || new AppInsightsCore();
         let extensions = [];
-        let appInsightsChannel: Sender = sender|| new Sender();
+        let appInsightsChannel: Sender = sender || new Sender();
 
         extensions.push(appInsightsChannel);
         extensions.push(this.properties);
