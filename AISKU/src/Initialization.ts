@@ -53,7 +53,7 @@ export class Initialization implements IApplicationInsights {
         // ensure instrumentationKey is specified
         if (config && !config.instrumentationKey) {
             config = <any>snippet;
-            ApplicationInsights.Version = "2.0.1-beta";
+            ApplicationInsights.Version = "2.0.2-beta";
         }
 
         this.appInsights = new ApplicationInsights();
@@ -163,7 +163,7 @@ export class Initialization implements IApplicationInsights {
      * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
      * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
-    public stopTrackPage(name?: string, url?: string, customProperties?: Object) {
+    public stopTrackPage(name?: string, url?: string, customProperties?: { [key: string]: any; }) {
         this.appInsights.stopTrackPage(name, url, customProperties);
     }
 
@@ -177,8 +177,8 @@ export class Initialization implements IApplicationInsights {
      * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
      * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
-    public stopTrackEvent(name: string, properties?: Object, measurements?: Object) {
-        this.appInsights.stopTrackEvent(name, undefined, properties); // Todo: Fix to pass measurements once type is updated
+    public stopTrackEvent(name: string, properties?: { [key: string]: string; }, measurements?: { [key: string]: number; }) {
+        this.appInsights.stopTrackEvent(name, properties, measurements); // Todo: Fix to pass measurements once type is updated
     }
 
     public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void) {

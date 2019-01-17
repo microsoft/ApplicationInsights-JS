@@ -16,6 +16,9 @@ for %%i in (%1, "..\AppInsightsCommon", "..\extensions\applicationinsights-prope
     echo "Deleting package-lock.json"
     del package-lock.json
 
+    echo "Deleting old npm package files"
+    del /s /q *.tgz
+
     echo Installing packages>> npm i
     call npm i
     IF %ERRORLEVEL% NEQ 0 (
