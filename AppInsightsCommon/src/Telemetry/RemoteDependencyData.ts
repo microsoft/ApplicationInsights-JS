@@ -42,7 +42,7 @@ export class RemoteDependencyData extends GeneratedRemoteDependencyData implemen
     /**
      * Constructs a new instance of the RemoteDependencyData object
      */
-    constructor(logger: IDiagnosticLogger, id: string, absoluteUrl: string, commandName: string, value: number, success: boolean, resultCode: number, method?: string, properties?: Object, measurements?: Object) {
+    constructor(logger: IDiagnosticLogger, id: string, absoluteUrl: string, commandName: string, value: number, success: boolean, resultCode: number, method?: string, requestType: string = "Ajax", properties?: Object, measurements?: Object) {
         super();
 
         this.id = id;
@@ -51,7 +51,7 @@ export class RemoteDependencyData extends GeneratedRemoteDependencyData implemen
         this.success = success;
         this.resultCode = resultCode + "";
 
-        this.type = "Ajax";
+        this.type = requestType;
         this.data = DataSanitizer.sanitizeUrl(logger, commandName);
 
         var dependencyFields = AjaxHelper.ParseDependencyPath(logger, absoluteUrl, method, commandName);

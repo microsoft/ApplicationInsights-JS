@@ -13,6 +13,7 @@ export interface IDependencyTelemetry {
     responseCode: number;
     correlationContext?: string;
     type?: string;
+    requestType?: string;
     data?: string;
     target?: string;
     properties?: {[key: string]: string};
