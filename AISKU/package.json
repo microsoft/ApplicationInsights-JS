@@ -25,7 +25,7 @@
         "@microsoft/applicationinsights-channel-js": "^1.0.0-beta.13",
         "@microsoft/applicationinsights-common": "^1.0.0-beta.15",
         "@microsoft/applicationinsights-core-js": "^1.0.0-beta.5",
-        "@microsoft/applicationinsights-dependencies-js": "^1.0.0-beta.14",
+        "@microsoft/applicationinsights-dependencies-js": "^1.0.0-beta.15",
         "@microsoft/applicationinsights-properties-js": "^1.0.0-beta.10"
     }
 }
