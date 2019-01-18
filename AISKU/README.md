@@ -19,8 +19,8 @@
 [![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/AppInsights%20-%20DevTools/1DS%20JavaScript%20SDK%20-%20SKU%20Web)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=7760)
 [![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web)
-[![minified size size](https://img.badgesize.io/https://1dsjssdk.blob.core.windows.net/scripts/ai.1.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://1dsjssdk.blob.core.windows.net/scripts/ai.1.min.js.svg?label=minified%20size)
-[![gzip size](https://img.badgesize.io/https://1dsjssdk.blob.core.windows.net/scripts/ai.1.min.js.svg?compression=gzip&softmax=27000&max=30000)](https://img.badgesize.io/https://1dsjssdk.blob.core.windows.net/scripts/ai.1.min.js.svg?compression=gzip&softmax=27000&max=30000)
+[![minified size size](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?label=minified%20size)
+[![gzip size](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?compression=gzip&softmax=27000&max=30000)](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?compression=gzip&softmax=27000&max=30000)
 
 
 
