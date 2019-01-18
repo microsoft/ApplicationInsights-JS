@@ -19,8 +19,8 @@
 [![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/AppInsights%20-%20DevTools/1DS%20JavaScript%20SDK%20-%20SKU%20Web)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=7760)
 [![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web)
-[![minified size size](https://img.badgesize.io/https://1dsjssdk.blob.core.windows.net/scripts/ai.1.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://1dsjssdk.blob.core.windows.net/scripts/ai.1.min.js.svg?label=minified%20size)
-[![gzip size](https://img.badgesize.io/https://1dsjssdk.blob.core.windows.net/scripts/ai.1.min.js.svg?compression=gzip&softmax=24000&max=25000)](https://img.badgesize.io/https://1dsjssdk.blob.core.windows.net/scripts/ai.1.min.js.svg?compression=gzip&softmax=24000&max=25000)
+[![minified size size](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?label=minified%20size)
+[![gzip size](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?compression=gzip&softmax=27000&max=30000)](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?compression=gzip&softmax=27000&max=30000)
 
 
 
@@ -54,7 +54,7 @@ appInsights.loadAppInsights();
 ### Snippet Setup (Ignore if using NPM)
 If your app does not use NPM, you can directly instrument your webpages with Application Insights by pasting this snippet at the top of each your pages. Preferably, it should be the first script in your `<head>` section so that it can monitor any potential issues with all of your dependencies.
 ```html
-<script type="text/javascript">    
+<script type="text/javascript">
 var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){t[e]=function(){var n=arguments;t.queue.push(function(){t[e].apply(t,n)})}}var t={config:e};t.initialize=!0;var i=document,a=window;setTimeout(function(){var n=i.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/beta/ai.1.min.js",i.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{t.cookie=i.cookie}catch(e){}t.queue=[],t.version=2;
 for(var r=["Event","PageView","Exception","Trace","DependencyData","Metric","PageViewPerformance"];r.length;)n("track"+r.pop());n("startTrackPage"),n("stopTrackPage");var o="Track"+r[0];
 if(n("start"+o),n("stop"+o),!(!0===e.disableExceptionTracking||e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!0===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking)){n("_"+(r="onerror"));var c=a[r];a[r]=function(e,n,i,a,o){var s=c&&c(e,n,i,a,o);return!0!==s&&t["_"+r]({message:e,url:n,lineNumber:i,columnNumber:a,error:o}),s},e.autoExceptionInstrumented=!0}return t}
@@ -126,11 +126,11 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | sessionExpirationMs | 86400000 | A session is logged if it has continued for this amount of time in milliseconds. Default is 24 hours |
 | maxBatchSizeInBytes | 10000 | Max size of telemetry batch. If a batch exceeds this limit, it is immediately sent and a new batch is started |
 | maxBatchInterval | 15000 | How long to batch telemetry for before sending (milliseconds) |
-| enableDebug | false | If true, internal debugging data is thrown as an exception by the logger. Default is false. |
 | disableExceptionTracking | false | If true, exceptions are no autocollected. Default is false. |
 | disableTelemetry | false | If true, telemetry is not collected or sent. Default is false. |
-| consoleLoggingLevel | 0 | (internal) Logs internal Application Insights errors to console. 0: off, 1: Critical errors only, 2: Everything (errors & warnings) |
-| telemetryLoggingLevel | 1 | (internal) Sends internal Application Insights errors as telemetry. 0: off, 1: Critical errors only, 2: Everything (errors & warnings) |
+| enableDebug | false | If true, **internal** debugging data is thrown as an exception **instead** of being logged, regardless of SDK logging settings. Default is false. <br>***Note:*** Enabling this setting will result in dropped telemetry whenever an internal error occurs. This can be useful for quickly identifying issues with your configuration or usage of the SDK. If you do not want to lose telemetry while debugging, consider using `consoleLoggingLevel` or `telemetryLoggingLevel` instead of `enableDebug`. |
+| consoleLoggingLevel | 0 | Logs **internal** Application Insights errors to console. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
+| telemetryLoggingLevel | 1 | Sends **internal** Application Insights errors as telemetry. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
 | diagnosticLogInterval | 10000 | (internal) Polling interval (in ms) for internal logging queue |
 | samplingPercentage | 100 | Percentage of events that will be sent. Default is 100, meaning all events are sent. Set this if you wish to preserve your datacap for large-scale applications. |
 | autoTrackPageVisitTime | false | If true, on a pageview,the previous instrumented page's view time is tracked and sent as telemetry and a new timer is started for the current pageview. Default is false. |
@@ -166,9 +166,9 @@ npm i --save @microsoft/applicationinsights-web-basic
 This version comes with the bare minimum amount of features and functionalities and relies on you to build it up as you see fit. For example, it performs no auto-collection (uncaught exceptions, ajax, etc). The APIs to send certain telemetry types, like `trackTrace`, `trackException`, etc, are not included in this version, so you will need to provide your own wrapper. The only api that is available is `track`.
 
 
-## Application Insights Upgrading to New SDK Version
+## Upgrading from the Old Version of Application Insights
 Breaking changes in the SDK V2 version:
-- To allow for better api signatures, some of the apis such as trackPageView, trackException have been updated. Running in IE8 or lower versions of the browser is not supported.
+- To allow for better API signatures, some of the apis such as trackPageView, trackException have been updated. Running in IE8 or lower versions of the browser is not supported.
 - Telemetry envelope has some changes due to data schema updates.
 
 If you are using the current application insights PRODUCTION SDK (1.0.20) and want to see if the new SDK works in runtime, please update URL depending on your current SDK loading scenario:
@@ -180,26 +180,15 @@ If you are using the current application insights PRODUCTION SDK (1.0.20) and wa
 	```
 
 **b)** NPM scenario:
-	Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key.  
+	Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key.
 ```ts
 appInsights.downloadAndSetup({
-
-	instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx",  
-	url: "https://az416426.vo.msecnd.net/beta/ai.1.min.js"  	
-});  
+	instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx",
+	url: "https://az416426.vo.msecnd.net/beta/ai.1.min.js"
+});
 ```
 
 Test in internal environment to verify monitoring telemetry is working as expected. If all works, please update your api signatures appropriately to SDK V2 version and deploy in your production environments.
-
-## Contributing
-
-We strongly welcome and encourage contributions to this project. Please read the [contributor's guide][ContribGuide] located in the ApplicationInsights-Home repository. If making a large change we request that you open an [issue][GitHubIssue] first. We follow the [Git Flow][GitFlow] approach to branching.
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
-[ContribGuide]: https://github.com/Microsoft/ApplicationInsights-Home/blob/master/CONTRIBUTING.md
-[GitFlow]: http://nvie.com/posts/a-successful-git-branching-model/
-[GitHubIssue]: https://github.com/Microsoft/ApplicationInsights-JS/issues
 
 ## Build & Test
 
@@ -214,13 +203,13 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 	```
 
 ## Performance
-At just 22 KB gzipped, and taking only ~15 ms to initialize, Application Insights adds a neglible amount of loadtime to your website. By using the snippet, minimal components of the library are quickly loaded, synchronously. In the meantime, the full script is downloaded in the background.
+At just 25 KB gzipped, and taking only ~15 ms to initialize, Application Insights adds a neglible amount of loadtime to your website. By using the snippet, minimal components of the library are quickly loaded, synchronously. In the meantime, the full script is downloaded in the background.
 
-While the script is downloading from the CDN, all tracking of your page is queued. Once the downloaded script finishes asynchronously initializing, all events that were queued are tracked. As a result, you will not lose any telemetry during the entire life cycle of your page. This setup process provides your page with a seamless tracking system, invisible to your users. 
+While the script is downloading from the CDN, all tracking of your page is queued. Once the downloaded script finishes asynchronously initializing, all events that were queued are tracked. As a result, you will not lose any telemetry during the entire life cycle of your page. This setup process provides your page with a seamless tracking system, invisible to your users.
 
 > Summary:
-> - **22 KB** gzipped
-> - **15 ms** overall initialize time
+> - **25 KB** gzipped
+> - **15 ms** overall initialization time
 > - **Zero** tracking missed during life cycle of page
 
 
@@ -229,5 +218,12 @@ While the script is downloading from the CDN, all tracking of your page is queue
 --- | --- | --- | --- | --- |
 Latest ✔ | Latest ✔ | 9+ ✔ | Latest ✔ | Latest ✔ |
 
-<!-- ## Performance
-Application Insights JavaScript SDK adds less than 15ms to page load. -->
+## Contributing
+
+We strongly welcome and encourage contributions to this project. Please read the [contributor's guide][ContribGuide] located in the ApplicationInsights-Home repository. If making a large change we request that you open an [issue][GitHubIssue] first. We follow the [Git Flow][GitFlow] approach to branching.
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+[ContribGuide]: https://github.com/Microsoft/ApplicationInsights-Home/blob/master/CONTRIBUTING.md
+[GitFlow]: http://nvie.com/posts/a-successful-git-branching-model/
+[GitHubIssue]: https://github.com/Microsoft/ApplicationInsights-JS/issues
