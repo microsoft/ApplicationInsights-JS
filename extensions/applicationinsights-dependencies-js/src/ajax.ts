@@ -248,7 +248,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         else {
             var dependency = <IDependencyTelemetry>{
                 id: xhr.ajaxData.id,
-                absoluteUrl: xhr.ajaxData.getAbsoluteUrl(),
+                target: xhr.ajaxData.getAbsoluteUrl(),
                 commandName: xhr.ajaxData.getPathName(),
                 duration: xhr.ajaxData.ajaxTotalDuration,
                 success:(+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
