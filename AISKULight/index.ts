@@ -107,13 +107,12 @@ export {
     ITelemetryItem
 } from "@microsoft/applicationinsights-core-js";
 export {
-    SeverityLevel,
-    Event,
-    Exception,
-    Metric,
-    PageView,
-    PageViewPerformance,
-    RemoteDependencyData,
-    Trace
+    IPageViewTelemetry,
+    IDependencyTelemetry,
+    IAutoExceptionTelemetry,
+    IEventTelemetry,
+    IMetricTelemetry,
+    IPageViewPerformanceTelemetry,
+    ITraceTelemetry
 } from "@microsoft/applicationinsights-common";
 export { Sender } from "@microsoft/applicationinsights-channel-js";
