@@ -95,8 +95,6 @@ export class ApplicationInsights {
         this.config.diagnosticLogInterval = 
             this.config.diagnosticLogInterval && this.config.diagnosticLogInterval > 0 ? this.config.diagnosticLogInterval : 10000;
     }
-
-
 }
 
 export {
@@ -108,12 +106,12 @@ export {
 } from "@microsoft/applicationinsights-core-js";
 export {
     SeverityLevel,
-    Event,
-    Exception,
-    Metric,
-    PageView,
-    PageViewPerformance,
-    RemoteDependencyData,
-    Trace
+    IPageViewTelemetry,
+    IDependencyTelemetry,
+    IAutoExceptionTelemetry,
+    IEventTelemetry,
+    IMetricTelemetry,
+    IPageViewPerformanceTelemetry,
+    ITraceTelemetry
 } from "@microsoft/applicationinsights-common";
 export { Sender } from "@microsoft/applicationinsights-channel-js";
