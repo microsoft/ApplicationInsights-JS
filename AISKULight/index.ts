@@ -95,8 +95,6 @@ export class ApplicationInsights {
         this.config.diagnosticLogInterval = 
             this.config.diagnosticLogInterval && this.config.diagnosticLogInterval > 0 ? this.config.diagnosticLogInterval : 10000;
     }
-
-
 }
 
 export {
@@ -107,6 +105,7 @@ export {
     ITelemetryItem
 } from "@microsoft/applicationinsights-core-js";
 export {
+    SeverityLevel,
     IPageViewTelemetry,
     IDependencyTelemetry,
     IAutoExceptionTelemetry,
