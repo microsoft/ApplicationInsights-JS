@@ -76,7 +76,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
         this.appInsightsNew.trackDependencyData(
             <IDependencyTelemetry>{
                 id: id,
-                absoluteUrl: absoluteUrl,
+                target: absoluteUrl,
                 type: pathName,
                 duration: totalTime,
                 properties: { HttpMethod: method },
@@ -126,6 +126,16 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
 
     downloadAndSetup?(config: IConfig): void {
         throw new Error("downloadAndSetup not implemented in web SKU");
+    }
+
+    public updateSnippetDefinitions(snippet: Snippet) {
+        // apply full appInsights to the global instance
+        // Note: This must be called before loadAppInsights is called
+        for (var field in this) {
+            if (typeof field === 'string') {
+                snippet[field as string] = this[field];
+            }
+        }
     }
 
     // note: these are split into methods to enable unit tests

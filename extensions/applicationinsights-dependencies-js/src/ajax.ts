@@ -248,8 +248,8 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         else {
             var dependency = <IDependencyTelemetry>{
                 id: xhr.ajaxData.id,
-                absoluteUrl: xhr.ajaxData.getAbsoluteUrl(),
-                commandName: xhr.ajaxData.getPathName(),
+                target: xhr.ajaxData.getAbsoluteUrl(),
+                type: xhr.ajaxData.getPathName(),
                 duration: xhr.ajaxData.ajaxTotalDuration,
                 success:(+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
                 responseCode: +xhr.ajaxData.status,
@@ -489,7 +489,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             } else {
                 let dependency: IDependencyTelemetry = {
                     id: ajaxData.id,
-                    absoluteUrl: ajaxData.getAbsoluteUrl(),
+                    target: ajaxData.getAbsoluteUrl(),
                     type: ajaxData.getPathName(),
                     duration: ajaxData.ajaxTotalDuration,
                     success: response.status >= 200 && response.status < 400,
@@ -539,7 +539,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             } else {
                 let dependency: IDependencyTelemetry = {
                     id: ajaxData.id,
-                    absoluteUrl: ajaxData.getAbsoluteUrl(),
+                    target: ajaxData.getAbsoluteUrl(),
                     type: ajaxData.getPathName(),
                     duration: ajaxData.ajaxTotalDuration,
                     success: false,
