@@ -11,7 +11,7 @@ var aisdk = window[aiName] || (function (aiConfig) {
     var localDocument = document, localWindow = window, scriptText = "script";
     setTimeout(function () {
         var scriptElement = localDocument.createElement(scriptText);
-        scriptElement.src = aiConfig.url || "https://1dsjssdk.blob.core.windows.net/scripts/aisdk.0.0.19.min.js";
+        scriptElement.src = aiConfig.url || "https://az416426.vo.msecnd.net/beta/ai.1.min.js";
         localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
     });
 
@@ -21,6 +21,7 @@ var aisdk = window[aiName] || (function (aiConfig) {
     } catch (e) { }
 
     appInsights.queue = [];
+    appInsights.version = 2.0;
 
     function createLazyMethod(name) {
         // Define a temporary method that queues-up a the real method call
@@ -35,7 +36,7 @@ var aisdk = window[aiName] || (function (aiConfig) {
         };
     }
 
-    var method = ["PageView", "Exception", "Trace", "DependencyData", "Metric"];
+    var method = ["Event", "PageView", "Exception", "Trace", "DependencyData", "Metric", "PageViewPerformance"];
     while (method.length) {
         createLazyMethod("track" + method.pop());
     }
@@ -45,12 +46,17 @@ var aisdk = window[aiName] || (function (aiConfig) {
     createLazyMethod("start" + trackPage);
     createLazyMethod("stop" + trackPage);
 
+    var trackEvent = track + method[0];
+    createLazyMethod("start" + trackEvent);
+    createLazyMethod("stop" + trackEvent);
+
     // Collect global errors
     // Note: ApplicationInsightsAnalytics is the extension string identifier for
     //  AppAnalytics. It is defined in ApplicationInsights.ts:ApplicationInsights.identifer
-    if (aiConfig.extensionConfig &&
+    if (!(aiConfig.disableExceptionTracking === true ||
+        (aiConfig.extensionConfig &&
         aiConfig.extensionConfig.ApplicationInsightsAnalytics &&
-        aiConfig.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking === false) {
+        aiConfig.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking === true))) {
 
         method = "onerror";
         createLazyMethod("_" + method);
@@ -69,13 +75,13 @@ var aisdk = window[aiName] || (function (aiConfig) {
 
             return handled;
         };
-        aiConfig.extensionConfig.ApplicationInsightsAnalytics.autoExceptionInstrumented = true;
+        aiConfig.autoExceptionInstrumented = true;
     }
 
     return appInsights;
 })({
     instrumentationKey: "INSTRUMENTATION_KEY"
-});
+   });
 
 // global instance must be set in this order to mitigate issues in ie8 and lower
 window[aiName] = aisdk;

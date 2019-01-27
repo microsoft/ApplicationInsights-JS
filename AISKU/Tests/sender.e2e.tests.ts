@@ -1,8 +1,7 @@
 /// <reference path='./TestFramework/Common.ts' />
 "use strict"
-import { Initialization, IApplicationInsights } from '../Initialization'
-import { ApplicationInsights } from 'applicationinsights-analytics-js';
-import { Sender } from 'applicationinsights-channel-js';
+import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
+import { Sender } from '@microsoft/applicationinsights-channel-js';
 
 export class SenderE2ETests extends TestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -27,7 +26,7 @@ export class SenderE2ETests extends TestClass {
             this.useFakeTimers = false;
             this.clock.restore();
 
-            var init = new Initialization({
+            var init = new ApplicationInsights({
                 config: {
                     instrumentationKey: this._instrumentationKey,
                     loggingLevelConsole: 999,
@@ -38,7 +37,8 @@ export class SenderE2ETests extends TestClass {
                         }
                     }
                 },
-                queue: []
+                queue: [],
+                version: 2.0
             });
             this._ai = init.loadAppInsights();
 

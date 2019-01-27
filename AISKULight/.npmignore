@@ -5,4 +5,12 @@
 
 # ... but these files
 !package.json
-!bundle/**/*.*
+!tsconfig.json
+!/README.md
+!/LICENSE
+!dist-esm/**
+!dist/**
+!browser/**
+!types/**
+!src/**
+!index.ts

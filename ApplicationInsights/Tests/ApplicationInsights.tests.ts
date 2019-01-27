@@ -1,11 +1,12 @@
 /// <reference path="./TestFramework/Common.ts" />
 
-import { Util, Exception, SeverityLevel, Trace } from "applicationinsights-common";
+import { Util, Exception, SeverityLevel, Trace, PageViewPerformance, PageView } from "@microsoft/applicationinsights-common";
 import {
     ITelemetryItem, AppInsightsCore,
     IPlugin, IConfiguration
-} from "applicationinsights-core-js";
-import { ApplicationInsights } from "../JavaScriptSDK/ApplicationInsights";
+} from "@microsoft/applicationinsights-core-js";
+import { ApplicationInsights } from "../src/JavaScriptSDK/ApplicationInsights";
+import { ITelemetryConfig } from "../src/JavaScriptSDK.Interfaces/ITelemetryConfig";
 
 export class ApplicationInsightsTests extends TestClass {
     public testInitialize() {
@@ -27,6 +28,33 @@ export class ApplicationInsightsTests extends TestClass {
 
     public registerTests() {
         this.testCase({
+            name: 'AppInsightsTests: config can be set from root',
+            test: () => {
+                // Setup
+                var appInsights: ApplicationInsights = new ApplicationInsights();
+
+                // Act
+                var config = {
+                    instrumentationKey: 'instrumentation_key',
+                    samplingPercentage: 12,
+                    accountId: 'aaa',
+                    extensionConfig: {
+                        [appInsights.identifier]: {
+                            accountId: 'def'
+                        }
+                    }
+                };
+                appInsights.initialize(config, new AppInsightsCore(), []);
+
+                // Assert
+                Assert.equal(12, appInsights.config.samplingPercentage);
+                Assert.notEqual('aaa', appInsights.config.accountId);
+                Assert.equal('def', appInsights.config.accountId);
+                Assert.equal('instrumentation_key', appInsights['_globalconfig'].instrumentationKey);
+            }
+        });
+
+        this.testCase({
             name: "AppInsightsTests: public members are correct",
             test: () => {
                 // setup
@@ -43,6 +71,7 @@ export class ApplicationInsightsTests extends TestClass {
                     "config",
                     "trackException",
                     "_onerror",
+                    "trackEvent",
                     "trackTrace",
                     "trackMetric",
                     "trackPageView",
@@ -81,18 +110,23 @@ export class ApplicationInsightsTests extends TestClass {
                 appInsights.initialize({instrumentationKey: core.config.instrumentationKey}, core, []);
                 var trackStub = this.sandbox.stub(appInsights.core, "track");
 
-                var test = (action, expectedEnvelopeType, expectedDataType) => {
+                let envelope: ITelemetryItem;
+                var test = (action, expectedEnvelopeType, expectedDataType, test?: () => void) => {
                     action();
-                    var envelope: ITelemetryItem = this.getFirstResult(action, trackStub);
-                    Assert.equal(iKey, envelope.instrumentationKey, "envelope iKey");
+                    envelope = this.getFirstResult(action, trackStub);
+                    Assert.equal(iKey, envelope.iKey, "envelope iKey");
                     Assert.equal(expectedEnvelopeType.replace("{0}", iKeyNoDash), envelope.name, "envelope name");
                     Assert.equal(expectedDataType, envelope.baseType, "data type name");
+                    if (typeof test === 'function') {test();}
                     trackStub.reset();
                 };
 
                 // Test
                 test(() => appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical}), Exception.envelopeType, Exception.dataType)
                 test(() => appInsights.trackTrace({message: "some string"}), Trace.envelopeType, Trace.dataType);
+                test(() => appInsights.trackPageViewPerformance({name: undefined, url: undefined, measurements: {somefield: 123}}, {vpHeight: 123}), PageViewPerformance.envelopeType, PageViewPerformance.dataType, () => {
+                    Assert.deepEqual(undefined, envelope.baseData.properties, 'Properties does not exist in Part B');
+                });
             }
         });
 
@@ -303,8 +337,8 @@ export class ApplicationInsightsTests extends TestClass {
             url: "url",
             duration: 200,
             properties: {
-                "property1": 5,
-                "property2": 10
+                "property1": "5",
+                "property2": "10"
             },
             measurements: {
                 "measurement": 300
@@ -336,7 +370,7 @@ export class ApplicationInsightsTests extends TestClass {
                 Assert.equal(testValues.name, actual.name);
                 Assert.equal(testValues.url, actual.uri);
 
-                var actualProperties = spy.args[0][1];
+                var actualProperties = actual.properties;
                 Assert.equal(testValues.duration, actualProperties.duration, "duration is calculated and sent correctly");
                 Assert.equal(testValues.properties.property1, actualProperties.property1);
                 Assert.equal(testValues.properties.property2, actualProperties.property2);
@@ -362,7 +396,7 @@ export class ApplicationInsightsTests extends TestClass {
                 // verify
                 var telemetry: ITelemetryItem = trackStub.args[0][0];
                 Assert.equal(window.document.title, telemetry.baseData.name);
-                Assert.equal(testValues.duration, telemetry.data.duration);
+                Assert.equal(testValues.duration, telemetry.baseData.properties.duration);
             }
         });
 
@@ -400,7 +434,7 @@ export class ApplicationInsightsTests extends TestClass {
                 telemetry = trackStub.args[1][0];
                 Assert.equal(testValues.name, telemetry.baseData.name);
                 Assert.equal(testValues.url, telemetry.baseData.uri);
-                Assert.deepEqual(testValues.properties, telemetry.data);
+                Assert.deepEqual(testValues.properties, telemetry.baseData.properties);
             }
         });
 
@@ -513,7 +547,7 @@ export class ApplicationInsightsTests extends TestClass {
 
                 // act
                 appInsights.addTelemetryInitializer(telemetryInitializer.initializer);
-                appInsights.trackTrace({message: 'test trace'});
+                appInsights.trackEvent({name: 'test event'});
                 this.clock.tick(1);
 
                 // verify
@@ -574,7 +608,7 @@ export class ApplicationInsightsTests extends TestClass {
                 var messageOverride = "my unique name";
                 var propOverride = "val1";
                 var telemetryInitializer = {
-                    // This illustrates how to use telemetry initializer (onBeforeSendTelemetry) 
+                    // This illustrates how to use telemetry initializer (onBeforeSendTelemetry)
                     // to access/ modify the contents of an envelope.
                     initializer: (envelope) => {
                         if (envelope.baseType ===
@@ -589,7 +623,7 @@ export class ApplicationInsightsTests extends TestClass {
                 }
 
                 appInsights.addTelemetryInitializer(telemetryInitializer.initializer);
-                    
+
                 // act
                 appInsights.trackTrace({message: 'test message'});
 
@@ -783,7 +817,7 @@ export class ApplicationInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: "TelemetryContext: telemetry initializer - if one initializer fails then telemetry is not sent",
+            name: "TelemetryContext: telemetry initializer - if one initializer fails then error logged and is still sent",
             test: () => {
                 // Setup
                 const plugin = new ChannelPlugin();
@@ -796,14 +830,16 @@ export class ApplicationInsightsTests extends TestClass {
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
                 plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
                 var trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
-
+                var logStub = this.sandbox.spy(appInsights.core.logger, "throwInternal")
                 // act
-                appInsights.addTelemetryInitializer(() => { throw new Error(); });
+                appInsights.addTelemetryInitializer(() => { throw new Error("Test error IGNORE"); });
                 appInsights.addTelemetryInitializer(() => { });
                 appInsights.trackTrace({message: 'test message'});
 
                 // verify
-                Assert.ok(trackStub.notCalled);
+                Assert.ok(trackStub.calledOnce);
+                Assert.ok(logStub.calledOnce);
+
             }
         });
     }
@@ -828,8 +864,8 @@ class ChannelPlugin implements IPlugin {
     }
     public pause(): void {
         this.isPauseInvoked = true;
-    }    
-    
+    }
+
     public resume(): void {
         this.isResumeInvoked = true;
     }
@@ -848,7 +884,7 @@ class ChannelPlugin implements IPlugin {
     public processTelemetry(env: ITelemetryItem) {}
 
     public identifier = "Sender";
-    
+
     setNextPlugin(next: any) {
         // no next setup
     }

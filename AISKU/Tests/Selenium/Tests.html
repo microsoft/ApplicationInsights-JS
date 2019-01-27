@@ -24,30 +24,23 @@
         });
         require([
             'qunit',
-            'node_modules/applicationinsights-core-js/bundle/applicationinsights-core-js',
+            'node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js',
         ], function(QUnit, core) {
-            console.log('core', core);
-            console.log('Qunit', QUnit);
-            define('applicationinsights-core-js', function(){return core;})
+            define('@microsoft/applicationinsights-core-js', function(){return core;})
             require([
-                'node_modules/applicationinsights-common/bundle/applicationinsights-common'
+                'node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common'
             ], function(common) {
-                console.log('common', common);
-                define('applicationinsights-common', common);
+                define('@microsoft/applicationinsights-common', common);
                 require([
-                    'node_modules/applicationinsights-analytics-js/bundle/applicationinsights-analytics-js',
-                    'node_modules/applicationinsights-channel-js/bundle/applicationinsights-channel-js',
-                    'node_modules/applicationinsights-properties-js/bundle/applicationinsights-properties-js',
-                    'node_modules/applicationinsights-dependencies-js/bundle/applicationinsights-dependencies-js'
+                    'node_modules/@microsoft/applicationinsights-analytics-js/browser/applicationinsights-analytics-js',
+                    'node_modules/@microsoft/applicationinsights-channel-js/browser/applicationinsights-channel-js',
+                    'node_modules/@microsoft/applicationinsights-properties-js/browser/applicationinsights-properties-js',
+                    'node_modules/@microsoft/applicationinsights-dependencies-js/browser/applicationinsights-dependencies-js'
                 ], function(analytics, channel, properties, dependencies) {
-                    console.log('analytics', analytics);
-                    console.log('channel', channel);
-                    console.log('properties', properties);
-                    console.log('dependencies', dependencies);
-                    define('applicationinsights-analytics-js', function(){return analytics;});
-                    define('applicationinsights-channel-js', function() {return channel;});
-                    define('applicationinsights-properties-js', function() {return properties;});
-                    define('applicationinsights-dependencies-js', function() {return dependencies;});
+                    define('@microsoft/applicationinsights-analytics-js', function(){return analytics;});
+                    define('@microsoft/applicationinsights-channel-js', function() {return channel;});
+                    define('@microsoft/applicationinsights-properties-js', function() {return properties;});
+                    define('@microsoft/applicationinsights-dependencies-js', function() {return dependencies;});
                     require([
                         'Tests/Selenium/appinsights-sdk.tests'
                     ], function(tests) {
@@ -59,13 +52,6 @@
                 });
             });
         });
-        // require(['Tests/Selenium/appinsights-sdk.tests'],
-        // function (tests) {
-        //     console.log('tests:', tests);
-        // },
-        // function (err) {
-        //     console.log(err); 
-        // });
     </script>
 </body>
 </html>

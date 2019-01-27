@@ -3,13 +3,24 @@
     "sourceMap": true,
     "inlineSources": true,
     "noImplicitAny": false,
-    "module": "amd",
+    "module": "es6",
     "target": "es5",
     "moduleResolution": "Node",
     "alwaysStrict": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "allowSyntheticDefaultImports": true,
+    "importHelpers": true,
+    "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "outDir": "amd/bundle",
-    "rootDir": "AISKU"
+    "declarationMap": true,
+    "declarationDir": "AISKU/dist-esm",
+    "outDir": "dist-esm",
+    "rootDir": "AISKU/src"
   },
-  "files": []
+  "include": [
+    "./src/**"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

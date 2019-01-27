@@ -3,13 +3,20 @@
     "sourceMap": true,
     "inlineSources": true,
     "noImplicitAny": false,
-    "module": "umd",
+    "module": "es6",
     "target": "es5",
     "moduleResolution": "Node",
     "alwaysStrict": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "allowSyntheticDefaultImports": true,
+    "importHelpers": true,
+    "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "outDir": "bundle",
+    "declarationMap": true,
+    "declarationDir": "AISKULight/types",
+    "outDir": "dist-esm",
     "rootDir": "AISKULight"
   },
-  "files": []
+  "include": ["index.ts"],
+  "exclude": ["node_modules"]
 }

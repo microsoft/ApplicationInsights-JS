@@ -1,8 +1,9 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 
-import { AppInsightsCore, IConfiguration, DiagnosticLogger } from "applicationinsights-core-js";
-import PropertiesPlugin from "../../PropertiesPlugin";
-import { Util } from "applicationinsights-common";
+import { AppInsightsCore, IConfiguration, DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import PropertiesPlugin from "../../src/PropertiesPlugin";
+import { ITelemetryConfig } from "../../src/Interfaces/ITelemetryConfig";
+import { Util } from "@microsoft/applicationinsights-common";
 
 export class PropertiesTests extends TestClass {
     private properties: PropertiesPlugin;
@@ -20,7 +21,33 @@ export class PropertiesTests extends TestClass {
     }
 
     public registerTests() {
+        this.addConfigTests();
         this.addUserTests();
+    }
+
+    private addConfigTests() {
+        this.testCase({
+            name: 'Properties Configuration: Config options can be passed from root config',
+            test: () => {
+                this.properties.initialize({
+                    instrumentationKey: 'instrumentation_key',
+                    accountId: 'abc',
+                    samplingPercentage: 15,
+                    sessionExpirationMs: 99999,
+                    extensionConfig: {
+                        [this.properties.identifier]: {
+                            sessionExpirationMs: 88888
+                        }
+                    }
+                }, this.core, []);
+                const config: ITelemetryConfig = this.properties['_extensionConfig'];
+                Assert.equal(15, config.samplingPercentage(), 'Extension configs can be set via root config (number)');
+                Assert.equal('abc', config.accountId(), 'Extension configs can be set via root config (string)');
+                Assert.equal(88888, config.sessionExpirationMs(), 'Root config does not override extensionConfig field when both are present')
+                Assert.notEqual(99999, config.sessionExpirationMs(), 'extensionConfig overrides root config field when both are present');
+            }
+
+        });
     }
 
     private addUserTests() {
@@ -411,7 +438,7 @@ export class PropertiesTests extends TestClass {
                     accountId: null,
                     sessionRenewalMs: null,
                     sessionExpirationMs: null,
-                    sampleRate: null,
+                    samplingPercentage: null,
                     endpointUrl: null,
                     cookieDomain: null,
                     emitLineDelimitedJson: null,

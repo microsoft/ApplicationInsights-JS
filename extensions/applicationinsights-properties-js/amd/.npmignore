@@ -1,8 +1,0 @@
-# NPM Ignore
-
-# ignore everything
-*
-
-# ... but these files
-!package.json
-!bundle/**/*.*

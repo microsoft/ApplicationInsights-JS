@@ -14,8 +14,8 @@
         require.config({
             baseUrl: '../../',
             paths: {
-                core: 'node_modules/applicationinsights-core-js/bundle/',
-                common: 'node_modules/applicationinsights-common/bundle/',
+                core: 'node_modules/@microsoft/applicationinsights-core-js/browser/',
+                common: 'node_modules/@microsoft/applicationinsights-common/browser/',
                 qunit: "Tests/External/qunit-1.23.1"
             }
         });
@@ -25,11 +25,11 @@
             'qunit', // Load qunit here instead of with tests, otherwise will not work
             'core/applicationinsights-core-js',
         ], function (QUnit, aicore) {
-            // aichannel is expecting to import from i.e 'applicationinsights-core-js', so create a temp module
-            define('applicationinsights-core-js', function () { return aicore; });
+            // aichannel is expecting to import from i.e '@microsoft/applicationinsights-core-js', so create a temp module
+            define('@microsoft/applicationinsights-core-js', function () { return aicore; });
 
             require(['common/applicationinsights-common'], function (aicommon) {
-                define('applicationinsights-common', function () { return aicommon; });
+                define('@microsoft/applicationinsights-common', function () { return aicommon; });
                 require.config({
                     baseUrl: './'
                 });
