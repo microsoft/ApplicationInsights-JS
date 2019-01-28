@@ -8,4 +8,14 @@ export interface IEventTelemetry {
      * @memberof IEventTelemetry
      */
     name: string;
+
+    /**
+     * Property bag to contain additional custom properties (Part C)
+     */
+    properties?: { [key: string]: string };
+
+    /**
+     * Property bag to contain additional custom measurements (Part C)
+     */
+    measurements?: { [key: string]: number };
 }
