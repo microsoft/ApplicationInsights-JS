@@ -216,7 +216,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * Logs that a page or other item was viewed.
      * @param IPageViewTelemetry The string you used as the name in startTrackPage. Defaults to the document title.
      * @param customProperties Additional data used to filter events and metrics. Defaults to empty. 
-     * If a user wants to provide duration for pageLoad, it'll have to be in pageView.customProperties.duration
+     * If a user wants to provide duration for pageLoad, it'll have to be in pageView.properties.duration
      */
     public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any }) {
         try {
