@@ -71,17 +71,15 @@ export class Initialization implements IApplicationInsights {
     /**
      * Log a user action or other occurrence.
      * @param {IEventTelemetry} event
-     * @param {{ [key:string]: any }} [customProperties]
      * @memberof Initialization
      */
-    public trackEvent(event: IEventTelemetry, customProperties?: { [key:string]: any }) {
-        this.appInsights.trackEvent(event, customProperties);
+    public trackEvent(event: IEventTelemetry) {
+        this.appInsights.trackEvent(event);
     }
 
     /**
      * Logs that a page, or similar container was displayed to the user.
      * @param {IPageViewTelemetry} pageView
-     * @param {{ [key: string]: any; }} [customProperties]
      * @memberof Initialization
      */
     public trackPageView(pageView: IPageViewTelemetry) {
@@ -91,7 +89,6 @@ export class Initialization implements IApplicationInsights {
     /**
      * Log a bag of performance information via the customProperties field.
      * @param {IPageViewPerformanceTelemetry} pageViewPerformance
-     * @param {{ [key:string]: any }} [customProperties]
      * @memberof Initialization
      */
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry): void {
@@ -101,7 +98,6 @@ export class Initialization implements IApplicationInsights {
     /**
      * Log an exception that you have caught.
      * @param {IExceptionTelemetry} exception
-     * @param {{ [key: string]: any; }} [customProperties]
      * @memberof Initialization
      */
     public trackException(exception: IExceptionTelemetry): void {
