@@ -116,8 +116,17 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'E2E.GenericTests: trackEvent sends to backend',
             stepDelay: 1,
             steps: [() => {
-                this._ai.trackEvent({name: 'event'});
-            }].concat(this.asserts(1))
+                this._ai.trackEvent({name: 'event', properties: {"prop1": "value1"}, measurements: {"measurement1": 200}});
+            }].concat(this.asserts(1)).concat(() => {
+
+                if (this.successSpy.called) {
+                    const payloadStr: string[] = this.successSpy.args[0][0];
+                    const payload = JSON.parse(payloadStr[0]);
+                    let data = payload.data;
+                    Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
+                    Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
+                }
+            })
         });
 
         this.testCaseAsync({
