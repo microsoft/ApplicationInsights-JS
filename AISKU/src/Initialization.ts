@@ -209,12 +209,10 @@ export class Initialization implements IApplicationInsights {
     /**
      * Log a dependency call (e.g. ajax)
      * @param {IDependencyTelemetry} dependency
-     * @param {{[key: string]: any}} [customProperties]
-     * @param {{[key: string]: any}} [systemProperties]
      * @memberof Initialization
      */
-    public trackDependencyData(dependency: IDependencyTelemetry, customProperties?: {[key: string]: any}): void {
-        this.dependencies.trackDependencyData(dependency, customProperties);
+    public trackDependencyData(dependency: IDependencyTelemetry): void {
+        this.dependencies.trackDependencyData(dependency);
     }
 
     // Misc
