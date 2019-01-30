@@ -71,10 +71,11 @@ export class Initialization implements IApplicationInsights {
     /**
      * Log a user action or other occurrence.
      * @param {IEventTelemetry} event
+     * @param {{ [key:string]: any }} [customProperties]
      * @memberof Initialization
      */
-    public trackEvent(event: IEventTelemetry) {
-        this.appInsights.trackEvent(event);
+    public trackEvent(event: IEventTelemetry, customProperties?: { [key:string]: any }) {
+        this.appInsights.trackEvent(event, customProperties);
     }
 
     /**
