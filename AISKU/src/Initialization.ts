@@ -81,7 +81,6 @@ export class Initialization implements IApplicationInsights {
     /**
      * Logs that a page, or similar container was displayed to the user.
      * @param {IPageViewTelemetry} pageView
-     * @param {{ [key: string]: any; }} [customProperties]
      * @memberof Initialization
      */
     public trackPageView(pageView: IPageViewTelemetry) {
@@ -91,7 +90,6 @@ export class Initialization implements IApplicationInsights {
     /**
      * Log a bag of performance information via the customProperties field.
      * @param {IPageViewPerformanceTelemetry} pageViewPerformance
-     * @param {{ [key:string]: any }} [customProperties]
      * @memberof Initialization
      */
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry): void {
@@ -101,7 +99,6 @@ export class Initialization implements IApplicationInsights {
     /**
      * Log an exception that you have caught.
      * @param {IExceptionTelemetry} exception
-     * @param {{ [key: string]: any; }} [customProperties]
      * @memberof Initialization
      */
     public trackException(exception: IExceptionTelemetry): void {
@@ -213,12 +210,10 @@ export class Initialization implements IApplicationInsights {
     /**
      * Log a dependency call (e.g. ajax)
      * @param {IDependencyTelemetry} dependency
-     * @param {{[key: string]: any}} [customProperties]
-     * @param {{[key: string]: any}} [systemProperties]
      * @memberof Initialization
      */
-    public trackDependencyData(dependency: IDependencyTelemetry, customProperties?: {[key: string]: any}): void {
-        this.dependencies.trackDependencyData(dependency, customProperties);
+    public trackDependencyData(dependency: IDependencyTelemetry): void {
+        this.dependencies.trackDependencyData(dependency);
     }
 
     // Misc

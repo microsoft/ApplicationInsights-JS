@@ -18,7 +18,7 @@ export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
 }
 
 export interface IDependenciesPlugin {
-    trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any });
+    trackDependencyData(dependency: IDependencyTelemetry);
 }
 
 export interface IInstrumentationRequirements extends IDependenciesPlugin {
