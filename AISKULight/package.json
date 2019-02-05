@@ -25,5 +25,8 @@
         "@microsoft/applicationinsights-common": "^1.0.0-beta.15",
         "@microsoft/applicationinsights-channel-js": "^1.0.0-beta.13",
         "@microsoft/applicationinsights-core-js": "^1.0.0-beta.5"
+    },
+    "peerDependencies": {
+      "tslib": "^1.9.3"
     }
 }
