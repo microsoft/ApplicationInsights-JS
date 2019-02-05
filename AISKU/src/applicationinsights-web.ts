@@ -14,7 +14,8 @@ export {
     IAppInsightsCore,
     LoggingSeverity,
     _InternalMessageId,
-    ITelemetryItem
+    ITelemetryItem,
+    ITelemetryPlugin
 } from "@microsoft/applicationinsights-core-js";
 export {
     Util,
