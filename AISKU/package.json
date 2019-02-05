@@ -37,10 +37,10 @@
     "dependencies": {
         "@microsoft/applicationinsights-analytics-js": "1.0.0-beta.15",
         "@microsoft/applicationinsights-channel-js": "1.0.0-beta.14",
-        "@microsoft/applicationinsights-common": "file:../AppInsightsCommon",
+        "@microsoft/applicationinsights-common": "1.0.0-beta.16",
         "@microsoft/applicationinsights-core-js": "1.0.0-beta.5",
         "@microsoft/applicationinsights-dependencies-js": "1.0.0-beta.16",
-        "@microsoft/applicationinsights-properties-js": "file:../extensions/applicationinsights-properties-js"
+        "@microsoft/applicationinsights-properties-js": "1.0.0-beta.11"
     },
     "peerDependencies": {
         "tslib": "^1.9.3"
