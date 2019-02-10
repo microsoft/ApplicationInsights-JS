@@ -6,9 +6,9 @@ module.exports = function (grunt) {
             },
             files: {
                 src: [
-                    './vNext/extensions/ApplicationInsights/**/*.ts',
+                    './vnext/shared/AppInsightsCommon/**/*.ts',
+                    './vNext/extensions/**/*.ts',
                     './AISKU/**/*.ts',
-                    '/vNext/extensions//vNext/**/*.ts',
                     './extensions/**/*.ts',
                     '!./**/node_modules/**',
                     '!./**/Tests/**',
@@ -35,15 +35,15 @@ module.exports = function (grunt) {
                 tsconfig: './vNext/shared/AppInsightsCommon/tsconfig.json'
             },
             appinsights: {
-                tsconfig: './ApplicationInsights/tsconfig.json',
+                tsconfig: './vnext/extensions/applicationinsights-analytics-js/tsconfig.json',
             },
             appinsightstests: {
-                tsconfig: './ApplicationInsights/Tests/tsconfig.json',
+                tsconfig: './vnext/extensions/applicationinsights-analytics-js/Tests/tsconfig.json',
                 src: [
-                    './ApplicationInsights/Tests/Selenium/*.ts',
-                    './ApplicationInsights/Tests/*.ts'
+                    './vnext/extensions/applicationinsights-analytics-js/Tests/Selenium/*.ts',
+                    './vnext/extensions/applicationinsights-analytics-js/Tests/*.ts'
                 ],
-                out: 'ApplicationInsights/Tests/Selenium/appinsights-analytics.tests.js'
+                out: 'vnext/extensions/applicationinsights-analytics-js/Tests/Selenium/appinsights-analytics.tests.js'
             },
             aisku: {
                 tsconfig: './AISKU/tsconfig.json',
@@ -201,7 +201,7 @@ module.exports = function (grunt) {
             aitests: {
                 options: {
                     urls: [
-                        './ApplicationInsights/Tests/Selenium/Tests.html'
+                        './vnext/extensions/applicationinsights-analytics-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,

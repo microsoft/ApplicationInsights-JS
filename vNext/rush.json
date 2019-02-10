@@ -17,6 +17,10 @@
     {
       "packageName": "@microsoft/applicationinsights-dependencies-js",
       "projectFolder": "extensions/applicationinsights-dependencies-js"
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-analytics-js",
+      "projectFolder": "extensions/applicationinsights-analytics-js"
     }
   ]
  }
