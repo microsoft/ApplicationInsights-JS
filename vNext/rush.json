@@ -13,6 +13,10 @@
       {
         "packageName": "@microsoft/applicationinsights-properties-js",
         "projectFolder": "extensions/applicationinsights-properties-js"
-      }
+      },
+    {
+      "packageName": "@microsoft/applicationinsights-dependencies-js",
+      "projectFolder": "extensions/applicationinsights-dependencies-js"
+    }
   ]
  }

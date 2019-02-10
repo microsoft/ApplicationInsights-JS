@@ -80,15 +80,15 @@ module.exports = function (grunt) {
                 out: './vNext/extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
             },
             deps: {
-                tsconfig: './extensions/applicationinsights-dependencies-js/tsconfig.json'
+                tsconfig: './vNext/extensions/applicationinsights-dependencies-js/tsconfig.json'
             },
             depstest: {
-                tsconfig: './extensions/applicationinsights-dependencies-js/Tests/tsconfig.json',
+                tsconfig: './vNext/extensions/applicationinsights-dependencies-js/Tests/tsconfig.json',
                 src: [
-                    './extensions/applicationinsights-dependencies-js/Tests/Selenium/*.ts',
-                    './extensions/applicationinsights-dependencies-js/Tests/TestsFramework/*.ts'
+                    './vNext/extensions/applicationinsights-dependencies-js/Tests/Selenium/*.ts',
+                    './vNext/extensions/applicationinsights-dependencies-js/Tests/TestsFramework/*.ts'
                 ],
-                out: './extensions/applicationinsights-dependencies-js/Tests/Selenium/dependencies.tests.js'
+                out: './vNext/extensions/applicationinsights-dependencies-js/Tests/Selenium/dependencies.tests.js'
             },
             module: {
                 // Use a different tsconfig for building module in order to not generate a declaration file for module, while keeping declaration for other modules
@@ -212,7 +212,7 @@ module.exports = function (grunt) {
             deps: {
                 options: {
                     urls: [
-                        './extensions/applicationinsights-dependencies-js/Tests/Selenium/Tests.html'                       
+                        './vNext/extensions/applicationinsights-dependencies-js/Tests/Selenium/Tests.html'                       
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
