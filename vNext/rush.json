@@ -6,6 +6,9 @@
   "rushVersion": "5.4.0",
   "projectFolderMaxDepth": 4,
   "projects": [
-    
+      {
+        "packageName": "@microsoft/applicationinsights-common",
+        "projectFolder": "shared/AppInsightsCommon"
+      }
   ]
  }
