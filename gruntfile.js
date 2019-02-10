@@ -6,9 +6,9 @@ module.exports = function (grunt) {
             },
             files: {
                 src: [
-                    './ApplicationInsights/**/*.ts',
-                    './vNext/shared/AppInsightsCommon/**/*.ts',
+                    './vNext/extensions/ApplicationInsights/**/*.ts',
                     './AISKU/**/*.ts',
+                    '/vNext/extensions//vNext/**/*.ts',
                     './extensions/**/*.ts',
                     '!./**/node_modules/**',
                     '!./**/Tests/**',
@@ -66,18 +66,18 @@ module.exports = function (grunt) {
                 out: 'AISKU/Tests/Selenium/appinsights-sdk.tests.js'
             },
             properties: {
-                tsconfig: './extensions/applicationinsights-properties-js/tsconfig.json',
+                tsconfig: './vNext/extensions/applicationinsights-properties-js/tsconfig.json',
                 src: [
-                    './extensions/applicationinsights-properties-js/*.ts',
-                    './extensions/applicationinsights-properties-js/Context/*.ts',
-                    './extensions/applicationinsights-properties-js/Interfaces/Context/*.ts',
-                    './extensions/applicationinsights-properties-js/Interfaces/*.ts'
+                    './vNext/extensions/applicationinsights-properties-js/*.ts',
+                    './vNext/extensions/applicationinsights-properties-js/Context/*.ts',
+                    './vNext/extensions/applicationinsights-properties-js/Interfaces/Context/*.ts',
+                    './vNext/extensions/applicationinsights-properties-js/Interfaces/*.ts'
                 ]
             },
             propertiestests: {
-                tsconfig: './extensions/applicationinsights-properties-js/Tests/tsconfig.json',
-                src: './extensions/applicationinsights-properties-js/Tests/**/*.ts',
-                out: './extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
+                tsconfig: './vNext/extensions/applicationinsights-properties-js/Tests/tsconfig.json',
+                src: './vNext/extensions/applicationinsights-properties-js/Tests/**/*.ts',
+                out: './vNext/extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
             },
             deps: {
                 tsconfig: './extensions/applicationinsights-dependencies-js/tsconfig.json'
@@ -223,7 +223,7 @@ module.exports = function (grunt) {
             properties: {
                 options: {
                     urls: [
-                        './extensions/applicationinsights-properties-js/Tests/Selenium/Tests.html'
+                        './vNext/extensions/applicationinsights-properties-js/Tests/Selenium/Tests.html'
                     ],
                     timout: 5 * 60 * 1000, // 5 min
                     console: false,
