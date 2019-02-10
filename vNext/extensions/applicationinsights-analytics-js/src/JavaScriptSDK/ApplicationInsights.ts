@@ -356,8 +356,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      */
     public trackException(exception: IExceptionTelemetry, customProperties?: {[key: string]: any}): void {
         try {
-            let baseData = new Exception(this._logger, exception.exception, exception.properties, exception.measurements, exception.severityLevel)
-            let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IExceptionTelemetry>(
+            let baseData = new Exception(this._logger, exception.error, exception.properties, exception.measurements, exception.severityLevel)
+            let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<Exception>(
                 baseData,
                 Exception.dataType,
                 Exception.envelopeType,
