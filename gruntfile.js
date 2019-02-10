@@ -45,9 +45,9 @@ module.exports = function (grunt) {
                 out: 'vnext/extensions/applicationinsights-analytics-js/Tests/Selenium/appinsights-analytics.tests.js'
             },
             aisku: {
-                tsconfig: '.vNext/AISKU/tsconfig.json',
+                tsconfig: './vNext/AISKU/tsconfig.json',
                 src: [
-                    'vNext/AISKU/*.ts'
+                    'vNext/AISKU/src/*.ts'
                 ]
             },
             aiskulite: {

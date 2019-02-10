@@ -16,7 +16,7 @@
     "declarationMap": true,
     "declarationDir": "vNext/AISKU/dist-esm",
     "outDir": "dist-esm",
-    "rootDir": "vNext/AKSKU/src"
+    "rootDir": "./vNext/AISKU/src"
   },
   "include": [
     "./src/**"
