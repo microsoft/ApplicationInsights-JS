@@ -9,6 +9,10 @@
       {
         "packageName": "@microsoft/applicationinsights-common",
         "projectFolder": "shared/AppInsightsCommon"
+      },
+      {
+        "packageName": "@microsoft/applicationinsights-properties-js",
+        "projectFolder": "extensions/applicationinsights-properties-js"
       }
   ]
  }
