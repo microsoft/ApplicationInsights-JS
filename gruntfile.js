@@ -7,7 +7,7 @@ module.exports = function (grunt) {
             files: {
                 src: [
                     './ApplicationInsights/**/*.ts',
-                    './AppInsightsCommon/**/*.ts',
+                    './vNext/shared/AppInsightsCommon/**/*.ts',
                     './AISKU/**/*.ts',
                     './extensions/**/*.ts',
                     '!./**/node_modules/**',
@@ -32,7 +32,7 @@ module.exports = function (grunt) {
                 out: 'bundle/ai.js',
             },
             common: {
-                tsconfig: './AppInsightsCommon/tsconfig.json'
+                tsconfig: './vNext/shared/AppInsightsCommon/tsconfig.json'
             },
             appinsights: {
                 tsconfig: './ApplicationInsights/tsconfig.json',
