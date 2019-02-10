@@ -21,6 +21,10 @@
     {
       "packageName": "@microsoft/applicationinsights-analytics-js",
       "projectFolder": "extensions/applicationinsights-analytics-js"
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-web",
+      "projectFolder": "AISKU"
     }
   ]
  }

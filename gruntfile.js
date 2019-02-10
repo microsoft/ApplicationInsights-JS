@@ -8,8 +8,7 @@ module.exports = function (grunt) {
                 src: [
                     './vnext/shared/AppInsightsCommon/**/*.ts',
                     './vNext/extensions/**/*.ts',
-                    './AISKU/**/*.ts',
-                    './extensions/**/*.ts',
+                    './vNext/AISKU/**/*.ts',
                     '!./**/node_modules/**',
                     '!./**/Tests/**',
                     '!./**/dist-esm/**',
@@ -46,9 +45,9 @@ module.exports = function (grunt) {
                 out: 'vnext/extensions/applicationinsights-analytics-js/Tests/Selenium/appinsights-analytics.tests.js'
             },
             aisku: {
-                tsconfig: './AISKU/tsconfig.json',
+                tsconfig: '.vNext/AISKU/tsconfig.json',
                 src: [
-                    'AISKU/*.ts'
+                    'vNext/AISKU/*.ts'
                 ]
             },
             aiskulite: {
@@ -58,12 +57,12 @@ module.exports = function (grunt) {
                 ]
             },
             aiskutests: {
-                tsconfig: './AISKU/Tests/tsconfig.json',
+                tsconfig: '.vNext/AISKU/Tests/tsconfig.json',
                 src: [
-                    'AISKU/Tests/Selenium/*.ts',
-                    'AISKU/Tests/*.ts'
+                    'vNext/AISKU/Tests/Selenium/*.ts',
+                    'vNext/AISKU/Tests/*.ts'
                 ],
-                out: 'AISKU/Tests/Selenium/appinsights-sdk.tests.js'
+                out: 'vNext/AISKU/Tests/Selenium/appinsights-sdk.tests.js'
             },
             properties: {
                 tsconfig: './vNext/extensions/applicationinsights-properties-js/tsconfig.json',
@@ -175,7 +174,7 @@ module.exports = function (grunt) {
             },
             snippetvNext: {
                 files: {
-                    'AISKU/snippet/snippet.min.js': ['AISKU/snippet/snippet.js']
+                    'vNext/AISKU/snippet/snippet.min.js': ['vNext/AISKU/snippet/snippet.js']
                 }
             }
         },
@@ -234,7 +233,7 @@ module.exports = function (grunt) {
             aisku: {
                 options: {
                     urls: [
-                        './AISKU/Tests/Selenium/Tests.html'
+                        './vNext/AISKU/Tests/Selenium/Tests.html'
                     ],
                     timeout: 5 * 60 * 1000, // 5 min
                     console: false,
