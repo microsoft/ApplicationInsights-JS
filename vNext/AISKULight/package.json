@@ -1,0 +1,31 @@
+{
+    "name": "@microsoft/applicationinsights-web-basic",
+    "version": "1.0.0-beta.14",
+    "description": "Microsoft Application Insights Javascript SDK core and channel",
+    "main": "dist/applicationinsights-web-basic.js",
+    "module": "dist-esm/index.js",
+    "types": "types/index.d.ts",
+    "sideEffects": false,
+    "scripts": {
+        "build": "npm run build:esm && npm run build:browser",
+        "build:esm": "grunt aiskulite",
+        "build:browser": "rollup -c",
+        "test": "echo 'No tests'"
+    },
+    "devDependencies": {
+        "grunt": "^1.0.3",
+        "rollup-plugin-node-resolve": "^3.4.0",
+        "rollup-plugin-replace": "^2.1.0",
+        "rollup-plugin-uglify": "^6.0.0",
+        "source-map-loader": "^0.2.3",
+        "typescript": "2.5.3"
+    },
+    "dependencies": {
+        "@microsoft/applicationinsights-common": "^1.0.0-beta.15",
+        "@microsoft/applicationinsights-channel-js": "^1.0.0-beta.13",
+        "@microsoft/applicationinsights-core-js": "^1.0.0-beta.5"
+    },
+    "peerDependencies": {
+      "tslib": "^1.9.3"
+    }
+}

@@ -51,9 +51,9 @@ module.exports = function (grunt) {
                 ]
             },
             aiskulite: {
-                tsconfig: './AISKULight/tsconfig.json',
+                tsconfig: './vNext/AISKULight/tsconfig.json',
                 src: [
-                    'AISKULight/*.ts'
+                    'vNext/AISKULight/*.ts'
                 ]
             },
             aiskutests: {

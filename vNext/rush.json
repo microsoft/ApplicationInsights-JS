@@ -25,6 +25,10 @@
     {
       "packageName": "@microsoft/applicationinsights-web",
       "projectFolder": "AISKU"
+     },
+     {
+      "packageName": "@microsoft/applicationinsights-web-basic",
+      "projectFolder": "AISKULight"
      }
   ]
  }
