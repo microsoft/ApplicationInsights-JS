@@ -4,6 +4,9 @@ node_js:
 before_install:
   - npm i -g npm@6.5.0
 
+before_script:
+  - npm install grunt-cli -g
+
 jobs:
   include:
     - stage: "Prod build and test"
@@ -14,6 +17,7 @@ jobs:
       name: "VNext build and test"
       script:
       - cd vNext
+      - rd /s /q common\temp\npm-local
       - set -e
       - set NO_UPDATE_NOTIFIER=1
 
