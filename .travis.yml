@@ -3,8 +3,8 @@ node_js:
   - "8.9.0"
 before_install:
   - npm i -g npm@6.5.0
-  - npm -v
-  - node -v
+  - npm --version
+  - node --version
 
 before_script:
   - npm install grunt-cli -g
