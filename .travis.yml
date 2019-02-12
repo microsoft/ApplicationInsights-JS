@@ -1,8 +1,10 @@
 language: node_js
 node_js:
-  - "8.9.4"
+  - "8.9.0"
 before_install:
   - npm i -g npm@6.5.0
+  - npm -v
+  - node -v
 
 before_script:
   - npm install grunt-cli -g
@@ -31,6 +33,7 @@ jobs:
 
       - echo 'Installing...' && echo -en 'travis_fold:start:install\\r'
       - rm -rf common/temp/npm-local
+    
       - node common/scripts/install-run-rush.js install
       - echo -en 'travis_fold:end:install\\r'
 
