@@ -14,8 +14,8 @@ jobs:
     - stage: "Prod build and test"
       name: "Prod build and test"
       script:
-      - echo "Hello world"
-    - stage: "vNext"
+      - grunt test
+    - stage: "VNext build and test"
       name: "VNext build and test"
       script:
       - cd vNext
