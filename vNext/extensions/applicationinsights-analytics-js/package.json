@@ -31,5 +31,8 @@
         "@microsoft/applicationinsights-common": "1.0.0-beta.16",
         "tslib": "^1.9.3"
     },
-    "license": "MIT"
+    "license": "MIT",
+    "peerDependencies": {
+        "rollup": "^0.66.0"
+    }
 }

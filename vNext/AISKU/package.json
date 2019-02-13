@@ -47,6 +47,7 @@
         "@microsoft/applicationinsights-properties-js": "1.0.0-beta.11"
     },
     "peerDependencies": {
-        "tslib": "^1.9.3"
+        "tslib": "^1.9.3",
+        "rollup": "^0.66.0"
     }
 }
