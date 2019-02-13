@@ -6,7 +6,7 @@ module.exports = function (grunt) {
             },
             files: {
                 src: [
-                    './vnext/shared/AppInsightsCommon/**/*.ts',
+                    './vNext/shared/AppInsightsCommon/**/*.ts',
                     './vNext/extensions/**/*.ts',
                     './vNext/AISKU/**/*.ts',
                     '!./**/node_modules/**',
@@ -34,15 +34,15 @@ module.exports = function (grunt) {
                 tsconfig: './vNext/shared/AppInsightsCommon/tsconfig.json'
             },
             appinsights: {
-                tsconfig: './vnext/extensions/applicationinsights-analytics-js/tsconfig.json',
+                tsconfig: './vNext/extensions/applicationinsights-analytics-js/tsconfig.json',
             },
             appinsightstests: {
-                tsconfig: './vnext/extensions/applicationinsights-analytics-js/Tests/tsconfig.json',
+                tsconfig: './vNext/extensions/applicationinsights-analytics-js/Tests/tsconfig.json',
                 src: [
-                    './vnext/extensions/applicationinsights-analytics-js/Tests/Selenium/*.ts',
-                    './vnext/extensions/applicationinsights-analytics-js/Tests/*.ts'
+                    './vNext/extensions/applicationinsights-analytics-js/Tests/Selenium/*.ts',
+                    './vNext/extensions/applicationinsights-analytics-js/Tests/*.ts'
                 ],
-                out: 'vnext/extensions/applicationinsights-analytics-js/Tests/Selenium/appinsights-analytics.tests.js'
+                out: 'vNext/extensions/applicationinsights-analytics-js/Tests/Selenium/appinsights-analytics.tests.js'
             },
             aisku: {
                 tsconfig: './vNext/AISKU/tsconfig.json',
@@ -200,7 +200,7 @@ module.exports = function (grunt) {
             aitests: {
                 options: {
                     urls: [
-                        './vnext/extensions/applicationinsights-analytics-js/Tests/Selenium/Tests.html'
+                        './vNext/extensions/applicationinsights-analytics-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
