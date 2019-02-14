@@ -36,7 +36,8 @@
         "selenium-server-standalone-jar": "^3.141.5",
         "serve-static": "^1.13.2",
         "source-map-loader": "^0.2.3",
-        "typescript": "2.5.3"
+        "typescript": "2.5.3",
+        "rollup": "^0.66.0"
     },
     "dependencies": {
         "@microsoft/applicationinsights-analytics-js": "1.0.0-beta.15",
@@ -47,7 +48,6 @@
         "@microsoft/applicationinsights-properties-js": "1.0.0-beta.11"
     },
     "peerDependencies": {
-        "tslib": "^1.9.3",
-        "rollup": "^0.66.0"
+        "tslib": "^1.9.3"
     }
 }
