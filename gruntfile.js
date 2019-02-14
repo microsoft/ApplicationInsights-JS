@@ -57,7 +57,7 @@ module.exports = function (grunt) {
                 ]
             },
             aiskutests: {
-                tsconfig: '.vNext/AISKU/Tests/tsconfig.json',
+                tsconfig: './vNext/AISKU/Tests/tsconfig.json',
                 src: [
                     'vNext/AISKU/Tests/Selenium/*.ts',
                     'vNext/AISKU/Tests/*.ts'
