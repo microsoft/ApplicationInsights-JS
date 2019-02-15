@@ -111,7 +111,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 Event.dataType,
                 Event.envelopeType,
                 this._logger,
-                customProperties);
+                customProperties
+             );
 
             this._setTelemetryNameAndIKey(telemetryItem);
             this.core.track(telemetryItem);
@@ -214,8 +215,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     /**
      * Logs that a page or other item was viewed.
      * @param IPageViewTelemetry The string you used as the name in startTrackPage. Defaults to the document title.
-     * @param customProperties Additional data used to filter events and metrics. Defaults to empty. If a user wants
-     *                         to provide a custom duration, it'll have to be in customProperties
+     * @param customProperties Additional data used to filter events and metrics. Defaults to empty.
+     * If a user wants to provide duration for pageLoad, it'll have to be in pageView.properties.duration
      */
     public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any }) {
         try {
@@ -355,8 +356,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      */
     public trackException(exception: IExceptionTelemetry, customProperties?: {[key: string]: any}): void {
         try {
+            let baseData = new Exception(this._logger, exception.exception, exception.properties, exception.measurements, exception.severityLevel)
             let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IExceptionTelemetry>(
-                exception,
+                baseData,
                 Exception.dataType,
                 Exception.envelopeType,
                 this._logger,
@@ -496,7 +498,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         // initialize page view timing
         this._pageTracking = new Timing(this._logger, "trackPageView");
         this._pageTracking.action = (name, url, duration, properties, measurements) => {
-            
+
             // duration must be a custom property in order for the collector to extract it
             if (CoreUtils.isNullOrUndefined(properties)) {
                 properties = {};
@@ -506,7 +508,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             let pageViewItem: IPageViewTelemetry = {
                 name: name,
                 uri: url,
-                properties: properties, 
+                properties: properties,
                 measurements: measurements
             };
 

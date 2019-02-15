@@ -11,21 +11,38 @@
         "build": "npm run build:esm && npm run build:browser && grunt snippetvnext",
         "build:esm": "grunt aisku",
         "build:browser": "rollup -c",
-        "test": "grunt aiskutests"
+        "test": "grunt aiskutests",
+        "nightwatch:chrome": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env chrome",
+        "nightwatch:firefox": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env firefox",
+        "nightwatch:edge": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env edge",
+        "nightwatch:ie8": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env ie8",
+        "nightwatch:ie9": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env ie9",
+        "nightwatch:ie10": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env ie10",
+        "nightwatch:ie11": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env ie11",
+        "nightwatch": "start node Tests/nightwatch/serve_nightwatch.js && npx concurrently \"npm run nightwatch:chrome\" \"npm run nightwatch:ie11\" \"npm run nightwatch:ie10\" && npm run nightwatch:done || npm run nightwatch:done",
+        "nightwatch:done": "curl http://localhost:8000/_done"
     },
     "devDependencies": {
+        "chromedriver": "^2.45.0",
+        "finalhandler": "^1.1.1",
+        "geckodriver": "^1.14.1",
         "rollup-plugin-node-resolve": "^3.4.0",
         "rollup-plugin-replace": "^2.1.0",
         "rollup-plugin-uglify": "^6.0.0",
+        "selenium-server-standalone-jar": "^3.141.5",
+        "serve-static": "^1.13.2",
         "source-map-loader": "^0.2.3",
         "typescript": "2.5.3"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-analytics-js": "^1.0.0-beta.14",
-        "@microsoft/applicationinsights-channel-js": "^1.0.0-beta.13",
-        "@microsoft/applicationinsights-common": "^1.0.0-beta.15",
-        "@microsoft/applicationinsights-core-js": "^1.0.0-beta.5",
-        "@microsoft/applicationinsights-dependencies-js": "^1.0.0-beta.13",
-        "@microsoft/applicationinsights-properties-js": "^1.0.0-beta.10"
+        "@microsoft/applicationinsights-analytics-js": "1.0.0-beta.15",
+        "@microsoft/applicationinsights-channel-js": "1.0.0-beta.14",
+        "@microsoft/applicationinsights-common": "1.0.0-beta.16",
+        "@microsoft/applicationinsights-core-js": "1.0.0-beta.5",
+        "@microsoft/applicationinsights-dependencies-js": "1.0.0-beta.16",
+        "@microsoft/applicationinsights-properties-js": "1.0.0-beta.11"
+    },
+    "peerDependencies": {
+        "tslib": "^1.9.3"
     }
 }

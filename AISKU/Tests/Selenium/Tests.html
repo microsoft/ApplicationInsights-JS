@@ -26,13 +26,10 @@
             'qunit',
             'node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js',
         ], function(QUnit, core) {
-            console.log('core', core);
-            console.log('Qunit', QUnit);
             define('@microsoft/applicationinsights-core-js', function(){return core;})
             require([
                 'node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common'
             ], function(common) {
-                console.log('common', common);
                 define('@microsoft/applicationinsights-common', common);
                 require([
                     'node_modules/@microsoft/applicationinsights-analytics-js/browser/applicationinsights-analytics-js',
@@ -40,10 +37,6 @@
                     'node_modules/@microsoft/applicationinsights-properties-js/browser/applicationinsights-properties-js',
                     'node_modules/@microsoft/applicationinsights-dependencies-js/browser/applicationinsights-dependencies-js'
                 ], function(analytics, channel, properties, dependencies) {
-                    console.log('analytics', analytics);
-                    console.log('channel', channel);
-                    console.log('properties', properties);
-                    console.log('dependencies', dependencies);
                     define('@microsoft/applicationinsights-analytics-js', function(){return analytics;});
                     define('@microsoft/applicationinsights-channel-js', function() {return channel;});
                     define('@microsoft/applicationinsights-properties-js', function() {return properties;});
@@ -59,13 +52,6 @@
                 });
             });
         });
-        // require(['Tests/Selenium/appinsights-sdk.tests'],
-        // function (tests) {
-        //     console.log('tests:', tests);
-        // },
-        // function (err) {
-        //     console.log(err); 
-        // });
     </script>
 </body>
 </html>

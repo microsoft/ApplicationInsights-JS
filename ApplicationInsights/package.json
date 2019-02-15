@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-analytics-js",
-    "version": "1.0.0-beta.14",
+    "version": "1.0.0-beta.15",
     "description": "Microsoft Application Insights Javascript SDK apis",
     "main": "dist/applicationinsights-analytics-js.js",
     "module": "dist-esm/applicationinsights-analytics-js.js",
@@ -24,7 +24,8 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-core-js": "^1.0.0-beta.5",
-        "@microsoft/applicationinsights-common": "^1.0.0-beta.15"
+        "@microsoft/applicationinsights-common": "^1.0.0-beta.16",
+        "tslib": "^1.9.3"
     },
     "license": "MIT"
 }
