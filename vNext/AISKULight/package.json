@@ -22,8 +22,8 @@
         "rollup": "^0.66.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-common": "1.0.0-beta.16",
-        "@microsoft/applicationinsights-channel-js": "1.0.0-beta.14",
+        "@microsoft/applicationinsights-common": "1.0.0-beta.17",
+        "@microsoft/applicationinsights-channel-js": "1.0.0-beta.15",
         "@microsoft/applicationinsights-core-js": "1.0.0-beta.5"
     },
     "peerDependencies": {
