@@ -233,7 +233,7 @@ module.exports = function (grunt) {
             aisku: {
                 options: {
                     urls: [
-                        './vNext/AISKU/Tests/Selenium/Tests.html'
+                        './vNext/AISKU/tests/Selenium/Tests.html'
                     ],
                     timeout: 5 * 60 * 1000, // 5 min
                     console: false,
