@@ -39,3 +39,6 @@ jobs:
       - node common/scripts/install-run-rush.js rebuild --verbose
       - echo -en 'travis_fold:end:build\\r'
       
+      - echo 'Running test...' && echo -en 'travis_fold:start:tests\\r'
+      - node common/scripts/install-run-rush.js test --verbose
+      - echo -en 'travis_fold:end:tests\\r'
