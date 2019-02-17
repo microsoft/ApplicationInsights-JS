@@ -59,10 +59,10 @@ module.exports = function (grunt) {
             aiskutests: {
                 tsconfig: './vNext/AISKU/tests/tsconfig.json',
                 src: [
-                    'vNext/AISKU/Tests/Selenium/*.ts',
-                    'vNext/AISKU/Tests/*.ts'
+                    'vNext/AISKU/tests/Selenium/*.ts',
+                    'vNext/AISKU/tests/*.ts'
                 ],
-                out: 'vNext/AISKU/Tests/Selenium/appinsights-sdk.tests.js'
+                out: 'vNext/AISKU/tests/Selenium/appinsights-sdk.tests.js'
             },
             properties: {
                 tsconfig: './vNext/extensions/applicationinsights-properties-js/tsconfig.json',
