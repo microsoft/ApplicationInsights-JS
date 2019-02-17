@@ -1,0 +1,63 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Cache-control" content="no-Cache" />
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css">
+    <script src="http://sinonjs.org/releases/sinon-1.17.2.js"></script>
+    <title>Tests for Application Insights JavaScript API</title>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script>
+</head>
+
+<body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script>
+        require.config({
+            baseUrl: '../../',
+            paths: {
+                qunit: "Tests/External/qunit-1.23.1",
+                tests: 'Tests/appinsights-sdk.tests'
+            }
+        });
+        require([
+            'qunit',
+            'node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js',
+        ], function(QUnit, core) {
+            define('@microsoft/applicationinsights-core-js', function(){return core;})
+            require([
+                'node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common'
+            ], function(common) {
+                define('@microsoft/applicationinsights-common', common);
+                require([
+                    'node_modules/@microsoft/applicationinsights-analytics-js/browser/applicationinsights-analytics-js',
+                    'node_modules/@microsoft/applicationinsights-channel-js/browser/applicationinsights-channel-js',
+                    'node_modules/@microsoft/applicationinsights-properties-js/browser/applicationinsights-properties-js',
+                    'node_modules/@microsoft/applicationinsights-dependencies-js/browser/applicationinsights-dependencies-js'
+                ], function(analytics, channel, properties, dependencies) {
+                    define('@microsoft/applicationinsights-analytics-js', function(){return analytics;});
+                    define('@microsoft/applicationinsights-channel-js', function() {return channel;});
+                    define('@microsoft/applicationinsights-properties-js', function() {return properties;});
+                    define('@microsoft/applicationinsights-dependencies-js', function() {return dependencies;});
+                    require([
+                        'Tests/Selenium/appinsights-sdk.tests'
+                    ], function(tests) {
+                        QUnit.start();
+                    },
+                    function(err) {
+                        console.log("Loading Test failed" + err);
+                    });
+                },
+                function(err1) {
+                    console.log("Loading analytics or channel or properties or dependencies failed" + err1);
+                })
+            },
+            function(err2) {
+                        console.log("Loading common failed" + err2);
+                });
+        });
+    </script>
+</body>
+</html>
