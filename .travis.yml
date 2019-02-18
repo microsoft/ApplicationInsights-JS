@@ -25,10 +25,6 @@ jobs:
       - node common/scripts/install-run-rush.js change -v
       - echo -en 'travis_fold:end:change\\r'
 
-      - echo 'Run rush update'
-      - rush update --purge --full --recheck
-      - echo 'End  rush update'
-
       - echo 'Checking for inconsistent dependency versions' && echo -en 'travis_fold:start:check\\r'
       - node common/scripts/install-run-rush.js check
       - echo -en 'travis_fold:end:check\\r'
@@ -38,6 +34,10 @@ jobs:
     
       - node common/scripts/install-run-rush.js install
       - echo -en 'travis_fold:end:install\\r'
+
+      - echo 'Run rush update'
+      - rush update --purge --full --recheck
+      - echo 'End rush update'
 
       - echo 'Building...' && echo -en 'travis_fold:start:build\\r'
       - node common/scripts/install-run-rush.js rebuild --verbose
