@@ -32,17 +32,13 @@ jobs:
       - echo 'Installing...' && echo -en 'travis_fold:start:install\\r'
       - rm -rf common/temp/npm-local
     
-      - call node common/scripts/install-run-rush.js install
+      - node common/scripts/install-run-rush.js install
       - echo -en 'travis_fold:end:install\\r'
 
-      - echo 'Run rush update'
-      - rush update --purge --full --recheck
-      - echo 'End rush update'
-
       - echo 'Building...' && echo -en 'travis_fold:start:build\\r'
-      - call node common/scripts/install-run-rush.js rebuild --verbose
+      - node common/scripts/install-run-rush.js rebuild --verbose
       - echo -en 'travis_fold:end:build\\r'
       
       - echo 'Running test...' && echo -en 'travis_fold:start:tests\\r'
-      - call node common/scripts/install-run-rush.js test --verbose
+      - node common/scripts/install-run-rush.js test --verbose
       - echo -en 'travis_fold:end:tests\\r'
