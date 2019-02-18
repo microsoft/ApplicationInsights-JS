@@ -6,10 +6,9 @@ module.exports = function (grunt) {
             },
             files: {
                 src: [
-                    './ApplicationInsights/**/*.ts',
-                    './AppInsightsCommon/**/*.ts',
-                    './AISKU/**/*.ts',
-                    './extensions/**/*.ts',
+                    './vNext/shared/AppInsightsCommon/**/*.ts',
+                    './vNext/extensions/**/*.ts',
+                    './vNext/AISKU/**/*.ts',
                     '!./**/node_modules/**',
                     '!./**/Tests/**',
                     '!./**/dist-esm/**',
@@ -32,63 +31,63 @@ module.exports = function (grunt) {
                 out: 'bundle/ai.js',
             },
             common: {
-                tsconfig: './AppInsightsCommon/tsconfig.json'
+                tsconfig: './vNext/shared/AppInsightsCommon/tsconfig.json'
             },
             appinsights: {
-                tsconfig: './ApplicationInsights/tsconfig.json',
+                tsconfig: './vNext/extensions/applicationinsights-analytics-js/tsconfig.json',
             },
             appinsightstests: {
-                tsconfig: './ApplicationInsights/Tests/tsconfig.json',
+                tsconfig: './vNext/extensions/applicationinsights-analytics-js/Tests/tsconfig.json',
                 src: [
-                    './ApplicationInsights/Tests/Selenium/*.ts',
-                    './ApplicationInsights/Tests/*.ts'
+                    './vNext/extensions/applicationinsights-analytics-js/Tests/Selenium/*.ts',
+                    './vNext/extensions/applicationinsights-analytics-js/Tests/*.ts'
                 ],
-                out: 'ApplicationInsights/Tests/Selenium/appinsights-analytics.tests.js'
+                out: 'vNext/extensions/applicationinsights-analytics-js/Tests/Selenium/appinsights-analytics.tests.js'
             },
             aisku: {
-                tsconfig: './AISKU/tsconfig.json',
+                tsconfig: './vNext/AISKU/tsconfig.json',
                 src: [
-                    'AISKU/*.ts'
+                    'vNext/AISKU/src/*.ts'
                 ]
             },
             aiskulite: {
-                tsconfig: './AISKULight/tsconfig.json',
+                tsconfig: './vNext/AISKULight/tsconfig.json',
                 src: [
-                    'AISKULight/*.ts'
+                    'vNext/AISKULight/*.ts'
                 ]
             },
             aiskutests: {
-                tsconfig: './AISKU/Tests/tsconfig.json',
+                tsconfig: './vNext/AISKU/Tests/tsconfig.json',
                 src: [
-                    'AISKU/Tests/Selenium/*.ts',
-                    'AISKU/Tests/*.ts'
+                    'vNext/AISKU/Tests/Selenium/*.ts',
+                    'vNext/AISKU/Tests/*.ts'
                 ],
-                out: 'AISKU/Tests/Selenium/appinsights-sdk.tests.js'
+                out: 'vNext/AISKU/Tests/Selenium/appinsights-sdk.tests.js'
             },
             properties: {
-                tsconfig: './extensions/applicationinsights-properties-js/tsconfig.json',
+                tsconfig: './vNext/extensions/applicationinsights-properties-js/tsconfig.json',
                 src: [
-                    './extensions/applicationinsights-properties-js/*.ts',
-                    './extensions/applicationinsights-properties-js/Context/*.ts',
-                    './extensions/applicationinsights-properties-js/Interfaces/Context/*.ts',
-                    './extensions/applicationinsights-properties-js/Interfaces/*.ts'
+                    './vNext/extensions/applicationinsights-properties-js/*.ts',
+                    './vNext/extensions/applicationinsights-properties-js/Context/*.ts',
+                    './vNext/extensions/applicationinsights-properties-js/Interfaces/Context/*.ts',
+                    './vNext/extensions/applicationinsights-properties-js/Interfaces/*.ts'
                 ]
             },
             propertiestests: {
-                tsconfig: './extensions/applicationinsights-properties-js/Tests/tsconfig.json',
-                src: './extensions/applicationinsights-properties-js/Tests/**/*.ts',
-                out: './extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
+                tsconfig: './vNext/extensions/applicationinsights-properties-js/Tests/tsconfig.json',
+                src: './vNext/extensions/applicationinsights-properties-js/Tests/**/*.ts',
+                out: './vNext/extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
             },
             deps: {
-                tsconfig: './extensions/applicationinsights-dependencies-js/tsconfig.json'
+                tsconfig: './vNext/extensions/applicationinsights-dependencies-js/tsconfig.json'
             },
             depstest: {
-                tsconfig: './extensions/applicationinsights-dependencies-js/Tests/tsconfig.json',
+                tsconfig: './vNext/extensions/applicationinsights-dependencies-js/Tests/tsconfig.json',
                 src: [
-                    './extensions/applicationinsights-dependencies-js/Tests/Selenium/*.ts',
-                    './extensions/applicationinsights-dependencies-js/Tests/TestsFramework/*.ts'
+                    './vNext/extensions/applicationinsights-dependencies-js/Tests/Selenium/*.ts',
+                    './vNext/extensions/applicationinsights-dependencies-js/Tests/TestsFramework/*.ts'
                 ],
-                out: './extensions/applicationinsights-dependencies-js/Tests/Selenium/dependencies.tests.js'
+                out: './vNext/extensions/applicationinsights-dependencies-js/Tests/Selenium/dependencies.tests.js'
             },
             module: {
                 // Use a different tsconfig for building module in order to not generate a declaration file for module, while keeping declaration for other modules
@@ -175,7 +174,7 @@ module.exports = function (grunt) {
             },
             snippetvNext: {
                 files: {
-                    'AISKU/snippet/snippet.min.js': ['AISKU/snippet/snippet.js']
+                    'vNext/AISKU/snippet/snippet.min.js': ['vNext/AISKU/snippet/snippet.js']
                 }
             }
         },
@@ -201,7 +200,7 @@ module.exports = function (grunt) {
             aitests: {
                 options: {
                     urls: [
-                        './ApplicationInsights/Tests/Selenium/Tests.html'
+                        './vNext/extensions/applicationinsights-analytics-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -212,7 +211,7 @@ module.exports = function (grunt) {
             deps: {
                 options: {
                     urls: [
-                        './extensions/applicationinsights-dependencies-js/Tests/Selenium/Tests.html'                       
+                        './vNext/extensions/applicationinsights-dependencies-js/Tests/Selenium/Tests.html'                       
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -223,7 +222,7 @@ module.exports = function (grunt) {
             properties: {
                 options: {
                     urls: [
-                        './extensions/applicationinsights-properties-js/Tests/Selenium/Tests.html'
+                        './vNext/extensions/applicationinsights-properties-js/Tests/Selenium/Tests.html'
                     ],
                     timout: 5 * 60 * 1000, // 5 min
                     console: false,
@@ -234,7 +233,7 @@ module.exports = function (grunt) {
             aisku: {
                 options: {
                     urls: [
-                        './AISKU/Tests/Selenium/Tests.html'
+                        './vNext/AISKU/Tests/Selenium/Tests.html'
                     ],
                     timeout: 5 * 60 * 1000, // 5 min
                     console: false,

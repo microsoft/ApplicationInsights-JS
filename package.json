@@ -11,11 +11,11 @@
         "azure"
     ],
     "scripts": {
-        "analytics": "cd ./ApplicationInsights/ && cpx amd/package.json . && npm i",
-        "common": "cd ./AppInsightsCommon/ && cpx amd/package.json . && npm i",
-        "dependencies": "cd ./extensions/applicationinsights-dependencies-js/ && npm i",
-        "properties": "cd ./extensions/applicationinsights-properties-js/ && cpx amd/package.json . && npm i",
-        "aisku": "cd ./AISKU && cpx amd/package.json . && npm i",
+        "analytics": "cd ./vNext/extensions/applicationinsights-analytics-js && npm i",
+        "common": "cd ./vNext/shared/AppInsightsCommon/ && npm i",
+        "dependencies": "cd ./vNext/extensions/applicationinsights-dependencies-js && npm i",
+        "properties": "cd ./vNext/extensions/applicationinsights-properties-js && npm i",
+        "aisku": "cd ./vNext/AISKU && npm i",
         "build-prefixes": "npm-run-all --serial analytics common dependencies properties aisku",
         "test": "grunt test"
     },
@@ -30,11 +30,10 @@
     },
     "homepage": "https://github.com/Microsoft/ApplicationInsights-JS#readme",
     "devDependencies": {
-        "cpx": "^1.5.0",
         "grunt": "1.0.1",
         "grunt-contrib-qunit": "2.0.0",
         "grunt-contrib-uglify": "3.1.0",
-        "grunt-ts": "^6.0.0-beta.15",
+        "grunt-ts": "^6.0.0-beta.22",
         "grunt-tslint": "^5.0.2",
         "npm-run-all": "^4.1.3",
         "tslint": "^5.11.0",

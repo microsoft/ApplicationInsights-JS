@@ -1,0 +1,14 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/rush/v5/command-line.schema.json",
+        "commands": [
+        {
+          "commandKind": "bulk",
+          "name": "test",
+          "summary": "Run all tests for all packages",
+          "description": "Runs tests for all projects",
+          "safeForSimultaneousRushProcesses": false,
+          "enableParallelism": true,
+          "ignoreMissingScript": false
+        }
+    ]
+}
