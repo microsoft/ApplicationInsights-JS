@@ -227,3 +227,12 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 [ContribGuide]: https://github.com/Microsoft/ApplicationInsights-Home/blob/master/CONTRIBUTING.md
 [GitFlow]: http://nvie.com/posts/a-successful-git-branching-model/
 [GitHubIssue]: https://github.com/Microsoft/ApplicationInsights-JS/issues
+
+## Build together when changing multiple packages:
+
+The vNext folder contains six packages that are components of the next version of the SDK. When making changes in multiple packages, you can build using the following commands in vNext folder:
+1. npm install -g @microsoft/rush
+2. rush rebuild
+This will build all packages in order of dependencies.
+
+If you are changing package versions or adding/removing any package dependencies, run> rush update --purge --recheck --full before building. Please check in any files that change under vNext\common\ folder.
