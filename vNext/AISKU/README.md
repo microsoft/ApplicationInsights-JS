@@ -230,7 +230,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 ## Build together when changing multiple packages:
 
-The repo houses six packages that are components of the next version of the SDK. When making changes in multiple packages, you can build using the following commands in vNext folder:
+The vNext folder contains six packages that are components of the next version of the SDK. When making changes in multiple packages, you can build using the following commands in vNext folder:
 1. npm install -g @microsoft/rush
 2. rush rebuild
 This will build all packages in order of dependencies.
