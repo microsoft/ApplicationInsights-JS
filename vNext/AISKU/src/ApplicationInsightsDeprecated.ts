@@ -104,11 +104,11 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     }
 
     setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean) {
-        this.appInsightsNew.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
+        this.appInsightsNew.context.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
     }
 
     clearAuthenticatedUserContext() {
-        this.appInsightsNew.clearAuthenticatedUserContext();
+        this.appInsightsNew.context.user.clearAuthenticatedUserContext();
     }
 
     _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {

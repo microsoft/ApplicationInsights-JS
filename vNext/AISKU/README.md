@@ -232,7 +232,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 The vNext folder contains six packages that are components of the next version of the SDK. When making changes in multiple packages, you can build using the following commands in vNext folder:
 1. npm install -g @microsoft/rush
-2. rush rebuild
-This will build all packages in order of dependencies.
+2. rush rebuild --verbose
+This will build all packages in order of dependencies. If there are build errors, verbose options is required to view error details.
 
 If you are changing package versions or adding/removing any package dependencies, run> rush update --purge --recheck --full before building. Please check in any files that change under vNext\common\ folder.

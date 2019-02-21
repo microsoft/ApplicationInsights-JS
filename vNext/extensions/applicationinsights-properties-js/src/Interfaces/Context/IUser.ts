@@ -38,7 +38,7 @@ export interface IUser {
     storeRegion: string;
 }
 
-export interface IUserContextPlugin {
+export interface IUserContext {
     setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean);
     clearAuthenticatedUserContext();
 }

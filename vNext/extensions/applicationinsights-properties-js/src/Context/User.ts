@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IUser, IUserContextPlugin } from '../Interfaces/Context/IUser';
+import { IUser, IUserContext } from '../Interfaces/Context/IUser';
 import { ITelemetryConfig } from '../Interfaces/ITelemetryConfig';
 import { Util } from '@microsoft/applicationinsights-common';
 import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from '@microsoft/applicationinsights-core-js';
 
-export class User implements IUser, IUserContextPlugin {
+export class User implements IUser {
 
     static cookieSeparator: string = '|';
     static userCookieName: string = 'ai_user';
