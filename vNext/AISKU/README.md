@@ -29,12 +29,12 @@
 2. Grab the _Instrumentation Key_ (aka "ikey") from the resource you created in
    step 1. Later, you'll add it to the `instrumentationKey` setting of the Application Insights JavaScript SDK.
 3. Add Application Insights to your app. There are 2 ways to do this.
-	- Install via NPM. Then, [setup an instance Application Insights in your app](#setup-npm-only-ignore-if-using-snippet)
+	- Install via NPM. Then, [set up an instance of Application Insights in your app.](#setup-npm-only-ignore-if-using-snippet)
 		> *Note:* **Typings are included with this package**, so you do **not** need to install a separate typings package.
 		```sh
 		npm i --save @microsoft/applicationinsights-web
 		```
-	- [Pasting a script snippet at the beginning of every `<head>` tag in each of the pages of your app.](#snippet-setup-ignore-if-using-npm)
+	- [Pasting a script snippet at the beginning of every `<head>` tag for each page you want to monitor.](#snippet-setup-ignore-if-using-npm)
 
 ## Basic Usage
 
