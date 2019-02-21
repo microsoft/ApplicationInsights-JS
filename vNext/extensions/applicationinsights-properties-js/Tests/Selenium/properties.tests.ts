@@ -64,7 +64,7 @@ export class PropertiesTests extends TestClass {
                 Assert.ok(cookieStub.called, 'Cookie grabbed');
 
                 // Assert
-                Assert.equal(id, this.properties.user.id, 'user id was set from cookie');
+                Assert.equal(id, this.properties.context.user.id, 'user id was set from cookie');
             }
         });
 
@@ -147,8 +147,8 @@ export class PropertiesTests extends TestClass {
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
                 // verify
-                Assert.equal(authId, this.properties.user.authenticatedId, "user auth id was set from cookie");
-                Assert.equal(accountId, this.properties.user.accountId, "user account id was not set from cookie");
+                Assert.equal(authId, this.properties.context.user.authenticatedId, "user auth id was set from cookie");
+                Assert.equal(accountId, this.properties.context.user.accountId, "user account id was not set from cookie");
             }
         });
 
@@ -163,7 +163,7 @@ export class PropertiesTests extends TestClass {
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
                 // verify
-                Assert.equal(authId, this.properties.user.authenticatedId, "user auth id was set from cookie");
+                Assert.equal(authId, this.properties.context.user.authenticatedId, "user auth id was set from cookie");
             }
         });
 
@@ -177,8 +177,8 @@ export class PropertiesTests extends TestClass {
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
                 // verify
-                Assert.equal(undefined, this.properties.user.authenticatedId, "user auth id was not set");
-                Assert.equal(undefined, this.properties.user.accountId, "user account id was not set");
+                Assert.equal(undefined, this.properties.context.user.authenticatedId, "user auth id was not set");
+                Assert.equal(undefined, this.properties.context.user.accountId, "user account id was not set");
             }
         });
 
@@ -195,7 +195,7 @@ export class PropertiesTests extends TestClass {
                 this.properties.initialize(config, this.core, []);
 
                 // verify
-                Assert.equal(config.extensionConfig.AppInsightsPropertiesPlugin.accountId, this.properties.user.accountId, "user account id was set from back compat");
+                Assert.equal(config.extensionConfig.AppInsightsPropertiesPlugin.accountId, this.properties.context.user.accountId, "user account id was set from back compat");
             }
         });
 
@@ -208,11 +208,11 @@ export class PropertiesTests extends TestClass {
                 var cookieStub = this.sandbox.stub(Util, "setCookie");
 
                 // act
-                this.properties.user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
+                this.properties.context.user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
 
                 // verify
-                Assert.equal('bla@bla.com', this.properties.user.authenticatedId, "user auth id was not set");
-                Assert.equal('contoso', this.properties.user.accountId, "user account id was not set");
+                Assert.equal('bla@bla.com', this.properties.context.user.authenticatedId, "user auth id was not set");
+                Assert.equal('contoso', this.properties.context.user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.notCalled, true, "cookie was not set");
             }
         });
@@ -226,10 +226,10 @@ export class PropertiesTests extends TestClass {
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
                 // act
-                this.properties.user.setAuthenticatedUserContext(authAndAccountId[0], null, true);
+                this.properties.context.user.setAuthenticatedUserContext(authAndAccountId[0], null, true);
 
                 // verify
-                Assert.equal(authAndAccountId[0], this.properties.user.authenticatedId, "user auth id was set");
+                Assert.equal(authAndAccountId[0], this.properties.context.user.authenticatedId, "user auth id was set");
                 Assert.equal(cookieStub.calledWithExactly(this.core.logger, 'ai_authUser', encodeURI(authAndAccountId.join('|')), null), true, "user auth id and account id cookie was set");
             }
         });
@@ -243,10 +243,10 @@ export class PropertiesTests extends TestClass {
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
                 // act
-                this.properties.user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1], true);
+                this.properties.context.user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1], true);
 
                 // verify
-                Assert.equal(authAndAccountId[0], this.properties.user.authenticatedId, "user auth id was set");
+                Assert.equal(authAndAccountId[0], this.properties.context.user.authenticatedId, "user auth id was set");
                 Assert.equal(cookieStub.calledWithExactly(this.core.logger, 'ai_authUser', encodeURI(authAndAccountId.join('|')), null), true, "user auth id cookie was set");
             }
         });
@@ -260,11 +260,11 @@ export class PropertiesTests extends TestClass {
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
                 // act
-                this.properties.user.setAuthenticatedUserContext(authAndAccountId[0], null, true);
+                this.properties.context.user.setAuthenticatedUserContext(authAndAccountId[0], null, true);
 
                 // verify
-                Assert.equal(authAndAccountId[0], this.properties.user.authenticatedId, "user auth id was set");
-                Assert.equal(null, this.properties.user.accountId, "user account id was not set");
+                Assert.equal(authAndAccountId[0], this.properties.context.user.authenticatedId, "user auth id was set");
+                Assert.equal(null, this.properties.context.user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.calledWithExactly(this.core.logger, 'ai_authUser', encodeURI(authAndAccountId[0]), null), true, "user auth id cookie was set");
             }
         });
@@ -280,11 +280,11 @@ export class PropertiesTests extends TestClass {
                 loggingStub.reset();
 
                 // act
-                this.properties.user.setAuthenticatedUserContext(null);
+                this.properties.context.user.setAuthenticatedUserContext(null);
 
                 // verify
-                Assert.equal(undefined, this.properties.user.authenticatedId, "user auth id was not set");
-                Assert.equal(undefined, this.properties.user.accountId, "user account id was not set");
+                Assert.equal(undefined, this.properties.context.user.authenticatedId, "user auth id was not set");
+                Assert.equal(undefined, this.properties.context.user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.notCalled, true, "cookie was not set");
                 Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
             }
@@ -301,11 +301,11 @@ export class PropertiesTests extends TestClass {
                 loggingStub.reset();
 
                 // act
-                this.properties.user.setAuthenticatedUserContext(undefined, undefined);
+                this.properties.context.user.setAuthenticatedUserContext(undefined, undefined);
 
                 // verify
-                Assert.equal(undefined, this.properties.user.authenticatedId, "user auth id was not set");
-                Assert.equal(undefined, this.properties.user.accountId, "user account id was not set");
+                Assert.equal(undefined, this.properties.context.user.authenticatedId, "user auth id was not set");
+                Assert.equal(undefined, this.properties.context.user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.notCalled, true, "cookie was not set");
                 Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
             }
@@ -322,11 +322,11 @@ export class PropertiesTests extends TestClass {
                 loggingStub.reset();
 
                 // act
-                this.properties.user.setAuthenticatedUserContext(undefined, '1234');
+                this.properties.context.user.setAuthenticatedUserContext(undefined, '1234');
 
                 // verify
-                Assert.equal(undefined, this.properties.user.authenticatedId, "user auth id was not set");
-                Assert.equal(undefined, this.properties.user.accountId, "user account id was not set");
+                Assert.equal(undefined, this.properties.context.user.authenticatedId, "user auth id was not set");
+                Assert.equal(undefined, this.properties.context.user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.notCalled, true, "cookie was not set");
                 Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
             }
@@ -342,11 +342,11 @@ export class PropertiesTests extends TestClass {
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
 
                 // act
-                this.properties.user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1], true);
+                this.properties.context.user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1], true);
 
                 // verify
-                Assert.equal(undefined, this.properties.user.authenticatedId, "user auth id was not set");
-                Assert.equal(undefined, this.properties.user.accountId, "user account id was not set");
+                Assert.equal(undefined, this.properties.context.user.authenticatedId, "user auth id was not set");
+                Assert.equal(undefined, this.properties.context.user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.notCalled, true, "cookie was not set");
                 Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
             }
@@ -358,16 +358,16 @@ export class PropertiesTests extends TestClass {
                 // setup
                 var authAndAccountId = ['myid', '1234 5678'];
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
-                this.properties.user.clearAuthenticatedUserContext();
+                this.properties.context.user.clearAuthenticatedUserContext();
                 var cookieStub = this.sandbox.stub(Util, "setCookie");
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
 
                 // act
-                this.properties.user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
+                this.properties.context.user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
 
                 // verify
-                Assert.equal(undefined, this.properties.user.authenticatedId, "user auth id was not set");
-                Assert.equal(undefined, this.properties.user.accountId, "user account id was not set");
+                Assert.equal(undefined, this.properties.context.user.authenticatedId, "user auth id was not set");
+                Assert.equal(undefined, this.properties.context.user.accountId, "user account id was not set");
                 Assert.equal(cookieStub.notCalled, true, "cookie was not set");
                 Assert.equal(loggingStub.calledOnce, true, "Warning was logged");
             }
@@ -383,11 +383,11 @@ export class PropertiesTests extends TestClass {
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
 
                 // act
-                this.properties.user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1], true);
+                this.properties.context.user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1], true);
 
                 // verify
-                Assert.equal(authAndAccountId[0], this.properties.user.authenticatedId, "user auth id was set");
-                Assert.equal(authAndAccountId[1], this.properties.user.accountId, "user account id was set");
+                Assert.equal(authAndAccountId[0], this.properties.context.user.authenticatedId, "user auth id was set");
+                Assert.equal(authAndAccountId[1], this.properties.context.user.accountId, "user account id was set");
                 Assert.equal(cookieStub.calledWithExactly(this.core.logger, 'ai_authUser', encodeURI(authAndAccountId.join('|')), null), true, "user auth id cookie was set");
                 Assert.equal(loggingStub.notCalled, true, "No warnings");
             }
@@ -398,15 +398,15 @@ export class PropertiesTests extends TestClass {
             test: () => {
                 // setup
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
-                this.properties.user.setAuthenticatedUserContext("bla", "123");
+                this.properties.context.user.setAuthenticatedUserContext("bla", "123");
                 var cookieStub = this.sandbox.stub(Util, "deleteCookie");
 
                 // act
-                this.properties.user.clearAuthenticatedUserContext();
+                this.properties.context.user.clearAuthenticatedUserContext();
 
                 // verify
-                Assert.equal(undefined, this.properties.user.authenticatedId, "user auth id was cleared");
-                Assert.equal(undefined, this.properties.user.accountId, "user account id was cleared");
+                Assert.equal(undefined, this.properties.context.user.authenticatedId, "user auth id was cleared");
+                Assert.equal(undefined, this.properties.context.user.accountId, "user account id was cleared");
                 Assert.equal(cookieStub.calledWithExactly(this.core.logger, 'ai_authUser'), true, "cookie was deleted");
             }
         });
@@ -419,11 +419,11 @@ export class PropertiesTests extends TestClass {
                 var cookieStub = this.sandbox.stub(Util, "deleteCookie");
 
                 // act
-                this.properties.user.clearAuthenticatedUserContext();
+                this.properties.context.user.clearAuthenticatedUserContext();
 
                 // verify
-                Assert.equal(undefined, this.properties.user.authenticatedId, "user auth id was cleared");
-                Assert.equal(undefined, this.properties.user.accountId, "user account id was cleared");
+                Assert.equal(undefined, this.properties.context.user.authenticatedId, "user auth id was cleared");
+                Assert.equal(undefined, this.properties.context.user.accountId, "user account id was cleared");
                 Assert.equal(cookieStub.calledWithExactly(this.core.logger, 'ai_authUser'), true, "cookie was deleted");
             }
         });

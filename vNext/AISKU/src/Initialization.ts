@@ -7,8 +7,9 @@ import { Util, IConfig, IDependencyTelemetry, IPageViewPerformanceTelemetry,
          IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry,
          IMetricTelemetry, IEventTelemetry, IAppInsights, ConfigurationManager } from "@microsoft/applicationinsights-common";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
-import { PropertiesPlugin, IPropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+import { PropertiesPlugin, IPropertiesPlugin, ITelemetryContext } from "@microsoft/applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
+import { TelemetryContext } from "../../extensions/applicationinsights-properties-js/types/TelemetryContext";
 
 "use strict";
 
@@ -40,6 +41,7 @@ export class Initialization implements IApplicationInsights {
     public config: IConfiguration & IConfig;
     public appInsights: ApplicationInsights;
     public core: IAppInsightsCore;
+    public context: TelemetryContext;
 
     private dependencies: DependenciesPlugin;
     private properties: PropertiesPlugin;
@@ -194,7 +196,7 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false): void {
-         this.properties.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
+         this.properties.context.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
     }
 
     /**
@@ -202,7 +204,7 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public clearAuthenticatedUserContext(): void {
-         this.properties.user.clearAuthenticatedUserContext();
+         this.properties.context.user.clearAuthenticatedUserContext();
     }
 
     // Dependencies Plugin
@@ -253,11 +255,12 @@ export class Initialization implements IApplicationInsights {
 
         // initialize core
         this.core.initialize(this.config, extensions);
-
+        
         // Empty queue of all api calls logged prior to sdk download
         this.emptyQueue();
         this.pollInternalLogs();
         this.addHousekeepingBeforeUnload(this);
+        this.context = this.properties.context;
 
         return this;
     }

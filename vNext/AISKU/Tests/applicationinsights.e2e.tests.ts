@@ -326,7 +326,7 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    this._ai.setAuthenticatedUserContext('10001');
+                    this._ai.context.user.setAuthenticatedUserContext('10001');
                     this._ai.trackTrace({message: 'authUserContext test'});
                 }
             ]
@@ -353,7 +353,7 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    this._ai.setAuthenticatedUserContext('10001', 'account123');
+                    this._ai.context.user.setAuthenticatedUserContext('10001', 'account123');
                     this._ai.trackTrace({message: 'authUserContext test'});
                 }
             ]
@@ -382,7 +382,7 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    this._ai.setAuthenticatedUserContext("\u0428", "\u0429");
+                    this._ai.context.user.setAuthenticatedUserContext("\u0428", "\u0429");
                     this._ai.trackTrace({message: 'authUserContext test'});
                 }
             ]
@@ -411,8 +411,8 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    this._ai.setAuthenticatedUserContext('10002', 'account567');
-                    this._ai.clearAuthenticatedUserContext();
+                    this._ai.context.user.setAuthenticatedUserContext('10002', 'account567');
+                    this._ai.context.user.clearAuthenticatedUserContext();
                     this._ai.trackTrace({message: 'authUserContext test'});
                 }
             ]
@@ -441,11 +441,11 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext does not set the cookie by default',
             test: () => {
                 // Setup
-                const authSpy: SinonSpy = this.sandbox.spy(this._ai, 'setAuthenticatedUserContext');
+                const authSpy: SinonSpy = this.sandbox.spy(this._ai.context.user, 'setAuthenticatedUserContext');
                 const cookieSpy: SinonSpy = this.sandbox.spy(Util, 'setCookie');
 
                 // Act
-                this._ai.setAuthenticatedUserContext('10002', 'account567');
+                this._ai.context.user.setAuthenticatedUserContext('10002', 'account567');
 
                 // Test
                 Assert.ok(authSpy.calledOnce, 'setAuthenticatedUserContext called');
