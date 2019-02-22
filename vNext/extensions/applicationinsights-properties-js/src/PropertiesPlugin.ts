@@ -7,17 +7,17 @@ import {
     ITelemetryPlugin, IConfiguration, CoreUtils,
     IAppInsightsCore, IPlugin, ITelemetryItem, IDiagnosticLogger
 } from '@microsoft/applicationinsights-core-js';
-import { PageView, ConfigurationManager, IConfig, } from '@microsoft/applicationinsights-common';
-import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
-import { IPropertiesPlugin } from './Interfaces/IPropertiesPlugin';
 import { TelemetryContext } from './TelemetryContext';
+import { PageView, ConfigurationManager,
+    IConfig, PropertiesPluginIdentifier, IPropertiesPlugin } from '@microsoft/applicationinsights-common';
+import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 
 export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPlugin {
     public context: TelemetryContext;
     private _logger: IDiagnosticLogger;
     
     public priority = 170;
-    public identifier = "AppInsightsPropertiesPlugin";
+    public identifier = PropertiesPluginIdentifier;
 
     private _nextPlugin: ITelemetryPlugin;
     private _extensionConfig: ITelemetryConfig;

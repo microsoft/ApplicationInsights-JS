@@ -43,9 +43,7 @@ export {
     ApplicationInsights as ApplicationAnalytics
 } from "@microsoft/applicationinsights-analytics-js";
 export {
-    PropertiesPlugin,
-    IPropertiesPlugin,
-    Operation
+    PropertiesPlugin
 } from "@microsoft/applicationinsights-properties-js";
 export {
     AjaxPlugin as DependenciesPlugin,

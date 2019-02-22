@@ -5,7 +5,8 @@
 
 import { ITelemetryItem, IDiagnosticLogger, IPlugin, IConfiguration } from '@microsoft/applicationinsights-core-js';
 import { Session, _SessionManager } from './Context/Session';
-import { AppExtensionKeys, CtxTagKeys, DeviceExtensionKeys, IngestExtKeys, WebExtensionKeys, OSExtKeys, UserTagKeys, UserExtensionKeys, IConfig } from '@microsoft/applicationinsights-common';
+import { AppExtensionKeys, CtxTagKeys, DeviceExtensionKeys, IngestExtKeys, WebExtensionKeys, OSExtKeys, 
+    UserTagKeys, UserExtensionKeys, ITelemetryContext } from '@microsoft/applicationinsights-common';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
 import { Internal } from './Context/Internal';
@@ -13,7 +14,6 @@ import { Sample } from './Context/Sample';
 import { Operation } from './Context/Operation';
 import { User } from './Context/User';
 import { Location } from './Context/Location';
-import { ITelemetryContext } from './Interfaces/ITelemetryContext';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
  
 export class TelemetryContext implements ITelemetryContext {

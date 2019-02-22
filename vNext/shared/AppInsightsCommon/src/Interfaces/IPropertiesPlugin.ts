@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { TelemetryContext } from '../TelemetryContext';
+import {ITelemetryContext } from './ITelemetryContext';
 
 export interface IPropertiesPlugin {
-    context: TelemetryContext;
+    context: ITelemetryContext;
 };

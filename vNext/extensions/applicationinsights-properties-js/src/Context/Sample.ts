@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
-import { ISample } from '../Interfaces/Context/ISample';
+import { ISample } from '@microsoft/applicationinsights-common';
 import { IEnvelope } from '@microsoft/applicationinsights-common';
 import { ITelemetryItem, IDiagnosticLogger, _InternalMessageId, LoggingSeverity, DiagnosticLogger, CoreUtils } from '@microsoft/applicationinsights-core-js';
 

@@ -3,11 +3,11 @@
 
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
-import { Util, IConfig, IDependencyTelemetry, IPageViewPerformanceTelemetry,
-         IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry,
-         IMetricTelemetry, IEventTelemetry, IAppInsights, ConfigurationManager } from "@microsoft/applicationinsights-common";
+import { Util, IConfig, IDependencyTelemetry, IPageViewPerformanceTelemetry,IPropertiesPlugin,
+         IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, ITelemetryContext,
+         IMetricTelemetry, IEventTelemetry, IAppInsights, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-common";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
-import { PropertiesPlugin, IPropertiesPlugin, ITelemetryContext } from "@microsoft/applicationinsights-properties-js";
+import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
 import { TelemetryContext } from "../../extensions/applicationinsights-properties-js/types/TelemetryContext";
 
@@ -28,8 +28,6 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
     appInsights: ApplicationInsights;
     flush: (async?: boolean) => void;
 };
-
-const propertiesPlugin = "AppInsightsPropertiesPlugin";
 
 /**
  * Application Insights API
@@ -338,10 +336,9 @@ export class Initialization implements IApplicationInsights {
 
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
-                // Todo: move this against interface behavior
-                if (appInsightsInstance.appInsights.core['_extensions'][propertiesPlugin] &&
-                    appInsightsInstance.appInsights.core['_extensions'][propertiesPlugin]._sessionManager) {
-                    appInsightsInstance.appInsights.core['_extensions'][propertiesPlugin]._sessionManager.backup();
+                let ext = appInsightsInstance.appInsights.core['_extensions'][PropertiesPluginIdentifier];
+                if (ext && ext.context && ext.context._sessionManager) {
+                    ext.context._sessionManager.backup();
                 }
             };
 

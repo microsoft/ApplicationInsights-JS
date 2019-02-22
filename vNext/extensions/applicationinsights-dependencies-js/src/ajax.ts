@@ -4,7 +4,7 @@
 import {
     RequestHeaders, Util, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
     RemoteDependencyData, DateTimeUtils, DisabledPropertyName, Data, IDependencyTelemetry,
-    IConfig, ConfigurationManager, HttpMethod
+    IConfig, ConfigurationManager, ITelemetryContext, PropertiesPluginIdentifier, IPropertiesPlugin
 } from '@microsoft/applicationinsights-common';
 import {
     CoreUtils, LoggingSeverity, _InternalMessageId, IDiagnosticLogger,
@@ -33,6 +33,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     protected _config: ICorrelationConfig;
     protected _nextPlugin: ITelemetryPlugin;
     protected _trackAjaxAttempts: number = 0;
+    private _context: ITelemetryContext;
 
     constructor() {
         this.currentWindowHost = window && window.location.host && window.location.host.toLowerCase();
@@ -120,12 +121,14 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     }
 
     private openHandler(xhr: XMLHttpRequestInstrumented, method, url, async) {
-        /* todo:
-        Disabling the following block of code as CV is not yet supported in 1DS for 3rd Part.
-        // this format corresponds with activity logic on server-side and is required for the correct correlation
-        var id = "|" + this.appInsights.context.operation.id + "." + Util.newId();
-        */
-       var id = Util.newId();
+        let id: string;
+        if (this._context && this._context.operation && this._context.operation.id) {
+
+            // this format corresponds with activity logic on server-side and is required for the correct correlation
+            id = "|" + this._context.operation.id + "." + Util.newId();
+        } else {
+            id = Util.newId();
+        }
 
         var ajaxData = new ajaxRecord(id, this._core.logger);
         ajaxData.method = method;
@@ -389,12 +392,14 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     }
 
     private createFetchRecord(input?: Request | string, init?: RequestInit): ajaxRecord {
-        /* todo:
-        Disabling the following block of code as CV is not yet supported in 1DS for 3rd Part.
-        // this format corresponds with activity logic on server-side and is required for the correct correlation
-        var id = "|" + this.appInsights.context.operation.id + "." + Util.newId();
-        */
-        const id: string = Util.newId();
+        let id: string;
+        if (this._context && this._context.operation && this._context.operation.id) {
+
+            // this format corresponds with activity logic on server-side and is required for the correct correlation
+            id = "|" + this._context.operation.id + "." + Util.newId();
+        } else {
+            id = Util.newId();
+        }
         let ajaxData: ajaxRecord = new ajaxRecord(id, this._core.logger);
         ajaxData.requestSentTime = DateTimeUtils.Now();
 
@@ -633,6 +638,13 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
 
             if (this._config.disableFetchTracking === false) {
                 this.instrumentFetch();
+            }
+            
+            if (extensions.length > 0 && extensions) {
+                const propExt = <IPropertiesPlugin>extensions[PropertiesPluginIdentifier];
+                if (propExt) {
+                    this._context = propExt.context; // we could move IPropertiesPlugin to common as well
+                }
             }
         }
     }

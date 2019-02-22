@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 import PropertiesPlugin from "./PropertiesPlugin";
-import { IPropertiesPlugin } from "./Interfaces/IPropertiesPlugin";
-import { ITelemetryContext } from "./Interfaces/ITelemetryContext";
-import { Operation } from "./Context/Operation";
+import { TelemetryTrace } from "./Context/TelemetryTrace";
 
-export { PropertiesPlugin, IPropertiesPlugin, ITelemetryContext, Operation };
+export { PropertiesPlugin, TelemetryTrace };

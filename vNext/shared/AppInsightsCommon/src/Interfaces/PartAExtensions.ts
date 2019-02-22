@@ -1,7 +1,7 @@
 import { ContextTagKeys } from "./Contracts/Generated/ContextTagKeys";
 
 export class WebExtensionKeys {
-    public static domain = "domain";
+    public static domain = "web.domain";
     public static browser = "web.browser";
     public static browserVer = "web.browserVer";
     public static browserLang = "web.browserLang";
@@ -22,8 +22,8 @@ export class AppExtensionKeys {
 
 export class UserExtensionKeys {
     public static id = "user.id";
-    public static authId = "authId";
-    public static localId = "localId";
+    public static authId = "user.authId";
+    public static localId = "user.localId";
 }
 
 export class UserTagKeys {
@@ -36,6 +36,12 @@ export class IngestExtKeys {
 
 export class OSExtKeys {
     public static deviceOS = "os.name";
+}
+
+export class TraceExtensionKeys {
+    public static traceID: "trace.traceID";
+    public static parentID: "trace.parentID";
+    public static traceState: "trace.traceState";
 }
 
 export class UnmappedKeys {
