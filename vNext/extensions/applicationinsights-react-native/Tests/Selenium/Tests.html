@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Cache-control" content="no-Cache" />
+    <title>Tests for Application Insights JavaScript API</title>
+    <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css">
+    <script src="http://sinonjs.org/releases/sinon-2.3.8.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script>
+    <script src="reactnativeplugin.tests.js"></script>
+
+    <script>
+        require.config({
+            baseUrl: '../../',
+            // Convenience paths to test reqs
+            paths: {
+                qunit: "Tests/External/qunit-1.23.1"
+            }
+        });
+
+        // Load core & common
+                require([
+            'qunit', // Load qunit here instead of with tests, otherwise will not work
+            './node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js',
+        ], function (QUnit, aicore) {
+            define('@microsoft/applicationinsights-core-js', function () { return aicore; });
+            require([
+            './node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common'], function (aicommon) {
+                define('@microsoft/applicationinsights-common', function () { return aicommon; });
+                require(['./node_modules/react-native-device-info/web/index'], function(rndi) {
+                    define('react-native-device-info', function() {return rndi});
+                    require.config({
+                        baseUrl: './'
+                    });
+
+                    require([
+                        "Tests/Selenium/reactnativeplugin.tests"
+                    ], function (tests) {
+                        QUnit.start();
+                        tests.runTests();
+                    }, function (err) {
+                        console.log('REQUIRE ERROR:', err.toString());
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <div id="error-message"></div>
+</body>
+
+</html>
