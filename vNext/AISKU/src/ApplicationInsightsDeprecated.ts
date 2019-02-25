@@ -2,7 +2,7 @@ import { IConfig, PageViewPerformance, SeverityLevel, Util,
     IPageViewTelemetry, ITraceTelemetry, IMetricTelemetry,
     IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry,
     IEventTelemetry, IEnvelope, ProcessLegacy, HttpMethod } from "@microsoft/applicationinsights-common";
-import { Snippet, IApplicationInsights } from "./Initialization";
+import { Snippet, Initialization as ApplicationInsights } from "./Initialization";
 import { ITelemetryItem, IDiagnosticLogger, IConfiguration } from "@microsoft/applicationinsights-core-js";
 
 // ToDo: fix properties and measurements once updates are done to common
@@ -12,7 +12,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     public context: ITelemetryContext;
     public logger: IDiagnosticLogger;
     queue: (() => void)[];
-    private appInsightsNew: IApplicationInsights;
+    private appInsightsNew: ApplicationInsights;
     private _hasLegacyInitializers = false;
     private _queue = [];
 
@@ -42,7 +42,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
         return item;
     }
 
-    constructor(snippet: Snippet, appInsightsNew: IApplicationInsights) {
+    constructor(snippet: Snippet, appInsightsNew: ApplicationInsights) {
         this.config = AppInsightsDeprecated.getDefaultConfig(snippet.config);
         this.appInsightsNew = appInsightsNew;
         this.context = { addTelemetryInitializer: this.addTelemetryInitializers.bind(this) }

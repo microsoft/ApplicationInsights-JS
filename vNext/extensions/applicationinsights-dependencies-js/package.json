@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-dependencies-js",
-    "version": "1.0.0-beta.17",
+    "version": "2.0.0-beta.0",
     "description": "Microsoft Application Insights XHR dependencies plugin",
     "main": "dist/applicationinsights-dependencies-js.js",
     "module": "dist-esm/applicationinsights-dependencies-js.js",
@@ -28,8 +28,8 @@
         "rollup": "^0.66.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "1.0.0-beta.5",
-        "@microsoft/applicationinsights-common": "1.0.0-beta.17",
+        "@microsoft/applicationinsights-core-js": "2.0.0-beta.0",
+        "@microsoft/applicationinsights-common": "2.0.0-beta.0",
         "tslib": "^1.9.3"
     },
     "license": "MIT"
