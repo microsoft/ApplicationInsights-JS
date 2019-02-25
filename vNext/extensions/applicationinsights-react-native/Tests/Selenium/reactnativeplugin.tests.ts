@@ -1,8 +1,8 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 
 import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
-import { Util } from "@microsoft/applicationinsights-common";
-import { ReactNativePlugin } from '../../src';
+import { Util, DeviceExtensionKeys } from "@microsoft/applicationinsights-common";
+import { ReactNativePlugin, INativeDevice } from '../../src';
 
 export class ReactNativePluginTests extends TestClass {
     private plugin: ReactNativePlugin;
@@ -26,6 +26,35 @@ export class ReactNativePluginTests extends TestClass {
     public registerTests() {
         this.addConfigTests()
         this.addAPITests();
+        this.addProcessTelemetryTests();
+    }
+
+    private addProcessTelemetryTests() {
+        this.testCase({
+            name: 'processTelemetry appends device fields',
+            test: () => {
+                var expectation: ITelemetryItem = {
+                    name: 'a name',
+                    ctx: {
+                        [DeviceExtensionKeys.localId]: 'some id',
+                        [DeviceExtensionKeys.model]: 'some model',
+                        [DeviceExtensionKeys.deviceType]: 'some type'
+                    }
+                };
+                var actual: ITelemetryItem = {
+                    name: 'a name'
+                };
+                this.plugin['_initialized'] = true;
+                (this.plugin['_device'] as INativeDevice) = {
+                    id: 'some id',
+                    model: 'some model',
+                    type: 'some type'
+                };
+                Assert.notDeepEqual(expectation, actual, 'Telemetry items are not equal yet');
+                this.plugin.processTelemetry(actual);
+                Assert.deepEqual(expectation, actual, 'Telemetry items are equal');
+            }
+        });
     }
 
     private addAPITests() {

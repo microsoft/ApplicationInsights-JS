@@ -10,7 +10,7 @@ import {
     IConfiguration,
     IAppInsightsCore
 } from '@microsoft/applicationinsights-core-js';
-import { ConfigurationManager } from '@microsoft/applicationinsights-common';
+import { ConfigurationManager, DeviceExtensionKeys } from '@microsoft/applicationinsights-common';
 import DeviceInfo from 'react-native-device-info';
 
 import { INativeDevice, IReactNativePluginConfig } from './Interfaces';
@@ -50,6 +50,7 @@ export class ReactNativePlugin implements ITelemetryPlugin {
     }
 
     public processTelemetry(item: ITelemetryItem) {
+        this._applyDeviceContext(item);
         if (this._nextPlugin) {
             this._nextPlugin.processTelemetry(item);
         }
@@ -78,6 +79,21 @@ export class ReactNativePlugin implements ITelemetryPlugin {
         this._device.type = DeviceInfo.getDeviceType();
         this._device.id = DeviceInfo.getUniqueID(); // Installation ID
         this._device.model = DeviceInfo.getModel();
+    }
+
+    private _applyDeviceContext(item: ITelemetryItem) {
+        if (this._device) {
+            item.ctx = item.ctx || {};
+            if (typeof this._device.id === 'string') {
+                item.ctx[DeviceExtensionKeys.localId] = this._device.id;
+            }
+            if (typeof this._device.model === 'string') {
+                item.ctx[DeviceExtensionKeys.model] = this._device.model;
+            }
+            if (typeof this._device.type === 'string') {
+                item.ctx[DeviceExtensionKeys.deviceType] = this._device.type;
+            }
+        }
     }
 
     private _getDefaultConfig(): IReactNativePluginConfig {

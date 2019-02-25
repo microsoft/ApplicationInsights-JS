@@ -3,7 +3,7 @@
     "sourceMap": true,
     "inlineSources": true,
     "noImplicitAny": false,
-    "module": "umd",
+    "module": "es6",
     "moduleResolution": "Node",
     "target": "es5",
     "alwaysStrict": true,
@@ -14,12 +14,12 @@
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "declarationMap": true,
-    "declarationDir": "vNext/extensions/applicationinsights-react-native/types",
+    "declarationDir": "vNext/extensions/applicationinsights-react-native/dist-esm",
     "outDir": "dist-esm",
     "rootDir": "vNext/extensions/applicationinsights-react-native/src"
   },
   "include": [
-    "./src/*.ts"
+    "./src/**/*.ts"
   ],
   "exclude": [
     "./node_modules/**"
