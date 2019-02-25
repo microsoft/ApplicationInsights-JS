@@ -41,9 +41,9 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-analytics-js": "1.0.0-beta.16",
-        "@microsoft/applicationinsights-channel-js": "1.0.0-beta.15",
+        "@microsoft/applicationinsights-channel-js": "2.0.0-beta.0",
         "@microsoft/applicationinsights-common": "1.0.0-beta.17",
-        "@microsoft/applicationinsights-core-js": "1.0.0-beta.5",
+        "@microsoft/applicationinsights-core-js": "2.0.0-beta.0",
         "@microsoft/applicationinsights-dependencies-js": "1.0.0-beta.17",
         "@microsoft/applicationinsights-properties-js": "1.0.0-beta.12"
     },

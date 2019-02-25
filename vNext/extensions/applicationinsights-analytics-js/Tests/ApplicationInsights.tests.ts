@@ -889,7 +889,7 @@ class ChannelPlugin implements IPlugin {
         // no next setup
     }
 
-    public priority: number = 201;
+    public priority: number = 1001;
 
     public initialize = (config: IConfiguration, core: AppInsightsCore, plugin: IPlugin[]) => {
     }
