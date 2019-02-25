@@ -8,6 +8,7 @@ export class Extensions {
     public static AppExt = "app";
     public static OSExt = "os";
     public static IngestExt = "ingest";
+    public static SessionExt = "ses";
 }
 
 export class WebExtensionKeys {

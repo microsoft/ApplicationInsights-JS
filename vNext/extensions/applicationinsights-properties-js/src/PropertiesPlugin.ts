@@ -103,6 +103,9 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
         event.ext[Extensions.IngestExt] = {};
         event.ext[Extensions.WebExt] = {};
         event.ext[Extensions.UserExt] = {};
+        event.ext[Extensions.OSExt] = {};
+        event.ext[Extensions.AppExt] = {};
+        event.ext[Extensions.TraceExt] = {};
 
         this.context.applyApplicationContext(event);
         this.context.applyDeviceContext(event);

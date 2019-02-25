@@ -201,5 +201,14 @@ export class TelemetryContext implements ITelemetryContext {
         if (event.ext[Extensions.WebExt] && Object.keys(event.ext[Extensions.WebExt]).length === 0) {
             delete event.ext[Extensions.WebExt];
         }
+        if (event.ext[Extensions.OSExt] && Object.keys(event.ext[Extensions.OSExt]).length === 0) {
+            delete event.ext[Extensions.OSExt];
+        }
+        if (event.ext[Extensions.AppExt] && Object.keys(event.ext[Extensions.AppExt]).length === 0) {
+            delete event.ext[Extensions.AppExt];
+        }
+        if (event.ext[Extensions.TraceExt] && Object.keys(event.ext[Extensions.TraceExt]).length === 0) {
+            delete event.ext[Extensions.TraceExt];
+        }
     }
 }
