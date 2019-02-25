@@ -1,9 +1,10 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 
-import { AppInsightsCore, IConfiguration, DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import PropertiesPlugin from "../../src/PropertiesPlugin";
 import { ITelemetryConfig } from "../../src/Interfaces/ITelemetryConfig";
-import { Util } from "@microsoft/applicationinsights-common";
+import { Util, TelemetryItemCreator } from "@microsoft/applicationinsights-common";
+import { TelemetryContext } from "../../src/TelemetryContext";
 
 export class PropertiesTests extends TestClass {
     private properties: PropertiesPlugin;
@@ -427,6 +428,56 @@ export class PropertiesTests extends TestClass {
                 Assert.equal(cookieStub.calledWithExactly(this.core.logger, 'ai_authUser'), true, "cookie was deleted");
             }
         });
+
+        this.testCase({
+            name: "validate telemetrycontext cleanup sets empty extensions to undefined",
+            test: () => {
+                // setup
+                this.properties.initialize(this.getEmptyConfig(), this.core, []);
+
+                const telemetyItem: ITelemetryItem = {
+                    name: "test",
+                    time: new Date("2018-06-12").toISOString(),
+                    iKey: "iKey",
+                    ext: {
+                        "user" : {
+                            "localId": "TestId",
+                            "authId": "AuthenticatedId",
+                            "id": "TestId"
+                        },
+                        "ingest": {},
+                        "web": {}
+                    },
+                    tags: [{"user.accountId": "TestAccountId"}],
+                    baseType: "RemoteDependencyData",
+                    baseData: {
+                        id: 'some id',
+                        name: "/test/name",
+                        success: true,
+                        responseCode: 200,
+                        duration: 123,
+                        type: 'Fetch',
+                        data: 'some data',
+                        target: 'https://example.com/test/name'
+                    },
+                    data: {
+                        property1: "val1",
+                        property2: "val2",
+                        measurement1: 50.0,
+                        measurement2: 1.3
+                    }
+                }
+
+                // act
+                const telemetrycontext = new TelemetryContext(this.core.logger, this.getTelemetryConfig());
+                telemetrycontext.cleanUp(telemetyItem);
+
+                // verify
+                Assert.equal(undefined, telemetyItem.ext.ingest, "ingest was cleared");
+                Assert.equal(undefined, telemetyItem.ext.web, "web was cleared");
+                Assert.notEqual(undefined, telemetyItem.ext.user, "user was not cleared");
+            }
+        });
     }
 
     private getEmptyConfig(): IConfiguration {
@@ -454,6 +505,20 @@ export class PropertiesTests extends TestClass {
                 }
             },
         };
+    }
+
+    private getTelemetryConfig(): ITelemetryConfig {
+        return {
+            instrumentationKey: () => "",
+            accountId: () => "",
+            sessionRenewalMs: () => 1000,
+            samplingPercentage: () => 0,
+            sessionExpirationMs: () => 1000,
+            cookieDomain: () => "",
+            sdkExtension: () => "",
+            isBrowserLinkTrackingEnabled: () => true,
+            appId: () => ""
+        }
     }
 }
 
