@@ -17,4 +17,9 @@ export interface ITraceTelemetry {
      * @memberof ITraceTelemetry
      */
     severityLevel?: SeverityLevel;
+
+    /**
+     * property bag to contain an extension to domain properties - extension to Part B
+     */
+    properties?: { [key: string]: string };
 }
