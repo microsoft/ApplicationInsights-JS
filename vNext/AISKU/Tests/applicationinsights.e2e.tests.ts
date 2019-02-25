@@ -2,7 +2,7 @@
 import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Util } from '@microsoft/applicationinsights-common';
-import { TelemetryContext } from '../../extensions/applicationinsights-properties-js/types/TelemetryContext';
+import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 
 export class ApplicationInsightsTests extends TestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';

@@ -3,5 +3,6 @@
 
 import PropertiesPlugin from "./PropertiesPlugin";
 import { TelemetryTrace } from "./Context/TelemetryTrace";
+import { TelemetryContext } from './TelemetryContext'
 
-export { PropertiesPlugin, TelemetryTrace };
+export { PropertiesPlugin, TelemetryTrace, TelemetryContext };
