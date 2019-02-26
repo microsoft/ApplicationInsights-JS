@@ -1,18 +1,36 @@
 # Microsoft Application Insights JavaScript SDK - React Native Plugin
 
-React Native Plugin (Part A) for the Application Insights Javascript SDK
+React Native Plugin for the Application Insights Javascript SDK
 
-## Build:
-```
-npm install -g grunt-cli
-npm install
-npm run build --silent
+## Getting Started
+This plugin relies on [`react-native-device-info`](https://github.com/rebeccahughes/react-native-device-info). You must install and link this package. Update `react-native-device-info` to support collecting the latest device names.
+```zsh
+npm install --save @microsoft/applicationinsights-react-native
+npm install --save react-native-device-info
+react-native link react-native-device-info
 ```
 
-## Run unit tests:
+## Initializing the Plugin
+To use this plugin, you only need to construct the plugin and add it as an extension to your existing Application Insights instance.
+```ts
+import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+import { ReactNativePlugin } from '@microsoft/applicationinsights-react-native';
+
+var RNPlugin = new ReactNativePlugin();
+var appInsights = new ApplicationInsights({
+    config: {
+        instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE'
+    },
+    extensions: [RNPlugin]
+});
+appInsights.loadAppInsights();
 ```
-npm run test
-```
+
+## Device Information Collected
+By default, this plugin automatically collects
+ - Unique Device ID (also known as Installation ID)
+ - Device Model Name (iPhone XS, etc.)
+ - Device Type (Handset, Tablet, etc.)
 
 ## Contributing
 
