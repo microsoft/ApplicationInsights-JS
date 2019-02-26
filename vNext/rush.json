@@ -21,6 +21,9 @@
     {
       "packageName": "@microsoft/applicationinsights-analytics-js",
       "projectFolder": "extensions/applicationinsights-analytics-js"
+    },    {
+      "packageName": "@microsoft/applicationinsights-channel-js",
+      "projectFolder": "channels/applicationinsights-channel-js"
     },
     {
       "packageName": "@microsoft/applicationinsights-web",

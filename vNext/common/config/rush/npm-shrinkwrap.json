@@ -29,23 +29,6 @@
         }
       }
     },
-    "@microsoft/applicationinsights-channel-js": {
-      "version": "2.0.0-beta.0",
-      "from": "@microsoft/applicationinsights-channel-js@2.0.0-beta.0",
-      "resolved": "https://registry.npmjs.org/@microsoft/applicationinsights-channel-js/-/applicationinsights-channel-js-2.0.0-beta.0.tgz"
-    },
-    "@microsoft/applicationinsights-common": {
-      "version": "1.0.0-beta.17",
-      "from": "@microsoft/applicationinsights-common@1.0.0-beta.17",
-      "resolved": "https://registry.npmjs.org/@microsoft/applicationinsights-common/-/applicationinsights-common-1.0.0-beta.17.tgz",
-      "dependencies": {
-        "@microsoft/applicationinsights-core-js": {
-          "version": "1.0.0-beta.5",
-          "from": "@microsoft/applicationinsights-core-js@^1.0.0-beta.5",
-          "resolved": "https://registry.npmjs.org/@microsoft/applicationinsights-core-js/-/applicationinsights-core-js-1.0.0-beta.5.tgz"
-        }
-      }
-    },
     "@microsoft/applicationinsights-core-js": {
       "version": "2.0.0-beta.0",
       "from": "@microsoft/applicationinsights-core-js@2.0.0-beta.0",
@@ -55,6 +38,11 @@
       "version": "0.0.0",
       "from": "projects\\applicationinsights-analytics-js.tgz",
       "resolved": "file:projects\\applicationinsights-analytics-js.tgz"
+    },
+    "@rush-temp/applicationinsights-channel-js": {
+      "version": "0.0.0",
+      "from": "projects\\applicationinsights-channel-js.tgz",
+      "resolved": "file:projects\\applicationinsights-channel-js.tgz"
     },
     "@rush-temp/applicationinsights-common": {
       "version": "0.0.0",
