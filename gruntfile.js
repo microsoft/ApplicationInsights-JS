@@ -89,6 +89,17 @@ module.exports = function (grunt) {
                 ],
                 out: './vNext/extensions/applicationinsights-dependencies-js/Tests/Selenium/dependencies.tests.js'
             },
+            aichannel: {
+                tsconfig: './vNext/channels/applicationinsights-channel-js/tsconfig.json'
+            },
+            aichanneltest: {
+                tsconfig: './vNext/channels/applicationinsights-channel-js/Tests/tsconfig.json',
+                src: [
+                    './vNext/channels/applicationinsights-channel-js/Tests/Selenium/*.ts',
+                    './vNext/channels/applicationinsights-channel-js/Tests/*.ts',
+                ],
+                out: './vNext/channels/applicationinsights-channel-js/Tests/Selenium/aichannel.tests.js'
+            },
             module: {
                 // Use a different tsconfig for building module in order to not generate a declaration file for module, while keeping declaration for other modules
                 tsconfig: './tsconfigmodule.json', 
@@ -240,6 +251,17 @@ module.exports = function (grunt) {
                     summaryOnly: true,
                     '--web-security': 'false'
                 }
+            },
+            aichannel: {
+                options: {
+                    urls: [
+                        './vNext/channels/applicationinsights-channel-js/Tests/Selenium/Tests.html'                       
+                    ],
+                    timeout: 300 * 1000, // 5 min
+                    console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false'
+                }
             }
         }
     });
@@ -267,4 +289,6 @@ module.exports = function (grunt) {
     grunt.registerTask("propertiestests", ["ts:properties", "ts:propertiestests", "qunit:properties"]);
     grunt.registerTask("deps", ["ts:deps"]);
     grunt.registerTask("depstest", ["ts:deps", "ts:depstest", "qunit:deps"]);
+    grunt.registerTask("aichannel", ["ts:aichannel"]);
+    grunt.registerTask("aichanneltest", ["ts:aichannel", "ts:aichanneltest", "qunit:aichannel"]);
 };

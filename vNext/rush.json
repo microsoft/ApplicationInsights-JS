@@ -23,6 +23,10 @@
       "projectFolder": "extensions/applicationinsights-analytics-js"
     },
     {
+      "packageName": "@microsoft/applicationinsights-channel-js",
+      "projectFolder": "channels/applicationinsights-channel-js"
+    },
+    {
       "packageName": "@microsoft/applicationinsights-web",
       "projectFolder": "AISKU"
      },
