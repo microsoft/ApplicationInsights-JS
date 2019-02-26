@@ -6,14 +6,14 @@
   "rushVersion": "5.4.0",
   "projectFolderMaxDepth": 4,
   "projects": [
-      {
-        "packageName": "@microsoft/applicationinsights-common",
-        "projectFolder": "shared/AppInsightsCommon"
-      },
-      {
-        "packageName": "@microsoft/applicationinsights-properties-js",
-        "projectFolder": "extensions/applicationinsights-properties-js"
-      },
+    {
+      "packageName": "@microsoft/applicationinsights-common",
+      "projectFolder": "shared/AppInsightsCommon"
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-properties-js",
+      "projectFolder": "extensions/applicationinsights-properties-js"
+    },
     {
       "packageName": "@microsoft/applicationinsights-dependencies-js",
       "projectFolder": "extensions/applicationinsights-dependencies-js"
@@ -25,10 +25,14 @@
     {
       "packageName": "@microsoft/applicationinsights-web",
       "projectFolder": "AISKU"
-     },
-     {
+    },
+    {
       "packageName": "@microsoft/applicationinsights-web-basic",
       "projectFolder": "AISKULight"
-     }
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-react-native",
+      "projectFolder": "extensions/applicationinsights-react-native"
+    }
   ]
  }
