@@ -369,9 +369,7 @@ function verifyLoggingCallbacks() {
 				}
 				QUnit.pushFailure( error, filePath + ":" + linerNr );
 			} else {
-				QUnit.test( "global failure", extend( function() {
-					QUnit.pushFailure( error, filePath + ":" + linerNr );
-				}, { validTest: true } ) );
+				return true;
 			}
 			return false;
 		}

@@ -78,6 +78,17 @@ module.exports = function (grunt) {
                 src: './vNext/extensions/applicationinsights-properties-js/Tests/**/*.ts',
                 out: './vNext/extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
             },
+            reactnative: {
+                tsconfig: './vNext/extensions/applicationinsights-react-native/tsconfig.json',
+                src: [
+                    './vNext/extensions/applicationinsights-react-native/src/index.ts'
+                ]
+            },
+            reactnativetests: {
+                tsconfig: './vNext/extensions/applicationinsights-react-native/Tests/tsconfig.json',
+                src: './vNext/extensions/applicationinsights-react-native/Tests/**/*.ts',
+                out: './vNext/extensions/applicationinsights-react-native/Tests/Selenium/reactnativeplugin.tests.js'
+            },
             deps: {
                 tsconfig: './vNext/extensions/applicationinsights-dependencies-js/tsconfig.json'
             },
@@ -102,7 +113,7 @@ module.exports = function (grunt) {
             },
             module: {
                 // Use a different tsconfig for building module in order to not generate a declaration file for module, while keeping declaration for other modules
-                tsconfig: './tsconfigmodule.json', 
+                tsconfig: './tsconfigmodule.json',
                 src: [
                     'JavaScript/JavaScriptSDK.Interfaces/*.ts',
                     'JavaScript/JavaScriptSDK.Module/*.ts',
@@ -222,7 +233,7 @@ module.exports = function (grunt) {
             deps: {
                 options: {
                     urls: [
-                        './vNext/extensions/applicationinsights-dependencies-js/Tests/Selenium/Tests.html'                       
+                        './vNext/extensions/applicationinsights-dependencies-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -235,8 +246,19 @@ module.exports = function (grunt) {
                     urls: [
                         './vNext/extensions/applicationinsights-properties-js/Tests/Selenium/Tests.html'
                     ],
-                    timout: 5 * 60 * 1000, // 5 min
+                    timeout: 5 * 60 * 1000, // 5 min
                     console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false'
+                }
+            },
+            reactnative: {
+                options: {
+                    urls: [
+                        './vNext/extensions/applicationinsights-react-native/Tests/Selenium/Tests.html'
+                    ],
+                    timeout: 5 * 60 * 1000, // 5 min
+                    console: true,
                     summaryOnly: true,
                     '--web-security': 'false'
                 }
@@ -287,6 +309,8 @@ module.exports = function (grunt) {
     grunt.registerTask("test1ds", ["common", "propertiestests", "depstest", "aitests", "aiskutests"]);
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiestests", ["ts:properties", "ts:propertiestests", "qunit:properties"]);
+    grunt.registerTask("reactnative", ["ts:reactnative"]);
+    grunt.registerTask("reactnativetests", ["ts:reactnative", "ts:reactnativetests", "qunit:reactnative"]);
     grunt.registerTask("deps", ["ts:deps"]);
     grunt.registerTask("depstest", ["ts:deps", "ts:depstest", "qunit:deps"]);
     grunt.registerTask("aichannel", ["ts:aichannel"]);
