@@ -84,15 +84,15 @@ export class ReactNativePlugin implements ITelemetryPlugin {
 
     private _applyDeviceContext(item: ITelemetryItem) {
         if (this._device) {
-            item.ctx = item.ctx || {};
+            item.ext = item.ext || {};
             if (typeof this._device.id === 'string') {
-                item.ctx[DeviceExtensionKeys.localId] = this._device.id;
+                item.ext[DeviceExtensionKeys.localId] = this._device.id;
             }
             if (typeof this._device.model === 'string') {
-                item.ctx[DeviceExtensionKeys.model] = this._device.model;
+                item.ext[DeviceExtensionKeys.model] = this._device.model;
             }
             if (typeof this._device.type === 'string') {
-                item.ctx[DeviceExtensionKeys.deviceType] = this._device.type;
+                item.ext[DeviceExtensionKeys.deviceType] = this._device.type;
             }
         }
     }

@@ -35,7 +35,7 @@ export class ReactNativePluginTests extends TestClass {
             test: () => {
                 var expectation: ITelemetryItem = {
                     name: 'a name',
-                    ctx: {
+                    ext: {
                         [DeviceExtensionKeys.localId]: 'some id',
                         [DeviceExtensionKeys.model]: 'some model',
                         [DeviceExtensionKeys.deviceType]: 'some type'
