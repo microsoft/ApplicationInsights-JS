@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "description": "Microsoft Application Insights React Native Plugin",
     "main": "dist-esm/index.js",
-    "types": "types/index.d.ts",
+    "types": "dist-esm/index.d.ts",
     "sideEffects": false,
     "repository": {
         "type": "git",
