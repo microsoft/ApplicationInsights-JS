@@ -30,14 +30,15 @@ export class ReactNativePlugin implements ITelemetryPlugin {
     }
 
     public initialize(
-        config: IConfiguration,
-        core: IAppInsightsCore,
-        extensions: IPlugin[]
+        config?: IReactNativePluginConfig | object, // need `| object` to coerce to interface
+        core?: IAppInsightsCore,
+        extensions?: IPlugin[]
     ) {
+        const inConfig = config || {};
         const defaultConfig = this._getDefaultConfig();
         for (const option in defaultConfig) {
             this._config[option] = ConfigurationManager.getConfig(
-                config,
+                inConfig as any,
                 option,
                 this.identifier,
                 this._config[option]

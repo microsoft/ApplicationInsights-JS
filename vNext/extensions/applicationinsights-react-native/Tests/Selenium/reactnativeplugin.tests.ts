@@ -2,19 +2,19 @@
 
 import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { Util, DeviceExtensionKeys } from "@microsoft/applicationinsights-common";
-import { ReactNativePlugin, INativeDevice } from '../../src';
+import { ReactNativePlugin, INativeDevice, IReactNativePluginConfig } from '../../src';
 
 export class ReactNativePluginTests extends TestClass {
     private plugin: ReactNativePlugin;
     private core: AppInsightsCore;
-    private config: IConfiguration = {instrumentationKey: ''};
+    private config: IReactNativePluginConfig;
     private item: ITelemetryItem;
 
     public testInitialize() {
         this.core = new AppInsightsCore();
         this.core.logger = new DiagnosticLogger();
         this.plugin = new ReactNativePlugin();
-        this.config = {instrumentationKey: ''};
+        this.config = {};
     }
 
     public testCleanup() {

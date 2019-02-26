@@ -1,3 +1,3 @@
 export interface IReactNativePluginConfig {
-    disableDeviceCollection: boolean;
+    disableDeviceCollection?: boolean;
 }
