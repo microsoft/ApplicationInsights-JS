@@ -474,6 +474,11 @@
       "from": "projects/applicationinsights-analytics-js.tgz",
       "resolved": "file:projects/applicationinsights-analytics-js.tgz"
     },
+    "@rush-temp/applicationinsights-channel-js": {
+      "version": "0.0.0",
+      "from": "projects\\applicationinsights-channel-js.tgz",
+      "resolved": "file:projects\\applicationinsights-channel-js.tgz"
+    },
     "@rush-temp/applicationinsights-common": {
       "version": "0.0.0",
       "from": "projects/applicationinsights-common.tgz",
