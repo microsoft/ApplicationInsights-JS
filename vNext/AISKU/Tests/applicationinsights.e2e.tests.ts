@@ -2,6 +2,7 @@
 import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Util } from '@microsoft/applicationinsights-common';
+import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 
 export class ApplicationInsightsTests extends TestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -326,7 +327,8 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    this._ai.context.user.setAuthenticatedUserContext('10001');
+                    const context = <TelemetryContext>(this._ai.context);
+                    context.user.setAuthenticatedUserContext('10001');
                     this._ai.trackTrace({message: 'authUserContext test'});
                 }
             ]
@@ -353,7 +355,8 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    this._ai.context.user.setAuthenticatedUserContext('10001', 'account123');
+                    const context = <TelemetryContext>(this._ai.context);
+                    context.user.setAuthenticatedUserContext('10001', 'account123');
                     this._ai.trackTrace({message: 'authUserContext test'});
                 }
             ]
@@ -382,7 +385,8 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    this._ai.context.user.setAuthenticatedUserContext("\u0428", "\u0429");
+                    const context = <TelemetryContext>(this._ai.context);
+                    context.user.setAuthenticatedUserContext("\u0428", "\u0429");
                     this._ai.trackTrace({message: 'authUserContext test'});
                 }
             ]
@@ -411,8 +415,9 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    this._ai.context.user.setAuthenticatedUserContext('10002', 'account567');
-                    this._ai.context.user.clearAuthenticatedUserContext();
+                    const context = <TelemetryContext>(this._ai.context);
+                    context.user.setAuthenticatedUserContext('10002', 'account567');
+                    context.user.clearAuthenticatedUserContext();
                     this._ai.trackTrace({message: 'authUserContext test'});
                 }
             ]
@@ -441,11 +446,12 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext does not set the cookie by default',
             test: () => {
                 // Setup
-                const authSpy: SinonSpy = this.sandbox.spy(this._ai.context.user, 'setAuthenticatedUserContext');
+                const context = <TelemetryContext>(this._ai.context);
+                const authSpy: SinonSpy = this.sandbox.spy(context.user, 'setAuthenticatedUserContext');
                 const cookieSpy: SinonSpy = this.sandbox.spy(Util, 'setCookie');
 
                 // Act
-                this._ai.context.user.setAuthenticatedUserContext('10002', 'account567');
+                context.user.setAuthenticatedUserContext('10002', 'account567');
 
                 // Test
                 Assert.ok(authSpy.calledOnce, 'setAuthenticatedUserContext called');

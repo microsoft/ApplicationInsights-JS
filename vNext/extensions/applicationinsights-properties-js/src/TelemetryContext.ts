@@ -5,7 +5,8 @@
 
 import { ITelemetryItem, IDiagnosticLogger, IPlugin, IConfiguration } from '@microsoft/applicationinsights-core-js';
 import { Session, _SessionManager } from './Context/Session';
-import { AppExtensionKeys, CtxTagKeys, DeviceExtensionKeys, IngestExtKeys, WebExtensionKeys, OSExtKeys, UserTagKeys, UserExtensionKeys, IConfig } from '@microsoft/applicationinsights-common';
+import { AppExtensionKeys, CtxTagKeys, DeviceExtensionKeys, Extensions, IngestExtKeys, WebExtensionKeys, OSExtKeys, 
+    UserTagKeys, UserExtensionKeys, ITelemetryContext } from '@microsoft/applicationinsights-common';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
 import { Internal } from './Context/Internal';
@@ -13,7 +14,6 @@ import { Sample } from './Context/Sample';
 import { Operation } from './Context/Operation';
 import { User } from './Context/User';
 import { Location } from './Context/Location';
-import { ITelemetryContext } from './Interfaces/ITelemetryContext';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
  
 export class TelemetryContext implements ITelemetryContext {
@@ -46,7 +46,7 @@ export class TelemetryContext implements ITelemetryContext {
         let sessionContext = this.session || this.sessionManager.automaticSession;
         if (sessionContext) {
             if (typeof sessionContext.id === "string") {
-                event.ctx[AppExtensionKeys.sessionId] = sessionContext.id;
+                event.ext[Extensions.AppExt][AppExtensionKeys.sessionId] = sessionContext.id;
             }
             if (typeof sessionContext.isFirst !== "undefined") {
                 event.tags[CtxTagKeys.sessionIsFirst] = sessionContext.isFirst;
@@ -70,20 +70,20 @@ export class TelemetryContext implements ITelemetryContext {
 
         if (this.device) {
             if (typeof this.device.id === "string") {
-                event.ctx[DeviceExtensionKeys.localId] = this.device.id;
+                event.ext[Extensions.DeviceExt][DeviceExtensionKeys.localId] = this.device.id;
             }
 
             if (typeof this.device.ip === "string") {
-                event.ctx[IngestExtKeys.clientIp] = this.device.ip;
+                event.ext[Extensions.IngestExt][IngestExtKeys.clientIp] = this.device.ip;
             }
             if (typeof this.device.language === "string") {
-                event.ctx[WebExtensionKeys.browserLang] = this.device.language;
+                event.ext[Extensions.WebExt][WebExtensionKeys.browserLang] = this.device.language;
             }
             if (typeof this.device.locale === "string") {
                 event.tags[CtxTagKeys.deviceLocale] = this.device.locale;
             }
             if (typeof this.device.model === "string") {
-                event.ctx[DeviceExtensionKeys.model] = this.device.model;
+                event.ext[Extensions.DeviceExt][DeviceExtensionKeys.model] = this.device.model;
             }
             if (typeof this.device.network !== "undefined") {
                 event.tags[CtxTagKeys.deviceNetwork] = this.device.network; // not mapped in CS 4.0
@@ -92,16 +92,16 @@ export class TelemetryContext implements ITelemetryContext {
                 event.tags[CtxTagKeys.deviceOEMName] = this.device.oemName; // not mapped in CS 4.0
             }
             if (typeof this.device.os === "string") {
-                event.ctx[OSExtKeys.deviceOS] = this.device.os;
+                event.ext[Extensions.DeviceExt][OSExtKeys.deviceOS] = this.device.os;
             }
             if (typeof this.device.osversion === "string") {
                 event.tags[CtxTagKeys.deviceOSVersion] = this.device.osversion; // not mapped in CS 4.0
             }
             if (typeof this.device.resolution === "string") {
-                event.ctx[WebExtensionKeys.screenRes] = this.device.resolution;
+                event.ext[Extensions.WebExt][WebExtensionKeys.screenRes] = this.device.resolution;
             }
             if (typeof this.device.type === "string") {
-                event.ctx[DeviceExtensionKeys.deviceType] = this.device.type;
+                event.ext[Extensions.DeviceExt][DeviceExtensionKeys.deviceType] = this.device.type;
             }
         }
     }
@@ -179,12 +179,36 @@ export class TelemetryContext implements ITelemetryContext {
             
             // CS 4.0            
             if (typeof this.user.id === "string") {
-                event.ctx[UserExtensionKeys.id] = this.user.id;
+                event.ext[Extensions.UserExt][UserExtensionKeys.id] = this.user.id;
             }
             
             if (typeof this.user.authenticatedId === "string") {
-                event.ctx[UserExtensionKeys.authId] = this.user.authenticatedId;
+                event.ext[Extensions.UserExt][UserExtensionKeys.authId] = this.user.authenticatedId;
             }            
+        }
+    }
+
+    public cleanUp(event:ITelemetryItem) {
+        if (event.ext[Extensions.DeviceExt] && Object.keys(event.ext[Extensions.DeviceExt]).length === 0) {
+            delete event.ext[Extensions.DeviceExt];
+        }
+        if (event.ext[Extensions.IngestExt] && Object.keys(event.ext[Extensions.IngestExt]).length === 0) {
+            delete event.ext[Extensions.IngestExt];
+        }
+        if (event.ext[Extensions.UserExt] && Object.keys(event.ext[Extensions.UserExt]).length === 0) {
+            delete event.ext[Extensions.UserExt];
+        }
+        if (event.ext[Extensions.WebExt] && Object.keys(event.ext[Extensions.WebExt]).length === 0) {
+            delete event.ext[Extensions.WebExt];
+        }
+        if (event.ext[Extensions.OSExt] && Object.keys(event.ext[Extensions.OSExt]).length === 0) {
+            delete event.ext[Extensions.OSExt];
+        }
+        if (event.ext[Extensions.AppExt] && Object.keys(event.ext[Extensions.AppExt]).length === 0) {
+            delete event.ext[Extensions.AppExt];
+        }
+        if (event.ext[Extensions.TraceExt] && Object.keys(event.ext[Extensions.TraceExt]).length === 0) {
+            delete event.ext[Extensions.TraceExt];
         }
     }
 }

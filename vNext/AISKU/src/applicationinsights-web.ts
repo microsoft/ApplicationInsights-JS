@@ -6,7 +6,6 @@ export {
 
 export { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
 
-
 // Re-exports
 export {
     IConfiguration,
@@ -39,15 +38,6 @@ export {
     Trace
 } from "@microsoft/applicationinsights-common";
 export { Sender } from "@microsoft/applicationinsights-channel-js";
-export {
-    ApplicationInsights as ApplicationAnalytics
-} from "@microsoft/applicationinsights-analytics-js";
-export {
-    PropertiesPlugin,
-    IPropertiesPlugin,
-    Operation
-} from "@microsoft/applicationinsights-properties-js";
-export {
-    AjaxPlugin as DependenciesPlugin,
-    IDependenciesPlugin
-} from "@microsoft/applicationinsights-dependencies-js";
+export { ApplicationInsights as ApplicationAnalytics } from "@microsoft/applicationinsights-analytics-js";
+export { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+export { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";

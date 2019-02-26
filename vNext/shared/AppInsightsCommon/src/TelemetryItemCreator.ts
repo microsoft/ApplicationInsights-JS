@@ -41,7 +41,7 @@ export class TelemetryItemCreator {
             name: envelopeName,
             time: new Date().toISOString(),
             iKey: "", // this will be set in TelemetryContext
-            ctx: systemProperties ? systemProperties : {}, // part A
+            ext: systemProperties ? systemProperties : {}, // part A
             tags: [],
             data: {
             },
@@ -106,8 +106,8 @@ export class TelemetryItemCreator {
             item.tags = [];
         }
 
-        if (!item.ctx) {
-            item.ctx = {};
+        if (!item.ext) {
+            item.ext = {};
         }
 
         if (env.tags[CtxTagKeys.applicationVersion]) {
@@ -121,7 +121,7 @@ export class TelemetryItemCreator {
         }
 
         if (env.tags[CtxTagKeys.sessionId]) {
-            item.ctx[AppExtensionKeys.sessionId] = env.tags[CtxTagKeys.sessionId];
+            item.ext[AppExtensionKeys.sessionId] = env.tags[CtxTagKeys.sessionId];
             keysFound.push(CtxTagKeys.sessionId);
         }
 
@@ -131,17 +131,17 @@ export class TelemetryItemCreator {
         }
 
         if (env.tags[CtxTagKeys.deviceId]) {
-            item.ctx[DeviceExtensionKeys.localId] = env.tags[CtxTagKeys.deviceId];
+            item.ext[DeviceExtensionKeys.localId] = env.tags[CtxTagKeys.deviceId];
             keysFound.push(CtxTagKeys.deviceId);
         }
 
         if (env.tags[CtxTagKeys.deviceIp]) {
-            item.ctx[IngestExtKeys.clientIp] = env.tags[CtxTagKeys.deviceIp];
+            item.ext[IngestExtKeys.clientIp] = env.tags[CtxTagKeys.deviceIp];
             keysFound.push(CtxTagKeys.deviceIp);
         }
 
         if (env.tags[CtxTagKeys.deviceLanguage]) {
-            item.ctx[WebExtensionKeys.browserLang] = env.tags[CtxTagKeys.deviceLanguage];
+            item.ext[WebExtensionKeys.browserLang] = env.tags[CtxTagKeys.deviceLanguage];
             keysFound.push(CtxTagKeys.deviceLanguage);
         }
 
@@ -151,17 +151,17 @@ export class TelemetryItemCreator {
         }
 
         if (env.tags[CtxTagKeys.deviceModel]) {
-            item.ctx[DeviceExtensionKeys.model] = env.tags[CtxTagKeys.deviceModel];
+            item.ext[DeviceExtensionKeys.model] = env.tags[CtxTagKeys.deviceModel];
             keysFound.push(CtxTagKeys.deviceModel);
         }
 
         if (env.tags[CtxTagKeys.deviceNetwork]) {
-            item.ctx[UnmappedKeys.deviceNetwork] = env.tags[CtxTagKeys.deviceNetwork];
+            item.ext[UnmappedKeys.deviceNetwork] = env.tags[CtxTagKeys.deviceNetwork];
             keysFound.push(CtxTagKeys.deviceNetwork);
         }
 
         if (env.tags[CtxTagKeys.deviceOEMName]) {
-            item.ctx[UnmappedKeys.deviceOEMName] = env.tags[CtxTagKeys.deviceOEMName];
+            item.ext[UnmappedKeys.deviceOEMName] = env.tags[CtxTagKeys.deviceOEMName];
             keysFound.push(CtxTagKeys.deviceOEMName);
         }
 
@@ -171,17 +171,17 @@ export class TelemetryItemCreator {
         }
 
         if (env.tags[CtxTagKeys.deviceOS]) {
-            item.ctx[OSExtKeys.deviceOS] = env.tags[CtxTagKeys.deviceOS];
+            item.ext[OSExtKeys.deviceOS] = env.tags[CtxTagKeys.deviceOS];
             keysFound.push(CtxTagKeys.deviceModel);
         }
 
         if (env.tags[CtxTagKeys.deviceNetwork]) {
-            item.ctx[UnmappedKeys.deviceNetwork] = env.tags[CtxTagKeys.deviceNetwork];
+            item.ext[UnmappedKeys.deviceNetwork] = env.tags[CtxTagKeys.deviceNetwork];
             keysFound.push(CtxTagKeys.deviceNetwork);
         }
 
         if (env.tags[CtxTagKeys.deviceType]) {
-            item.ctx[DeviceExtensionKeys.deviceType] = env.tags[CtxTagKeys.deviceType];
+            item.ext[DeviceExtensionKeys.deviceType] = env.tags[CtxTagKeys.deviceType];
             keysFound.push(CtxTagKeys.deviceType);
         }
 

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ISession } from '../Interfaces/Context/ISession';
+import { ISession } from '@microsoft/applicationinsights-common';
 import {
     Util, DateTimeUtils 
 } from '@microsoft/applicationinsights-common';

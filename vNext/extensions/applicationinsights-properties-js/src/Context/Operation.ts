@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IOperation } from '../Interfaces/Context/IOperation';
-import { Util } from '@microsoft/applicationinsights-common';
+import { IOperation, Util } from '@microsoft/applicationinsights-common';
 
 export class Operation implements IOperation {
 

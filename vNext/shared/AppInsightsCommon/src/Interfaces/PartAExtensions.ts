@@ -1,19 +1,30 @@
 import { ContextTagKeys } from "./Contracts/Generated/ContextTagKeys";
 
+export class Extensions {
+    public static UserExt = "user";
+    public static DeviceExt = "device";
+    public static TraceExt = "trace";
+    public static WebExt = "web";
+    public static AppExt = "app";
+    public static OSExt = "os";
+    public static IngestExt = "ingest";
+    public static SessionExt = "ses";
+}
+
 export class WebExtensionKeys {
     public static domain = "domain";
-    public static browser = "web.browser";
-    public static browserVer = "web.browserVer";
-    public static browserLang = "web.browserLang";
-    public static userConsent = "web.userConsent";
-    public static isManual = "web.isManual";
-    public static screenRes = "web.screenRes";
+    public static browser = "browser";
+    public static browserVer = "browserVer";
+    public static browserLang = "browserLang";
+    public static userConsent = "userConsent";
+    public static isManual = "isManual";
+    public static screenRes = "screenRes";
 }
 
 export class DeviceExtensionKeys {
-    public static localId = "device.localId";
-    public static model = "device.model";
-    public static deviceType = "device.class";
+    public static localId = "localId";
+    public static model = "model";
+    public static deviceType = "class";
 }
 
 export class AppExtensionKeys {
@@ -21,7 +32,7 @@ export class AppExtensionKeys {
 }
 
 export class UserExtensionKeys {
-    public static id = "user.id";
+    public static id = "id";
     public static authId = "authId";
     public static localId = "localId";
 }
@@ -31,11 +42,17 @@ export class UserTagKeys {
 }
 
 export class IngestExtKeys {
-    public static clientIp = "ingest.clientIp";
+    public static clientIp = "clientIp";
 }
 
 export class OSExtKeys {
-    public static deviceOS = "os.name";
+    public static deviceOS = "name";
+}
+
+export class TraceExtensionKeys {
+    public static traceID: "traceID";
+    public static parentID: "parentID";
+    public static traceState: "traceState";
 }
 
 export class UnmappedKeys {

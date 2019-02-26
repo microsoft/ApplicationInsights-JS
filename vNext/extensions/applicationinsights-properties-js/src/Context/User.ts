@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IUser, IUserContext } from '../Interfaces/Context/IUser';
 import { ITelemetryConfig } from '../Interfaces/ITelemetryConfig';
-import { Util } from '@microsoft/applicationinsights-common';
+import { Util, IUser } from '@microsoft/applicationinsights-common';
 import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from '@microsoft/applicationinsights-core-js';
 
 export class User implements IUser {
