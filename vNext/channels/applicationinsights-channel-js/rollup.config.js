@@ -57,7 +57,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       file: `dist/${outputName}.js`,
       banner: banner,
       format: "umd",
-      name: "aiproperties",
+      name: "aichannel",
       sourcemap: true
     },
     plugins: [
