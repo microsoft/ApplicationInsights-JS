@@ -497,7 +497,8 @@ export class TraceEnvelopeCreator extends EnvelopeCreator {
         let message = telemetryItem.baseData.message;
         let severityLevel = telemetryItem.baseData.severityLevel;
         let customProperties = EnvelopeCreator.extractProperties(telemetryItem.data);
-        let baseData = new Trace(logger, message, severityLevel, customProperties);
+        const props = {...customProperties, ...telemetryItem.baseData.properties};
+        let baseData = new Trace(logger, message, severityLevel, props);
         let data = new Data<Trace>(Trace.dataType, baseData);
         return EnvelopeCreator.createEnvelope<Trace>(logger, Trace.envelopeType, telemetryItem, data);
     }
