@@ -7,7 +7,7 @@
     "sideEffects": false,
     "repository": {
         "type": "git",
-        "url": "https://github.com/Microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-properties-js"
+        "url": "https://github.com/Microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-react-native"
     },
     "scripts": {
         "build": "npm run build:esm && npm run build:browser",
