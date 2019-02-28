@@ -447,50 +447,50 @@
       "from": "@babel/types@^7.3.4",
       "resolved": "https://registry.npmjs.org/@babel/types/-/types-7.3.4.tgz"
     },
-    "@microsoft/applicationinsights-core-js": {
-      "version": "2.0.0-beta.0",
-      "from": "@microsoft/applicationinsights-core-js@2.0.0-beta.0",
-      "resolved": "https://registry.npmjs.org/@microsoft/applicationinsights-core-js/-/applicationinsights-core-js-2.0.0-beta.0.tgz"
-    },
     "@rush-temp/applicationinsights-analytics-js": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-analytics-js.tgz",
-      "resolved": "file:projects/applicationinsights-analytics-js.tgz"
+      "from": "projects\\applicationinsights-analytics-js.tgz",
+      "resolved": "file:projects\\applicationinsights-analytics-js.tgz"
     },
     "@rush-temp/applicationinsights-channel-js": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-channel-js.tgz",
-      "resolved": "file:projects/applicationinsights-channel-js.tgz"
+      "from": "projects\\applicationinsights-channel-js.tgz",
+      "resolved": "file:projects\\applicationinsights-channel-js.tgz"
     },
     "@rush-temp/applicationinsights-common": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-common.tgz",
-      "resolved": "file:projects/applicationinsights-common.tgz"
+      "from": "projects\\applicationinsights-common.tgz",
+      "resolved": "file:projects\\applicationinsights-common.tgz"
+    },
+    "@rush-temp/applicationinsights-core-js": {
+      "version": "0.0.0",
+      "from": "projects\\applicationinsights-core-js.tgz",
+      "resolved": "file:projects\\applicationinsights-core-js.tgz"
     },
     "@rush-temp/applicationinsights-dependencies-js": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-dependencies-js.tgz",
-      "resolved": "file:projects/applicationinsights-dependencies-js.tgz"
+      "from": "projects\\applicationinsights-dependencies-js.tgz",
+      "resolved": "file:projects\\applicationinsights-dependencies-js.tgz"
     },
     "@rush-temp/applicationinsights-properties-js": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-properties-js.tgz",
-      "resolved": "file:projects/applicationinsights-properties-js.tgz"
+      "from": "projects\\applicationinsights-properties-js.tgz",
+      "resolved": "file:projects\\applicationinsights-properties-js.tgz"
     },
     "@rush-temp/applicationinsights-react-native": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-react-native.tgz",
-      "resolved": "file:projects/applicationinsights-react-native.tgz"
+      "from": "projects\\applicationinsights-react-native.tgz",
+      "resolved": "file:projects\\applicationinsights-react-native.tgz"
     },
     "@rush-temp/applicationinsights-web": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-web.tgz",
-      "resolved": "file:projects/applicationinsights-web.tgz"
+      "from": "projects\\applicationinsights-web.tgz",
+      "resolved": "file:projects\\applicationinsights-web.tgz"
     },
     "@rush-temp/applicationinsights-web-basic": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-web-basic.tgz",
-      "resolved": "file:projects/applicationinsights-web-basic.tgz"
+      "from": "projects\\applicationinsights-web-basic.tgz",
+      "resolved": "file:projects\\applicationinsights-web-basic.tgz"
     },
     "@types/estree": {
       "version": "0.0.39",
@@ -498,9 +498,9 @@
       "resolved": "https://registry.npmjs.org/@types/estree/-/estree-0.0.39.tgz"
     },
     "@types/node": {
-      "version": "11.9.5",
+      "version": "11.9.6",
       "from": "@types/node@*",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-11.9.5.tgz"
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-11.9.6.tgz"
     },
     "abbrev": {
       "version": "1.1.1",
@@ -1697,6 +1697,23 @@
           "version": "1.1.7",
           "from": "resolve@>=1.1.0 <1.2.0",
           "resolved": "https://registry.npmjs.org/resolve/-/resolve-1.1.7.tgz"
+        }
+      }
+    },
+    "grunt-contrib-clean": {
+      "version": "1.1.0",
+      "from": "grunt-contrib-clean@>=1.1.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/grunt-contrib-clean/-/grunt-contrib-clean-1.1.0.tgz",
+      "dependencies": {
+        "glob": {
+          "version": "7.1.3",
+          "from": "glob@>=7.1.3 <8.0.0",
+          "resolved": "https://registry.npmjs.org/glob/-/glob-7.1.3.tgz"
+        },
+        "rimraf": {
+          "version": "2.6.3",
+          "from": "rimraf@^2.5.1",
+          "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.6.3.tgz"
         }
       }
     },
@@ -3957,6 +3974,18 @@
           "version": "5.5.0",
           "from": "supports-color@^5.3.0",
           "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-5.5.0.tgz"
+        }
+      }
+    },
+    "tslint-microsoft-contrib": {
+      "version": "5.2.1",
+      "from": "tslint-microsoft-contrib@^5.2.1",
+      "resolved": "https://registry.npmjs.org/tslint-microsoft-contrib/-/tslint-microsoft-contrib-5.2.1.tgz",
+      "dependencies": {
+        "tsutils": {
+          "version": "2.28.0",
+          "from": "tsutils@^2.27.2 <2.29.0",
+          "resolved": "https://registry.npmjs.org/tsutils/-/tsutils-2.28.0.tgz"
         }
       }
     },
