@@ -3,7 +3,8 @@
 React Native Plugin for the Application Insights Javascript SDK
 
 ## Getting Started
-This plugin relies on [`react-native-device-info`](https://github.com/rebeccahughes/react-native-device-info). You must install and link this package. Update `react-native-device-info` to support collecting the latest device names.
+>**This plugin relies on [`react-native-device-info`](https://github.com/rebeccahughes/react-native-device-info). You must install and link this package. Keep `react-native-device-info` up-to-date to collect the latest device names using your app.**
+
 ```zsh
 npm install --save @microsoft/applicationinsights-react-native
 npm install --save react-native-device-info
@@ -11,7 +12,7 @@ react-native link react-native-device-info
 ```
 
 ## Initializing the Plugin
-To use this plugin, you only need to construct the plugin and add it as an extension to your existing Application Insights instance.
+To use this plugin, you only need to construct the plugin and add it as an `extension` to your existing Application Insights instance.
 ```ts
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import { ReactNativePlugin } from '@microsoft/applicationinsights-react-native';
@@ -26,11 +27,14 @@ var appInsights = new ApplicationInsights({
 appInsights.loadAppInsights();
 ```
 
+## Requirements
+You must be using a version `>=2.0.0` of `@microsoft/applicationinsights-web`. This plugin will only work in react-native apps, e.g. it will not work with `expo`.
+
 ## Device Information Collected
 By default, this plugin automatically collects
- - Unique Device ID (also known as Installation ID)
- - Device Model Name (iPhone XS, etc.)
- - Device Type (Handset, Tablet, etc.)
+ - **Unique Device ID** (also known as Installation ID)
+ - **Device Model Name** (iPhone XS, etc.)
+ - **Device Type** (Handset, Tablet, etc.)
 
 ## Contributing
 
