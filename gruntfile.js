@@ -30,6 +30,17 @@ module.exports = function (grunt) {
                 ],
                 out: 'bundle/ai.js',
             },
+            core: {
+                tsconfig: './vNext/shared/AppInsightsCore/tsconfig.json'
+            },
+            coretest: {
+                tsconfig: './vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/tsconfig.json',
+                src: [
+                    './vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests.ts',
+                    './vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/aitests.ts'
+                ],
+                out: 'vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/aicore.tests.js'
+            },
             common: {
                 tsconfig: './vNext/shared/AppInsightsCommon/tsconfig.json'
             },
@@ -219,6 +230,17 @@ module.exports = function (grunt) {
                     '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
             },
+            core: {
+                options: {
+                    urls: [
+                        './vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/Tests.html'
+                    ],
+                    timeout: 300 * 1000, // 5 min
+                    console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
+                }
+            },
             aitests: {
                 options: {
                     urls: [
@@ -277,7 +299,7 @@ module.exports = function (grunt) {
             aichannel: {
                 options: {
                     urls: [
-                        './vNext/channels/applicationinsights-channel-js/Tests/Selenium/Tests.html'                       
+                        './vNext/channels/applicationinsights-channel-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -297,6 +319,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
+    grunt.registerTask("core", ["ts:core"]);
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("ai", ["ts:appinsights"]);
@@ -306,7 +329,8 @@ module.exports = function (grunt) {
     grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
     grunt.registerTask("aiskutests", ["ts:aisku", "ts:aiskutests", "qunit:aisku"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
-    grunt.registerTask("test1ds", ["common", "propertiestests", "depstest", "aitests", "aiskutests"]);
+    grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests"]);
+    grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiestests", ["ts:properties", "ts:propertiestests", "qunit:properties"]);
     grunt.registerTask("reactnative", ["ts:reactnative"]);
