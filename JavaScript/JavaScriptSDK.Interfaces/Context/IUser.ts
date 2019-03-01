@@ -19,7 +19,7 @@ module Microsoft.ApplicationInsights.Context {
         /**
          * Authenticated user id
          */
-        authId: string;
+        authenticatedId: string;
 
         /**
          * The account ID.
