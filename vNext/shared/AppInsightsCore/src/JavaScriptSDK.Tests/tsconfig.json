@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+    "noImplicitAny": false,
+    "module": "amd",
+    "target": "es5",
+    "alwaysStrict": true,
+    "declaration": true
+  },
+  "files": []
+}

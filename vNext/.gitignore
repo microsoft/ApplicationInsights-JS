@@ -61,3 +61,8 @@ temp
 # Rush files
 common/temp/**
 package-deps.json
+
+# test output
+aicore.tests.js*
+aicore.tests.d.ts
+ai.tests.d.ts

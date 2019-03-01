@@ -30,6 +30,17 @@ module.exports = function (grunt) {
                 ],
                 out: 'bundle/ai.js',
             },
+            core: {
+                tsconfig: './vNext/shared/AppInsightsCore/tsconfig.json'
+            },
+            coretest: {
+                tsconfig: './vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/tsconfig.json',
+                src: [
+                    './vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests.ts',
+                    './vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/aitests.ts'
+                ],
+                out: 'vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/aicore.tests.js'
+            },
             common: {
                 tsconfig: './vNext/shared/AppInsightsCommon/tsconfig.json'
             },
@@ -78,6 +89,17 @@ module.exports = function (grunt) {
                 src: './vNext/extensions/applicationinsights-properties-js/Tests/**/*.ts',
                 out: './vNext/extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
             },
+            reactnative: {
+                tsconfig: './vNext/extensions/applicationinsights-react-native/tsconfig.json',
+                src: [
+                    './vNext/extensions/applicationinsights-react-native/src/index.ts'
+                ]
+            },
+            reactnativetests: {
+                tsconfig: './vNext/extensions/applicationinsights-react-native/Tests/tsconfig.json',
+                src: './vNext/extensions/applicationinsights-react-native/Tests/**/*.ts',
+                out: './vNext/extensions/applicationinsights-react-native/Tests/Selenium/reactnativeplugin.tests.js'
+            },
             deps: {
                 tsconfig: './vNext/extensions/applicationinsights-dependencies-js/tsconfig.json'
             },
@@ -102,7 +124,7 @@ module.exports = function (grunt) {
             },
             module: {
                 // Use a different tsconfig for building module in order to not generate a declaration file for module, while keeping declaration for other modules
-                tsconfig: './tsconfigmodule.json', 
+                tsconfig: './tsconfigmodule.json',
                 src: [
                     'JavaScript/JavaScriptSDK.Interfaces/*.ts',
                     'JavaScript/JavaScriptSDK.Module/*.ts',
@@ -208,6 +230,17 @@ module.exports = function (grunt) {
                     '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
             },
+            core: {
+                options: {
+                    urls: [
+                        './vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/Tests.html'
+                    ],
+                    timeout: 300 * 1000, // 5 min
+                    console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
+                }
+            },
             aitests: {
                 options: {
                     urls: [
@@ -222,7 +255,7 @@ module.exports = function (grunt) {
             deps: {
                 options: {
                     urls: [
-                        './vNext/extensions/applicationinsights-dependencies-js/Tests/Selenium/Tests.html'                       
+                        './vNext/extensions/applicationinsights-dependencies-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -235,8 +268,19 @@ module.exports = function (grunt) {
                     urls: [
                         './vNext/extensions/applicationinsights-properties-js/Tests/Selenium/Tests.html'
                     ],
-                    timout: 5 * 60 * 1000, // 5 min
+                    timeout: 5 * 60 * 1000, // 5 min
                     console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false'
+                }
+            },
+            reactnative: {
+                options: {
+                    urls: [
+                        './vNext/extensions/applicationinsights-react-native/Tests/Selenium/Tests.html'
+                    ],
+                    timeout: 5 * 60 * 1000, // 5 min
+                    console: true,
                     summaryOnly: true,
                     '--web-security': 'false'
                 }
@@ -255,7 +299,7 @@ module.exports = function (grunt) {
             aichannel: {
                 options: {
                     urls: [
-                        './vNext/channels/applicationinsights-channel-js/Tests/Selenium/Tests.html'                       
+                        './vNext/channels/applicationinsights-channel-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -275,6 +319,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
+    grunt.registerTask("core", ["ts:core"]);
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("ai", ["ts:appinsights"]);
@@ -284,9 +329,12 @@ module.exports = function (grunt) {
     grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
     grunt.registerTask("aiskutests", ["ts:aisku", "ts:aiskutests", "qunit:aisku"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
-    grunt.registerTask("test1ds", ["common", "propertiestests", "depstest", "aitests", "aiskutests"]);
+    grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests"]);
+    grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiestests", ["ts:properties", "ts:propertiestests", "qunit:properties"]);
+    grunt.registerTask("reactnative", ["ts:reactnative"]);
+    grunt.registerTask("reactnativetests", ["ts:reactnative", "ts:reactnativetests", "qunit:reactnative"]);
     grunt.registerTask("deps", ["ts:deps"]);
     grunt.registerTask("depstest", ["ts:deps", "ts:depstest", "qunit:deps"]);
     grunt.registerTask("aichannel", ["ts:aichannel"]);
