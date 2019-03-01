@@ -141,6 +141,8 @@ export class ApplicationInsightsTests extends TestClass {
                 let data = payload.data;
                 Assert.ok(data && data.baseData && 
                     data.baseData.properties["foo"] && data.baseData.properties["prop2"]);
+                Assert.equal("bar", data.baseData.properties["foo"]);
+                Assert.equal("value2", data.baseData.properties["prop2"]);
             })
         });
 
