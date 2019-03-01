@@ -38,7 +38,7 @@ export class ReactNativePluginTests extends TestClass {
                     ext: {
                         [DeviceExtensionKeys.localId]: 'some id',
                         [DeviceExtensionKeys.model]: 'some model',
-                        [DeviceExtensionKeys.deviceType]: 'some type'
+                        [DeviceExtensionKeys.deviceClass]: 'some type'
                     }
                 };
                 var actual: ITelemetryItem = {
@@ -48,7 +48,7 @@ export class ReactNativePluginTests extends TestClass {
                 (this.plugin['_device'] as INativeDevice) = {
                     id: 'some id',
                     model: 'some model',
-                    type: 'some type'
+                    deviceClass: 'some type'
                 };
                 Assert.notDeepEqual(expectation, actual, 'Telemetry items are not equal yet');
                 this.plugin.processTelemetry(actual);
@@ -82,9 +82,9 @@ export class ReactNativePluginTests extends TestClass {
             name: `setDeviceType sets this device's type`,
             test: () => {
                 const expectation = 'something';
-                Assert.notEqual(expectation, this.plugin['_device'].type, 'Initial not set');
+                Assert.notEqual(expectation, this.plugin['_device'].deviceClass, 'Initial not set');
                 this.plugin.setDeviceType(expectation);
-                Assert.equal(expectation, this.plugin['_device'].type, 'Value set');
+                Assert.equal(expectation, this.plugin['_device'].deviceClass, 'Value set');
             }
         });
     }

@@ -2,7 +2,7 @@ export interface INativeDevice {
     /**
      * Device type, e.g. Handset, Tablet, Tv
      */
-    type?: string;
+    deviceClass?: string;
 
     /**
      * Unique installation ID

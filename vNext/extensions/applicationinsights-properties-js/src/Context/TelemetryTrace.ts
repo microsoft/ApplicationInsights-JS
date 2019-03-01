@@ -8,6 +8,7 @@ export class TelemetryTrace implements ITelemetryTrace {
     public traceID: string;
     public parentID: string;
     public traceState: ITraceState;
+    public name: string;
 
     constructor(id?: string, parentId?: string) {
         this.traceID = id || Util.newId();

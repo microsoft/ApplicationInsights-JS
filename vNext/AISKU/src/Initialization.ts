@@ -7,9 +7,8 @@ import { Util, IConfig, IDependencyTelemetry, IPageViewPerformanceTelemetry,IPro
          IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, ITelemetryContext,
          IMetricTelemetry, IEventTelemetry, IAppInsights, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-common";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
-import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+import { PropertiesPlugin, TelemetryContext } from "@microsoft/applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
-import { TelemetryContext } from "../../extensions/applicationinsights-properties-js/types/TelemetryContext";
 
 "use strict";
 

@@ -19,11 +19,6 @@ export class Session implements ISession {
      */
     public id: string;
 
-    /**  
-     * The true if this is the first session  
-     */
-    public isFirst: boolean;
-
     /**
      * The date at which this guid was genereated.
      * Per the spec the ID will be regenerated if more than acquisitionSpan milliseconds ellapse from this time.
@@ -86,7 +81,6 @@ export class _SessionManager {
         // renew if acquisitionSpan or renewalSpan has ellapsed
         if (acquisitionExpired || renewalExpired) {
             // update automaticSession so session state has correct id                
-            this.automaticSession.isFirst = undefined;
             this.renew();
         } else {
             // do not update the cookie more often than cookieUpdateInterval
@@ -126,7 +120,6 @@ export class _SessionManager {
         }
 
         if (!this.automaticSession.id) {
-            this.automaticSession.isFirst = true;
             this.renew();
         }
     }

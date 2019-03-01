@@ -122,10 +122,10 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
 
     private openHandler(xhr: XMLHttpRequestInstrumented, method, url, async) {
         let id: string;
-        if (this._context && this._context.operation && this._context.operation.id) {
+        if (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) {
 
             // this format corresponds with activity logic on server-side and is required for the correct correlation
-            id = "|" + this._context.operation.id + "." + Util.newId();
+            id = "|" + this._context.telemetryTrace.traceID + "." + Util.newId();
         } else {
             id = Util.newId();
         }
@@ -393,10 +393,10 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
 
     private createFetchRecord(input?: Request | string, init?: RequestInit): ajaxRecord {
         let id: string;
-        if (this._context && this._context.operation && this._context.operation.id) {
+        if (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) {
 
             // this format corresponds with activity logic on server-side and is required for the correct correlation
-            id = "|" + this._context.operation.id + "." + Util.newId();
+            id = "|" + this._context.telemetryTrace.traceID + "." + Util.newId();
         } else {
             id = Util.newId();
         }

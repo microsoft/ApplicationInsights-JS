@@ -8,7 +8,7 @@ export class Device implements IDevice {
     /**
      * The type for the current device.
      */
-    public type: string;
+    public deviceClass: string;
 
     /**
      * A device unique ID.
@@ -16,9 +16,9 @@ export class Device implements IDevice {
     public id: string;
 
     /**
-     * The device OEM for the current device.
+     * The application screen resolution.
      */
-    public oemName: string;
+    resolution: string;
 
     /**
      * The device model for the current device.
@@ -26,39 +26,14 @@ export class Device implements IDevice {
     public model: string;
 
     /**
-     * The IANA interface type for the internet connected network adapter.
+     * Device identifier known at instrumentation time
      */
-    public network: number;
+    public localId: string;
 
     /**
-     * The application screen resolution.
-     */
-    public resolution: string;
-
-    /**
-     * The current display language of the operating system.
-     */
-    public locale: string;
-
-    /**
-     * The IP address.
+     * Device identifier known at instrumentation time
      */
     public ip: string;
-
-    /**
-     * The device language.
-     */
-    public language: string;
-
-    /**
-     * The OS name.
-     */
-    public os: string;
-
-    /**
-     * The OS version.
-     */
-    public osversion: string;
 
     /**
      * Constructs a new instance of the Device class
@@ -69,6 +44,6 @@ export class Device implements IDevice {
 
         // Device type is a dimension in our data platform
         // Setting it to 'Browser' allows to separate client and server dependencies/exceptions
-        this.type = "Browser";
+        this.deviceClass = "Browser";
     }
 }

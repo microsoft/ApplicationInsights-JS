@@ -27,6 +27,11 @@ export class User implements IUser {
     public authenticatedId: string;
 
     /**
+     * The localId
+     */
+    public localId: string;
+
+    /**
      * The account ID.
      */
     public accountId: string;
@@ -35,16 +40,6 @@ export class User implements IUser {
      * The account acquisition date.
      */
     public accountAcquisitionDate: string;
-
-    /**
-     * The user agent string.
-     */
-    public agent: string;
-
-    /**
-     * The store region.
-     */
-    public storeRegion: string;
 
     private _logger: IDiagnosticLogger;
 

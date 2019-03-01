@@ -70,14 +70,14 @@ export class ReactNativePlugin implements ITelemetryPlugin {
     }
 
     public setDeviceType(newType: string) {
-        this._device.type = newType;
+        this._device.deviceClass = newType;
     }
 
     /**
      * Automatically collects native device info for this device
      */
     private _collectDeviceInfo() {
-        this._device.type = DeviceInfo.getDeviceType();
+        this._device.deviceClass = DeviceInfo.getDeviceType();
         this._device.id = DeviceInfo.getUniqueID(); // Installation ID
         this._device.model = DeviceInfo.getModel();
     }
@@ -91,8 +91,8 @@ export class ReactNativePlugin implements ITelemetryPlugin {
             if (typeof this._device.model === 'string') {
                 item.ext[DeviceExtensionKeys.model] = this._device.model;
             }
-            if (typeof this._device.type === 'string') {
-                item.ext[DeviceExtensionKeys.deviceType] = this._device.type;
+            if (typeof this._device.deviceClass === 'string') {
+                item.ext[DeviceExtensionKeys.deviceClass] = this._device.deviceClass;
             }
         }
     }

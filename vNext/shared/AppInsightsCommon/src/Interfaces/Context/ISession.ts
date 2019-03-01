@@ -7,11 +7,6 @@ export interface ISession {
     */
     id: string;
 
-    /**  
-     * The true if this is the first session  
-     */
-    isFirst: boolean;
-
     /**
      * The date at which this guid was genereated.
      * Per the spec the ID will be regenerated if more than acquisitionSpan milliseconds ellapse from this time.

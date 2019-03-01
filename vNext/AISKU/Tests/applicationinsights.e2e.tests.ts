@@ -134,8 +134,16 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'E2E.GenericTests: trackTrace sends to backend',
             stepDelay: 1,
             steps: [() => {
-                this._ai.trackTrace({message: 'trace'});
-            }].concat(this.asserts(1))
+                this._ai.trackTrace({message: 'trace', properties: { "foo": "bar", "prop2": "value2" }});
+            }].concat(this.asserts(1)).concat(() => {
+                const payloadStr: string[] = this.successSpy.args[0][0];
+                const payload = JSON.parse(payloadStr[0]);
+                let data = payload.data;
+                Assert.ok(data && data.baseData && 
+                    data.baseData.properties["foo"] && data.baseData.properties["prop2"]);
+                Assert.equal("bar", data.baseData.properties["foo"]);
+                Assert.equal("value2", data.baseData.properties["prop2"]);
+            })
         });
 
         this.testCaseAsync({

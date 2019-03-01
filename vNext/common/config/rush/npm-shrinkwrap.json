@@ -3931,9 +3931,9 @@
       "resolved": "https://registry.npmjs.org/tslib/-/tslib-1.9.3.tgz"
     },
     "tslint": {
-      "version": "5.13.0",
+      "version": "5.13.1",
       "from": "tslint@^5.11.0",
-      "resolved": "https://registry.npmjs.org/tslint/-/tslint-5.13.0.tgz",
+      "resolved": "https://registry.npmjs.org/tslint/-/tslint-5.13.1.tgz",
       "dependencies": {
         "ansi-styles": {
           "version": "3.2.1",
