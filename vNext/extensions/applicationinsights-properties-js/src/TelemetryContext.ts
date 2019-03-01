@@ -99,9 +99,11 @@ export class TelemetryContext implements ITelemetryContext {
 
     public applyLocationContext(event: ITelemetryItem) {
         if (this.location) {
-
             if (typeof this.location.ip === "string") {
-                event.tags[CtxTagKeys.locationIp] = this.location.ip; // not mapped in CS 4.0
+                let key = this.location.ip;
+                let val  = CtxTagKeys.locationIp;
+                
+                event.tags.push({key: val}); // not mapped in CS 4.0
             }
         }
     }

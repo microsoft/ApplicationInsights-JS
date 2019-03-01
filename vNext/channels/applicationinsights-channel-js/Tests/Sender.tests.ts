@@ -253,7 +253,8 @@ export class SenderTests extends TestClass {
                             "id": "TestId"
                         }
                     },
-                    tags: [{"ai.user.accountId": "TestAccountId"}],
+                    tags: [{"ai.user.accountId": "TestAccountId"},
+                           {"ai.location.ip": "10.22.8.2"}],
                     baseType: "RemoteDependencyData",
                     baseData: {
                         id: 'some id',
@@ -316,6 +317,8 @@ export class SenderTests extends TestClass {
                 // Assert tags
                 Assert.ok(appInsightsEnvelope.tags);
                 Assert.equal("TestAccountId", appInsightsEnvelope.tags["ai.user.accountId"]);
+                Assert.equal("10.22.8.2", appInsightsEnvelope.tags["ai.location.ip"]);
+                
                 Assert.equal("AuthenticatedId", appInsightsEnvelope.tags["ai.user.authUserId"]);
                 Assert.equal("TestId", appInsightsEnvelope.tags["ai.user.id"]);
 

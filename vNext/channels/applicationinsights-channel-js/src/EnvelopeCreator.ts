@@ -89,14 +89,6 @@ export abstract class EnvelopeCreator {
             item.tags = [];
         }
 
-        if (item.tags[LegacyKeys.applicationVersion]) {
-            env.tags[CtxTagKeys.applicationVersion] = item.tags[LegacyKeys.applicationVersion];
-        }
-
-        if (item.tags[LegacyKeys.applicationBuild]) {
-            env.tags[CtxTagKeys.applicationBuild] = item.tags[LegacyKeys.applicationBuild];
-        }
-
         if (item.ext.user) {
             if (item.ext.user.authId) {
                 env.tags[CtxTagKeys.userAuthUserId] = item.ext.user.authId;
@@ -112,7 +104,7 @@ export abstract class EnvelopeCreator {
                 env.tags[CtxTagKeys.sessionId] = item.ext.app.sesId;
             }
         }
-
+        
         // session.isFirst is not supported in CS 4.0
         // if (item.tags[CtxTagKeys.sessionIsFirst]) { 
         //     env.tags[CtxTagKeys.sessionIsFirst] = item.tags[CtxTagKeys.sessionIsFirst];
@@ -157,10 +149,6 @@ export abstract class EnvelopeCreator {
             }
         }
 
-        if (item.tags[LegacyKeys.deviceOSVersion]) {
-            env.tags[CtxTagKeys.deviceOSVersion] = item.tags[LegacyKeys.deviceOSVersion];
-        }
-
         if (item.ext.web) {
             if (item.ext.web.screenRes) {
                 env.tags[CtxTagKeys.deviceScreenResolution] = item.ext.web.screenRes;
@@ -169,18 +157,6 @@ export abstract class EnvelopeCreator {
 
         if (item.tags[SampleRate]) {
             env.tags.sampleRate = item.tags[SampleRate];
-        }
-
-        if (item.tags[CtxTagKeys.locationIp]) {
-            env.tags[CtxTagKeys.locationIp] = item.tags[CtxTagKeys.locationIp];
-        }
-
-        if (item.tags[CtxTagKeys.internalSdkVersion]) {
-            env.tags[CtxTagKeys.internalSdkVersion] = item.tags[CtxTagKeys.internalSdkVersion];
-        }
-
-        if (item.tags[CtxTagKeys.internalAgentVersion]) {
-            env.tags[CtxTagKeys.internalAgentVersion] = item.tags[CtxTagKeys.internalAgentVersion];
         }
         
         // No support for mapping Trace.traceState to 2.0 as it is currently empty
@@ -214,6 +190,27 @@ export abstract class EnvelopeCreator {
         item.tags.forEach(tg => {
             if (tg[LegacyKeys.accountId]) {
                 env.tags[LegacyKeys.accountId] = tg[LegacyKeys.accountId]; // account id in tags
+            }
+
+            // SDK version field: example: ai.internal.sdkVersion=javascript:1.0.18
+            if (tg[LegacyKeys.internalSdkVersion]) {
+                env.tags[LegacyKeys.internalSdkVersion] = tg[LegacyKeys.internalSdkVersion];
+            }
+
+            if (tg[LegacyKeys.locationIp]) {
+                env.tags[LegacyKeys.locationIp] = tg[LegacyKeys.locationIp];
+            }
+
+            if (tg[LegacyKeys.deviceOSVersion]) {
+                env.tags[LegacyKeys.deviceOSVersion] = tg[LegacyKeys.deviceOSVersion];
+            }
+
+            if (tg[LegacyKeys.applicationVersion]) {
+                env.tags[LegacyKeys.applicationVersion] = tg[LegacyKeys.applicationVersion];
+            }
+    
+            if (tg[LegacyKeys.applicationBuild]) {
+                tg[LegacyKeys.applicationBuild] = tg[LegacyKeys.applicationBuild];
             }
         });
     }

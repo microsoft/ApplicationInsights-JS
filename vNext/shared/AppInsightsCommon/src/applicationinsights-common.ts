@@ -43,7 +43,6 @@ export { IApplication } from './Interfaces/Context/IApplication';
 export { IDevice } from './Interfaces/Context/IDevice';
 export { IInternal } from './Interfaces/Context/IInternal';
 export { ILocation } from './Interfaces/Context/ILocation';
-export { IOperation } from './Interfaces/Context/IOperation';
 export { ISample } from './Interfaces/Context/ISample';
 export { IPropertiesPlugin } from './Interfaces/IPropertiesPlugin';
 export { IUser, IUserContext } from './Interfaces/Context/IUser';
