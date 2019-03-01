@@ -5,9 +5,9 @@ import { IApplication } from './Context/IApplication';
 import { IDevice } from './Context/IDevice';
 import { IInternal } from './Context/IInternal';
 import { ILocation } from './Context/ILocation';
-import { IOperation } from './Context/IOperation';
 import { IUser } from './Context/IUser';
 import { ISession } from './Context/ISession';
+import { ITelemetryTrace } from './Context/ITelemetryTrace';
 
 export interface ITelemetryContext {
     /**
@@ -33,7 +33,7 @@ export interface ITelemetryContext {
     /**
      * The object describing a operation tracked by this object.
      */
-    operation: IOperation;
+    telemetryTrace: ITelemetryTrace;
 
     /**
      * The object describing a user tracked by this object.

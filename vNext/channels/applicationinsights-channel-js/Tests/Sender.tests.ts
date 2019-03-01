@@ -253,7 +253,7 @@ export class SenderTests extends TestClass {
                             "id": "TestId"
                         }
                     },
-                    tags: [{"user.accountId": "TestAccountId"}],
+                    tags: [{"ai.user.accountId": "TestAccountId"}],
                     baseType: "RemoteDependencyData",
                     baseData: {
                         id: 'some id',
@@ -351,7 +351,7 @@ export class SenderTests extends TestClass {
                             "parentID": "1528B5FF-6455-4657-BE77-E6664CACEEEE"
                         }
                     },
-                    tags: [{"user.accountId": "TestAccountId"}],
+                    tags: [{"ai.user.accountId": "TestAccountId"}],
                     baseType: "PageviewData",
                     baseData: {
                         "name": "Page View Name",

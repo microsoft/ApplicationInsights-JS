@@ -8,7 +8,7 @@ import { ITelemetryItem, CoreUtils, IDiagnosticLogger } from "@microsoft/applica
 import { IEnvelope } from './Interfaces/Telemetry/IEnvelope';
 import { RemoteDependencyData } from './Telemetry/RemoteDependencyData';
 import { IDependencyTelemetry } from './applicationinsights-common';
-import { UnmappedKeys, DeviceExtensionKeys, CtxTagKeys, AppExtensionKeys, IngestExtKeys, WebExtensionKeys, OSExtKeys } from "./Interfaces/PartAExtensions";
+import { LegacyKeys, DeviceExtensionKeys, CtxTagKeys, AppExtensionKeys, IngestExtKeys, WebExtensionKeys, OSExtKeys } from "./Interfaces/PartAExtensions";
 
 export class TelemetryItemCreator {
 
@@ -111,12 +111,12 @@ export class TelemetryItemCreator {
         }
 
         if (env.tags[CtxTagKeys.applicationVersion]) {
-            item.tags[UnmappedKeys.applicationVersion] = env.tags[CtxTagKeys.applicationVersion];
+            item.tags[LegacyKeys.applicationVersion] = env.tags[CtxTagKeys.applicationVersion];
             keysFound.push(CtxTagKeys.applicationVersion);
         }
 
         if (env.tags[CtxTagKeys.applicationBuild]) {
-            item.tags[UnmappedKeys.applicationBuild]  = env.tags[CtxTagKeys.applicationBuild];
+            item.tags[LegacyKeys.applicationBuild]  = env.tags[CtxTagKeys.applicationBuild];
             keysFound.push(CtxTagKeys.applicationBuild);
         }
 
@@ -146,7 +146,7 @@ export class TelemetryItemCreator {
         }
 
         if (env.tags[CtxTagKeys.deviceLocale]) {
-            item.tags[UnmappedKeys.deviceLocale] = env.tags[CtxTagKeys.deviceLocale];
+            item.tags[LegacyKeys.deviceLocale] = env.tags[CtxTagKeys.deviceLocale];
             keysFound.push(CtxTagKeys.deviceLocale);
         }
 
@@ -156,17 +156,17 @@ export class TelemetryItemCreator {
         }
 
         if (env.tags[CtxTagKeys.deviceNetwork]) {
-            item.ext[UnmappedKeys.deviceNetwork] = env.tags[CtxTagKeys.deviceNetwork];
+            item.ext[LegacyKeys.deviceNetwork] = env.tags[CtxTagKeys.deviceNetwork];
             keysFound.push(CtxTagKeys.deviceNetwork);
         }
 
         if (env.tags[CtxTagKeys.deviceOEMName]) {
-            item.ext[UnmappedKeys.deviceOEMName] = env.tags[CtxTagKeys.deviceOEMName];
+            item.ext[LegacyKeys.deviceOEMName] = env.tags[CtxTagKeys.deviceOEMName];
             keysFound.push(CtxTagKeys.deviceOEMName);
         }
 
         if (env.tags[CtxTagKeys.deviceOSVersion]) {
-            item.tags[UnmappedKeys.deviceOSVersion] = env.tags[CtxTagKeys.deviceOSVersion];
+            item.tags[LegacyKeys.deviceOSVersion] = env.tags[CtxTagKeys.deviceOSVersion];
             keysFound.push(CtxTagKeys.deviceOSVersion);
         }
 
@@ -176,17 +176,17 @@ export class TelemetryItemCreator {
         }
 
         if (env.tags[CtxTagKeys.deviceNetwork]) {
-            item.ext[UnmappedKeys.deviceNetwork] = env.tags[CtxTagKeys.deviceNetwork];
+            item.ext[LegacyKeys.deviceNetwork] = env.tags[CtxTagKeys.deviceNetwork];
             keysFound.push(CtxTagKeys.deviceNetwork);
         }
 
         if (env.tags[CtxTagKeys.deviceType]) {
-            item.ext[DeviceExtensionKeys.deviceType] = env.tags[CtxTagKeys.deviceType];
+            item.ext[DeviceExtensionKeys.deviceClass] = env.tags[CtxTagKeys.deviceType];
             keysFound.push(CtxTagKeys.deviceType);
         }
 
         if (env.tags[CtxTagKeys.deviceOSVersion]) {
-            item.tags[UnmappedKeys.deviceOSVersion] = env.tags[CtxTagKeys.deviceOSVersion];
+            item.tags[LegacyKeys.deviceOSVersion] = env.tags[CtxTagKeys.deviceOSVersion];
             keysFound.push(CtxTagKeys.deviceOSVersion);
         }
 

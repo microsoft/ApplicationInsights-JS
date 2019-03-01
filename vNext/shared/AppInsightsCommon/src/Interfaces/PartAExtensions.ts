@@ -24,7 +24,7 @@ export class WebExtensionKeys {
 export class DeviceExtensionKeys {
     public static localId = "localId";
     public static model = "model";
-    public static deviceType = "class";
+    public static deviceClass = "class";
 }
 
 export class AppExtensionKeys {
@@ -35,10 +35,6 @@ export class UserExtensionKeys {
     public static id = "id";
     public static authId = "authId";
     public static localId = "localId";
-}
-
-export class UserTagKeys {
-    public static accountId = "user.accountId"; // account id is under user tags CS 4.0
 }
 
 export class IngestExtKeys {
@@ -55,13 +51,13 @@ export class TraceExtensionKeys {
     public static traceState: "traceState";
 }
 
-export class UnmappedKeys {
+export class LegacyKeys {
     public static sessionIsFirst = "ai.session.isFirst";
     public static sessionIsNew = "ai.session.isNew";
     public static userAccountAcquisitionDate = "ai.user.accountAcquisitionDate";
-    public static userStoreRegion = "ai.user.storeRegion";
     public static userAnonymousUserAcquisitionDate = "ai.user.anonUserAcquisitionDate";
     public static userAuthenticatedUserAcquisitionDate = "ai.user.authUserAcquisitionDate";
+    public static accountId = "ai.user.accountId";
 
     public static cloudName = "ai.cloud.name";
     public static cloudRole = "ai.cloud.role";
@@ -80,11 +76,11 @@ export class UnmappedKeys {
     public static deviceLocale = "ai.device.locale";
     public static deviceOSVersion = "ai.device.osVersion";
     public static locationIp = "ai.location.ip";
-    public static operationId = "ai.operation.id"; // not yet closed in CS 4.0
-    public static operationParentId = "ai.operation.parentId"; // not yet closed in CS 4.0
-    public static operationName: "ai.operation.name"; // not yet closed in CS 4.0
-    public static operationRootId = "ai.operation.rootId"; // not yet closed in CS 4.0
-    public static operationSyntheticSource = "ai.operation.syntheticSource"; // not yet closed in CS 4.0
+    public static operationId = "ai.operation.id";
+    public static operationParentId = "ai.operation.parentId";
+    public static operationName: "ai.operation.name";
+    public static operationRootId = "ai.operation.rootId";
+    public static operationSyntheticSource = "ai.operation.syntheticSource";
 }
 
 export var CtxTagKeys = new ContextTagKeys();

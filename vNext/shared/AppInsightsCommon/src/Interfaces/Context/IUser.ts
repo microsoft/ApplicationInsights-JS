@@ -28,14 +28,9 @@ export interface IUser {
     accountAcquisitionDate: string;
 
     /**
-     * The user agent string.
+     * The localId
      */
-    agent: string;
-
-    /**
-     * The store region.
-     */
-    storeRegion: string;
+    localId: string;
 }
 
 export interface IUserContext {

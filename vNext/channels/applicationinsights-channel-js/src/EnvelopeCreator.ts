@@ -3,71 +3,13 @@ import {
     RemoteDependencyData, Event, Exception,
     Metric, PageView, Trace, PageViewPerformance, IDependencyTelemetry,
     IPageViewPerformanceTelemetry, IPageViewTelemetry, CtxTagKeys,
-    UnmappedKeys, AppExtensionKeys, DeviceExtensionKeys,
-    IngestExtKeys, WebExtensionKeys, OSExtKeys, HttpMethod, UserExtensionKeys
+    LegacyKeys, AppExtensionKeys, DeviceExtensionKeys,
+    IngestExtKeys, WebExtensionKeys, OSExtKeys, HttpMethod, UserExtensionKeys, Extensions
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, CoreUtils,
     IDiagnosticLogger, LoggingSeverity, _InternalMessageId
 } from '@microsoft/applicationinsights-core-js';
-
-export const ContextTagKeys: string[] = [
-    "ai.application.ver",
-    "ai.application.build",
-    "ai.application.typeId",
-    "ai.application.applicationId",
-    "ai.application.layer",
-    "ai.device.id",
-    "ai.device.ip",
-    "ai.device.language",
-    "ai.device.locale",
-    "ai.device.model",
-    "ai.device.friendlyName",
-    "ai.device.network",
-    "ai.device.networkName",
-    "ai.device.oemName",
-    "ai.device.os",
-    "ai.device.osVersion",
-    "ai.device.roleInstance",
-    "ai.device.roleName",
-    "ai.device.screenResolution",
-    "ai.device.type",
-    "ai.device.machineName",
-    "ai.device.vmName",
-    "ai.device.browser",
-    "ai.device.browserVersion",
-    "ai.location.ip",
-    "ai.location.country",
-    "ai.location.province",
-    "ai.location.city",
-    "ai.operation.id",
-    "ai.operation.name",
-    "ai.operation.parentId",
-    "ai.operation.rootId",
-    "ai.operation.syntheticSource",
-    "ai.operation.correlationVector",
-    "ai.session.id",
-    "ai.session.isFirst",
-    "ai.session.isNew",
-    "ai.user.accountAcquisitionDate",
-    "ai.user.accountId",
-    "ai.user.userAgent",
-    "ai.user.id",
-    "ai.user.storeRegion",
-    "ai.user.authUserId",
-    "ai.user.anonUserAcquisitionDate",
-    "ai.user.authUserAcquisitionDate",
-    "ai.cloud.name",
-    "ai.cloud.role",
-    "ai.cloud.roleVer",
-    "ai.cloud.roleInstance",
-    "ai.cloud.environment",
-    "ai.cloud.location",
-    "ai.cloud.deploymentUnit",
-    "ai.internal.sdkVersion",
-    "ai.internal.agentVersion",
-    "ai.internal.nodeName",
-];
 
 // these two constants are used to filter out properties not needed when trying to extract custom properties and measurements from the incoming payload
 const baseType: string = "baseType";
@@ -147,12 +89,12 @@ export abstract class EnvelopeCreator {
             item.tags = [];
         }
 
-        if (item.tags[UnmappedKeys.applicationVersion]) {
-            env.tags[CtxTagKeys.applicationVersion] = item.tags[UnmappedKeys.applicationVersion];
+        if (item.tags[LegacyKeys.applicationVersion]) {
+            env.tags[CtxTagKeys.applicationVersion] = item.tags[LegacyKeys.applicationVersion];
         }
 
-        if (item.tags[UnmappedKeys.applicationBuild]) {
-            env.tags[CtxTagKeys.applicationBuild] = item.tags[UnmappedKeys.applicationBuild];
+        if (item.tags[LegacyKeys.applicationBuild]) {
+            env.tags[CtxTagKeys.applicationBuild] = item.tags[LegacyKeys.applicationBuild];
         }
 
         if (item.ext.user) {
@@ -171,30 +113,27 @@ export abstract class EnvelopeCreator {
             }
         }
 
-        if (item.tags[CtxTagKeys.sessionIsFirst]) {
-            env.tags[CtxTagKeys.sessionIsFirst] = item.tags[CtxTagKeys.sessionIsFirst];
-        }
+        // session.isFirst is not supported in CS 4.0
+        // if (item.tags[CtxTagKeys.sessionIsFirst]) { 
+        //     env.tags[CtxTagKeys.sessionIsFirst] = item.tags[CtxTagKeys.sessionIsFirst];
+        // }
 
         if (item.ext.device) {
-            if (item.ext.device.localId) {
-                env.tags[CtxTagKeys.deviceId] = item.ext.device.localId;
+            if (item.ext.device.id || item.ext.device.localId) {
+                env.tags[CtxTagKeys.deviceId] = item.ext.device.id || item.ext.device.localId;
             }
         }
 
         if (item.ext.ingest) {
             if (item.ext.ingest.clientIp) {
-                env.tags[CtxTagKeys.deviceIp] = item.ext.ingest.clientIp;
+                env.tags[CtxTagKeys.deviceIp] = item.ext.ingest.clientIp; // mapping ingest to deviceIp
             }
         }
 
         if (item.ext.web) {
             if (item.ext.web.browserLang) {
-                env.tags[CtxTagKeys.deviceLanguage] = item.ext.web.browserLang;
+                env.tags[CtxTagKeys.deviceLanguage] = item.ext.web.browserLang; // mapping browser language to device language
             }
-        }
-
-        if (item.tags[UnmappedKeys.deviceLocale]) {
-            env.tags[CtxTagKeys.deviceLocale] = item.tags[UnmappedKeys.deviceLocale];
         }
 
         if (item.ext.device) {
@@ -203,26 +142,14 @@ export abstract class EnvelopeCreator {
             }
         }
 
-        if (item.tags[UnmappedKeys.deviceNetwork]) {
-            env.tags[CtxTagKeys.deviceNetwork] = item.tags[UnmappedKeys.deviceNetwork];
-        }
-
-        if (item.tags[UnmappedKeys.deviceOEMName]) {
-            env.tags[CtxTagKeys.deviceOEMName] = item.tags[UnmappedKeys.deviceOEMName];
-        }
-
-        if (item.tags[UnmappedKeys.deviceOSVersion]) {
-            env.tags[CtxTagKeys.deviceOSVersion] = item.tags[UnmappedKeys.deviceOSVersion];
-        }
-
         if (item.ext.os) {
             if (item.ext.os.deviceOS) {
                 env.tags[CtxTagKeys.deviceOS] = item.ext.os.deviceOS;
             }
         }
 
-        if (item.tags[UnmappedKeys.deviceNetwork]) {
-            env.tags[CtxTagKeys.deviceNetwork] = item.tags[UnmappedKeys.deviceNetwork];
+        if (item.tags[LegacyKeys.deviceNetwork]) {
+            env.tags[CtxTagKeys.deviceNetwork] = item.tags[LegacyKeys.deviceNetwork];
         }
         if (item.ext.device) {
             if (item.ext.device.deviceType) {
@@ -230,8 +157,8 @@ export abstract class EnvelopeCreator {
             }
         }
 
-        if (item.tags[UnmappedKeys.deviceOSVersion]) {
-            env.tags[CtxTagKeys.deviceOSVersion] = item.tags[UnmappedKeys.deviceOSVersion];
+        if (item.tags[LegacyKeys.deviceOSVersion]) {
+            env.tags[CtxTagKeys.deviceOSVersion] = item.tags[LegacyKeys.deviceOSVersion];
         }
 
         if (item.ext.web) {
@@ -283,18 +210,10 @@ export abstract class EnvelopeCreator {
         //        { "os.expid" : "wp:02df239" }
         //     ]
         //   }
-          
-        // remaining items in tags, attempt to map to 2.0 schema
-        item.tags.forEach(tag => {
-            for (let key in tag) {
-                if (env.tags.key) {
-                    continue; // already added
-                }
-                ContextTagKeys.forEach(ct => {
-                    if (ct.indexOf(key) > 0) { // if field exists in 2.0
-                        env.tags[ct] = tag[key];
-                    }
-                });
+
+        item.tags.forEach(tg => {
+            if (tg[LegacyKeys.accountId]) {
+                env.tags[LegacyKeys.accountId] = tg[LegacyKeys.accountId]; // account id in tags
             }
         });
     }
