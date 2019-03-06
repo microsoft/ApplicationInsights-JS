@@ -6,7 +6,7 @@
 import { ITelemetryItem, IDiagnosticLogger, IPlugin, IConfiguration } from '@microsoft/applicationinsights-core-js';
 import { Session, _SessionManager } from './Context/Session';
 import { AppExtensionKeys, CtxTagKeys, DeviceExtensionKeys, Extensions, IngestExtKeys, WebExtensionKeys, OSExtKeys, 
-    UserExtensionKeys, ITelemetryContext, LegacyKeys } from '@microsoft/applicationinsights-common';
+    UserExtensionKeys, ITelemetryContext, LegacyKeys, IOperatingSystem } from '@microsoft/applicationinsights-common';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
 import { Internal } from './Context/Internal';
@@ -27,6 +27,7 @@ export class TelemetryContext implements ITelemetryContext {
     public session: Session; // The object describing a session tracked by this object.
     public sessionManager: _SessionManager; // The session manager that manages session on the base of cookies.
     public sample: Sample;
+    public os: IOperatingSystem;
 
     constructor(logger: IDiagnosticLogger, defaultConfig: ITelemetryConfig) {
         if (typeof window !== 'undefined') {
@@ -51,6 +52,12 @@ export class TelemetryContext implements ITelemetryContext {
             // if (typeof sessionContext.isFirst !== "undefined") { // session.isFirst is not supported in CS 4.0
             //     event.tags[CtxTagKeys.sessionIsFirst] = sessionContext.isFirst;
             // }
+        }
+    }
+
+    public applyOperatingSystemContxt(event: ITelemetryItem) {
+        if (this.os && this.os.name) {
+            event.ext.os = this.os;
         }
     }
 

@@ -32,7 +32,8 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
             cookieDomain: () => null,
             sdkExtension: () => null,
             isBrowserLinkTrackingEnabled: () => false,
-            appId: () => null
+            appId: () => null,
+            namePrefix: () => undefined
         }
         return defaultConfig;
     }

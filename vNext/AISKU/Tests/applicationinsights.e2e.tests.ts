@@ -22,7 +22,7 @@ export class ApplicationInsightsTests extends TestClass {
         "flush"
     ];
 
-    private _ai: IApplicationInsights;
+    private _ai: ApplicationInsights;
     private _aiName: string = 'AppInsightsSDK';
 
     // Sinon
@@ -30,9 +30,11 @@ export class ApplicationInsightsTests extends TestClass {
     private successSpy: SinonSpy;
     private loggingSpy: SinonSpy;
     private userSpy: SinonSpy;
+    private sessionPrefix: string = Util.newId();
 
     // Context
     private tagKeys = new ContextTagKeys();
+    private _config;
 
     public testInitialize() {
         try {
@@ -40,23 +42,29 @@ export class ApplicationInsightsTests extends TestClass {
             (<any>sinon.fakeServer).restore();
             this.useFakeTimers = false;
             this.clock.restore();
-
-            var init = new ApplicationInsights({
-                config: {
-                    instrumentationKey: ApplicationInsightsTests._instrumentationKey,
-                    disableAjaxTracking: false,
-                    disableFetchTracking: false,
-                    extensionConfig: {
-                        AppInsightsChannelPlugin: {
-                            maxBatchInterval: 5000
-                        },
-                        ApplicationInsightsAnalytics: {
-                            disableExceptionTracking: false
-                        }
+            this._config = {
+                instrumentationKey: ApplicationInsightsTests._instrumentationKey,
+                disableAjaxTracking: false,
+                disableFetchTracking: false,
+                extensionConfig: {
+                    AppInsightsChannelPlugin: {
+                        maxBatchInterval: 5000
+                    },
+                    ApplicationInsightsAnalytics: {
+                        disableExceptionTracking: false
+                    },
+                    AppInsightsPropertiesPlugin: {
+                        namePrefix: this.sessionPrefix
                     }
                 }
+            };
+
+            var init = new ApplicationInsights({
+                config: this._config
             });
-            this._ai = init.loadAppInsights();
+            init.loadAppInsights();
+            this._ai = init;
+
 
             // Setup Sinon stuff
             const sender: Sender = this._ai.appInsights.core['_channelController'].channelQueue[0][0];
@@ -215,6 +223,7 @@ export class ApplicationInsightsTests extends TestClass {
                     this._ai.trackTrace({message: "test"});
                     this._ai.trackPageView({}); // sends 2
                     this._ai.trackPageViewPerformance({name: 'name', url:'http://someurl'});
+                    this._ai.flush();
                 }
             ].concat(this.asserts(6))
         });
@@ -505,5 +514,5 @@ export class ApplicationInsightsTests extends TestClass {
         } else {
             return false;
         }
-    }, "sender succeeded", 30, 1000))];
+    }, "sender succeeded", 60, 1000))];
 }

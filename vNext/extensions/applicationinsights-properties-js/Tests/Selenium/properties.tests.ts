@@ -5,6 +5,7 @@ import PropertiesPlugin from "../../src/PropertiesPlugin";
 import { ITelemetryConfig } from "../../src/Interfaces/ITelemetryConfig";
 import { Util, TelemetryItemCreator } from "@microsoft/applicationinsights-common";
 import { TelemetryContext } from "../../src/TelemetryContext";
+import { Session, _SessionManager } from "../../src/Context/Session";
 
 export class PropertiesTests extends TestClass {
     private properties: PropertiesPlugin;
@@ -478,6 +479,34 @@ export class PropertiesTests extends TestClass {
                 Assert.notEqual(undefined, telemetyItem.ext.user, "user was not cleared");
             }
         });
+
+        this.testCase({
+            name: 'Session uses name prefix for cookie storage',
+            test: () => {
+
+                var sessionPrefix = Util.newId();
+                var config = {
+                    namePrefix: () => sessionPrefix,
+                    sessionExpirationMs: () => undefined,
+                    sessionRenewalMs: () => undefined,
+                    cookieDomain: () => undefined
+
+                };
+                // Setup
+                let cookie = "";
+                const cookieStub: SinonStub = this.sandbox.stub(Util, 'setCookie', (logger, cookieName, value, domain) => {
+                    cookie = cookieName;
+                });
+
+                // Act
+                const sessionManager = new _SessionManager(config);
+                sessionManager.update();
+
+                // Test
+                Assert.ok(cookieStub.called, 'cookie set');
+                Assert.equal('ai_session' + sessionPrefix, cookie, 'Correct cookie name when name prefix is provided');
+            }
+        });
     }
 
     private getEmptyConfig(): IConfiguration {
@@ -517,7 +546,8 @@ export class PropertiesTests extends TestClass {
             cookieDomain: () => "",
             sdkExtension: () => "",
             isBrowserLinkTrackingEnabled: () => true,
-            appId: () => ""
+            appId: () => "",
+            namePrefix: () => ""
         }
     }
 }

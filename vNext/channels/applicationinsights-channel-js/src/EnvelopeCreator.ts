@@ -4,7 +4,7 @@ import {
     Metric, PageView, Trace, PageViewPerformance, IDependencyTelemetry,
     IPageViewPerformanceTelemetry, IPageViewTelemetry, CtxTagKeys,
     LegacyKeys, AppExtensionKeys, DeviceExtensionKeys,
-    IngestExtKeys, WebExtensionKeys, OSExtKeys, HttpMethod, UserExtensionKeys, Extensions
+    IngestExtKeys, WebExtensionKeys, OSExtKeys, HttpMethod, UserExtensionKeys, Extensions, IPageViewTelemetryInternal
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, CoreUtils,
@@ -136,7 +136,7 @@ export abstract class EnvelopeCreator {
 
         if (item.ext.os) {
             if (item.ext.os.deviceOS) {
-                env.tags[CtxTagKeys.deviceOS] = item.ext.os.deviceOS;
+                env.tags[CtxTagKeys.deviceOS] = item.ext.os.name;
             }
         }
 
@@ -340,9 +340,10 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
             delete telemetryItem.baseData.measurements.duration;
         }
 
-        let bd = telemetryItem.baseData as IPageViewTelemetry;
+        let bd = telemetryItem.baseData as IPageViewTelemetryInternal;
         let name = bd.name;
         let url = bd.uri;
+        let id = bd.id;
         let properties = bd.properties || {};
         let measurements = bd.measurements || {};
 
@@ -371,7 +372,7 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
             }
         }
 
-        let baseData = new PageView(logger, name, url, duration, properties, measurements);
+        let baseData = new PageView(logger, name, url, duration, properties, measurements, id);
         let data = new Data<PageView>(PageView.dataType, baseData);
         return EnvelopeCreator.createEnvelope<PageView>(logger, PageView.envelopeType, telemetryItem, data);
     }

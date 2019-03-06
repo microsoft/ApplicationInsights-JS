@@ -44,6 +44,7 @@ export { IDevice } from './Interfaces/Context/IDevice';
 export { IInternal } from './Interfaces/Context/IInternal';
 export { ILocation } from './Interfaces/Context/ILocation';
 export { ISample } from './Interfaces/Context/ISample';
+export { IOperatingSystem } from './Interfaces/Context/IOperatinSystem';
 export { IPropertiesPlugin } from './Interfaces/IPropertiesPlugin';
 export { IUser, IUserContext } from './Interfaces/Context/IUser';
 export { ITelemetryTrace, ITraceState } from './Interfaces/Context/ITelemetryTrace';
