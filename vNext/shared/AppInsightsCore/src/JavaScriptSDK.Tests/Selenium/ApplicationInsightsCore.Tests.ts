@@ -54,6 +54,40 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 } catch (error) {
                     Assert.ok(true, "Validates instrumentationKey");
                 }
+
+                let channelPlugin1 = new ChannelPlugin();
+                channelPlugin1.priority = 1001;
+
+                let config3 = {
+                    extensions: [channelPlugin1],
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey: "",
+                    extensionConfig: {}
+                };
+                try {
+                    appInsightsCore.initialize(config3, [samplingPlugin]);
+                } catch (error) {
+                    Assert.ok(true, "Validates channels cannot be passed in through extensions");
+                }
+
+                let channelPlugin2 = new ChannelPlugin();
+                channelPlugin2.priority = 200;
+
+                let config4 = {
+                    channels: [[channelPlugin2]],
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey: "",
+                    extensionConfig: {}
+                };
+
+                let thrown = false;
+                try {
+                    appInsightsCore.initialize(config4, [samplingPlugin]);
+                } catch (error) {
+                    thrown = true;
+                }
+                Assert.ok(thrown, "Validates channels passed in through config, priority cannot be less Channel controller priority");
+
             }
         });
 
@@ -355,13 +389,13 @@ export class ApplicationInsightsCoreTests extends TestClass {
             test: () => {
 
                 let channelPlugin1 = new ChannelPlugin();
-                channelPlugin1.priority = 201;
+                channelPlugin1.priority = 1001;
 
                 let channelPlugin2 = new ChannelPlugin();
-                channelPlugin2.priority = 202;
+                channelPlugin2.priority = 1002;
 
                 let channelPlugin3 = new ChannelPlugin();
-                channelPlugin3.priority = 201;
+                channelPlugin3.priority = 1001;
 
                 let appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize(
