@@ -91,12 +91,11 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
     private _processTelemetryInternal(event: ITelemetryItem) {
 
         
-        this.context.applySessionContext(event);
         // set part A  fields
         if (!event.tags) {
             event.tags = [];
         }
-
+        
         if (!event.ext) {
             event.ext = {};
         }
@@ -106,13 +105,15 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
         event.ext[Extensions.OSExt] = event.ext[Extensions.OSExt] || {};
         event.ext[Extensions.AppExt] = event.ext[Extensions.AppExt] || {};
         event.ext[Extensions.TraceExt] = event.ext[Extensions.TraceExt] || {};
-
+        
+        this.context.applySessionContext(event);
         this.context.applyApplicationContext(event);
         this.context.applyDeviceContext(event);
         this.context.applyOperationContext(event);
         this.context.applyUserContext(event);
         this.context.applyOperatingSystemContxt(event);
-        
+        this.context.applyWebContext(event);
+
         this.context.applyLocationContext(event); // legacy tags
         this.context.applySampleContext(event); // legacy tags
         this.context.applyInternalContext(event); // legacy tags

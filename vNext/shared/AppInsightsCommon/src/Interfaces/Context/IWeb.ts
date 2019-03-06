@@ -3,10 +3,6 @@
 
 export interface IWeb {
     /**
-     * Current domain. Leverages Window.location.hostname
-     */
-    domain: string;
-    /**
      * Browser name, set at ingestion
      */
     browser: string;
@@ -15,24 +11,29 @@ export interface IWeb {
      * Browser ver, set at ingestion.
      */
     browserVer: string;
-   
+    
     /**
-     * Language, not populated
+     * Language
      */
     browserLang: string;
-
+    
     /**
-     * User consent, not populated
+     * User consent, populated to properties bag
      */
     userConsent: boolean;
-
+    
     /**
-     * Whether event was fired manually, not populated
+     * Whether event was fired manually, populated to properties bag
      */
     isManual: boolean;
-
+    
     /**
-     * Screen resolution, not populated
+     * Screen resolution, populated to properties bag
      */
     screenRes: string;
+
+    /**
+     * Current domain. Leverages Window.location.hostname. populated to properties bag
+     */
+    domain: string;
 }

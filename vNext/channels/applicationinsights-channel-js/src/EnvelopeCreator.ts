@@ -3,7 +3,7 @@ import {
     RemoteDependencyData, Event, Exception,
     Metric, PageView, Trace, PageViewPerformance, IDependencyTelemetry,
     IPageViewPerformanceTelemetry, IPageViewTelemetry, CtxTagKeys,
-    HttpMethod, IPageViewTelemetryInternal
+    HttpMethod, IPageViewTelemetryInternal, IWeb
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, CoreUtils,
@@ -116,8 +116,36 @@ export abstract class EnvelopeCreator {
 
 
         if (item.ext.web) {
-            if (item.ext.web.browserLang) {
-                env.tags[CtxTagKeys.deviceLanguage] = item.ext.web.browserLang; // mapping browser language to device language
+            let web: IWeb = <IWeb>item.ext.web;
+
+            if (web.browserLang) {
+                env.tags[CtxTagKeys.deviceLanguage] = web.browserLang;
+            }
+            if (web.browserVer) {
+                env.tags[CtxTagKeys.deviceBrowserVersion] = web.browserVer;
+            }
+
+            if (web.browser) {
+                env.tags[CtxTagKeys.deviceBrowser] = web.browser;
+            }
+            env.data = env.data || {};
+            env.data.baseData = env.data.baseData || {};
+            env.data.baseData.properties = env.data.baseData.properties || {};
+
+            if (web.domain) {
+                env.data.baseData.properties['domain'] =web.domain;
+            }
+
+            if (web.isManual) {
+                env.data.baseData.properties['isManual'] = web.isManual.toString();
+            }
+
+            if (web.screenRes) {
+                env.data.baseData.properties['screenRes'] = web.screenRes;
+            }
+
+            if (web.userConsent) {
+                env.data.baseData.properties['userConsent'] = web.userConsent.toString();
             }
         }
 
@@ -136,12 +164,6 @@ export abstract class EnvelopeCreator {
         if (item.ext.device) {
             if (item.ext.device.deviceType) {
                 env.tags[CtxTagKeys.deviceType] = item.ext.device.deviceType;
-            }
-        }
-
-        if (item.ext.web) {
-            if (item.ext.web.screenRes) {
-                env.tags[CtxTagKeys.deviceScreenResolution] = item.ext.web.screenRes;
             }
         }
 

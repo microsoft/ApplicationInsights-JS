@@ -3,7 +3,7 @@
 import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import PropertiesPlugin from "../../src/PropertiesPlugin";
 import { ITelemetryConfig } from "../../src/Interfaces/ITelemetryConfig";
-import { Util, TelemetryItemCreator } from "@microsoft/applicationinsights-common";
+import { Util, TelemetryItemCreator, IWeb } from "@microsoft/applicationinsights-common";
 import { TelemetryContext } from "../../src/TelemetryContext";
 import { Session, _SessionManager } from "../../src/Context/Session";
 
@@ -427,6 +427,58 @@ export class PropertiesTests extends TestClass {
                 Assert.equal(undefined, this.properties.context.user.authenticatedId, "user auth id was cleared");
                 Assert.equal(undefined, this.properties.context.user.accountId, "user account id was cleared");
                 Assert.equal(cookieStub.calledWithExactly(this.core.logger, 'ai_authUser'), true, "cookie was deleted");
+            }
+        });
+
+        this.testCase({
+            name: "Validate telemetrycontext sets up web extension properties on TelemetryItem",
+            test: () => {
+                // setup
+                this.properties.initialize(this.getEmptyConfig(), this.core, []);
+
+                let context = new TelemetryContext(this.core.logger, this.getTelemetryConfig());
+                context.web = <IWeb> {
+                    domain: "www.bing.com",
+                    userConsent: true,
+                    screenRes: "1024x768",
+                    browser: "internet explorer",
+                    browserVer: "48.0",
+                    isManual: true,
+                    browserLang: "EN"
+                };
+
+                let telemetyItem: ITelemetryItem = {
+                    name: "test",
+                    time: new Date("2018-06-12").toISOString(),
+                    iKey: "iKey",
+                    ext: {},
+                    baseType: "RemoteDependencyData",
+                    baseData: {
+                        id: 'some id',
+                        name: "/test/name",
+                        success: true,
+                        responseCode: 200,
+                        duration: 123,
+                        type: 'Fetch',
+                        data: 'some data',
+                        target: 'https://example.com/test/name'
+                    },
+                    data: {
+                        property1: "val1",
+                        measurement1: 50.0,
+                    }
+                };
+
+                context.applyWebContext(telemetyItem);
+                let ext = telemetyItem.ext;
+                Assert.ok(ext);
+                Assert.equal("www.bing.com", ext.web.domain);
+                Assert.equal("1024x768", ext.web.screenRes);
+                Assert.equal(true, ext.web.userConsent);
+                Assert.equal("48.0", ext.web.browserVer);
+                Assert.equal("EN", ext.web.browserLang);
+                Assert.equal("internet explorer", ext.web.browser);
+                Assert.equal(true, ext.web.isManual);
             }
         });
 

@@ -7,7 +7,6 @@ export class Extensions {
     public static WebExt = "web";
     public static AppExt = "app";
     public static OSExt = "os";
-    public static IngestExt = "ingest";
     public static SessionExt = "ses";
 }
 

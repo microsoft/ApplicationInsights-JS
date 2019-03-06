@@ -5,7 +5,7 @@
 
 import { ITelemetryItem, IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 import { Session, _SessionManager } from './Context/Session';
-import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, SampleRate, CtxTagKeys } from '@microsoft/applicationinsights-common';
+import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, IWeb, SampleRate, CtxTagKeys } from '@microsoft/applicationinsights-common';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
 import { Internal } from './Context/Internal';
@@ -27,6 +27,7 @@ export class TelemetryContext implements ITelemetryContext {
     public sessionManager: _SessionManager; // The session manager that manages session on the base of cookies.
     public sample: Sample;
     public os: IOperatingSystem;
+    public web: IWeb;
 
     constructor(logger: IDiagnosticLogger, defaultConfig: ITelemetryConfig) {
         if (typeof window !== 'undefined') {
@@ -132,6 +133,13 @@ export class TelemetryContext implements ITelemetryContext {
             }
 
             event.ext.trace = trace;
+        }
+    }
+
+    public applyWebContext(event: ITelemetryItem) {
+        if (this.web) {
+            event.ext.web = event.ext.web || {};
+            event.ext.web = this.web;
         }
     }
 
