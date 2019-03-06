@@ -3,10 +3,9 @@
  * @copyright Microsoft 2018
  */
 
-import { ITelemetryItem, IDiagnosticLogger, IPlugin, IConfiguration } from '@microsoft/applicationinsights-core-js';
+import { ITelemetryItem, IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 import { Session, _SessionManager } from './Context/Session';
-import { AppExtensionKeys, CtxTagKeys, DeviceExtensionKeys, Extensions, IngestExtKeys, WebExtensionKeys, 
-    UserExtensionKeys, ITelemetryContext, LegacyKeys, IOperatingSystem, ITelemetryTrace, ISession } from '@microsoft/applicationinsights-common';
+import { Extensions, ITelemetryContext, LegacyKeys, IOperatingSystem, ITelemetryTrace, SampleRate } from '@microsoft/applicationinsights-common';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
 import { Internal } from './Context/Internal';
@@ -18,12 +17,12 @@ import { TelemetryTrace } from './Context/TelemetryTrace';
  
 export class TelemetryContext implements ITelemetryContext {
 
-    public application: Application; // The object describing a component tracked by this object.
+    public application: Application; // The object describing a component tracked by this object - legacy
     public device: Device; // The object describing a device tracked by this object.
-    public location: Location; // The object describing a location tracked by this object.
+    public location: Location; // The object describing a location tracked by this object -legacy
     public telemetryTrace: TelemetryTrace; // The object describing a operation tracked by this object.
     public user: User; // The object describing a user tracked by this object.
-    public internal: Internal;
+    public internal: Internal; // legacy
     public session: Session; // The object describing a session tracked by this object.
     public sessionManager: _SessionManager; // The session manager that manages session on the base of cookies.
     public sample: Sample;
@@ -47,11 +46,8 @@ export class TelemetryContext implements ITelemetryContext {
         let sessionContext = this.session || this.sessionManager.automaticSession;
         if (sessionContext) {
             if (typeof sessionContext.id === "string") {
-                event.ext[Extensions.SessionExt][AppExtensionKeys.sessionId] = sessionContext.id;
+                event.ext.app.sesId = sessionContext.id;
             }
-            // if (typeof sessionContext.isFirst !== "undefined") { // session.isFirst is not supported in CS 4.0
-            //     event.tags[CtxTagKeys.sessionIsFirst] = sessionContext.isFirst;
-            // }
         }
     }
 
@@ -65,10 +61,10 @@ export class TelemetryContext implements ITelemetryContext {
         if (this.application) {
 
             if (typeof this.application.ver === "string") {
-                event.tags[CtxTagKeys.applicationVersion] = this.application.ver;
+                event.tags.push({[LegacyKeys.applicationVersion]: this.application.ver});
             }
             if (typeof this.application.build === "string") {
-                event.tags[CtxTagKeys.applicationBuild] = this.application.build;
+                event.tags.push({[LegacyKeys.applicationBuild]: this.application.build });
             }
         }
     }
@@ -76,19 +72,21 @@ export class TelemetryContext implements ITelemetryContext {
     public applyDeviceContext(event: ITelemetryItem) {
 
         if (this.device) {
+
             if (typeof this.device.id === "string") {
-                event.ext[Extensions.DeviceExt][DeviceExtensionKeys.localId] = this.device.id;
+                event.ext.device.localId = this.device.id;
             }
 
             if (typeof this.device.ip === "string") {
-                event.ext[Extensions.IngestExt][IngestExtKeys.clientIp] = this.device.ip;
+                event.ext.device.ip = this.device.ip;
             }
 
             if (typeof this.device.model === "string") {
-                event.ext[Extensions.DeviceExt][DeviceExtensionKeys.model] = this.device.model;
+                event.ext.device.model = this.device.model;
             }
+
             if (typeof this.device.deviceClass === "string") {
-                event.ext[Extensions.DeviceExt][DeviceExtensionKeys.deviceClass] = this.device.deviceClass;
+                event.ext.device.deviceClass = this.device.deviceClass;
             }
         }
     }
@@ -96,28 +94,25 @@ export class TelemetryContext implements ITelemetryContext {
     public applyInternalContext(event: ITelemetryItem) {
         if (this.internal) {
             if (typeof this.internal.agentVersion === "string") {
-                event.tags[CtxTagKeys.internalAgentVersion] = this.internal.agentVersion; // not mapped in CS 4.0
+                event.tags.push({[LegacyKeys.internalAgentVersion]: this.internal.agentVersion }); // not mapped in CS 4.0
             }
             if (typeof this.internal.sdkVersion === "string") {
-                event.tags[CtxTagKeys.internalSdkVersion] = this.internal.sdkVersion; // not mapped in CS 4.0
+                event.tags.push({[LegacyKeys.internalSdkVersion]: this.internal.sdkVersion }); // not mapped in CS 4.0
             }
         }
     }
 
     public applyLocationContext(event: ITelemetryItem) {
         if (this.location) {
-            if (typeof this.location.ip === "string") {
-                let key = this.location.ip;
-                let val  = CtxTagKeys.locationIp;
-                
-                event.tags.push({key: val}); // not mapped in CS 4.0
+            if (typeof this.location.ip === "string") {                
+                event.tags.push({[LegacyKeys.locationIp]: this.location.ip});
             }
         }
     }
 
     public applySampleContext(event: ITelemetryItem) {
         if (this.sample) {
-            event.tags["sampleRate"] = this.sample.sampleRate; // tags.sampleRate -> mapped in CS 4.0
+            event.tags.push({ SampleRate:  this.sample.sampleRate }); // tags.sampleRate -> mapped in CS 4.0
         }
     }
 
@@ -149,17 +144,16 @@ export class TelemetryContext implements ITelemetryContext {
             // stays in tags
             if (typeof this.user.accountId === "string") {
                 let item = {};
-                item[LegacyKeys.accountId] = this.user.accountId;
-                event.tags.push(item);
+                event.tags.push({[LegacyKeys.accountId]: this.user.accountId});
             }
             
             // CS 4.0            
             if (typeof this.user.id === "string") {
-                event.ext[Extensions.UserExt][UserExtensionKeys.id] = this.user.id;
+                event.ext.user.id = this.user.id;
             }
             
             if (typeof this.user.authenticatedId === "string") {
-                event.ext[Extensions.UserExt][UserExtensionKeys.authId] = this.user.authenticatedId;
+                event.ext.user.authId = this.user.authenticatedId;
             }            
         }
     }
@@ -167,9 +161,6 @@ export class TelemetryContext implements ITelemetryContext {
     public cleanUp(event:ITelemetryItem) {
         if (event.ext[Extensions.DeviceExt] && Object.keys(event.ext[Extensions.DeviceExt]).length === 0) {
             delete event.ext[Extensions.DeviceExt];
-        }
-        if (event.ext[Extensions.IngestExt] && Object.keys(event.ext[Extensions.IngestExt]).length === 0) {
-            delete event.ext[Extensions.IngestExt];
         }
         if (event.ext[Extensions.UserExt] && Object.keys(event.ext[Extensions.UserExt]).length === 0) {
             delete event.ext[Extensions.UserExt];

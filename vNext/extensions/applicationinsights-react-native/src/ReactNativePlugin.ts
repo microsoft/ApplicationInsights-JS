@@ -10,7 +10,7 @@ import {
     IConfiguration,
     IAppInsightsCore
 } from '@microsoft/applicationinsights-core-js';
-import { ConfigurationManager, DeviceExtensionKeys } from '@microsoft/applicationinsights-common';
+import { ConfigurationManager, IDevice } from '@microsoft/applicationinsights-common';
 import DeviceInfo from 'react-native-device-info';
 
 import { INativeDevice, IReactNativePluginConfig } from './Interfaces';
@@ -34,18 +34,20 @@ export class ReactNativePlugin implements ITelemetryPlugin {
         core?: IAppInsightsCore,
         extensions?: IPlugin[]
     ) {
-        const inConfig = config || {};
-        const defaultConfig = this._getDefaultConfig();
-        for (const option in defaultConfig) {
-            this._config[option] = ConfigurationManager.getConfig(
-                inConfig as any,
-                option,
-                this.identifier,
-                this._config[option]
-            );
-        }
-        if (!this._config.disableDeviceCollection) {
-            this._collectDeviceInfo();
+        if (!this._initialized) {
+            const inConfig = config || {};
+            const defaultConfig = this._getDefaultConfig();
+            for (const option in defaultConfig) {
+                this._config[option] = ConfigurationManager.getConfig(
+                    inConfig as any,
+                    option,
+                    this.identifier,
+                    this._config[option]
+                );
+            }
+            if (!this._config.disableDeviceCollection) {
+                this._collectDeviceInfo();
+            }
         }
         this._initialized = true;
     }
@@ -85,14 +87,15 @@ export class ReactNativePlugin implements ITelemetryPlugin {
     private _applyDeviceContext(item: ITelemetryItem) {
         if (this._device) {
             item.ext = item.ext || {};
+            item.ext.device = item.ext.device || <IDevice>{};
             if (typeof this._device.id === 'string') {
-                item.ext[DeviceExtensionKeys.localId] = this._device.id;
+                item.ext.device.localId = this._device.id;
             }
             if (typeof this._device.model === 'string') {
-                item.ext[DeviceExtensionKeys.model] = this._device.model;
+                item.ext.device.model = this._device.model;
             }
             if (typeof this._device.deviceClass === 'string') {
-                item.ext[DeviceExtensionKeys.deviceClass] = this._device.deviceClass;
+                item.ext.device.deviceClass = this._device.deviceClass;
             }
         }
     }

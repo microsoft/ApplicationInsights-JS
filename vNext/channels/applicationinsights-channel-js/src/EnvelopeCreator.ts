@@ -3,8 +3,7 @@ import {
     RemoteDependencyData, Event, Exception,
     Metric, PageView, Trace, PageViewPerformance, IDependencyTelemetry,
     IPageViewPerformanceTelemetry, IPageViewTelemetry, CtxTagKeys,
-    LegacyKeys, AppExtensionKeys, DeviceExtensionKeys,
-    IngestExtKeys, WebExtensionKeys, OSExtKeys, HttpMethod, UserExtensionKeys, Extensions, IPageViewTelemetryInternal
+    LegacyKeys, HttpMethod, IPageViewTelemetryInternal
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, CoreUtils,
@@ -104,23 +103,17 @@ export abstract class EnvelopeCreator {
                 env.tags[CtxTagKeys.sessionId] = item.ext.app.sesId;
             }
         }
-        
-        // session.isFirst is not supported in CS 4.0
-        // if (item.tags[CtxTagKeys.sessionIsFirst]) { 
-        //     env.tags[CtxTagKeys.sessionIsFirst] = item.tags[CtxTagKeys.sessionIsFirst];
-        // }
 
         if (item.ext.device) {
             if (item.ext.device.id || item.ext.device.localId) {
                 env.tags[CtxTagKeys.deviceId] = item.ext.device.id || item.ext.device.localId;
             }
-        }
 
-        if (item.ext.ingest) {
-            if (item.ext.ingest.clientIp) {
-                env.tags[CtxTagKeys.deviceIp] = item.ext.ingest.clientIp; // mapping ingest to deviceIp
+            if (item.ext.device.ip) {
+                env.tags[CtxTagKeys.deviceIp] = item.ext.device.ip;
             }
         }
+
 
         if (item.ext.web) {
             if (item.ext.web.browserLang) {
@@ -140,9 +133,6 @@ export abstract class EnvelopeCreator {
             }
         }
 
-        if (item.tags[LegacyKeys.deviceNetwork]) {
-            env.tags[CtxTagKeys.deviceNetwork] = item.tags[LegacyKeys.deviceNetwork];
-        }
         if (item.ext.device) {
             if (item.ext.device.deviceType) {
                 env.tags[CtxTagKeys.deviceType] = item.ext.device.deviceType;
@@ -155,15 +145,15 @@ export abstract class EnvelopeCreator {
             }
         }
 
-        if (item.tags[SampleRate]) {
-            env.tags.sampleRate = item.tags[SampleRate];
-        }
-        
         // No support for mapping Trace.traceState to 2.0 as it is currently empty
 
         if (item.ext.trace) {
             if (item.ext.trace.parentID) {
                 env.tags[CtxTagKeys.operationParentId] = item.ext.trace.parentID;
+            }
+
+            if (item.ext.trace.name) {
+                env.tags[CtxTagKeys.operationName] = item.ext.trace.name;
             }
             
             if (item.ext.trace.traceID) {
@@ -187,32 +177,43 @@ export abstract class EnvelopeCreator {
         //     ]
         //   }
 
+        let tgs = {};
         item.tags.forEach(tg => {
-            if (tg[LegacyKeys.accountId]) {
-                env.tags[LegacyKeys.accountId] = tg[LegacyKeys.accountId]; // account id in tags
-            }
-
-            // SDK version field: example: ai.internal.sdkVersion=javascript:1.0.18
-            if (tg[LegacyKeys.internalSdkVersion]) {
-                env.tags[LegacyKeys.internalSdkVersion] = tg[LegacyKeys.internalSdkVersion];
-            }
-
-            if (tg[LegacyKeys.locationIp]) {
-                env.tags[LegacyKeys.locationIp] = tg[LegacyKeys.locationIp];
-            }
-
-            if (tg[LegacyKeys.deviceOSVersion]) {
-                env.tags[LegacyKeys.deviceOSVersion] = tg[LegacyKeys.deviceOSVersion];
-            }
-
-            if (tg[LegacyKeys.applicationVersion]) {
-                env.tags[LegacyKeys.applicationVersion] = tg[LegacyKeys.applicationVersion];
-            }
-    
-            if (tg[LegacyKeys.applicationBuild]) {
-                tg[LegacyKeys.applicationBuild] = tg[LegacyKeys.applicationBuild];
-            }
+            tgs = { ...tgs, ...tg };
         });
+        env.tags = { ...env.tags, ...tgs};
+            // if (tg[LegacyKeys.accountId]) {
+            //     env.tags[LegacyKeys.accountId] = tg[LegacyKeys.accountId]; // account id in tags
+            // }
+
+            // // SDK version field: example: ai.internal.sdkVersion=javascript:1.0.18
+            // if (tg[LegacyKeys.internalSdkVersion]) {
+            //     env.tags[LegacyKeys.internalSdkVersion] = tg[LegacyKeys.internalSdkVersion];
+            // }
+
+            // if (tg[LegacyKeys.internalAgentVersion]) {
+            //     env.tags[LegacyKeys.internalAgentVersion] = tg[LegacyKeys.internalAgentVersion];
+            // }
+
+            // if (tg[LegacyKeys.internalAgentVersion]) {
+            //     env.tags[LegacyKeys.internalAgentVersion] = tg[LegacyKeys.internalAgentVersion];
+            // }
+
+            // if (tg[LegacyKeys.locationIp]) {
+            //     env.tags[LegacyKeys.locationIp] = tg[LegacyKeys.locationIp];
+            // }
+
+            // if (tg[LegacyKeys.deviceOSVersion]) {
+            //     env.tags[LegacyKeys.deviceOSVersion] = tg[LegacyKeys.deviceOSVersion];
+            // }
+
+            // if (tg[LegacyKeys.applicationVersion]) {
+            //     env.tags[LegacyKeys.applicationVersion] = tg[LegacyKeys.applicationVersion];
+            // }
+    
+            // if (tg[LegacyKeys.applicationBuild]) {
+            //     env.tags[LegacyKeys.applicationBuild] = tg[LegacyKeys.applicationBuild];
+            // }
     }
 }
 

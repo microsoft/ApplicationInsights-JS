@@ -446,7 +446,6 @@ export class PropertiesTests extends TestClass {
                             "authId": "AuthenticatedId",
                             "id": "TestId"
                         },
-                        "ingest": {},
                         "web": {}
                     },
                     tags: [{"user.accountId": "TestAccountId"}],
@@ -474,7 +473,6 @@ export class PropertiesTests extends TestClass {
                 telemetrycontext.cleanUp(telemetyItem);
 
                 // verify
-                Assert.equal(undefined, telemetyItem.ext.ingest, "ingest was cleared");
                 Assert.equal(undefined, telemetyItem.ext.web, "web was cleared");
                 Assert.notEqual(undefined, telemetyItem.ext.user, "user was not cleared");
             }

@@ -101,7 +101,6 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
             event.ext = {};
         }
         event.ext[Extensions.DeviceExt] = event.ext[Extensions.DeviceExt] || {};
-        event.ext[Extensions.IngestExt] = event.ext[Extensions.IngestExt] || {};
         event.ext[Extensions.WebExt] = event.ext[Extensions.WebExt] || {};
         event.ext[Extensions.UserExt] = event.ext[Extensions.UserExt] || {};
         event.ext[Extensions.OSExt] = event.ext[Extensions.OSExt] || {};
@@ -110,12 +109,13 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
 
         this.context.applyApplicationContext(event);
         this.context.applyDeviceContext(event);
-        this.context.applyInternalContext(event);
-        this.context.applyLocationContext(event);
-        this.context.applySampleContext(event);
         this.context.applyOperationContext(event);
         this.context.applyUserContext(event);
         this.context.applyOperatingSystemContxt(event);
+        
+        this.context.applyLocationContext(event); // legacy tags
+        this.context.applySampleContext(event); // legacy tags
+        this.context.applyInternalContext(event); // legacy tags
         this.context.cleanUp(event);
     }
 }

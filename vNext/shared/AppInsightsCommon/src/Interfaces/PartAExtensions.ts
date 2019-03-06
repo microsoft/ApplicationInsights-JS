@@ -11,22 +11,6 @@ export class Extensions {
     public static SessionExt = "ses";
 }
 
-export class WebExtensionKeys {
-    public static domain = "domain";
-    public static browser = "browser";
-    public static browserVer = "browserVer";
-    public static browserLang = "browserLang";
-    public static userConsent = "userConsent";
-    public static isManual = "isManual";
-    public static screenRes = "screenRes";
-}
-
-export class DeviceExtensionKeys {
-    public static localId = "localId";
-    public static model = "model";
-    public static deviceClass = "class";
-}
-
 export class AppExtensionKeys {
     public static sessionId = "sesId";
 }
@@ -35,20 +19,6 @@ export class UserExtensionKeys {
     public static id = "id";
     public static authId = "authId";
     public static localId = "localId";
-}
-
-export class IngestExtKeys {
-    public static clientIp = "clientIp";
-}
-
-export class OSExtKeys {
-    public static deviceOS = "name";
-}
-
-export class TraceExtensionKeys {
-    public static traceID: "traceID";
-    public static parentID: "parentID";
-    public static traceState: "traceState";
 }
 
 export class LegacyKeys {

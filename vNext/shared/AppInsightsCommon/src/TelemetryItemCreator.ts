@@ -1,14 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { PageViewPerformance } from "./Telemetry/PageViewPerformance";
 import { Util } from "./Util";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
 import { ITelemetryItem, CoreUtils, IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
-import { IEnvelope } from './Interfaces/Telemetry/IEnvelope';
-import { RemoteDependencyData } from './Telemetry/RemoteDependencyData';
-import { IDependencyTelemetry } from './applicationinsights-common';
-import { LegacyKeys, DeviceExtensionKeys, CtxTagKeys, AppExtensionKeys, IngestExtKeys, WebExtensionKeys, OSExtKeys } from "./Interfaces/PartAExtensions";
 
 export class TelemetryItemCreator {
 
