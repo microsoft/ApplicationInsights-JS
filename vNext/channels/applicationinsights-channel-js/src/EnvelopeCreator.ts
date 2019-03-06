@@ -155,10 +155,8 @@ export abstract class EnvelopeCreator {
             }
         }
 
-        if (item.ext.os) {
-            if (item.ext.os.deviceOS) {
-                env.tags[CtxTagKeys.deviceOS] = item.ext.os.name;
-            }
+        if (item.ext.os && item.ext.os.name) {
+            env.tags[CtxTagKeys.deviceOS] = item.ext.os.name;
         }
 
         if (item.ext.device) {
