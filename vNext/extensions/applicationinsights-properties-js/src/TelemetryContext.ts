@@ -5,8 +5,8 @@
 
 import { ITelemetryItem, IDiagnosticLogger, IPlugin, IConfiguration } from '@microsoft/applicationinsights-core-js';
 import { Session, _SessionManager } from './Context/Session';
-import { AppExtensionKeys, CtxTagKeys, DeviceExtensionKeys, Extensions, IngestExtKeys, WebExtensionKeys, OSExtKeys, 
-    UserExtensionKeys, ITelemetryContext, LegacyKeys, IOperatingSystem } from '@microsoft/applicationinsights-common';
+import { AppExtensionKeys, CtxTagKeys, DeviceExtensionKeys, Extensions, IngestExtKeys, WebExtensionKeys, 
+    UserExtensionKeys, ITelemetryContext, LegacyKeys, IOperatingSystem, ITelemetryTrace, ISession } from '@microsoft/applicationinsights-common';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
 import { Internal } from './Context/Internal';
@@ -47,7 +47,7 @@ export class TelemetryContext implements ITelemetryContext {
         let sessionContext = this.session || this.sessionManager.automaticSession;
         if (sessionContext) {
             if (typeof sessionContext.id === "string") {
-                event.ext[Extensions.AppExt][AppExtensionKeys.sessionId] = sessionContext.id;
+                event.ext[Extensions.SessionExt][AppExtensionKeys.sessionId] = sessionContext.id;
             }
             // if (typeof sessionContext.isFirst !== "undefined") { // session.isFirst is not supported in CS 4.0
             //     event.tags[CtxTagKeys.sessionIsFirst] = sessionContext.isFirst;
@@ -123,15 +123,20 @@ export class TelemetryContext implements ITelemetryContext {
 
     public applyOperationContext(event: ITelemetryItem) {
         if (this.telemetryTrace) {
+            let trace = event.ext.trace || <ITelemetryTrace>{traceID: undefined, parentID: undefined};
             if (typeof this.telemetryTrace.traceID === "string") {
-                event.tags[CtxTagKeys.operationId] = this.telemetryTrace.traceID; // not mapped in CS 4.0
+                trace.traceID = this.telemetryTrace.traceID;
             }
+
             if (typeof this.telemetryTrace.name === "string") {
-                event.tags[CtxTagKeys.operationName] = this.telemetryTrace.name; // not mapped in CS 4.0
+                trace.name = this.telemetryTrace.name;
             }
+            
             if (typeof this.telemetryTrace.parentID === "string") {
-                event.tags[CtxTagKeys.operationParentId] = this.telemetryTrace.parentID; // not mapped in CS 4.0
+                trace.parentID = this.telemetryTrace.parentID;
             }
+
+            event.ext.trace = trace;
         }
     }
 

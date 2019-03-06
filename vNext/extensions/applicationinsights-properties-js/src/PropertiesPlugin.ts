@@ -9,7 +9,7 @@ import {
 } from '@microsoft/applicationinsights-core-js';
 import { TelemetryContext } from './TelemetryContext';
 import { PageView, ConfigurationManager,
-    IConfig, PropertiesPluginIdentifier, IPropertiesPlugin, Extensions } from '@microsoft/applicationinsights-common';
+    IConfig, PropertiesPluginIdentifier, IPropertiesPlugin, Extensions, IDevice } from '@microsoft/applicationinsights-common';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 
 export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPlugin {
@@ -100,13 +100,13 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
         if (!event.ext) {
             event.ext = {};
         }
-        event.ext[Extensions.DeviceExt] = {};
-        event.ext[Extensions.IngestExt] = {};
-        event.ext[Extensions.WebExt] = {};
-        event.ext[Extensions.UserExt] = {};
-        event.ext[Extensions.OSExt] = {};
-        event.ext[Extensions.AppExt] = {};
-        event.ext[Extensions.TraceExt] = {};
+        event.ext[Extensions.DeviceExt] = event.ext[Extensions.DeviceExt] || {};
+        event.ext[Extensions.IngestExt] = event.ext[Extensions.IngestExt] || {};
+        event.ext[Extensions.WebExt] = event.ext[Extensions.WebExt] || {};
+        event.ext[Extensions.UserExt] = event.ext[Extensions.UserExt] || {};
+        event.ext[Extensions.OSExt] = event.ext[Extensions.OSExt] || {};
+        event.ext[Extensions.AppExt] = event.ext[Extensions.AppExt] || {};
+        event.ext[Extensions.TraceExt] = event.ext[Extensions.TraceExt] || {};
 
         this.context.applyApplicationContext(event);
         this.context.applyDeviceContext(event);
@@ -115,6 +115,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
         this.context.applySampleContext(event);
         this.context.applyOperationContext(event);
         this.context.applyUserContext(event);
+        this.context.applyOperatingSystemContxt(event);
         this.context.cleanUp(event);
     }
 }

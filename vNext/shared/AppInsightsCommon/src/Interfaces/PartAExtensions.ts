@@ -28,7 +28,7 @@ export class DeviceExtensionKeys {
 }
 
 export class AppExtensionKeys {
-    public static sessionId = "app.sesId";
+    public static sessionId = "sesId";
 }
 
 export class UserExtensionKeys {

@@ -4,7 +4,7 @@ export { IConfiguration } from "./JavaScriptSDK.Interfaces/IConfiguration";
 export { IChannelControls, MinChannelPriorty } from "./JavaScriptSDK.Interfaces/IChannelControls";
 export { ITelemetryPlugin, IPlugin } from "./JavaScriptSDK.Interfaces/ITelemetryPlugin";
 export { IAppInsightsCore } from "./JavaScriptSDK.Interfaces/IAppInsightsCore";
-export { ITelemetryItem } from "./JavaScriptSDK.Interfaces/ITelemetryItem";
+export { ITelemetryItem, ICustomProperties } from "./JavaScriptSDK.Interfaces/ITelemetryItem";
 export { INotificationListener } from "./JavaScriptSDK.Interfaces/INotificationListener";
 export { IDiagnosticLogger } from "./JavaScriptSDK.Interfaces/IDiagnosticLogger";
 export { EventsDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
