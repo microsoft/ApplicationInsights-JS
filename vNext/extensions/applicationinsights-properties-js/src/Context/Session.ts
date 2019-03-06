@@ -11,6 +11,7 @@ export interface ISessionConfig {
     sessionRenewalMs: () => number;
     sessionExpirationMs: () => number;
     cookieDomain: () => string;
+    namePrefix?: () => string;
 }
 
 export class Session implements ISession {
@@ -40,9 +41,11 @@ export class _SessionManager {
     public static cookieUpdateInterval = 60000 // 1 minute in ms
     public automaticSession: Session;
     public config: ISessionConfig;
+    private static cookieNameConst = 'ai_session';
 
     private cookieUpdatedTimestamp: number;
     private _logger: IDiagnosticLogger;
+    private _storageNamePrefix: () => string;
 
     constructor(config: ISessionConfig, logger?: IDiagnosticLogger) {
         if(CoreUtils.isNullOrUndefined(logger)) {
@@ -64,6 +67,7 @@ export class _SessionManager {
         }
 
         this.config = config;
+        this._storageNamePrefix = () => this.config.namePrefix && this.config.namePrefix() ? _SessionManager.cookieNameConst + this.config.namePrefix() : _SessionManager.cookieNameConst;
 
         this.automaticSession = new Session();
     }
@@ -101,11 +105,11 @@ export class _SessionManager {
     }
 
     /**
-     *  Use ai_session cookie data or local storage data (when the cookie is unavailable) to
+     *  Use config.namePrefix + ai_session cookie data or local storage data (when the cookie is unavailable) to
      *  initialize the automatic session.
      */
     private initializeAutomaticSession() {
-        var cookie = Util.getCookie(this._logger, 'ai_session');
+        var cookie = Util.getCookie(this._logger, this._storageNamePrefix());
         if (cookie && typeof cookie.split === "function") {
             this.initializeAutomaticSessionWithData(cookie);
         } else {
@@ -113,7 +117,7 @@ export class _SessionManager {
             // This can happen if the session expired or the user actively deleted the cookie
             // We only want to recover data if the cookie is missing from expiry. We should respect the user's wishes if the cookie was deleted actively.
             // The User class handles this for us and deletes our local storage object if the persistent user cookie was removed.
-            var storage = Util.getStorage(this._logger, 'ai_session');
+            var storage = Util.getStorage(this._logger, this._storageNamePrefix());
             if (storage) {
                 this.initializeAutomaticSessionWithData(storage);
             }
@@ -197,7 +201,7 @@ export class _SessionManager {
 
         var cookieDomnain = this.config.cookieDomain ? this.config.cookieDomain() : null;
 
-        Util.setCookie(this._logger, 'ai_session', cookie.join('|') + ';expires=' + cookieExpiry.toUTCString(), cookieDomnain);
+        Util.setCookie(this._logger, this._storageNamePrefix(), cookie.join('|') + ';expires=' + cookieExpiry.toUTCString(), cookieDomnain);
 
         this.cookieUpdatedTimestamp = DateTimeUtils.Now();
     }
@@ -206,6 +210,6 @@ export class _SessionManager {
         // Keep data in local storage to retain the last session id, allowing us to cleanly end the session when it expires
         // Browsers that don't support local storage won't be able to end sessions cleanly from the client
         // The server will notice this and end the sessions itself, with loss of accurate session duration
-        Util.setStorage(this._logger, 'ai_session', [guid, acq, renewal].join('|'));
+        Util.setStorage(this._logger, this._storageNamePrefix(), [guid, acq, renewal].join('|'));
     }
 }

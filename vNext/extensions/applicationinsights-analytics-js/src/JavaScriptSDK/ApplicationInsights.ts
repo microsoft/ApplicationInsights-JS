@@ -13,7 +13,7 @@ import {
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     ITelemetryPlugin, CoreUtils, ITelemetryItem,
-    IDiagnosticLogger, LoggingSeverity, _InternalMessageId
+    IDiagnosticLogger, LoggingSeverity, _InternalMessageId, ICustomProperties,
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -26,7 +26,7 @@ const durationProperty: string = "duration";
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
     public static Version = "2.0.1-beta";
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
-    public identifier: string = "ApplicationInsightsAnalytics";
+    public identifier: string = "ApplicationInsightsAnalytics"; // do not change name or priority
     public priority: number = 160;// take from reserved priority range 100- 200
     public config: IConfig;
     public core: IAppInsightsCore;
@@ -104,7 +104,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this._nextPlugin = next;
     }
 
-    public trackEvent(event: IEventTelemetry, customProperties?: {[key: string]: any}): void {
+    public trackEvent(event: IEventTelemetry, customProperties?: ICustomProperties): void {
         try {
             let telemetryItem = TelemetryItemCreator.create<IEventTelemetry>(
                 event,
@@ -159,10 +159,10 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     /**
      * @description Log a diagnostic message
      * @param {ITraceTelemetry} trace
-     * @param {{[key: string]: any}} [customProperties]
+     * @param ICustomProperties.
      * @memberof ApplicationInsights
      */
-    public trackTrace(trace: ITraceTelemetry, customProperties?: {[key: string]: any}): void {
+    public trackTrace(trace: ITraceTelemetry, customProperties?: ICustomProperties): void {
         try {
             let telemetryItem = TelemetryItemCreator.create<ITraceTelemetry>(
                 trace,
@@ -192,7 +192,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * portal. Defaults to empty.
      * @memberof ApplicationInsights
      */
-    public trackMetric(metric: IMetricTelemetry, customProperties?: {[key: string]: any}): void {
+    public trackMetric(metric: IMetricTelemetry, customProperties?: ICustomProperties): void {
         try {
             var telemetryItem = TelemetryItemCreator.create<IMetricTelemetry>(
                 metric,
@@ -218,7 +218,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param customProperties Additional data used to filter events and metrics. Defaults to empty.
      * If a user wants to provide duration for pageLoad, it'll have to be in pageView.properties.duration
      */
-    public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any }) {
+    public trackPageView(pageView: IPageViewTelemetry, customProperties?: ICustomProperties) {
         try {
             this._pageViewManager.trackPageView(pageView, customProperties);
 
@@ -280,7 +280,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param pageViewPerformance
      * @param customProperties
      */
-    public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: { [key: string]: any }): void {
+    public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: ICustomProperties): void {
         const item: PageViewPerformance = new PageViewPerformance(this.core.logger,
             pageViewPerformance.name,
             pageViewPerformance.url,
@@ -354,7 +354,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * Any property of type double will be considered a measurement, and will be treated by Application Insights as a metric.
      * @memberof ApplicationInsights
      */
-    public trackException(exception: IExceptionTelemetry, customProperties?: {[key: string]: any}): void {
+    public trackException(exception: IExceptionTelemetry, customProperties?: ICustomProperties): void {
         try {
             let baseData = new Exception(this._logger, exception.error, exception.properties, exception.measurements, exception.severityLevel)
             let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<Exception>(

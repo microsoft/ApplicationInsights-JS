@@ -1,7 +1,6 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 
-import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
-import { Util, DeviceExtensionKeys } from "@microsoft/applicationinsights-common";
+import { AppInsightsCore, DiagnosticLogger, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { ReactNativePlugin, INativeDevice, IReactNativePluginConfig } from '../../src';
 
 export class ReactNativePluginTests extends TestClass {
@@ -36,9 +35,11 @@ export class ReactNativePluginTests extends TestClass {
                 var expectation: ITelemetryItem = {
                     name: 'a name',
                     ext: {
-                        [DeviceExtensionKeys.localId]: 'some id',
-                        [DeviceExtensionKeys.model]: 'some model',
-                        [DeviceExtensionKeys.deviceClass]: 'some type'
+                        device: {
+                            localId: 'some id',
+                            model: 'some model',
+                            deviceClass: 'some type'
+                        }
                     }
                 };
                 var actual: ITelemetryItem = {

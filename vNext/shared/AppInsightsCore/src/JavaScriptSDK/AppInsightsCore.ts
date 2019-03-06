@@ -20,7 +20,7 @@ export class AppInsightsCore implements IAppInsightsCore {
     public static defaultConfig: IConfiguration;
     public logger: IDiagnosticLogger;
 
-    private _extensions: Array<IPlugin>;
+    public _extensions: Array<IPlugin>;
     private _notificationManager: NotificationManager;
     private _isInitialized: boolean = false;
     private _channelController: ChannelController;

@@ -3,8 +3,9 @@
 import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import PropertiesPlugin from "../../src/PropertiesPlugin";
 import { ITelemetryConfig } from "../../src/Interfaces/ITelemetryConfig";
-import { Util, TelemetryItemCreator } from "@microsoft/applicationinsights-common";
+import { Util, TelemetryItemCreator, IWeb } from "@microsoft/applicationinsights-common";
 import { TelemetryContext } from "../../src/TelemetryContext";
+import { Session, _SessionManager } from "../../src/Context/Session";
 
 export class PropertiesTests extends TestClass {
     private properties: PropertiesPlugin;
@@ -430,6 +431,58 @@ export class PropertiesTests extends TestClass {
         });
 
         this.testCase({
+            name: "Validate telemetrycontext sets up web extension properties on TelemetryItem",
+            test: () => {
+                // setup
+                this.properties.initialize(this.getEmptyConfig(), this.core, []);
+
+                let context = new TelemetryContext(this.core.logger, this.getTelemetryConfig());
+                context.web = <IWeb> {
+                    domain: "www.bing.com",
+                    userConsent: true,
+                    screenRes: "1024x768",
+                    browser: "internet explorer",
+                    browserVer: "48.0",
+                    isManual: true,
+                    browserLang: "EN"
+                };
+
+                let telemetyItem: ITelemetryItem = {
+                    name: "test",
+                    time: new Date("2018-06-12").toISOString(),
+                    iKey: "iKey",
+                    ext: {},
+                    baseType: "RemoteDependencyData",
+                    baseData: {
+                        id: 'some id',
+                        name: "/test/name",
+                        success: true,
+                        responseCode: 200,
+                        duration: 123,
+                        type: 'Fetch',
+                        data: 'some data',
+                        target: 'https://example.com/test/name'
+                    },
+                    data: {
+                        property1: "val1",
+                        measurement1: 50.0,
+                    }
+                };
+
+                context.applyWebContext(telemetyItem);
+                let ext = telemetyItem.ext;
+                Assert.ok(ext);
+                Assert.equal("www.bing.com", ext.web.domain);
+                Assert.equal("1024x768", ext.web.screenRes);
+                Assert.equal(true, ext.web.userConsent);
+                Assert.equal("48.0", ext.web.browserVer);
+                Assert.equal("EN", ext.web.browserLang);
+                Assert.equal("internet explorer", ext.web.browser);
+                Assert.equal(true, ext.web.isManual);
+            }
+        });
+
+        this.testCase({
             name: "validate telemetrycontext cleanup sets empty extensions to undefined",
             test: () => {
                 // setup
@@ -445,7 +498,6 @@ export class PropertiesTests extends TestClass {
                             "authId": "AuthenticatedId",
                             "id": "TestId"
                         },
-                        "ingest": {},
                         "web": {}
                     },
                     tags: [{"user.accountId": "TestAccountId"}],
@@ -473,9 +525,36 @@ export class PropertiesTests extends TestClass {
                 telemetrycontext.cleanUp(telemetyItem);
 
                 // verify
-                Assert.equal(undefined, telemetyItem.ext.ingest, "ingest was cleared");
                 Assert.equal(undefined, telemetyItem.ext.web, "web was cleared");
                 Assert.notEqual(undefined, telemetyItem.ext.user, "user was not cleared");
+            }
+        });
+
+        this.testCase({
+            name: 'Session uses name prefix for cookie storage',
+            test: () => {
+
+                var sessionPrefix = Util.newId();
+                var config = {
+                    namePrefix: () => sessionPrefix,
+                    sessionExpirationMs: () => undefined,
+                    sessionRenewalMs: () => undefined,
+                    cookieDomain: () => undefined
+
+                };
+                // Setup
+                let cookie = "";
+                const cookieStub: SinonStub = this.sandbox.stub(Util, 'setCookie', (logger, cookieName, value, domain) => {
+                    cookie = cookieName;
+                });
+
+                // Act
+                const sessionManager = new _SessionManager(config);
+                sessionManager.update();
+
+                // Test
+                Assert.ok(cookieStub.called, 'cookie set');
+                Assert.equal('ai_session' + sessionPrefix, cookie, 'Correct cookie name when name prefix is provided');
             }
         });
     }
@@ -517,7 +596,8 @@ export class PropertiesTests extends TestClass {
             cookieDomain: () => "",
             sdkExtension: () => "",
             isBrowserLinkTrackingEnabled: () => true,
-            appId: () => ""
+            appId: () => "",
+            namePrefix: () => ""
         }
     }
 }

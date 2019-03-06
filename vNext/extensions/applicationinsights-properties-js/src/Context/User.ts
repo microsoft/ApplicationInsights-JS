@@ -116,9 +116,10 @@ export class User implements IUser {
 
             Util.setCookie(this._logger, User.userCookieName, newCookie.join(User.cookieSeparator) + ';expires=' + date.toUTCString(), cookieDomain);
 
-            // If we have an ai_session in local storage this means the user actively removed our cookies.
+            // If we have an config.namePrefix() + ai_session in local storage this means the user actively removed our cookies.
             // We should respect their wishes and clear ourselves from local storage
-            Util.removeStorage(this._logger, 'ai_session');
+            const name = config.namePrefix && config.namePrefix() ? config.namePrefix() + 'ai_session' : 'ai_session';
+            Util.removeStorage(this._logger, name);
         }
 
         // We still take the account id from the ctor param for backward compatibility. 

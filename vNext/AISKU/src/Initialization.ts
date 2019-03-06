@@ -9,6 +9,7 @@ import { Util, IConfig, IDependencyTelemetry, IPageViewPerformanceTelemetry,IPro
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { PropertiesPlugin, TelemetryContext } from "@microsoft/applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
+import { ICustomProperties } from "../../shared/AppInsightsCore/types/JavaScriptSDK.Interfaces/ITelemetryItem";
 
 "use strict";
 
@@ -70,10 +71,10 @@ export class Initialization implements IApplicationInsights {
     /**
      * Log a user action or other occurrence.
      * @param {IEventTelemetry} event
-     * @param {{ [key:string]: any }} [customProperties]
+     * @param {ICustomProperties} [customProperties]
      * @memberof Initialization
      */
-    public trackEvent(event: IEventTelemetry, customProperties?: { [key:string]: any }) {
+    public trackEvent(event: IEventTelemetry, customProperties?: ICustomProperties) {
         this.appInsights.trackEvent(event, customProperties);
     }
 
@@ -117,10 +118,10 @@ export class Initialization implements IApplicationInsights {
     /**
      * Log a diagnostic scenario such entering or leaving a function.
      * @param {ITraceTelemetry} trace
-     * @param {{ [key: string]: any; }} [customProperties]
+     * @param {ICustomProperties} [customProperties]
      * @memberof Initialization
      */
-    public trackTrace(trace: ITraceTelemetry, customProperties?: { [key: string]: any; }): void {
+    public trackTrace(trace: ITraceTelemetry, customProperties?: ICustomProperties): void {
         this.appInsights.trackTrace(trace, customProperties);
     }
 
@@ -135,10 +136,10 @@ export class Initialization implements IApplicationInsights {
      * aggregating multiple measurements and sending the resulting average and modifying
      * the `sampleCount` field of {@link IMetricTelemetry}.
      * @param {IMetricTelemetry} metric input object argument. Only `name` and `average` are mandatory.
-     * @param {{ [key: string]: any; }} [customProperties]
+     * @param {ICustomProperties} [customProperties]
      * @memberof Initialization
      */
-    public trackMetric(metric: IMetricTelemetry, customProperties?: { [key: string]: any; }): void {
+    public trackMetric(metric: IMetricTelemetry, customProperties?: ICustomProperties): void {
         this.appInsights.trackMetric(metric, customProperties);
     }
     /**
@@ -159,8 +160,8 @@ export class Initialization implements IApplicationInsights {
      * @param   properties  map[string, string] - additional data used to filter pages and metrics in the portal. Defaults to empty.
      * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
-    public stopTrackPage(name?: string, url?: string, customProperties?: { [key: string]: any; }) {
-        this.appInsights.stopTrackPage(name, url, customProperties);
+    public stopTrackPage(name?: string, url?: string, customProperties?: { [key: string]: any; }, measurements?: { [key: string]: number; }) {
+        this.appInsights.stopTrackPage(name, url, customProperties, measurements);
     }
 
     public startTrackEvent(name?: string): void {

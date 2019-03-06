@@ -1,7 +1,7 @@
 /// <reference path="./TestFramework/Common.ts" />
 import { Sender } from "../src/Sender";
 import { Offline } from '../src/Offline';
-import { Exception } from "@microsoft/applicationinsights-common";
+import { Exception, CtxTagKeys } from "@microsoft/applicationinsights-common";
 import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
 
 export class SenderTests extends TestClass {
@@ -509,6 +509,80 @@ export class SenderTests extends TestClass {
 
                 // Verify online
                 Assert.ok(Offline.isOnline());
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: AppInsights Envelope created for Page View with new web extension",
+            test: () => {
+                // setup
+                let inputEnvelope: ITelemetryItem = {
+                    name: "test",
+                    time: new Date("2018-06-12").toISOString(),
+                    iKey: "iKey",
+                    ext: {
+                        "web": {
+                            "domain": "www.bing.com",
+                            "userConsent": true,
+                            "screenRes": "1024x768",
+                            "browser": "internet explorer",
+                            "browserVer": "48.0",
+                            "isManual": true,
+                            "browserLang": "EN"
+                        }
+                    },
+                    baseType: "PageviewData",
+                    baseData: {
+                        "name": "Page View Name",
+                        "uri": "https://fakeUri.com",
+                        properties: {
+                            "property1": "val1",
+                            "property2": "val2"
+                        },
+                        measurements: {
+                            "measurement1": 50.0,
+                        }
+                    }
+                };
+
+                // Act
+                let appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+                let baseData = appInsightsEnvelope.data.baseData;
+
+                // Assert measurements
+                let resultMeasurements = baseData.measurements;
+                Assert.ok(resultMeasurements);
+                Assert.ok(resultMeasurements["measurement1"]);
+                Assert.equal(50.0, resultMeasurements["measurement1"]);
+
+                // Assert custom properties
+                Assert.ok(baseData.properties);
+                Assert.equal("val1", baseData.properties["property1"]);
+                Assert.equal("val2", baseData.properties["property2"]);
+                Assert.equal("true", baseData.properties["isManual"]);
+                Assert.equal("1024x768", baseData.properties["screenRes"]);
+                Assert.equal("true", baseData.properties["userConsent"]);
+                Assert.equal("www.bing.com", baseData.properties["domain"]);
+
+                Assert.equal("internet explorer", appInsightsEnvelope.tags[CtxTagKeys.deviceBrowser]);
+                Assert.equal("48.0", appInsightsEnvelope.tags[CtxTagKeys.deviceBrowserVersion]);
+                Assert.equal("EN", appInsightsEnvelope.tags[CtxTagKeys.deviceLanguage]);
+
+                // Assert Page View name
+                Assert.ok(baseData.name);
+                Assert.equal("Page View Name", baseData.name);
+
+                // Assert ver
+                Assert.ok(baseData.ver);
+                Assert.equal(2, baseData.ver);
+
+                // Assert baseType
+                Assert.ok(appInsightsEnvelope.data.baseType);
+                Assert.equal("PageviewData", appInsightsEnvelope.data.baseType);
+
+                // Assert name
+                Assert.ok(appInsightsEnvelope.name);
+                Assert.equal("Microsoft.ApplicationInsights.iKey.Pageview", appInsightsEnvelope.name);
             }
         });
     }
