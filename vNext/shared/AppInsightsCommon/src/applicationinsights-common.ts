@@ -34,8 +34,7 @@ export { DataSanitizer } from './Telemetry/Common/DataSanitizer';
 export { TelemetryItemCreator } from './TelemetryItemCreator';
 export { ICorrelationConfig } from './Interfaces/ICorrelationConfig';
 export { IAppInsights } from './Interfaces/IAppInsights';
-export { CtxTagKeys, LegacyKeys, Extensions,
-    UserExtensionKeys, AppExtensionKeys } from './Interfaces/PartAExtensions';
+export { CtxTagKeys, Extensions } from './Interfaces/PartAExtensions';
 export { ISession } from './Interfaces/Context/ISession';
 export { ITelemetryContext } from './Interfaces/ITelemetryContext';
 export { IApplication } from './Interfaces/Context/IApplication';

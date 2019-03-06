@@ -5,7 +5,7 @@
 
 import { ITelemetryItem, IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 import { Session, _SessionManager } from './Context/Session';
-import { Extensions, ITelemetryContext, LegacyKeys, IOperatingSystem, ITelemetryTrace, SampleRate } from '@microsoft/applicationinsights-common';
+import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, SampleRate, CtxTagKeys } from '@microsoft/applicationinsights-common';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
 import { Internal } from './Context/Internal';
@@ -61,10 +61,10 @@ export class TelemetryContext implements ITelemetryContext {
         if (this.application) {
 
             if (typeof this.application.ver === "string") {
-                event.tags.push({[LegacyKeys.applicationVersion]: this.application.ver});
+                event.tags.push({[CtxTagKeys.applicationVersion]: this.application.ver});
             }
             if (typeof this.application.build === "string") {
-                event.tags.push({[LegacyKeys.applicationBuild]: this.application.build });
+                event.tags.push({[CtxTagKeys.applicationBuild]: this.application.build });
             }
         }
     }
@@ -94,10 +94,10 @@ export class TelemetryContext implements ITelemetryContext {
     public applyInternalContext(event: ITelemetryItem) {
         if (this.internal) {
             if (typeof this.internal.agentVersion === "string") {
-                event.tags.push({[LegacyKeys.internalAgentVersion]: this.internal.agentVersion }); // not mapped in CS 4.0
+                event.tags.push({[CtxTagKeys.internalAgentVersion]: this.internal.agentVersion }); // not mapped in CS 4.0
             }
             if (typeof this.internal.sdkVersion === "string") {
-                event.tags.push({[LegacyKeys.internalSdkVersion]: this.internal.sdkVersion }); // not mapped in CS 4.0
+                event.tags.push({[CtxTagKeys.internalSdkVersion]: this.internal.sdkVersion }); // not mapped in CS 4.0
             }
         }
     }
@@ -105,7 +105,7 @@ export class TelemetryContext implements ITelemetryContext {
     public applyLocationContext(event: ITelemetryItem) {
         if (this.location) {
             if (typeof this.location.ip === "string") {                
-                event.tags.push({[LegacyKeys.locationIp]: this.location.ip});
+                event.tags.push({[CtxTagKeys.locationIp]: this.location.ip});
             }
         }
     }
@@ -144,7 +144,7 @@ export class TelemetryContext implements ITelemetryContext {
             // stays in tags
             if (typeof this.user.accountId === "string") {
                 let item = {};
-                event.tags.push({[LegacyKeys.accountId]: this.user.accountId});
+                event.tags.push({[CtxTagKeys.userAccountId]: this.user.accountId});
             }
             
             // CS 4.0            

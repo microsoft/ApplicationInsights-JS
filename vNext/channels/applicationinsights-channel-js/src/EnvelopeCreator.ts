@@ -3,7 +3,7 @@ import {
     RemoteDependencyData, Event, Exception,
     Metric, PageView, Trace, PageViewPerformance, IDependencyTelemetry,
     IPageViewPerformanceTelemetry, IPageViewTelemetry, CtxTagKeys,
-    LegacyKeys, HttpMethod, IPageViewTelemetryInternal
+    HttpMethod, IPageViewTelemetryInternal
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, CoreUtils,
@@ -182,38 +182,6 @@ export abstract class EnvelopeCreator {
             tgs = { ...tgs, ...tg };
         });
         env.tags = { ...env.tags, ...tgs};
-            // if (tg[LegacyKeys.accountId]) {
-            //     env.tags[LegacyKeys.accountId] = tg[LegacyKeys.accountId]; // account id in tags
-            // }
-
-            // // SDK version field: example: ai.internal.sdkVersion=javascript:1.0.18
-            // if (tg[LegacyKeys.internalSdkVersion]) {
-            //     env.tags[LegacyKeys.internalSdkVersion] = tg[LegacyKeys.internalSdkVersion];
-            // }
-
-            // if (tg[LegacyKeys.internalAgentVersion]) {
-            //     env.tags[LegacyKeys.internalAgentVersion] = tg[LegacyKeys.internalAgentVersion];
-            // }
-
-            // if (tg[LegacyKeys.internalAgentVersion]) {
-            //     env.tags[LegacyKeys.internalAgentVersion] = tg[LegacyKeys.internalAgentVersion];
-            // }
-
-            // if (tg[LegacyKeys.locationIp]) {
-            //     env.tags[LegacyKeys.locationIp] = tg[LegacyKeys.locationIp];
-            // }
-
-            // if (tg[LegacyKeys.deviceOSVersion]) {
-            //     env.tags[LegacyKeys.deviceOSVersion] = tg[LegacyKeys.deviceOSVersion];
-            // }
-
-            // if (tg[LegacyKeys.applicationVersion]) {
-            //     env.tags[LegacyKeys.applicationVersion] = tg[LegacyKeys.applicationVersion];
-            // }
-    
-            // if (tg[LegacyKeys.applicationBuild]) {
-            //     env.tags[LegacyKeys.applicationBuild] = tg[LegacyKeys.applicationBuild];
-            // }
     }
 }
 
