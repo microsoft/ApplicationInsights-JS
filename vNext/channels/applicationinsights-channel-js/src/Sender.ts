@@ -435,8 +435,7 @@ export class Sender implements IChannelControlsAI {
             case RemoteDependencyData.dataType:
                 return DependencyEnvelopeCreator.DependencyEnvelopeCreator.Create(logger, envelope);
             default:
-                // default create custom event type with name mapping to unknown type
-                envelope.baseData.name = envelope.baseType;
+
                 return EventEnvelopeCreator.EventEnvelopeCreator.Create(logger, envelope);
         }
     }

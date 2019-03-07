@@ -43,7 +43,7 @@ export class AppInsightsCore implements IAppInsightsCore {
 
         this.config = config;
 
-        this._notificationManager = new NotificationManager();
+        this._notificationManager = new NotificationManager();        
         this.config.extensions = CoreUtils.isNullOrUndefined(this.config.extensions) ? [] : this.config.extensions;
 
         // add notification to the extensions in the config so other plugins can access it
@@ -61,15 +61,24 @@ export class AppInsightsCore implements IAppInsightsCore {
 
         if (this.config.extensions.length > 0) {
             let isValid = true;
+            let containsChannels = false;
             this.config.extensions.forEach(item =>
             {
                 if (CoreUtils.isNullOrUndefined(item)) {
                     isValid = false;
                 }
+
+                if (item.priority > ChannelControllerPriority) {
+                    containsChannels = true;
+                }
             });
 
             if (!isValid) {
                 throw Error(validationError);
+            }
+
+            if (containsChannels) {
+                throw Error(validationErrorInExt);
             }
         }
         // Initial validation complete
@@ -317,14 +326,25 @@ class ChannelController implements ITelemetryPlugin {
     initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
         this.channelQueue = new Array<IChannelControls[]>();
         if (config.channels) {
+            let invalidChannelIdentifier = undefined;
             config.channels.forEach(queue => {
+
                 if(queue && queue.length > 0) {
                     queue = queue.sort((a,b) => { // sort based on priority within each queue
                         return a.priority - b.priority;
                     });
 
                     // Initialize each plugin
-                    queue.forEach(queueItem => queueItem.initialize(config, core, extensions));
+                    queue.forEach(queueItem => {
+                        if (queueItem.priority < ChannelControllerPriority) {
+                            invalidChannelIdentifier = queueItem.identifier;
+                        }
+                        queueItem.initialize(config, core, extensions)
+                    });
+
+                    if (invalidChannelIdentifier) {
+                        throw Error(ChannelValidationMessage + invalidChannelIdentifier);
+                    }
 
                     for (let i = 1; i < queue.length; i++) {
                         queue[i - 1].setNextPlugin(queue[i]); // setup processing chain
@@ -364,5 +384,6 @@ class ChannelController implements ITelemetryPlugin {
 }
 
 const validationError = "Extensions must provide callback to initialize";
+const validationErrorInExt = "Channels must be provided through config.channels only";
 const ChannelControllerPriority = 500;
-const duplicatePriority = "One or more extensions are set at same priority";
+const ChannelValidationMessage = "Channel has invalid priority";

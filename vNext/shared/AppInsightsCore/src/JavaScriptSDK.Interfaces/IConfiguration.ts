@@ -72,7 +72,8 @@ export interface IConfiguration {
     extensions?: ITelemetryPlugin[];
 
     /**
-     * Channel queues that is setup by caller in desired order
+     * Channel queues that is setup by caller in desired order. 
+     * If channels are provided here, core will ignore any channels that are already setup, example if there is a SKU with an initialized channel
      */
     channels?: Array<IChannelControls[]>;
 }

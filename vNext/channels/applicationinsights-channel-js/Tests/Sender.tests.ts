@@ -230,7 +230,7 @@ export class SenderTests extends TestClass {
 
                 // Assert Event name
                 Assert.ok(baseData.name);
-                Assert.equal("PageUnloadData", baseData.name);
+                Assert.equal("PageUnloadData", baseData.properties['baseTypeSource']);
 
                 // Assert ver
                 Assert.ok(baseData.ver);
