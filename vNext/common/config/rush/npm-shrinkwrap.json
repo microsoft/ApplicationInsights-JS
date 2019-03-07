@@ -447,6 +447,11 @@
       "from": "@babel/types@^7.3.4",
       "resolved": "https://registry.npmjs.org/@babel/types/-/types-7.3.4.tgz"
     },
+    "@microsoft/applicationinsights-core-js": {
+      "version": "2.0.0-beta.0",
+      "from": "@microsoft/applicationinsights-core-js@2.0.0-beta.0",
+      "resolved": "https://registry.npmjs.org/@microsoft/applicationinsights-core-js/-/applicationinsights-core-js-2.0.0-beta.0.tgz"
+    },
     "@rush-temp/applicationinsights-analytics-js": {
       "version": "0.0.0",
       "from": "projects\\applicationinsights-analytics-js.tgz",
@@ -498,9 +503,9 @@
       "resolved": "https://registry.npmjs.org/@types/estree/-/estree-0.0.39.tgz"
     },
     "@types/node": {
-      "version": "11.10.4",
+      "version": "11.10.5",
       "from": "@types/node@*",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-11.10.4.tgz"
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-11.10.5.tgz"
     },
     "abbrev": {
       "version": "1.1.1",
@@ -2239,14 +2244,14 @@
       }
     },
     "jest-serializer": {
-      "version": "24.0.0",
+      "version": "24.3.0",
       "from": "jest-serializer@^24.0.0-alpha.6",
-      "resolved": "https://registry.npmjs.org/jest-serializer/-/jest-serializer-24.0.0.tgz"
+      "resolved": "https://registry.npmjs.org/jest-serializer/-/jest-serializer-24.3.0.tgz"
     },
     "jest-worker": {
-      "version": "24.0.0",
+      "version": "24.3.1",
       "from": "jest-worker@^24.0.0",
-      "resolved": "https://registry.npmjs.org/jest-worker/-/jest-worker-24.0.0.tgz",
+      "resolved": "https://registry.npmjs.org/jest-worker/-/jest-worker-24.3.1.tgz",
       "dependencies": {
         "supports-color": {
           "version": "6.1.0",
@@ -3192,9 +3197,9 @@
       "resolved": "https://registry.npmjs.org/react-deep-force-update/-/react-deep-force-update-1.1.2.tgz"
     },
     "react-devtools-core": {
-      "version": "3.6.0",
+      "version": "3.6.1",
       "from": "react-devtools-core@^3.4.2",
-      "resolved": "https://registry.npmjs.org/react-devtools-core/-/react-devtools-core-3.6.0.tgz",
+      "resolved": "https://registry.npmjs.org/react-devtools-core/-/react-devtools-core-3.6.1.tgz",
       "dependencies": {
         "ultron": {
           "version": "1.1.1",
@@ -3209,9 +3214,9 @@
       }
     },
     "react-is": {
-      "version": "16.8.3",
+      "version": "16.8.4",
       "from": "react-is@^16.8.1",
-      "resolved": "https://registry.npmjs.org/react-is/-/react-is-16.8.3.tgz"
+      "resolved": "https://registry.npmjs.org/react-is/-/react-is-16.8.4.tgz"
     },
     "react-native": {
       "version": "0.58.5",
@@ -3276,9 +3281,9 @@
       "resolved": "https://registry.npmjs.org/regenerate/-/regenerate-1.4.0.tgz"
     },
     "regenerate-unicode-properties": {
-      "version": "7.0.0",
-      "from": "regenerate-unicode-properties@>=7.0.0 <8.0.0",
-      "resolved": "https://registry.npmjs.org/regenerate-unicode-properties/-/regenerate-unicode-properties-7.0.0.tgz"
+      "version": "8.0.1",
+      "from": "regenerate-unicode-properties@^8.0.1",
+      "resolved": "https://registry.npmjs.org/regenerate-unicode-properties/-/regenerate-unicode-properties-8.0.1.tgz"
     },
     "regenerator-runtime": {
       "version": "0.11.1",
@@ -3301,9 +3306,9 @@
       "resolved": "https://registry.npmjs.org/regex-not/-/regex-not-1.0.2.tgz"
     },
     "regexpu-core": {
-      "version": "4.4.0",
+      "version": "4.5.3",
       "from": "regexpu-core@^4.1.3",
-      "resolved": "https://registry.npmjs.org/regexpu-core/-/regexpu-core-4.4.0.tgz"
+      "resolved": "https://registry.npmjs.org/regexpu-core/-/regexpu-core-4.5.3.tgz"
     },
     "regjsgen": {
       "version": "0.5.0",
@@ -4045,14 +4050,14 @@
       "resolved": "https://registry.npmjs.org/unicode-match-property-ecmascript/-/unicode-match-property-ecmascript-1.0.4.tgz"
     },
     "unicode-match-property-value-ecmascript": {
-      "version": "1.0.2",
-      "from": "unicode-match-property-value-ecmascript@>=1.0.2 <2.0.0",
-      "resolved": "https://registry.npmjs.org/unicode-match-property-value-ecmascript/-/unicode-match-property-value-ecmascript-1.0.2.tgz"
+      "version": "1.1.0",
+      "from": "unicode-match-property-value-ecmascript@^1.1.0",
+      "resolved": "https://registry.npmjs.org/unicode-match-property-value-ecmascript/-/unicode-match-property-value-ecmascript-1.1.0.tgz"
     },
     "unicode-property-aliases-ecmascript": {
-      "version": "1.0.4",
-      "from": "unicode-property-aliases-ecmascript@>=1.0.4 <2.0.0",
-      "resolved": "https://registry.npmjs.org/unicode-property-aliases-ecmascript/-/unicode-property-aliases-ecmascript-1.0.4.tgz"
+      "version": "1.0.5",
+      "from": "unicode-property-aliases-ecmascript@^1.0.4",
+      "resolved": "https://registry.npmjs.org/unicode-property-aliases-ecmascript/-/unicode-property-aliases-ecmascript-1.0.5.tgz"
     },
     "union-value": {
       "version": "1.0.0",
@@ -4101,9 +4106,9 @@
       }
     },
     "upath": {
-      "version": "1.1.0",
-      "from": "upath@>=1.1.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/upath/-/upath-1.1.0.tgz"
+      "version": "1.1.1",
+      "from": "upath@^1.1.0",
+      "resolved": "https://registry.npmjs.org/upath/-/upath-1.1.1.tgz"
     },
     "uri-js": {
       "version": "4.2.2",
