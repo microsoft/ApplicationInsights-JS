@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-core-js",
     "author": "Microsoft Corporation",
-    "version": "2.0.0-beta.0",
+    "version": "2.0.0-beta.1",
     "description": "Microsoft Application Insights Core Javascript SDK",
     "keywords": [
         "azure",

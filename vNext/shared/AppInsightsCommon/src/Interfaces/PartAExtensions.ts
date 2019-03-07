@@ -8,6 +8,11 @@ export class Extensions {
     public static AppExt = "app";
     public static OSExt = "os";
     public static SessionExt = "ses";
+    public static SDKExt = "sdk";
+}
+
+export class SDKExtensionKeys {
+    public static libVer = 'libVer';
 }
 
 export var CtxTagKeys = new ContextTagKeys();
