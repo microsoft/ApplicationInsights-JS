@@ -248,10 +248,14 @@ export class EventEnvelopeCreator extends EnvelopeCreator {
             this._logger.throwInternal(
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
-        }
-
+            }
+            
         let customProperties = {};
         let customMeasurements = {};
+        if (telemetryItem.baseType !== Event.dataType) {
+            customProperties['baseTypeSource'] = telemetryItem.baseType; // save the passed in base type as a property
+        }
+
         if (telemetryItem.baseType === Event.dataType) { // take collection
             customProperties = telemetryItem.baseData.properties || {};
             customMeasurements = telemetryItem.baseData.measurements || {};
