@@ -46,10 +46,6 @@ export class AppInsightsCore implements IAppInsightsCore {
         this._notificationManager = new NotificationManager();        
         this.config.extensions = CoreUtils.isNullOrUndefined(this.config.extensions) ? [] : this.config.extensions;
 
-        // if (this.config.channels && this.config.channels.length > 0) {
-        //     for (let i = 0; i this.config.extensions
-        // }
-
         // add notification to the extensions in the config so other plugins can access it
         this.config.extensionConfig = CoreUtils.isNullOrUndefined(this.config.extensionConfig) ? {} : this.config.extensionConfig;
         this.config.extensionConfig.NotificationManager = this._notificationManager;
