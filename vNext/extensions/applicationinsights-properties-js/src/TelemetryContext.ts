@@ -50,6 +50,15 @@ export class TelemetryContext implements ITelemetryContext {
                 event.ext.app.sesId = sessionContext.id;
             }
         }
+
+        if (this.session) {
+            // If customer set session info, apply his context; otherwise apply context automatically generated 
+            if (typeof this.session.id === "string") {
+                event.ext.app.sesId = this.session.id;
+            } else {
+                event.ext.app.sesId = this.sessionManager.automaticSession.id;
+            }
+        }
     }
 
     public applyOperatingSystemContxt(event: ITelemetryItem) {

@@ -361,12 +361,12 @@ export class SenderTests extends TestClass {
                         "uri": "https://fakeUri.com",
                         properties: {
                             "property1": "val1",
-                            "property2": "val2"
+                            "property2": "val2",
+                            "duration": 300000
                         },
                         measurements: {
                             "measurement1": 50.0,
                             "measurement2": 1.3,
-                            "duration": 300000
                         }
                     }
                 };
@@ -381,12 +381,13 @@ export class SenderTests extends TestClass {
 
                 // Assert measurements
                 let resultMeasurements = baseData.measurements;
+                let  props = baseData.properties;
                 Assert.ok(resultMeasurements);
                 Assert.ok(resultMeasurements["measurement1"]);
                 Assert.equal(50.0, resultMeasurements["measurement1"]);
                 Assert.ok(resultMeasurements["measurement2"]);
                 Assert.equal(1.3, resultMeasurements["measurement2"]);
-                Assert.ok(!resultMeasurements.duration, "duration is not supposed to be treated as measurement");
+                Assert.ok(!resultMeasurements.duration, "duration is not supposed to be treated as property in envelope");
 
                 // Assert custom properties
                 Assert.ok(baseData.properties);
@@ -426,6 +427,7 @@ export class SenderTests extends TestClass {
 
                 // Assert timestamp
                 Assert.ok(appInsightsEnvelope.time);
+
 
                 Assert.equal("1528B5FF-6455-4657-BE77-E6664CAC72DC", appInsightsEnvelope.tags["ai.operation.id"]);
                 Assert.equal("1528B5FF-6455-4657-BE77-E6664CACEEEE", appInsightsEnvelope.tags["ai.operation.parentId"])

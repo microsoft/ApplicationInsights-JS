@@ -55,7 +55,7 @@ appInsights.loadAppInsights();
 If your app does not use NPM, you can directly instrument your webpages with Application Insights by pasting this snippet at the top of each your pages. Preferably, it should be the first script in your `<head>` section so that it can monitor any potential issues with all of your dependencies.
 ```html
 <script type="text/javascript">
-var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){t[e]=function(){var n=arguments;t.queue.push(function(){t[e].apply(t,n)})}}var t={config:e};t.initialize=!0;var i=document,a=window;setTimeout(function(){var n=i.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/next/ai.1.min.js",i.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{t.cookie=i.cookie}catch(e){}t.queue=[],t.version=2;
+var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){t[e]=function(){var n=arguments;t.queue.push(function(){t[e].apply(t,n)})}}var t={config:e};t.initialize=!0;var i=document,a=window;setTimeout(function(){var n=i.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/next/ai.2.min.js",i.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{t.cookie=i.cookie}catch(e){}t.queue=[],t.version=2;
 for(var r=["Event","PageView","Exception","Trace","DependencyData","Metric","PageViewPerformance"];r.length;)n("track"+r.pop());n("startTrackPage"),n("stopTrackPage");var o="Track"+r[0];
 if(n("start"+o),n("stop"+o),!(!0===e.disableExceptionTracking||e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!0===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking)){n("_"+(r="onerror"));var c=a[r];a[r]=function(e,n,i,a,o){var s=c&&c(e,n,i,a,o);return!0!==s&&t["_"+r]({message:e,url:n,lineNumber:i,columnNumber:a,error:o}),s},e.autoExceptionInstrumented=!0}return t}
 ({
@@ -78,6 +78,7 @@ appInsights.startTrackPage("pageName");
 appInsights.stopTrackPage("pageName", {customProp1: "some value"});
 appInsights.startTrackEvent("event");
 appInsights.stopTrackEvent("event", {customProp1: "some value"});
+appInsights.flush();
 ```
 
 ### Setting Up Autocollection
@@ -152,6 +153,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | isBrowserLinkTrackingEnabled | false | Default is false. If true, the SDK will track all [Browser Link](https://docs.microsoft.com/en-us/aspnet/core/client-side/using-browserlink) requests. |
 | appId | null | AppId is used for the correlation between AJAX dependencies happening on the client-side with the server-side requets. When Beacon API is enabled, it cannot be used automatically, but can be set manually in the configuration. Default is null |
 | enableCorsCorrelation | false | If true, the SDK will add two headers ('Request-Id' and 'Request-Context') to all CORS requests tocorrelate outgoing AJAX dependencies with corresponding requests on the server side. Default is false |
+| namePrefix | undefined | An optional value that will be used as name postfix for localStorage and cookie name. This enables
 
 ## Examples
 
@@ -166,17 +168,17 @@ npm i --save @microsoft/applicationinsights-web-basic
 This version comes with the bare minimum amount of features and functionalities and relies on you to build it up as you see fit. For example, it performs no auto-collection (uncaught exceptions, ajax, etc). The APIs to send certain telemetry types, like `trackTrace`, `trackException`, etc, are not included in this version, so you will need to provide your own wrapper. The only api that is available is `track`.
 
 
-## Upgrading from the Old Version of Application Insights
+## Upgrading from the old Version of Application Insights
 Breaking changes in the SDK V2 version:
 - To allow for better API signatures, some of the apis such as trackPageView, trackException have been updated. Running in IE8 or lower versions of the browser is not supported.
-- Telemetry envelope has some changes due to data schema updates.
+- Telemetry envelope has field name and structure changes due to data schema updates.
 
 If you are using the current application insights PRODUCTION SDK (1.0.20) and want to see if the new SDK works in runtime, please update URL depending on your current SDK loading scenario:
 
 **a)** Download via CDN scenario:
 	Update code snippet that you currently use to point to the following URL:
 	```
-	"https://az416426.vo.msecnd.net/beta/ai.1.min.js"
+	"https://az416426.vo.msecnd.net/beta/ai.2.min.js"
 	```
 
 **b)** NPM scenario:
@@ -184,13 +186,13 @@ If you are using the current application insights PRODUCTION SDK (1.0.20) and wa
 ```ts
 appInsights.downloadAndSetup({
 	instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx",
-	url: "https://az416426.vo.msecnd.net/beta/ai.1.min.js"
+	url: "https://az416426.vo.msecnd.net/beta/ai.2.min.js"
 });
 ```
 
 Test in internal environment to verify monitoring telemetry is working as expected. If all works, please update your api signatures appropriately to SDK V2 version and deploy in your production environments.
 
-## Build & Test
+## Build & Test this repo
 
 1. Install all dependencies
 	```
@@ -230,9 +232,13 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 ## Build together when changing multiple packages:
 
-The vNext folder contains six packages that are components of the next version of the SDK. When making changes in multiple packages, you can build using the following commands in vNext folder:
+The vNext folder contains 8 packages that are components of this next version of the SDK. When making changes in multiple packages, you can build using the following commands in vNext folder:
 1. npm install -g @microsoft/rush
+
 2. rush rebuild --verbose
 This will build all packages in order of dependencies. If there are build errors, verbose options is required to view error details.
+
+3. rush test --verbose
+This will run tests in all packages in parallel.
 
 If you are changing package versions or adding/removing any package dependencies, run> rush update --purge --recheck --full before building. Please check in any files that change under vNext\common\ folder.

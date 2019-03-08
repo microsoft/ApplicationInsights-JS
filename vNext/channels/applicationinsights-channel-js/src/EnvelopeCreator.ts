@@ -93,8 +93,9 @@ export abstract class EnvelopeCreator {
                 env.tags[CtxTagKeys.userAuthUserId] = item.ext.user.authId;
             }
 
-            if (item.ext.user.localId) {
-                env.tags[CtxTagKeys.userId] = item.ext.user.localId;
+            let userId = item.ext.user.id || item.ext.user.localId;
+            if (userId) {
+                env.tags[CtxTagKeys.userId] = userId;
             }
         }
 
@@ -328,9 +329,9 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
         // Since duration is not part of the domain properties in Common Schema, extract it from part C
         let duration = undefined;
         if (!CoreUtils.isNullOrUndefined(telemetryItem.baseData) &&
-            !CoreUtils.isNullOrUndefined(telemetryItem.baseData.measurements)) {
-            duration = telemetryItem.baseData.measurements.duration;
-            delete telemetryItem.baseData.measurements.duration;
+            !CoreUtils.isNullOrUndefined(telemetryItem.baseData.properties)) {
+            duration = telemetryItem.baseData.properties.duration;
+            delete telemetryItem.baseData.properties.duration;
         }
 
         let bd = telemetryItem.baseData as IPageViewTelemetryInternal;
