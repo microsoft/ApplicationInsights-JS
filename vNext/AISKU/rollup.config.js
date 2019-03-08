@@ -10,7 +10,7 @@ const banner = [
   " */"
 ].join("\n");
 
-const browserRollupConfigFactory = (isProduction, libVersion = '1') => {
+const browserRollupConfigFactory = (isProduction, libVersion = '2') => {
   const browserRollupConfig = {
     input: "dist-esm/Init.js",
     output: {
