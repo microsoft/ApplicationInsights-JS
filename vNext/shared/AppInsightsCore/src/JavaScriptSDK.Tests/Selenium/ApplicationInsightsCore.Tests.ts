@@ -155,6 +155,28 @@ export class ApplicationInsightsCoreTests extends TestClass {
         });
 
         this.testCase({
+            name: "config.channel adds additional queue to existing channels",
+            test: () => {
+                let channelPlugin = new ChannelPlugin();
+                channelPlugin.priority = 1030;
+
+                let channelPlugin1 = new ChannelPlugin();
+                channelPlugin1.priority = 1030;
+
+                let appInsightsCore = new AppInsightsCore();
+                appInsightsCore.initialize(
+                    {instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", channels: [[channelPlugin1]]},
+                    [channelPlugin]);
+
+                
+                let channelQueues = appInsightsCore.getTransmissionControls();
+                Assert.equal(2, channelQueues.length, "Total number of channel queues");
+                Assert.equal(1, channelQueues[0].length, "Number of channels in queue 1");
+                Assert.equal(1, channelQueues[1].length, "Number of channels in queue 2");
+            }
+        });
+
+        this.testCase({
             name: 'ApplicationInsightsCore: track adds required default fields if missing',
             test: () => {
                 const expectedIKey: string = "09465199-12AA-4124-817F-544738CC7C41";

@@ -353,33 +353,33 @@ class ChannelController implements ITelemetryPlugin {
                     this.channelQueue.push(queue);
                 }
             });
-        } else {
-            let arr = new Array<IChannelControls>();
+        }
+        
+        let arr = new Array<IChannelControls>();
 
-            for (let i = 0; i < extensions.length; i++) {
-                let plugin = <IChannelControls>extensions[i];
-                if (plugin.priority > ChannelControllerPriority) {
-                    arr.push(plugin);
-                }
-            }
-
-            if (arr.length > 0) {
-                // sort if not sorted
-                arr = arr.sort((a,b) => {
-                    return a.priority - b.priority;
-                });
-
-                // Initialize each plugin
-                arr.forEach(queueItem => queueItem.initialize(config, core, extensions));
-
-                // setup next plugin
-                for (let i = 1; i < arr.length; i++) {
-                    arr[i - 1].setNextPlugin(arr[i]);
-                }
-
-                               this.channelQueue.push(arr);
+        for (let i = 0; i < extensions.length; i++) {
+            let plugin = <IChannelControls>extensions[i];
+            if (plugin.priority > ChannelControllerPriority) {
+                arr.push(plugin);
             }
         }
+
+        if (arr.length > 0) {
+            // sort if not sorted
+            arr = arr.sort((a,b) => {
+                return a.priority - b.priority;
+            });
+
+            // Initialize each plugin
+            arr.forEach(queueItem => queueItem.initialize(config, core, extensions));
+
+            // setup next plugin
+            for (let i = 1; i < arr.length; i++) {
+                arr[i - 1].setNextPlugin(arr[i]);
+            }
+
+            this.channelQueue.push(arr);
+        }        
     }
 }
 
