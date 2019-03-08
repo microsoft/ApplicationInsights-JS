@@ -88,9 +88,5 @@ window[aiName] = aisdk;
 
 // if somebody calls the snippet twice, don't report page view again
 if (aisdk.queue && aisdk.queue.length === 0) {
-    var pageViewItem = {
-        name: document.title ? document.title : "",
-        uri: document.URL ? document.URL : ""
-    };
-    aisdk.trackPageView(pageViewItem);
+     aisdk.trackPageView();
 }
