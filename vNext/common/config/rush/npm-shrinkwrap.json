@@ -447,11 +447,6 @@
       "from": "@babel/types@^7.3.4",
       "resolved": "https://registry.npmjs.org/@babel/types/-/types-7.3.4.tgz"
     },
-    "@microsoft/applicationinsights-core-js": {
-      "version": "2.0.0-beta.0",
-      "from": "@microsoft/applicationinsights-core-js@2.0.0-beta.0",
-      "resolved": "https://registry.npmjs.org/@microsoft/applicationinsights-core-js/-/applicationinsights-core-js-2.0.0-beta.0.tgz"
-    },
     "@rush-temp/applicationinsights-analytics-js": {
       "version": "0.0.0",
       "from": "projects\\applicationinsights-analytics-js.tgz",
