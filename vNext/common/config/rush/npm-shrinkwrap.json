@@ -3093,9 +3093,9 @@
       "resolved": "https://registry.npmjs.org/pretty-format/-/pretty-format-24.0.0-alpha.6.tgz",
       "dependencies": {
         "ansi-regex": {
-          "version": "4.0.0",
+          "version": "4.1.0",
           "from": "ansi-regex@^4.0.0",
-          "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-4.0.0.tgz"
+          "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-4.1.0.tgz"
         },
         "ansi-styles": {
           "version": "3.2.1",
