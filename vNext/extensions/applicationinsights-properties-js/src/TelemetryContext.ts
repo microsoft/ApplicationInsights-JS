@@ -5,7 +5,7 @@
 
 import { ITelemetryItem, IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 import { Session, _SessionManager } from './Context/Session';
-import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, IWeb, SampleRate, CtxTagKeys } from '@microsoft/applicationinsights-common';
+import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, IWeb, SampleRate, CtxTagKeys, SDKExtensionKeys } from '@microsoft/applicationinsights-common';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
 import { Internal } from './Context/Internal';
@@ -98,7 +98,12 @@ export class TelemetryContext implements ITelemetryContext {
                 event.tags.push({[CtxTagKeys.internalAgentVersion]: this.internal.agentVersion }); // not mapped in CS 4.0
             }
             if (typeof this.internal.sdkVersion === "string") {
-                event.tags.push({[CtxTagKeys.internalSdkVersion]: this.internal.sdkVersion }); // not mapped in CS 4.0
+                event.tags.push({[CtxTagKeys.internalSdkVersion]: this.internal.sdkVersion });
+            } else {
+                // store the version provided by core
+                if (event[Extensions.SDKExt] && event[Extensions.SDKExt][SDKExtensionKeys.libVer]) { // not exposing context object as this ext is not finalized
+                    event.tags.push({[CtxTagKeys.internalSdkVersion]: event[Extensions.SDKExt][SDKExtensionKeys.libVer] }); // map sdk.libVer 
+                }
             }
         }
     }
