@@ -41,14 +41,13 @@
 ### Setup (NPM only, ignore if using Snippet)
 ```js
 import { ApplicationInsights } from '@microsoft/applicationinsights-web'
-```
 
-```js
+const customPlugin = new CustomPlugin();
 const appInsights = new ApplicationInsights({ config: {
-  instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
-  /* ...Other Configuration Options... */
+	instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+	extensions: [customPlugin],
+/* ...Other Configuration Options... */
 }});
-appInsights.loadAppInsights();
 ```
 
 ### Snippet Setup (Ignore if using NPM)
@@ -156,7 +155,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 
 ## Examples
 
-For runnable examples, see [Application Insights Javascript SDK samples](https://github.com/Azure-Samples?utf8=%E2%9C%93&q=application+insights+sdk&type=&language=)
+For runnable examples, see [Application Insights Javascript SDK Samples](https://github.com/Azure-Samples?utf8=%E2%9C%93&q=application+insights+sdk&type=&language=)
 
 ## Application Insights Web Basic
 
@@ -165,7 +164,7 @@ For a lightweight experience, you can instead install the basic version of Appli
 npm i --save @microsoft/applicationinsights-web-basic
 ```
 This version comes with the bare minimum amount of features and functionalities and relies on you to build it up as you see fit. For example, it performs no auto-collection (uncaught exceptions, ajax, etc). The APIs to send certain telemetry types, like `trackTrace`, `trackException`, etc, are not included in this version, so you will need to provide your own wrapper. The only api that is available is `track`.
-Sample: 
+[Sample](https://github.com/Azure-Samples/applicationinsights-web-sample1/blob/master/testlightsku.html)
 
 
 ## Upgrading from the old Version of Application Insights
@@ -194,27 +193,27 @@ Test in internal environment to verify monitoring telemetry is working as expect
 ## Build a new extension for the SDK
 The beta SDK supports the ability to include multiple extensions at runtime. In order to create a new extension, please implement the following interface:
 
-	- [ITelemetryPlugin](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/vNext/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts)
+[ITelemetryPlugin](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/vNext/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts)
 
 On initialization, config.extensions accepts an array of ITelemetryPlugin objects. These are hooked up and ITelemetryPlugin.processTelemetry() is chained based on priority of these plugins.
 Please note that higher the priority, the later your processing code will be invoked. The SDK supports a plugin model and channels can also be plugged in similarly (advanced scenario).
 Target scenarios for creating a brand new extension is to share a usage scenario that benefits multiple customers. Please follow guidelines 
 
 Here is the priority ranges available:
-	- Regular extension priority can be between 201 to 499.
-	- Priorty range < 201 is reserved.
-	- Priority range > 1000 is for channels (advanced scenario)
+- Regular extension priority can be between 201 to 499.
+- Priorty range < 201 is reserved.
+- Priority range > 1000 is for channels (advanced scenario)
 
 Usage:
 
-	```
-	const customPlugin = new CustomPlugin();
-	const appInsights = new ApplicationInsights({ config: {
-		instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
-		extensions: [customPlugin],
-	/* ...Other Configuration Options... */
-	}});
-	```
+```ts
+const customPlugin = new CustomPlugin();
+const appInsights = new ApplicationInsights({ config: {
+	instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+	extensions: [customPlugin],
+	// Other Configuration Options...
+}});
+```
 
 ITelemetryPlugin has a simpler base type IPlugin that you can instantiate for initialization purposes when SDK loads.
 
