@@ -658,7 +658,8 @@ export class CorrelationIdHelper {
 
 export class AjaxHelper {
     public static ParseDependencyPath(logger: IDiagnosticLogger, absoluteUrl: string, method: string, commandName: string) {
-        let target, name = commandName;
+        let target, name = commandName, data = commandName;
+
         if (absoluteUrl && absoluteUrl.length > 0) {
             var parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)
             target = parsedUrl.host;
@@ -668,7 +669,7 @@ export class AjaxHelper {
                         if (pathName.charAt(0) !== '/') {
                             pathName = "/" + pathName;
                         }
-
+                        data = parsedUrl.pathname;
                         name = DataSanitizer.sanitizeString(logger, method ? method + " " + pathName : pathName);
                     } else {
                         name = DataSanitizer.sanitizeString(logger, absoluteUrl);
@@ -681,7 +682,8 @@ export class AjaxHelper {
 
         return {
             target: target,
-            name: name
+            name: name,
+            data: data
         };
     }
 }

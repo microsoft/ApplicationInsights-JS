@@ -52,9 +52,9 @@ export class RemoteDependencyData extends GeneratedRemoteDependencyData implemen
         this.resultCode = resultCode + "";
 
         this.type = DataSanitizer.sanitizeString(logger, requestAPI);
-        this.data = DataSanitizer.sanitizeUrl(logger, commandName);
-
+        
         var dependencyFields = AjaxHelper.ParseDependencyPath(logger, absoluteUrl, method, commandName);
+        this.data = DataSanitizer.sanitizeUrl(logger, commandName) || dependencyFields.data; // get a value from hosturl if commandName not available
         this.target = dependencyFields.target;
         this.name = dependencyFields.name;
 
