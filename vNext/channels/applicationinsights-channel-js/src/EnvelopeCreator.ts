@@ -217,8 +217,8 @@ export class DependencyEnvelopeCreator extends EnvelopeCreator {
                 _InternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
         }
 
-        let customMeasurements = {};
-        let customProperties = {};
+        let customMeasurements = telemetryItem.baseData.measurements || {};
+        let customProperties = telemetryItem.baseData.properties || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
         let bd = telemetryItem.baseData as IDependencyTelemetry;
         if (CoreUtils.isNullOrUndefined(bd)) {
@@ -303,7 +303,9 @@ export class MetricEnvelopeCreator extends EnvelopeCreator {
                 _InternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
         }
 
+        let props = telemetryItem.baseData.properties || {};
         let customProperties = EnvelopeCreator.extractProperties(telemetryItem.data);
+        customProperties = { ...props, ...customProperties};
         let name = telemetryItem.baseData.name;
         let average = telemetryItem.baseData.average;
         let sampleCount = telemetryItem.baseData.sampleCount;
@@ -406,7 +408,7 @@ export class TraceEnvelopeCreator extends EnvelopeCreator {
         }
 
         let message = telemetryItem.baseData.message;
-        let severityLevel = telemetryItem.baseData.severityLevel;
+        let severityLevel = telemetryItem.baseData.severityLevel;        
         let customProperties = EnvelopeCreator.extractProperties(telemetryItem.data);
         const props = {...customProperties, ...telemetryItem.baseData.properties};
         let baseData = new Trace(logger, message, severityLevel, props);

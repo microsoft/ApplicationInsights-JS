@@ -258,7 +258,7 @@ export class SenderTests extends TestClass {
                     baseType: "RemoteDependencyData",
                     baseData: {
                         id: 'some id',
-                        name: "/test/name",
+                        name: "Some name given",
                         success: true,
                         responseCode: 200,
                         duration: 123,
@@ -299,11 +299,11 @@ export class SenderTests extends TestClass {
 
                 // Assert baseData
                 Assert.ok(baseData.name);
-                Assert.equal("/test/name", baseData.data);
+                Assert.equal("Some name given", baseData.data);
                 Assert.equal("some id", baseData.id);
                 Assert.equal(true, baseData.success);
                 Assert.equal(200, baseData.resultCode);
-                Assert.equal("GET /test/name", baseData.name);
+                Assert.equal("Some name given", baseData.name);
                 Assert.equal("example.com", baseData.target);
 
                 // Assert ver
@@ -332,6 +332,53 @@ export class SenderTests extends TestClass {
 
                 // Assert timestamp
                 Assert.ok(appInsightsEnvelope.time);
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: When name is not provided, it is obtained from hostname",
+            test: () => {
+                // setup
+                let inputEnvelope: ITelemetryItem = {
+                    name: "test",
+                    time: new Date("2018-06-12").toISOString(),
+                    iKey: "iKey",
+                    ext: {
+                        "user" : {
+                            "localId": "TestId",
+                            "authId": "AuthenticatedId",
+                            "id": "TestId"
+                        }
+                    },
+                    tags: [{"ai.user.accountId": "TestAccountId"},
+                           {"ai.location.ip": "10.22.8.2"}],
+                    baseType: "RemoteDependencyData",
+                    baseData: {
+                        id: 'some id',
+                        success: true,
+                        responseCode: 200,
+                        duration: 123,
+                        type: 'Fetch',
+                        data: 'some data',
+                        target: 'https://example.com/test/name'
+                    },
+                    data: {
+                        property1: "val1",
+                        property2: "val2",
+                        measurement1: 50.0,
+                        measurement2: 1.3
+                    }
+
+                }
+
+                // act
+                let appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+                let { baseData } = appInsightsEnvelope.data;
+
+                // Assert baseData
+                Assert.ok(baseData.name);
+                Assert.equal("GET /test/name", baseData.name); // retrieved from target 
+                Assert.equal("/test/name", baseData.data);
             }
         });
 

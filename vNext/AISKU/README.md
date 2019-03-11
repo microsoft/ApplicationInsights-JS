@@ -3,7 +3,7 @@
 	description="Reference doc"
 	services="application-insights"
     documentationCenter=".net"
-	authors="markwolff"/>
+/>
 
 <tags
 	ms.service="application-insights"
@@ -41,26 +41,24 @@
 ### Setup (NPM only, ignore if using Snippet)
 ```js
 import { ApplicationInsights } from '@microsoft/applicationinsights-web'
-```
 
-```js
+const customPlugin = new CustomPlugin();
 const appInsights = new ApplicationInsights({ config: {
-  instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
-  /* ...Other Configuration Options... */
+	instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+	extensions: [customPlugin],
+/* ...Other Configuration Options... */
 }});
-appInsights.loadAppInsights();
 ```
 
 ### Snippet Setup (Ignore if using NPM)
 If your app does not use NPM, you can directly instrument your webpages with Application Insights by pasting this snippet at the top of each your pages. Preferably, it should be the first script in your `<head>` section so that it can monitor any potential issues with all of your dependencies.
 ```html
 <script type="text/javascript">
-var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){t[e]=function(){var n=arguments;t.queue.push(function(){t[e].apply(t,n)})}}var t={config:e};t.initialize=!0;var i=document,a=window;setTimeout(function(){var n=i.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/next/ai.2.min.js",i.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{t.cookie=i.cookie}catch(e){}t.queue=[],t.version=2;
-for(var r=["Event","PageView","Exception","Trace","DependencyData","Metric","PageViewPerformance"];r.length;)n("track"+r.pop());n("startTrackPage"),n("stopTrackPage");var o="Track"+r[0];
-if(n("start"+o),n("stop"+o),!(!0===e.disableExceptionTracking||e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!0===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking)){n("_"+(r="onerror"));var c=a[r];a[r]=function(e,n,i,a,o){var s=c&&c(e,n,i,a,o);return!0!==s&&t["_"+r]({message:e,url:n,lineNumber:i,columnNumber:a,error:o}),s},e.autoExceptionInstrumented=!0}return t}
-({
-	instrumentationKey:"INSTRUMENTATION_KEY"
-});if(window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length){var pageViewItem={name:document.title?document.title:"",uri:document.URL?document.URL:""};aisdk.trackPageView(pageViewItem)}
+var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){i[e]=function(){var n=arguments;i.queue.push(function(){i[e].apply(i,n)})}}var i={config:e};i.initialize=!0;var a=document,t=window;setTimeout(function(){var n=a.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/next/ai.2.min.js",a.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{i.cookie=a.cookie}catch(e){}i.queue=[],i.version=2;for(var r=["Event","PageView","Exception","Trace","DependencyData","Metric","PageViewPerformance"];r.length;)n("track"+r.pop());n("startTrackPage"),n("stopTrackPage");var o="Track"+r[0];if(n("start"+o),n("stop"+o),!(!0===e.disableExceptionTracking||e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!0===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking)){n("_"+(r="onerror"));var s=t[r];t[r]=function(e,n,a,t,o){var c=s&&s(e,n,a,t,o);return!0!==c&&i["_"+r]({message:e,url:n,lineNumber:a,columnNumber:t,error:o}),c},e.autoExceptionInstrumented=!0}return i}
+(
+	{instrumentationKey:"INSTRUMENTATION_KEY"}
+);
+window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length&&aisdk.trackPageView();
 </script>
 ```
 
@@ -157,7 +155,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 
 ## Examples
 
-For runnable examples, see [Application Insights Javascript SDK samples](https://github.com/Azure-Samples?utf8=%E2%9C%93&q=application+insights+sdk&type=&language=)
+For runnable examples, see [Application Insights Javascript SDK Samples](https://github.com/Azure-Samples?utf8=%E2%9C%93&q=application+insights+sdk&type=&language=)
 
 ## Application Insights Web Basic
 
@@ -166,6 +164,7 @@ For a lightweight experience, you can instead install the basic version of Appli
 npm i --save @microsoft/applicationinsights-web-basic
 ```
 This version comes with the bare minimum amount of features and functionalities and relies on you to build it up as you see fit. For example, it performs no auto-collection (uncaught exceptions, ajax, etc). The APIs to send certain telemetry types, like `trackTrace`, `trackException`, etc, are not included in this version, so you will need to provide your own wrapper. The only api that is available is `track`.
+[Sample](https://github.com/Azure-Samples/applicationinsights-web-sample1/blob/master/testlightsku.html)
 
 
 ## Upgrading from the old Version of Application Insights
@@ -185,12 +184,38 @@ If you are using the current application insights PRODUCTION SDK (1.0.20) and wa
 	Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key.
 ```ts
 appInsights.downloadAndSetup({
-	instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx",
-	url: "https://az416426.vo.msecnd.net/beta/ai.2.min.js"
+    instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx",
+    url: "https://az416426.vo.msecnd.net/beta/ai.2.min.js"
 });
 ```
-
 Test in internal environment to verify monitoring telemetry is working as expected. If all works, please update your api signatures appropriately to SDK V2 version and deploy in your production environments.
+
+## Build a new extension for the SDK
+The beta SDK supports the ability to include multiple extensions at runtime. In order to create a new extension, please implement the following interface:
+
+[ITelemetryPlugin](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/vNext/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts)
+
+On initialization, config.extensions accepts an array of ITelemetryPlugin objects. These are hooked up and ITelemetryPlugin.processTelemetry() is chained based on priority of these plugins.
+Please note that higher the priority, the later your processing code will be invoked. The SDK supports a plugin model and channels can also be plugged in similarly (advanced scenario).
+Target scenarios for creating a brand new extension is to share a usage scenario that benefits multiple customers. Please follow guidelines 
+
+Here is the priority ranges available:
+- Regular extension priority can be between 201 to 499.
+- Priorty range < 201 is reserved.
+- Priority range > 1000 is for channels (advanced scenario)
+
+Usage:
+
+```ts
+const customPlugin = new CustomPlugin();
+const appInsights = new ApplicationInsights({ config: {
+	instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+	extensions: [customPlugin],
+	// Other Configuration Options...
+}});
+```
+
+ITelemetryPlugin has a simpler base type IPlugin that you can instantiate for initialization purposes when SDK loads.
 
 ## Build & Test this repo
 

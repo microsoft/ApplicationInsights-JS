@@ -36,7 +36,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     private _context: ITelemetryContext;
 
     constructor() {
-        this.currentWindowHost = window && window.location.host && window.location.host.toLowerCase();
+        this.currentWindowHost = window && window.location && window.location.host && window.location.host.toLowerCase();
         this.initialized = false;
         this._fetchInitialized = false;
     }

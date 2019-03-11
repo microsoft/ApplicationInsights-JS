@@ -657,29 +657,33 @@ export class CorrelationIdHelper {
 }
 
 export class AjaxHelper {
-    public static ParseDependencyPath(logger: IDiagnosticLogger, absoluteUrl: string, method: string, pathName: string) {
-        var target, name;
+    public static ParseDependencyPath(logger: IDiagnosticLogger, absoluteUrl: string, method: string, commandName: string) {
+        let target, name = commandName, data = commandName;
+
         if (absoluteUrl && absoluteUrl.length > 0) {
             var parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)
             target = parsedUrl.host;
-            if (parsedUrl.pathname != null) {
-                var pathName: string = (parsedUrl.pathname.length === 0) ? "/" : parsedUrl.pathname;
-                if (pathName.charAt(0) !== '/') {
-                    pathName = "/" + pathName;
+                if (!name) {
+                    if (parsedUrl.pathname != null) {
+                        let pathName: string = (parsedUrl.pathname.length === 0) ? "/" : parsedUrl.pathname;
+                        if (pathName.charAt(0) !== '/') {
+                            pathName = "/" + pathName;
+                        }
+                        data = parsedUrl.pathname;
+                        name = DataSanitizer.sanitizeString(logger, method ? method + " " + pathName : pathName);
+                    } else {
+                        name = DataSanitizer.sanitizeString(logger, absoluteUrl);
+                    }
                 }
-
-                name = DataSanitizer.sanitizeString(logger, method ? method + " " + pathName : pathName);
-            } else {
-                name = DataSanitizer.sanitizeString(logger, absoluteUrl);
-            }
         } else {
-            target = pathName;
-            name = pathName;
+            target = commandName;
+            name = commandName;
         }
 
         return {
             target: target,
-            name: name
+            name: name,
+            data: data
         };
     }
 }
