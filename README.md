@@ -10,6 +10,8 @@
 To use this SDK, you'll need a subscription to [Microsoft Azure](https://azure.com). Application Insights has a free subscription option.
 In the [Azure Preview Portal](https://portal.azure.com), create new or open an existing Application Insights resource.
 
+Full documentation for beta version of next SDK release is [here](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/vNext/AISKU/README.md)  . Please try it out and provide feedback/log any issues.
+
 ## Initializing Application Insights JS SDK script
 There are several ways to initialize Application Insights.
 
