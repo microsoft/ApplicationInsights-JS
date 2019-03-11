@@ -55,7 +55,11 @@ appInsights.loadAppInsights();
 If your app does not use NPM, you can directly instrument your webpages with Application Insights by pasting this snippet at the top of each your pages. Preferably, it should be the first script in your `<head>` section so that it can monitor any potential issues with all of your dependencies.
 ```html
 <script type="text/javascript">
-var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){i[e]=function(){var n=arguments;i.queue.push(function(){i[e].apply(i,n)})}}var i={config:e};i.initialize=!0;var a=document,t=window;setTimeout(function(){var n=a.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/next/ai.2.min.js",a.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{i.cookie=a.cookie}catch(e){}i.queue=[],i.version=2;for(var r=["Event","PageView","Exception","Trace","DependencyData","Metric","PageViewPerformance"];r.length;)n("track"+r.pop());n("startTrackPage"),n("stopTrackPage");var o="Track"+r[0];if(n("start"+o),n("stop"+o),!(!0===e.disableExceptionTracking||e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!0===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking)){n("_"+(r="onerror"));var s=t[r];t[r]=function(e,n,a,t,o){var c=s&&s(e,n,a,t,o);return!0!==c&&i["_"+r]({message:e,url:n,lineNumber:a,columnNumber:t,error:o}),c},e.autoExceptionInstrumented=!0}return i}({instrumentationKey:"INSTRUMENTATION_KEY"});window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length&&aisdk.trackPageView();
+var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){i[e]=function(){var n=arguments;i.queue.push(function(){i[e].apply(i,n)})}}var i={config:e};i.initialize=!0;var a=document,t=window;setTimeout(function(){var n=a.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/next/ai.2.min.js",a.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{i.cookie=a.cookie}catch(e){}i.queue=[],i.version=2;for(var r=["Event","PageView","Exception","Trace","DependencyData","Metric","PageViewPerformance"];r.length;)n("track"+r.pop());n("startTrackPage"),n("stopTrackPage");var o="Track"+r[0];if(n("start"+o),n("stop"+o),!(!0===e.disableExceptionTracking||e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!0===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking)){n("_"+(r="onerror"));var s=t[r];t[r]=function(e,n,a,t,o){var c=s&&s(e,n,a,t,o);return!0!==c&&i["_"+r]({message:e,url:n,lineNumber:a,columnNumber:t,error:o}),c},e.autoExceptionInstrumented=!0}return i}
+(
+	{instrumentationKey:"INSTRUMENTATION_KEY"}
+);
+window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length&&aisdk.trackPageView();
 </script>
 ```
 
@@ -181,33 +185,36 @@ If you are using the current application insights PRODUCTION SDK (1.0.20) and wa
 	Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key.
 ```ts
 appInsights.downloadAndSetup({
-	instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx",
-	url: "https://az416426.vo.msecnd.net/beta/ai.2.min.js"
+    instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx",
+    url: "https://az416426.vo.msecnd.net/beta/ai.2.min.js"
 });
 ```
 Test in internal environment to verify monitoring telemetry is working as expected. If all works, please update your api signatures appropriately to SDK V2 version and deploy in your production environments.
 
-## Build a new extension for the SDK:
+## Build a new extension for the SDK
 The beta SDK supports the ability to include multiple extensions at runtime. In order to create a new extension, please implement the following interface:
 
-	> ITelemetryPlugin
+	- [ITelemetryPlugin](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/vNext/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts)
 
 On initialization, config.extensions accepts an array of ITelemetryPlugin objects. These are hooked up and ITelemetryPlugin.processTelemetry() is chained based on priority of these plugins.
 Please note that higher the priority, the later your processing code will be invoked. The SDK supports a plugin model and channels can also be plugged in similarly (advanced scenario).
 Target scenarios for creating a brand new extension is to share a usage scenario that benefits multiple customers. Please follow guidelines 
 
 Here is the priority ranges available:
-	> Regular extension priority can be between 201 to 499.
-	> Priorty range < 201 is reserved.
-	> Priority range > 1000 is for channels (advanced scenario)
+	- Regular extension priority can be between 201 to 499.
+	- Priorty range < 201 is reserved.
+	- Priority range > 1000 is for channels (advanced scenario)
 
 Usage:
-const customPlugin = new CustomPlugin();
-const appInsights = new ApplicationInsights({ config: {
-  instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
-  extensions: [customPlugin]
-  /* ...Other Configuration Options... */
-}});
+
+	```
+	const customPlugin = new CustomPlugin();
+	const appInsights = new ApplicationInsights({ config: {
+		instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+		extensions: [customPlugin],
+	/* ...Other Configuration Options... */
+	}});
+	```
 
 ITelemetryPlugin has a simpler base type IPlugin that you can instantiate for initialization purposes when SDK loads.
 
