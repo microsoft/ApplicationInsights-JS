@@ -257,7 +257,8 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 duration: xhr.ajaxData.ajaxTotalDuration,
                 success:(+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
                 responseCode: +xhr.ajaxData.status,
-                method: xhr.ajaxData.method
+                method: xhr.ajaxData.method,
+                time: xhr.ajaxData.requestSentTime
             };
 
             // enrich dependency target with correlation context from the server
@@ -493,7 +494,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                         responseFinishedTime: ajaxData.responseFinishedTime
                     });
             } else {
-                let dependency: IDependencyTelemetry = {
+                let dependency = <IDependencyTelemetry>{
                     id: ajaxData.id,
                     target: ajaxData.getAbsoluteUrl(),
                     name: ajaxData.getPathName(),
@@ -501,6 +502,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     duration: ajaxData.ajaxTotalDuration,
                     success: response.status >= 200 && response.status < 400,
                     responseCode: response.status,
+                    time: ajaxData.requestSentTime,
                     properties: { HttpMethod: ajaxData.method }
                 };
 
@@ -544,7 +546,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                         responseFinishedTime: ajaxData.responseFinishedTime
                     });
             } else {
-                let dependency: IDependencyTelemetry = {
+                let dependency= <IDependencyTelemetry>{
                     id: ajaxData.id,
                     target: ajaxData.getAbsoluteUrl(),
                     name: ajaxData.getPathName(),
@@ -552,6 +554,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     duration: ajaxData.ajaxTotalDuration,
                     success: false,
                     responseCode: 0,
+                    time: ajaxData.requestSentTime,
                     properties: { HttpMethod: ajaxData.method }
                 };
 
@@ -639,7 +642,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             if (this._config.disableFetchTracking === false) {
                 this.instrumentFetch();
             }
-            
+
             if (extensions.length > 0 && extensions) {
                 const propExt = <IPropertiesPlugin>extensions[PropertiesPluginIdentifier];
                 if (propExt) {

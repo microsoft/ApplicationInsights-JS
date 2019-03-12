@@ -1,6 +1,6 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 import { AjaxMonitor } from "../../src/ajax";
-import { RemoteDependencyData, DisabledPropertyName, IConfig } from "@microsoft/applicationinsights-common";
+import { RemoteDependencyData, DisabledPropertyName, IConfig, DateTimeUtils, IDependencyTelemetry } from "@microsoft/applicationinsights-common";
 import { AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls } from "@microsoft/applicationinsights-core-js";
 
 export class AjaxTests extends TestClass {
@@ -83,6 +83,32 @@ export class AjaxTests extends TestClass {
 
                 // Assert
                 Assert.ok(fetchSpy.notCalled, "createFetchRecord called once after using fetch");
+            }
+        });
+
+        this.testCase({
+            name: "Fetch: fetch creates telemetry item with time == request start",
+            test: () => {
+                if (typeof fetch === 'undefined') {
+                    Assert.ok(true);
+                    return;
+                }
+
+                let ajaxMonitor = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [ajaxMonitor, new TestChannelPlugin()]);
+                const trackStub = this.sandbox.stub(ajaxMonitor, "trackDependencyDataInternal");
+
+                // Act
+                fetch("https://httpbin.org/status/200");
+                const now = DateTimeUtils.Now();
+
+                // Assert
+                Assert.ok(trackStub.calledOnce);
+
+                const calledWithArgs: IDependencyTelemetry = trackStub.args[0][0];
+                Assert.equal(now, (<any>calledWithArgs).time);
             }
         });
 

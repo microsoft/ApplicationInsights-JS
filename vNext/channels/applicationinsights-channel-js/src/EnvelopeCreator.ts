@@ -57,6 +57,9 @@ export abstract class EnvelopeCreator {
     protected static createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, telemetryItem: ITelemetryItem, data: Data<T>): IEnvelope {
         let envelope = new Envelope(logger, data, envelopeType);
         envelope.iKey = telemetryItem.iKey;
+        if (data.baseData && (data.baseData as any).time) {
+            envelope.time = (data.baseData as any).time;
+        }
         let iKeyNoDashes = telemetryItem.iKey.replace(/-/g, "");
         envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
 
@@ -176,7 +179,7 @@ export abstract class EnvelopeCreator {
             if (item.ext.trace.name) {
                 env.tags[CtxTagKeys.operationName] = item.ext.trace.name;
             }
-            
+
             if (item.ext.trace.traceID) {
                 env.tags[CtxTagKeys.operationId] = item.ext.trace.traceID;
             }
@@ -190,7 +193,7 @@ export abstract class EnvelopeCreator {
         //     "ext": {  "cloud": {
         //          "role": "WATSON3",
         //          "roleInstance": "CO4AEAP00000260"
-        //      }, 
+        //      },
         //      "device": {}, "correlation": {} },
         //      "tags": [
         //        { "amazon.region" : "east2" },
@@ -250,7 +253,7 @@ export class EventEnvelopeCreator extends EnvelopeCreator {
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
             }
-            
+
         let customProperties = {};
         let customMeasurements = {};
         if (telemetryItem.baseType !== Event.dataType) {
@@ -408,7 +411,7 @@ export class TraceEnvelopeCreator extends EnvelopeCreator {
         }
 
         let message = telemetryItem.baseData.message;
-        let severityLevel = telemetryItem.baseData.severityLevel;        
+        let severityLevel = telemetryItem.baseData.severityLevel;
         let customProperties = EnvelopeCreator.extractProperties(telemetryItem.data);
         const props = {...customProperties, ...telemetryItem.baseData.properties};
         let baseData = new Trace(logger, message, severityLevel, props);
