@@ -1,8 +1,8 @@
 import {
-    IEnvelope, Data, Envelope, SampleRate,
+    IEnvelope, Data, Envelope,
     RemoteDependencyData, Event, Exception,
     Metric, PageView, Trace, PageViewPerformance, IDependencyTelemetry,
-    IPageViewPerformanceTelemetry, IPageViewTelemetry, CtxTagKeys,
+    IPageViewPerformanceTelemetry, CtxTagKeys,
     HttpMethod, IPageViewTelemetryInternal, IWeb
 } from '@microsoft/applicationinsights-common';
 import {
@@ -134,7 +134,7 @@ export abstract class EnvelopeCreator {
             env.data.baseData.properties = env.data.baseData.properties || {};
 
             if (web.domain) {
-                env.data.baseData.properties['domain'] =web.domain;
+                env.data.baseData.properties['domain'] = web.domain;
             }
 
             if (web.isManual) {
@@ -176,7 +176,7 @@ export abstract class EnvelopeCreator {
             if (item.ext.trace.name) {
                 env.tags[CtxTagKeys.operationName] = item.ext.trace.name;
             }
-            
+
             if (item.ext.trace.traceID) {
                 env.tags[CtxTagKeys.operationId] = item.ext.trace.traceID;
             }
@@ -202,7 +202,7 @@ export abstract class EnvelopeCreator {
         item.tags.forEach(tg => {
             tgs = { ...tgs, ...tg };
         });
-        env.tags = { ...env.tags, ...tgs};
+        env.tags = { ...env.tags, ...tgs };
     }
 }
 
@@ -249,8 +249,8 @@ export class EventEnvelopeCreator extends EnvelopeCreator {
             this._logger.throwInternal(
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
-            }
-            
+        }
+
         let customProperties = {};
         let customMeasurements = {};
         if (telemetryItem.baseType !== Event.dataType) {
@@ -305,7 +305,7 @@ export class MetricEnvelopeCreator extends EnvelopeCreator {
 
         let props = telemetryItem.baseData.properties || {};
         let customProperties = EnvelopeCreator.extractProperties(telemetryItem.data);
-        customProperties = { ...props, ...customProperties};
+        customProperties = { ...props, ...customProperties };
         let name = telemetryItem.baseData.name;
         let average = telemetryItem.baseData.average;
         let sampleCount = telemetryItem.baseData.sampleCount;
@@ -387,7 +387,7 @@ export class PageViewPerformanceEnvelopeCreator extends EnvelopeCreator {
 
         const bd = telemetryItem.baseData as IPageViewPerformanceTelemetry;
         let name = bd.name;
-        let url = bd.url;
+        let url = bd.uri;
         let properties = bd.properties;
         let measurements = bd.measurements;
         let baseData = new PageViewPerformance(logger, name, url, undefined, properties, measurements);
@@ -408,9 +408,9 @@ export class TraceEnvelopeCreator extends EnvelopeCreator {
         }
 
         let message = telemetryItem.baseData.message;
-        let severityLevel = telemetryItem.baseData.severityLevel;        
+        let severityLevel = telemetryItem.baseData.severityLevel;
         let customProperties = EnvelopeCreator.extractProperties(telemetryItem.data);
-        const props = {...customProperties, ...telemetryItem.baseData.properties};
+        const props = { ...customProperties, ...telemetryItem.baseData.properties };
         let baseData = new Trace(logger, message, severityLevel, props);
         let data = new Data<Trace>(Trace.dataType, baseData);
         return EnvelopeCreator.createEnvelope<Trace>(logger, Trace.envelopeType, telemetryItem, data);

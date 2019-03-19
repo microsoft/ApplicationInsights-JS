@@ -5,9 +5,10 @@
 
 import {
     IConfig, Util, PageViewPerformance, IAppInsights, PageView, RemoteDependencyData, Event, IEventTelemetry,
-    TelemetryItemCreator, Data, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
+    TelemetryItemCreator, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
-    IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, ConfigurationManager
+    IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
+    ConfigurationManager, DateTimeUtils
 } from "@microsoft/applicationinsights-common";
 
 import {
@@ -17,6 +18,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
+import { PageViewPerformanceManager } from './Telemetry/PageViewPerformanceManager';
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 
 "use strict";
@@ -39,8 +41,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     private _eventTracking: Timing;
     private _pageTracking: Timing;
     private _telemetryInitializers: { (envelope: ITelemetryItem): boolean | void; }[]; // Internal telemetry initializers.
-    private _pageViewManager: PageViewManager;
-    private _pageVisitTimeManager: PageVisitTimeManager;
+    protected _pageViewManager: PageViewManager;
+    protected _pageViewPerformanceManager: PageViewPerformanceManager;
+    protected _pageVisitTimeManager: PageVisitTimeManager;
 
     // Counts number of trackAjax invokations.
     // By default we only monitor X ajax call per view to avoid too much load.
@@ -86,11 +89,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                         break;
                     }
                 } catch (e) {
-                        // log error but dont stop executing rest of the telemetry initializers
-                        // doNotSendItem = true;
-                        this._logger.throwInternal(
-                            LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
-                            { exception: Util.dump(e) }, true);
+                    // log error but dont stop executing rest of the telemetry initializers
+                    // doNotSendItem = true;
+                    this._logger.throwInternal(
+                        LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) }, true);
                 }
             }
         }
@@ -112,7 +115,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 Event.envelopeType,
                 this._logger,
                 customProperties
-             );
+            );
 
             this._setTelemetryNameAndIKey(telemetryItem);
             this.core.track(telemetryItem);
@@ -262,12 +265,14 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param pageViewPerformance
      * @param properties
      */
-    public sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance, properties?: { [key: string]: any }) {
-        let telemetryItem = TelemetryItemCreator.create<PageViewPerformance>(pageViewPerformance,
+    public sendPageViewPerformanceInternal(pageViewPerformance: IPageViewPerformanceTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
+        let telemetryItem = TelemetryItemCreator.create<IPageViewPerformanceTelemetryInternal>(
+            pageViewPerformance,
             PageViewPerformance.dataType,
             PageViewPerformance.envelopeType,
             this._logger,
-            properties);
+            properties,
+            systemProperties);
 
         // set instrumentation key
         this._setTelemetryNameAndIKey(telemetryItem);
@@ -281,13 +286,16 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param customProperties
      */
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry, customProperties?: ICustomProperties): void {
-        const item: PageViewPerformance = new PageViewPerformance(this.core.logger,
-            pageViewPerformance.name,
-            pageViewPerformance.url,
-            undefined
-        );
-
-        this.sendPageViewPerformanceInternal(item, customProperties);
+        try {
+            this._pageViewPerformanceManager.populatePageViewPerformanceEvent(pageViewPerformance);
+            this.sendPageViewPerformanceInternal(pageViewPerformance, customProperties);
+        } catch (e) {
+            this._logger.throwInternal(
+                LoggingSeverity.CRITICAL,
+                _InternalMessageId.TrackPVFailed,
+                "trackPageViewPerformance failed, page view will not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) });
+        }
     }
 
     /**
@@ -346,6 +354,28 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     }
 
     /**
+    * @ignore INTERNAL ONLY
+    * @param exception
+    * @param properties
+    * @param systemProperties
+    */
+    public sendExceptionInternal(exception: IExceptionTelemetry, customProperties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
+        let baseData = new Exception(this._logger, exception.error, exception.properties, exception.measurements, exception.severityLevel)
+        let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<Exception>(
+            baseData,
+            Exception.dataType,
+            Exception.envelopeType,
+            this._logger,
+            customProperties,
+            systemProperties
+        );
+
+        this._setTelemetryNameAndIKey(telemetryItem);
+
+        this.core.track(telemetryItem);
+    }
+
+    /**
      * Log an exception you have caught.
      *
      * @param {IExceptionTelemetry} exception   Object which contains exception to be sent
@@ -356,18 +386,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      */
     public trackException(exception: IExceptionTelemetry, customProperties?: ICustomProperties): void {
         try {
-            let baseData = new Exception(this._logger, exception.error, exception.properties, exception.measurements, exception.severityLevel)
-            let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<Exception>(
-                baseData,
-                Exception.dataType,
-                Exception.envelopeType,
-                this._logger,
-                customProperties
-            );
-
-            this._setTelemetryNameAndIKey(telemetryItem);
-
-            this.core.track(telemetryItem);
+            this.sendExceptionInternal(exception, customProperties);
         } catch (e) {
             this._logger.throwInternal(
                 LoggingSeverity.CRITICAL,
@@ -399,7 +418,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                     exception.error = new Error(exception.message);
                     exception.error.stack = stack;
                 }
-                this.trackException({error: exception.error, severityLevel: SeverityLevel.Error}, properties);
+                this.trackException({ error: exception.error, severityLevel: SeverityLevel.Error }, properties);
             }
         } catch (e) {
             const errorString = exception.error ?
@@ -478,7 +497,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             appId: () => this.config.appId || config.appId
         }
 
-        this._pageViewManager = new PageViewManager(this, this.config.overridePageViewDuration, this.core);
+        this._pageViewPerformanceManager = new PageViewPerformanceManager(this.core);
+        this._pageViewManager = new PageViewManager(this, this.config.overridePageViewDuration, this.core, this._pageViewPerformanceManager);
 
         this._telemetryInitializers = [];
         this._addDefaultTelemetryInitializers(configGetters);
@@ -521,7 +541,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             const onerror = "onerror";
             const originalOnError = window[onerror];
             const instance: IAppInsights = this;
-            window.onerror = function(message, url, lineNumber, columnNumber, error) {
+            window.onerror = function (message, url, lineNumber, columnNumber, error) {
                 const handled = originalOnError && <any>originalOnError(message, url, lineNumber, columnNumber, error);
                 if (handled !== true) { // handled could be typeof function
                     instance._onerror({
@@ -580,7 +600,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             Exception.dataType,
             Exception.envelopeType,
             this._logger,
-            {url: url}
+            { url: url }
         );
 
         this.core.track(telemetryItem);
@@ -591,7 +611,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         telemetryItem.iKey = this._globalconfig.instrumentationKey;
 
         var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
-        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
+        telemetryItem.name = telemetryItem.name || telemetryItem.name.replace("{0}", iKeyNoDashes);
     }
 }
 
@@ -621,7 +641,7 @@ class Timing {
         this._events[name] = +new Date;
     }
 
-    public stop(name: string, url: string, properties?: {[key: string]: string}, measurements?: { [key: string]: number }) {
+    public stop(name: string, url: string, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) {
         var start = this._events[name];
         if (isNaN(start)) {
             this._logger.throwInternal(
@@ -629,7 +649,7 @@ class Timing {
                 { name: this._name, key: name }, true);
         } else {
             var end = +new Date;
-            var duration = PageViewPerformance.getDuration(start, end);
+            var duration = DateTimeUtils.GetDuration(start, end);
             this.action(name, url, duration, properties, measurements);
         }
 
