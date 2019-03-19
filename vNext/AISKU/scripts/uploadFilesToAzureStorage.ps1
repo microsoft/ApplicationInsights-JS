@@ -64,15 +64,15 @@ if (Test-Path $releaseFromDir) {
     exit;
 }
 
-New-Item -ItemType directory -Path $releaseFromDir | Out-Null
-Copy-Item ($jssdkMinDir + "ai.1.js") (Join-Path $releaseFromDir -ChildPath "ai.1.js")
-Copy-Item ($jssdkMinDir + "ai.1.js") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".js"))
-Copy-Item ($jssdkMinDir + "ai.1.js.map") (Join-Path $releaseFromDir -ChildPath "ai.1.js.map")
-Copy-Item ($jssdkMinDir + "ai.1.js.map") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".js.map"))
-Copy-Item ($jssdkMinDir + "ai.1.min.js") (Join-Path $releaseFromDir -ChildPath "ai.1.min.js")
-Copy-Item ($jssdkMinDir + "ai.1.min.js") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".min.js"))
-Copy-Item ($jssdkMinDir + "ai.1.min.js.map") (Join-Path $releaseFromDir -ChildPath "ai.1.min.js.map")
-Copy-Item ($jssdkMinDir + "ai.1.min.js.map") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".min.js.map"))
+New-Item -Force -ItemType directory -Path $releaseFromDir | Out-Null
+Copy-Item ($jssdkMinDir + "ai.2.js") (Join-Path $releaseFromDir -ChildPath "ai.2.js")
+Copy-Item ($jssdkMinDir + "ai.2.js") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".js"))
+Copy-Item ($jssdkMinDir + "ai.2.js.map") (Join-Path $releaseFromDir -ChildPath "ai.2.js.map")
+Copy-Item ($jssdkMinDir + "ai.2.js.map") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".js.map"))
+Copy-Item ($jssdkMinDir + "ai.2.min.js") (Join-Path $releaseFromDir -ChildPath "ai.2.min.js")
+Copy-Item ($jssdkMinDir + "ai.2.min.js") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".min.js"))
+Copy-Item ($jssdkMinDir + "ai.2.min.js.map") (Join-Path $releaseFromDir -ChildPath "ai.2.min.js.map")
+Copy-Item ($jssdkMinDir + "ai.2.min.js.map") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".min.js.map"))
 
 Write-Host "Please review files in $releaseFromDir"
 Write-Host "Files will be uploaded to Azure storage! Press any key to continue..."

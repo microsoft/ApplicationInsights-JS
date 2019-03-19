@@ -12,7 +12,7 @@
         "browser performance monitoring",
         "web analytics"
     ],
-    "main": "dist/applicationinsights-core-js.min.js",
+    "main": "dist/applicationinsights-core-js.js",
     "module": "dist-esm/applicationinsights-core-js.js",
     "types": "types/applicationinsights-core-js.d.ts",
     "browser": "browser/applicationinsights-core-js.min.js",
