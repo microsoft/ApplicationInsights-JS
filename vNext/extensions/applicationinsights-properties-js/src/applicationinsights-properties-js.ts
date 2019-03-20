@@ -6,4 +6,4 @@ import { TelemetryTrace } from "./Context/TelemetryTrace";
 import { TelemetryContext } from './TelemetryContext'
 import { ISessionConfig, Session, _SessionManager } from "./Context/Session";
 
-export { PropertiesPlugin, TelemetryTrace, TelemetryContext, User, Session, ISessionConfig, _SessionManager as SessionManager };
+export { PropertiesPlugin, TelemetryTrace, TelemetryContext, Session, ISessionConfig, _SessionManager as SessionManager };
