@@ -31,7 +31,7 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
     /**
      * Constructs a new instance of the PageEventTelemetry object
      */
-    constructor(logger: IDiagnosticLogger, name: string, url: string, unused: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }, id?: string) {
+    constructor(logger: IDiagnosticLogger, name: string, url: string, unused: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) {
         super();
         this.url = DataSanitizer.sanitizeUrl(logger, url);
         this.name = DataSanitizer.sanitizeString(logger, name) || Util.NotSpecified;

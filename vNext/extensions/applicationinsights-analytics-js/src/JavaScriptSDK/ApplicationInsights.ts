@@ -611,7 +611,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         telemetryItem.iKey = this._globalconfig.instrumentationKey;
 
         var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
-        telemetryItem.name = telemetryItem.name || telemetryItem.name.replace("{0}", iKeyNoDashes);
+        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
     }
 }
 

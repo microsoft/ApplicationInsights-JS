@@ -709,11 +709,11 @@ export class DateTimeUtils {
      * Gets duration between two timestamps
      */
     public static GetDuration = function (start: number, end: number): number {
-        var duration = undefined;
-        if (!(isNaN(start) || isNaN(end))) {
-            duration = Math.max(end - start, 0);
+        var result = null;
+        if (start !== 0 && end !== 0 && !CoreUtils.isNullOrUndefined(start) && !CoreUtils.isNullOrUndefined(end)) {
+            result = end - start;
         }
 
-        return duration;
+        return result;
     }
 }

@@ -6,7 +6,6 @@ import {
     IPlugin, IConfiguration
 } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "../src/JavaScriptSDK/ApplicationInsights";
-import { ITelemetryConfig } from "../src/JavaScriptSDK.Interfaces/ITelemetryConfig";
 
 export class ApplicationInsightsTests extends TestClass {
     public testInitialize() {
@@ -358,6 +357,7 @@ export class ApplicationInsightsTests extends TestClass {
                 var appInsights = new ApplicationInsights();
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
                 var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
+                this.clock.tick(1);
 
                 // act
                 appInsights.startTrackPage(testValues.name);
