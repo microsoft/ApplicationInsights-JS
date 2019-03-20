@@ -48,6 +48,7 @@ const appInsights = new ApplicationInsights({ config: {
 	extensions: [customPlugin],
 /* ...Other Configuration Options... */
 }});
+appInsights.loadAppInsights();
 ```
 
 ### Snippet Setup (Ignore if using NPM)
@@ -213,6 +214,7 @@ const appInsights = new ApplicationInsights({ config: {
 	extensions: [customPlugin],
 	// Other Configuration Options...
 }});
+appInsights.loadAppInsights();
 ```
 
 ITelemetryPlugin has a simpler base type IPlugin that you can instantiate for initialization purposes when SDK loads.
