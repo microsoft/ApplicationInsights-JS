@@ -5,18 +5,18 @@ export interface ISession {
     /**
     * The session ID.
     */
-    id: string;
+    id?: string;
 
     /**
      * The date at which this guid was genereated.
      * Per the spec the ID will be regenerated if more than acquisitionSpan milliseconds ellapse from this time.
      */
-    acquisitionDate: number;
+    acquisitionDate?: number;
 
     /**
      * The date at which this session ID was last reported.
      * This value should be updated whenever telemetry is sent using this ID.
      * Per the spec the ID will be regenerated if more than renewalSpan milliseconds elapse from this time with no activity.
      */
-    renewalDate: number;
+    renewalDate?: number;
 }
