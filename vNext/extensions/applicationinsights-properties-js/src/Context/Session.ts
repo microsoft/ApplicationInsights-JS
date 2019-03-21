@@ -3,14 +3,14 @@
 
 import { ISession } from '@microsoft/applicationinsights-common';
 import {
-    Util, DateTimeUtils 
+    Util, DateTimeUtils
 } from '@microsoft/applicationinsights-common';
 import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity, CoreUtils, DiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 
 export interface ISessionConfig {
-    sessionRenewalMs: () => number;
-    sessionExpirationMs: () => number;
-    cookieDomain: () => string;
+    sessionRenewalMs?: () => number;
+    sessionExpirationMs?: () => number;
+    cookieDomain?: () => string;
     namePrefix?: () => string;
 }
 
@@ -18,20 +18,20 @@ export class Session implements ISession {
     /**
      * The session ID.
      */
-    public id: string;
+    public id?: string;
 
     /**
      * The date at which this guid was genereated.
      * Per the spec the ID will be regenerated if more than acquisitionSpan milliseconds ellapse from this time.
      */
-    public acquisitionDate: number;
+    public acquisitionDate?: number;
 
     /**
      * The date at which this session ID was last reported.
      * This value should be updated whenever telemetry is sent using this ID.
      * Per the spec the ID will be regenerated if more than renewalSpan milliseconds elapse from this time with no activity.
      */
-    public renewalDate: number;
+    public renewalDate?: number;
 }
 
 export class _SessionManager {
@@ -84,7 +84,7 @@ export class _SessionManager {
 
         // renew if acquisitionSpan or renewalSpan has ellapsed
         if (acquisitionExpired || renewalExpired) {
-            // update automaticSession so session state has correct id                
+            // update automaticSession so session state has correct id
             this.renew();
         } else {
             // do not update the cookie more often than cookieUpdateInterval
