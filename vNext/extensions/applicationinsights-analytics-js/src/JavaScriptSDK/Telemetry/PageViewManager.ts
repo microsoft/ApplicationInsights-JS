@@ -2,17 +2,20 @@
 // Licensed under the MIT License.
 
 import {
-    PageViewPerformance, Util, IPageViewTelemetry, IPageViewTelemetryInternal
+    DateTimeUtils, Util, IPageViewTelemetry, IPageViewTelemetryInternal, IPageViewPerformanceTelemetryInternal
 } from '@microsoft/applicationinsights-common';
-import { IAppInsightsCore, CoreUtils, IDiagnosticLogger, LoggingSeverity,
-    _InternalMessageId, IChannelControls } from '@microsoft/applicationinsights-core-js';
+import {
+    IAppInsightsCore, CoreUtils, IDiagnosticLogger, LoggingSeverity,
+    _InternalMessageId, IChannelControls
+} from '@microsoft/applicationinsights-core-js';
+import { PageViewPerformanceManager } from './PageViewPerformanceManager';
 
 /**
 * Internal interface to pass appInsights object to subcomponents without coupling 
 */
 export interface IAppInsightsInternal {
-    sendPageViewInternal(pageViewItem: IPageViewTelemetryInternal, properties?: Object);
-    sendPageViewPerformanceInternal(pageViewPerformance: PageViewPerformance, properties?: Object);
+    sendPageViewInternal(pageViewItem: IPageViewTelemetryInternal, properties?: Object, systemProperties?: Object);
+    sendPageViewPerformanceInternal(pageViewPerformance: IPageViewPerformanceTelemetryInternal, properties?: Object, systemProperties?: Object);
 }
 
 /**
@@ -24,14 +27,16 @@ export class PageViewManager {
     private overridePageViewDuration: boolean = false;
 
     private appInsights: IAppInsightsInternal;
+    private _pageViewPerformanceManager: PageViewPerformanceManager;
     private _channel: () => IChannelControls[][];
     private _logger: IDiagnosticLogger;
 
     constructor(
         appInsights: IAppInsightsInternal,
-        overridePageViewDuration: boolean, core: IAppInsightsCore) {
+        overridePageViewDuration: boolean, core: IAppInsightsCore, pageViewPerformanceManager: PageViewPerformanceManager) {
         this.overridePageViewDuration = overridePageViewDuration;
         this.appInsights = appInsights;
+        this._pageViewPerformanceManager = pageViewPerformanceManager;
         if (core) {
             this._channel = () => <IChannelControls[][]>(core.getTransmissionControls());
             this._logger = core.logger;
@@ -63,12 +68,12 @@ export class PageViewManager {
         // case 1a. if performance timing is not supported by the browser, send the page view telemetry with the duration provided by the user. If the user
         // do not provide the duration, set duration to undefined
         // Also this is case 4
-        if (!PageViewPerformance.isPerformanceTimingSupported()) {
+        if (!this._pageViewPerformanceManager.isPerformanceTimingSupported()) {
             this.appInsights.sendPageViewInternal(
                 pageView,
                 customProperties
             );
-            this._channel().forEach(queues => {queues.forEach(q => q.flush(true))})
+            this._channel().forEach(queues => { queues.forEach(q => q.flush(true)) })
 
             // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
             this._logger.throwInternal(
@@ -83,9 +88,9 @@ export class PageViewManager {
         var customDuration = undefined;
 
         // if the performance timing is supported by the browser, calculate the custom duration
-        var start = PageViewPerformance.getPerformanceTiming().navigationStart;
-        customDuration = PageViewPerformance.getDuration(start, +new Date);
-        if (!PageViewPerformance.shouldCollectDuration(customDuration)) {
+        var start = this._pageViewPerformanceManager.getPerformanceTiming().navigationStart;
+        customDuration = DateTimeUtils.GetDuration(start, +new Date);
+        if (!this._pageViewPerformanceManager.shouldCollectDuration(customDuration)) {
             customDuration = undefined;
         }
 
@@ -102,7 +107,7 @@ export class PageViewManager {
                 if (!customProperties) {
                     customProperties = {};
                 }
-                
+
                 customProperties["duration"] = customDuration;
             }
             // case 2
@@ -110,7 +115,7 @@ export class PageViewManager {
                 pageView,
                 customProperties
             );
-            this._channel().forEach(queues => {queues.forEach(q => q.flush(true))})
+            this._channel().forEach(queues => { queues.forEach(q => q.flush(true)) })
             pageViewSent = true;
         }
 
@@ -121,21 +126,25 @@ export class PageViewManager {
         }
         var handle = setInterval((() => {
             try {
-                if (PageViewPerformance.isPerformanceTimingDataReady()) {
+                if (this._pageViewPerformanceManager.isPerformanceTimingDataReady()) {
                     clearInterval(handle);
-                    var pageViewPerformance = new PageViewPerformance(this._logger, name, uri, null);
+                    let pageViewPerformance: IPageViewPerformanceTelemetryInternal = {
+                        name: name,
+                        uri: uri
+                    };
+                    this._pageViewPerformanceManager.populatePageViewPerformanceEvent(pageViewPerformance);
 
-                    if (!pageViewPerformance.getIsValid() && !pageViewSent) {
+                    if (!pageViewPerformance.isValid && !pageViewSent) {
                         // If navigation timing gives invalid numbers, then go back to "override page view duration" mode.
                         // That's the best value we can get that makes sense.
                         customProperties["duration"] = customDuration;
                         this.appInsights.sendPageViewInternal(
                             pageView,
                             customProperties);
-                        this._channel().forEach(queues => {queues.forEach(q => q.flush(true))})
+                        this._channel().forEach(queues => { queues.forEach(q => q.flush(true)) })
                     } else {
                         if (!pageViewSent) {
-                            customProperties["duration"] = pageViewPerformance.getDurationMs();
+                            customProperties["duration"] = pageViewPerformance.durationMs;
                             this.appInsights.sendPageViewInternal(
                                 pageView,
                                 customProperties);
@@ -145,9 +154,9 @@ export class PageViewManager {
                             this.appInsights.sendPageViewPerformanceInternal(pageViewPerformance, customProperties);
                             this.pageViewPerformanceSent = true;
                         }
-                        this._channel().forEach(queues => {queues.forEach(q => q.flush(true))})
+                        this._channel().forEach(queues => { queues.forEach(q => q.flush(true)) })
                     }
-                } else if (PageViewPerformance.getDuration(start, +new Date) > maxDurationLimit) {
+                } else if (DateTimeUtils.GetDuration(start, +new Date) > maxDurationLimit) {
                     // if performance timings are not ready but we exceeded the maximum duration limit, just log a page view telemetry
                     // with the maximum duration limit. Otherwise, keep waiting until performance timings are ready
                     clearInterval(handle);
@@ -157,7 +166,7 @@ export class PageViewManager {
                             pageView,
                             customProperties
                         );
-                        this._channel().forEach(queues => {queues.forEach(q => q.flush(true))})
+                        this._channel().forEach(queues => { queues.forEach(q => q.flush(true)) })
                     }
                 }
             } catch (e) {
