@@ -75,7 +75,7 @@ class Sanitizer2ETests extends TestClass {
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (aiT1.successSpy.called || aiT1.errorSpy.called || aiT1.loggingSpy.called);
-            }, "Wait for response", 5, 1000))
+            }, "Wait for response"))
                 .concat(() => {
                     boilerPlateAsserts(aiT1);
                 })
@@ -103,7 +103,7 @@ class Sanitizer2ETests extends TestClass {
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (aiT2.successSpy.called || aiT2.errorSpy.called || aiT2.loggingSpy.called);
-            }, "Wait for response", 5, 1000))
+            }, "Wait for response"))
                 .concat(() => {
                     boilerPlateAsserts(aiT2);
                 })
@@ -125,7 +125,7 @@ class Sanitizer2ETests extends TestClass {
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (aiT3.successSpy.called || aiT3.errorSpy.called || aiT3.loggingSpy.called);
-            }, "Wait for response", 5, 1000))
+            }, "Wait for response"))
                 .concat(() => {
                     boilerPlateAsserts(aiT3);
                 })
@@ -151,7 +151,7 @@ class Sanitizer2ETests extends TestClass {
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (aiT4.successSpy.called || aiT4.errorSpy.called || aiT4.loggingSpy.called);
-            }, "Wait for response", 5, 1000))
+            }, "Wait for response"))
                 .concat(() => {
                     boilerPlateAsserts(aiT4);
                 })
@@ -174,7 +174,7 @@ class Sanitizer2ETests extends TestClass {
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (aiT5.successSpy.called || aiT5.errorSpy.called || aiT5.loggingSpy.called);
-            }, "Wait for response", 5, 1000))
+            }, "Wait for response"))
                 .concat(() => {
                     boilerPlateAsserts(aiT5);
                 })
@@ -196,11 +196,11 @@ class Sanitizer2ETests extends TestClass {
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (aiT6.successSpy.called || aiT6.errorSpy.called || aiT6.loggingSpy.called);
-            }, "Wait for response", 5, 1000))
+            }, "Wait for response"))
                 .concat(() => {
                     boilerPlateAsserts(aiT6);
                 })
         });
     }
 }
-new Sanitizer2ETests().registerTests(); 
+new Sanitizer2ETests().registerTests();

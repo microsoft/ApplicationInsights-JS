@@ -4,7 +4,7 @@ import { Sender } from '@microsoft/applicationinsights-channel-js';
 
 export class ValidateE2ETests extends TestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
-    
+
     private _ai: IApplicationInsights;
 
     // Sinon
@@ -122,7 +122,7 @@ export class ValidateE2ETests extends TestClass {
     private waitForResponse() {
         return <any>PollingAssert.createPollingAssert(() => {
             return (this.successSpy.called || this.errorSpy.called);
-        }, "Wait for response" + new Date().toISOString(), 5, 1000)
+        }, "Wait for response" + new Date().toISOString(), 15, 1000)
     }
 
     private boilerPlateAsserts() {
