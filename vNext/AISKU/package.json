@@ -6,6 +6,10 @@
     "module": "dist-esm/applicationinsights-web.js",
     "types": "dist-esm/applicationinsights-web.d.ts",
     "sideEffects": false,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/AISKU"
+    },
     "scripts": {
         "clean": "rm -rfv browser types dist-esm",
         "build": "npm run build:esm && npm run build:browser && grunt snippetvnext",
@@ -40,12 +44,12 @@
         "grunt-tslint": "^5.0.2"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-analytics-js": "^2.0.0-beta.3",
-        "@microsoft/applicationinsights-channel-js": "^2.0.0-beta.3",
-        "@microsoft/applicationinsights-common": "^2.0.0-beta.3",
-        "@microsoft/applicationinsights-core-js": "^2.0.0-beta.3",
-        "@microsoft/applicationinsights-dependencies-js": "^2.0.0-beta.3",
-        "@microsoft/applicationinsights-properties-js": "^2.0.0-beta.3"
+        "@microsoft/applicationinsights-analytics-js": "^2.0.0-beta.4",
+        "@microsoft/applicationinsights-channel-js": "^2.0.0-beta.4",
+        "@microsoft/applicationinsights-common": "^2.0.0-beta.4",
+        "@microsoft/applicationinsights-core-js": "^2.0.0-beta.4",
+        "@microsoft/applicationinsights-dependencies-js": "^2.0.0-beta.4",
+        "@microsoft/applicationinsights-properties-js": "^2.0.0-beta.4"
     },
     "peerDependencies": {
         "tslib": "^1.9.3"
