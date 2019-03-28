@@ -15,6 +15,6 @@ export interface IDependencyTelemetry {
     type?: string;
     data?: string;
     target?: string;
-    properties?: {[key: string]: string};
-    measurements?: {[key: string]: string};
+    properties?: {[key: string]: any};
+    measurements?: {[key: string]: number};
 }

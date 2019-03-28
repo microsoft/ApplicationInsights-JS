@@ -364,7 +364,7 @@ export class ApplicationInsightsTests extends TestClass {
                         }
                     }
                     return false;
-                }, 'user.authenticatedId', 5, 500))
+                }, 'user.authenticatedId'))
         });
 
         this.testCaseAsync({
@@ -394,7 +394,7 @@ export class ApplicationInsightsTests extends TestClass {
                         }
                     }
                     return false;
-                }, 'user.authenticatedId', 5, 500))
+                }, 'user.authenticatedId'))
         });
 
         this.testCaseAsync({
@@ -424,7 +424,7 @@ export class ApplicationInsightsTests extends TestClass {
                         }
                     }
                     return false;
-                }, 'user.authenticatedId', 5, 500))
+                }, 'user.authenticatedId'))
         });
 
         this.testCaseAsync({
@@ -455,7 +455,7 @@ export class ApplicationInsightsTests extends TestClass {
                         }
                     }
                     return false;
-                }, 'user.authenticatedId', 5, 500))
+                }, 'user.authenticatedId'))
         });
 
         // This doesn't need to be e2e

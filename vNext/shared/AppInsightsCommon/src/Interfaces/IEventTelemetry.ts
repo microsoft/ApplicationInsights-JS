@@ -12,7 +12,7 @@ export interface IEventTelemetry {
     /**
      * Property bag to contain additional custom properties (Part C)
      */
-    properties?: { [key: string]: string };
+    properties?: { [key: string]: any };
 
     /**
      * Property bag to contain additional custom measurements (Part C)

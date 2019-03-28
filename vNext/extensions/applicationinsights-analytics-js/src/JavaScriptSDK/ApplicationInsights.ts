@@ -244,6 +244,10 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param systemProperties System level properties (Part A) that a user can add to the telemetry item
      */
     public sendPageViewInternal(pageView: IPageViewTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
+        if (typeof document !== "undefined") {
+            pageView.refUri = pageView.refUri || document.referrer;
+        }
+
         let telemetryItem = TelemetryItemCreator.create<IPageViewTelemetryInternal>(
             pageView,
             PageView.dataType,

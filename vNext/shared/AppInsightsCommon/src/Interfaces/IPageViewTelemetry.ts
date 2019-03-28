@@ -33,7 +33,7 @@ export interface IPageViewTelemetry {
     /**
      * property bag to contain an extension to domain properties - extension to Part B
      */
-    properties?: { [key: string]: string };
+    properties?: { [key: string]: any };
 
     /**
      * Property bag to contain additional custom measurements (Part C)

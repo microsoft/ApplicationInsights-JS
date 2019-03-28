@@ -188,7 +188,7 @@ class SnippetTests extends TestClass {
                 }]
                 .concat(<any>PollingAssert.createPollingAssert(() => {
                     return (!window[this.aiName].hasOwnProperty("queue"))
-                }, "waiting for AI Init() to finish" + new Date().toISOString(), 5, 200))
+                }, "waiting for AI Init() to finish" + new Date().toISOString()))
                 .concat(() => {
                     Assert.ok(!window[this.aiName].hasOwnProperty("queue"), "queue was removed during the init");
                     Assert.equal(this.queueCallCount, this.queueSpy.callCount, "should drain the queue");
@@ -235,7 +235,7 @@ class SnippetTests extends TestClass {
     private waitForResponse() {
         return <any>PollingAssert.createPollingAssert(() => {
             return (this.senderMocks.successSpy.called || this.senderMocks.errorSpy.called);
-        }, "Wait for response" + new Date().toISOString(), 5, 1000)
+        }, "Wait for response" + new Date().toISOString())
     }
 
     private checkConfig() {
