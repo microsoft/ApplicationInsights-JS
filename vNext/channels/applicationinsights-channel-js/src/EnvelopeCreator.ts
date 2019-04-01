@@ -15,6 +15,7 @@ const baseType: string = "baseType";
 const baseData: string = "baseData";
 
 export abstract class EnvelopeCreator {
+    public static Version = "2.0.0-rc1";
     protected _logger: IDiagnosticLogger;
 
     abstract Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem): IEnvelope;
@@ -77,7 +78,7 @@ export abstract class EnvelopeCreator {
     private static extractPartAExtensions(item: ITelemetryItem, env: IEnvelope) {
         // todo: switch to keys from common in this method
         if (!env.tags) {
-            env.tags = [];
+            env.tags = {};
         }
 
         if (!item.ext) {
@@ -190,7 +191,7 @@ export abstract class EnvelopeCreator {
         //     "ext": {  "cloud": {
         //          "role": "WATSON3",
         //          "roleInstance": "CO4AEAP00000260"
-        //      }, 
+        //      },
         //      "device": {}, "correlation": {} },
         //      "tags": [
         //        { "amazon.region" : "east2" },
@@ -203,6 +204,10 @@ export abstract class EnvelopeCreator {
             tgs = { ...tgs, ...tg };
         });
         env.tags = { ...env.tags, ...tgs };
+        if(!env.tags[CtxTagKeys.internalSdkVersion]) {
+            // Append a version in case it is not already set
+            env.tags[CtxTagKeys.internalSdkVersion] = `javascript:${EnvelopeCreator.Version}`;
+        }
     }
 }
 
