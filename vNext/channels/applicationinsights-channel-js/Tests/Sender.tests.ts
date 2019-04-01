@@ -1,6 +1,7 @@
 /// <reference path="./TestFramework/Common.ts" />
 import { Sender } from "../src/Sender";
 import { Offline } from '../src/Offline';
+import { EnvelopeCreator } from '../src/EnvelopeCreator';
 import { Exception, CtxTagKeys } from "@microsoft/applicationinsights-common";
 import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
 
@@ -318,7 +319,7 @@ export class SenderTests extends TestClass {
                 Assert.ok(appInsightsEnvelope.tags);
                 Assert.equal("TestAccountId", appInsightsEnvelope.tags["ai.user.accountId"]);
                 Assert.equal("10.22.8.2", appInsightsEnvelope.tags["ai.location.ip"]);
-                
+
                 Assert.equal("AuthenticatedId", appInsightsEnvelope.tags["ai.user.authUserId"]);
                 Assert.equal("TestId", appInsightsEnvelope.tags["ai.user.id"]);
 
@@ -351,7 +352,7 @@ export class SenderTests extends TestClass {
                         }
                     },
                     tags: [{"ai.user.accountId": "TestAccountId"},
-                           {"ai.location.ip": "10.22.8.2"}],
+                           {"ai.location.ip": "10.22.8.2"}, {"ai.internal.sdkVersion": "1234"}],
                     baseType: "RemoteDependencyData",
                     baseData: {
                         id: 'some id',
@@ -377,8 +378,11 @@ export class SenderTests extends TestClass {
 
                 // Assert baseData
                 Assert.ok(baseData.name);
-                Assert.equal("GET /test/name", baseData.name); // retrieved from target 
+                Assert.equal("GET /test/name", baseData.name); // retrieved from target
                 Assert.equal("/test/name", baseData.data);
+
+                // Assert sdkVersion
+                Assert.equal("1234", appInsightsEnvelope.tags["ai.internal.sdkVersion"])
             }
         });
 
@@ -445,6 +449,7 @@ export class SenderTests extends TestClass {
                 Assert.ok(baseData.name);
                 Assert.equal("Page View Name", baseData.name);
 
+
                 // Assert ver
                 Assert.ok(baseData.ver);
                 Assert.equal(2, baseData.ver);
@@ -458,6 +463,11 @@ export class SenderTests extends TestClass {
                 Assert.equal("TestAccountId", appInsightsEnvelope.tags["ai.user.accountId"]);
                 Assert.equal("AuthenticatedId", appInsightsEnvelope.tags["ai.user.authUserId"]);
                 Assert.equal("TestId", appInsightsEnvelope.tags["ai.user.id"]);
+
+                // Assert sdkVersion
+                Assert.ok(EnvelopeCreator.Version)
+                Assert.ok(EnvelopeCreator.Version.length > 0)
+                Assert.equal(`javascript:${EnvelopeCreator.Version}`, appInsightsEnvelope.tags["ai.internal.sdkVersion"])
 
                 // Assert.equal("d041d2e5fa834b4f9eee41ac163bf402", appInsightsEnvelope.tags["ai.session.id"]);
                 // Assert.equal("browser", appInsightsEnvelope.tags["ai.device.id"]);
