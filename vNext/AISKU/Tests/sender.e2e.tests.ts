@@ -7,7 +7,7 @@ export class SenderE2ETests extends TestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
     private readonly _bufferName = 'AI_buffer';
     private readonly _sentBufferName = 'AI_sentBuffer';
-    
+
     private _ai: IApplicationInsights;
     private _sender: Sender;
 
@@ -112,8 +112,8 @@ export class SenderE2ETests extends TestClass {
             ]
             .concat(this.waitForResponse())
             .concat(this.boilerPlateAsserts)
-            .concat(<any>PollingAssert.createPollingAssert(() => this.successSpy.called && this.isSessionSentEmpty(), "SentBuffer Session storage is empty", 5, 1000))
-            .concat(<any>PollingAssert.createPollingAssert(() => this.successSpy.called && this.isSessionEmpty(), "Buffer Session storage is empty", 5, 1000))
+            .concat(<any>PollingAssert.createPollingAssert(() => this.successSpy.called && this.isSessionSentEmpty(), "SentBuffer Session storage is empty", 15, 1000))
+            .concat(<any>PollingAssert.createPollingAssert(() => this.successSpy.called && this.isSessionEmpty(), "Buffer Session storage is empty", 15, 1000))
         });
     }
 
@@ -148,17 +148,17 @@ export class SenderE2ETests extends TestClass {
                 }
 
                 return false;
-            }, `Backend accepts ${SENT_ITEMS} items`, 5, 1000))
+            }, `Backend accepts ${SENT_ITEMS} items`, 15, 1000))
             .concat(<any>PollingAssert.createPollingAssert(() => {
                 return this.successSpy.calledOnce;
-            }, "Tracks are sent in ONE batch", 5, 1000))
+            }, "Tracks are sent in ONE batch", 15, 1000))
         });
     }
 
     private waitForResponse() {
         return <any>PollingAssert.createPollingAssert(() => {
             return (this.successSpy.called || this.errorSpy.called);
-        }, "Wait for response" + new Date().toISOString(), 5, 1000)
+        }, "Wait for response" + new Date().toISOString(), 15, 1000)
     }
 
     private boilerPlateAsserts() {

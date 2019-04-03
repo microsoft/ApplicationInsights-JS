@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-analytics-js",
-    "version": "2.0.0-beta.2",
+    "version": "2.0.0-rc1",
     "description": "Microsoft Application Insights Javascript SDK apis",
     "main": "dist/applicationinsights-analytics-js.js",
     "module": "dist-esm/applicationinsights-analytics-js.js",
@@ -8,7 +8,7 @@
     "sideEffects": false,
     "repository": {
         "type": "git",
-        "url": "https://github.com/Microsoft/ApplicationInsights-JS/tree/master/ApplicationInsights"
+        "url": "https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-analytics-js"
     },
     "scripts": {
         "build": "npm run build:esm && npm run build:browser",
@@ -28,8 +28,8 @@
         "rollup": "^0.66.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "^2.0.0-beta.2",
-        "@microsoft/applicationinsights-common": "^2.0.0-beta.2",
+        "@microsoft/applicationinsights-core-js": "^2.0.0-rc1",
+        "@microsoft/applicationinsights-common": "^2.0.0-rc1",
         "tslib": "^1.9.3"
     },
     "license": "MIT"

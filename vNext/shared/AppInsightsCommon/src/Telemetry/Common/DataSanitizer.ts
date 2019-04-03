@@ -129,7 +129,16 @@ export class DataSanitizer {
         if (properties) {
             var tempProps = {};
             for (var prop in properties) {
-                var value = DataSanitizer.sanitizeString(logger, properties[prop], DataSanitizer.MAX_PROPERTY_LENGTH);
+                var value = properties[prop];
+                if (typeof value === "object" && typeof JSON !== "undefined") {
+                    // Stringify any part C properties
+                    try {
+                        value = JSON.stringify(value);
+                    } catch (e) {
+                        logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.CannotSerializeObjectNonSerializable, "custom property is not valid", { exception: e}, true);
+                    }
+                }
+                value = DataSanitizer.sanitizeString(logger, value, DataSanitizer.MAX_PROPERTY_LENGTH);
                 prop = DataSanitizer.sanitizeKeyAndAddUniqueness(logger, prop, tempProps);
                 tempProps[prop] = value;
             }

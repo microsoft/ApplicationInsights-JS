@@ -48,6 +48,7 @@ const appInsights = new ApplicationInsights({ config: {
 	extensions: [customPlugin],
 /* ...Other Configuration Options... */
 }});
+appInsights.loadAppInsights();
 ```
 
 ### Snippet Setup (Ignore if using NPM)
@@ -58,7 +59,7 @@ var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=wi
 (
 	{instrumentationKey:"INSTRUMENTATION_KEY"}
 );
-window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length&&aisdk.trackPageView();
+window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length&&aisdk.trackPageView({});
 </script>
 ```
 
@@ -197,7 +198,7 @@ The beta SDK supports the ability to include multiple extensions at runtime. In 
 
 On initialization, config.extensions accepts an array of ITelemetryPlugin objects. These are hooked up and ITelemetryPlugin.processTelemetry() is chained based on priority of these plugins.
 Please note that higher the priority, the later your processing code will be invoked. The SDK supports a plugin model and channels can also be plugged in similarly (advanced scenario).
-Target scenarios for creating a brand new extension is to share a usage scenario that benefits multiple customers. Please follow guidelines 
+Target scenarios for creating a brand new extension is to share a usage scenario that benefits multiple customers. Please follow guidelines
 
 Here is the priority ranges available:
 - Regular extension priority can be between 201 to 499.
@@ -213,6 +214,7 @@ const appInsights = new ApplicationInsights({ config: {
 	extensions: [customPlugin],
 	// Other Configuration Options...
 }});
+appInsights.loadAppInsights();
 ```
 
 ITelemetryPlugin has a simpler base type IPlugin that you can instantiate for initialization purposes when SDK loads.

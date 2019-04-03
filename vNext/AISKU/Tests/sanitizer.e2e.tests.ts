@@ -4,7 +4,7 @@ import { Sender } from '@microsoft/applicationinsights-channel-js';
 
 export class SanitizerE2ETests extends TestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
-    
+
     private _ai: IApplicationInsights;
 
     // Sinon
@@ -80,7 +80,7 @@ export class SanitizerE2ETests extends TestClass {
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
-            }, "Wait for response", 5, 1000))
+            }, "Wait for response"))
                 .concat(() => {
                     boilerPlateAsserts();
                 })
@@ -105,7 +105,7 @@ export class SanitizerE2ETests extends TestClass {
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
-            }, "Wait for response", 5, 1000))
+            }, "Wait for response"))
                 .concat(() => {
                     boilerPlateAsserts();
                 })
@@ -124,7 +124,7 @@ export class SanitizerE2ETests extends TestClass {
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
-            }, "Wait for response", 5, 1000))
+            }, "Wait for response"))
                 .concat(() => {
                     boilerPlateAsserts();
                 })
@@ -147,7 +147,7 @@ export class SanitizerE2ETests extends TestClass {
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
-            }, "Wait for response", 5, 1000))
+            }, "Wait for response"))
                 .concat(() => {
                     boilerPlateAsserts();
                 })
@@ -167,7 +167,7 @@ export class SanitizerE2ETests extends TestClass {
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
-            }, "Wait for response", 5, 1000))
+            }, "Wait for response"))
                 .concat(() => {
                     boilerPlateAsserts();
                 })
@@ -186,7 +186,7 @@ export class SanitizerE2ETests extends TestClass {
             ].concat(<any>PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
-            }, "Wait for response", 5, 1000))
+            }, "Wait for response"))
                 .concat(() => {
                     boilerPlateAsserts();
                 })

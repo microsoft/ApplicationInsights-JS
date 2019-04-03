@@ -6,7 +6,6 @@ import {
     IPlugin, IConfiguration
 } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "../src/JavaScriptSDK/ApplicationInsights";
-import { ITelemetryConfig } from "../src/JavaScriptSDK.Interfaces/ITelemetryConfig";
 
 export class ApplicationInsightsTests extends TestClass {
     public testInitialize() {
@@ -124,7 +123,7 @@ export class ApplicationInsightsTests extends TestClass {
                 // Test
                 test(() => appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical}), Exception.envelopeType, Exception.dataType)
                 test(() => appInsights.trackTrace({message: "some string"}), Trace.envelopeType, Trace.dataType);
-                test(() => appInsights.trackPageViewPerformance({name: undefined, url: undefined, measurements: {somefield: 123}}, {vpHeight: 123}), PageViewPerformance.envelopeType, PageViewPerformance.dataType, () => {
+                test(() => appInsights.trackPageViewPerformance({name: undefined, uri: undefined, measurements: {somefield: 123}}, {vpHeight: 123}), PageViewPerformance.envelopeType, PageViewPerformance.dataType, () => {
                     Assert.deepEqual(undefined, envelope.baseData.properties, 'Properties does not exist in Part B');
                 });
             }
@@ -358,6 +357,7 @@ export class ApplicationInsightsTests extends TestClass {
                 var appInsights = new ApplicationInsights();
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
                 var spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
+                this.clock.tick(1);
 
                 // act
                 appInsights.startTrackPage(testValues.name);

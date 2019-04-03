@@ -21,5 +21,5 @@ export interface ITraceTelemetry {
     /**
      * property bag to contain an extension to domain properties - extension to Part B
      */
-    properties?: { [key: string]: string };
+    properties?: { [key: string]: any };
 }

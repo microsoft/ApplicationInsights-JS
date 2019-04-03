@@ -1,122 +1,272 @@
-﻿# Microsoft Application Insights JavaScript SDK
- 
- [![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
- [![npm version](https://badge.fury.io/js/applicationinsights-js.svg)](https://badge.fury.io/js/applicationinsights-js)
+<properties
+	pageTitle="Application Insights SDK JavaScript API"
+	description="Reference doc"
+	services="application-insights"
+    documentationCenter=".net"
+/>
 
-[Application Insights](https://azure.microsoft.com/services/application-insights/) tells you about your app's performance and usage. By adding a few lines of code to your web pages, you get data about how many users you have, which pages are most popular, how fast pages load, whether they throw exceptions, and more. And you can add code to track more detailed user activity.
+<tags
+	ms.service="application-insights"
+	ms.workload="tbd"
+	ms.tgt_pltfrm="ibiza"
+	ms.devlang="na"
+	ms.topic="article"
+	ms.date="08/24/2015"/>
 
-## Get started
 
-To use this SDK, you'll need a subscription to [Microsoft Azure](https://azure.com). Application Insights has a free subscription option.
-In the [Azure Preview Portal](https://portal.azure.com), create new or open an existing Application Insights resource.
+# Application Insights JavaScript SDK
 
-Full documentation for beta version of next SDK release is [here](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/vNext/AISKU/README.md)  . Please try it out and provide feedback/log any issues.
 
-## Initializing Application Insights JS SDK script
-There are several ways to initialize Application Insights.
+[![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/AppInsights%20-%20DevTools/1DS%20JavaScript%20SDK%20web%20SKU%20vNext?branchName=master)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=master)
+[![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
+[![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web)
+[![minified size size](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?label=minified%20size)
+[![gzip size](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?compression=gzip&softmax=27000&max=30000)](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?compression=gzip&softmax=27000&max=30000)
 
-|                                    | **Dynamic loading.** JS script tag is inserted in the head of the page. This is the recommended approach as our CDN is getting frequent updates.                                                                                                           | **Static loading.** You are responsible for including JS script tag or bundling the script with your other scripts. |
-|------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| **Using initialization `snippet`** | [Dynamic loading with snippet](README.md#use-js-snippet-and-initialize-dynamically-download-full-application-insights-script-from-cdn) This is default approach used in a new ASP.NET application created in Visual Studio. Use this for MVC applications. | [Host AI JS SDK and initialize statically](README.md#include-ai-js-sdk-script-and-initialize-statically). Cordova applications where you would like to embed scripts into your application for faster loading is an example of when you would use this approach.                                                                                                             |
-| **Using module import**            | [Dynamic loading using module import](README.md#import-as-a-module-and-initialize-dynamically-download-full-application-insights-script-from-cdn). This is the recommended approach for modern modular applications.                                       | [TBD](https://github.com/Microsoft/ApplicationInsights-JS/issues/213)                                                                                                                 |
 
-### Use JS `snippet` and initialize dynamically (download full Application Insights script from CDN)  
-Use this method for an MVC application. Get "code to monitor my web pages" from the Quick Start page, 
-and insert it in the head of your web pages. Application Insights script will be downloaded 
-from CDN or you can override the script hosting location by specifying `url` parameter in the config.   
+> ***Note:*** The documentation for `applicationinsights-js` has moved [here](./legacy_README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights).
+
+## Getting Started
+1. Create an Application Insights resource in Azure by following [these instructions](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-javascript?toc=/azure/azure-monitor/toc.json).
+2. Grab the _Instrumentation Key_ (aka "ikey") from the resource you created in
+   step 1. Later, you'll add it to the `instrumentationKey` setting of the Application Insights JavaScript SDK.
+3. Add Application Insights to your app. **There are 2 ways to do this.**
+	- Install via NPM. Then, [set up an instance of Application Insights in your app.](#setup-npm-only-ignore-if-using-snippet)
+		> *Note:* **Typings are included with this package**, so you do **not** need to install a separate typings package.
+		```sh
+		npm i --save @microsoft/applicationinsights-web
+		```
+	- [Pasting a script snippet at the beginning of every `<head>` tag for each page you want to monitor.](#snippet-setup-ignore-if-using-npm)
+
+## Basic Usage
+
+### Setup (NPM only, ignore if using Snippet)
+```js
+import { ApplicationInsights } from '@microsoft/applicationinsights-web'
+
+const customPlugin = new CustomPlugin();
+const appInsights = new ApplicationInsights({ config: {
+	instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+	extensions: [customPlugin],
+/* ...Other Configuration Options... */
+}});
+appInsights.loadAppInsights();
 ```
+
+### Snippet Setup (Ignore if using NPM)
+If your app does not use NPM, you can directly instrument your webpages with Application Insights by pasting this snippet at the top of each your pages. Preferably, it should be the first script in your `<head>` section so that it can monitor any potential issues with all of your dependencies.
+```html
 <script type="text/javascript">
-    var appInsights=window.appInsights||function(a){
-        function b(a){c[a]=function(){var b=arguments;c.queue.push(function(){c[a].apply(c,b)})}}var c={config:a},d=document,e=window;setTimeout(function(){var b=d.createElement("script");b.src=a.url||"https://az416426.vo.msecnd.net/scripts/a/ai.0.js",d.getElementsByTagName("script")[0].parentNode.appendChild(b)});try{c.cookie=d.cookie}catch(a){}c.queue=[];for(var f=["Event","Exception","Metric","PageView","Trace","Dependency"];f.length;)b("track"+f.pop());if(b("setAuthenticatedUserContext"),b("clearAuthenticatedUserContext"),b("startTrackEvent"),b("stopTrackEvent"),b("startTrackPage"),b("stopTrackPage"),b("flush"),!a.disableExceptionTracking){f="onerror",b("_"+f);var g=e[f];e[f]=function(a,b,d,e,h){var i=g&&g(a,b,d,e,h);return!0!==i&&c["_"+f](a,b,d,e,h),i}}return c
-    }({
-        instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
-    });
-    
-    window.appInsights=appInsights,appInsights.queue&&0===appInsights.queue.length&&appInsights.trackPageView();
-</script>
-```    
-[Learn more.](https://azure.microsoft.com/documentation/articles/app-insights-javascript/)
-
-### Import as a module and initialize dynamically (download full Application Insights script from CDN)  
-Use this method for a modern JS application that is using modules. Just like in `snippet` scenario the full script will be downloaded from CDN.
-* Obtain instrumentation key from your Application Insights resource  
-* Install applicationinsights-js with npm  
-`npm install applicationinsights-js` 
-
-* Import and call `downloadAndSetup` to initialize it. You can override the script hosting location by specifying `url` parameter in the config 
-```
-/* import AppInsights */
-import {AppInsights} from "applicationinsights-js"
-
-/* Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key */
-AppInsights.downloadAndSetup({ instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx" });
-
-/* example: track page view */
-AppInsights.trackPageView(
-    "FirstPage", /* (optional) page name */
-    null, /* (optional) page url if available */
-    { prop1: "prop1", prop2: "prop2" }, /* (optional) dimension dictionary */
-    { measurement1: 1 }, /* (optional) metric dictionary */
-    123 /* page view duration in milliseconds */
+var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){i[e]=function(){var n=arguments;i.queue.push(function(){i[e].apply(i,n)})}}var i={config:e};i.initialize=!0;var a=document,t=window;setTimeout(function(){var n=a.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/next/ai.2.min.js",a.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{i.cookie=a.cookie}catch(e){}i.queue=[],i.version=2;for(var r=["Event","PageView","Exception","Trace","DependencyData","Metric","PageViewPerformance"];r.length;)n("track"+r.pop());n("startTrackPage"),n("stopTrackPage");var o="Track"+r[0];if(n("start"+o),n("stop"+o),!(!0===e.disableExceptionTracking||e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!0===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking)){n("_"+(r="onerror"));var s=t[r];t[r]=function(e,n,a,t,o){var c=s&&s(e,n,a,t,o);return!0!==c&&i["_"+r]({message:e,url:n,lineNumber:a,columnNumber:t,error:o}),c},e.autoExceptionInstrumented=!0}return i}
+(
+	{instrumentationKey:"INSTRUMENTATION_KEY"}
 );
-
-/* example: track event */
-AppInsights.trackEvent("TestEvent", { prop1: "prop1", prop2: "prop2" }, { measurement1: 1 });
-```
-### Include AI JS SDK script and initialize statically
-Use this approach if you would like to host AI JS SDK script on your endpoint or bundle it with other scripts. One popular example is Cordova applications (see [this blog post](http://www.teamfoundation.co.za/2016/02/application-insights-and-typescript/). After JS script has loaded, include the following snippet to initialize Application Insights:   
-```
-<!-- the snippet below assumes that JS SDK script has already loaded -->
-<script type="text/javascript" src="/pathToAIJSSDK.js"></script>   
-<script type="text/javascript">   
-    var snippet = {   
-        config: {   
-            instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"   
-        }   
-    };   
-    var init = new Microsoft.ApplicationInsights.Initialization(snippet);   
-    var appInsights = init.loadAppInsights();   
-    appInsights.trackPageView();   
+window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length&&aisdk.trackPageView({});
 </script>
-```  
-## API reference
+```
 
-Data on users, page views, and exceptions are provided out of the box. You can write your own code to track specific events and metrics.
+### Sending Telemetry to the Azure Portal
+If initialized using the snippet, your Application Insights instance is located by default at `window.appInsights`
+```js
+appInsights.trackEvent({name: 'some event'});
+appInsights.trackPageView({name: 'some page'});
+appInsights.trackPageViewPerformance({name : 'some page', url: 'some url'});
+appInsights.trackException({error: new Error('some error')});
+appInsights.trackTrace({message: 'some trace'});
+appInsights.trackMetric({name: 'some metric', average: 42});
+appInsights.trackDependencyData({absoluteUrl: 'some url', resultCode: 200, method: 'GET', id: 'some id'});
+appInsights.startTrackPage("pageName");
+appInsights.stopTrackPage("pageName", {customProp1: "some value"});
+appInsights.startTrackEvent("event");
+appInsights.stopTrackEvent("event", {customProp1: "some value"});
+appInsights.flush();
+```
 
-See:
+### Setting Up Autocollection
+All autocollection is on by default. By using the full version of the JavaScript Application Insights SDK, we collect for you
+- **Uncaught exceptions** in your app, including information on
+	- Stack trace
+	- Exception details and message accompanying the error
+	- Line & column number of error
+	- URL where error was raised
+- **Network Dependency Requests** made by your app **XHR** and **Fetch** (fetch collection is disabled by default) requests, include information on
+	- Url of dependency source
+	- Command & Method used to request the dependency
+	- Duration of the request
+	- Result code and success status of the request
+	- ID (if any) of user making the request
+	- Correlation context (if any) where request is made
+- **User information** (e.g. Location, network, IP)
+- **Device information** (e.g. Browser, OS, version, language, resolution, model)
+- **Session information**
 
-* [JavaScript API reference](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/API-reference.md)
-* [API overview with portal examples](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/)
+### Telemetry Initializers
+Telemetry initializers are used to modify the contents of collected telemetry before being sent from the user's browser. They can also be used to prevent certain telemetry from being sent, by returning `false`. Multiple telemetry initializers can be added to your Application Insights instance, and they are executed in order of adding them.
 
-## Links
+The input argument to `addTelemetryInitializer` is a callback that takes a [`ITelemetryItem`](./API.md#addTelemetryInitializer) as an argument and returns a `boolean` or `void`. If returning `false`, the telemetry item is not sent, else it proceeds to the next telemetry initializer, if any, or is sent to the telemetry collection endpoint.
 
-* Check out our [Wiki](https://github.com/Microsoft/ApplicationInsights-JS/wiki) and [FAQ](https://github.com/Microsoft/ApplicationInsights-JS/wiki/FAQ) for other useful info. 
-* Follow latest Application Insights changes and announcements on [ApplicationInsights Announcements](https://github.com/Microsoft/ApplicationInsights-Announcements)
-* [Application Insights Home](https://github.com/Microsoft/ApplicationInsights-Home). The main repository for documentation of overall SDK offerings for all platforms.
-* [SDK Release Schedule](https://github.com/Microsoft/ApplicationInsights-Home/wiki/SDK-Release-Schedule)
+An example of using telemetry initializers:
+```ts
+var telemetryInitializer = (envelope) => {
+  envelope.data.someField = 'This item passed through my telemetry initializer';
+};
+appInsights.addTelemetryInitializer(telemetryInitializer);
+appInsights.trackTrace({message: 'This message will use a telemetry initializer'});
+
+appInsights.addTelemetryInitializer(() => false); // Nothing is sent after this is executed
+appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
+```
+
+## Configuration
+Most configuration fields are named such that they can be defaulted to falsey. All fields are optional except for `instrumentationKey`.
+
+| Name | Default | Description |
+|------|---------|-------------|
+| instrumentationKey | null | **Required**<br>Instrumentation key that you obtained from the Azure Portal. |
+| accountId | null | An optional account id, if your app groups users into accounts. No spaces, commas, semicolons, equals, or vertical bars |
+| sessionRenewalMs | 1800000 | A session is logged if the user is inactive for this amount of time in milliseconds. Default is 30 minutes |
+| sessionExpirationMs | 86400000 | A session is logged if it has continued for this amount of time in milliseconds. Default is 24 hours |
+| maxBatchSizeInBytes | 10000 | Max size of telemetry batch. If a batch exceeds this limit, it is immediately sent and a new batch is started |
+| maxBatchInterval | 15000 | How long to batch telemetry for before sending (milliseconds) |
+| disableExceptionTracking | false | If true, exceptions are no autocollected. Default is false. |
+| disableTelemetry | false | If true, telemetry is not collected or sent. Default is false. |
+| enableDebug | false | If true, **internal** debugging data is thrown as an exception **instead** of being logged, regardless of SDK logging settings. Default is false. <br>***Note:*** Enabling this setting will result in dropped telemetry whenever an internal error occurs. This can be useful for quickly identifying issues with your configuration or usage of the SDK. If you do not want to lose telemetry while debugging, consider using `consoleLoggingLevel` or `telemetryLoggingLevel` instead of `enableDebug`. |
+| consoleLoggingLevel | 0 | Logs **internal** Application Insights errors to console. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
+| telemetryLoggingLevel | 1 | Sends **internal** Application Insights errors as telemetry. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
+| diagnosticLogInterval | 10000 | (internal) Polling interval (in ms) for internal logging queue |
+| samplingPercentage | 100 | Percentage of events that will be sent. Default is 100, meaning all events are sent. Set this if you wish to preserve your datacap for large-scale applications. |
+| autoTrackPageVisitTime | false | If true, on a pageview,the previous instrumented page's view time is tracked and sent as telemetry and a new timer is started for the current pageview. Default is false. |
+| disableAjaxTracking | false | If true, Ajax calls are not autocollected. Default is false. |
+| disableFetchTracking | true | If true, Fetch requests are not autocollected. Default is true |
+| overridePageViewDuration | false | If true, default behavior of trackPageView is changed to record end of page view duration interval when trackPageView is called. If false and no custom duration is provided to trackPageView, the page view performance is calculated using the navigation timing API. Default is false. |
+| maxAjaxCallsPerView | 500 | Default 500 - controls how many ajax calls will be monitored per page view. Set to -1 to monitor all (unlimited) ajax calls on the page. |
+| disableDataLossAnalysis | true | If false, internal telemetry sender buffers will be checked at startup for items not yet sent. |
+| disableCorrelationHeaders | false | If false, the SDK will add two headers ('Request-Id' and 'Request-Context') to all dependency requests to correlate them with corresponding requests on the server side. Default is false. |
+| correlationHeaderExcludedDomains |  | Disable correlation headers for specific domains |
+| disableFlushOnBeforeUnload | false | Default false. If true, flush method will not be called when onBeforeUnload event triggers |
+| enableSessionStorageBuffer | true | Default true. If true, the buffer with all unsent telemetry is stored in session storage. The buffer is restored on page load |
+| isCookieUseDisabled | false | Default false. If true, the SDK will not store or read any data from cookies.|
+| cookieDomain | null | Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. |
+| isRetryDisabled | false | Default false. If false, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error), 503 (service unavailable), and 0 (offline, only if detected) |
+| isStorageUseDisabled | false | If true, the SDK will not store or read any data from local and session storage. Default is false. |
+| isBeaconApiDisabled | true | If false, the SDK will send all telemetry using the [Beacon API](https://www.w3.org/TR/beacon) |
+| sdkExtension | null | Sets the sdk extension name. Only alphabetic characters are allowed. The extension name is added as a prefix to the 'ai.internal.sdkVersion' tag (e.g. 'ext_javascript:2.0.0'). Default is null. |
+| isBrowserLinkTrackingEnabled | false | Default is false. If true, the SDK will track all [Browser Link](https://docs.microsoft.com/en-us/aspnet/core/client-side/using-browserlink) requests. |
+| appId | null | AppId is used for the correlation between AJAX dependencies happening on the client-side with the server-side requets. When Beacon API is enabled, it cannot be used automatically, but can be set manually in the configuration. Default is null |
+| enableCorsCorrelation | false | If true, the SDK will add two headers ('Request-Id' and 'Request-Context') to all CORS requests tocorrelate outgoing AJAX dependencies with corresponding requests on the server side. Default is false |
+| namePrefix | undefined | An optional value that will be used as name postfix for localStorage and cookie name. This enables
+
+## Examples
+
+For runnable examples, see [Application Insights Javascript SDK Samples](https://github.com/Azure-Samples?utf8=%E2%9C%93&q=application+insights+sdk&type=&language=)
+
+## Application Insights Web Basic
+
+For a lightweight experience, you can instead install the basic version of Application Insights
+```
+npm i --save @microsoft/applicationinsights-web-basic
+```
+This version comes with the bare minimum amount of features and functionalities and relies on you to build it up as you see fit. For example, it performs no auto-collection (uncaught exceptions, ajax, etc). The APIs to send certain telemetry types, like `trackTrace`, `trackException`, etc, are not included in this version, so you will need to provide your own wrapper. The only api that is available is `track`. A [sample](https://github.com/Azure-Samples/applicationinsights-web-sample1/blob/master/testlightsku.html) is located here.
 
 
-## Build and run check-in tests:
+## Upgrading from the old Version of Application Insights
+Breaking changes in the SDK V2 version:
+- To allow for better API signatures, some of the apis such as trackPageView, trackException have been updated. Running in IE8 or lower versions of the browser is not supported.
+- Telemetry envelope has field name and structure changes due to data schema updates.
 
-* Build
-  * `npm install -g grunt-cli`
-  * `npm install`
-  * `grunt` or Ctrl+Shift+B in VisualStudio Code
-  * `grunt module` to build the npm module
-  * compiled files are dropped into a `/bundle` folder
+If you are using the current application insights PRODUCTION SDK (1.0.20) and want to see if the new SDK works in runtime, please update URL depending on your current SDK loading scenario:
 
-* Run check-in tests
-  * `grunt test` to build and run tests
-  * You can also open `JavaScriptSDK.Tests/Selenium/Tests.html` directly in your browser to debug failing tests.
-  
-To debug tests in PhantomJS use a remote debugger: `phantomjs.exe --remote-debugger-port=9000 \JavaScript\JavaScriptSDK.Tests\phantomJS.debug.js`. If webkit console isn't working execute the following script in a browser's console: `function isEnterKey(event) { return (event.keyCode !== 229 && event.keyIdentifier === "Enter") || event.keyCode === 13; }`. 
+**a)** Download via CDN scenario:
+	Update code snippet that you currently use to point to the following URL:
+	```
+	"https://az416426.vo.msecnd.net/beta/ai.2.min.js"
+	```
+
+**b)** NPM scenario:
+	Call downloadAndSetup to download full ApplicationInsights script from CDN and initialize it with instrumentation key.
+```ts
+appInsights.downloadAndSetup({
+    instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx",
+    url: "https://az416426.vo.msecnd.net/beta/ai.2.min.js"
+});
+```
+Test in internal environment to verify monitoring telemetry is working as expected. If all works, please update your api signatures appropriately to SDK V2 version and deploy in your production environments.
+
+## Build a new extension for the SDK
+The beta SDK supports the ability to include multiple extensions at runtime. In order to create a new extension, please implement the following interface:
+
+[ITelemetryPlugin](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/vNext/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts)
+
+On initialization, config.extensions accepts an array of ITelemetryPlugin objects. These are hooked up and ITelemetryPlugin.processTelemetry() is chained based on priority of these plugins.
+Please note that higher the priority, the later your processing code will be invoked. The SDK supports a plugin model and channels can also be plugged in similarly (advanced scenario).
+Target scenarios for creating a brand new extension is to share a usage scenario that benefits multiple customers. Please follow guidelines
+
+Here is the priority ranges available:
+- Regular extension priority can be between 201 to 499.
+- Priorty range < 201 is reserved.
+- Priority range > 1000 is for channels (advanced scenario)
+
+Usage:
+
+```ts
+const customPlugin = new CustomPlugin();
+const appInsights = new ApplicationInsights({ config: {
+	instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+	extensions: [customPlugin],
+	// Other Configuration Options...
+}});
+appInsights.loadAppInsights();
+```
+
+ITelemetryPlugin has a simpler base type IPlugin that you can instantiate for initialization purposes when SDK loads.
+
+## Build & Test this repo
+
+1. Install all dependencies
+	```
+	npm install
+	```
+2. Build and test
+	```
+	npm run build
+	npm run test
+	```
+
+## Performance
+At just 25 KB gzipped, and taking only ~15 ms to initialize, Application Insights adds a neglible amount of loadtime to your website. By using the snippet, minimal components of the library are quickly loaded, synchronously. In the meantime, the full script is downloaded in the background.
+
+While the script is downloading from the CDN, all tracking of your page is queued. Once the downloaded script finishes asynchronously initializing, all events that were queued are tracked. As a result, you will not lose any telemetry during the entire life cycle of your page. This setup process provides your page with a seamless tracking system, invisible to your users.
+
+> Summary:
+> - **25 KB** gzipped
+> - **15 ms** overall initialization time
+> - **Zero** tracking missed during life cycle of page
+
+
+## Browser Support
+![Chrome](https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png) | ![Firefox](https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png) | ![IE](https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png) | ![Opera](https://raw.githubusercontent.com/alrra/browser-logos/master/src/opera/opera_48x48.png) | ![Safari](https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png)
+--- | --- | --- | --- | --- |
+Latest ✔ | Latest ✔ | 9+ ✔ | Latest ✔ | Latest ✔ |
 
 ## Contributing
 
-We strongly welcome and encourage contributions to this project. Please read the [contributor's guide][ContribGuide] located in the ApplicationInsights-Home repository. If making a large change we request that you open an [issue][GitHubIssue] first. We follow the [Git Flow][GitFlow] approach to branching. 
+We strongly welcome and encourage contributions to this project. Please read the [contributor's guide][ContribGuide] located in the ApplicationInsights-Home repository. If making a large change we request that you open an [issue][GitHubIssue] first. We follow the [Git Flow][GitFlow] approach to branching.
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
 [ContribGuide]: https://github.com/Microsoft/ApplicationInsights-Home/blob/master/CONTRIBUTING.md
 [GitFlow]: http://nvie.com/posts/a-successful-git-branching-model/
 [GitHubIssue]: https://github.com/Microsoft/ApplicationInsights-JS/issues
+
+## Build together when changing multiple packages:
+
+The vNext folder contains 8 packages that are components of this next version of the SDK. When making changes in multiple packages, you can build using the following commands in vNext folder:
+1. npm install -g @microsoft/rush
+
+2. rush rebuild --verbose
+This will build all packages in order of dependencies. If there are build errors, verbose options is required to view error details.
+
+3. rush test --verbose
+This will run tests in all packages in parallel.
+
+If you are changing package versions or adding/removing any package dependencies, run> rush update --purge --recheck --full before building. Please check in any files that change under vNext\common\ folder.

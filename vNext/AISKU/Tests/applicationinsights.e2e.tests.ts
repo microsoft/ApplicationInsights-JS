@@ -103,7 +103,7 @@ export class ApplicationInsightsTests extends TestClass {
 
                 Assert.ok(this._ai.appInsights.core, 'Core exists');
                 Assert.equal(true, this._ai.appInsights.core['_isInitialized'],
-                'Core is initialized');
+                    'Core is initialized');
             }
         });
     }
@@ -125,7 +125,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'E2E.GenericTests: trackEvent sends to backend',
             stepDelay: 1,
             steps: [() => {
-                this._ai.trackEvent({name: 'event', properties: {"prop1": "value1"}, measurements: {"measurement1": 200}});
+                this._ai.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
             }].concat(this.asserts(1)).concat(() => {
 
                 if (this.successSpy.called) {
@@ -142,12 +142,12 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'E2E.GenericTests: trackTrace sends to backend',
             stepDelay: 1,
             steps: [() => {
-                this._ai.trackTrace({message: 'trace', properties: { "foo": "bar", "prop2": "value2" }});
+                this._ai.trackTrace({ message: 'trace', properties: { "foo": "bar", "prop2": "value2" } });
             }].concat(this.asserts(1)).concat(() => {
                 const payloadStr: string[] = this.successSpy.args[0][0];
                 const payload = JSON.parse(payloadStr[0]);
                 let data = payload.data;
-                Assert.ok(data && data.baseData && 
+                Assert.ok(data && data.baseData &&
                     data.baseData.properties["foo"] && data.baseData.properties["prop2"]);
                 Assert.equal("bar", data.baseData.properties["foo"]);
                 Assert.equal("value2", data.baseData.properties["prop2"]);
@@ -164,7 +164,7 @@ export class ApplicationInsightsTests extends TestClass {
                     Assert.ok(false, 'trackException test not run');
                 } catch (e) {
                     exception = e;
-                    this._ai.trackException({error: exception});
+                    this._ai.trackException({ error: exception });
                 }
                 Assert.ok(exception);
             }].concat(this.asserts(1))
@@ -177,7 +177,7 @@ export class ApplicationInsightsTests extends TestClass {
                 () => {
                     console.log("* calling trackMetric " + new Date().toISOString());
                     for (var i = 0; i < 100; i++) {
-                        this._ai.trackMetric({name: "test" + i, average: Math.round(100 * Math.random())});
+                        this._ai.trackMetric({ name: "test" + i, average: Math.round(100 * Math.random()) });
                     }
                     console.log("* done calling trackMetric " + new Date().toISOString());
                 }
@@ -199,7 +199,7 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    this._ai.trackPageViewPerformance({name: 'name', url: 'url'});
+                    this._ai.trackPageViewPerformance({ name: 'name', uri: 'url' });
                 }
             ].concat(this.asserts(1))
         });
@@ -218,11 +218,11 @@ export class ApplicationInsightsTests extends TestClass {
 
                     Assert.ok(exception);
 
-                    this._ai.trackException({error: exception});
-                    this._ai.trackMetric({name: "test", average: Math.round(100 * Math.random())});
-                    this._ai.trackTrace({message: "test"});
+                    this._ai.trackException({ error: exception });
+                    this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
+                    this._ai.trackTrace({ message: "test" });
                     this._ai.trackPageView({}); // sends 2
-                    this._ai.trackPageViewPerformance({name: 'name', url:'http://someurl'});
+                    this._ai.trackPageViewPerformance({ name: 'name', uri: 'http://someurl' });
                     this._ai.flush();
                 }
             ].concat(this.asserts(6))
@@ -242,10 +242,10 @@ export class ApplicationInsightsTests extends TestClass {
                     Assert.ok(exception);
 
                     for (var i = 0; i < 100; i++) {
-                        this._ai.trackException({error: exception});
-                        this._ai.trackMetric({name: "test", average: Math.round(100 * Math.random())});
-                        this._ai.trackTrace({message: "test"});
-                        this._ai.trackPageView({name: `${i}`}); // sends 2 1st time
+                        this._ai.trackException({ error: exception });
+                        this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
+                        this._ai.trackTrace({ message: "test" });
+                        this._ai.trackPageView({ name: `${i}` }); // sends 2 1st time
                     }
                 }
             ].concat(this.asserts(401))
@@ -266,24 +266,24 @@ export class ApplicationInsightsTests extends TestClass {
 
                     // Act
                     this._ai.addTelemetryInitializer(telemetryInitializer.init);
-                    this._ai.trackMetric({name: "test", average: Math.round(100 * Math.random())});
+                    this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
                 }
             ]
-            .concat(this.asserts(1))
-            .concat(() => {
-                if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
-                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
-                    const payload = JSON.parse(payloadStr[0]);
-                    Assert.ok(payload);
+                .concat(this.asserts(1))
+                .concat(() => {
+                    if (this.successSpy.called) {
+                        const payloadStr: string[] = this.successSpy.args[0][0];
+                        Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                        const payload = JSON.parse(payloadStr[0]);
+                        Assert.ok(payload);
 
-                    if (payload && payload.baseData) {
-                        const nameResult: string = payload.data.baseData.metrics[0].name;
-                        const nameExpect: string = 'other name';
-                        Assert.equal(nameExpect, nameResult, 'telemetryinitializer override successful');
+                        if (payload && payload.baseData) {
+                            const nameResult: string = payload.data.baseData.metrics[0].name;
+                            const nameExpect: string = 'other name';
+                            Assert.equal(nameExpect, nameResult, 'telemetryinitializer override successful');
+                        }
                     }
-                }
-            })
+                })
         });
     }
 
@@ -346,25 +346,25 @@ export class ApplicationInsightsTests extends TestClass {
                 () => {
                     const context = <TelemetryContext>(this._ai.context);
                     context.user.setAuthenticatedUserContext('10001');
-                    this._ai.trackTrace({message: 'authUserContext test'});
+                    this._ai.trackTrace({ message: 'authUserContext test' });
                 }
             ]
-            .concat(this.asserts(1))
-            .concat(<any>PollingAssert.createPollingAssert(() => {
-                if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
-                    if (payloadStr.length !== 1) {
-                        // Only 1 track should be sent
-                        return false;
+                .concat(this.asserts(1))
+                .concat(<any>PollingAssert.createPollingAssert(() => {
+                    if (this.successSpy.called) {
+                        const payloadStr: string[] = this.successSpy.args[0][0];
+                        if (payloadStr.length !== 1) {
+                            // Only 1 track should be sent
+                            return false;
+                        }
+                        const payload = JSON.parse(payloadStr[0]);
+                        if (payload && payload.tags) {
+                            const tagName: string = this.tagKeys.userAuthUserId;
+                            return '10001' === payload.tags[tagName];
+                        }
                     }
-                    const payload = JSON.parse(payloadStr[0]);
-                    if (payload && payload.tags) {
-                        const tagName: string = this.tagKeys.userAuthUserId;
-                        return '10001' === payload.tags[tagName];
-                    }
-                }
-                return false;
-            }, 'user.authenticatedId', 5, 500))
+                    return false;
+                }, 'user.authenticatedId'))
         });
 
         this.testCaseAsync({
@@ -374,27 +374,27 @@ export class ApplicationInsightsTests extends TestClass {
                 () => {
                     const context = <TelemetryContext>(this._ai.context);
                     context.user.setAuthenticatedUserContext('10001', 'account123');
-                    this._ai.trackTrace({message: 'authUserContext test'});
+                    this._ai.trackTrace({ message: 'authUserContext test' });
                 }
             ]
-            .concat(this.asserts(1))
-            .concat(<any>PollingAssert.createPollingAssert(() => {
-                if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
-                    if (payloadStr.length !== 1) {
-                        // Only 1 track should be sent
-                        return false;
-                    }
-                    const payload = JSON.parse(payloadStr[0]);
-                    if (payload && payload.tags) {
-                        const authTag: string = this.tagKeys.userAuthUserId;
-                        const accountTag: string = this.tagKeys.userAccountId;
-                        return '10001' === payload.tags[authTag] /*&&
+                .concat(this.asserts(1))
+                .concat(<any>PollingAssert.createPollingAssert(() => {
+                    if (this.successSpy.called) {
+                        const payloadStr: string[] = this.successSpy.args[0][0];
+                        if (payloadStr.length !== 1) {
+                            // Only 1 track should be sent
+                            return false;
+                        }
+                        const payload = JSON.parse(payloadStr[0]);
+                        if (payload && payload.tags) {
+                            const authTag: string = this.tagKeys.userAuthUserId;
+                            const accountTag: string = this.tagKeys.userAccountId;
+                            return '10001' === payload.tags[authTag] /*&&
                             'account123' === payload.tags[accountTag] */; //bug https://msazure.visualstudio.com/One/_workitems/edit/3508825
+                        }
                     }
-                }
-                return false;
-            }, 'user.authenticatedId', 5, 500))
+                    return false;
+                }, 'user.authenticatedId'))
         });
 
         this.testCaseAsync({
@@ -404,27 +404,27 @@ export class ApplicationInsightsTests extends TestClass {
                 () => {
                     const context = <TelemetryContext>(this._ai.context);
                     context.user.setAuthenticatedUserContext("\u0428", "\u0429");
-                    this._ai.trackTrace({message: 'authUserContext test'});
+                    this._ai.trackTrace({ message: 'authUserContext test' });
                 }
             ]
-            .concat(this.asserts(1))
-            .concat(<any>PollingAssert.createPollingAssert(() => {
-                if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
-                    if (payloadStr.length !== 1) {
-                        // Only 1 track should be sent
-                        return false;
-                    }
-                    const payload = JSON.parse(payloadStr[0]);
-                    if (payload && payload.tags) {
-                        const authTag: string = this.tagKeys.userAuthUserId;
-                        const accountTag: string = this.tagKeys.userAccountId;
-                        return '\u0428' === payload.tags[authTag] /* &&
+                .concat(this.asserts(1))
+                .concat(<any>PollingAssert.createPollingAssert(() => {
+                    if (this.successSpy.called) {
+                        const payloadStr: string[] = this.successSpy.args[0][0];
+                        if (payloadStr.length !== 1) {
+                            // Only 1 track should be sent
+                            return false;
+                        }
+                        const payload = JSON.parse(payloadStr[0]);
+                        if (payload && payload.tags) {
+                            const authTag: string = this.tagKeys.userAuthUserId;
+                            const accountTag: string = this.tagKeys.userAccountId;
+                            return '\u0428' === payload.tags[authTag] /* &&
                             '\u0429' === payload.tags[accountTag] */; //bug https://msazure.visualstudio.com/One/_workitems/edit/3508825
+                        }
                     }
-                }
-                return false;
-            }, 'user.authenticatedId', 5, 500))
+                    return false;
+                }, 'user.authenticatedId'))
         });
 
         this.testCaseAsync({
@@ -435,27 +435,27 @@ export class ApplicationInsightsTests extends TestClass {
                     const context = <TelemetryContext>(this._ai.context);
                     context.user.setAuthenticatedUserContext('10002', 'account567');
                     context.user.clearAuthenticatedUserContext();
-                    this._ai.trackTrace({message: 'authUserContext test'});
+                    this._ai.trackTrace({ message: 'authUserContext test' });
                 }
             ]
-            .concat(this.asserts(1))
-            .concat(<any>PollingAssert.createPollingAssert(() => {
-                if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
-                    if (payloadStr.length !== 1) {
-                        // Only 1 track should be sent
-                        return false;
+                .concat(this.asserts(1))
+                .concat(<any>PollingAssert.createPollingAssert(() => {
+                    if (this.successSpy.called) {
+                        const payloadStr: string[] = this.successSpy.args[0][0];
+                        if (payloadStr.length !== 1) {
+                            // Only 1 track should be sent
+                            return false;
+                        }
+                        const payload = JSON.parse(payloadStr[0]);
+                        if (payload && payload.tags) {
+                            const authTag: string = this.tagKeys.userAuthUserId;
+                            const accountTag: string = this.tagKeys.userAccountId;
+                            return undefined === payload.tags[authTag] &&
+                                undefined === payload.tags[accountTag];
+                        }
                     }
-                    const payload = JSON.parse(payloadStr[0]);
-                    if (payload && payload.tags) {
-                        const authTag: string = this.tagKeys.userAuthUserId;
-                        const accountTag: string = this.tagKeys.userAccountId;
-                        return undefined === payload.tags[authTag] &&
-                            undefined === payload.tags[accountTag];
-                    }
-                }
-                return false;
-            }, 'user.authenticatedId', 5, 500))
+                    return false;
+                }, 'user.authenticatedId'))
         });
 
         // This doesn't need to be e2e
@@ -504,7 +504,7 @@ export class ApplicationInsightsTests extends TestClass {
     (PollingAssert.createPollingAssert(() => {
         Assert.ok(true, "* checking success spy " + new Date().toISOString());
 
-        if(this.successSpy.called) {
+        if (this.successSpy.called) {
             let currentCount: number = 0;
             this.successSpy.args.forEach(call => {
                 currentCount += call[1];

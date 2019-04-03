@@ -31,7 +31,7 @@ export interface IMetricTelemetry {
      * @default min=average
      */
     min?: number;
-    
+
     /**
      * @description (optional) The largest measurement in the sample. Defaults to the average.
      * @type {number}
