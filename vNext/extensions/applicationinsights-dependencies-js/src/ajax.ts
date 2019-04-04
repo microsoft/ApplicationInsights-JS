@@ -258,7 +258,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 success:(+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
                 responseCode: +xhr.ajaxData.status,
                 method: xhr.ajaxData.method,
-                time: xhr.ajaxData.requestSentTime
+                startTime: xhr.ajaxData.requestSentTime
             };
 
             // enrich dependency target with correlation context from the server
@@ -502,7 +502,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     duration: ajaxData.ajaxTotalDuration,
                     success: response.status >= 200 && response.status < 400,
                     responseCode: response.status,
-                    time: ajaxData.requestSentTime,
+                    startTime: ajaxData.requestSentTime,
                     properties: { HttpMethod: ajaxData.method }
                 };
 
@@ -554,7 +554,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     duration: ajaxData.ajaxTotalDuration,
                     success: false,
                     responseCode: 0,
-                    time: ajaxData.requestSentTime,
+                    startTime: ajaxData.requestSentTime,
                     properties: { HttpMethod: ajaxData.method }
                 };
 

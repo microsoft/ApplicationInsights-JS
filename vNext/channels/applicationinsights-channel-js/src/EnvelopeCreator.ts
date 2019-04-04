@@ -3,7 +3,8 @@ import {
     RemoteDependencyData, Event, Exception,
     Metric, PageView, Trace, PageViewPerformance, IDependencyTelemetry,
     IPageViewPerformanceTelemetry, CtxTagKeys,
-    HttpMethod, IPageViewTelemetryInternal, IWeb
+    HttpMethod, IPageViewTelemetryInternal, IWeb,
+    Util
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, CoreUtils,
@@ -58,9 +59,6 @@ export abstract class EnvelopeCreator {
     protected static createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, telemetryItem: ITelemetryItem, data: Data<T>): IEnvelope {
         let envelope = new Envelope(logger, data, envelopeType);
         envelope.iKey = telemetryItem.iKey;
-        if (data.baseData && (data.baseData as any).time) {
-            envelope.time = (data.baseData as any).time;
-        }
         let iKeyNoDashes = telemetryItem.iKey.replace(/-/g, "");
         envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
 
@@ -241,10 +239,18 @@ export class DependencyEnvelopeCreator extends EnvelopeCreator {
         let success = bd.success;
         let resultCode = bd.responseCode;
         let requestAPI = bd.type;
+        let startTime = bd.startTime;
+
         let method = bd.properties && bd.properties[HttpMethod] ? bd.properties[HttpMethod] : "GET";
         let baseData = new RemoteDependencyData(logger, id, absoluteUrl, command, duration, success, resultCode, method, requestAPI, customProperties, customMeasurements);
         let data = new Data<RemoteDependencyData>(RemoteDependencyData.dataType, baseData);
-        return EnvelopeCreator.createEnvelope<RemoteDependencyData>(logger, RemoteDependencyData.envelopeType, telemetryItem, data);
+        const envelope = EnvelopeCreator.createEnvelope<RemoteDependencyData>(logger, RemoteDependencyData.envelopeType, telemetryItem, data);
+        if (typeof startTime === "number") {
+            const dateString = new Date(startTime);
+            const dateISO =  Util.toISOStringForIE8(dateString);
+            envelope.time = dateISO;
+        }
+        return envelope;
     }
 }
 

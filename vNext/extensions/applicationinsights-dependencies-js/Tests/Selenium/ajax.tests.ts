@@ -1,14 +1,25 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
+/// <reference path='../TestFramework/Common.ts' />
 import { AjaxMonitor } from "../../src/ajax";
 import { RemoteDependencyData, DisabledPropertyName, IConfig, DateTimeUtils, IDependencyTelemetry } from "@microsoft/applicationinsights-common";
 import { AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls } from "@microsoft/applicationinsights-core-js";
 
 export class AjaxTests extends TestClass {
+    private trackStub: SinonStub;
+    private ajaxMonitor: AjaxMonitor;
+
     public testInitialize() {
+        // this.useFakeTimers = false;
+        this.clock.restore();
+
         var xhr = sinon.useFakeXMLHttpRequest();
+        this.ajaxMonitor = new AjaxMonitor();
+        this.trackStub = this.sandbox.stub(this.ajaxMonitor, "trackDependencyDataInternal");
     }
 
     public testCleanup() {
+        this.trackStub.restore();
+        this.ajaxMonitor = null;
     }
 
     public registerTests() {
@@ -86,31 +97,45 @@ export class AjaxTests extends TestClass {
             }
         });
 
-        this.testCase({
-            name: "Fetch: fetch creates telemetry item with time == request start",
-            test: () => {
-                if (typeof fetch === 'undefined') {
-                    Assert.ok(true);
-                    return;
-                }
+        this.testCaseAsync({
+            name: 'Fetch: fetch creates telemetry item with sentTime == request start',
+            stepDelay: 1,
+            steps: [
+                () => {
+                    if (typeof fetch === 'undefined') {
+                        Assert.ok(true);
+                        return;
+                    }
 
-                let ajaxMonitor = new AjaxMonitor();
-                let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
-                appInsightsCore.initialize(coreConfig, [ajaxMonitor, new TestChannelPlugin()]);
-                const trackStub = this.sandbox.stub(ajaxMonitor, "trackDependencyDataInternal");
+                    let appInsightsCore = new AppInsightsCore();
+                    let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                    appInsightsCore.initialize(coreConfig, [this.ajaxMonitor, new TestChannelPlugin()]);
 
-                // Act
-                fetch("https://httpbin.org/status/200");
-                const now = DateTimeUtils.Now();
+                    // Act
+                    fetch("https://httpbin.org/status/200");
 
-                // Assert
-                Assert.ok(trackStub.calledOnce);
+                },
+                <any>PollingAssert.createPollingAssert(() => {
+                    if (typeof fetch === 'undefined') {
+                        return true;
+                    }
 
-                const calledWithArgs: IDependencyTelemetry = trackStub.args[0][0];
-                Assert.equal(now, (<any>calledWithArgs).time);
-            }
-        });
+                    // Assert
+                    if (!this.trackStub.calledOnce) {
+                        return false;
+                    }
+
+                    const calledWithArgs: IDependencyTelemetry = this.trackStub.args[0][0];
+                    if (!calledWithArgs.startTime) {
+                        return false;
+                    }
+                    if (typeof calledWithArgs.startTime !== "string") {
+                        return false;
+                    }
+                    return false;
+                }, 'Fetch sends a sentTime')
+            ]
+        })
 
         this.testCase({
             name: "Fetch: fetch gets instrumented",
