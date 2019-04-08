@@ -221,12 +221,13 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param customProperties Additional data used to filter events and metrics. Defaults to empty.
      * If a user wants to provide duration for pageLoad, it'll have to be in pageView.properties.duration
      */
-    public trackPageView(pageView: IPageViewTelemetry, customProperties?: ICustomProperties) {
+    public trackPageView(pageView?: IPageViewTelemetry, customProperties?: ICustomProperties) {
         try {
-            this._pageViewManager.trackPageView(pageView, customProperties);
+            const inPv = pageView || {};
+            this._pageViewManager.trackPageView(inPv, customProperties);
 
             if (this.config.autoTrackPageVisitTime) {
-                this._pageVisitTimeManager.trackPreviousPageVisit(pageView.name, pageView.uri);
+                this._pageVisitTimeManager.trackPreviousPageVisit(inPv.name, inPv.uri);
             }
         } catch (e) {
             this._logger.throwInternal(
@@ -503,6 +504,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
         this._pageViewPerformanceManager = new PageViewPerformanceManager(this.core);
         this._pageViewManager = new PageViewManager(this, this.config.overridePageViewDuration, this.core, this._pageViewPerformanceManager);
+        this._pageVisitTimeManager = new PageVisitTimeManager(this._logger, (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime))
 
         this._telemetryInitializers = [];
         this._addDefaultTelemetryInitializers(configGetters);
@@ -563,6 +565,22 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
 
         this._isInitialized = true;
+    }
+
+    /**
+     * Log a page visit time
+     * @param    pageName    Name of page
+     * @param    pageVisitDuration Duration of visit to the page in milleseconds
+     */
+    private trackPageVisitTime(pageName: string, pageUrl: string, pageVisitTime: number) {
+        var properties = { PageName: pageName, PageUrl: pageUrl };
+        this.trackMetric({
+            name: "PageVisitTime",
+            average: pageVisitTime,
+            max: pageVisitTime,
+            min: pageVisitTime,
+            sampleCount: 1
+        }, properties);
     }
 
     private _addDefaultTelemetryInitializers(configGetters: ITelemetryConfig) {

@@ -82,8 +82,9 @@ export class Initialization implements IApplicationInsights {
      * @param {IPageViewTelemetry} pageView
      * @memberof Initialization
      */
-    public trackPageView(pageView: IPageViewTelemetry) {
-        this.appInsights.trackPageView(pageView);
+    public trackPageView(pageView?: IPageViewTelemetry) {
+        const inPv = pageView || {};
+        this.appInsights.trackPageView(inPv);
     }
 
     /**
@@ -92,7 +93,8 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry): void {
-        this.appInsights.trackPageViewPerformance(pageViewPerformance);
+        const inPvp = pageViewPerformance || {};
+        this.appInsights.trackPageViewPerformance(inPvp);
     }
 
     /**
