@@ -14,7 +14,7 @@
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "grunt common",
         "build:browser": "rollup -c",
-        "test": "echo 'No Tests'"
+        "test": "grunt commontest"
     },
     "devDependencies": {
         "grunt": "1.0.1",
