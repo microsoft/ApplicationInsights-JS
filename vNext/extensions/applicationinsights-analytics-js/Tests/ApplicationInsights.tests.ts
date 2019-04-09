@@ -27,6 +27,62 @@ export class ApplicationInsightsTests extends TestClass {
 
     public registerTests() {
         this.testCase({
+            name: 'AppInsightsTests: PageVisitTimeManager is constructed when analytics plugin is initialized',
+            test: () => {
+                // Setup
+                var channel = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                var appInsights: ApplicationInsights = new ApplicationInsights();
+
+                // Act
+                var config = {
+                    instrumentationKey: 'ikey'
+                };
+
+                core.initialize(
+                    config,
+                    [appInsights, channel]
+                );
+                const pvtm = appInsights['_pageVisitTimeManager'];
+
+                // Assert
+                Assert.ok(pvtm)
+                Assert.ok(pvtm['_logger']);
+                Assert.ok(pvtm['pageVisitTimeTrackingHandler']);
+            }
+        });
+
+        this.testCase({
+            name: 'AppInsightsTests: PageVisitTimeManager is available when config.autoTrackPageVisitTime is true and trackPageView is called',
+            test: () => {
+                // Setup
+                var channel = new ChannelPlugin();
+                var core = new AppInsightsCore();
+                var appInsights: ApplicationInsights = new ApplicationInsights();
+
+                var config = {
+                    instrumentationKey: 'ikey',
+                    autoTrackPageVisitTime: true
+                };
+                core.initialize(
+                    config,
+                    [appInsights, channel]
+                );
+                const pvtm = appInsights['_pageVisitTimeManager'];
+                const pvtmSpy = this.sandbox.spy(pvtm, 'trackPreviousPageVisit');
+
+                Assert.ok(pvtm)
+                Assert.ok(pvtmSpy.notCalled);
+
+                // Act
+                appInsights.trackPageView();
+
+                // Assert
+                Assert.ok(pvtmSpy.calledOnce);
+            }
+        });
+
+        this.testCase({
             name: 'AppInsightsTests: config can be set from root',
             test: () => {
                 // Setup
