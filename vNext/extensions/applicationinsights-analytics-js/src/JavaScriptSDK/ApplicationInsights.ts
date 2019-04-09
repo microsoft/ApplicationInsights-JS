@@ -365,9 +365,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     * @param systemProperties
     */
     public sendExceptionInternal(exception: IExceptionTelemetry, customProperties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
-        let baseData = new Exception(this._logger, exception.error, exception.properties, exception.measurements, exception.severityLevel)
-        let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<Exception>(
-            baseData,
+        let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IExceptionTelemetry>(
+            exception,
             Exception.dataType,
             Exception.envelopeType,
             this._logger,
