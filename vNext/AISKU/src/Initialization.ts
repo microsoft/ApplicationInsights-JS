@@ -52,7 +52,7 @@ export class Initialization implements IApplicationInsights {
         // ensure instrumentationKey is specified
         if (config && !config.instrumentationKey) {
             config = <any>snippet;
-            ApplicationInsights.Version = "2.0.2-beta";
+            ApplicationInsights.Version = "2.0.0-rc1"; // Not currently used anywhere
         }
 
         this.appInsights = new ApplicationInsights();
@@ -82,8 +82,9 @@ export class Initialization implements IApplicationInsights {
      * @param {IPageViewTelemetry} pageView
      * @memberof Initialization
      */
-    public trackPageView(pageView: IPageViewTelemetry) {
-        this.appInsights.trackPageView(pageView);
+    public trackPageView(pageView?: IPageViewTelemetry) {
+        const inPv = pageView || {};
+        this.appInsights.trackPageView(inPv);
     }
 
     /**
@@ -92,7 +93,8 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry): void {
-        this.appInsights.trackPageViewPerformance(pageViewPerformance);
+        const inPvp = pageViewPerformance || {};
+        this.appInsights.trackPageViewPerformance(inPvp);
     }
 
     /**
@@ -252,7 +254,7 @@ export class Initialization implements IApplicationInsights {
 
         // initialize core
         this.core.initialize(this.config, extensions);
-        
+
         // Empty queue of all api calls logged prior to sdk download
         this.emptyQueue();
         this.pollInternalLogs();

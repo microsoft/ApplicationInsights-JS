@@ -26,10 +26,10 @@ export interface IExceptionTelemetry {
 
     /**
      * Collection of custom properties
-     * @type {{ [key: string]: string}}
+     * @type {{ [key: any]: string}}
      * @memberof IExceptionTelemetry
      */
-    properties?: { [key: string]: string};
+    properties?: { [key: string]: any};
 
     /**
      * Collection of custom measurements

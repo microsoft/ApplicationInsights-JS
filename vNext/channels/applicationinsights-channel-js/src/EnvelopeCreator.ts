@@ -3,7 +3,9 @@ import {
     RemoteDependencyData, Event, Exception,
     Metric, PageView, Trace, PageViewPerformance, IDependencyTelemetry,
     IPageViewPerformanceTelemetry, CtxTagKeys,
-    HttpMethod, IPageViewTelemetryInternal, IWeb
+    HttpMethod, IPageViewTelemetryInternal, IWeb,
+    Util,
+    IExceptionTelemetry
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, CoreUtils,
@@ -15,6 +17,7 @@ const baseType: string = "baseType";
 const baseData: string = "baseData";
 
 export abstract class EnvelopeCreator {
+    public static Version = "2.0.0-rc1";
     protected _logger: IDiagnosticLogger;
 
     abstract Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem): IEnvelope;
@@ -77,7 +80,7 @@ export abstract class EnvelopeCreator {
     private static extractPartAExtensions(item: ITelemetryItem, env: IEnvelope) {
         // todo: switch to keys from common in this method
         if (!env.tags) {
-            env.tags = [];
+            env.tags = {};
         }
 
         if (!item.ext) {
@@ -190,7 +193,7 @@ export abstract class EnvelopeCreator {
         //     "ext": {  "cloud": {
         //          "role": "WATSON3",
         //          "roleInstance": "CO4AEAP00000260"
-        //      }, 
+        //      },
         //      "device": {}, "correlation": {} },
         //      "tags": [
         //        { "amazon.region" : "east2" },
@@ -203,6 +206,10 @@ export abstract class EnvelopeCreator {
             tgs = { ...tgs, ...tg };
         });
         env.tags = { ...env.tags, ...tgs };
+        if(!env.tags[CtxTagKeys.internalSdkVersion]) {
+            // Append a version in case it is not already set
+            env.tags[CtxTagKeys.internalSdkVersion] = `javascript:${EnvelopeCreator.Version}`;
+        }
     }
 }
 
@@ -285,8 +292,12 @@ export class ExceptionEnvelopeCreator extends EnvelopeCreator {
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
         }
-
-        let baseData = telemetryItem.baseData as Exception;
+        let bd = telemetryItem.baseData as IExceptionTelemetry;
+        let customProperties = bd.properties;
+        let customMeasurements = bd.measurements;
+        let error = bd.error;
+        let severityLevel = bd.severityLevel
+        let baseData = new Exception(logger, error, customProperties, customMeasurements, severityLevel);
         let data = new Data<Exception>(Exception.dataType, baseData);
         return EnvelopeCreator.createEnvelope<Exception>(logger, Exception.envelopeType, telemetryItem, data);
     }

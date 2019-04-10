@@ -88,5 +88,5 @@ window[aiName] = aisdk;
 
 // if somebody calls the snippet twice, don't report page view again
 if (aisdk.queue && aisdk.queue.length === 0) {
-     aisdk.trackPageView();
+     aisdk.trackPageView({});
 }

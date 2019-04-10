@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-core-js",
     "author": "Microsoft Corporation",
-    "version": "2.0.0-beta.3",
+    "version": "2.0.0-rc1",
     "description": "Microsoft Application Insights Core Javascript SDK",
     "keywords": [
         "azure",
@@ -23,7 +23,10 @@
         "build:browser": "rollup -c rollup.config.js",
         "test": "grunt coretest"
     },
-    "repository": "github:Microsoft/applicationinsights-core-js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/shared/AppInsightsCore"
+    },
     "license": "MIT",
     "sideEffects": false,
     "devDependencies": {

@@ -139,7 +139,7 @@ class ValidateTests extends TestClass {
     private waitForResponse() {
         return <any>PollingAssert.createPollingAssert(() => {
             return (this.successSpy.called || this.errorSpy.called);
-        }, "Wait for response" + new Date().toISOString(), 5, 1000)
+        }, "Wait for response" + new Date().toISOString())
     }
 
     private boilerPlateAsserts() {

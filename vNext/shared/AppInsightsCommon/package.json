@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-common",
-    "version": "2.0.0-beta.3",
+    "version": "2.0.0-rc1",
     "description": "Microsoft Application Insights Common JavaScript Library",
     "main": "./dist/applicationinsights-common.js",
     "module": "./dist-esm/applicationinsights-common.js",
@@ -8,7 +8,7 @@
     "sideEffects": false,
     "repository": {
         "type": "git",
-        "url": "https://github.com/Microsoft/ApplicationInsights-JS/tree/master/AppInsightsCommon"
+        "url": "https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/shared/AppInsightsCommon"
     },
     "scripts": {
         "build": "npm run build:esm && npm run build:browser",
@@ -30,7 +30,7 @@
         "rollup": "^0.66.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "^2.0.0-beta.3",
+        "@microsoft/applicationinsights-core-js": "^2.0.0-rc1",
         "tslib": "^1.9.3"
     },
     "license": "MIT"
