@@ -1,3 +1,5 @@
+import { CoreUtils } from '@microsoft/applicationinsights-core-js';
+
 /**
  * @description Monitors browser for offline events
  * @export default - Offline: Static instance of OfflineListener
@@ -27,7 +29,7 @@ export class OfflineListener {
                 (<any>document.body).ononline = this._setOnline.bind(this);
                 (<any>document.body).onoffline = this._setOffline.bind(this)
                 this.isListening = true;
-            } else if (document){
+            } else if (document) {
                 (<any>document).ononline = this._setOnline.bind(this);
                 (<any>document).onoffline = this._setOffline.bind(this)
                 this.isListening = true;
@@ -45,7 +47,7 @@ export class OfflineListener {
     public isOnline(): boolean {
         if (this.isListening) {
             return this._onlineStatus
-        } else if (navigator) {
+        } else if (navigator && !CoreUtils.isNullOrUndefined(navigator.onLine)) { // navigator.onLine is undefined in react-native
             return navigator.onLine;
         } else {
             // Cannot determine online status - report as online
