@@ -467,7 +467,8 @@ export class Sender implements IChannelControlsAI {
             enableSessionStorageBuffer: undefined,
             isRetryDisabled: undefined,
             isBeaconApiDisabled: undefined,
-            instrumentationKey: undefined
+            instrumentationKey: undefined,
+            namePrefix: undefined
         };
     }
 

@@ -30,18 +30,18 @@ export interface ISendBuffer {
 
     /**
      * Moves items to the SENT_BUFFER.
-     * The buffer holds items which were sent, but we haven't received any response from the backend yet. 
+     * The buffer holds items which were sent, but we haven't received any response from the backend yet.
      */
     markAsSent: (payload: string[]) => void;
 
     /**
-     * Removes items from the SENT_BUFFER. Should be called on successful response from the backend. 
+     * Removes items from the SENT_BUFFER. Should be called on successful response from the backend.
      */
     clearSent: (payload: string[]) => void;
 }
 
 /*
- * An array based send buffer. 
+ * An array based send buffer.
  */
 export class ArraySendBuffer implements ISendBuffer {
     private _config: ISenderConfig;
@@ -97,11 +97,11 @@ export class SessionStorageSendBuffer implements ISendBuffer {
     static BUFFER_KEY = "AI_buffer";
     static SENT_BUFFER_KEY = "AI_sentBuffer";
 
-    // Maximum number of payloads stored in the buffer. If the buffer is full, new elements will be dropped. 
+    // Maximum number of payloads stored in the buffer. If the buffer is full, new elements will be dropped.
     static MAX_BUFFER_SIZE = 2000;
     private _bufferFullMessageSent = false;
 
-    // An in-memory copy of the buffer. A copy is saved to the session storage on enqueue() and clear(). 
+    // An in-memory copy of the buffer. A copy is saved to the session storage on enqueue() and clear().
     // The buffer is restored in a constructor and contains unsent events from a previous page.
     private _buffer: string[];
     private _config: ISenderConfig;
@@ -228,8 +228,10 @@ export class SessionStorageSendBuffer implements ISendBuffer {
     }
 
     private getBuffer(key: string): string[] {
+        let prefixedKey = key;
         try {
-            var bufferJson = Util.getSessionStorage(this._logger, key);
+            prefixedKey = this._config.namePrefix && this._config.namePrefix() ? this._config.namePrefix() + "_" + prefixedKey : prefixedKey;
+            var bufferJson = Util.getSessionStorage(this._logger, prefixedKey);
             if (bufferJson) {
                 var buffer: string[] = JSON.parse(bufferJson);
                 if (buffer) {
@@ -239,7 +241,7 @@ export class SessionStorageSendBuffer implements ISendBuffer {
         } catch (e) {
             this._logger.throwInternal(LoggingSeverity.CRITICAL,
                 _InternalMessageId.FailedToRestoreStorageBuffer,
-                " storage key: " + key + ", " + Util.getExceptionName(e),
+                " storage key: " + prefixedKey + ", " + Util.getExceptionName(e),
                 { exception: Util.dump(e) });
         }
 
@@ -247,17 +249,19 @@ export class SessionStorageSendBuffer implements ISendBuffer {
     }
 
     private setBuffer(key: string, buffer: string[]) {
+        let prefixedKey = key;
         try {
+            prefixedKey = this._config.namePrefix && this._config.namePrefix() ? this._config.namePrefix() + "_" + prefixedKey : prefixedKey;
             var bufferJson = JSON.stringify(buffer);
-            Util.setSessionStorage(this._logger, key, bufferJson);
+            Util.setSessionStorage(this._logger, prefixedKey, bufferJson);
         } catch (e) {
             // if there was an error, clear the buffer
             // telemetry is stored in the _buffer array so we won't loose any items
-            Util.setSessionStorage(this._logger, key, JSON.stringify([]));
+            Util.setSessionStorage(this._logger, prefixedKey, JSON.stringify([]));
 
             this._logger.throwInternal(LoggingSeverity.WARNING,
                 _InternalMessageId.FailedToSetStorageBuffer,
-                " storage key: " + key + ", " + Util.getExceptionName(e) + ". Buffer cleared",
+                " storage key: " + prefixedKey + ", " + Util.getExceptionName(e) + ". Buffer cleared",
                 { exception: Util.dump(e) });
         }
     }
