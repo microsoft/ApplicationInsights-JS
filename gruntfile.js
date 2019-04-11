@@ -44,6 +44,13 @@ module.exports = function (grunt) {
             common: {
                 tsconfig: './vNext/shared/AppInsightsCommon/tsconfig.json'
             },
+            commontest: {
+                tsconfig: './vNext/shared/AppInsightsCommon/Tests/tsconfig.json',
+                src: [
+                    './vNext/shared/AppInsightsCommon/Tests/Selenium/appinsights-common.tests.ts',
+                ],
+                out: 'vNext/shared/AppInsightsCommon/Tests/Selenium/aicommon.tests.js'
+            },
             appinsights: {
                 tsconfig: './vNext/extensions/applicationinsights-analytics-js/tsconfig.json',
             },
@@ -241,6 +248,17 @@ module.exports = function (grunt) {
                     '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
             },
+            common: {
+                options: {
+                    urls: [
+                        './vNext/shared/AppInsightsCommon/Tests/Selenium/Tests.html'
+                    ],
+                    timeout: 300 * 1000, // 5 min
+                    console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
+                }
+            },
             aitests: {
                 options: {
                     urls: [
@@ -331,6 +349,7 @@ module.exports = function (grunt) {
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
     grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests"]);
     grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
+    grunt.registerTask("commontest", ["ts:common", "ts:commontest", "qunit:common"]);
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiestests", ["ts:properties", "ts:propertiestests", "qunit:properties"]);
     grunt.registerTask("reactnative", ["ts:reactnative"]);
