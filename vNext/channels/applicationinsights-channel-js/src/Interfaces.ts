@@ -41,6 +41,8 @@ export interface ISenderConfig {
      * (Optional) Override the instrumentation key that this channel instance sends to
      */
     instrumentationKey: () => string;
+
+    namePrefix: () => string;
 }
 
 export interface IBackendResponse {
