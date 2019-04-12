@@ -65,6 +65,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         config.sessionExpirationMs = 24 * 60 * 60 * 1000;
         config.disableExceptionTracking = Util.stringToBoolOrDefault(config.disableExceptionTracking);
         config.autoTrackPageVisitTime = Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
+        config.overridePageViewDuration = Util.stringToBoolOrDefault(config.overridePageViewDuration);
 
         if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
             config.samplingPercentage = 100;
