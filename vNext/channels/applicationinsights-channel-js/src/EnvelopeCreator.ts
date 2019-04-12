@@ -342,9 +342,14 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
         // Since duration is not part of the domain properties in Common Schema, extract it from part C
         let duration = undefined;
         if (!CoreUtils.isNullOrUndefined(telemetryItem.baseData) &&
-            !CoreUtils.isNullOrUndefined(telemetryItem.baseData.properties)) {
+            !CoreUtils.isNullOrUndefined(telemetryItem.baseData.properties) &&
+            !CoreUtils.isNullOrUndefined(telemetryItem.baseData.properties.duration)) { // from part B properties
             duration = telemetryItem.baseData.properties.duration;
             delete telemetryItem.baseData.properties.duration;
+        } else if (!CoreUtils.isNullOrUndefined(telemetryItem.data) &&
+            !CoreUtils.isNullOrUndefined(telemetryItem.data["duration"])) { // from custom properties
+            duration = telemetryItem.data["duration"];
+            delete telemetryItem.data["duration"];
         }
 
         let bd = telemetryItem.baseData as IPageViewTelemetryInternal;

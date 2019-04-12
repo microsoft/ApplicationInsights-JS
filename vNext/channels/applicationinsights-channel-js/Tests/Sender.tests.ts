@@ -492,6 +492,54 @@ export class SenderTests extends TestClass {
         });
 
         this.testCase({
+            name: "AppInsightsTests: AppInsights Envelope created for Page View with duration in customProperties Part C",
+            test: () => {
+                // setup
+                let inputEnvelope: ITelemetryItem = {
+                    name: "test",
+                    time: new Date("2018-06-12").toISOString(),
+                    iKey: "iKey",
+                    ext: {
+                        "user": {
+                            "localId": "TestId",
+                            "authId": "AuthenticatedId",
+                            "id": "TestId"
+                        },
+                        "trace": {
+                            "traceID": "1528B5FF-6455-4657-BE77-E6664CAC72DC",
+                            "parentID": "1528B5FF-6455-4657-BE77-E6664CACEEEE"
+                        }
+                    },
+                    tags: [{"ai.user.accountId": "TestAccountId"}],
+                    baseType: "PageviewData",
+                    baseData: {
+                        "name": "Page View Name",
+                        "uri": "https://fakeUri.com",
+                        properties: {
+                            "property1": "val1",
+                            "property2": "val2",
+                        },
+                        measurements: {
+                            "measurement1": 50.0,
+                            "measurement2": 1.3,
+                        }
+                    },
+                    data: {
+                        "duration": 300000
+                    }
+                };
+
+                // Act
+                let appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+                let baseData = appInsightsEnvelope.data.baseData;
+
+                // Assert duration
+                let resultDuration = baseData.duration;
+                Assert.equal("00:05:00.000", resultDuration);
+            }
+        });
+
+        this.testCase({
             name: 'Envelope: custom properties are put into envelope for Exception data type',
             test: () => {
                 const inputEnvelope: ITelemetryItem = {
