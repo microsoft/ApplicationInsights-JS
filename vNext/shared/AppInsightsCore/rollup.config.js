@@ -89,6 +89,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
 
 export default [
   nodeUmdRollupConfigFactory(true),
+  nodeUmdRollupConfigFactory(false),
   browserRollupConfigFactory(true),
   browserRollupConfigFactory(false)
 ];
