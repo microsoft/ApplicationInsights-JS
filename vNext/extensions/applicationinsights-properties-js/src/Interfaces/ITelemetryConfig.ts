@@ -7,6 +7,7 @@ export interface ITelemetryConfig {
     sessionRenewalMs: () => number;
     samplingPercentage: () => number;
     sessionExpirationMs: () => number;
+    isCookieUseDisabled: () => boolean;
     cookieDomain: () => string;
     sdkExtension: () => string;
     isBrowserLinkTrackingEnabled: () => boolean;

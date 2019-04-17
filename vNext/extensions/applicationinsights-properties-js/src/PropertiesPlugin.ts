@@ -9,13 +9,13 @@ import {
 } from '@microsoft/applicationinsights-core-js';
 import { TelemetryContext } from './TelemetryContext';
 import { PageView, ConfigurationManager,
-    IConfig, PropertiesPluginIdentifier, IPropertiesPlugin, Extensions, IDevice } from '@microsoft/applicationinsights-common';
+    IConfig, PropertiesPluginIdentifier, IPropertiesPlugin, Extensions, IDevice, Util } from '@microsoft/applicationinsights-common';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 
 export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPlugin {
     public context: TelemetryContext;
     private _logger: IDiagnosticLogger;
-    
+
     public priority = 170;
     public identifier = PropertiesPluginIdentifier;
 
@@ -29,6 +29,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
             sessionRenewalMs: () => 30 * 60 * 1000,
             samplingPercentage: () => 100,
             sessionExpirationMs: () => 24 * 60 * 60 * 1000,
+            isCookieUseDisabled: () => false,
             cookieDomain: () => null,
             sdkExtension: () => null,
             isBrowserLinkTrackingEnabled: () => false,
@@ -46,6 +47,11 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
         }
 
         this._logger = core.logger;
+
+        if (this._extensionConfig.isCookieUseDisabled()) {
+            Util.disableCookies();
+        }
+
         this.context = new TelemetryContext(core.logger, this._extensionConfig);
     }
 
@@ -90,12 +96,12 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
 
     private _processTelemetryInternal(event: ITelemetryItem) {
 
-        
+
         // set part A  fields
         if (!event.tags) {
             event.tags = [];
         }
-        
+
         if (!event.ext) {
             event.ext = {};
         }
@@ -105,7 +111,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
         event.ext[Extensions.OSExt] = event.ext[Extensions.OSExt] || {};
         event.ext[Extensions.AppExt] = event.ext[Extensions.AppExt] || {};
         event.ext[Extensions.TraceExt] = event.ext[Extensions.TraceExt] || {};
-        
+
         this.context.applySessionContext(event);
         this.context.applyApplicationContext(event);
         this.context.applyDeviceContext(event);
