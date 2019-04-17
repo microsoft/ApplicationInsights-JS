@@ -9,7 +9,7 @@ import {
 } from '@microsoft/applicationinsights-core-js';
 import { TelemetryContext } from './TelemetryContext';
 import { PageView, ConfigurationManager,
-    IConfig, PropertiesPluginIdentifier, IPropertiesPlugin, Extensions, IDevice, Util } from '@microsoft/applicationinsights-common';
+    IConfig, PropertiesPluginIdentifier, IPropertiesPlugin, Extensions } from '@microsoft/applicationinsights-common';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 
 export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPlugin {
@@ -29,7 +29,6 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
             sessionRenewalMs: () => 30 * 60 * 1000,
             samplingPercentage: () => 100,
             sessionExpirationMs: () => 24 * 60 * 60 * 1000,
-            isCookieUseDisabled: () => false,
             cookieDomain: () => null,
             sdkExtension: () => null,
             isBrowserLinkTrackingEnabled: () => false,
@@ -47,11 +46,6 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
         }
 
         this._logger = core.logger;
-
-        if (this._extensionConfig.isCookieUseDisabled()) {
-            Util.disableCookies();
-        }
-
         this.context = new TelemetryContext(core.logger, this._extensionConfig);
     }
 

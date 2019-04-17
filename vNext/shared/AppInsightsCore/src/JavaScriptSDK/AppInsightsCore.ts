@@ -43,7 +43,7 @@ export class AppInsightsCore implements IAppInsightsCore {
 
         this.config = config;
 
-        this._notificationManager = new NotificationManager();        
+        this._notificationManager = new NotificationManager();
         this.config.extensions = CoreUtils.isNullOrUndefined(this.config.extensions) ? [] : this.config.extensions;
 
         // add notification to the extensions in the config so other plugins can access it
@@ -324,6 +324,10 @@ class ChannelController implements ITelemetryPlugin {
     priority: number = ChannelControllerPriority; // in reserved range 100 to 200
 
     initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
+        if ((<any>config).isCookieUseDisabled) {
+            CoreUtils.disableCookies();
+        }
+
         this.channelQueue = new Array<IChannelControls[]>();
         if (config.channels) {
             let invalidChannelIdentifier = undefined;
@@ -354,7 +358,7 @@ class ChannelController implements ITelemetryPlugin {
                 }
             });
         }
-        
+
         let arr = new Array<IChannelControls>();
 
         for (let i = 0; i < extensions.length; i++) {
@@ -379,7 +383,7 @@ class ChannelController implements ITelemetryPlugin {
             }
 
             this.channelQueue.push(arr);
-        }        
+        }
     }
 }
 
