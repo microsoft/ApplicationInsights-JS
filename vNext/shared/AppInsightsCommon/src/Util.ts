@@ -10,6 +10,7 @@ import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 
 export class Util {
     private static document: any = typeof document !== "undefined" ? document : {};
+    private static _canUseCookies: boolean = undefined;
     private static _canUseLocalStorage: boolean = undefined;
     private static _canUseSessionStorage: boolean = undefined;
     // listing only non-geo specific locations
@@ -294,17 +295,21 @@ export class Util {
      * helper method to tell if document.cookie object is available
      */
     public static canUseCookies(logger: IDiagnosticLogger): any {
-        let res = null;
-        try {
-            res = CoreUtils.canUseCookies();
-        } catch (e) {
-            logger.throwInternal(
-                LoggingSeverity.WARNING,
-                _InternalMessageId.CannotAccessCookie,
-                "Cannot access document.cookie - " + Util.getExceptionName(e),
-                { exception: Util.dump(e) });
+        if (CoreUtils._canUseCookies === undefined) {
+            CoreUtils._canUseCookies = false;
+
+            try {
+                CoreUtils._canUseCookies = Util.document.cookie !== undefined;
+            } catch (e) {
+                logger.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.CannotAccessCookie,
+                    "Cannot access document.cookie - " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) });
+            };
         }
-        return res;
+
+        return Util._canUseCookies;
     }
 
     /**
