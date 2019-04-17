@@ -114,6 +114,10 @@ export abstract class EnvelopeCreator {
                 env.tags[CtxTagKeys.deviceId] = item.ext.device.id || item.ext.device.localId;
             }
 
+            if (item.ext.device.deviceClass) {
+                env.tags[CtxTagKeys.deviceType] = item.ext.device.deviceClass;
+            }
+
             if (item.ext.device.ip) {
                 env.tags[CtxTagKeys.deviceIp] = item.ext.device.ip;
             }

@@ -25,6 +25,7 @@ export class PropertiesTests extends TestClass {
     public registerTests() {
         this.addConfigTests();
         this.addUserTests();
+        this.addDeviceTests();
     }
 
     private addConfigTests() {
@@ -52,6 +53,26 @@ export class PropertiesTests extends TestClass {
         });
     }
 
+    private addDeviceTests() {
+        this.testCase({
+            name: 'Device: device context adds Browser field to ITelemetryItem',
+            test: () => {
+                this.properties.initialize({
+                    instrumentationKey: 'key',
+                    extensionConfig: {}
+                }, this.core, []);
+
+                // Act
+                const item: ITelemetryItem = {name: 'item'};
+                this.properties.processTelemetry(item);
+
+                // Assert
+                Assert.equal("Browser", item.ext.device.deviceClass);
+                Assert.equal("browser", item.ext.device.localId);
+            }
+        });
+    }
+
     private addUserTests() {
         this.testCase({
             name: 'User: user context initializes from cookie when possible',
@@ -70,7 +91,7 @@ export class PropertiesTests extends TestClass {
             }
         });
 
-        
+
         this.testCase({
             name: "ai_user cookie is set with acq date and year expiration",
             test: () => {
