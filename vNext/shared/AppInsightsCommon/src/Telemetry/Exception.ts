@@ -51,19 +51,30 @@ export class Exception extends ExceptionData implements ISerializable {
     }
 
     public static CreateFromInterface(logger: IDiagnosticLogger, exception: IExceptionInternal): Exception {
-        const exceptions = exception.exceptions.map((ex: IExceptionDetailsInternal) => _ExceptionDetails.CreateFromInterface(logger, ex));
-        return new Exception(logger, {...exception, exceptions: exceptions});
+        const exceptions: _ExceptionDetails[] = exception.exceptions
+            && exception.exceptions.map((ex: IExceptionDetailsInternal) => _ExceptionDetails.CreateFromInterface(logger, ex));
+        const exceptionData = new Exception(logger, {...exception, exceptions});
+
+        // if (exceptions) {
+        //     exceptionData.exceptions = exceptions;
+        // }
+        return exceptionData;
     }
 
     public toInterface(): IExceptionInternal {
         const { exceptions, properties, measurements, severityLevel, ver } = this;
-        return {
+
+        const exceptionDetailsInterface = exceptions instanceof Array
+            && exceptions.map((exception: _ExceptionDetails) => exception.toInterface())
+            || undefined;
+
+        return <IExceptionInternal>{
             ver: ver,
-            exceptions: exceptions.map((exception: _ExceptionDetails) => exception.toInterface()),
+            exceptions: exceptionDetailsInterface,
             severityLevel,
             properties,
             measurements,
-            problemGroup: undefined,
+            problemGroup: undefined, // TODO: implement fields below
             id: null,
             isManual: null
         };
@@ -120,21 +131,30 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
     }
 
     public toInterface(): IExceptionDetailsInternal {
-        return {
+        const parsedStack = this.parsedStack instanceof Array
+            && this.parsedStack.map((frame: _StackFrame) => frame.toInterface());
+
+        const exceptionDetailsInterface: IExceptionDetailsInternal = {
             id: this.id,
             outerId: this.outerId,
             typeName: this.typeName,
             message: this.message,
             hasFullStack: this.hasFullStack,
             stack: this.stack,
-            parsedStack: this.parsedStack && this.parsedStack.map((frame: _StackFrame) => frame.toInterface())
-        }
+            parsedStack: parsedStack || undefined
+        };
+
+        return exceptionDetailsInterface;
     }
 
     public static CreateFromInterface(logger, exception: IExceptionDetailsInternal): _ExceptionDetails {
-        const parsedStack = exception.parsedStack && exception.parsedStack.map(frame => _StackFrame.CreateFromInterface(frame));
+        const parsedStack = (exception.parsedStack instanceof Array
+            && exception.parsedStack.map(frame => _StackFrame.CreateFromInterface(frame)))
+            || exception.parsedStack;
 
-        return new _ExceptionDetails(logger, {...exception, parsedStack: parsedStack || exception.parsedStack});
+        const exceptionDetails = new _ExceptionDetails(logger, {...exception, parsedStack: parsedStack});
+
+        return exceptionDetails;
     }
 
     private static parseStack(stack): _StackFrame[] {
@@ -244,7 +264,7 @@ export class _StackFrame extends StackFrame implements ISerializable {
     }
 
     public static CreateFromInterface(frame: IExceptionStackFrameInternal) {
-        return new _StackFrame(frame, null);
+        return new _StackFrame(frame, null /* level is available in frame interface */);
     }
 
     public toInterface() {
