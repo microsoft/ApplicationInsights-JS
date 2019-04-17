@@ -548,22 +548,18 @@ export class SenderTests extends TestClass {
         this.testCase({
             name: 'Envelope: custom properties are put into envelope for Exception data type',
             test: () => {
+                const bd = new Exception(
+                    null,
+                    new Error(),
+                    {"property1": "val1", "property2": "val2" },
+                    {"measurement1": 50.0, "measurement2": 1.3 }
+                );
                 const inputEnvelope: ITelemetryItem = {
                     name: "test",
                     time: new Date("2018-06-12").toISOString(),
                     iKey: "iKey",
                     baseType: Exception.dataType,
-                    baseData: {
-                        error: new Error(),
-                        properties: {
-                            "property1": "val1",
-                            "property2": "val2"
-                        },
-                        measurements: {
-                            "measurement1": 50.0,
-                            "measurement2": 1.3
-                        }
-                    },
+                    baseData: bd,
                     data: {
                         "property3": "val3",
                         "measurement3": 3.0

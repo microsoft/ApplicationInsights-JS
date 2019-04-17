@@ -80,3 +80,33 @@ export interface IAutoExceptionTelemetry {
      */
     error: Error;
 }
+
+export interface IExceptionInternal {
+    ver: number;
+    id: string;
+    exceptions: IExceptionDetailsInternal[];
+    severityLevel?: SeverityLevel | number;
+    problemGroup: string;
+    isManual: boolean;
+    properties: { [key: string]: any};
+    measurements: { [key: string]: number};
+}
+
+export interface IExceptionDetailsInternal {
+    id: number;
+    outerId: number;
+    typeName: string;
+    message: string;
+    hasFullStack: boolean;
+    stack: string;
+    parsedStack: IExceptionStackFrameInternal[];
+}
+
+export interface IExceptionStackFrameInternal {
+    level: number;
+    method: string;
+    assembly: string;
+    fileName: string;
+    line: number;
+    pos?: number;
+}

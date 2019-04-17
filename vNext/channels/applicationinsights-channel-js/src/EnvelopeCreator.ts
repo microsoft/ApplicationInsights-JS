@@ -5,7 +5,8 @@ import {
     IPageViewPerformanceTelemetry, CtxTagKeys,
     HttpMethod, IPageViewTelemetryInternal, IWeb,
     Util,
-    IExceptionTelemetry
+    IExceptionTelemetry,
+    IExceptionInternal
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, CoreUtils,
@@ -296,12 +297,8 @@ export class ExceptionEnvelopeCreator extends EnvelopeCreator {
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
         }
-        let bd = telemetryItem.baseData as IExceptionTelemetry;
-        let customProperties = bd.properties;
-        let customMeasurements = bd.measurements;
-        let error = bd.error;
-        let severityLevel = bd.severityLevel
-        let baseData = new Exception(logger, error, customProperties, customMeasurements, severityLevel);
+        let bd = telemetryItem.baseData as IExceptionInternal;
+        let baseData = Exception.CreateFromInterface(logger, bd);
         let data = new Data<Exception>(Exception.dataType, baseData);
         return EnvelopeCreator.createEnvelope<Exception>(logger, Exception.envelopeType, telemetryItem, data);
     }
