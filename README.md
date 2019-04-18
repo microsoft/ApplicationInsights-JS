@@ -20,8 +20,8 @@
 [![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/AppInsights%20-%20DevTools/1DS%20JavaScript%20SDK%20web%20SKU%20vNext?branchName=master)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=master)
 [![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web)
-[![minified size size](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?label=minified%20size)
-[![gzip size](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?compression=gzip&softmax=27000&max=30000)](https://img.badgesize.io/https://az416426.vo.msecnd.net/beta/ai.1.min.js.svg?compression=gzip&softmax=27000&max=30000)
+[![minified size size](https://img.badgesize.io/https://az416426.vo.msecnd.net/next/ai.2.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://az416426.vo.msecnd.net/next/ai.2.min.js.svg?label=minified%20size)
+[![gzip size](https://img.badgesize.io/https://az416426.vo.msecnd.net/next/ai.2.min.js.svg?compression=gzip&softmax=27000&max=30000)](https://img.badgesize.io/https://az416426.vo.msecnd.net/next/ai.2.min.js.svg?compression=gzip&softmax=27000&max=30000)
 
 
 > ***Note:*** The documentation for `applicationinsights-js` has moved [here](./legacy_README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights).
@@ -40,20 +40,18 @@
 
 ## Basic Usage
 
-### Setup (NPM only, ignore if using Snippet)
+### NPM Setup (ignore if using Snippet Setup)
 ```js
 import { ApplicationInsights } from '@microsoft/applicationinsights-web'
 
-const customPlugin = new CustomPlugin();
 const appInsights = new ApplicationInsights({ config: {
-	instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
-	extensions: [customPlugin],
-/* ...Other Configuration Options... */
-}});
+  instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE'
+  /* ...Other Configuration Options... */
+} });
 appInsights.loadAppInsights();
 ```
 
-### Snippet Setup (Ignore if using NPM)
+### Snippet Setup (Ignore if using NPM Setup)
 If your app does not use NPM, you can directly instrument your webpages with Application Insights by pasting this snippet at the top of each your pages. Preferably, it should be the first script in your `<head>` section so that it can monitor any potential issues with all of your dependencies.
 ```html
 <script type="text/javascript">
@@ -209,10 +207,10 @@ Here is the priority ranges available:
 Usage:
 
 ```ts
-const customPlugin = new CustomPlugin();
+const customPluginInstance = new YourCustomPlugin()
 const appInsights = new ApplicationInsights({ config: {
 	instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
-	extensions: [customPlugin],
+	extensions: [customPluginInstance]
 	// Other Configuration Options...
 }});
 appInsights.loadAppInsights();
@@ -233,9 +231,9 @@ ITelemetryPlugin has a simpler base type IPlugin that you can instantiate for in
 	```
 
 ## Performance
-At just 25 KB gzipped, and taking only ~15 ms to initialize, Application Insights adds a neglible amount of loadtime to your website. By using the snippet, minimal components of the library are quickly loaded, synchronously. In the meantime, the full script is downloaded in the background.
+At just 25 KB gzipped, and taking only ~15 ms to initialize, Application Insights adds a neglible amount of loadtime to your website. By using the snippet, minimal components of the library are quickly loaded. In the meantime, the full script is downloaded in the background.
 
-While the script is downloading from the CDN, all tracking of your page is queued. Once the downloaded script finishes asynchronously initializing, all events that were queued are tracked. As a result, you will not lose any telemetry during the entire life cycle of your page. This setup process provides your page with a seamless tracking system, invisible to your users.
+While the script is downloading from the CDN, all tracking of your page is queued. Once the downloaded script finishes asynchronously initializing, all events that were queued are tracked. As a result, you will not lose any telemetry during the entire life cycle of your page. This setup process provides your page with a seamless analytics system, invisible to your users.
 
 > Summary:
 > - **25 KB** gzipped
