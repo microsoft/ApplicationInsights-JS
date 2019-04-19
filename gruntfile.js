@@ -96,6 +96,15 @@ module.exports = function (grunt) {
                 src: './vNext/extensions/applicationinsights-properties-js/Tests/**/*.ts',
                 out: './vNext/extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
             },
+            react: {
+                tsconfig: './vNext/extensions/applicationinsights-react-js/tsconfig.json'
+            },
+            reacttests: {
+                tsconfig: './vNext/extensions/applicationinsights-react-js/Tests/tsconfig.json',
+                src: ['./vNext/extensions/applicationinsights-react-js/Tests/**/*.ts',
+                    './vNext/extensions/applicationinsights-react-js/Tests/**/*.tsx'],
+                out: './vNext/extensions/applicationinsights-react-js/Tests/Selenium/react.tests.js'
+            },
             reactnative: {
                 tsconfig: './vNext/extensions/applicationinsights-react-native/tsconfig.json',
                 src: [
@@ -292,6 +301,17 @@ module.exports = function (grunt) {
                     '--web-security': 'false'
                 }
             },
+            react: {
+                options: {
+                    urls: [
+                        './vNext/extensions/applicationinsights-react-js/Tests/Selenium/Tests.html'
+                    ],
+                    timeout: 5 * 60 * 1000, // 5 min
+                    console: true,
+                    summaryOnly: true,
+                    '--web-security': 'false'
+                }
+            },
             reactnative: {
                 options: {
                     urls: [
@@ -352,6 +372,8 @@ module.exports = function (grunt) {
     grunt.registerTask("commontest", ["ts:common", "ts:commontest", "qunit:common"]);
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiestests", ["ts:properties", "ts:propertiestests", "qunit:properties"]);
+    grunt.registerTask("react", ["ts:react"]);
+    grunt.registerTask("reacttests", ["ts:react", "ts:reacttests", "qunit:react"]);
     grunt.registerTask("reactnative", ["ts:reactnative"]);
     grunt.registerTask("reactnativetests", ["ts:reactnative", "ts:reactnativetests", "qunit:reactnative"]);
     grunt.registerTask("deps", ["ts:deps"]);

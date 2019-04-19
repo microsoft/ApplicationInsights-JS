@@ -1,0 +1,11 @@
+﻿{
+    "Framework": "qunit",
+    "References": [
+        { "Path": "External/sinon-1.17.2.js" },
+        { "Path": "Selenium/JSLitmus.js" },
+        { "Path": "E2ETests/testSnippet.js" },
+        { "Path": "Selenium/checkinTests.js" }
+    ],
+    "EnableTestFileBatching": true,
+    "CodeCoverageExcludes": [ "*Tests*" ]
+}
