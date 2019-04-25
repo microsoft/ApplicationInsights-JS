@@ -355,8 +355,8 @@ module.exports = function (grunt) {
     grunt.registerTask("aiskulite", ["ts:aiskulite"]);
     grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
     grunt.registerTask("aiskutests", ["ts:aisku", "ts:aiskutests", "qunit:aisku"]);
-    grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all", "run:reacttests"]);
-    grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests"]);
+    grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
+    grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests", "reacttests"]);
     grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
     grunt.registerTask("commontest", ["ts:common", "ts:commontest", "qunit:common"]);
     grunt.registerTask("properties", ["ts:properties"]);
