@@ -39,8 +39,8 @@
       "projectFolder": "AISKULight"
     },
     {
-      "packageName": "@microsoft/applicationinsights-react-native",
-      "projectFolder": "extensions/applicationinsights-react-native"
+      "packageName": "@microsoft/applicationinsights-react-js",
+      "projectFolder": "extensions/applicationinsights-react-js"
     }
   ]
  }
