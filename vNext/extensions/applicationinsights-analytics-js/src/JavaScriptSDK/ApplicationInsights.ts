@@ -8,7 +8,8 @@ import {
     TelemetryItemCreator, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
-    ConfigurationManager, DateTimeUtils
+    ConfigurationManager, DateTimeUtils,
+    IExceptionInternal
 } from "@microsoft/applicationinsights-common";
 
 import {
@@ -26,7 +27,7 @@ import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 const durationProperty: string = "duration";
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
-    public static Version = "2.0.0-rc3"; // Not currently used anywhere
+    public static Version = "2.0.0-rc4"; // Not currently used anywhere
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
     public identifier: string = "ApplicationInsightsAnalytics"; // do not change name or priority
     public priority: number = 160;// take from reserved priority range 100- 200
@@ -366,17 +367,23 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     * @param systemProperties
     */
     public sendExceptionInternal(exception: IExceptionTelemetry, customProperties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
-        let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IExceptionTelemetry>(
-            exception,
+        const exceptionPartB = new Exception(
+            this._logger,
+            exception.error,
+            exception.properties,
+            exception.measurements,
+            exception.severityLevel
+        ).toInterface();
+
+        let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IExceptionInternal>(
+            exceptionPartB,
             Exception.dataType,
             Exception.envelopeType,
             this._logger,
             customProperties,
             systemProperties
         );
-
         this._setTelemetryNameAndIKey(telemetryItem);
-
         this.core.track(telemetryItem);
     }
 
