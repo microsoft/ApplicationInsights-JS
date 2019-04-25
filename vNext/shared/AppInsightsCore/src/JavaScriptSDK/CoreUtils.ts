@@ -3,6 +3,8 @@
 "use strict";
 
 export class CoreUtils {
+    public static _canUseCookies: boolean;
+
     public static isNullOrUndefined(input: any): boolean {
         return input === null || input === undefined;
     }
@@ -12,6 +14,10 @@ export class CoreUtils {
 * Creates a new GUID.
 * @return {string} A GUID.
 */
+
+    public static disableCookies() {
+        CoreUtils._canUseCookies = false;
+    }
 
     public static newGuid():  string  {
         return  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(GuidRegex,  function  (c) {

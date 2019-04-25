@@ -1,5 +1,5 @@
 $storageAccountName = "daprodcdn";
-$cacheControlValue = "max-age=604800, immutable";
+$cacheControlValue = "max-age=1800, immutable";
 $contentType = "text/javascript; charset=utf-8";
 
 function Show-Menu

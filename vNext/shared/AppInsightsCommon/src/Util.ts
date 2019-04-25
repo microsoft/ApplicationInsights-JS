@@ -13,7 +13,7 @@ export class Util {
     private static _canUseCookies: boolean = undefined;
     private static _canUseLocalStorage: boolean = undefined;
     private static _canUseSessionStorage: boolean = undefined;
-    // listing only non-geo specific locations 
+    // listing only non-geo specific locations
     private static _internalEndpoints: string[] = [
         "https://dc.services.visualstudio.com/v2/track",
         "https://breeze.aimon.applicationinsights.io/v2/track",
@@ -70,11 +70,11 @@ export class Util {
         return storage;
     }
 
-    /** 
-     *  Checks if endpoint URL is application insights internal injestion service URL. 
-     * 
-     *  @param endpointUrl Endpoint URL to check. 
-     *  @returns {boolean} True if if endpoint URL is application insights internal injestion service URL. 
+    /**
+     *  Checks if endpoint URL is application insights internal injestion service URL.
+     *
+     *  @param endpointUrl Endpoint URL to check.
+     *  @returns {boolean} True if if endpoint URL is application insights internal injestion service URL.
      */
     public static isInternalApplicationInsightsEndpoint(endpointUrl: string): boolean {
         return Util._internalEndpoints.indexOf(endpointUrl.toLowerCase()) !== -1;
@@ -288,18 +288,18 @@ export class Util {
      * Force the SDK not to store and read any data from cookies
      */
     public static disableCookies() {
-        Util._canUseCookies = false;
+        CoreUtils.disableCookies();
     }
 
     /*
      * helper method to tell if document.cookie object is available
      */
     public static canUseCookies(logger: IDiagnosticLogger): any {
-        if (Util._canUseCookies === undefined) {
-            Util._canUseCookies = false;
+        if (CoreUtils._canUseCookies === undefined) {
+            CoreUtils._canUseCookies = false;
 
             try {
-                Util._canUseCookies = Util.document.cookie !== undefined;
+                CoreUtils._canUseCookies = Util.document.cookie !== undefined;
             } catch (e) {
                 logger.throwInternal(
                     LoggingSeverity.WARNING,
@@ -484,9 +484,9 @@ export class Util {
         return (days > 0 ? days + "." : "") + hour + ":" + min + ":" + sec + "." + ms;
     }
 
-    /**		
-    * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error		
-    * happens in a script from other domain (cross origin, CORS).		
+    /**
+    * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error
+    * happens in a script from other domain (cross origin, CORS).
     */
     public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
         return (message === "Script error." || message === "Script error") && !error;
@@ -519,7 +519,7 @@ export class Util {
     /**
      * Adds an event handler for the specified event
      * @param eventName {string} - The name of the event
-     * @param callback {any} - The callback function that needs to be executed for the given event 
+     * @param callback {any} - The callback function that needs to be executed for the given event
      * @return {boolean} - true if the handler was successfully added
      */
     public static addEventHandler(eventName: string, callback: any): boolean {

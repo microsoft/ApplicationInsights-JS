@@ -5,7 +5,8 @@ import {
     IPageViewPerformanceTelemetry, CtxTagKeys,
     HttpMethod, IPageViewTelemetryInternal, IWeb,
     Util,
-    IExceptionTelemetry
+    IExceptionTelemetry,
+    IExceptionInternal
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, CoreUtils,
@@ -17,7 +18,7 @@ const baseType: string = "baseType";
 const baseData: string = "baseData";
 
 export abstract class EnvelopeCreator {
-    public static Version = "2.0.0-rc3";
+    public static Version = "2.0.0-rc4";
     protected _logger: IDiagnosticLogger;
 
     abstract Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem): IEnvelope;
@@ -111,6 +112,10 @@ export abstract class EnvelopeCreator {
         if (item.ext.device) {
             if (item.ext.device.id || item.ext.device.localId) {
                 env.tags[CtxTagKeys.deviceId] = item.ext.device.id || item.ext.device.localId;
+            }
+
+            if (item.ext.device.deviceClass) {
+                env.tags[CtxTagKeys.deviceType] = item.ext.device.deviceClass;
             }
 
             if (item.ext.device.ip) {
@@ -292,12 +297,8 @@ export class ExceptionEnvelopeCreator extends EnvelopeCreator {
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
         }
-        let bd = telemetryItem.baseData as IExceptionTelemetry;
-        let customProperties = bd.properties;
-        let customMeasurements = bd.measurements;
-        let error = bd.error;
-        let severityLevel = bd.severityLevel
-        let baseData = new Exception(logger, error, customProperties, customMeasurements, severityLevel);
+        let bd = telemetryItem.baseData as IExceptionInternal;
+        let baseData = Exception.CreateFromInterface(logger, bd);
         let data = new Data<Exception>(Exception.dataType, baseData);
         return EnvelopeCreator.createEnvelope<Exception>(logger, Exception.envelopeType, telemetryItem, data);
     }

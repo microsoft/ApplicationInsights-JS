@@ -106,7 +106,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     ajaxMonitorInstance.openHandler(this, method, url, async);
                 }
             } catch (e) {
-                this._core.logger.throwInternal(
+                ajaxMonitorInstance._core.logger.throwInternal(
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.FailedMonitorAjaxOpen,
                     "Failed to monitor XMLHttpRequest.open, monitoring data for this ajax call may be incorrect.",
@@ -161,7 +161,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     ajaxMonitorInstance.sendHandler(this, content);
                 }
             } catch (e) {
-                this._core.logger.throwInternal(
+                ajaxMonitorInstance._core.logger.throwInternal(
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.FailedMonitorAjaxSend,
                     "Failed to monitor XMLHttpRequest, monitoring data for this ajax call may be incorrect.",
@@ -191,7 +191,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     (<XMLHttpRequestInstrumented>this).ajaxData.xhrMonitoringState.abortDone = true;
                 }
             } catch (e) {
-                this._core.logger.throwInternal(
+                ajaxMonitorInstance._core.logger.throwInternal(
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.FailedMonitorAjaxAbort,
                     "Failed to monitor XMLHttpRequest.abort, monitoring data for this ajax call may be incorrect.",
@@ -219,7 +219,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
 
                 // ignore messages with c00c023f, as this a known IE9 XHR abort issue
                 if (!exceptionText || exceptionText.toLowerCase().indexOf("c00c023f") == -1) {
-                    this._core.logger.throwInternal(
+                    ajaxMonitorInstance._core.logger.throwInternal(
                         LoggingSeverity.CRITICAL,
                         _InternalMessageId.FailedMonitorAjaxRSC,
                         "Failed to monitor XMLHttpRequest 'readystatechange' event handler, monitoring data for this ajax call may be incorrect.",
