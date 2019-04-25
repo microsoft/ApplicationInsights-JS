@@ -99,12 +99,6 @@ module.exports = function (grunt) {
             react: {
                 tsconfig: './vNext/extensions/applicationinsights-react-js/tsconfig.json'
             },
-            reacttests: {
-                tsconfig: './vNext/extensions/applicationinsights-react-js/Tests/tsconfig.json',
-                src: ['./vNext/extensions/applicationinsights-react-js/Tests/**/*.ts',
-                    './vNext/extensions/applicationinsights-react-js/Tests/**/*.tsx'],
-                out: './vNext/extensions/applicationinsights-react-js/Tests/Selenium/react.tests.js'
-            },
             reactnative: {
                 tsconfig: './vNext/extensions/applicationinsights-react-native/tsconfig.json',
                 src: [
@@ -227,6 +221,11 @@ module.exports = function (grunt) {
                 }
             }
         },
+        run: {
+            reacttests: {
+                exec: 'cd vNext/extensions/applicationinsights-react-js && npm run test'
+            }
+        },
         qunit: {
             all: {
                 options: {
@@ -301,17 +300,6 @@ module.exports = function (grunt) {
                     '--web-security': 'false'
                 }
             },
-            react: {
-                options: {
-                    urls: [
-                        './vNext/extensions/applicationinsights-react-js/Tests/Selenium/Tests.html'
-                    ],
-                    timeout: 5 * 60 * 1000, // 5 min
-                    console: true,
-                    summaryOnly: true,
-                    '--web-security': 'false'
-                }
-            },
             reactnative: {
                 options: {
                     urls: [
@@ -356,6 +344,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-tslint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
+    grunt.loadNpmTasks('grunt-run');
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("core", ["ts:core"]);
     grunt.registerTask("common", ["ts:common"]);
@@ -366,14 +355,14 @@ module.exports = function (grunt) {
     grunt.registerTask("aiskulite", ["ts:aiskulite"]);
     grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
     grunt.registerTask("aiskutests", ["ts:aisku", "ts:aiskutests", "qunit:aisku"]);
-    grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
+    grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all", "run:reacttests"]);
     grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests"]);
     grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
     grunt.registerTask("commontest", ["ts:common", "ts:commontest", "qunit:common"]);
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiestests", ["ts:properties", "ts:propertiestests", "qunit:properties"]);
     grunt.registerTask("react", ["ts:react"]);
-    grunt.registerTask("reacttests", ["ts:react", "ts:reacttests", "qunit:react"]);
+    grunt.registerTask("reacttests", ["run:reacttests"]);
     grunt.registerTask("reactnative", ["ts:reactnative"]);
     grunt.registerTask("reactnativetests", ["ts:reactnative", "ts:reactnativetests", "qunit:reactnative"]);
     grunt.registerTask("deps", ["ts:deps"]);
