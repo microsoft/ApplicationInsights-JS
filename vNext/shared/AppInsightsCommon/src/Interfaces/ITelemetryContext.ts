@@ -44,4 +44,9 @@ export interface ITelemetryContext {
      * The object describing a session tracked by this object.
      */
     session: ISession;
+
+    /**
+     * Property bag to contain additional custom properties (Part C)
+     */
+    properties?: { [key: string]: any };
 }

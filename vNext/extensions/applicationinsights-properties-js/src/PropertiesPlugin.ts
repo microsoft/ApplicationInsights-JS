@@ -8,8 +8,10 @@ import {
     IAppInsightsCore, IPlugin, ITelemetryItem, IDiagnosticLogger
 } from '@microsoft/applicationinsights-core-js';
 import { TelemetryContext } from './TelemetryContext';
-import { PageView, ConfigurationManager,
-    IConfig, PropertiesPluginIdentifier, IPropertiesPlugin, Extensions } from '@microsoft/applicationinsights-common';
+import {
+    PageView, ConfigurationManager,
+    IConfig, PropertiesPluginIdentifier, IPropertiesPlugin, Extensions
+} from '@microsoft/applicationinsights-common';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 
 export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPlugin {
@@ -113,6 +115,11 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
         this.context.applyUserContext(event);
         this.context.applyOperatingSystemContxt(event);
         this.context.applyWebContext(event);
+
+        if (!event.data) {
+            event.data = {};
+        }
+        this.context.applyCustomProperties(event);
 
         this.context.applyLocationContext(event); // legacy tags
         this.context.applySampleContext(event); // legacy tags

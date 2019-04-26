@@ -14,7 +14,7 @@ import { User } from './Context/User';
 import { Location } from './Context/Location';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 import { TelemetryTrace } from './Context/TelemetryTrace';
- 
+
 export class TelemetryContext implements ITelemetryContext {
 
     public application: Application; // The object describing a component tracked by this object - legacy
@@ -28,6 +28,7 @@ export class TelemetryContext implements ITelemetryContext {
     public sample: Sample;
     public os: IOperatingSystem;
     public web: IWeb;
+    public properties?: { [key: string]: any }; // Property bag to contain additional custom properties (Part C)
 
     constructor(logger: IDiagnosticLogger, defaultConfig: ITelemetryConfig) {
         if (typeof window !== 'undefined') {
@@ -40,9 +41,10 @@ export class TelemetryContext implements ITelemetryContext {
             this.telemetryTrace = new TelemetryTrace();
             this.session = new Session();
             this.sample = new Sample(defaultConfig.samplingPercentage(), logger);
+            this.properties = {};
         }
     }
-    
+
     public applySessionContext(event: ITelemetryItem) {
         let sessionContext = this.session || this.sessionManager.automaticSession;
         if (sessionContext) {
@@ -71,10 +73,10 @@ export class TelemetryContext implements ITelemetryContext {
         if (this.application) {
 
             if (typeof this.application.ver === "string") {
-                event.tags.push({[CtxTagKeys.applicationVersion]: this.application.ver});
+                event.tags.push({ [CtxTagKeys.applicationVersion]: this.application.ver });
             }
             if (typeof this.application.build === "string") {
-                event.tags.push({[CtxTagKeys.applicationBuild]: this.application.build });
+                event.tags.push({ [CtxTagKeys.applicationBuild]: this.application.build });
             }
         }
     }
@@ -104,14 +106,14 @@ export class TelemetryContext implements ITelemetryContext {
     public applyInternalContext(event: ITelemetryItem) {
         if (this.internal) {
             if (typeof this.internal.agentVersion === "string") {
-                event.tags.push({[CtxTagKeys.internalAgentVersion]: this.internal.agentVersion }); // not mapped in CS 4.0
+                event.tags.push({ [CtxTagKeys.internalAgentVersion]: this.internal.agentVersion }); // not mapped in CS 4.0
             }
             if (typeof this.internal.sdkVersion === "string") {
-                event.tags.push({[CtxTagKeys.internalSdkVersion]: this.internal.sdkVersion });
+                event.tags.push({ [CtxTagKeys.internalSdkVersion]: this.internal.sdkVersion });
             } else {
                 // store the version provided by core
                 if (event[Extensions.SDKExt] && event[Extensions.SDKExt][SDKExtensionKeys.libVer]) { // not exposing context object as this ext is not finalized
-                    event.tags.push({[CtxTagKeys.internalSdkVersion]: event[Extensions.SDKExt][SDKExtensionKeys.libVer] }); // map sdk.libVer 
+                    event.tags.push({ [CtxTagKeys.internalSdkVersion]: event[Extensions.SDKExt][SDKExtensionKeys.libVer] }); // map sdk.libVer 
                 }
             }
         }
@@ -119,21 +121,21 @@ export class TelemetryContext implements ITelemetryContext {
 
     public applyLocationContext(event: ITelemetryItem) {
         if (this.location) {
-            if (typeof this.location.ip === "string") {                
-                event.tags.push({[CtxTagKeys.locationIp]: this.location.ip});
+            if (typeof this.location.ip === "string") {
+                event.tags.push({ [CtxTagKeys.locationIp]: this.location.ip });
             }
         }
     }
 
     public applySampleContext(event: ITelemetryItem) {
         if (this.sample) {
-            event.tags.push({ SampleRate:  this.sample.sampleRate }); // tags.sampleRate -> mapped in CS 4.0
+            event.tags.push({ SampleRate: this.sample.sampleRate }); // tags.sampleRate -> mapped in CS 4.0
         }
     }
 
     public applyOperationContext(event: ITelemetryItem) {
         if (this.telemetryTrace) {
-            let trace = event.ext.trace || <ITelemetryTrace>{traceID: undefined, parentID: undefined};
+            let trace = event.ext.trace || <ITelemetryTrace>{ traceID: undefined, parentID: undefined };
             if (typeof this.telemetryTrace.traceID === "string") {
                 trace.traceID = this.telemetryTrace.traceID;
             }
@@ -141,7 +143,7 @@ export class TelemetryContext implements ITelemetryContext {
             if (typeof this.telemetryTrace.name === "string") {
                 trace.name = this.telemetryTrace.name;
             }
-            
+
             if (typeof this.telemetryTrace.parentID === "string") {
                 trace.parentID = this.telemetryTrace.parentID;
             }
@@ -162,25 +164,37 @@ export class TelemetryContext implements ITelemetryContext {
             if (!event.tags) {
                 event.tags = [];
             }
-            
+
             // stays in tags
             if (typeof this.user.accountId === "string") {
                 let item = {};
-                event.tags.push({[CtxTagKeys.userAccountId]: this.user.accountId});
+                event.tags.push({ [CtxTagKeys.userAccountId]: this.user.accountId });
             }
-            
+
             // CS 4.0            
             if (typeof this.user.id === "string") {
                 event.ext.user.id = this.user.id;
             }
-            
+
             if (typeof this.user.authenticatedId === "string") {
                 event.ext.user.authId = this.user.authenticatedId;
-            }            
+            }
         }
     }
 
-    public cleanUp(event:ITelemetryItem) {
+    public applyCustomProperties(event: ITelemetryItem) {
+        if (this.properties) {
+            for (let customProperty in this.properties) {
+                if (this.properties.hasOwnProperty(customProperty)) {
+                    if (!event.data[customProperty]) {
+                        event.data[customProperty] = this.properties[customProperty];
+                    }
+                }
+            }
+        }
+    }
+
+    public cleanUp(event: ITelemetryItem) {
         if (event.ext[Extensions.DeviceExt] && Object.keys(event.ext[Extensions.DeviceExt]).length === 0) {
             delete event.ext[Extensions.DeviceExt];
         }

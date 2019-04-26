@@ -26,6 +26,7 @@ export class PropertiesTests extends TestClass {
         this.addConfigTests();
         this.addUserTests();
         this.addDeviceTests();
+        this.addCustomPropertiesTests();
     }
 
     private addConfigTests() {
@@ -63,12 +64,34 @@ export class PropertiesTests extends TestClass {
                 }, this.core, []);
 
                 // Act
-                const item: ITelemetryItem = {name: 'item'};
+                const item: ITelemetryItem = { name: 'item' };
                 this.properties.processTelemetry(item);
 
                 // Assert
                 Assert.equal("Browser", item.ext.device.deviceClass);
                 Assert.equal("browser", item.ext.device.localId);
+            }
+        });
+    }
+
+    private addCustomPropertiesTests() {
+        this.testCase({
+            name: 'Properties: context adds custom properties(Part C) to ITelemetryItem',
+            test: () => {
+                this.properties.initialize({
+                    instrumentationKey: 'key',
+                    extensionConfig: {}
+                }, this.core, []);
+
+                // Act
+                const item: ITelemetryItem = { name: 'item' };
+                this.properties.context.properties['customProperty1'] = 'customValue1';
+                this.properties.context.properties['customProperty2'] = 'customValue2';
+                this.properties.processTelemetry(item);
+
+                // Assert
+                Assert.equal("customValue1", item.data['customProperty1']);
+                Assert.equal("customValue2", item.data['customProperty2']);
             }
         });
     }
@@ -458,7 +481,7 @@ export class PropertiesTests extends TestClass {
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
                 let context = new TelemetryContext(this.core.logger, this.getTelemetryConfig());
-                context.web = <IWeb> {
+                context.web = <IWeb>{
                     domain: "www.bing.com",
                     userConsent: true,
                     screenRes: "1024x768",
@@ -514,14 +537,14 @@ export class PropertiesTests extends TestClass {
                     time: new Date("2018-06-12").toISOString(),
                     iKey: "iKey",
                     ext: {
-                        "user" : {
+                        "user": {
                             "localId": "TestId",
                             "authId": "AuthenticatedId",
                             "id": "TestId"
                         },
                         "web": {}
                     },
-                    tags: [{"user.accountId": "TestAccountId"}],
+                    tags: [{ "user.accountId": "TestAccountId" }],
                     baseType: "RemoteDependencyData",
                     baseData: {
                         id: 'some id',
