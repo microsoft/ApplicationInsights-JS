@@ -96,6 +96,9 @@ module.exports = function (grunt) {
                 src: './vNext/extensions/applicationinsights-properties-js/Tests/**/*.ts',
                 out: './vNext/extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
             },
+            react: {
+                tsconfig: './vNext/extensions/applicationinsights-react-js/tsconfig.json'
+            },
             reactnative: {
                 tsconfig: './vNext/extensions/applicationinsights-react-native/tsconfig.json',
                 src: [
@@ -218,6 +221,11 @@ module.exports = function (grunt) {
                 }
             }
         },
+        run: {
+            reacttests: {
+                exec: 'cd vNext/extensions/applicationinsights-react-js && npm run test'
+            }
+        },
         qunit: {
             all: {
                 options: {
@@ -336,6 +344,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-tslint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
+    grunt.loadNpmTasks('grunt-run');
     grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("core", ["ts:core"]);
     grunt.registerTask("common", ["ts:common"]);
@@ -347,11 +356,13 @@ module.exports = function (grunt) {
     grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
     grunt.registerTask("aiskutests", ["ts:aisku", "ts:aiskutests", "qunit:aisku"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
-    grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests"]);
+    grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests", "reacttests"]);
     grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
     grunt.registerTask("commontest", ["ts:common", "ts:commontest", "qunit:common"]);
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiestests", ["ts:properties", "ts:propertiestests", "qunit:properties"]);
+    grunt.registerTask("react", ["ts:react"]);
+    grunt.registerTask("reacttests", ["run:reacttests"]);
     grunt.registerTask("reactnative", ["ts:reactnative"]);
     grunt.registerTask("reactnativetests", ["ts:reactnative", "ts:reactnativetests", "qunit:reactnative"]);
     grunt.registerTask("deps", ["ts:deps"]);
