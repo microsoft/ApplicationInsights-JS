@@ -5,17 +5,31 @@
 
 React Plugin for the Application Insights Javascript SDK
 
-## Build:
-```
-npm install -g grunt-cli
-npm install
-npm run build --silent
-```  
+## Getting Started
 
-## Run unit tests:
+Install npm package:
+
+```bash
+npm install --save @microsoft/applicationinsights-react-js
 ```
-npm run test
+
+## Basic Usage
+
+### npm Setup 
+```js
+import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+import { ReactPlugin } from '@microsoft/applicationinsights-react-js';
+
+var reactPlugin = new ReactNativePlugin();
+var appInsights = new ApplicationInsights({
+    config: {
+        instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE'
+    },
+    extensions: [reactPlugin]
+});
+appInsights.loadAppInsights();
 ```
+
 
 ## Contributing
 
