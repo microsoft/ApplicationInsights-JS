@@ -3,6 +3,11 @@
 [![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-react-js.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-react-js)
 
+React Plugin for the Application Insights Javascript SDK, enables the following:
+
+- Tracking of router changes
+- React components usage statistics
+
 React Plugin for the Application Insights Javascript SDK
 
 ## Getting Started
@@ -17,18 +22,65 @@ npm install --save @microsoft/applicationinsights-react-js
 
 ### npm Setup 
 ```js
+import React from 'react';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
-import { ReactPlugin } from '@microsoft/applicationinsights-react-js';
+import { ReactPlugin, withAITracking } from '@microsoft/applicationinsights-react-js';
+import { createBrowserHistory } from "history";
 
+const browserHistory = createBrowserHistory({ basename: '' });
 var reactPlugin = new ReactNativePlugin();
 var appInsights = new ApplicationInsights({
     config: {
         instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE'
     },
-    extensions: [reactPlugin]
+    extensions: [reactPlugin],
+    extensionConfig: {
+      [reactPlugin.identifier]: { history: browserHistory }
+    }
 });
 appInsights.loadAppInsights();
+
+// To instrument various React components usage tracking, apply the `withAITracking` higher-order
+// component function.
+
+class MyComponent extends React.Component {
+    ...
+}
+
+export default withAITracking(appInsights, MyComponent);
 ```
+
+## Configuration
+
+| Name | Default | Description |
+|------|---------|-------------|
+| history | null | React router history for more information see the [documentation][react-router] of the `react-router` package. |
+
+#### React components usage tracking
+
+To instrument various React components usage tracking, apply the `withAITracking` higher-order
+component function.
+
+
+It will measure time from the `ComponentDidMount` event through the `ComponentWillUnmount` event.
+However, in order to make this more accurate, it will subtract the time in which the user was idle.
+In other words, `React Component Engaged Time = ComponentWillUnmount timestamp - ComponentDidMount timestamp - idle time`.
+
+To see this metric in the Azure portal you need to navigate to the Application Insights resource, select "Metrics" tab and configure the empty charts to display Custom metric named "React Component Engaged Time (seconds)", select aggregation (sum, avg, etc.) of your liking and apply split by "Component Name".
+
+![image](https://user-images.githubusercontent.com/1005174/51357010-c168ac80-1a71-11e9-8df9-348febd2d6dd.png)
+
+You can also run custom queries to slice and dice AI data to generate reports and visualizations as per your requirements. In the Azure portal, navigate to the Application Insights resource, select "Analytics" from the top menu of the Overview tab and run your query.
+
+![image](https://user-images.githubusercontent.com/1005174/51356821-e872ae80-1a70-11e9-9e12-e56a1edcde68.png)
+
+Please note that it can take up to 10 minutes for new custom metric to appear in the Azure Portal.
+
+
+## Sample App
+
+[Azure-Samples/application-insights-react-demo](https://github.com/Azure-Samples/application-insights-react-demo).
+
 
 
 ## Contributing
@@ -48,3 +100,5 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 ## License
 
 [MIT](LICENSE)
+
+[react-router]: https://github.com/ReactTraining/react-router/blob/master/FAQ.md#how-do-i-access-the-history-object-outside-of-components

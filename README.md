@@ -190,6 +190,14 @@ appInsights.downloadAndSetup({
 ```
 Test in internal environment to verify monitoring telemetry is working as expected. If all works, please update your api signatures appropriately to SDK V2 version and deploy in your production environments.
 
+## Available extensions for the SDK
+
+
+| Extensions |
+|------|---------|-------------|
+| [React](https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-react-js) 
+| [React Native](https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-react-native) 
+
 ## Build a new extension for the SDK
 The beta SDK supports the ability to include multiple extensions at runtime. In order to create a new extension, please implement the following interface:
 
