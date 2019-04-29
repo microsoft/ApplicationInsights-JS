@@ -28,7 +28,7 @@ import { ReactPlugin, withAITracking } from '@microsoft/applicationinsights-reac
 import { createBrowserHistory } from "history";
 
 const browserHistory = createBrowserHistory({ basename: '' });
-var reactPlugin = new ReactNativePlugin();
+var reactPlugin = new ReactPlugin();
 var appInsights = new ApplicationInsights({
     config: {
         instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE'
