@@ -170,7 +170,7 @@ This version comes with the bare minimum amount of features and functionalities 
 
 
 | Extensions |
-|------|---------|
+|---------------|
 | [React](https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-react-js)| 
 | [React Native](https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-react-native)| 
 
