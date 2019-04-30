@@ -166,6 +166,13 @@ npm i --save @microsoft/applicationinsights-web-basic
 ```
 This version comes with the bare minimum amount of features and functionalities and relies on you to build it up as you see fit. For example, it performs no auto-collection (uncaught exceptions, ajax, etc). The APIs to send certain telemetry types, like `trackTrace`, `trackException`, etc, are not included in this version, so you will need to provide your own wrapper. The only api that is available is `track`. A [sample](https://github.com/Azure-Samples/applicationinsights-web-sample1/blob/master/testlightsku.html) is located here.
 
+## Available extensions for the SDK
+
+
+| Extensions |
+|------|---------|
+| [React](https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-react-js)| 
+| [React Native](https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-react-native)| 
 
 ## Upgrading from the old Version of Application Insights
 Breaking changes in the SDK V2 version:
@@ -189,14 +196,6 @@ appInsights.downloadAndSetup({
 });
 ```
 Test in internal environment to verify monitoring telemetry is working as expected. If all works, please update your api signatures appropriately to SDK V2 version and deploy in your production environments.
-
-## Available extensions for the SDK
-
-
-| Extensions |
-|------|---------|-------------|
-| [React](https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-react-js) 
-| [React Native](https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-react-native) 
 
 ## Build a new extension for the SDK
 The beta SDK supports the ability to include multiple extensions at runtime. In order to create a new extension, please implement the following interface:

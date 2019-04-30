@@ -15,12 +15,11 @@ React Plugin for the Application Insights Javascript SDK
 Install npm package:
 
 ```bash
-npm install --save @microsoft/applicationinsights-react-js
+npm install @microsoft/applicationinsights-react-js
 ```
 
 ## Basic Usage
 
-### npm Setup 
 ```js
 import React from 'react';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
