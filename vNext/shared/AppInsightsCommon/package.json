@@ -8,7 +8,7 @@
     "sideEffects": false,
     "repository": {
         "type": "git",
-        "url": "https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/shared/AppInsightsCommon"
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/vNext/shared/AppInsightsCommon"
     },
     "scripts": {
         "build": "npm run build:esm && npm run build:browser",

@@ -75,7 +75,7 @@ Log an exception you have caught. Exceptions caught by the browser are also auto
 Parameter | Type | Description
 ---|---|---
 `error` | [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) | **Required**<br>Error object
-`severityLevel?` | [SeverityLevel (number)](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts) | **Optional**<br>Severity of the message, ranging from verbose to critical
+`severityLevel?` | [SeverityLevel (number)](https://github.com/microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts) | **Optional**<br>Severity of the message, ranging from verbose to critical
 
 By default, uncaught browser exceptions are caught by the SDK and reported to the portal. To disable this behavior, insert the following line in the config section below your instrumentation key:
 
@@ -100,7 +100,7 @@ The `ITraceTelemetry` interface is described below
 Parameter | Type | Description
 ---|---|---
 `message` | string | **Required**<br>Diagnostic data. Can be much longer than an event's name.
-`severityLevel?` | [SeverityLevel (number)](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts) | **Optional**<br>Severity of the message, ranging from verbose to critical
+`severityLevel?` | [SeverityLevel (number)](https://github.com/microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts) | **Optional**<br>Severity of the message, ranging from verbose to critical
 
 In the portal, you can search on message content and [display individual trackTrace events](https://azure.microsoft.com/documentation/articles/app-insights-diagnostic-search/).
 (Unlike `trackEvent`, you can't filter on the message content in the portal.)

@@ -21,14 +21,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Microsoft/ApplicationInsights-JS.git"
+        "url": "git+https://github.com/microsoft/ApplicationInsights-JS.git"
     },
     "author": "Microsoft Application Insights Team",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/Microsoft/ApplicationInsights-JS/issues"
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/issues"
     },
-    "homepage": "https://github.com/Microsoft/ApplicationInsights-JS#readme",
+    "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "devDependencies": {
         "grunt": "1.0.1",
         "grunt-contrib-qunit": "2.0.0",

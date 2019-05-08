@@ -160,7 +160,7 @@ Parameter | Description
 `handledAt` | Deprecated. This argument is ignored. Please pass `null`.
 `properties` | Map of string to string: Additional data used to [filter exceptions](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 `measurements` | Map of string to number: Metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
-`severityLevel` | Supported values: [SeverityLevel.ts](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts)
+`severityLevel` | Supported values: [SeverityLevel.ts](https://github.com/microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts)
 
 In the portal, you can [search on exception type and view](https://azure.microsoft.com/documentation/articles/app-insights-diagnostic-search/) the type, message, and stack trace of individual instances.
 
@@ -186,7 +186,7 @@ Log a diagnostic event such as entering or leaving a method.
 ---|---
 `message` | Diagnostic data. Can be much longer than a name.
 `properties` | Map of string to string: Additional data used to [filter exceptions](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
-`severityLevel` | Supported values: [SeverityLevel.ts](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts)
+`severityLevel` | Supported values: [SeverityLevel.ts](https://github.com/microsoft/ApplicationInsights-JS/blob/master/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts)
 
 
 In the portal, you can search on message content and [display individual trackTrace events](https://azure.microsoft.com/documentation/articles/app-insights-diagnostic-search/).
@@ -574,5 +574,5 @@ public data: Base;  // PageView, Event, Exception etc
 
 ## Links
 
-* Read or contribute to the [code for the SDK](https://github.com/Microsoft/ApplicationInsights-js).
+* Read or contribute to the [code for the SDK](https://github.com/microsoft/ApplicationInsights-js).
 * [Overview of the API and examples](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/)
