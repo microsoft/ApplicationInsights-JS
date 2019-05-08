@@ -2,7 +2,7 @@
 /// <reference path="../../JavaScriptSDK/UtilHelpers.ts" />
 
 // This file was copied from https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/master/types/applicationinsights-js/applicationinsights-js-tests.ts
-// and is used to validate ApplicationInsights-JS definition types. 
+// and is used to validate ApplicationInsights-JS definition types.
 // If you have to change this file, plese update the DefinitelyTyped repo too - https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/applicationinsights-js
 
 const config: Microsoft.ApplicationInsights.IConfig = {
@@ -131,7 +131,7 @@ context.track(envelope);
 context.addTelemetryInitializer(envelope => false);
 context.addTelemetryInitializer(envelope => { });
 
-// a sample from: https://github.com/Microsoft/ApplicationInsights-JS/blob/master/API-reference.md#example
+// a sample from: https://github.com/microsoft/ApplicationInsights-JS/blob/master/API-reference.md#example
 context.addTelemetryInitializer(envelope => {
     let telemetryItem = envelope.data.baseData;
     if (envelope.name === Microsoft.ApplicationInsights.Telemetry.PageView.envelopeType) {

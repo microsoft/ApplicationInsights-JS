@@ -7,44 +7,44 @@ module AI
 "use strict";
     export class ContextTagKeys
     {
-        
+
         /**
          * Application version. Information in the application context fields is always about the application that is sending the telemetry.
          */
         public applicationVersion: string;
-        
+
         /**
          * Application build.
          */
         public applicationBuild: string;
-        
+
         /**
          * Application type id.
          */
         public applicationTypeId: string;
-        
+
         /**
          * Application id.
          */
         public applicationId: string;
-        
+
         /**
          * Application layer.
          */
         public applicationLayer: string;
-        
+
         /**
          * Unique client device id. Computer name in most cases.
          */
         public deviceId: string;
         public deviceIp: string;
         public deviceLanguage: string;
-        
+
         /**
          * Device locale using <language>-<REGION> pattern, following RFC 5646. Example 'en-US'.
          */
         public deviceLocale: string;
-        
+
         /**
          * Model of the device the end user of the application is using. Used for client scenarios. If this field is empty then it is derived from the user agent.
          */
@@ -52,29 +52,29 @@ module AI
         public deviceFriendlyName: string;
         public deviceNetwork: string;
         public deviceNetworkName: string;
-        
+
         /**
          * Client device OEM name taken from the browser.
          */
         public deviceOEMName: string;
         public deviceOS: string;
-        
+
         /**
          * Operating system name and version of the device the end user of the application is using. If this field is empty then it is derived from the user agent. Example 'Windows 10 Pro 10.0.10586.0'
          */
         public deviceOSVersion: string;
-        
+
         /**
          * Name of the instance where application is running. Computer name for on-premisis, instance name for Azure.
          */
         public deviceRoleInstance: string;
-        
+
         /**
          * Name of the role application is part of. Maps directly to the role name in azure.
          */
         public deviceRoleName: string;
         public deviceScreenResolution: string;
-        
+
         /**
          * The type of the device the end user of the application is using. Used primarily to distinguish JavaScript telemetry from server side telemetry. Examples: 'PC', 'Phone', 'Browser'. 'PC' is the default value.
          */
@@ -82,90 +82,90 @@ module AI
         public deviceMachineName: string;
         public deviceVMName: string;
         public deviceBrowser: string;
-        
+
         /**
          * The browser name and version as reported by the browser.
          */
         public deviceBrowserVersion: string;
-        
+
         /**
          * The IP address of the client device. IPv4 and IPv6 are supported. Information in the location context fields is always about the end user. When telemetry is sent from a service, the location context is about the user that initiated the operation in the service.
          */
         public locationIp: string;
-        
+
         /**
          * The country of the client device. If any of Country, Province, or City is specified, those values will be preferred over geolocation of the IP address field. Information in the location context fields is always about the end user. When telemetry is sent from a service, the location context is about the user that initiated the operation in the service.
          */
         public locationCountry: string;
-        
+
         /**
          * The province/state of the client device. If any of Country, Province, or City is specified, those values will be preferred over geolocation of the IP address field. Information in the location context fields is always about the end user. When telemetry is sent from a service, the location context is about the user that initiated the operation in the service.
          */
         public locationProvince: string;
-        
+
         /**
          * The city of the client device. If any of Country, Province, or City is specified, those values will be preferred over geolocation of the IP address field. Information in the location context fields is always about the end user. When telemetry is sent from a service, the location context is about the user that initiated the operation in the service.
          */
         public locationCity: string;
-        
+
         /**
          * A unique identifier for the operation instance. The operation.id is created by either a request or a page view. All other telemetry sets this to the value for the containing request or page view. Operation.id is used for finding all the telemetry items for a specific operation instance.
          */
         public operationId: string;
-        
+
         /**
          * The name (group) of the operation. The operation.name is created by either a request or a page view. All other telemetry items set this to the value for the containing request or page view. Operation.name is used for finding all the telemetry items for a group of operations (i.e. 'GET Home/Index').
          */
         public operationName: string;
-        
+
         /**
          * The unique identifier of the telemetry item's immediate parent.
          */
         public operationParentId: string;
         public operationRootId: string;
-        
+
         /**
          * Name of synthetic source. Some telemetry from the application may represent a synthetic traffic. It may be web crawler indexing the web site, site availability tests or traces from diagnostic libraries like Application Insights SDK itself.
          */
         public operationSyntheticSource: string;
-        
+
         /**
          * The correlation vector is a light weight vector clock which can be used to identify and order related events across clients and services.
          */
         public operationCorrelationVector: string;
-        
+
         /**
          * Session ID - the instance of the user's interaction with the app. Information in the session context fields is always about the end user. When telemetry is sent from a service, the session context is about the user that initiated the operation in the service.
          */
         public sessionId: string;
-        
+
         /**
          * Boolean value indicating whether the session identified by ai.session.id is first for the user or not.
          */
         public sessionIsFirst: string;
         public sessionIsNew: string;
         public userAccountAcquisitionDate: string;
-        
+
         /**
          * In multi-tenant applications this is the account ID or name which the user is acting with. Examples may be subscription ID for Azure portal or blog name blogging platform.
          */
         public userAccountId: string;
-        
+
         /**
          * The browser's user agent string as reported by the browser. This property will be used to extract informaiton regarding the customer's browser but will not be stored. Use custom properties to store the original user agent.
          */
         public userAgent: string;
-        
+
         /**
          * Anonymous user id. Represents the end user of the application. When telemetry is sent from a service, the user context is about the user that initiated the operation in the service.
          */
         public userId: string;
-        
+
         /**
          * Store region for UWP applications.
          */
         public userStoreRegion: string;
-        
+
         /**
          * Authenticated user id. The opposite of ai.user.id, this represents the user with a friendly name. Since it's PII information it is not collected by default by most SDKs.
          */
@@ -173,13 +173,13 @@ module AI
         public userAnonymousUserAcquisitionDate: string;
         public userAuthenticatedUserAcquisitionDate: string;
         public cloudName: string;
-        
+
         /**
          * Name of the role the application is a part of. Maps directly to the role name in azure.
          */
         public cloudRole: string;
         public cloudRoleVer: string;
-        
+
         /**
          * Name of the instance where the application is running. Computer name for on-premisis, instance name for Azure.
          */
@@ -187,22 +187,22 @@ module AI
         public cloudEnvironment: string;
         public cloudLocation: string;
         public cloudDeploymentUnit: string;
-        
+
         /**
-         * SDK version. See https://github.com/Microsoft/ApplicationInsights-Home/blob/master/SDK-AUTHORING.md#sdk-version-specification for information.
+         * SDK version. See https://github.com/microsoft/ApplicationInsights-Home/blob/master/SDK-AUTHORING.md#sdk-version-specification for information.
          */
         public internalSdkVersion: string;
-        
+
         /**
          * Agent version. Used to indicate the version of StatusMonitor installed on the computer if it is used for data collection.
          */
         public internalAgentVersion: string;
-        
+
         /**
          * This is the node name used for billing purposes. Use it to override the standard detection of nodes.
          */
         public internalNodeName: string;
-        
+
         constructor()
         {
             this.applicationVersion = "ai.application.ver";

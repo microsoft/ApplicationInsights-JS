@@ -1,6 +1,6 @@
 # Microsoft Application Insights JavaScript SDK - Analytics
 
-[![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
+[![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-analytics-js.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-analytics-js)
 
 Web Analytics Plugin for the Application Insights Javascript SDK
@@ -10,7 +10,7 @@ Web Analytics Plugin for the Application Insights Javascript SDK
 npm install -g grunt-cli
 npm install
 npm run build --silent
-```  
+```
 
 ## Run unit tests:
 ```

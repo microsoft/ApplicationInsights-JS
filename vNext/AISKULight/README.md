@@ -1,7 +1,7 @@
 # Microsoft Application Insights JavaScript SDK - Web Basic
 
 [![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/1DS%20JavaScript%20SDK%20-%20SKU%20+%20Common%20+%20Extensions)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=7610)
-[![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
+[![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web-basic.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web-basic)
 
 Application Insights - Web Basic SDK
@@ -11,7 +11,7 @@ Application Insights - Web Basic SDK
 npm install -g grunt-cli
 npm install
 npm run build --silent
-```  
+```
 
 ## Run unit tests:
 ```

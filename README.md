@@ -18,7 +18,7 @@
 
 
 [![Build Status](https://dev.azure.com/mseng/AppInsights/_apis/build/status/AppInsights%20-%20DevTools/1DS%20JavaScript%20SDK%20web%20SKU%20vNext?branchName=master)](https://dev.azure.com/mseng/AppInsights/_build/latest?definitionId=8184&branchName=master)
-[![Build Status](https://travis-ci.org/Microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/Microsoft/ApplicationInsights-JS)
+[![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web)
 [![minified size size](https://img.badgesize.io/https://az416426.vo.msecnd.net/next/ai.2.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://az416426.vo.msecnd.net/next/ai.2.min.js.svg?label=minified%20size)
 [![gzip size](https://img.badgesize.io/https://az416426.vo.msecnd.net/next/ai.2.min.js.svg?compression=gzip&softmax=27000&max=30000)](https://img.badgesize.io/https://az416426.vo.msecnd.net/next/ai.2.min.js.svg?compression=gzip&softmax=27000&max=30000)
@@ -171,8 +171,8 @@ This version comes with the bare minimum amount of features and functionalities 
 
 | Extensions |
 |---------------|
-| [React](https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-react-js)| 
-| [React Native](https://github.com/Microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-react-native)| 
+| [React](https://github.com/microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-react-js)|
+| [React Native](https://github.com/microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-react-native)|
 
 ## Upgrading from the old Version of Application Insights
 Breaking changes in the SDK V2 version:
@@ -200,7 +200,7 @@ Test in internal environment to verify monitoring telemetry is working as expect
 ## Build a new extension for the SDK
 The beta SDK supports the ability to include multiple extensions at runtime. In order to create a new extension, please implement the following interface:
 
-[ITelemetryPlugin](https://github.com/Microsoft/ApplicationInsights-JS/blob/master/vNext/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts)
+[ITelemetryPlugin](https://github.com/microsoft/ApplicationInsights-JS/blob/master/vNext/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts)
 
 On initialization, config.extensions accepts an array of ITelemetryPlugin objects. These are hooked up and ITelemetryPlugin.processTelemetry() is chained based on priority of these plugins.
 Please note that higher the priority, the later your processing code will be invoked. The SDK supports a plugin model and channels can also be plugged in similarly (advanced scenario).
@@ -259,9 +259,9 @@ We strongly welcome and encourage contributions to this project. Please read the
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-[ContribGuide]: https://github.com/Microsoft/ApplicationInsights-Home/blob/master/CONTRIBUTING.md
+[ContribGuide]: https://github.com/microsoft/ApplicationInsights-Home/blob/master/CONTRIBUTING.md
 [GitFlow]: http://nvie.com/posts/a-successful-git-branching-model/
-[GitHubIssue]: https://github.com/Microsoft/ApplicationInsights-JS/issues
+[GitHubIssue]: https://github.com/microsoft/ApplicationInsights-JS/issues
 
 ## Build together when changing multiple packages:
 
