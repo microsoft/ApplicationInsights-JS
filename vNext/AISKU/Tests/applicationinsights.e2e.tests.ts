@@ -2,7 +2,9 @@
 import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Util } from '@microsoft/applicationinsights-common';
+import { AppInsightsCore } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
+import { AjaxPlugin } from '@microsoft/applicationinsights-dependencies-js';
 
 export class ApplicationInsightsTests extends TestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -280,6 +282,24 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public addDependencyPluginTests(): void {
+
+        this.testCase({
+            name: "DependenciesPlugin: initialization yields a defined _context value",
+            test: () => {
+                const extensions = (<AppInsightsCore>this._ai.core)._extensions;
+                let ajax: AjaxPlugin, extIx=0;
+                while (!ajax && extIx < extensions.length) {
+                    if (extensions[extIx].identifier === AjaxPlugin.identifier) {
+                        ajax = extensions[extIx] as AjaxPlugin;
+                    }
+                    extIx++;
+                }
+
+                Assert.ok(ajax);
+                Assert.equal(AjaxPlugin.identifier, ajax.identifier);
+                Assert.ok(ajax["_context"]);
+            }
+        })
 
         this.testCaseAsync({
             name: "TelemetryContext: trackDependencyData",

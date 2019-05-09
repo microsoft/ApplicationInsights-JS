@@ -338,7 +338,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         }
     }
 
-    priority: number = 161;
+    priority: number = 171;
 
     // Fetch Stuff
     protected instrumentFetch(): void {
@@ -639,9 +639,15 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             if (this._config.disableFetchTracking === false) {
                 this.instrumentFetch();
             }
-            
+
             if (extensions.length > 0 && extensions) {
-                const propExt = <IPropertiesPlugin>extensions[PropertiesPluginIdentifier];
+                let propExt, extIx = 0;
+                while (!propExt && extIx < extensions.length) {
+                    if (extensions[extIx] && extensions[extIx].identifier === PropertiesPluginIdentifier) {
+                        propExt = extensions[extIx]
+                    }
+                    extIx++;
+                }
                 if (propExt) {
                     this._context = propExt.context; // we could move IPropertiesPlugin to common as well
                 }
