@@ -48,3 +48,4 @@ export { IPropertiesPlugin } from './Interfaces/IPropertiesPlugin';
 export { IUser, IUserContext } from './Interfaces/Context/IUser';
 export { ITelemetryTrace, ITraceState } from './Interfaces/Context/ITelemetryTrace';
 export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
+export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";

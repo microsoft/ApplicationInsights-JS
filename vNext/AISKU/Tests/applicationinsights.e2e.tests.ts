@@ -48,9 +48,10 @@ export class ApplicationInsightsTests extends TestClass {
                 instrumentationKey: ApplicationInsightsTests._instrumentationKey,
                 disableAjaxTracking: false,
                 disableFetchTracking: false,
-                maxBatchInterval: 5000,
+                maxBatchInterval: 2500,
                 disableExceptionTracking: false,
-                namePrefix: this.sessionPrefix
+                namePrefix: this.sessionPrefix,
+                enableCorsCorrelation: true
             };
 
             var init = new ApplicationInsights({
@@ -332,13 +333,17 @@ export class ApplicationInsightsTests extends TestClass {
         if (window && window.fetch) {
             this.testCaseAsync({
                 name: "DependenciesPlugin: auto collection of outgoing fetch requests",
-                stepDelay: 1,
+                stepDelay: 5000,
                 steps: [
                     () => {
                         fetch('https://httpbin.org/status/200', { method: 'GET' });
                         Assert.ok(true, "fetch monitoring is instrumented");
+                    },
+                    () => {
+                        fetch('https://httpbin.org/status/200', { method: 'GET' });
+                        Assert.ok(true, "fetch monitoring is instrumented");
                     }
-                ].concat(this.asserts(1))
+                ].concat(this.asserts(2))
             });
         } else {
             this.testCase({
@@ -521,8 +526,8 @@ export class ApplicationInsightsTests extends TestClass {
             this.successSpy.args.forEach(call => {
                 currentCount += call[1];
             });
-            console.log('curr: ' + currentCount + ' exp: ' + expectedCount);
-            return currentCount === expectedCount;
+            console.log('curr: ' + currentCount + ' exp: ' + expectedCount, ' appId: ' + this._ai.context.appId());
+            return currentCount === expectedCount && !!this._ai.context.appId();
         } else {
             return false;
         }
