@@ -556,7 +556,7 @@ export class UrlHelper {
 
     public static parseUrl(url): HTMLAnchorElement {
         if (!UrlHelper.htmlAnchorElement) {
-            UrlHelper.htmlAnchorElement = !!UrlHelper.document.createElement ? UrlHelper.document.createElement('a') : {};
+            UrlHelper.htmlAnchorElement = !!UrlHelper.document.createElement ? UrlHelper.document.createElement('a') : { host: UrlHelper.parseHost(url) }; // fill host field in the fallback case as that is the only externally required field from this fn
         }
 
         UrlHelper.htmlAnchorElement.href = url;
@@ -589,6 +589,16 @@ export class UrlHelper {
             return method.toUpperCase() + " " + absoluteUrl;
         } else {
             return absoluteUrl;
+        }
+    }
+
+    // Fallback method to grab host from url if document.createElement method is not available
+    public static parseHost(url: string) {
+        var match = url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i);
+        if (match != null && match.length > 2 && typeof match[2] === 'string' && match[2].length > 0) {
+            return match[2];
+        } else {
+            return null;
         }
     }
 }
