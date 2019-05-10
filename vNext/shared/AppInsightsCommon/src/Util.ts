@@ -10,7 +10,6 @@ import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 
 export class Util {
     private static document: any = typeof document !== "undefined" ? document : {};
-    private static _canUseCookies: boolean = undefined;
     private static _canUseLocalStorage: boolean = undefined;
     private static _canUseSessionStorage: boolean = undefined;
     // listing only non-geo specific locations
@@ -309,7 +308,7 @@ export class Util {
             };
         }
 
-        return Util._canUseCookies;
+        return CoreUtils._canUseCookies;
     }
 
     /**
