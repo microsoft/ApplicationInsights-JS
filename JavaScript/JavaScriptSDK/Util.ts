@@ -607,10 +607,12 @@ module Microsoft.ApplicationInsights {
             }
 
             let includedDomains = config && config.correlationHeaderDomains;
-            for (let i = 0; i < includedDomains.length; i++) {
-                let regex = new RegExp(includedDomains[i].toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
-                if (!regex.test(requestHost)) {
-                    return false;
+            if (includedDomains) {
+                for (let i = 0; i < includedDomains.length; i++) {
+                    let regex = new RegExp(includedDomains[i].toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
+                    if (!regex.test(requestHost)) {
+                        return false;
+                    }
                 }
             }
 
