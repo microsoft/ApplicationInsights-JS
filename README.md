@@ -238,7 +238,7 @@ ITelemetryPlugin has a simpler base type IPlugin that you can instantiate for in
 	```
 
 ## Performance
-At just 25 KB gzipped, and taking only ~15 ms to initialize, Application Insights adds a neglible amount of loadtime to your website. By using the snippet, minimal components of the library are quickly loaded. In the meantime, the full script is downloaded in the background.
+At just 25 KB gzipped, and taking only ~15 ms to initialize, Application Insights adds a negligible amount of loadtime to your website. By using the snippet, minimal components of the library are quickly loaded. In the meantime, the full script is downloaded in the background.
 
 While the script is downloading from the CDN, all tracking of your page is queued. Once the downloaded script finishes asynchronously initializing, all events that were queued are tracked. As a result, you will not lose any telemetry during the entire life cycle of your page. This setup process provides your page with a seamless analytics system, invisible to your users.
 
