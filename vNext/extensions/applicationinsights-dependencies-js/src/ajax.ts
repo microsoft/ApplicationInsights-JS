@@ -255,7 +255,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 name: xhr.ajaxData.getPathName(),
                 type: "Ajax",
                 duration: xhr.ajaxData.ajaxTotalDuration,
-                success:(+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
+                success: (+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
                 responseCode: +xhr.ajaxData.status,
                 method: xhr.ajaxData.method
             };
@@ -347,7 +347,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         }
         const originalFetch: (input?: Request | string, init?: RequestInit) => Promise<Response> = window.fetch;
         const fetchMonitorInstance: AjaxMonitor = this;
-        window.fetch = function fetch(input?: Request | string , init?: RequestInit): Promise<Response> {
+        window.fetch = function fetch(input?: Request | string, init?: RequestInit): Promise<Response> {
             let fetchData: ajaxRecord;
             if (fetchMonitorInstance.isFetchInstrumented(input) && fetchMonitorInstance.isMonitoredInstance(undefined, undefined, input, init)) {
                 try {
@@ -468,7 +468,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.FailedMonitorAjaxOpen,
                 "Failed to grab failed fetch diagnostics message",
-                {exception: Util.dump(e)}
+                { exception: Util.dump(e) }
             );
         }
         return result;
@@ -619,7 +619,8 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             disableCorrelationHeaders: undefined,
             correlationHeaderExcludedDomains: undefined,
             appId: undefined,
-            enableCorsCorrelation: undefined
+            enableCorsCorrelation: undefined,
+            correlationHeaderDomains: undefined,
         }
     }
 
