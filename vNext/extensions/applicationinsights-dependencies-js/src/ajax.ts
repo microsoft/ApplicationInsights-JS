@@ -605,6 +605,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 "*.blob.core.chinacloudapi.cn",
                 "*.blob.core.cloudapi.de",
                 "*.blob.core.usgovcloudapi.net"],
+            correlationHeaderDomains: undefined,
             appId: undefined,
             enableCorsCorrelation: false
         }
