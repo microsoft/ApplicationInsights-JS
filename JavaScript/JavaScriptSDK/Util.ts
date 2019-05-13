@@ -424,7 +424,7 @@ module Microsoft.ApplicationInsights {
                 if (Date.prototype.toISOString) {
                     return date.toISOString();
                 } else {
-                    const pad = function(number) {
+                    const pad = function (number) {
                         var r = String(number);
                         if (r.length === 1) {
                             r = "0" + r;
@@ -604,6 +604,16 @@ module Microsoft.ApplicationInsights {
             let requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
             if ((!config || !config.enableCorsCorrelation) && requestHost !== currentHost) {
                 return false;
+            }
+
+            let includedDomains = config && config.correlationHeaderDomains;
+            if (includedDomains) {
+                for (let i = 0; i < includedDomains.length; i++) {
+                    let regex = new RegExp(includedDomains[i].toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
+                    if (!regex.test(requestHost)) {
+                        return false;
+                    }
+                }
             }
 
             let excludedDomains = config && config.correlationHeaderExcludedDomains;
