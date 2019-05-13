@@ -606,16 +606,6 @@ module Microsoft.ApplicationInsights {
                 return false;
             }
 
-            let includedDomains = config && config.correlationHeaderDomains;
-            if (includedDomains) {
-                for (let i = 0; i < includedDomains.length; i++) {
-                    let regex = new RegExp(includedDomains[i].toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
-                    if (!regex.test(requestHost)) {
-                        return false;
-                    }
-                }
-            }
-
             let excludedDomains = config && config.correlationHeaderExcludedDomains;
             if (!excludedDomains || excludedDomains.length == 0) {
                 return true;

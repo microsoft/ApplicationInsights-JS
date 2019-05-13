@@ -39,6 +39,5 @@ module Microsoft.ApplicationInsights {
         isBrowserLinkTrackingEnabled?: boolean;
         appId?: string;
         enableCorsCorrelation?: boolean;
-        correlationHeaderDomains?: string[];
     }
 }
