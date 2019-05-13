@@ -544,12 +544,12 @@ module Microsoft.ApplicationInsights {
     }
 
     export class UrlHelper {
-        private static document: any = typeof document !== "undefined" ? document : { host: UrlHelper.parseHost(url) };
+        private static document: any = typeof document !== "undefined" ? document : {};
         private static htmlAnchorElement: HTMLAnchorElement;
 
         public static parseUrl(url): HTMLAnchorElement {
             if (!UrlHelper.htmlAnchorElement) {
-                UrlHelper.htmlAnchorElement = !!UrlHelper.document.createElement ? UrlHelper.document.createElement('a') : {};
+                UrlHelper.htmlAnchorElement = !!UrlHelper.document.createElement ? UrlHelper.document.createElement('a') : { host: UrlHelper.parseHost(url) };
             }
 
             UrlHelper.htmlAnchorElement.href = url;
