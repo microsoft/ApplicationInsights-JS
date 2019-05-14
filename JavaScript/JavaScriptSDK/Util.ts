@@ -477,9 +477,9 @@ module Microsoft.ApplicationInsights {
             return (days > 0 ? days + "." : "") + hour + ":" + min + ":" + sec + "." + ms;
         }
 
-        /**		
-        * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error		
-        * happens in a script from other domain (cross origin, CORS).		
+        /**
+        * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error
+        * happens in a script from other domain (cross origin, CORS).
         */
         public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
             return (message === "Script error." || message === "Script error") && !error;
@@ -512,7 +512,7 @@ module Microsoft.ApplicationInsights {
         /**
          * Adds an event handler for the specified event
          * @param eventName {string} - The name of the event
-         * @param callback {any} - The callback function that needs to be executed for the given event 
+         * @param callback {any} - The callback function that needs to be executed for the given event
          * @return {boolean} - true if the handler was successfully added
          */
         public static addEventHandler(eventName: string, callback: any): boolean {
@@ -549,12 +549,22 @@ module Microsoft.ApplicationInsights {
 
         public static parseUrl(url): HTMLAnchorElement {
             if (!UrlHelper.htmlAnchorElement) {
-                UrlHelper.htmlAnchorElement = !!UrlHelper.document.createElement ? UrlHelper.document.createElement('a') : {};
+                UrlHelper.htmlAnchorElement = !!UrlHelper.document.createElement ? UrlHelper.document.createElement('a') : { host: UrlHelper.parseHost(url) };
             }
 
             UrlHelper.htmlAnchorElement.href = url;
 
             return UrlHelper.htmlAnchorElement;
+        }
+
+        // Fallback method to grab host from url if document.createElement method is not available
+        public static parseHost(url: string) {
+            var match = url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i);
+            if (match != null && match.length > 2 && typeof match[2] === 'string' && match[2].length > 0) {
+                return match[2];
+            } else {
+                return null;
+            }
         }
 
         public static getAbsoluteUrl(url): string {
