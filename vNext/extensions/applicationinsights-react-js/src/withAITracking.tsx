@@ -80,6 +80,7 @@ export default function withAITracking<P>(reactPlugin: ReactPlugin, Component: R
           onMouseDown={this.trackActivity}
           onTouchStart={this.trackActivity}
           onTouchMove={this.trackActivity}
+          className="appinsights-hoc"
         >
           <Component {...this.props} />
         </div>
