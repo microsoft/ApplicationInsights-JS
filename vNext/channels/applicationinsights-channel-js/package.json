@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-channel-js",
-    "version": "2.0.0-rc4",
+    "version": "2.0.0-rc5",
     "description": "Microsoft Application Insights JavaScript SDK Channel",
     "main": "dist/applicationinsights-channel-js.js",
     "module": "dist-esm/applicationinsights-channel-js.js",
@@ -28,8 +28,8 @@
         "rollup": "^0.66.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "2.0.0-rc4",
-        "@microsoft/applicationinsights-common": "2.0.0-rc4",
+        "@microsoft/applicationinsights-core-js": "2.0.0-rc5",
+        "@microsoft/applicationinsights-common": "2.0.0-rc5",
         "tslib": "^1.9.3"
     },
     "license": "MIT"
