@@ -407,7 +407,7 @@ export class PageViewPerformanceEnvelopeCreator extends EnvelopeCreator {
         let url = bd.uri || (bd as any).url;
         let properties = bd.properties;
         let measurements = bd.measurements;
-        let baseData = new PageViewPerformance(logger, name, url, undefined, properties, measurements, cs4BaseData);
+        let baseData = new PageViewPerformance(logger, name, url, undefined, properties, measurements, bd);
         let data = new Data<PageViewPerformance>(PageViewPerformance.dataType, baseData);
         return EnvelopeCreator.createEnvelope<PageViewPerformance>(logger, PageViewPerformance.envelopeType, telemetryItem, data);
     }
