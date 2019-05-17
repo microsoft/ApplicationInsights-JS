@@ -638,9 +638,9 @@ export class CorrelationIdHelper {
 
         let includedDomains = config && config.correlationHeaderDomains;
         if (includedDomains) {
-            if (includedDomains.length == 0 || includedDomains.every((domain) => {
+            if (!includedDomains.some((domain) => {
                 let regex = new RegExp(domain.toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
-                return !regex.test(requestHost);
+                return regex.test(requestHost);
             })) {
                 return false;
             }
