@@ -625,11 +625,11 @@ export class CorrelationIdHelper {
 
         let includedDomains = config && config.correlationHeaderDomains;
         if (includedDomains) {
-            for (let i = 0; i < includedDomains.length; i++) {
-                let regex = new RegExp(includedDomains[i].toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
-                if (!regex.test(requestHost)) {
-                    return false;
-                }
+            if (includedDomains.length == 0 || includedDomains.every((domain) => {
+                let regex = new RegExp(domain.toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
+                return !regex.test(requestHost);
+            })) {
+                return false;
             }
         }
 
