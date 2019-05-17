@@ -7,6 +7,7 @@ import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
 import { Util } from '../Util';
 import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from '@microsoft/applicationinsights-core-js';
+import { IPageViewPerformanceTelemetry } from '../Interfaces/IPageViewPerformanceTelemetry';
 
 
 export class PageViewPerformance extends PageViewPerfData implements ISerializable {
@@ -31,12 +32,21 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
     /**
      * Constructs a new instance of the PageEventTelemetry object
      */
-    constructor(logger: IDiagnosticLogger, name: string, url: string, unused: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) {
+    constructor(logger: IDiagnosticLogger, name: string, url: string, unused: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }, cs4BaseData?: IPageViewPerformanceTelemetry) {
         super();
         this.url = DataSanitizer.sanitizeUrl(logger, url);
         this.name = DataSanitizer.sanitizeString(logger, name) || Util.NotSpecified;
 
         this.properties = DataSanitizer.sanitizeProperties(logger, properties);
         this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
+
+        if (cs4BaseData) {
+            this.domProcessing = cs4BaseData.domProcessing;
+            this.duration = cs4BaseData.duration
+            this.networkConnect = cs4BaseData.networkConnect;
+            this.perfTotal = cs4BaseData.perfTotal;
+            this.receivedResponse = cs4BaseData.receivedResponse;
+            this.sentRequest = cs4BaseData.sentRequest;
+        }
     }
 }

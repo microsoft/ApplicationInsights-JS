@@ -44,4 +44,9 @@ export interface ITelemetryContext {
      * The object describing a session tracked by this object.
      */
     session: ISession;
+
+    /**
+     * application id obtained from breeze responses. Is used if appId is not specified by root config
+     */
+    appId: () => string;
 }

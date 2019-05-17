@@ -20,7 +20,8 @@ import {
     PageViewPerformance, RemoteDependencyData,
     IChannelControlsAI,
     ConfigurationManager, IConfig,
-    ProcessLegacy
+    ProcessLegacy,
+    BreezeChannelIdentifier
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryPlugin, ITelemetryItem, IConfiguration,
@@ -37,7 +38,7 @@ declare var XDomainRequest: {
 export class Sender implements IChannelControlsAI {
     public priority: number = 1001;
 
-    public identifier: string;
+    public identifier: string = BreezeChannelIdentifier;
 
     public pause(): void {
         throw new Error("Method not implemented.");
@@ -111,10 +112,6 @@ export class Sender implements IChannelControlsAI {
 
     private _logger: IDiagnosticLogger;
     private _serializer: Serializer;
-
-    constructor() {
-        this.identifier = "AppInsightsChannelPlugin"
-    }
 
     public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) :void {
         this._logger = core.logger;

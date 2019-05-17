@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { StorageType } from "./Enums";
-import { CoreUtils, _InternalMessageId, LoggingSeverity, IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { CoreUtils, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin } from "@microsoft/applicationinsights-core-js";
 import { IConfig } from "./Interfaces/IConfig";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
@@ -10,7 +10,6 @@ import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 
 export class Util {
     private static document: any = typeof document !== "undefined" ? document : {};
-    private static _canUseCookies: boolean = undefined;
     private static _canUseLocalStorage: boolean = undefined;
     private static _canUseSessionStorage: boolean = undefined;
     // listing only non-geo specific locations
@@ -309,7 +308,7 @@ export class Util {
             };
         }
 
-        return Util._canUseCookies;
+        return CoreUtils._canUseCookies;
     }
 
     /**
@@ -547,6 +546,20 @@ export class Util {
      */
     public static IsBeaconApiSupported(): boolean {
         return ('sendBeacon' in navigator && (<any>navigator).sendBeacon);
+    }
+
+    public static getExtension(extensions: IPlugin[], identifier: string) {
+        let extension = null;
+        let extIx = 0;
+
+        while (!extension && extIx < extensions.length) {
+            if (extensions[extIx] && extensions[extIx].identifier === identifier) {
+                extension = extensions[extIx];
+            }
+            extIx++;
+        }
+
+        return extension;
     }
 }
 

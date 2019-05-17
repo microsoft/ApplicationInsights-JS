@@ -18,7 +18,7 @@ const baseType: string = "baseType";
 const baseData: string = "baseData";
 
 export abstract class EnvelopeCreator {
-    public static Version = "2.0.0-rc4";
+    public static Version = "2.0.0-rc5";
     protected _logger: IDiagnosticLogger;
 
     abstract Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem): IEnvelope;
@@ -404,10 +404,10 @@ export class PageViewPerformanceEnvelopeCreator extends EnvelopeCreator {
 
         const bd = telemetryItem.baseData as IPageViewPerformanceTelemetry;
         let name = bd.name;
-        let url = bd.uri;
+        let url = bd.uri || (bd as any).url;
         let properties = bd.properties;
         let measurements = bd.measurements;
-        let baseData = new PageViewPerformance(logger, name, url, undefined, properties, measurements);
+        let baseData = new PageViewPerformance(logger, name, url, undefined, properties, measurements, bd);
         let data = new Data<PageViewPerformance>(PageViewPerformance.dataType, baseData);
         return EnvelopeCreator.createEnvelope<PageViewPerformance>(logger, PageViewPerformance.envelopeType, telemetryItem, data);
     }
