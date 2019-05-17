@@ -9,12 +9,13 @@ import {
 } from '@microsoft/applicationinsights-core-js';
 import { TelemetryContext } from './TelemetryContext';
 import { PageView, ConfigurationManager,
-    IConfig, PropertiesPluginIdentifier, IPropertiesPlugin, Extensions } from '@microsoft/applicationinsights-common';
+    IConfig, BreezeChannelIdentifier, PropertiesPluginIdentifier, IPropertiesPlugin, Extensions, Util } from '@microsoft/applicationinsights-common';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 
 export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPlugin {
     public context: TelemetryContext;
     private _logger: IDiagnosticLogger;
+    private _breezeChannel: IPlugin; // optional. If exists, grab appId from it
 
     public priority = 170;
     public identifier = PropertiesPluginIdentifier;
@@ -47,6 +48,8 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
 
         this._logger = core.logger;
         this.context = new TelemetryContext(core.logger, this._extensionConfig);
+        this._breezeChannel = Util.getExtension(extensions, BreezeChannelIdentifier);
+        this.context.appId = () => this._breezeChannel ? this._breezeChannel["_appId"] : null;
     }
 
     /**

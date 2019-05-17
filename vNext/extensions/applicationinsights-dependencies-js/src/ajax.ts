@@ -430,7 +430,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 // not using original request headers will result in them being lost
                 init.headers = new Headers(init.headers || (input instanceof Request ? (input.headers || {}) : {}));
                 init.headers.set(RequestHeaders.requestIdHeader, ajaxData.id);
-                let appId: string = this._config.appId;
+                let appId: string = this._config.appId || this._context.appId();
                 if (appId) {
                     init.headers.set(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
                 }
@@ -442,7 +442,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             if (this.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(this._config, xhr.ajaxData.getAbsoluteUrl(),
                 this.currentWindowHost)) {
                 xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
-                var appId = this._config.appId; // Todo: also, get appId from channel as breeze returns it
+                var appId = this._config.appId || this._context.appId();
                 if (appId) {
                     xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
                 }
