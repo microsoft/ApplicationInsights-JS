@@ -22,7 +22,10 @@ export class ExceptionTests extends TestClass {
                 Assert.ok(exception, "Exception is created");
 
                 var exceptionInterface: IExceptionInternal = exception.toInterface();
+                Assert.deepEqual(exception.id, exceptionInterface.id);
+                Assert.deepEqual(exception.problemGroup, exceptionInterface.problemGroup);
                 Assert.deepEqual(exception.ver, exceptionInterface.ver);
+                Assert.deepEqual(exception.isManual, exceptionInterface.isManual);
                 Assert.deepEqual(exception.exceptions.map((exception: any) => exception.toInterface()), exceptionInterface.exceptions);
                 Assert.deepEqual(exception.severityLevel, exceptionInterface.severityLevel);
                 Assert.deepEqual(exception.properties, exceptionInterface.properties);
