@@ -36,12 +36,12 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public queue: (() => void)[];
 
     private _isInitialized: boolean = false;
-    private _logger: IDiagnosticLogger; // Initialized by Core
     private _globalconfig: IConfiguration;
-    private _nextPlugin: ITelemetryPlugin;
     private _eventTracking: Timing;
     private _pageTracking: Timing;
-    private _telemetryInitializers: { (envelope: ITelemetryItem): boolean | void; }[]; // Internal telemetry initializers.
+    protected _nextPlugin: ITelemetryPlugin;
+    protected _logger: IDiagnosticLogger; // Initialized by Core
+    protected _telemetryInitializers: { (envelope: ITelemetryItem): boolean | void; }[]; // Internal telemetry initializers.
     protected _pageViewManager: PageViewManager;
     protected _pageViewPerformanceManager: PageViewPerformanceManager;
     protected _pageVisitTimeManager: PageVisitTimeManager;
