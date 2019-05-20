@@ -298,7 +298,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
      * Logs dependency call
      * @param dependencyData dependency data object
      */
-    public trackDependencyDataInternal(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
+    protected trackDependencyDataInternal(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         if (this._config.maxAjaxCallsPerView === -1 || this._trackAjaxAttempts < this._config.maxAjaxCallsPerView) {
             let item = TelemetryItemCreator.create<IDependencyTelemetry>(
                 dependency,

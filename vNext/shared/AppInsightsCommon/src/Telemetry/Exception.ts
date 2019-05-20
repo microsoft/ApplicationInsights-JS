@@ -9,13 +9,17 @@ import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
 import { Util } from '../Util';
-import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, CoreUtils } from '@microsoft/applicationinsights-core-js';
 import { IExceptionInternal, IExceptionTelemetry, IExceptionDetailsInternal, IExceptionStackFrameInternal } from '../Interfaces/IExceptionTelemetry';
 
 export class Exception extends ExceptionData implements ISerializable {
 
     public static envelopeType = "Microsoft.ApplicationInsights.{0}.Exception";
     public static dataType = "ExceptionData";
+
+    public id?: string;
+    public problemGroup?: string;
+    public isManual?: boolean;
 
 
     public aiDataContract = {
@@ -43,9 +47,13 @@ export class Exception extends ExceptionData implements ISerializable {
             this.exceptions = exception.exceptions;
             this.properties = exception.properties;
             this.measurements = exception.measurements;
-            if (exception.severityLevel) {
-                this.severityLevel = exception.severityLevel;
-            }
+            if (exception.severityLevel) this.severityLevel = exception.severityLevel;
+            if (exception.id) this.id = exception.id;
+            if (exception.problemGroup) this.problemGroup = exception.problemGroup;
+
+            // bool/int types, use isNullOrUndefined
+            if (!CoreUtils.isNullOrUndefined(exception.ver)) this.ver = exception.ver;
+            if (!CoreUtils.isNullOrUndefined(exception.isManual)) this.isManual = exception.isManual;
         }
 
     }
@@ -54,15 +62,11 @@ export class Exception extends ExceptionData implements ISerializable {
         const exceptions: _ExceptionDetails[] = exception.exceptions
             && exception.exceptions.map((ex: IExceptionDetailsInternal) => _ExceptionDetails.CreateFromInterface(logger, ex));
         const exceptionData = new Exception(logger, {...exception, exceptions});
-
-        // if (exceptions) {
-        //     exceptionData.exceptions = exceptions;
-        // }
         return exceptionData;
     }
 
     public toInterface(): IExceptionInternal {
-        const { exceptions, properties, measurements, severityLevel, ver } = this;
+        const { exceptions, properties, measurements, severityLevel, ver, problemGroup, id, isManual } = this;
 
         const exceptionDetailsInterface = exceptions instanceof Array
             && exceptions.map((exception: _ExceptionDetails) => exception.toInterface())
@@ -74,9 +78,9 @@ export class Exception extends ExceptionData implements ISerializable {
             severityLevel,
             properties,
             measurements,
-            problemGroup: undefined, // TODO: implement fields below
-            id: null,
-            isManual: null
+            problemGroup,
+            id,
+            isManual
         };
     }
 
