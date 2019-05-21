@@ -33,16 +33,15 @@ export class Exception extends ExceptionData implements ISerializable {
     /**
     * Constructs a new instance of the ExceptionTelemetry object
     */
-    constructor(logger: IDiagnosticLogger, exception: Error | IExceptionInternal, properties?: {[key: string]: any}, measurements?: {[key: string]: number}, severityLevel?: SeverityLevel) {
+    constructor(logger: IDiagnosticLogger, exception: Error | IExceptionInternal, properties?: {[key: string]: any}, measurements?: {[key: string]: number}, severityLevel?: SeverityLevel, id?: string) {
         super();
 
         if (exception instanceof Error) {
             this.exceptions = [new _ExceptionDetails(logger, exception)];
             this.properties = DataSanitizer.sanitizeProperties(logger, properties);
             this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
-            if (severityLevel) {
-                this.severityLevel = severityLevel;
-            }
+            if (severityLevel) this.severityLevel = severityLevel;
+            if (id) this.id = id;
         } else {
             this.exceptions = exception.exceptions;
             this.properties = exception.properties;

@@ -10,6 +10,11 @@ import { SeverityLevel } from './Contracts/Generated/SeverityLevel'
  */
 export interface IExceptionTelemetry {
     /**
+     * Unique guid identifying this error
+     */
+    id?: string;
+
+    /**
      * @type {Error}
      * @memberof IExceptionTelemetry
      * @description Error Object(s)

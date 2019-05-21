@@ -372,7 +372,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             exception.error,
             exception.properties,
             exception.measurements,
-            exception.severityLevel
+            exception.severityLevel,
+            exception.id
         ).toInterface();
 
         let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IExceptionInternal>(
