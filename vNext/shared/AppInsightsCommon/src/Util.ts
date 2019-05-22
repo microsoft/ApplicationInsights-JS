@@ -636,6 +636,16 @@ export class CorrelationIdHelper {
             return false;
         }
 
+        let includedDomains = config && config.correlationHeaderDomains;
+        if (includedDomains) {
+            if (!includedDomains.some((domain) => {
+                let regex = new RegExp(domain.toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
+                return regex.test(requestHost);
+            })) {
+                return false;
+            }
+        }
+
         let excludedDomains = config && config.correlationHeaderExcludedDomains;
         if (!excludedDomains || excludedDomains.length == 0) {
             return true;
@@ -686,18 +696,18 @@ export class AjaxHelper {
         if (absoluteUrl && absoluteUrl.length > 0) {
             var parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)
             target = parsedUrl.host;
-                if (!name) {
-                    if (parsedUrl.pathname != null) {
-                        let pathName: string = (parsedUrl.pathname.length === 0) ? "/" : parsedUrl.pathname;
-                        if (pathName.charAt(0) !== '/') {
-                            pathName = "/" + pathName;
-                        }
-                        data = parsedUrl.pathname;
-                        name = DataSanitizer.sanitizeString(logger, method ? method + " " + pathName : pathName);
-                    } else {
-                        name = DataSanitizer.sanitizeString(logger, absoluteUrl);
+            if (!name) {
+                if (parsedUrl.pathname != null) {
+                    let pathName: string = (parsedUrl.pathname.length === 0) ? "/" : parsedUrl.pathname;
+                    if (pathName.charAt(0) !== '/') {
+                        pathName = "/" + pathName;
                     }
+                    data = parsedUrl.pathname;
+                    name = DataSanitizer.sanitizeString(logger, method ? method + " " + pathName : pathName);
+                } else {
+                    name = DataSanitizer.sanitizeString(logger, absoluteUrl);
                 }
+            }
         } else {
             target = commandName;
             name = commandName;
@@ -720,13 +730,13 @@ export class DateTimeUtils {
      */
     public static Now = (typeof window === 'undefined') ? function () { return new Date().getTime(); } :
         (window.performance && window.performance.now && window.performance.timing) ?
-        function () {
-            return window.performance.now() + window.performance.timing.navigationStart;
-        }
-        :
-        function () {
-            return new Date().getTime();
-        }
+            function () {
+                return window.performance.now() + window.performance.timing.navigationStart;
+            }
+            :
+            function () {
+                return new Date().getTime();
+            }
 
     /**
      * Gets duration between two timestamps

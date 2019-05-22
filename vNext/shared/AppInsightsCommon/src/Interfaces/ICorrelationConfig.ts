@@ -3,10 +3,12 @@
 
 export interface ICorrelationConfig {
     enableCorsCorrelation: boolean;
-    correlationHeaderExcludedDomains:  string[];
+    correlationHeaderExcludedDomains: string[];
     disableCorrelationHeaders: boolean;
     maxAjaxCallsPerView: number;
     disableAjaxTracking: boolean;
     disableFetchTracking: boolean;
     appId?: string;
+
+    correlationHeaderDomains?: string[]
 }
