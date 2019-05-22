@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-common",
-    "version": "2.0.0-rc5",
+    "version": "2.0.0",
     "description": "Microsoft Application Insights Common JavaScript Library",
     "main": "./dist/applicationinsights-common.js",
     "module": "./dist-esm/applicationinsights-common.js",
@@ -30,7 +30,7 @@
         "rollup": "^0.66.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "2.0.0-rc5",
+        "@microsoft/applicationinsights-core-js": "2.0.0",
         "tslib": "^1.9.3"
     },
     "license": "MIT"
