@@ -31,10 +31,10 @@ var reactPlugin = new ReactPlugin();
 var appInsights = new ApplicationInsights({
     config: {
         instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE'
-    },
-    extensions: [reactPlugin],
-    extensionConfig: {
-      [reactPlugin.identifier]: { history: browserHistory }
+        extensions: [reactPlugin],
+        extensionConfig: {
+          [reactPlugin.identifier]: { history: browserHistory }
+        }
     }
 });
 appInsights.loadAppInsights();
