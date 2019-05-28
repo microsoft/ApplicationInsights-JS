@@ -638,10 +638,13 @@ export class CorrelationIdHelper {
 
         let includedDomains = config && config.correlationHeaderDomains;
         if (includedDomains) {
-            if (!includedDomains.some((domain) => {
+            let matchExists;
+            includedDomains.forEach((domain) => {
                 let regex = new RegExp(domain.toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
-                return regex.test(requestHost);
-            })) {
+                matchExists = matchExists || regex.test(requestHost);
+            });
+
+            if (!matchExists) {
                 return false;
             }
         }
