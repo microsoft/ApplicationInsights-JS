@@ -18,7 +18,7 @@ const browserRollupConfigFactory = isProduction => {
       file: `browser/${outputName}.js`,
       banner: banner,
       format: "umd",
-      name: "Microsoft.ApplicationInsights",
+      name: "Microsoft.ApplicationInsightsWeb",
       sourcemap: true
     },
     plugins: [
@@ -58,7 +58,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       file: `dist/${outputName}.js`,
       banner: banner,
       format: "umd",
-      name: "Microsoft.ApplicationInsights",
+      name: "Microsoft.ApplicationInsightsWeb",
       sourcemap: true
     },
     plugins: [

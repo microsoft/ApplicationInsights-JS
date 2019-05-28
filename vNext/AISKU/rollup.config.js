@@ -17,7 +17,7 @@ const browserRollupConfigFactory = (isProduction, libVersion = '2') => {
       file: `browser/ai.${libVersion}.js`,
       banner: banner,
       format: "umd",
-      name: "Microsoft.ApplicationInsights",
+      name: "Microsoft.ApplicationInsightsWeb",
       sourcemap: true
     },
     plugins: [
@@ -56,7 +56,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       file: `dist/applicationinsights-web.js`,
       banner: banner,
       format: "umd",
-      name: "Microsoft.ApplicationInsights",
+      name: "Microsoft.ApplicationInsightsWeb",
       sourcemap: true
     },
     plugins: [
