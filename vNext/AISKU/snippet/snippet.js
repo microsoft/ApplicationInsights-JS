@@ -50,6 +50,10 @@ var aisdk = window[aiName] || (function (aiConfig) {
     createLazyMethod("start" + trackEvent);
     createLazyMethod("stop" + trackEvent);
 
+    createLazyMethod("setAuthenticatedUserContext");
+    createLazyMethod("clearAuthenticatedUserContext");
+    createLazyMethod("flush");
+
     // Collect global errors
     // Note: ApplicationInsightsAnalytics is the extension string identifier for
     //  AppAnalytics. It is defined in ApplicationInsights.ts:ApplicationInsights.identifer
