@@ -15,11 +15,19 @@ export interface IExceptionTelemetry {
     id?: string;
 
     /**
+     * @deprecated
      * @type {Error}
      * @memberof IExceptionTelemetry
      * @description Error Object(s)
      */
-    error: Error;
+    error?: Error;
+
+    /**
+     * @type {Error}
+     * @memberof IExceptionTelemetry
+     * @description Error Object(s)
+     */
+    exception?: Error;
 
     /**
      * @description Specified severity of exception for use with

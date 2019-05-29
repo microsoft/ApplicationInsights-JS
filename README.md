@@ -69,7 +69,7 @@ If initialized using the snippet, your Application Insights instance is located 
 appInsights.trackEvent({name: 'some event'});
 appInsights.trackPageView({name: 'some page'});
 appInsights.trackPageViewPerformance({name : 'some page', url: 'some url'});
-appInsights.trackException({error: new Error('some error')});
+appInsights.trackException({exception: new Error('some error')});
 appInsights.trackTrace({message: 'some trace'});
 appInsights.trackMetric({name: 'some metric', average: 42});
 appInsights.trackDependencyData({absoluteUrl: 'some url', resultCode: 200, method: 'GET', id: 'some id'});
