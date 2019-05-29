@@ -50,7 +50,7 @@ var aisdk = window[aiName] || (function (aiConfig) {
     createLazyMethod("start" + trackEvent);
     createLazyMethod("stop" + trackEvent);
 
-    createMethod("setAuthenticatedUserContext");
+    createLazyMethod("setAuthenticatedUserContext");
 
     // Collect global errors
     // Note: ApplicationInsightsAnalytics is the extension string identifier for
