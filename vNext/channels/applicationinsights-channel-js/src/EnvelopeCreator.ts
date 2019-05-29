@@ -207,9 +207,21 @@ export abstract class EnvelopeCreator {
         //   }
 
         let tgs = {};
-        item.tags.forEach(tg => {
-            tgs = { ...tgs, ...tg };
-        });
+        let tagsCopy = item.tags;
+        // deals with tags.push({object})
+        for(let i = tagsCopy.length - 1; i >= 0; i--){
+            let tg = tagsCopy[i];
+            // Object.keys returns an array of keys
+            Object.keys(tg).forEach(key => {
+                tgs[key] = tg[key];
+            })
+            tagsCopy.splice(i, 1);
+        }
+        // deals with tags[key]=value
+        for(let tg in tagsCopy){
+            tgs[tg] = tagsCopy[tg];
+        }
+        
         env.tags = { ...env.tags, ...tgs };
         if(!env.tags[CtxTagKeys.internalSdkVersion]) {
             // Append a version in case it is not already set
