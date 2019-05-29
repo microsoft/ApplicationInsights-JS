@@ -2,7 +2,7 @@
 import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Util } from '@microsoft/applicationinsights-common';
-import { AppInsightsCore } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { AjaxPlugin } from '@microsoft/applicationinsights-dependencies-js';
 
@@ -356,6 +356,108 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public addPropertiesPluginTests(): void {
+        this.testCaseAsync({
+            name: 'Custom Tags: allowed to send custom properties via addTelemetryInitializer',
+            stepDelay: 1,
+            steps: [
+                () => {
+                    this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
+                        item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
+                    });
+                    this._ai.trackEvent({ name: "Custom event" });
+                }
+            ]
+            .concat(this.asserts(1))
+            .concat(<any>PollingAssert.createPollingAssert(() => {
+                if (this.successSpy.called) {
+                    const payloadStr: string[] = this.successSpy.args[0][0];
+                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                    const payload = JSON.parse(payloadStr[0]);
+                    Assert.ok(payload);
+
+                    if (payload && payload.tags) {
+                        const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                        const tagExpect: string = 'my.custom.cloud.name';
+                        Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
+                        return true;
+                    }
+                    return false;
+                }
+            }, 'Set custom tags'))
+        });
+
+        this.testCaseAsync({
+            name: 'Custom Tags: allowed to send custom properties via addTelemetryInitializer & shimmed addTelemetryInitializer',
+            stepDelay: 1,
+            steps: [
+                () => {
+                    this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
+                        item.tags.push({[this.tagKeys.cloudName]: "my.shim.cloud.name"});
+                    });
+                    this._ai.trackEvent({ name: "Custom event" });
+                }
+            ]
+            .concat(this.asserts(1))
+            .concat(<any>PollingAssert.createPollingAssert(() => {
+                if (this.successSpy.called) {
+                    const payloadStr: string[] = this.successSpy.args[0][0];
+                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                    const payload = JSON.parse(payloadStr[0]);
+                    Assert.ok(payload);
+
+                    if (payload && payload.tags) {
+                        const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                        const tagExpect: string = 'my.shim.cloud.name';
+                        Assert.equal(tagResult, tagExpect, 'telemetryinitializer tag override successful');
+                        return true;
+                    }
+                    return false;
+                }
+            }, 'Set custom tags'))
+        });
+
+        this.testCaseAsync({
+            name: 'Custom Tags: allowed to send custom properties via shimmed addTelemetryInitializer',
+            stepDelay: 1,
+            steps: [
+                () => {
+                    this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
+                        item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
+                        item.tags[this.tagKeys.locationCity] = "my.custom.location.city";
+                        item.tags.push({[this.tagKeys.locationCountry]: "my.custom.location.country"});
+                        item.tags.push({[this.tagKeys.operationId]: "my.custom.operation.id"});
+                    });
+                    this._ai.trackEvent({ name: "Custom event" });
+                }
+            ]
+            .concat(this.asserts(1))
+            .concat(<any>PollingAssert.createPollingAssert(() => {
+                if (this.successSpy.called) {
+                    const payloadStr: string[] = this.successSpy.args[0][0];
+                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                    const payload = JSON.parse(payloadStr[0]);
+                    Assert.ok(payload);
+
+                    if (payload && payload.tags) {
+                        const tagResult1: string = payload.tags && payload.tags[this.tagKeys.cloudName];
+                        const tagExpect1: string = 'my.custom.cloud.name';
+                        Assert.equal(tagResult1, tagExpect1, 'telemetryinitializer tag override successful');
+                        const tagResult2: string = payload.tags && payload.tags[this.tagKeys.locationCity];
+                        const tagExpect2: string = 'my.custom.location.city';
+                        Assert.equal(tagResult2, tagExpect2, 'telemetryinitializer tag override successful');
+                        const tagResult3: string = payload.tags && payload.tags[this.tagKeys.locationCountry];
+                        const tagExpect3: string = 'my.custom.location.country';
+                        Assert.equal(tagResult3, tagExpect3, 'telemetryinitializer tag override successful');
+                        const tagResult4: string = payload.tags && payload.tags[this.tagKeys.operationId];
+                        const tagExpect4: string = 'my.custom.operation.id';
+                        Assert.equal(tagResult4, tagExpect4, 'telemetryinitializer tag override successful');
+                        return true;
+                    }
+                    return false;
+                }
+            }, 'Set custom tags'))
+        });
+
         this.testCaseAsync({
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext authId',
             stepDelay: 1,
