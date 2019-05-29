@@ -207,19 +207,18 @@ export abstract class EnvelopeCreator {
         //   }
 
         let tgs = {};
-        let tagsCopy = item.tags;
         // deals with tags.push({object})
-        for(let i = tagsCopy.length - 1; i >= 0; i--){
-            let tg = tagsCopy[i];
+        for(let i = item.tags.length - 1; i >= 0; i--){
+            let tg = item.tags[i];
             // Object.keys returns an array of keys
             Object.keys(tg).forEach(key => {
                 tgs[key] = tg[key];
             })
-            tagsCopy.splice(i, 1);
+            item.tags.splice(i, 1);
         }
         // deals with tags[key]=value
-        for(let tg in tagsCopy){
-            tgs[tg] = tagsCopy[tg];
+        for(let tg in item.tags){
+            tgs[tg] = item.tags[tg];
         }
         
         env.tags = { ...env.tags, ...tgs };
