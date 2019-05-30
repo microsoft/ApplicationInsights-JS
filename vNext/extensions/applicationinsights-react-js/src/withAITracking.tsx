@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IMetricTelemetry } from '@microsoft/applicationinsights-common';
 import * as React from 'react';
 import ReactPlugin from './ReactPlugin';
-import { IMetricTelemetry } from '@microsoft/applicationinsights-common';
-import {
-  _InternalMessageId,
-} from '@microsoft/applicationinsights-core-js';
 
 /**
  * Higher-order component function to hook Application Insights tracking 
