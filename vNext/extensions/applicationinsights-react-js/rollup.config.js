@@ -1,6 +1,7 @@
 import nodeResolve from "rollup-plugin-node-resolve";
 import {uglify} from "rollup-plugin-uglify";
 import replace from "rollup-plugin-replace";
+import commonjs from "rollup-plugin-commonjs";
 
 const version = require("./package.json").version;
 const outputName = "applicationinsights-react-js";
@@ -10,45 +11,6 @@ const banner = [
   " * Copyright (c) Microsoft and contributors. All rights reserved.",
   " */"
 ].join("\n");
-
-const browserRollupConfigFactory = isProduction => {
-  const browserRollupConfig = {
-    input: `dist-esm/${outputName}.js`,
-    output: {
-      file: `browser/${outputName}.js`,
-      banner: banner,
-      format: "umd",
-      name: "Microsoft.ApplicationInsights",
-      sourcemap: true
-    },
-    plugins: [
-      replace({
-        delimiters: ["", ""],
-        values: {
-          "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
-          "// Licensed under the MIT License.": ""
-        }
-      }),
-      nodeResolve({
-        browser: false,
-        preferBuiltins: false
-      })
-    ]
-  };
-
-  if (isProduction) {
-    browserRollupConfig.output.file = `browser/${outputName}.min.js`;
-    browserRollupConfig.plugins.push(
-      uglify({
-        output: {
-          preamble: banner
-        }
-      })
-    );
-  }
-
-  return browserRollupConfig;
-};
 
 const nodeUmdRollupConfigFactory = (isProduction) => {
   const nodeRollupConfig = {
@@ -68,7 +30,13 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
           "// Licensed under the MIT License.": ""
         }
       }),
-      nodeResolve()
+      nodeResolve({ preferBuiltins: true }),
+      commonjs({
+        namedExports: {
+          "node_modules/react/index.js": ["Children", "Component", "PropTypes", "createElement"],
+          "node_modules/react-dom/index.js": ["render"]
+        }
+      })
     ]
   };
 
@@ -87,8 +55,6 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
 };
 
 export default [
-  browserRollupConfigFactory(true),
-  browserRollupConfigFactory(false),
-  nodeUmdRollupConfigFactory(true),
+  nodeUmdRollupConfigFactory(false),
   nodeUmdRollupConfigFactory(false)
 ];
