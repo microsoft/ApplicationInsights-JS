@@ -18,7 +18,7 @@ export interface IExceptionTelemetry {
      * @deprecated
      * @type {Error}
      * @memberof IExceptionTelemetry
-     * @description Error Object(s)
+     * @description DEPRECATED: Please use exception instead. Behavior/usage for exception remains the same as this field.
      */
     error?: Error;
 
