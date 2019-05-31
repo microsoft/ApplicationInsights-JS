@@ -369,7 +369,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public sendExceptionInternal(exception: IExceptionTelemetry, customProperties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         const exceptionPartB = new Exception(
             this._logger,
-            exception.error,
+            exception.exception || new Error(Util.NotSpecified),
             exception.properties,
             exception.measurements,
             exception.severityLevel,
@@ -431,7 +431,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                     exception.error = new Error(exception.message);
                     exception.error.stack = stack;
                 }
-                this.trackException({ error: exception.error, severityLevel: SeverityLevel.Error }, properties);
+                this.trackException({ exception: exception.error, severityLevel: SeverityLevel.Error }, properties);
             }
         } catch (e) {
             const errorString = exception.error ?
