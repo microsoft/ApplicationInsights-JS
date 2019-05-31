@@ -177,6 +177,7 @@ export class ApplicationInsightsTests extends TestClass {
                 };
 
                 // Test
+                test(() => appInsights.trackException({exception: new Error(), severityLevel: SeverityLevel.Critical}), Exception.envelopeType, Exception.dataType)
                 test(() => appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical}), Exception.envelopeType, Exception.dataType)
                 test(() => appInsights.trackTrace({message: "some string"}), Trace.envelopeType, Trace.dataType);
                 test(() => appInsights.trackPageViewPerformance({name: undefined, uri: undefined, measurements: {somefield: 123}}, {vpHeight: 123}), PageViewPerformance.envelopeType, PageViewPerformance.dataType, () => {
@@ -200,11 +201,12 @@ export class ApplicationInsightsTests extends TestClass {
                 const senderStub = this.sandbox.stub(appInsights.core, "track");
 
                 // Act
+                appInsights.trackException({exception: new Error(), severityLevel: SeverityLevel.Critical});
                 appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
                 this.clock.tick(1);
 
                 // Test
-                Assert.ok(senderStub.calledOnce, "Telemetry is sent when master switch is on");
+                Assert.ok(senderStub.calledTwice, "Telemetry is sent when master switch is on");
             }
         });
     }

@@ -159,7 +159,23 @@ export class ApplicationInsightsTests extends TestClass {
                     Assert.ok(false, 'trackException test not run');
                 } catch (e) {
                     exception = e;
-                    this._ai.trackException({ error: exception });
+                    this._ai.trackException({ exception: exception });
+                }
+                Assert.ok(exception);
+            }].concat(this.asserts(1))
+        });
+
+        this.testCaseAsync({
+            name: 'E2E.GenericTests: legacy trackException sends to backend',
+            stepDelay: 1,
+            steps: [() => {
+                let exception: Error = null;
+                try {
+                    window['a']['b']();
+                    Assert.ok(false, 'trackException test not run');
+                } catch (e) {
+                    exception = e;
+                    this._ai.trackException(<any>{ error: exception });
                 }
                 Assert.ok(exception);
             }].concat(this.asserts(1))
@@ -213,7 +229,7 @@ export class ApplicationInsightsTests extends TestClass {
 
                     Assert.ok(exception);
 
-                    this._ai.trackException({ error: exception });
+                    this._ai.trackException({ exception: exception });
                     this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
                     this._ai.trackTrace({ message: "test" });
                     this._ai.trackPageView({}); // sends 2
@@ -237,7 +253,7 @@ export class ApplicationInsightsTests extends TestClass {
                     Assert.ok(exception);
 
                     for (var i = 0; i < 100; i++) {
-                        this._ai.trackException({ error: exception });
+                        this._ai.trackException({ exception: exception });
                         this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
                         this._ai.trackTrace({ message: "test" });
                         this._ai.trackPageView({ name: `${i}` }); // sends 2 1st time

@@ -87,7 +87,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
 
     trackException(exception: Error, handledAt?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, severityLevel?: any) {
         this.appInsightsNew.trackException(<IExceptionTelemetry>{
-            error: exception
+            exception: exception
         });
     }
 
