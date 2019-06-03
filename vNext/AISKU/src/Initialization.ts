@@ -103,6 +103,9 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public trackException(exception: IExceptionTelemetry): void {
+        if (!exception.exception && (<any>exception).error) {
+            exception.exception = (<any>exception).error;
+        }
         this.appInsights.trackException(exception);
     }
 

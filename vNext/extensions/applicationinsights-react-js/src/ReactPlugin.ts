@@ -4,23 +4,22 @@
  */
 
 import {
-    IConfig, IPageViewTelemetry, Util, IMetricTelemetry
+    IConfig, IPageViewTelemetry, IMetricTelemetry, IAppInsights
 } from "@microsoft/applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     ITelemetryPlugin, CoreUtils, ITelemetryItem,
     IDiagnosticLogger, _InternalMessageId, LoggingSeverity, ICustomProperties
 } from "@microsoft/applicationinsights-core-js";
-import { ApplicationInsights } from '@microsoft/applicationinsights-analytics-js';
 import { IReactExtensionConfig } from './Interfaces/IReactExtensionConfig';
 import { History, LocationListener, Location, Action } from "history";
 
 export default class ReactPlugin implements ITelemetryPlugin {
     private _logger: IDiagnosticLogger;
-    public priority = 165;
+    public priority = 180;
     public identifier = 'ReactPlugin';
 
-    private _analyticsPlugin: ApplicationInsights;
+    private _analyticsPlugin: IAppInsights;
     private _nextPlugin: ITelemetryPlugin;
     private _extensionConfig: IReactExtensionConfig;
 
@@ -33,7 +32,7 @@ export default class ReactPlugin implements ITelemetryPlugin {
         extensions.forEach(ext => {
             let identifier = (ext as ITelemetryPlugin).identifier;
             if (identifier === 'ApplicationInsightsAnalytics') {
-                this._analyticsPlugin = (<any>ext) as ApplicationInsights;
+                this._analyticsPlugin = (<any>ext) as IAppInsights;
             }
         });
         if (this._extensionConfig.history) {
