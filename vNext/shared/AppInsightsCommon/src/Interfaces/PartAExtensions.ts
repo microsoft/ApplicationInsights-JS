@@ -11,8 +11,4 @@ export class Extensions {
     public static SDKExt = "sdk";
 }
 
-export class SDKExtensionKeys {
-    public static libVer = 'libVer';
-}
-
 export var CtxTagKeys = new ContextTagKeys();

@@ -39,7 +39,7 @@ export interface IPlugin {
     identifier: string;
 
     /**
-    * Plugin version (available in ext.sdk.libVer in common schema)
+    * Plugin version (available in data.properties.version in common schema)
     */
     version?: string;
 }

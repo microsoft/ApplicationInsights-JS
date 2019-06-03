@@ -35,7 +35,7 @@ export { TelemetryItemCreator } from './TelemetryItemCreator';
 export { ICorrelationConfig } from './Interfaces/ICorrelationConfig';
 export { IAppInsights } from './Interfaces/IAppInsights';
 export { IWeb } from './Interfaces/Context/IWeb';
-export { CtxTagKeys, Extensions, SDKExtensionKeys } from './Interfaces/PartAExtensions';
+export { CtxTagKeys, Extensions } from './Interfaces/PartAExtensions';
 export { ISession } from './Interfaces/Context/ISession';
 export { ITelemetryContext } from './Interfaces/ITelemetryContext';
 export { IApplication } from './Interfaces/Context/IApplication';
