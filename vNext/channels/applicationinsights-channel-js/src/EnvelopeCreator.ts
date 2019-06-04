@@ -18,7 +18,7 @@ const baseType: string = "baseType";
 const baseData: string = "baseData";
 
 export abstract class EnvelopeCreator {
-    public static Version = "2.0.0";
+    public static Version = "2.0.1";
     protected _logger: IDiagnosticLogger;
 
     abstract Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem): IEnvelope;
@@ -220,7 +220,7 @@ export abstract class EnvelopeCreator {
         for(let tg in item.tags){
             tgs[tg] = item.tags[tg];
         }
-        
+
         env.tags = { ...env.tags, ...tgs };
         if(!env.tags[CtxTagKeys.internalSdkVersion]) {
             // Append a version in case it is not already set
