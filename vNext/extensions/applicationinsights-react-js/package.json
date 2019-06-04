@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-react-js",
-    "version": "1.0.1",
+    "version": "2.0.1",
     "description": "Microsoft Application Insights React plugin",
     "main": "dist/applicationinsights-react-js.js",
     "module": "dist-esm/applicationinsights-react-js.js",
