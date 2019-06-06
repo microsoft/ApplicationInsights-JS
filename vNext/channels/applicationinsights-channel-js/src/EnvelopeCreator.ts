@@ -365,9 +365,15 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
         }
 
         let bd = telemetryItem.baseData as IPageViewTelemetryInternal;
+
+         // special case: pageview.id is grabbed from current operation id. Analytics plugin is decoupled from properties plugin, so this is done here instead. This can be made a default telemetry intializer instead if needed to be decoupled from channel
+        let currentContextId;
+        if (telemetryItem.ext && telemetryItem.ext.trace && telemetryItem.ext.trace.traceID) {
+            currentContextId = telemetryItem.ext.trace.traceID;
+        }
+        let id = bd.id || currentContextId
         let name = bd.name;
         let url = bd.uri;
-        let id = bd.id;
         let properties = bd.properties || {};
         let measurements = bd.measurements || {};
 
