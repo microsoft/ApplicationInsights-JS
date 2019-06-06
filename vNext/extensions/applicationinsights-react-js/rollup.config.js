@@ -33,6 +33,12 @@ const browserRollupConfigFactory = isProduction => {
       nodeResolve({
         browser: false,
         preferBuiltins: false
+      }),
+      commonjs({
+        namedExports: {
+          "node_modules/react/index.js": ["Children", "Component", "PropTypes", "createElement"],
+          "node_modules/react-dom/index.js": ["render"]
+        }
       })
     ]
   };
