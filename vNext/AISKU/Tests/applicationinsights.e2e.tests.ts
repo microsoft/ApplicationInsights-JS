@@ -196,14 +196,11 @@ export class ApplicationInsightsTests extends TestClass {
         });
 
         this.testCaseAsync({
-            name: "TelemetryContext: track page view",
+            name: `TelemetryContext: track page view ${window.location.pathname}`,
             stepDelay: 500,
             steps: [
                 () => {
-                    const originalPathName = window.location.pathname.slice();
-                    window.location.pathname = "/test"
                     this._ai.trackPageView(); // sends 2
-                    window.location.pathname = originalPathName;
                 }
             ].concat(this.asserts(2)).concat(() => {
 
@@ -212,8 +209,9 @@ export class ApplicationInsightsTests extends TestClass {
                     const payload = JSON.parse(payloadStr[0]);
                     let data = payload.data;
                     Assert.ok(data.baseData.id, "pageView id is defined");
-                    Assert.deepEqual(data.baseData.id.length > 0, "/test");
-                    Assert.deepEqual(data.baseData.id, data.tags["ai.operation.id"], "pageView id matches current operation id");
+                    Assert.ok(data.baseData.id.length > 0);
+                    Assert.ok(payload.tags["ai.operation.id"]);
+                    Assert.equal(data.baseData.id, payload.tags["ai.operation.id"], "pageView id matches current operation id");
                 } else {
                     Assert.ok(false, "successSpy not called");
                 }
