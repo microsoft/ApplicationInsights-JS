@@ -438,20 +438,19 @@ export class Sender implements IChannelControlsAI {
     }
 
     private static _getDefaultAppInsightsChannelConfig(): ISenderConfig {
-        let resultConfig = <ISenderConfig>{};
-
         // set default values
-        resultConfig.endpointUrl = () => "https://dc.services.visualstudio.com/v2/track";
-        resultConfig.emitLineDelimitedJson = () => false;
-        resultConfig.maxBatchInterval = () => 15000;
-        resultConfig.maxBatchSizeInBytes = () => 102400; // 100kb
-        resultConfig.disableTelemetry = () => false;
-        resultConfig.enableSessionStorageBuffer = () => true;
-        resultConfig.isRetryDisabled = () => false;
-        resultConfig.isBeaconApiDisabled = () => true;
-        resultConfig.instrumentationKey = () => undefined; // Channel doesn't need iKey, it should be set already
-
-        return resultConfig;
+        return {
+            endpointUrl: () =>"https://dc.services.visualstudio.com/v2/track",
+            emitLineDelimitedJson: () => false,
+            maxBatchInterval: () => 15000,
+            maxBatchSizeInBytes: () => 102400,  // 100kb
+            disableTelemetry: () => false,
+            enableSessionStorageBuffer: () => true,
+            isRetryDisabled: () => false,
+            isBeaconApiDisabled: () => true,
+            instrumentationKey: () => undefined,  // Channel doesn't need iKey, it should be set already
+            namePrefix: () => undefined
+        }
     }
 
     private static _getEmptyAppInsightsChannelConfig(): ISenderConfig {
