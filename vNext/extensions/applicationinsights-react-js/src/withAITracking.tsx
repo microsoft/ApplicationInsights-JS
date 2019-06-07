@@ -12,11 +12,16 @@ import ReactPlugin from './ReactPlugin';
  * @param reactPlugin ReactPlugin instance
  * @param Component the React component to be instrumented 
  * @param componentName (optional) component name
+ * @param className (optional) className of the HOC div
  */
-export default function withAITracking<P>(reactPlugin: ReactPlugin, Component: React.ComponentType<P>, componentName?: string): React.ComponentClass<P> {
+export default function withAITracking<P>(reactPlugin: ReactPlugin, Component: React.ComponentType<P>, componentName?: string, className?: string): React.ComponentClass<P> {
 
   if (componentName === undefined || componentName === null || typeof componentName !== 'string') {
     componentName = Component.prototype.constructor.name;
+  }
+
+  if (className === undefined || className === null || typeof className !== 'string') {
+    className = '';
   }
 
   return class extends React.Component<P> {
@@ -77,7 +82,7 @@ export default function withAITracking<P>(reactPlugin: ReactPlugin, Component: R
           onMouseDown={this.trackActivity}
           onTouchStart={this.trackActivity}
           onTouchMove={this.trackActivity}
-          className="appinsights-hoc"
+          className={className}
         >
           <Component {...this.props} />
         </div>
