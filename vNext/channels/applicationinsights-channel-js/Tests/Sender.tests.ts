@@ -124,7 +124,7 @@ export class SenderTests extends TestClass {
                         }
 
                     },
-                    tags: [{"ai.internal.sdkVersion": "javascript:2.0.0"}],
+                    tags: [{"ai.internal.sdkVersion": "javascript:2.0.1"}],
                     data: {
                         "property1": "val1",
                         "measurement1": 50.0,
@@ -170,7 +170,7 @@ export class SenderTests extends TestClass {
                 Assert.equal("d041d2e5fa834b4f9eee41ac163bf402", appInsightsEnvelope.tags["ai.session.id"]);
                 Assert.equal("browser", appInsightsEnvelope.tags["ai.device.id"]);
                 Assert.equal("Browser", appInsightsEnvelope.tags["ai.device.type"]);
-                Assert.equal("javascript:2.0.0", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
+                Assert.equal("javascript:2.0.1", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
 
                 // Assert name
                 Assert.ok(appInsightsEnvelope.name);
@@ -240,7 +240,7 @@ export class SenderTests extends TestClass {
                 Assert.ok(baseData.ver);
                 Assert.equal(2, baseData.ver);
 
-                Assert.equal("javascript:2.0.0-rc4", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
+                Assert.equal("javascript:2.0.1", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
 
             }
         })

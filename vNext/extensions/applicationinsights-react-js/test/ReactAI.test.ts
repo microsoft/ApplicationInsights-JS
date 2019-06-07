@@ -1,5 +1,5 @@
-import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, IPlugin } from "@microsoft/applicationinsights-core-js";
+import { IPageViewTelemetry } from "@microsoft/applicationinsights-common";
 import ReactPlugin from "../src/ReactPlugin";
 import { IReactExtensionConfig } from "../src/Interfaces/IReactExtensionConfig";
 import { createBrowserHistory } from "history";
@@ -34,7 +34,24 @@ describe("ReactAI", () => {
     const history = createBrowserHistory();
     jest.useFakeTimers();
     init();
-    let analyticsExtension = new ApplicationInsights();
+    let analyticsExtension = {
+      initialize: (config, core, extensions) => { },
+      trackEvent: (event, customProperties) => { },
+      trackPageView: (pageView, customProperties) => { },
+      trackException: (exception, customProperties) => { },
+      trackTrace: (trace, customProperties) => { },
+      trackMetric: (metric, customProperties) => { },
+      _onerror: (exception) => { },
+      startTrackPage: (name) => { },
+      stopTrackPage: (name, properties, measurements) => { },
+      startTrackEvent: (name) => { },
+      stopTrackEvent: (name, properties, measurements) => { },
+      addTelemetryInitializer: (telemetryInitializer) => { },
+      trackPageViewPerformance: (pageViewPerformance, customProperties) => { },
+      processTelemetry: (env) => { },
+      setNextPlugin: (next) => { },
+      identifier: "ApplicationInsightsAnalytics"
+    };
     let channel = new ChannelPlugin();
     let config: IConfiguration = {
       instrumentationKey: 'instrumentation_key',
@@ -42,25 +59,21 @@ describe("ReactAI", () => {
         [reactPlugin.identifier]: {
           history: history
         },
-        [analyticsExtension.identifier]: {
-        }
       }
     };
     core.initialize(config, [reactPlugin, analyticsExtension, channel]);
-    // Mock core track
-    const coreMock = core.track = jest.fn();
+    // Mock Analytics track
+    const analyticsMock = analyticsExtension.trackPageView = jest.fn();
 
     // Emulate navigation to different URL-addressed pages
     history.push("/home", { some: "state" });
     history.push("/new-fancy-page");
     jest.runOnlyPendingTimers();
-    expect(core.track).toHaveBeenCalledTimes(2);
-    var event: ITelemetryItem = coreMock.mock.calls[0][0]
-    expect(event.baseType).toBe("PageviewData");
-    expect(event.baseData["uri"]).toBe("/home");
-    event = coreMock.mock.calls[1][0]
-    expect(event.baseType).toBe("PageviewData");
-    expect(event.baseData["uri"]).toBe("/new-fancy-page");
+    expect(analyticsExtension.trackPageView).toHaveBeenCalledTimes(2);
+    var event: IPageViewTelemetry = analyticsMock.mock.calls[0][0]
+    expect(event.uri).toBe("/home");
+    event = analyticsMock.mock.calls[1][0]
+    expect(event.uri).toBe("/new-fancy-page");
   });
 
   it("React plugin with Analytics not available", () => {

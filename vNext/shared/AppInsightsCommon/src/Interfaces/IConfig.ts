@@ -257,6 +257,7 @@ export interface IConfig {
     consoleLoggingLevel?: number;
     telemetryLoggingLevel?: number;
     diagnosticLogInterval?: number;
+    correlationHeaderDomains?: string[]
 }
 
 export class ConfigurationManager {

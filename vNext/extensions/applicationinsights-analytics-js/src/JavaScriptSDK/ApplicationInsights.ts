@@ -27,7 +27,7 @@ import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 const durationProperty: string = "duration";
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
-    public static Version = "2.0.0-rc4"; // Not currently used anywhere
+    public static Version = "2.0.1"; // Not currently used anywhere
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
     public identifier: string = "ApplicationInsightsAnalytics"; // do not change name or priority
     public priority: number = 160;// take from reserved priority range 100- 200
@@ -36,12 +36,12 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public queue: (() => void)[];
 
     private _isInitialized: boolean = false;
-    private _logger: IDiagnosticLogger; // Initialized by Core
     private _globalconfig: IConfiguration;
-    private _nextPlugin: ITelemetryPlugin;
     private _eventTracking: Timing;
     private _pageTracking: Timing;
-    private _telemetryInitializers: { (envelope: ITelemetryItem): boolean | void; }[]; // Internal telemetry initializers.
+    protected _nextPlugin: ITelemetryPlugin;
+    protected _logger: IDiagnosticLogger; // Initialized by Core
+    protected _telemetryInitializers: { (envelope: ITelemetryItem): boolean | void; }[]; // Internal telemetry initializers.
     protected _pageViewManager: PageViewManager;
     protected _pageViewPerformanceManager: PageViewPerformanceManager;
     protected _pageVisitTimeManager: PageVisitTimeManager;
@@ -369,10 +369,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public sendExceptionInternal(exception: IExceptionTelemetry, customProperties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         const exceptionPartB = new Exception(
             this._logger,
-            exception.error,
+            exception.exception || new Error(Util.NotSpecified),
             exception.properties,
             exception.measurements,
-            exception.severityLevel
+            exception.severityLevel,
+            exception.id
         ).toInterface();
 
         let telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IExceptionInternal>(
@@ -430,7 +431,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                     exception.error = new Error(exception.message);
                     exception.error.stack = stack;
                 }
-                this.trackException({ error: exception.error, severityLevel: SeverityLevel.Error }, properties);
+                this.trackException({ exception: exception.error, severityLevel: SeverityLevel.Error }, properties);
             }
         } catch (e) {
             const errorString = exception.error ?

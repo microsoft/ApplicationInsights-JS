@@ -18,7 +18,7 @@ const baseType: string = "baseType";
 const baseData: string = "baseData";
 
 export abstract class EnvelopeCreator {
-    public static Version = "2.0.0-rc4";
+    public static Version = "2.0.1";
     protected _logger: IDiagnosticLogger;
 
     abstract Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem): IEnvelope;
@@ -207,9 +207,20 @@ export abstract class EnvelopeCreator {
         //   }
 
         let tgs = {};
-        item.tags.forEach(tg => {
-            tgs = { ...tgs, ...tg };
-        });
+        // deals with tags.push({object})
+        for(let i = item.tags.length - 1; i >= 0; i--){
+            let tg = item.tags[i];
+            // Object.keys returns an array of keys
+            Object.keys(tg).forEach(key => {
+                tgs[key] = tg[key];
+            })
+            item.tags.splice(i, 1);
+        }
+        // deals with tags[key]=value
+        for(let tg in item.tags){
+            tgs[tg] = item.tags[tg];
+        }
+
         env.tags = { ...env.tags, ...tgs };
         if(!env.tags[CtxTagKeys.internalSdkVersion]) {
             // Append a version in case it is not already set
@@ -354,9 +365,15 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
         }
 
         let bd = telemetryItem.baseData as IPageViewTelemetryInternal;
+
+         // special case: pageview.id is grabbed from current operation id. Analytics plugin is decoupled from properties plugin, so this is done here instead. This can be made a default telemetry intializer instead if needed to be decoupled from channel
+        let currentContextId;
+        if (telemetryItem.ext && telemetryItem.ext.trace && telemetryItem.ext.trace.traceID) {
+            currentContextId = telemetryItem.ext.trace.traceID;
+        }
+        let id = bd.id || currentContextId
         let name = bd.name;
         let url = bd.uri;
-        let id = bd.id;
         let properties = bd.properties || {};
         let measurements = bd.measurements || {};
 
@@ -404,10 +421,10 @@ export class PageViewPerformanceEnvelopeCreator extends EnvelopeCreator {
 
         const bd = telemetryItem.baseData as IPageViewPerformanceTelemetry;
         let name = bd.name;
-        let url = bd.uri;
+        let url = bd.uri || (bd as any).url;
         let properties = bd.properties;
         let measurements = bd.measurements;
-        let baseData = new PageViewPerformance(logger, name, url, undefined, properties, measurements);
+        let baseData = new PageViewPerformance(logger, name, url, undefined, properties, measurements, bd);
         let data = new Data<PageViewPerformance>(PageViewPerformance.dataType, baseData);
         return EnvelopeCreator.createEnvelope<PageViewPerformance>(logger, PageViewPerformance.envelopeType, telemetryItem, data);
     }

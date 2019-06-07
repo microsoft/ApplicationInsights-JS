@@ -13,7 +13,7 @@ export class EventValidator implements ITypeValidator {
         if (!item.sytemProperties || !item.sytemProperties["ver"]) {
             return false;
         }
-        
+
         if (!item.domainProperties || !item.domainProperties["name"]) {
             return false;
         }

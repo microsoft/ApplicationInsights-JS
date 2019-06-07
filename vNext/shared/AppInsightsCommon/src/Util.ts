@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { StorageType } from "./Enums";
-import { CoreUtils, _InternalMessageId, LoggingSeverity, IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { CoreUtils, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin } from "@microsoft/applicationinsights-core-js";
 import { IConfig } from "./Interfaces/IConfig";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
@@ -10,7 +10,6 @@ import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 
 export class Util {
     private static document: any = typeof document !== "undefined" ? document : {};
-    private static _canUseCookies: boolean = undefined;
     private static _canUseLocalStorage: boolean = undefined;
     private static _canUseSessionStorage: boolean = undefined;
     // listing only non-geo specific locations
@@ -309,7 +308,7 @@ export class Util {
             };
         }
 
-        return Util._canUseCookies;
+        return CoreUtils._canUseCookies;
     }
 
     /**
@@ -548,6 +547,20 @@ export class Util {
     public static IsBeaconApiSupported(): boolean {
         return ('sendBeacon' in navigator && (<any>navigator).sendBeacon);
     }
+
+    public static getExtension(extensions: IPlugin[], identifier: string) {
+        let extension = null;
+        let extIx = 0;
+
+        while (!extension && extIx < extensions.length) {
+            if (extensions[extIx] && extensions[extIx].identifier === identifier) {
+                extension = extensions[extIx];
+            }
+            extIx++;
+        }
+
+        return extension;
+    }
 }
 
 export class UrlHelper {
@@ -623,6 +636,19 @@ export class CorrelationIdHelper {
             return false;
         }
 
+        let includedDomains = config && config.correlationHeaderDomains;
+        if (includedDomains) {
+            let matchExists;
+            includedDomains.forEach((domain) => {
+                let regex = new RegExp(domain.toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
+                matchExists = matchExists || regex.test(requestHost);
+            });
+
+            if (!matchExists) {
+                return false;
+            }
+        }
+
         let excludedDomains = config && config.correlationHeaderExcludedDomains;
         if (!excludedDomains || excludedDomains.length == 0) {
             return true;
@@ -673,18 +699,18 @@ export class AjaxHelper {
         if (absoluteUrl && absoluteUrl.length > 0) {
             var parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)
             target = parsedUrl.host;
-                if (!name) {
-                    if (parsedUrl.pathname != null) {
-                        let pathName: string = (parsedUrl.pathname.length === 0) ? "/" : parsedUrl.pathname;
-                        if (pathName.charAt(0) !== '/') {
-                            pathName = "/" + pathName;
-                        }
-                        data = parsedUrl.pathname;
-                        name = DataSanitizer.sanitizeString(logger, method ? method + " " + pathName : pathName);
-                    } else {
-                        name = DataSanitizer.sanitizeString(logger, absoluteUrl);
+            if (!name) {
+                if (parsedUrl.pathname != null) {
+                    let pathName: string = (parsedUrl.pathname.length === 0) ? "/" : parsedUrl.pathname;
+                    if (pathName.charAt(0) !== '/') {
+                        pathName = "/" + pathName;
                     }
+                    data = parsedUrl.pathname;
+                    name = DataSanitizer.sanitizeString(logger, method ? method + " " + pathName : pathName);
+                } else {
+                    name = DataSanitizer.sanitizeString(logger, absoluteUrl);
                 }
+            }
         } else {
             target = commandName;
             name = commandName;
@@ -707,13 +733,13 @@ export class DateTimeUtils {
      */
     public static Now = (typeof window === 'undefined') ? function () { return new Date().getTime(); } :
         (window.performance && window.performance.now && window.performance.timing) ?
-        function () {
-            return window.performance.now() + window.performance.timing.navigationStart;
-        }
-        :
-        function () {
-            return new Date().getTime();
-        }
+            function () {
+                return window.performance.now() + window.performance.timing.navigationStart;
+            }
+            :
+            function () {
+                return new Date().getTime();
+            }
 
     /**
      * Gets duration between two timestamps

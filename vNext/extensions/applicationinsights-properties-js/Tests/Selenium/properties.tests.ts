@@ -6,6 +6,7 @@ import { ITelemetryConfig } from "../../src/Interfaces/ITelemetryConfig";
 import { Util, TelemetryItemCreator, IWeb } from "@microsoft/applicationinsights-common";
 import { TelemetryContext } from "../../src/TelemetryContext";
 import { Session, _SessionManager } from "../../src/Context/Session";
+import { TelemetryTrace } from "../../src/Context/TelemetryTrace";
 
 export class PropertiesTests extends TestClass {
     private properties: PropertiesPlugin;
@@ -26,6 +27,17 @@ export class PropertiesTests extends TestClass {
         this.addConfigTests();
         this.addUserTests();
         this.addDeviceTests();
+        this.addTelemetryTraceTests();
+    }
+
+    private addTelemetryTraceTests() {
+        this.testCase({
+            name: 'Trace: default operation.name is grabbed from window pathname, if available',
+            test: () => {
+                const operation = new TelemetryTrace();
+                Assert.ok(operation.name);
+            }
+        });
     }
 
     private addConfigTests() {

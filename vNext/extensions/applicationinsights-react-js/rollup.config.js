@@ -1,6 +1,7 @@
 import nodeResolve from "rollup-plugin-node-resolve";
 import {uglify} from "rollup-plugin-uglify";
 import replace from "rollup-plugin-replace";
+import commonjs from "rollup-plugin-commonjs";
 
 const version = require("./package.json").version;
 const outputName = "applicationinsights-react-js";
@@ -32,11 +33,17 @@ const browserRollupConfigFactory = isProduction => {
       nodeResolve({
         browser: false,
         preferBuiltins: false
+      }),
+      commonjs({
+        namedExports: {
+          "node_modules/react/index.js": ["Children", "Component", "PropTypes", "createElement"],
+          "node_modules/react-dom/index.js": ["render"]
+        }
       })
     ]
   };
 
-  if (isProduction) {
+   if (isProduction) {
     browserRollupConfig.output.file = `browser/${outputName}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
@@ -68,7 +75,13 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
           "// Licensed under the MIT License.": ""
         }
       }),
-      nodeResolve()
+      nodeResolve({ preferBuiltins: true }),
+      commonjs({
+        namedExports: {
+          "node_modules/react/index.js": ["Children", "Component", "PropTypes", "createElement"],
+          "node_modules/react-dom/index.js": ["render"]
+        }
+      })
     ]
   };
 

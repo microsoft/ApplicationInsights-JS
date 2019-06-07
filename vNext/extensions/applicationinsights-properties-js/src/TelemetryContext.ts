@@ -5,7 +5,7 @@
 
 import { ITelemetryItem, IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 import { Session, _SessionManager } from './Context/Session';
-import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, IWeb, SampleRate, CtxTagKeys, SDKExtensionKeys } from '@microsoft/applicationinsights-common';
+import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, IWeb, SampleRate, CtxTagKeys } from '@microsoft/applicationinsights-common';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
 import { Internal } from './Context/Internal';
@@ -14,7 +14,7 @@ import { User } from './Context/User';
 import { Location } from './Context/Location';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 import { TelemetryTrace } from './Context/TelemetryTrace';
- 
+
 export class TelemetryContext implements ITelemetryContext {
 
     public application: Application; // The object describing a component tracked by this object - legacy
@@ -28,6 +28,7 @@ export class TelemetryContext implements ITelemetryContext {
     public sample: Sample;
     public os: IOperatingSystem;
     public web: IWeb;
+    public appId: () => string;
 
     constructor(logger: IDiagnosticLogger, defaultConfig: ITelemetryConfig) {
         if (typeof window !== 'undefined') {
@@ -41,8 +42,9 @@ export class TelemetryContext implements ITelemetryContext {
             this.session = new Session();
             this.sample = new Sample(defaultConfig.samplingPercentage(), logger);
         }
+        this.appId = () => null;
     }
-    
+
     public applySessionContext(event: ITelemetryItem) {
         let sessionContext = this.session || this.sessionManager.automaticSession;
         if (sessionContext) {
@@ -52,7 +54,7 @@ export class TelemetryContext implements ITelemetryContext {
         }
 
         if (this.session) {
-            // If customer set session info, apply his context; otherwise apply context automatically generated 
+            // If customer set session info, apply his context; otherwise apply context automatically generated
             if (typeof this.session.id === "string") {
                 event.ext.app.sesId = this.session.id;
             } else {
@@ -71,10 +73,10 @@ export class TelemetryContext implements ITelemetryContext {
         if (this.application) {
 
             if (typeof this.application.ver === "string") {
-                event.tags.push({[CtxTagKeys.applicationVersion]: this.application.ver});
+                event.tags[CtxTagKeys.applicationVersion] = this.application.ver;
             }
             if (typeof this.application.build === "string") {
-                event.tags.push({[CtxTagKeys.applicationBuild]: this.application.build });
+                event.tags[CtxTagKeys.applicationBuild] = this.application.build;
             }
         }
     }
@@ -82,7 +84,6 @@ export class TelemetryContext implements ITelemetryContext {
     public applyDeviceContext(event: ITelemetryItem) {
 
         if (this.device) {
-
             if (typeof this.device.id === "string") {
                 event.ext.device.localId = this.device.id;
             }
@@ -104,30 +105,25 @@ export class TelemetryContext implements ITelemetryContext {
     public applyInternalContext(event: ITelemetryItem) {
         if (this.internal) {
             if (typeof this.internal.agentVersion === "string") {
-                event.tags.push({[CtxTagKeys.internalAgentVersion]: this.internal.agentVersion }); // not mapped in CS 4.0
+                event.tags[CtxTagKeys.internalAgentVersion] = this.internal.agentVersion; // not mapped in CS 4.0
             }
             if (typeof this.internal.sdkVersion === "string") {
-                event.tags.push({[CtxTagKeys.internalSdkVersion]: this.internal.sdkVersion });
-            } else {
-                // store the version provided by core
-                if (event[Extensions.SDKExt] && event[Extensions.SDKExt][SDKExtensionKeys.libVer]) { // not exposing context object as this ext is not finalized
-                    event.tags.push({[CtxTagKeys.internalSdkVersion]: event[Extensions.SDKExt][SDKExtensionKeys.libVer] }); // map sdk.libVer 
-                }
+                event.tags[CtxTagKeys.internalSdkVersion] = this.internal.sdkVersion;
             }
         }
     }
 
     public applyLocationContext(event: ITelemetryItem) {
         if (this.location) {
-            if (typeof this.location.ip === "string") {                
-                event.tags.push({[CtxTagKeys.locationIp]: this.location.ip});
+            if (typeof this.location.ip === "string") {
+                event.tags[CtxTagKeys.locationIp] = this.location.ip;
             }
         }
     }
 
     public applySampleContext(event: ITelemetryItem) {
         if (this.sample) {
-            event.tags.push({ SampleRate:  this.sample.sampleRate }); // tags.sampleRate -> mapped in CS 4.0
+            event.tags[SampleRate] = this.sample.sampleRate; // tags.sampleRate -> mapped in CS 4.0
         }
     }
 
@@ -141,7 +137,7 @@ export class TelemetryContext implements ITelemetryContext {
             if (typeof this.telemetryTrace.name === "string") {
                 trace.name = this.telemetryTrace.name;
             }
-            
+
             if (typeof this.telemetryTrace.parentID === "string") {
                 trace.parentID = this.telemetryTrace.parentID;
             }
@@ -162,21 +158,21 @@ export class TelemetryContext implements ITelemetryContext {
             if (!event.tags) {
                 event.tags = [];
             }
-            
+
             // stays in tags
             if (typeof this.user.accountId === "string") {
                 let item = {};
-                event.tags.push({[CtxTagKeys.userAccountId]: this.user.accountId});
+                event.tags[CtxTagKeys.userAccountId] = this.user.accountId;
             }
-            
-            // CS 4.0            
+
+            // CS 4.0
             if (typeof this.user.id === "string") {
                 event.ext.user.id = this.user.id;
             }
-            
+
             if (typeof this.user.authenticatedId === "string") {
                 event.ext.user.authId = this.user.authenticatedId;
-            }            
+            }
         }
     }
 

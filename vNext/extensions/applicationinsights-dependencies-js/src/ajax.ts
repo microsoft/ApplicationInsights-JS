@@ -255,7 +255,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 name: xhr.ajaxData.getPathName(),
                 type: "Ajax",
                 duration: xhr.ajaxData.ajaxTotalDuration,
-                success:(+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
+                success: (+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
                 responseCode: +xhr.ajaxData.status,
                 method: xhr.ajaxData.method
             };
@@ -298,7 +298,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
      * Logs dependency call
      * @param dependencyData dependency data object
      */
-    public trackDependencyDataInternal(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
+    protected trackDependencyDataInternal(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         if (this._config.maxAjaxCallsPerView === -1 || this._trackAjaxAttempts < this._config.maxAjaxCallsPerView) {
             let item = TelemetryItemCreator.create<IDependencyTelemetry>(
                 dependency,
@@ -347,7 +347,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         }
         const originalFetch: (input?: Request | string, init?: RequestInit) => Promise<Response> = window.fetch;
         const fetchMonitorInstance: AjaxMonitor = this;
-        window.fetch = function fetch(input?: Request | string , init?: RequestInit): Promise<Response> {
+        window.fetch = function fetch(input?: Request | string, init?: RequestInit): Promise<Response> {
             let fetchData: ajaxRecord;
             if (fetchMonitorInstance.isFetchInstrumented(input) && fetchMonitorInstance.isMonitoredInstance(undefined, undefined, input, init)) {
                 try {
@@ -430,7 +430,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 // not using original request headers will result in them being lost
                 init.headers = new Headers(init.headers || (input instanceof Request ? (input.headers || {}) : {}));
                 init.headers.set(RequestHeaders.requestIdHeader, ajaxData.id);
-                let appId: string = this._config.appId;
+                let appId: string = this._config.appId || this._context.appId();
                 if (appId) {
                     init.headers.set(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
                 }
@@ -442,7 +442,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             if (this.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(this._config, xhr.ajaxData.getAbsoluteUrl(),
                 this.currentWindowHost)) {
                 xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
-                var appId = this._config.appId; // Todo: also, get appId from channel as breeze returns it
+                var appId = this._config.appId || this._context.appId();
                 if (appId) {
                     xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
                 }
@@ -468,7 +468,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.FailedMonitorAjaxOpen,
                 "Failed to grab failed fetch diagnostics message",
-                {exception: Util.dump(e)}
+                { exception: Util.dump(e) }
             );
         }
         return result;
@@ -605,6 +605,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 "*.blob.core.chinacloudapi.cn",
                 "*.blob.core.cloudapi.de",
                 "*.blob.core.usgovcloudapi.net"],
+            correlationHeaderDomains: undefined,
             appId: undefined,
             enableCorsCorrelation: false
         }
@@ -619,7 +620,8 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             disableCorrelationHeaders: undefined,
             correlationHeaderExcludedDomains: undefined,
             appId: undefined,
-            enableCorsCorrelation: undefined
+            enableCorsCorrelation: undefined,
+            correlationHeaderDomains: undefined,
         }
     }
 

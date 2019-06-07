@@ -52,7 +52,7 @@ export class Initialization implements IApplicationInsights {
         // ensure instrumentationKey is specified
         if (config && !config.instrumentationKey) {
             config = <any>snippet;
-            ApplicationInsights.Version = "2.0.0-rc4"; // Not currently used anywhere
+            ApplicationInsights.Version = "2.0.1"; // Not currently used anywhere
         }
 
         this.appInsights = new ApplicationInsights();
@@ -103,6 +103,9 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public trackException(exception: IExceptionTelemetry): void {
+        if (!exception.exception && (<any>exception).error) {
+            exception.exception = (<any>exception).error;
+        }
         this.appInsights.trackException(exception);
     }
 

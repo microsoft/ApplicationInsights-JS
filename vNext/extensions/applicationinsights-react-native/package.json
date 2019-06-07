@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-react-native",
-    "version": "1.0.0-rc4",
+    "version": "1.0.2",
     "description": "Microsoft Application Insights React Native Plugin",
     "main": "dist-esm/index.js",
     "types": "dist-esm/index.d.ts",
@@ -10,6 +10,7 @@
         "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-react-native"
     },
     "scripts": {
+        "prepublishOnly": "npm run build",
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "grunt reactnative",
         "build:browser": "echo \"No browser version\"",
@@ -25,13 +26,13 @@
         "rollup-plugin-replace": "^2.1.0",
         "rollup-plugin-uglify": "^6.0.0",
         "rollup": "^0.66.0",
-        "react-native": "0.58.5",
-        "react": "16.6.3"
+        "react-native": "0.59.8",
+        "react": "16.8.3"
     },
     "dependencies": {
-        "react-native-device-info": "^1.4.1",
-        "@microsoft/applicationinsights-core-js": "2.0.0-rc4",
-        "@microsoft/applicationinsights-common": "2.0.0-rc4",
+        "react-native-device-info": "^2.0.2",
+        "@microsoft/applicationinsights-core-js": "^2.0.1",
+        "@microsoft/applicationinsights-common": "^2.0.1",
         "tslib": "^1.9.3"
     },
     "peerDependencies": {
