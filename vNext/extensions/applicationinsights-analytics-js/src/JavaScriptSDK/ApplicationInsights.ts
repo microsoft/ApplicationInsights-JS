@@ -119,7 +119,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 customProperties
             );
 
-            this._setTelemetryNameAndIKey(telemetryItem);
             this.core.track(telemetryItem);
         } catch (e) {
             this._logger.throwInternal(LoggingSeverity.WARNING,
@@ -176,7 +175,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 this._logger,
                 customProperties);
 
-            this._setTelemetryNameAndIKey(telemetryItem);
             this.core.track(telemetryItem);
         } catch (e) {
             this._logger.throwInternal(LoggingSeverity.WARNING,
@@ -207,7 +205,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 customProperties
             );
 
-            this._setTelemetryNameAndIKey(telemetryItem);
             this.core.track(telemetryItem);
         } catch (e) {
             this._logger.throwInternal(LoggingSeverity.CRITICAL,
@@ -259,8 +256,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             properties,
             systemProperties);
 
-        // set instrumentation key
-        this._setTelemetryNameAndIKey(telemetryItem);
         this.core.track(telemetryItem);
 
         // reset ajaxes counter
@@ -280,9 +275,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             this._logger,
             properties,
             systemProperties);
-
-        // set instrumentation key
-        this._setTelemetryNameAndIKey(telemetryItem);
 
         this.core.track(telemetryItem);
     }
@@ -384,7 +376,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             customProperties,
             systemProperties
         );
-        this._setTelemetryNameAndIKey(telemetryItem);
         this.core.track(telemetryItem);
     }
 
@@ -634,14 +625,6 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         );
 
         this.core.track(telemetryItem);
-    }
-
-    // Mutate telemetryItem inplace to add boilerplate iKey & name info
-    private _setTelemetryNameAndIKey(telemetryItem: ITelemetryItem): void {
-        telemetryItem.iKey = this._globalconfig.instrumentationKey;
-
-        var iKeyNoDashes = this._globalconfig.instrumentationKey.replace(/-/g, "");
-        telemetryItem.name = telemetryItem.name.replace("{0}", iKeyNoDashes);
     }
 }
 
