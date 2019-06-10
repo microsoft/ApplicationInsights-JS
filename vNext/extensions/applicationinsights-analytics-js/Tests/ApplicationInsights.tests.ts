@@ -169,8 +169,8 @@ export class ApplicationInsightsTests extends TestClass {
                 var test = (action, expectedEnvelopeType, expectedDataType, test?: () => void) => {
                     action();
                     envelope = this.getFirstResult(action, trackStub);
-                    Assert.equal(iKey, envelope.iKey, "envelope iKey");
-                    Assert.equal(expectedEnvelopeType.replace("{0}", iKeyNoDash), envelope.name, "envelope name");
+                    Assert.equal("", envelope.iKey, "envelope iKey");
+                    Assert.equal(expectedEnvelopeType, envelope.name, "envelope name");
                     Assert.equal(expectedDataType, envelope.baseType, "data type name");
                     if (typeof test === 'function') {test();}
                     trackStub.reset();
