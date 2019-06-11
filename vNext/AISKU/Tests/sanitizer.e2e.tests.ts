@@ -1,5 +1,5 @@
 /// <reference path='./TestFramework/Common.ts' />
-import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
+import { ApplicationInsights, IApplicationInsights, Util, LoggingSeverity, _InternalMessageId } from '../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 
 export class SanitizerE2ETests extends TestClass {
@@ -59,6 +59,31 @@ export class SanitizerE2ETests extends TestClass {
             Assert.ok(this.successSpy.called, "success");
             Assert.ok(!this.errorSpy.called, "no error sending");
         }
+
+        this.testCaseAsync({
+            name: "SanitizerE2ETests: RDD Telemetry sanitizes long names",
+            stepDelay: this.delay,
+            steps: [
+                () => {
+                    this._ai.trackDependencyData({
+                        id: Util.newId(),
+                        name: new Array(1234).join("a"), // exceeds max of 1024
+                        responseCode: 200
+                    });
+                }
+            ].concat(<any>PollingAssert.createPollingAssert(() => {
+                Assert.ok(true, "waiting for response " + new Date().toISOString());
+                return (this.successSpy.called || this.errorSpy.called);
+            }, "Wait for response"))
+                .concat(() => {
+                    boilerPlateAsserts();
+                })
+                .concat(() => {
+                    Assert.ok(this.loggingSpy.called);
+                    Assert.equal(LoggingSeverity.WARNING, this.loggingSpy.args[0][0]);
+                    Assert.equal(_InternalMessageId.StringValueTooLong, this.loggingSpy.args[0][1]);
+                })
+        })
 
         this.testCaseAsync({
             name: "Sanitizer2ETests: Data platform accepts sanitized names",
