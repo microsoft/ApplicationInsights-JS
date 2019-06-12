@@ -119,7 +119,7 @@ The `IDependencyTelemetry` interface is described below
 Parameter | Type | Description
 ---|---|---
 `id` | string | **Required**<br>Unique id, this is used by the backend to correlate server requests.
-`resultCode` | number | **Required**<br>Response code returned by the dependency request (e.g., `200` for a success)
+`responseCode` | number | **Required**<br>Response code returned by the dependency request (e.g., `200` for a success)
 `absoluteUrl?` | string | **Optional**<br>Absolute url used to make the dependency request
 `success?` | boolean | **Optional**<br>Whether or not the request was successful or not (e.g., `responseCode` in the range 200-299)
 `commandName?` | string| **Optional**<br>Command used to make the dependency request

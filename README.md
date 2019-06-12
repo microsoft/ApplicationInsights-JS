@@ -72,7 +72,7 @@ appInsights.trackPageViewPerformance({name : 'some page', url: 'some url'});
 appInsights.trackException({exception: new Error('some error')});
 appInsights.trackTrace({message: 'some trace'});
 appInsights.trackMetric({name: 'some metric', average: 42});
-appInsights.trackDependencyData({absoluteUrl: 'some url', resultCode: 200, method: 'GET', id: 'some id'});
+appInsights.trackDependencyData({absoluteUrl: 'some url', responseCode: 200, method: 'GET', id: 'some id'});
 appInsights.startTrackPage("pageName");
 appInsights.stopTrackPage("pageName", {customProp1: "some value"});
 appInsights.startTrackEvent("event");
