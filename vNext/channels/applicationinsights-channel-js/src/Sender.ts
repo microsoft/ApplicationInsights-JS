@@ -501,33 +501,21 @@ export class Sender implements IChannelControlsAI {
     private _beaconSender(payload: string[], isAsync: boolean) {
         var url = this._config.endpointUrl();
         var batch = this._buffer.batchPayloads(payload);
-        var browserLimit = 63000;
-        var count = 0;
-        var overLimit = false;
 
-        for (var i = 0; i < payload.length; i++){
-            if (overLimit) break;
-            count += payload[i].length;
-            overLimit = count > browserLimit ? true : false;
-        }
+        // Chrome only allows CORS-safelisted values for the sendBeacon data argument
+        // see: https://bugs.chromium.org/p/chromium/issues/detail?id=720283
+        let plainTextBatch = new Blob([batch], { type: 'text/plain;charset=UTF-8' });
 
-        if (overLimit) {
-            this._xhrSender(payload, true);
+        // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
+        var queued = navigator.sendBeacon(url, plainTextBatch);
+
+        if (queued) {
+            this._buffer.markAsSent(payload);
+            // no response from beaconSender, clear buffer
+            this._onSuccess(payload, payload.length);
         } else {
-            // Chrome only allows CORS-safelisted values for the sendBeacon data argument
-            // see: https://bugs.chromium.org/p/chromium/issues/detail?id=720283
-            let plainTextBatch = new Blob([batch], { type: 'text/plain;charset=UTF-8' });
-
-            // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
-            var queued = navigator.sendBeacon(url, plainTextBatch);
-
-            if (queued) {
-                this._buffer.markAsSent(payload);
-                // no response from beaconSender, clear buffer
-                this._onSuccess(payload, payload.length);
-            } else {
-                this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API.");
-            }
+            this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
+            this._xhrSender(payload, true);
         }
     }
 
