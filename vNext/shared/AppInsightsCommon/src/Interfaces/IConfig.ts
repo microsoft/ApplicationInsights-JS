@@ -245,6 +245,14 @@ export interface IConfig {
      */
     enableCorsCorrelation?: boolean;
 
+    /**
+     * @description An optional value that will be used as name postfix for localStorage and cookie name.
+     * @type {string}
+     * @memberof IConfig
+     * @defaultValue null
+     */
+    namePrefix
+
     // Internal
 
     /**
