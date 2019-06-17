@@ -251,7 +251,7 @@ export interface IConfig {
      * @memberof IConfig
      * @defaultValue null
      */
-    namePrefix
+    namePrefix?: string;
 
     // Internal
 
