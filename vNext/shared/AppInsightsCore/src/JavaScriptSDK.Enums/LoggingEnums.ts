@@ -89,5 +89,6 @@ export const _InternalMessageId = {
     SessionStorageBufferFull: 67,
     CannotAccessCookie: 68,
     IdTooLong: 69,
+    InvalidEvent: 70,
 };
 export type _InternalMessageId = number | typeof _InternalMessageId;
