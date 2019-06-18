@@ -267,7 +267,6 @@ export class SenderTests extends TestClass {
                         "measurement2": 1.3,
                         "property2": "val2"
                     },
-                    baseType: "EventData",
                     baseData: {
                         "name": "Event Name"
                     }
@@ -297,7 +296,7 @@ export class SenderTests extends TestClass {
                 Assert.ok(baseData.ver);
                 Assert.equal(2, baseData.ver);
 
-                // Assert baseType
+                // Assert baseType added by default
                 Assert.ok(appInsightsEnvelope.data.baseType);
                 Assert.equal("EventData", appInsightsEnvelope.data.baseType);
 
