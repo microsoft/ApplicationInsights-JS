@@ -522,8 +522,11 @@ export class Sender implements IChannelControlsAI {
 
         if (queued) {
             this._buffer.markAsSent(payload);
+            // no response from beaconSender, clear buffer
+            this._onSuccess(payload, payload.length);
         } else {
-            this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API.");
+            this._xhrSender(payload, true);
+            this._logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");     
         }
     }
 
