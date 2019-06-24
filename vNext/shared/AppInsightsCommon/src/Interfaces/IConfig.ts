@@ -253,6 +253,14 @@ export interface IConfig {
      */
     namePrefix?: string;
 
+    /**
+     * @description An optional value that will track Request and Resonse Header through trackDependency function.
+     * @type {boolean}
+     * @memberof IConfig
+     * @defaultValue false
+     */
+    enableHeaderTracking?: boolean;
+
     // Internal
 
     /**

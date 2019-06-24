@@ -64,6 +64,31 @@ export class AjaxTests extends TestClass {
         });
 
         this.testCase({
+            name: "Ajax: xhr request header is tracked as part C data when enableHeaderTracking flag is true",
+            test: () => {
+                let ajaxMonitor = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "abc", disableAjaxTracking: false, enableHeaderTracking: true };
+                appInsightsCore.initialize(coreConfig, [ajaxMonitor, new TestChannelPlugin()]);
+
+                var trackStub = this.sandbox.stub(ajaxMonitor, "trackDependencyDataInternal");
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.send();
+
+                // Emulate response
+                (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
+                var responseHeaderStr = xhr.getAllResponseHeaders().trim().split(/[\r\n]+/).join("|");
+
+                // assert
+                Assert.equal("Ajax", trackStub.args[0][0].type, "request is Ajax type");
+                Assert.equal(responseHeaderStr, trackStub.args[0][1].responseHeader, "xhr request's reponse header is stored");
+            }
+        });
+
+        this.testCase({
             name: "Fetch: fetch with disabled flag isn't tracked",
             test: () => {
                 if (typeof fetch === 'undefined') {
