@@ -33,6 +33,7 @@ export class ApplicationInsightsTests extends TestClass {
     private loggingSpy: SinonSpy;
     private userSpy: SinonSpy;
     private sessionPrefix: string = Util.newId();
+    private trackSpy: SinonSpy;
 
     // Context
     private tagKeys = new ContextTagKeys();
@@ -48,6 +49,7 @@ export class ApplicationInsightsTests extends TestClass {
                 instrumentationKey: ApplicationInsightsTests._instrumentationKey,
                 disableAjaxTracking: false,
                 disableFetchTracking: false,
+                enableHeaderTracking: true,
                 maxBatchInterval: 2500,
                 disableExceptionTracking: false,
                 namePrefix: this.sessionPrefix,
@@ -66,6 +68,7 @@ export class ApplicationInsightsTests extends TestClass {
             this.errorSpy = this.sandbox.spy(sender, '_onError');
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
             this.loggingSpy = this.sandbox.stub(this._ai['core'].logger, 'throwInternal');
+            this.trackSpy = this.sandbox.spy(this._ai['dependencies'], 'trackDependencyDataInternal')
         } catch (e) {
             console.error('Failed to initialize');
         }
@@ -372,7 +375,13 @@ export class ApplicationInsightsTests extends TestClass {
                         fetch('https://httpbin.org/status/200', { method: 'GET' });
                         Assert.ok(true, "fetch monitoring is instrumented");
                     }
-                ].concat(this.asserts(2))
+                ]
+                    .concat(this.asserts(2))
+                    .concat(() => {
+                        Assert.ok(this.trackSpy.calledTwice, "trackDependencyDataInternal is called");
+                        Assert.equal("Fetch", this.trackSpy.args[0][0].type, "request is Fetch type");
+                        Assert.notEqual(undefined, this.trackSpy.args[0][1].responseHeader, "fetch request's reponse header is stored");
+                    })
             });
         } else {
             this.testCase({
