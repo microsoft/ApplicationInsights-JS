@@ -13,7 +13,6 @@ import {
 import { ajaxRecord } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
 
-export const responseHeaderKey = "responseHeader";
 
 export interface XMLHttpRequestInstrumented extends XMLHttpRequest {
     ajaxData: ajaxRecord;
@@ -269,14 +268,25 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             }
 
             if (this._config.enableHeaderTracking) {
-                var responseHeader = this._config.enableHeaderTracking ? xhr.getAllResponseHeaders() : "";
-                var responseHeaderStr = responseHeader.trim().split(/[\r\n]+/).join("|");
-                var customProperties: any = {};
-                customProperties[responseHeaderKey] = responseHeaderStr;
-                this.trackDependencyDataInternal(dependency, customProperties);
-            } else {
-                this.trackDependencyDataInternal(dependency);
+                var headers = xhr.getAllResponseHeaders() || "";
+                var arr = headers.trim().split(/[\r\n]+/);
+                var headerMap = {};
+                arr.forEach(function (line) {
+                    var parts = line.split(': ');
+                    var header = parts.shift();
+                    var value = parts.join(': ');
+                    headerMap[header] = value;
+                });
+                if (!dependency.properties) {
+                    dependency.properties = {};
+                }
+                if (!dependency.properties.responseHeader) {
+                    dependency.properties.responseHeader = {};
+                }
+                dependency.properties.responseHeader = headerMap;
             }
+            
+            this.trackDependencyDataInternal(dependency);
 
             xhr.ajaxData = null;
         }
@@ -521,16 +531,19 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 }
 
                 if (this._config.enableHeaderTracking) {
-                    let customProperties: any = {};
-                    let arr: string[] = [];
+                    var headerMap = {};
                     response.headers.forEach((value, name) => {
-                        arr.push(name + ": " + value);
+                        headerMap[name] = value;
                     });
-                    customProperties[responseHeaderKey] = arr.join("|");
-                    this.trackDependencyDataInternal(dependency, customProperties);
-                } else {
-                    this.trackDependencyDataInternal(dependency);
-                } 
+                    if (!dependency.properties) {
+                        dependency.properties = {};
+                    }
+                    if (!dependency.properties.responseHeader) {
+                        dependency.properties.responseHeader = {};
+                    }
+                    dependency.properties.responseHeader = headerMap;
+                }
+                this.trackDependencyDataInternal(dependency);
             }
         } catch (e) {
             this._core.logger.throwInternal(

@@ -380,7 +380,7 @@ export class ApplicationInsightsTests extends TestClass {
                     .concat(() => {
                         Assert.ok(this.trackSpy.calledTwice, "trackDependencyDataInternal is called");
                         Assert.equal("Fetch", this.trackSpy.args[0][0].type, "request is Fetch type");
-                        Assert.notEqual(undefined, this.trackSpy.args[0][1].responseHeader, "fetch request's reponse header is stored");
+                        Assert.notEqual(undefined, this.trackSpy.args[0][0].properties.responseHeader, "fetch request's reponse header is stored");
                     })
             });
         } else {

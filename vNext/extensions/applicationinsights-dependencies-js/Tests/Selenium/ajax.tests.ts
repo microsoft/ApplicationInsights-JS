@@ -80,11 +80,11 @@ export class AjaxTests extends TestClass {
 
                 // Emulate response
                 (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
-                var responseHeaderStr = xhr.getAllResponseHeaders().trim().split(/[\r\n]+/).join("|");
 
                 // assert
+                Assert.ok(trackStub.calledOnce, "trackDependencyDataInternal is called");
                 Assert.equal("Ajax", trackStub.args[0][0].type, "request is Ajax type");
-                Assert.equal(responseHeaderStr, trackStub.args[0][1].responseHeader, "xhr request's reponse header is stored");
+                Assert.notEqual(undefined, trackStub.args[0][0].properties.responseHeader, "xhr request's reponse header is stored");
             }
         });
 
