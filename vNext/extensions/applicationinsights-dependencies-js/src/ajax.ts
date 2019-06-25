@@ -338,7 +338,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         }
     }
 
-    priority: number = 171;
+    priority: number = 120;
 
     // Fetch Stuff
     protected instrumentFetch(): void {

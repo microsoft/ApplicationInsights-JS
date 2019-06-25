@@ -16,7 +16,7 @@ import { History, LocationListener, Location, Action } from "history";
 
 export default class ReactPlugin implements ITelemetryPlugin {
     private _logger: IDiagnosticLogger;
-    public priority = 180;
+    public priority = 130;
     public identifier = 'ReactPlugin';
 
     private _analyticsPlugin: IAppInsights;

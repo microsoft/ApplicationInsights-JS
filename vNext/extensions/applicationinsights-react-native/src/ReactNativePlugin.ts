@@ -21,7 +21,7 @@ export class ReactNativePlugin implements ITelemetryPlugin {
     private _config: IReactNativePluginConfig;
 
     identifier: string = 'AppInsightsReactNativePlugin';
-    priority: number = 199;
+    priority: number = 140;
     _nextPlugin?: ITelemetryPlugin;
 
     constructor(config?: IReactNativePluginConfig) {
