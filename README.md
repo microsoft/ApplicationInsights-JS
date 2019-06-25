@@ -72,7 +72,7 @@ appInsights.trackPageViewPerformance({name : 'some page', url: 'some url'});
 appInsights.trackException({exception: new Error('some error')});
 appInsights.trackTrace({message: 'some trace'});
 appInsights.trackMetric({name: 'some metric', average: 42});
-appInsights.trackDependencyData({absoluteUrl: 'some url', resultCode: 200, method: 'GET', id: 'some id'});
+appInsights.trackDependencyData({absoluteUrl: 'some url', responseCode: 200, method: 'GET', id: 'some id'});
 appInsights.startTrackPage("pageName");
 appInsights.stopTrackPage("pageName", {customProp1: "some value"});
 appInsights.startTrackEvent("event");
@@ -151,7 +151,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | isBeaconApiDisabled | true | If false, the SDK will send all telemetry using the [Beacon API](https://www.w3.org/TR/beacon) |
 | sdkExtension | null | Sets the sdk extension name. Only alphabetic characters are allowed. The extension name is added as a prefix to the 'ai.internal.sdkVersion' tag (e.g. 'ext_javascript:2.0.0'). Default is null. |
 | isBrowserLinkTrackingEnabled | false | Default is false. If true, the SDK will track all [Browser Link](https://docs.microsoft.com/en-us/aspnet/core/client-side/using-browserlink) requests. |
-| appId | null | AppId is used for the correlation between AJAX dependencies happening on the client-side with the server-side requets. When Beacon API is enabled, it cannot be used automatically, but can be set manually in the configuration. Default is null |
+| appId | null | AppId is used for the correlation between AJAX dependencies happening on the client-side with the server-side requests. When Beacon API is enabled, it cannot be used automatically, but can be set manually in the configuration. Default is null |
 | enableCorsCorrelation | false | If true, the SDK will add two headers ('Request-Id' and 'Request-Context') to all CORS requests tocorrelate outgoing AJAX dependencies with corresponding requests on the server side. Default is false |
 | namePrefix | undefined | An optional value that will be used as name postfix for localStorage and cookie name.
 

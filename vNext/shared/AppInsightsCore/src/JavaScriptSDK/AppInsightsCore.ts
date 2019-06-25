@@ -62,8 +62,7 @@ export class AppInsightsCore implements IAppInsightsCore {
         if (this.config.extensions.length > 0) {
             let isValid = true;
             let containsChannels = false;
-            this.config.extensions.forEach(item =>
-            {
+            this.config.extensions.forEach(item => {
                 if (CoreUtils.isNullOrUndefined(item)) {
                     isValid = false;
                 }
@@ -158,7 +157,7 @@ export class AppInsightsCore implements IAppInsightsCore {
     }
 
     getTransmissionControls(): Array<IChannelControls[]> {
-       return this._channelController.ChannelControls;
+        return this._channelController.ChannelControls;
     }
 
     track(telemetryItem: ITelemetryItem) {
@@ -166,16 +165,6 @@ export class AppInsightsCore implements IAppInsightsCore {
             this._notifiyInvalidEvent(telemetryItem);
             // throw error
             throw Error("Invalid telemetry item");
-        }
-
-        if (telemetryItem.baseData && !telemetryItem.baseType) {
-            this._notifiyInvalidEvent(telemetryItem);
-            throw Error("Provide data.baseType for data.baseData");
-        }
-
-        if (!telemetryItem.baseType) {
-            // Hard coded from Common::Event.ts::Event.dataType
-            telemetryItem.baseType = "EventData";
         }
 
         if (!telemetryItem.iKey) {
@@ -278,7 +267,7 @@ class ChannelController implements ITelemetryPlugin {
 
     private channelQueue: Array<IChannelControls[]>;
 
-    public processTelemetry (item: ITelemetryItem) {
+    public processTelemetry(item: ITelemetryItem) {
         this.channelQueue.forEach(queues => {
             // pass on to first item in queue
             if (queues.length > 0) {
@@ -307,8 +296,8 @@ class ChannelController implements ITelemetryPlugin {
             let invalidChannelIdentifier = undefined;
             config.channels.forEach(queue => {
 
-                if(queue && queue.length > 0) {
-                    queue = queue.sort((a,b) => { // sort based on priority within each queue
+                if (queue && queue.length > 0) {
+                    queue = queue.sort((a, b) => { // sort based on priority within each queue
                         return a.priority - b.priority;
                     });
 
@@ -344,7 +333,7 @@ class ChannelController implements ITelemetryPlugin {
 
         if (arr.length > 0) {
             // sort if not sorted
-            arr = arr.sort((a,b) => {
+            arr = arr.sort((a, b) => {
                 return a.priority - b.priority;
             });
 

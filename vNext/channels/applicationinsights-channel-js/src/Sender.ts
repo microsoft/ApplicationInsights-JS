@@ -113,7 +113,7 @@ export class Sender implements IChannelControlsAI {
     private _logger: IDiagnosticLogger;
     private _serializer: Serializer;
 
-    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) :void {
+    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]): void {
         this._logger = core.logger;
         this._serializer = new Serializer(core.logger);
 
@@ -157,6 +157,17 @@ export class Sender implements IChannelControlsAI {
             if (!telemetryItem) {
                 this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
                 return;
+            }
+
+            // validate event
+            if (telemetryItem.baseData && !telemetryItem.baseType) {
+                this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
+                return;
+            }
+
+            if (!telemetryItem.baseType) {
+                // Default
+                telemetryItem.baseType = "EventData";
             }
 
             // ensure a sender was constructed
@@ -440,7 +451,7 @@ export class Sender implements IChannelControlsAI {
     private static _getDefaultAppInsightsChannelConfig(): ISenderConfig {
         // set default values
         return {
-            endpointUrl: () =>"https://dc.services.visualstudio.com/v2/track",
+            endpointUrl: () => "https://dc.services.visualstudio.com/v2/track",
             emitLineDelimitedJson: () => false,
             maxBatchInterval: () => 15000,
             maxBatchSizeInBytes: () => 102400,  // 100kb
@@ -511,8 +522,11 @@ export class Sender implements IChannelControlsAI {
 
         if (queued) {
             this._buffer.markAsSent(payload);
+            // no response from beaconSender, clear buffer
+            this._onSuccess(payload, payload.length);
         } else {
-            this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API.");
+            this._xhrSender(payload, true);
+            this._logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");     
         }
     }
 

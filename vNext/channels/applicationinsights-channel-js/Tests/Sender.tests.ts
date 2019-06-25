@@ -2,7 +2,7 @@
 import { Sender } from "../src/Sender";
 import { Offline } from '../src/Offline';
 import { EnvelopeCreator } from '../src/EnvelopeCreator';
-import { Exception, CtxTagKeys } from "@microsoft/applicationinsights-common";
+import { Exception, CtxTagKeys, Util } from "@microsoft/applicationinsights-common";
 import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
 
 export class SenderTests extends TestClass {
@@ -105,7 +105,143 @@ export class SenderTests extends TestClass {
 
                 Assert.ok(!processTelemetrySpy.calledOnce);
             }
-        })
+        });
+
+        this.testCase({
+            name: 'BeaconAPI is not used when isBeaconApiDisabled flag is true',
+            test: () => {
+                if (!navigator.sendBeacon) {
+                    navigator['sendBeacon'] = (url: string, data?: any) => { return true; };
+                }
+                let sender = new Sender();
+                let cr = new AppInsightsCore();
+
+                const xhrSenderSpy = this.sandbox.stub(sender, "_xhrSender");
+                const beaconSenderSpy = this.sandbox.stub(navigator, "sendBeacon");
+               
+                sender.initialize({
+                    instrumentationKey: 'abc',
+                    isBeaconApiDisabled: true
+                }, cr, []);
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                Assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
+                Assert.ok(beaconSenderSpy.notCalled, "Beacon API was not called before");
+                Assert.ok(xhrSenderSpy.notCalled, "xhr sender was not called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem);
+                    sender.flush();
+                } catch(e) {
+                    Assert.ok(false);
+                }
+
+                Assert.ok(beaconSenderSpy.notCalled, "Beacon API is disabled, Beacon API is not called");
+                Assert.ok(xhrSenderSpy.called, "xhr sender is called when Beacon API is disabled");
+            }
+        });
+
+        this.testCase({
+            name: 'beaconSender is called when isBeaconApiDisabled flag is false',
+            test: () => {
+                if (!navigator.sendBeacon) {
+                    navigator['sendBeacon'] = (url: string, data?: any) => { return true; };
+                }
+
+                let cr = new AppInsightsCore();
+                let sender = new Sender();
+
+                const beaconSenderSpy = this.sandbox.stub(navigator, "sendBeacon", (a, b) => true);
+                const xhrSenderSpy = this.sandbox.spy(sender, "_xhrSender");
+
+                sender.initialize({
+                    instrumentationKey: 'abc',
+                    isBeaconApiDisabled: false
+                }, cr, []);
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                Assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
+                Assert.ok(beaconSenderSpy.notCalled, "Beacon API was not called before");
+                Assert.ok(xhrSenderSpy.notCalled, "xhr sender was not called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem);
+                    sender.flush();
+                } catch(e) {
+                    Assert.ok(false);
+                }
+
+                Assert.ok(xhrSenderSpy.notCalled, "xhr sender is not called when Beacon API is enabled");
+                Assert.ok(beaconSenderSpy.called, "Beacon API is enabled, Beacon API is called");
+            }
+        });
+
+        this.testCase({
+            name: 'BeaconAPI is not used when isBeaconApiDisabled flag is false but payload size is over 64k, fall off to xhr sender',
+            test: () => {
+                if (!navigator.sendBeacon) {
+                    navigator['sendBeacon'] = (url: string, data?: any) => { return true; };
+                }
+                let sender = new Sender();
+                let cr = new AppInsightsCore();
+                cr["logger"] = new DiagnosticLogger();
+                const MAX_PROPERTIES_SIZE = 8000;
+                let payload = new Array(MAX_PROPERTIES_SIZE).join('a');
+                
+                const beaconSenderSpy = this.sandbox.stub(navigator, "sendBeacon", (a, b) => false);
+                const xhrSenderSpy = this.sandbox.spy(sender, "_xhrSender");
+
+                sender.initialize({
+                    instrumentationKey: 'abc',
+                    isBeaconApiDisabled: false
+                }, cr, []);
+
+                let telemetryItems: ITelemetryItem[] = [];
+                for (var i = 0; i < 8; i ++) {
+                    const telemetryItem: ITelemetryItem = {
+                        name: 'fake item',
+                        iKey: 'iKey',
+                        baseType: 'some type',
+                        baseData: {},
+                        data: {
+                            properties: {
+                                payload: payload
+                            }
+                        }
+                    };
+                    telemetryItems[i] = telemetryItem;
+                }
+                
+
+                Assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
+                Assert.ok(beaconSenderSpy.notCalled, "Beacon API was not called before");
+                Assert.ok(xhrSenderSpy.notCalled, "xhr sender was not called before");
+
+                try {
+                    for (var i = 0; i < 8; i++) {
+                        sender.processTelemetry(telemetryItems[i]);
+                    }
+                    sender.flush();
+                } catch(e) {
+                    Assert.ok(false);
+                }
+
+                Assert.ok(beaconSenderSpy.called, "Beacon API is enabled but payload is over size, Beacon API is called");
+                Assert.ok(xhrSenderSpy.called, "xhr sender is called when payload is over size");
+            }
+        });
 
         this.testCase({
             name: "AppInsightsTests: AppInsights Envelope created for Custom Event",
@@ -131,7 +267,6 @@ export class SenderTests extends TestClass {
                         "measurement2": 1.3,
                         "property2": "val2"
                     },
-                    baseType: "EventData",
                     baseData: {
                         "name": "Event Name"
                     }
@@ -161,7 +296,7 @@ export class SenderTests extends TestClass {
                 Assert.ok(baseData.ver);
                 Assert.equal(2, baseData.ver);
 
-                // Assert baseType
+                // Assert baseType added by default
                 Assert.ok(appInsightsEnvelope.data.baseType);
                 Assert.equal("EventData", appInsightsEnvelope.data.baseType);
 
