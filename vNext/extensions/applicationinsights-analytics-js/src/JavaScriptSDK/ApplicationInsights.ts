@@ -580,23 +580,23 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
             history.pushState = ( f => function pushState() {
                 var ret = f.apply(this, arguments);
-                window.dispatchEvent(new Event(config.namePrefix + "pushState"));
-                window.dispatchEvent(new Event(config.namePrefix + "locationchange"));
+                window.dispatchEvent(new Event(this.config.namePrefix + "pushState"));
+                window.dispatchEvent(new Event(this.config.namePrefix + "locationchange"));
                 return ret;
             })(history.pushState);
 
             history.replaceState = ( f => function replaceState(){
                 var ret = f.apply(this, arguments);
-                window.dispatchEvent(new Event(config.namePrefix + "replaceState"));
-                window.dispatchEvent(new Event(config.namePrefix + "locationchange"));
+                window.dispatchEvent(new Event(this.config.namePrefix + "replaceState"));
+                window.dispatchEvent(new Event(this.config.namePrefix + "locationchange"));
                 return ret;
             })(history.replaceState);
 
-            window.addEventListener(config.namePrefix + "popstate",()=>{
-                window.dispatchEvent(new Event(config.namePrefix + "locationchange"));
+            window.addEventListener(this.config.namePrefix + "popstate",()=>{
+                window.dispatchEvent(new Event(this.config.namePrefix + "locationchange"));
             });
 
-            window.addEventListener(config.namePrefix + "locationchange", () => {
+            window.addEventListener(this.config.namePrefix + "locationchange", () => {
                 if (this._properties) this._properties.context.telemetryTrace.traceID = Util.newId();
                 this.trackPageView({ name: window.location.pathname });
             });
