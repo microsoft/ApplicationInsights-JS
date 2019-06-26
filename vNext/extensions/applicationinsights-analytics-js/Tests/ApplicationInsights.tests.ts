@@ -51,7 +51,7 @@ export class ApplicationInsightsTests extends TestClass {
         this.testCase({
             name: 'enableAutoRouteTracking: route changes trigger a new pageview',
             test: () => {
-                // Assert
+                // Setup
                 var appInsights = new ApplicationInsights();
                 var core = new AppInsightsCore();
                 var channel = new ChannelPlugin();
@@ -71,6 +71,38 @@ export class ApplicationInsightsTests extends TestClass {
                 Assert.ok(trackPageViewStub.calledOnce);
                 Assert.ok(appInsights['_properties'].context.telemetryTrace.traceID);
                 Assert.notEqual(appInsights['_properties'].context.telemetryTrace.traceID, 'not set', 'current operation id is updated after route change');
+            }
+        });
+
+        this.testCase({
+            name: 'enableAutoRouteTracking: (IE9) app does not crash if history.pushState does not exist',
+            test: () => {
+                // Setup
+                const originalPushState = history.pushState;
+                const originalReplaceState = history.replaceState;
+                history.pushState = null;
+                history.replaceState = null;
+                var appInsights = new ApplicationInsights();
+                var core = new AppInsightsCore();
+                var channel = new ChannelPlugin();
+                appInsights['_properties'] = {
+                    context: { telemetryTrace: { traceID: 'not set'}}
+                }
+                const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
+
+                // Act
+                core.initialize(<IConfig & IConfiguration>{
+                    instrumentationKey: '',
+                    enableAutoRouteTracking: true
+                }, [appInsights, channel]);
+                window.dispatchEvent(new Event('locationchange'));
+
+                // Assert
+                Assert.ok(true, 'App does not crash when history object is incomplete');
+
+                // Cleanup
+                history.pushState = originalPushState;
+                history.replaceState = originalReplaceState;
             }
         });
 

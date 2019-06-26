@@ -570,7 +570,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         /**
          * Create a custom "locationchange" event which is triggered each time the history object is changed
          */
-        if (this.config.enableAutoRouteTracking === true && typeof history === "object" && typeof window === "object") {
+        if (this.config.enableAutoRouteTracking === true
+            && typeof history === "object" && typeof history.pushState === "function" && typeof history.replaceState === "function"
+            && typeof window === "object") {
             // Find the properties plugin
             extensions.forEach(extension => {
                 if (extension.identifier === PropertiesPluginIdentifier) {
