@@ -23,6 +23,9 @@ import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { PageViewPerformanceManager } from './Telemetry/PageViewPerformanceManager';
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 
+// For types only
+import * as properties from "@microsoft/applicationinsights-properties-js";
+
 "use strict";
 
 const durationProperty: string = "duration";
@@ -40,7 +43,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     private _globalconfig: IConfiguration;
     private _eventTracking: Timing;
     private _pageTracking: Timing;
-    private _properties;
+    private _properties: properties.PropertiesPlugin;
     protected _nextPlugin: ITelemetryPlugin;
     protected _logger: IDiagnosticLogger; // Initialized by Core
     protected _telemetryInitializers: { (envelope: ITelemetryItem): boolean | void; }[]; // Internal telemetry initializers.
@@ -576,7 +579,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             // Find the properties plugin
             extensions.forEach(extension => {
                 if (extension.identifier === PropertiesPluginIdentifier) {
-                    this._properties = extension;
+                    this._properties = extension as properties.PropertiesPlugin;
                 }
             });
 
@@ -599,7 +602,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             });
 
             window.addEventListener(this.config.namePrefix + "locationchange", () => {
-                if (this._properties) this._properties.context.telemetryTrace.traceID = Util.newId();
+                if (this._properties && this._properties.context && this._properties.context.telemetryTrace) {
+                    this._properties.context.telemetryTrace.traceID = Util.newId();
+                }
                 this.trackPageView({ name: window.location.pathname });
             });
         }
