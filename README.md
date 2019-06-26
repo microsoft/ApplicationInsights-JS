@@ -158,13 +158,9 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 
 ## Single Page Applications
 
-By default, this SDK will **not** handle state based route changing that occurs in single page applications unless you use a plugin designed for your frontend framework (Angular, React, Vue, etc). Currently, we support a separate [React plugin](#available-extensions-for-the-sdk) which you can initialize with this SDK and it will accomplish this for you in your React application. Otherwise, you must manually trigger pageviews on each route change. An example of accomplishing this for a React application is located [here](https://github.com/Azure-Samples/appinsights-guestbook/blob/6555933e19d737b2ff4f9f339cc1b928f0c08cdb/client/src/AppContainer.js#L17-L20). Note that you must refresh the current operation's id **as well as** trigger an additional pageview:
-**React Router history listener example**
-```js
-this.unlisten = this.props.history.listen((location, action) => {
-  ai.properties.context.telemetryTrace.traceID = Util.newId();
-  ai.trackPageView({name: window.location.pathname});
-});
+By default, this SDK will **not** handle state based route changing that occurs in single page applications unless you use a plugin designed for your frontend framework (Angular, React, Vue, etc). <!-- To enable enable automatic route change tracking for your single page application, you can add `enableAutoRouteTracking: true` to the setup configuration. -->
+
+Currently, we support a separate [React plugin](#available-extensions-for-the-sdk) which you can initialize with this SDK. It will also accomplish route change tracking for you, as well as collect [other React specific telemetry](./vNext/extensions/applicationinsights-react-js).
 ```
 
 ## Examples
