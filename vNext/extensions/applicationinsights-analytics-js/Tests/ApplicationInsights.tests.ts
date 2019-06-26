@@ -55,7 +55,7 @@ export class ApplicationInsightsTests extends TestClass {
                 var appInsights = new ApplicationInsights();
                 var core = new AppInsightsCore();
                 var channel = new ChannelPlugin();
-                appInsights['_properties'] = {
+                appInsights['_properties'] = <any>{
                     context: { telemetryTrace: { traceID: 'not set'}}
                 }
                 const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
@@ -85,7 +85,7 @@ export class ApplicationInsightsTests extends TestClass {
                 var appInsights = new ApplicationInsights();
                 var core = new AppInsightsCore();
                 var channel = new ChannelPlugin();
-                appInsights['_properties'] = {
+                appInsights['_properties'] = <any>{
                     context: { telemetryTrace: { traceID: 'not set'}}
                 }
                 const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
