@@ -1,6 +1,6 @@
 /// <reference path="./TestFramework/Common.ts" />
 
-import { Util, Exception, SeverityLevel, Trace, PageViewPerformance, PageView } from "@microsoft/applicationinsights-common";
+import { Util, Exception, SeverityLevel, Trace, PageViewPerformance, PageView, IConfig } from "@microsoft/applicationinsights-common";
 import {
     ITelemetryItem, AppInsightsCore,
     IPlugin, IConfiguration
@@ -26,6 +26,88 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public registerTests() {
+        this.testCase({
+            name: 'enableAutoRouteTracking: event listener is added to the popstate event',
+            test: () => {
+                // Setup
+                var appInsights = new ApplicationInsights();
+                var core = new AppInsightsCore();
+                var channel = new ChannelPlugin();
+                var eventListenerStub = this.sandbox.stub(window, 'addEventListener');
+
+                // Act
+                core.initialize(<IConfig & IConfiguration>{
+                    instrumentationKey: '',
+                    enableAutoRouteTracking: true
+                }, [appInsights, channel]);
+
+                // Assert
+                Assert.ok(eventListenerStub.calledTwice);
+                Assert.equal(eventListenerStub.args[0][0], "popstate");
+                Assert.equal(eventListenerStub.args[1][0], "locationchange");
+            }
+        });
+
+        this.testCase({
+            name: 'enableAutoRouteTracking: route changes trigger a new pageview',
+            test: () => {
+                // Setup
+                var appInsights = new ApplicationInsights();
+                var core = new AppInsightsCore();
+                var channel = new ChannelPlugin();
+                appInsights['_properties'] = <any>{
+                    context: { telemetryTrace: { traceID: 'not set', name: 'name not set' } }
+                }
+                const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
+
+                // Act
+                core.initialize(<IConfig & IConfiguration>{
+                    instrumentationKey: '',
+                    enableAutoRouteTracking: true
+                }, [appInsights, channel]);
+                window.dispatchEvent(new Event('locationchange'));
+
+                // Assert
+                Assert.ok(trackPageViewStub.calledOnce);
+                Assert.ok(appInsights['_properties'].context.telemetryTrace.traceID);
+                Assert.ok(appInsights['_properties'].context.telemetryTrace.name);
+                Assert.notEqual(appInsights['_properties'].context.telemetryTrace.traceID, 'not set', 'current operation id is updated after route change');
+                Assert.notEqual(appInsights['_properties'].context.telemetryTrace.name, 'name not set', 'current operation name is updated after route change');
+            }
+        });
+
+        this.testCase({
+            name: 'enableAutoRouteTracking: (IE9) app does not crash if history.pushState does not exist',
+            test: () => {
+                // Setup
+                const originalPushState = history.pushState;
+                const originalReplaceState = history.replaceState;
+                history.pushState = null;
+                history.replaceState = null;
+                var appInsights = new ApplicationInsights();
+                var core = new AppInsightsCore();
+                var channel = new ChannelPlugin();
+                appInsights['_properties'] = <any>{
+                    context: { telemetryTrace: { traceID: 'not set'}}
+                }
+                this.sandbox.stub(appInsights, 'trackPageView');
+
+                // Act
+                core.initialize(<IConfig & IConfiguration>{
+                    instrumentationKey: '',
+                    enableAutoRouteTracking: true
+                }, [appInsights, channel]);
+                window.dispatchEvent(new Event('locationchange'));
+
+                // Assert
+                Assert.ok(true, 'App does not crash when history object is incomplete');
+
+                // Cleanup
+                history.pushState = originalPushState;
+                history.replaceState = originalReplaceState;
+            }
+        });
+
         this.testCase({
             name: 'AppInsightsTests: PageVisitTimeManager is constructed when analytics plugin is initialized',
             test: () => {
