@@ -56,7 +56,7 @@ export class ApplicationInsightsTests extends TestClass {
                 var core = new AppInsightsCore();
                 var channel = new ChannelPlugin();
                 appInsights['_properties'] = <any>{
-                    context: { telemetryTrace: { traceID: 'not set'}}
+                    context: { telemetryTrace: { traceID: 'not set', name: 'name not set' } }
                 }
                 const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
 
@@ -70,7 +70,9 @@ export class ApplicationInsightsTests extends TestClass {
                 // Assert
                 Assert.ok(trackPageViewStub.calledOnce);
                 Assert.ok(appInsights['_properties'].context.telemetryTrace.traceID);
+                Assert.ok(appInsights['_properties'].context.telemetryTrace.name);
                 Assert.notEqual(appInsights['_properties'].context.telemetryTrace.traceID, 'not set', 'current operation id is updated after route change');
+                Assert.notEqual(appInsights['_properties'].context.telemetryTrace.name, 'name not set', 'current operation name is updated after route change');
             }
         });
 
@@ -88,7 +90,7 @@ export class ApplicationInsightsTests extends TestClass {
                 appInsights['_properties'] = <any>{
                     context: { telemetryTrace: { traceID: 'not set'}}
                 }
-                const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
+                this.sandbox.stub(appInsights, 'trackPageView');
 
                 // Act
                 core.initialize(<IConfig & IConfiguration>{

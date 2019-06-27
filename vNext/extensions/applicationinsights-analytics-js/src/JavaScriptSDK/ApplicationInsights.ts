@@ -604,8 +604,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             window.addEventListener(this.config.namePrefix + "locationchange", () => {
                 if (this._properties && this._properties.context && this._properties.context.telemetryTrace) {
                     this._properties.context.telemetryTrace.traceID = Util.newId();
+                    this._properties.context.telemetryTrace.name = window.location.pathname;
                 }
-                this.trackPageView({ name: window.location.pathname });
+                this.trackPageView({ measurements: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
             });
         }
 
