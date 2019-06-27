@@ -230,7 +230,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public trackPageView(pageView?: IPageViewTelemetry, customProperties?: ICustomProperties) {
         try {
             const inPv = pageView || {};
-            this._pageViewManager.trackPageView(inPv, customProperties);
+            this._pageViewManager.trackPageView(inPv, {...inPv.properties, ...inPv.measurements, ...customProperties});
 
             if (this.config.autoTrackPageVisitTime) {
                 this._pageVisitTimeManager.trackPreviousPageVisit(inPv.name, inPv.uri);
@@ -576,6 +576,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         if (this.config.enableAutoRouteTracking === true
             && typeof history === "object" && typeof history.pushState === "function" && typeof history.replaceState === "function"
             && typeof window === "object") {
+            const _self = this;
             // Find the properties plugin
             extensions.forEach(extension => {
                 if (extension.identifier === PropertiesPluginIdentifier) {
@@ -585,28 +586,28 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
             history.pushState = ( f => function pushState() {
                 var ret = f.apply(this, arguments);
-                window.dispatchEvent(new Event(this.config.namePrefix + "pushState"));
-                window.dispatchEvent(new Event(this.config.namePrefix + "locationchange"));
+                window.dispatchEvent(new Event(_self.config.namePrefix + "pushState"));
+                window.dispatchEvent(new Event(_self.config.namePrefix + "locationchange"));
                 return ret;
             })(history.pushState);
 
             history.replaceState = ( f => function replaceState(){
                 var ret = f.apply(this, arguments);
-                window.dispatchEvent(new Event(this.config.namePrefix + "replaceState"));
-                window.dispatchEvent(new Event(this.config.namePrefix + "locationchange"));
+                window.dispatchEvent(new Event(_self.config.namePrefix + "replaceState"));
+                window.dispatchEvent(new Event(_self.config.namePrefix + "locationchange"));
                 return ret;
             })(history.replaceState);
 
-            window.addEventListener(this.config.namePrefix + "popstate",()=>{
-                window.dispatchEvent(new Event(this.config.namePrefix + "locationchange"));
+            window.addEventListener(_self.config.namePrefix + "popstate",()=>{
+                window.dispatchEvent(new Event(_self.config.namePrefix + "locationchange"));
             });
 
-            window.addEventListener(this.config.namePrefix + "locationchange", () => {
-                if (this._properties && this._properties.context && this._properties.context.telemetryTrace) {
-                    this._properties.context.telemetryTrace.traceID = Util.newId();
-                    this._properties.context.telemetryTrace.name = window.location.pathname;
+            window.addEventListener(_self.config.namePrefix + "locationchange", () => {
+                if (_self._properties && _self._properties.context && _self._properties.context.telemetryTrace) {
+                    _self._properties.context.telemetryTrace.traceID = Util.newId();
+                    _self._properties.context.telemetryTrace.name = window.location.pathname;
                 }
-                this.trackPageView({ measurements: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
+                _self.trackPageView({ properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
             });
         }
 
