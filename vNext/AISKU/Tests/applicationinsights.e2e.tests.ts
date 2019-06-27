@@ -1,10 +1,17 @@
 /// <reference path='./TestFramework/Common.ts' />
 import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Util } from '@microsoft/applicationinsights-common';
+import { IDependencyTelemetry, ContextTagKeys, Util, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData } from '@microsoft/applicationinsights-common';
 import { AppInsightsCore, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { AjaxPlugin } from '@microsoft/applicationinsights-dependencies-js';
+import { EventValidator } from './TelemetryValidation/EventValidator';
+import { TraceValidator } from './TelemetryValidation/TraceValidator';
+import { ExceptionValidator } from './TelemetryValidation/ExceptionValidator';
+import { MetricValidator } from './TelemetryValidation/MetricValidator';
+import { PageViewPerformanceValidator } from './TelemetryValidation/PageViewPerformanceValidator';
+import { PageViewValidator } from './TelemetryValidation/PageViewValidator';
+import { RemoteDepdencyValidator } from './TelemetryValidation/RemoteDepdencyValidator';
 
 export class ApplicationInsightsTests extends TestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -658,7 +665,33 @@ export class ApplicationInsightsTests extends TestClass {
                 currentCount += call[1];
             });
             console.log('curr: ' + currentCount + ' exp: ' + expectedCount, ' appId: ' + this._ai.context.appId());
-            return currentCount === expectedCount && !!this._ai.context.appId();
+            let isValid: boolean = false;
+            if (currentCount === expectedCount) {
+                const payloadStr: string[] = this.successSpy.args[0][0];
+                const payload = JSON.parse(payloadStr[0]);
+                const baseType = payload.data.baseType;
+                // call the appropriate Validate depending on the baseType
+                switch (baseType) {
+                    case Event.dataType:
+                        return EventValidator.EventValidator.Validate(payload, baseType);
+                    case Trace.dataType:
+                        return TraceValidator.TraceValidator.Validate(payload, baseType);
+                    case Exception.dataType:
+                        return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
+                    case Metric.dataType:
+                        return MetricValidator.MetricValidator.Validate(payload, baseType);
+                    case PageView.dataType:
+                        return PageViewValidator.PageViewValidator.Validate(payload, baseType);
+                    case PageViewPerformance.dataType:
+                        return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
+                    case RemoteDependencyData.dataType:
+                        return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
+        
+                    default:
+                        return EventValidator.EventValidator.Validate(payload, baseType);
+                }
+            }
+            return currentCount === expectedCount && isValid && !!this._ai.context.appId();
         } else {
             return false;
         }

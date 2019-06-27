@@ -5,13 +5,6 @@ import {
     ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
 } from './EnvelopeCreator';
-import { EventValidator } from './TelemetryValidation/EventValidator';
-import { TraceValidator } from './TelemetryValidation/TraceValidator';
-import { ExceptionValidator } from './TelemetryValidation/ExceptionValidator';
-import { MetricValidator } from './TelemetryValidation/MetricValidator';
-import { PageViewPerformanceValidator } from './TelemetryValidation/PageViewPerformanceValidator';
-import { PageViewValidator } from './TelemetryValidation/PageViewValidator';
-import { RemoteDepdencyValidator } from './TelemetryValidation/RemoteDepdencyValidator';
 import { Serializer } from './Serializer'; // todo move to channel
 import {
     DisabledPropertyName, RequestHeaders, Util,
@@ -173,13 +166,6 @@ export class Sender implements IChannelControlsAI {
             // ensure a sender was constructed
             if (!this._sender) {
                 this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.SenderNotInitialized, "Sender was not initialized");
-                return;
-            }
-
-            // first we need to validate that the envelope passed down is valid
-            let isValid: boolean = Sender._validate(telemetryItem);
-            if (!isValid) {
-                this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryEnvelopeInvalid, "Invalid telemetry envelope");
                 return;
             }
 
@@ -477,29 +463,6 @@ export class Sender implements IChannelControlsAI {
             instrumentationKey: undefined,
             namePrefix: undefined
         };
-    }
-
-    private static _validate(envelope: ITelemetryItem): boolean {
-        // call the appropriate Validate depending on the baseType
-        switch (envelope.baseType) {
-            case Event.dataType:
-                return EventValidator.EventValidator.Validate(envelope);
-            case Trace.dataType:
-                return TraceValidator.TraceValidator.Validate(envelope);
-            case Exception.dataType:
-                return ExceptionValidator.ExceptionValidator.Validate(envelope);
-            case Metric.dataType:
-                return MetricValidator.MetricValidator.Validate(envelope);
-            case PageView.dataType:
-                return PageViewValidator.PageViewValidator.Validate(envelope);
-            case PageViewPerformance.dataType:
-                return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(envelope);
-            case RemoteDependencyData.dataType:
-                return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(envelope);
-
-            default:
-                return EventValidator.EventValidator.Validate(envelope);
-        }
     }
 
     /**
