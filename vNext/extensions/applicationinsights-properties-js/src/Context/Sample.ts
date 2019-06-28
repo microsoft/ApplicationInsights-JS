@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { SamplingScoreGenerator } from '../SamplingScoreGenerator';
-import { ISample } from '@microsoft/applicationinsights-common';
+import { ISample, Metric } from '@microsoft/applicationinsights-common';
 import { IEnvelope } from '@microsoft/applicationinsights-common';
 import { ITelemetryItem, IDiagnosticLogger, _InternalMessageId, LoggingSeverity, DiagnosticLogger, CoreUtils } from '@microsoft/applicationinsights-core-js';
 
@@ -36,7 +36,17 @@ export class Sample implements ISample {
     * Determines if an envelope is sampled in (i.e. will be sent) or not (i.e. will be dropped).
     */
     public isSampledIn(envelope: ITelemetryItem): boolean {
-        // return true as sampling will move to different extension
-        return true;
+        let samplingPercentage = this.sampleRate; // 0 - 100
+        let isSampledIn = false;
+
+        if (samplingPercentage === null || samplingPercentage === undefined || samplingPercentage >= 100) {
+            return true;
+        } else if (envelope.baseType === Metric.dataType) {
+            // exclude MetricData telemetry from sampling
+            return true;
+        }
+
+        isSampledIn = this.samplingScoreGenerator.getSamplingScore(envelope) < samplingPercentage;
+        return isSampledIn;
     }
 }

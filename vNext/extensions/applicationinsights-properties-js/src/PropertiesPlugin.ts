@@ -60,13 +60,13 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
         if (CoreUtils.isNullOrUndefined(event)) {
             // TODO(barustum): throw an internal event once we have support for internal logging
         } else {
+            // If the envelope is PageView, reset the internal message count so that we can send internal telemetry for the new page.
+            if (event.name === PageView.envelopeType) {
+                this._logger.resetInternalMessageCount();
+            }
+
             // if the event is not sampled in, do not bother going through the pipeline
             if (this.context.sample.isSampledIn(event)) {
-                // If the envelope is PageView, reset the internal message count so that we can send internal telemetry for the new page.
-                if (event.name === PageView.envelopeType) {
-                    this._logger.resetInternalMessageCount();
-                }
-
                 if (this.context.session) {
                     // If customer did not provide custom session id update the session manager
                     if (typeof this.context.session.id !== "string") {
