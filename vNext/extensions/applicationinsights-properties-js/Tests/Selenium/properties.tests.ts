@@ -8,6 +8,8 @@ import { TelemetryContext } from "../../src/TelemetryContext";
 import { Session, _SessionManager } from "../../src/Context/Session";
 import { TelemetryTrace } from "../../src/Context/TelemetryTrace";
 
+import { SampleTests } from "./Sample.tests";
+
 export class PropertiesTests extends TestClass {
     private properties: PropertiesPlugin;
     private core: AppInsightsCore;
@@ -637,4 +639,5 @@ export class PropertiesTests extends TestClass {
 
 export function runTests() {
     new PropertiesTests().registerTests();
+    new SampleTests().registerTests();
 }

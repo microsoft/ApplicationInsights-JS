@@ -5,7 +5,7 @@ import { ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { PageView, TelemetryItemCreator, IPageViewTelemetry, Util } from "@microsoft/applicationinsights-common";
 import { HashCodeScoreGenerator } from "../../src/HashCodeScoreGenerator";
 
-class SampleTests extends TestClass {
+export class SampleTests extends TestClass {
     private sample: Sample
     private item: ITelemetryItem;
 
