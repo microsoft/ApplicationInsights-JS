@@ -1,0 +1,155 @@
+/// <reference path="../TestFramework/TestClass.ts" />
+
+import { Sample } from "../../src/Context/Sample";
+import { ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { PageView, TelemetryItemCreator, IPageViewTelemetry, Util } from "@microsoft/applicationinsights-common";
+import { HashCodeScoreGenerator } from "../../src/HashCodeScoreGenerator";
+
+class SampleTests extends TestClass {
+    private sample: Sample
+    private item: ITelemetryItem;
+
+    public testInitialize() {
+    }
+
+    public testCleanup() {
+        this.sample = null;
+        this.item = null;
+    }
+
+    public registerTests() {
+        this.addSamplingTests();
+    }
+
+    private addSamplingTests() {
+        this.testCase({
+            name: 'Sampling: isSampledIn returns true for 100 sampling rate',
+            test: () => {
+                this.sample = new Sample(100);
+                this.item = this.getTelemetryItem();
+                const scoreStub = this.sandbox.stub(this.sample["samplingScoreGenerator"], "getSamplingScore");
+
+                Assert.ok(this.sample.isSampledIn(this.item));
+                Assert.ok(scoreStub.notCalled);
+            }
+        });
+
+        this.testCase({
+            name: 'Sampling: hashing is based on user id even if operation id is provided',
+            test: () => {
+                this.sample = new Sample(33);
+
+                var userid = "asdf";
+
+                var item1 = this.getTelemetryItem();
+                item1.tags["ai.user.id"] = userid;
+                item1.tags["ai.operation.id"] = "operation 1";
+
+                var item2 = this.getTelemetryItem();
+                item2.tags["ai.user.id"] = userid;
+                item2.tags["ai.operation.id"] = "operation 1";
+
+                var isSampledIn1 = this.sample.isSampledIn(item1);
+                var isSampledIn2 = this.sample.isSampledIn(item2);
+
+                Assert.equal(isSampledIn1, isSampledIn2);
+            }
+        });
+
+        this.testCase({
+            name: 'Sampling: hashing is based on operation id if no user id is provided',
+            test: () => {
+                this.sample = new Sample(33);
+                const operationId = "operation id";
+
+                const item1 = this.getTelemetryItem();
+                item1.tags["ai.user.id"] = null;
+                item1.tags["ai.operation.id"] = operationId;
+
+                const item2 = this.getTelemetryItem();
+                item2.tags["ai.user.id"] = null;
+                item2.tags["ai.operation.id"] = operationId;
+
+                const item3 = this.getTelemetryItem();
+                item3.tags["ai.user.id"] = null;
+                item3.tags["ai.operation.id"] = operationId;
+
+                const item4 = this.getTelemetryItem();
+                item4.tags["ai.user.id"] = null;
+                item4.tags["ai.operation.id"] = operationId;
+
+                // Act
+                const isSampledIn1 = this.sample.isSampledIn(item1);
+                const isSampledIn2 = this.sample.isSampledIn(item2);
+                const isSampledIn3 = this.sample.isSampledIn(item3);
+                const isSampledIn4 = this.sample.isSampledIn(item4);
+
+                Assert.equal(isSampledIn1, isSampledIn2);
+                Assert.equal(isSampledIn1, isSampledIn3);
+                Assert.equal(isSampledIn1, isSampledIn4);
+            }
+        });
+
+        this.testCase({
+            name: 'Sampling: hashing is random if no user id nor operation id provided',
+            test: () => {
+                // setup
+                this.sample = new Sample(33);
+
+                var envelope1 = this.getTelemetryItem();
+                envelope1.tags["ai.user.id"] = null;
+                envelope1.tags["ai.operation.id"] = null;
+
+                var mathRandomSpy = this.sandbox.spy(Math, "random");
+
+                // act
+                this.sample.isSampledIn(envelope1);
+
+                // assert
+                Assert.ok(mathRandomSpy.calledOnce);
+            }
+        });
+
+        this.testCase({
+            name: 'Sampling: actual sampling rate should fall into 5% error range',
+            test: () => {
+
+                // setup
+                var errorRange = 5;
+                var totalItems = 1000;
+                var ids = [];
+                for (var i = 0; i < totalItems; ++i) {
+                    ids.push(Util.newId());
+                }
+
+                var sampleRates = [50, 33, 25, 20, 16, 10];
+
+                // act
+                sampleRates.forEach((sampleRate) => {
+                    var sut = new HashCodeScoreGenerator();
+                    var countOfSampledItems = 0;
+
+                    ids.forEach(function (id) {
+                        if (sut.getHashCodeScore(id) < sampleRate)++countOfSampledItems;
+                    });
+
+                    // Assert
+                    var actualSampleRate = 100 * countOfSampledItems / totalItems;
+                    Assert.ok(Math.abs(actualSampleRate - sampleRate) < errorRange,
+                        "Actual sampling (" + actualSampleRate + ") does not fall into +-2% range from expected rate (" + sampleRate + ")");
+                });
+            }
+        });
+    }
+
+    private getTelemetryItem(): ITelemetryItem {
+        return TelemetryItemCreator.create<IPageViewTelemetry>({
+            name: 'some page',
+            uri: 'some uri'
+        }, PageView.dataType, PageView.envelopeType, null);
+    }
+
+    private getMetricItem(): ITelemetryItem {
+        return null;
+    }
+}
