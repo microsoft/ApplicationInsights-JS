@@ -665,8 +665,7 @@ export class ApplicationInsightsTests extends TestClass {
                 currentCount += call[1];
             });
             console.log('curr: ' + currentCount + ' exp: ' + expectedCount, ' appId: ' + this._ai.context.appId());
-            let isValid: boolean = false;
-            if (currentCount === expectedCount) {
+            if (currentCount === expectedCount && !!this._ai.context.appId()) {
                 const payloadStr: string[] = this.successSpy.args[0][0];
                 const payload = JSON.parse(payloadStr[0]);
                 const baseType = payload.data.baseType;
@@ -691,7 +690,7 @@ export class ApplicationInsightsTests extends TestClass {
                         return EventValidator.EventValidator.Validate(payload, baseType);
                 }
             }
-            return currentCount === expectedCount && isValid && !!this._ai.context.appId();
+            return false;
         } else {
             return false;
         }
