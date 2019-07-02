@@ -15,7 +15,6 @@
     "main": "dist/applicationinsights-core-js.js",
     "module": "dist-esm/applicationinsights-core-js.js",
     "types": "types/applicationinsights-core-js.d.ts",
-    "browser": "browser/applicationinsights-core-js.min.js",
     "scripts": {
         "clean": "grunt clean",
         "build": "npm run build:esm && npm run build:browser",

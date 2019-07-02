@@ -4,12 +4,13 @@
  */
 
 import {
-    IConfig, Util, PageViewPerformance, IAppInsights, PageView, RemoteDependencyData, Event, IEventTelemetry,
+    IConfig, Util, PageViewPerformance, IAppInsights, PageView, RemoteDependencyData, Event as EventTelemetry, IEventTelemetry,
     TelemetryItemCreator, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
     ConfigurationManager, DateTimeUtils,
-    IExceptionInternal
+    IExceptionInternal,
+    PropertiesPluginIdentifier
 } from "@microsoft/applicationinsights-common";
 
 import {
@@ -22,6 +23,9 @@ import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
 import { PageViewPerformanceManager } from './Telemetry/PageViewPerformanceManager';
 import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 
+// For types only
+import * as properties from "@microsoft/applicationinsights-properties-js";
+
 "use strict";
 
 const durationProperty: string = "duration";
@@ -30,7 +34,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public static Version = "2.0.1"; // Not currently used anywhere
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
     public identifier: string = "ApplicationInsightsAnalytics"; // do not change name or priority
-    public priority: number = 160;// take from reserved priority range 100- 200
+    public priority: number = 180; // take from reserved priority range 100- 200
     public config: IConfig;
     public core: IAppInsightsCore;
     public queue: (() => void)[];
@@ -39,6 +43,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     private _globalconfig: IConfiguration;
     private _eventTracking: Timing;
     private _pageTracking: Timing;
+    private _properties: properties.PropertiesPlugin;
     protected _nextPlugin: ITelemetryPlugin;
     protected _logger: IDiagnosticLogger; // Initialized by Core
     protected _telemetryInitializers: { (envelope: ITelemetryItem): boolean | void; }[]; // Internal telemetry initializers.
@@ -75,6 +80,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         config.isCookieUseDisabled = Util.stringToBoolOrDefault(config.isCookieUseDisabled);
         config.isStorageUseDisabled = Util.stringToBoolOrDefault(config.isStorageUseDisabled);
         config.isBrowserLinkTrackingEnabled = Util.stringToBoolOrDefault(config.isBrowserLinkTrackingEnabled);
+        config.enableAutoRouteTracking = Util.stringToBoolOrDefault(config.enableAutoRouteTracking);
+        config.namePrefix = config.namePrefix || "";
 
         return config;
     }
@@ -113,8 +120,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         try {
             let telemetryItem = TelemetryItemCreator.create<IEventTelemetry>(
                 event,
-                Event.dataType,
-                Event.envelopeType,
+                EventTelemetry.dataType,
+                EventTelemetry.envelopeType,
                 this._logger,
                 customProperties
             );
@@ -223,7 +230,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public trackPageView(pageView?: IPageViewTelemetry, customProperties?: ICustomProperties) {
         try {
             const inPv = pageView || {};
-            this._pageViewManager.trackPageView(inPv, customProperties);
+            this._pageViewManager.trackPageView(inPv, {...inPv.properties, ...inPv.measurements, ...customProperties});
 
             if (this.config.autoTrackPageVisitTime) {
                 this._pageVisitTimeManager.trackPreviousPageVisit(inPv.name, inPv.uri);
@@ -540,12 +547,12 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             this.sendPageViewInternal(pageViewItem);
         }
 
+        const instance: IAppInsights = this;
         if (this.config.disableExceptionTracking === false &&
             !this.config.autoExceptionInstrumented) {
             // We want to enable exception auto collection and it has not been done so yet
             const onerror = "onerror";
             const originalOnError = window[onerror];
-            const instance: IAppInsights = this;
             window.onerror = function (message, url, lineNumber, columnNumber, error) {
                 const handled = originalOnError && <any>originalOnError(message, url, lineNumber, columnNumber, error);
                 if (handled !== true) { // handled could be typeof function
@@ -561,6 +568,47 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 return handled;
             }
             this.config.autoExceptionInstrumented = true;
+        }
+
+        /**
+         * Create a custom "locationchange" event which is triggered each time the history object is changed
+         */
+        if (this.config.enableAutoRouteTracking === true
+            && typeof history === "object" && typeof history.pushState === "function" && typeof history.replaceState === "function"
+            && typeof window === "object") {
+            const _self = this;
+            // Find the properties plugin
+            extensions.forEach(extension => {
+                if (extension.identifier === PropertiesPluginIdentifier) {
+                    this._properties = extension as properties.PropertiesPlugin;
+                }
+            });
+
+            history.pushState = ( f => function pushState() {
+                var ret = f.apply(this, arguments);
+                window.dispatchEvent(new Event(_self.config.namePrefix + "pushState"));
+                window.dispatchEvent(new Event(_self.config.namePrefix + "locationchange"));
+                return ret;
+            })(history.pushState);
+
+            history.replaceState = ( f => function replaceState(){
+                var ret = f.apply(this, arguments);
+                window.dispatchEvent(new Event(_self.config.namePrefix + "replaceState"));
+                window.dispatchEvent(new Event(_self.config.namePrefix + "locationchange"));
+                return ret;
+            })(history.replaceState);
+
+            window.addEventListener(_self.config.namePrefix + "popstate",()=>{
+                window.dispatchEvent(new Event(_self.config.namePrefix + "locationchange"));
+            });
+
+            window.addEventListener(_self.config.namePrefix + "locationchange", () => {
+                if (_self._properties && _self._properties.context && _self._properties.context.telemetryTrace) {
+                    _self._properties.context.telemetryTrace.traceID = Util.newId();
+                    _self._properties.context.telemetryTrace.name = window.location.pathname;
+                }
+                _self.trackPageView({ properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
+            });
         }
 
         this._isInitialized = true;

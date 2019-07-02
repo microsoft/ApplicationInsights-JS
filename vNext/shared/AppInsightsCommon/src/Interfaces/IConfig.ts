@@ -95,6 +95,13 @@ export interface IConfig {
     autoTrackPageVisitTime?: boolean;
 
     /**
+     * @description Automatically track route changes in Single Page Applications (SPA). If true, each route change will send a new Pageview to Application Insights.
+     * @type {boolean}
+     * @memberof IConfig
+     */
+    enableAutoRouteTracking?: boolean;
+
+    /**
      * @description If true, Ajax calls are not autocollected. Default is false
      * @type {boolean}
      * @memberof IConfig

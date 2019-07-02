@@ -17,7 +17,7 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
     private _logger: IDiagnosticLogger;
     private _breezeChannel: IPlugin; // optional. If exists, grab appId from it
 
-    public priority = 170;
+    public priority = 110;
     public identifier = PropertiesPluginIdentifier;
 
     private _nextPlugin: ITelemetryPlugin;
