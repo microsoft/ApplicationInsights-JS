@@ -44,7 +44,7 @@ export interface ISenderConfig {
 
     namePrefix: () => string;
 
-    sampleRate: () => number;
+    samplingPercentage: () => number;
 }
 
 export interface IBackendResponse {
