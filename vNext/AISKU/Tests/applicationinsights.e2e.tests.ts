@@ -49,7 +49,8 @@ export class ApplicationInsightsTests extends TestClass {
                 instrumentationKey: ApplicationInsightsTests._instrumentationKey,
                 disableAjaxTracking: false,
                 disableFetchTracking: false,
-                enableHeaderTracking: true,
+                enableRequestHeaderTracking: true,
+                enableResponseHeaderTracking: true,
                 maxBatchInterval: 2500,
                 disableExceptionTracking: false,
                 namePrefix: this.sessionPrefix,
@@ -368,19 +369,25 @@ export class ApplicationInsightsTests extends TestClass {
                 stepDelay: 5000,
                 steps: [
                     () => {
-                        fetch('https://httpbin.org/status/200', { method: 'GET' });
+                        fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
                         Assert.ok(true, "fetch monitoring is instrumented");
                     },
                     () => {
                         fetch('https://httpbin.org/status/200', { method: 'GET' });
                         Assert.ok(true, "fetch monitoring is instrumented");
+                    },
+                    () => {
+                        fetch('https://httpbin.org/status/200');
+                        Assert.ok(true, "fetch monitoring is instrumented");
                     }
                 ]
-                    .concat(this.asserts(2))
+                    .concat(this.asserts(3))
                     .concat(() => {
-                        Assert.ok(this.trackSpy.calledTwice, "trackDependencyDataInternal is called");
+                        Assert.ok(this.trackSpy.calledThrice, "trackDependencyDataInternal is called");
                         Assert.equal("Fetch", this.trackSpy.args[0][0].type, "request is Fetch type");
-                        Assert.notEqual(undefined, this.trackSpy.args[0][0].properties.responseHeader, "fetch request's reponse header is stored");
+                        Assert.equal('value', this.trackSpy.args[0][0].properties.requestHeaders['header'], "fetch request's customer defined request header is stored");
+                        Assert.notEqual(undefined, this.trackSpy.args[0][0].properties.responseHeaders, "fetch request's reponse header is stored");
+                        Assert.equal(undefined, this.trackSpy.args[1][0].properties.requestHeaders['header'], "customer doesn't define a header field");
                     })
             });
         } else {

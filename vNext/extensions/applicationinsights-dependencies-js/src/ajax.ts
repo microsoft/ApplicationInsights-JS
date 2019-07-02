@@ -135,6 +135,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         ajaxData.method = method;
         ajaxData.requestUrl = url;
         ajaxData.xhrMonitoringState.openDone = true
+        ajaxData.requestHeaders = {};
         xhr.ajaxData = ajaxData;
 
         this.attachToOnReadyStateChange(xhr);
@@ -206,6 +207,29 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         };
     }
 
+    private instrumentSetRequestHeader() {
+        var originalSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
+        var ajaxMonitorInstance = this;
+        XMLHttpRequest.prototype.setRequestHeader = function (header, value) {
+            try {
+                if (ajaxMonitorInstance.isMonitoredInstance(this)) {
+                    this.ajaxData.requestHeaders[header] = value;
+                }
+            } catch (e) {
+                ajaxMonitorInstance._core.logger.throwInternal(
+                    LoggingSeverity.CRITICAL,
+                    _InternalMessageId.FailedMonitorAjaxSetRequestHeader,
+                    "Failed to monitor XMLHttpRequest.setRequestHeader, monitoring data for this ajax call may be incorrect.",
+                    {
+                        ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(this),
+                        exception: Util.dump(e)
+                    });
+            }
+
+            return originalSetRequestHeader.apply(this, arguments);
+        }
+    }
+
     private attachToOnReadyStateChange(xhr: XMLHttpRequestInstrumented) {
         var ajaxMonitorInstance = this;
         xhr.ajaxData.xhrMonitoringState.onreadystatechangeCallbackAttached = EventHelper.AttachEvent(xhr, "readystatechange", () => {
@@ -267,23 +291,35 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 dependency.correlationContext = /* dependency.target + " | " + */ correlationContext;
             }
 
-            if (this._config.enableHeaderTracking) {
-                var headers = xhr.getAllResponseHeaders() || "";
-                var arr = headers.trim().split(/[\r\n]+/);
-                var headerMap = {};
-                arr.forEach(function (line) {
-                    var parts = line.split(': ');
-                    var header = parts.shift();
-                    var value = parts.join(': ');
-                    headerMap[header] = value;
-                });
-                if (!dependency.properties) {
-                    dependency.properties = {};
+            if (this._config.enableRequestHeaderTracking) {
+                if (!(Object.keys(xhr.ajaxData.requestHeaders).length === 0)) {
+                    if (!dependency.properties) {
+                        dependency.properties = {};
+                    }
+                    dependency.properties.requestHeaders = {};
+                    dependency.properties.requestHeaders = xhr.ajaxData.requestHeaders;
                 }
-                if (!dependency.properties.responseHeader) {
-                    dependency.properties.responseHeader = {};
+            }
+
+            if (this._config.enableResponseHeaderTracking) { 
+                var headers = xhr.getAllResponseHeaders();
+                if (headers) {
+                    var arr = headers.trim().split(/[\r\n]+/);
+                    var responseHeaderMap = {};
+                    arr.forEach(function (line) {
+                        var parts = line.split(': ');
+                        var header = parts.shift();
+                        var value = parts.join(': ');
+                        responseHeaderMap[header] = value;
+                    });
+                    if (!(Object.keys(responseHeaderMap).length === 0)) {
+                        if (!dependency.properties) {
+                            dependency.properties = {};
+                        }
+                        dependency.properties.responseHeaders = {};
+                        dependency.properties.responseHeaders = responseHeaderMap;
+                    }
                 }
-                dependency.properties.responseHeader = headerMap;
             }
             
             this.trackDependencyDataInternal(dependency);
@@ -436,6 +472,12 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         } else {
             ajaxData.method = "GET";
         }
+
+        if (init && init.headers && this._config.enableRequestHeaderTracking) {
+            ajaxData.requestHeaders = init.headers;
+        } else {
+            ajaxData.requestHeaders = {};
+        }
         return ajaxData;
     }
 
@@ -450,9 +492,11 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 // not using original request headers will result in them being lost
                 init.headers = new Headers(init.headers || (input instanceof Request ? (input.headers || {}) : {}));
                 init.headers.set(RequestHeaders.requestIdHeader, ajaxData.id);
+                ajaxData.requestHeaders[RequestHeaders.requestIdHeader] = ajaxData.id;
                 let appId: string = this._config.appId || this._context.appId();
                 if (appId) {
                     init.headers.set(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
+                    ajaxData.requestHeaders[RequestHeaders.requestContextHeader] = RequestHeaders.requestContextAppIdFormat + appId;
                 }
 
                 return init;
@@ -462,9 +506,11 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             if (this.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(this._config, xhr.ajaxData.getAbsoluteUrl(),
                 this.currentWindowHost)) {
                 xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
+                xhr.ajaxData.requestHeaders[RequestHeaders.requestIdHeader] = xhr.ajaxData.id;
                 var appId = this._config.appId || this._context.appId();
                 if (appId) {
                     xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
+                    xhr.ajaxData.requestHeaders[RequestHeaders.requestContextHeader] = RequestHeaders.requestContextAppIdFormat + appId;
                 }
             }
 
@@ -530,18 +576,28 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     dependency.correlationContext = correlationContext;
                 }
 
-                if (this._config.enableHeaderTracking) {
-                    var headerMap = {};
+                if (this._config.enableRequestHeaderTracking) {
+                    if (!(Object.keys(ajaxData.requestHeaders).length === 0)) {
+                        if (!dependency.properties) {
+                            dependency.properties = {};
+                        }
+                        dependency.properties.requestHeaders = {};
+                        dependency.properties.requestHeaders = ajaxData.requestHeaders;
+                    }               
+                }
+
+                if (this._config.enableResponseHeaderTracking) {          
+                    var responseHeaderMap = {};
                     response.headers.forEach((value, name) => {
-                        headerMap[name] = value;
+                        responseHeaderMap[name] = value;
                     });
-                    if (!dependency.properties) {
-                        dependency.properties = {};
+                    if (!(Object.keys(responseHeaderMap).length === 0)) {
+                        if (!dependency.properties) {
+                            dependency.properties = {};
+                        }
+                        dependency.properties.responseHeaders = {};
+                        dependency.properties.responseHeaders = responseHeaderMap;
                     }
-                    if (!dependency.properties.responseHeader) {
-                        dependency.properties.responseHeader = {};
-                    }
-                    dependency.properties.responseHeader = headerMap;
                 }
                 this.trackDependencyDataInternal(dependency);
             }
@@ -623,6 +679,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             this.instrumentOpen();
             this.instrumentSend();
             this.instrumentAbort();
+            this.instrumentSetRequestHeader();
             this.initialized = true;
         }
     }
@@ -641,7 +698,8 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             correlationHeaderDomains: undefined,
             appId: undefined,
             enableCorsCorrelation: false,
-            enableHeaderTracking: false
+            enableRequestHeaderTracking: false,
+            enableResponseHeaderTracking: false
         }
         return config;
     }
@@ -656,7 +714,8 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             appId: undefined,
             enableCorsCorrelation: undefined,
             correlationHeaderDomains: undefined,
-            enableHeaderTracking: undefined
+            enableRequestHeaderTracking: undefined,
+            enableResponseHeaderTracking: undefined
         }
     }
 
