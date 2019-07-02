@@ -3,12 +3,10 @@
 import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import PropertiesPlugin from "../../src/PropertiesPlugin";
 import { ITelemetryConfig } from "../../src/Interfaces/ITelemetryConfig";
-import { Util, TelemetryItemCreator, IWeb } from "@microsoft/applicationinsights-common";
+import { Util, IWeb } from "@microsoft/applicationinsights-common";
 import { TelemetryContext } from "../../src/TelemetryContext";
-import { Session, _SessionManager } from "../../src/Context/Session";
+import { _SessionManager } from "../../src/Context/Session";
 import { TelemetryTrace } from "../../src/Context/TelemetryTrace";
-
-import { SampleTests } from "./Sample.tests";
 
 export class PropertiesTests extends TestClass {
     private properties: PropertiesPlugin;
@@ -639,5 +637,4 @@ export class PropertiesTests extends TestClass {
 
 export function runTests() {
     new PropertiesTests().registerTests();
-    new SampleTests().registerTests();
 }

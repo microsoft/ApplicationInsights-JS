@@ -65,17 +65,14 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
                 this._logger.resetInternalMessageCount();
             }
 
-            // if the event is not sampled in, do not bother going through the pipeline
-            if (this.context.sample.isSampledIn(event)) {
-                if (this.context.session) {
-                    // If customer did not provide custom session id update the session manager
-                    if (typeof this.context.session.id !== "string") {
-                        this.context.sessionManager.update();
-                    }
+            if (this.context.session) {
+                // If customer did not provide custom session id update the session manager
+                if (typeof this.context.session.id !== "string") {
+                    this.context.sessionManager.update();
                 }
-
-                this._processTelemetryInternal(event);
             }
+
+            this._processTelemetryInternal(event);
 
             if (!CoreUtils.isNullOrUndefined(this._nextPlugin)) {
                 this._nextPlugin.processTelemetry(event);
@@ -118,7 +115,6 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
         this.context.applyWebContext(event);
 
         this.context.applyLocationContext(event); // legacy tags
-        this.context.applySampleContext(event); // legacy tags
         this.context.applyInternalContext(event); // legacy tags
         this.context.cleanUp(event);
     }

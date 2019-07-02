@@ -43,6 +43,8 @@ export interface ISenderConfig {
     instrumentationKey: () => string;
 
     namePrefix: () => string;
+
+    sampleRate: () => number;
 }
 
 export interface IBackendResponse {

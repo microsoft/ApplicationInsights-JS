@@ -29,6 +29,7 @@ import {
 } from '@microsoft/applicationinsights-core-js';
 import { CoreUtils } from '@microsoft/applicationinsights-core-js';
 import { Offline } from './Offline';
+import { Sample } from './TelemetryProcessors/Sample'
 
 declare var XDomainRequest: {
     prototype: IXDomainRequest;
@@ -39,6 +40,7 @@ export class Sender implements IChannelControlsAI {
     public priority: number = 1001;
 
     public identifier: string = BreezeChannelIdentifier;
+
 
     public pause(): void {
         throw new Error("Method not implemented.");
@@ -112,6 +114,7 @@ export class Sender implements IChannelControlsAI {
 
     private _logger: IDiagnosticLogger;
     private _serializer: Serializer;
+    protected _sample: Sample;
 
     public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]): void {
         this._logger = core.logger;
@@ -129,6 +132,7 @@ export class Sender implements IChannelControlsAI {
 
         this._buffer = (this._config.enableSessionStorageBuffer && Util.canUseSessionStorage())
             ? new SessionStorageSendBuffer(this._logger, this._config) : new ArraySendBuffer(this._config);
+        this._sample = new Sample(this._config.sampleRate(), this._logger);
 
         if (!this._config.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
             this._sender = this._beaconSender;
@@ -209,6 +213,10 @@ export class Sender implements IChannelControlsAI {
                 });
 
                 delete telemetryItem.tags[ProcessLegacy];
+            }
+            if (!this._isSampledIn(telemetryItem)) {
+                // Item is sampled out, do not send it
+                doNotSendItem = true;
             }
             if (doNotSendItem) {
                 return; // do not send, no need to execute next plugin
@@ -460,7 +468,8 @@ export class Sender implements IChannelControlsAI {
             isRetryDisabled: () => false,
             isBeaconApiDisabled: () => true,
             instrumentationKey: () => undefined,  // Channel doesn't need iKey, it should be set already
-            namePrefix: () => undefined
+            namePrefix: () => undefined,
+            sampleRate: () => 100
         }
     }
 
@@ -475,8 +484,13 @@ export class Sender implements IChannelControlsAI {
             isRetryDisabled: undefined,
             isBeaconApiDisabled: undefined,
             instrumentationKey: undefined,
-            namePrefix: undefined
+            namePrefix: undefined,
+            sampleRate: undefined
         };
+    }
+
+    private _isSampledIn(envelope: ITelemetryItem): boolean {
+        return this._sample.isSampledIn(envelope);
     }
 
     private static _validate(envelope: ITelemetryItem): boolean {
@@ -526,7 +540,7 @@ export class Sender implements IChannelControlsAI {
             this._onSuccess(payload, payload.length);
         } else {
             this._xhrSender(payload, true);
-            this._logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");     
+            this._logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
         }
     }
 

@@ -9,7 +9,6 @@ import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, IWeb,
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
 import { Internal } from './Context/Internal';
-import { Sample } from './Context/Sample';
 import { User } from './Context/User';
 import { Location } from './Context/Location';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
@@ -25,7 +24,6 @@ export class TelemetryContext implements ITelemetryContext {
     public internal: Internal; // legacy
     public session: Session; // The object describing a session tracked by this object.
     public sessionManager: _SessionManager; // The session manager that manages session on the base of cookies.
-    public sample: Sample;
     public os: IOperatingSystem;
     public web: IWeb;
     public appId: () => string;
@@ -40,7 +38,6 @@ export class TelemetryContext implements ITelemetryContext {
             this.user = new User(defaultConfig, logger);
             this.telemetryTrace = new TelemetryTrace();
             this.session = new Session();
-            this.sample = new Sample(defaultConfig.samplingPercentage(), logger);
         }
         this.appId = () => null;
     }
@@ -118,12 +115,6 @@ export class TelemetryContext implements ITelemetryContext {
             if (typeof this.location.ip === "string") {
                 event.tags[CtxTagKeys.locationIp] = this.location.ip;
             }
-        }
-    }
-
-    public applySampleContext(event: ITelemetryItem) {
-        if (this.sample) {
-            event.tags[SampleRate] = this.sample.sampleRate; // tags.sampleRate -> mapped in CS 4.0
         }
     }
 

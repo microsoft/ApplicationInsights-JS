@@ -1,9 +1,9 @@
-/// <reference path="../TestFramework/TestClass.ts" />
+/// <reference path="./TestFramework/TestClass.ts" />
 
-import { Sample } from "../../src/Context/Sample";
+import { Sample } from "../src/TelemetryProcessors/Sample";
 import { ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { PageView, TelemetryItemCreator, IPageViewTelemetry, Util } from "@microsoft/applicationinsights-common";
-import { HashCodeScoreGenerator } from "../../src/HashCodeScoreGenerator";
+import { HashCodeScoreGenerator } from "../src/TelemetryProcessors/SamplingScoreGenerators/HashCodeScoreGenerator";
 
 export class SampleTests extends TestClass {
     private sample: Sample
