@@ -388,6 +388,7 @@ export class ApplicationInsightsTests extends TestClass {
                         Assert.equal('value', this.trackSpy.args[0][0].properties.requestHeaders['header'], "fetch request's customer defined request header is stored");
                         Assert.notEqual(undefined, this.trackSpy.args[0][0].properties.responseHeaders, "fetch request's reponse header is stored");
                         Assert.equal(undefined, this.trackSpy.args[1][0].properties.requestHeaders['header'], "customer doesn't define a header field");
+                        Assert.equal(undefined, this.trackSpy.args[2][0].properties.requestHeaders['header'], "customer doesn't define a header field");
                     })
             });
         } else {
