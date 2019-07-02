@@ -52,8 +52,8 @@ export class AppInsightsCore implements IAppInsightsCore {
 
         this.logger = new DiagnosticLogger(config);
 
-        // Initial validation
-        this._extensions.forEach((extension: ITelemetryPlugin) => {
+        // Initial validation 
+        extensions.forEach((extension: ITelemetryPlugin) => {
             if (CoreUtils.isNullOrUndefined(extension.initialize)) {
                 throw Error(validationError);
             }
