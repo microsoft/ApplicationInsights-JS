@@ -304,6 +304,8 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             if (this._config.enableResponseHeaderTracking) { 
                 var headers = xhr.getAllResponseHeaders();
                 if (headers) {
+                    // xhr.getAllResponseHeaders() method returns all the response headers, separated by CRLF, as a string or null
+                    // the regex converts the header string into an array of individual headers
                     var arr = headers.trim().split(/[\r\n]+/);
                     var responseHeaderMap = {};
                     arr.forEach(function (line) {
