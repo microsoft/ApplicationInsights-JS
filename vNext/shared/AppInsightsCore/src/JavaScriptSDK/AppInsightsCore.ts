@@ -3,7 +3,7 @@
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { ITelemetryPlugin, IPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { IChannelControls, MinChannelPriorty } from "../JavaScriptSDK.Interfaces/IChannelControls";
+import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { EventsDiscardedReason } from "../JavaScriptSDK.Enums/EventsDiscardedReason";
@@ -53,7 +53,7 @@ export class AppInsightsCore implements IAppInsightsCore {
         this.logger = new DiagnosticLogger(config);
 
         // Initial validation
-        extensions.forEach((extension: ITelemetryPlugin) => {
+        this._extensions.forEach((extension: ITelemetryPlugin) => {
             if (CoreUtils.isNullOrUndefined(extension.initialize)) {
                 throw Error(validationError);
             }
@@ -144,11 +144,6 @@ export class AppInsightsCore implements IAppInsightsCore {
                 ext.initialize(this.config, this, this._extensions); // initialize
             }
         });
-
-        // Remove sender channels from main list
-        if (c < this._extensions.length) {
-            this._extensions.splice(c);
-        }
 
         if (this.getTransmissionControls().length === 0) {
             throw new Error("No channels available");
