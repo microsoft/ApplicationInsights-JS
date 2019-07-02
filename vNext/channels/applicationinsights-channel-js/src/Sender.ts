@@ -21,7 +21,8 @@ import {
     IChannelControlsAI,
     ConfigurationManager, IConfig,
     ProcessLegacy,
-    BreezeChannelIdentifier
+    BreezeChannelIdentifier,
+    SampleRate
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryPlugin, ITelemetryItem, IConfiguration,
@@ -132,7 +133,7 @@ export class Sender implements IChannelControlsAI {
 
         this._buffer = (this._config.enableSessionStorageBuffer && Util.canUseSessionStorage())
             ? new SessionStorageSendBuffer(this._logger, this._config) : new ArraySendBuffer(this._config);
-        this._sample = new Sample(this._config.sampleRate(), this._logger);
+        this._sample = new Sample(this._config.samplingPercentage(), this._logger);
 
         if (!this._config.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
             this._sender = this._beaconSender;
@@ -186,6 +187,15 @@ export class Sender implements IChannelControlsAI {
                 this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryEnvelopeInvalid, "Invalid telemetry envelope");
                 return;
             }
+            // check if this item should be sampled in, else add sampleRate tag
+            if (!this._isSampledIn(telemetryItem)) {
+                // Item is sampled out, do not send it
+                this._logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TelemetrySampledAndNotSent,
+                    "Telemetry item was sampled out and not sent", { SampleRate: this._sample.sampleRate });
+                return;
+            } else {
+                telemetryItem.tags[SampleRate] = this._sample.sampleRate;
+            }
 
             // construct an envelope that Application Insights endpoint can understand
             let aiEnvelope = Sender.constructEnvelope(telemetryItem, this._config.instrumentationKey(), this._logger);
@@ -213,10 +223,6 @@ export class Sender implements IChannelControlsAI {
                 });
 
                 delete telemetryItem.tags[ProcessLegacy];
-            }
-            if (!this._isSampledIn(telemetryItem)) {
-                // Item is sampled out, do not send it
-                doNotSendItem = true;
             }
             if (doNotSendItem) {
                 return; // do not send, no need to execute next plugin
@@ -469,7 +475,7 @@ export class Sender implements IChannelControlsAI {
             isBeaconApiDisabled: () => true,
             instrumentationKey: () => undefined,  // Channel doesn't need iKey, it should be set already
             namePrefix: () => undefined,
-            sampleRate: () => 100
+            samplingPercentage: () => 100
         }
     }
 
@@ -485,7 +491,7 @@ export class Sender implements IChannelControlsAI {
             isBeaconApiDisabled: undefined,
             instrumentationKey: undefined,
             namePrefix: undefined,
-            sampleRate: undefined
+            samplingPercentage: undefined
         };
     }
 
