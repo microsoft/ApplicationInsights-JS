@@ -269,9 +269,6 @@ export interface IConfig {
      * @memberof IConfig
      */
     autoExceptionInstrumented?: boolean;
-    consoleLoggingLevel?: number;
-    telemetryLoggingLevel?: number;
-    diagnosticLogInterval?: number;
     correlationHeaderDomains?: string[]
 }
 

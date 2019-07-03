@@ -129,8 +129,8 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | disableExceptionTracking | false | If true, exceptions are no autocollected. Default is false. |
 | disableTelemetry | false | If true, telemetry is not collected or sent. Default is false. |
 | enableDebug | false | If true, **internal** debugging data is thrown as an exception **instead** of being logged, regardless of SDK logging settings. Default is false. <br>***Note:*** Enabling this setting will result in dropped telemetry whenever an internal error occurs. This can be useful for quickly identifying issues with your configuration or usage of the SDK. If you do not want to lose telemetry while debugging, consider using `consoleLoggingLevel` or `telemetryLoggingLevel` instead of `enableDebug`. |
-| consoleLoggingLevel | 0 | Logs **internal** Application Insights errors to console. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
-| telemetryLoggingLevel | 1 | Sends **internal** Application Insights errors as telemetry. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
+| loggingLevelConsole | 0 | Logs **internal** Application Insights errors to console. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
+| loggingLevelTelemetry | 1 | Sends **internal** Application Insights errors as telemetry. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
 | diagnosticLogInterval | 10000 | (internal) Polling interval (in ms) for internal logging queue |
 | samplingPercentage | 100 | Percentage of events that will be sent. Default is 100, meaning all events are sent. Set this if you wish to preserve your datacap for large-scale applications. |
 | autoTrackPageVisitTime | false | If true, on a pageview,the previous instrumented page's view time is tracked and sent as telemetry and a new timer is started for the current pageview. Default is false. |
@@ -162,6 +162,14 @@ By default, this SDK will **not** handle state based route changing that occurs 
 
 Currently, we support a separate [React plugin](#available-extensions-for-the-sdk) which you can initialize with this SDK. It will also accomplish route change tracking for you, as well as collect [other React specific telemetry](./vNext/extensions/applicationinsights-react-js).
 ```
+
+## Source Map Support
+
+The minified callstack of your exception telemetry can be unminified in the Azure Portal. All existing integrations on the Exception Details panel will work with the newly unminified callstack. Drag and drop source map unminifying supports all existing and future JS SDKs (+Node.JS), so you do not need to upgrade your SDK version. To view your unminified callstack,
+1. Select an Exception Telemetry item in the Azure Portal to view its "End-to-end transaction details"
+2. Identify which source maps correspond to this call stack. The source map must match a stack frame's source file, but suffixed with `.map`
+3. Drag and drop the source maps onto the call stack in the Azure Portal
+![](https://i.imgur.com/Efue9nU.gif)
 
 ## Examples
 
