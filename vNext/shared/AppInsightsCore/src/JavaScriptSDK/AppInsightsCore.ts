@@ -151,7 +151,7 @@ export class AppInsightsCore implements IAppInsightsCore {
 
     track(telemetryItem: ITelemetryItem) {
         if (telemetryItem === null) {
-            this._notififyInvalidEvent(telemetryItem);
+            this._notifyInvalidEvent(telemetryItem);
             // throw error
             throw Error("Invalid telemetry item");
         }
@@ -235,22 +235,22 @@ export class AppInsightsCore implements IAppInsightsCore {
     private _validateTelmetryItem(telemetryItem: ITelemetryItem) {
 
         if (CoreUtils.isNullOrUndefined(telemetryItem.name)) {
-            this._notififyInvalidEvent(telemetryItem);
+            this._notifyInvalidEvent(telemetryItem);
             throw Error("telemetry name required");
         }
 
         if (CoreUtils.isNullOrUndefined(telemetryItem.time)) {
-            this._notififyInvalidEvent(telemetryItem);
+            this._notifyInvalidEvent(telemetryItem);
             throw Error("telemetry timestamp required");
         }
 
         if (CoreUtils.isNullOrUndefined(telemetryItem.iKey)) {
-            this._notififyInvalidEvent(telemetryItem);
+            this._notifyInvalidEvent(telemetryItem);
             throw Error("telemetry instrumentationKey required");
         }
     }
 
-    private _notififyInvalidEvent(telemetryItem: ITelemetryItem): void {
+    private _notifyInvalidEvent(telemetryItem: ITelemetryItem): void {
         this._notificationManager.eventsDiscarded([telemetryItem], EventsDiscardedReason.InvalidEvent);
     }
 }
