@@ -129,8 +129,8 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | disableExceptionTracking | false | If true, exceptions are no autocollected. Default is false. |
 | disableTelemetry | false | If true, telemetry is not collected or sent. Default is false. |
 | enableDebug | false | If true, **internal** debugging data is thrown as an exception **instead** of being logged, regardless of SDK logging settings. Default is false. <br>***Note:*** Enabling this setting will result in dropped telemetry whenever an internal error occurs. This can be useful for quickly identifying issues with your configuration or usage of the SDK. If you do not want to lose telemetry while debugging, consider using `consoleLoggingLevel` or `telemetryLoggingLevel` instead of `enableDebug`. |
-| consoleLoggingLevel | 0 | Logs **internal** Application Insights errors to console. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
-| telemetryLoggingLevel | 1 | Sends **internal** Application Insights errors as telemetry. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
+| loggingLevelConsole | 0 | Logs **internal** Application Insights errors to console. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
+| loggingLevelTelemetry | 1 | Sends **internal** Application Insights errors as telemetry. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
 | diagnosticLogInterval | 10000 | (internal) Polling interval (in ms) for internal logging queue |
 | samplingPercentage | 100 | Percentage of events that will be sent. Default is 100, meaning all events are sent. Set this if you wish to preserve your datacap for large-scale applications. |
 | autoTrackPageVisitTime | false | If true, on a pageview,the previous instrumented page's view time is tracked and sent as telemetry and a new timer is started for the current pageview. Default is false. |
@@ -154,17 +154,22 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | appId | null | AppId is used for the correlation between AJAX dependencies happening on the client-side with the server-side requests. When Beacon API is enabled, it cannot be used automatically, but can be set manually in the configuration. Default is null |
 | enableCorsCorrelation | false | If true, the SDK will add two headers ('Request-Id' and 'Request-Context') to all CORS requests tocorrelate outgoing AJAX dependencies with corresponding requests on the server side. Default is false |
 | namePrefix | undefined | An optional value that will be used as name postfix for localStorage and cookie name.
+<!-- | enableAutoRouteTracking | false | Automatically track route changes in Single Page Applications (SPA). If true, each route change will send a new Pageview to Application Insights. Hash route changes changes (`example.com/foo#bar`) are also recorded as new page views. -->
 
 ## Single Page Applications
 
-By default, this SDK will **not** handle state based route changing that occurs in single page applications unless you use a plugin designed for your frontend framework (Angular, React, Vue, etc). Currently, we support a separate [React plugin](#available-extensions-for-the-sdk) which you can initialize with this SDK and it will accomplish this for you in your React application. Otherwise, you must manually trigger pageviews on each route change. An example of accomplishing this for a React application is located [here](https://github.com/Azure-Samples/appinsights-guestbook/blob/6555933e19d737b2ff4f9f339cc1b928f0c08cdb/client/src/AppContainer.js#L17-L20). Note that you must refresh the current operation's id **as well as** trigger an additional pageview:
-**React Router history listener example**
-```js
-this.unlisten = this.props.history.listen((location, action) => {
-  ai.properties.context.telemetryTrace.traceID = Util.newId();
-  ai.trackPageView({name: window.location.pathname});
-});
+By default, this SDK will **not** handle state based route changing that occurs in single page applications unless you use a plugin designed for your frontend framework (Angular, React, Vue, etc). <!-- To enable enable automatic route change tracking for your single page application, you can add `enableAutoRouteTracking: true` to the setup configuration. -->
+
+Currently, we support a separate [React plugin](#available-extensions-for-the-sdk) which you can initialize with this SDK. It will also accomplish route change tracking for you, as well as collect [other React specific telemetry](./vNext/extensions/applicationinsights-react-js).
 ```
+
+## Source Map Support
+
+The minified callstack of your exception telemetry can be unminified in the Azure Portal. All existing integrations on the Exception Details panel will work with the newly unminified callstack. Drag and drop source map unminifying supports all existing and future JS SDKs (+Node.JS), so you do not need to upgrade your SDK version. To view your unminified callstack,
+1. Select an Exception Telemetry item in the Azure Portal to view its "End-to-end transaction details"
+2. Identify which source maps correspond to this call stack. The source map must match a stack frame's source file, but suffixed with `.map`
+3. Drag and drop the source maps onto the call stack in the Azure Portal
+![](https://i.imgur.com/Efue9nU.gif)
 
 ## Examples
 
@@ -268,24 +273,4 @@ While the script is downloading from the CDN, all tracking of your page is queue
 Latest ✔ | Latest ✔ | 9+ ✔ | Latest ✔ | Latest ✔ |
 
 ## Contributing
-
-We strongly welcome and encourage contributions to this project. Please read the [contributor's guide][ContribGuide] located in the ApplicationInsights-Home repository. If making a large change we request that you open an [issue][GitHubIssue] first. We follow the [Git Flow][GitFlow] approach to branching.
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
-[ContribGuide]: https://github.com/microsoft/ApplicationInsights-Home/blob/master/CONTRIBUTING.md
-[GitFlow]: http://nvie.com/posts/a-successful-git-branching-model/
-[GitHubIssue]: https://github.com/microsoft/ApplicationInsights-JS/issues
-
-## Build together when changing multiple packages:
-
-The vNext folder contains 8 packages that are components of this next version of the SDK. When making changes in multiple packages, you can build using the following commands in vNext folder:
-1. npm install -g @microsoft/rush
-
-2. rush rebuild --verbose
-This will build all packages in order of dependencies. If there are build errors, verbose options is required to view error details.
-
-3. rush test --verbose
-This will run tests in all packages in parallel.
-
-If you are changing package versions or adding/removing any package dependencies, run> rush update --purge --recheck --full before building. Please check in any files that change under vNext\common\ folder.
+Read our [contributing guide](./CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Application Insights.
