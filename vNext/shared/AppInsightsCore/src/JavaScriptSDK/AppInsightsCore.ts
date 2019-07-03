@@ -11,8 +11,11 @@ import { CoreUtils } from "./CoreUtils";
 import { NotificationManager } from "./NotificationManager";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { _InternalLogMessage, DiagnosticLogger } from "./DiagnosticLogger";
+import { ChannelController } from './ChannelController';
 
 "use strict";
+
+const validationError = "Extensions must provide callback to initialize";
 
 export class AppInsightsCore implements IAppInsightsCore {
 
@@ -52,38 +55,24 @@ export class AppInsightsCore implements IAppInsightsCore {
 
         this.logger = new DiagnosticLogger(config);
 
+        // Concat all available extensions 
+        this._extensions.push(...extensions, ...this.config.extensions);
+
         // Initial validation 
-        extensions.forEach((extension: ITelemetryPlugin) => {
-            if (CoreUtils.isNullOrUndefined(extension.initialize)) {
+        this._extensions.forEach((extension: ITelemetryPlugin) => {
+            let isValid = true;
+            if (CoreUtils.isNullOrUndefined(extension) || CoreUtils.isNullOrUndefined(extension.initialize)) {
+                isValid = false;
+            }
+            if (!isValid) {
                 throw Error(validationError);
             }
         });
 
-        if (this.config.extensions.length > 0) {
-            let isValid = true;
-            let containsChannels = false;
-            this.config.extensions.forEach(item => {
-                if (CoreUtils.isNullOrUndefined(item)) {
-                    isValid = false;
-                }
-
-                if (item.priority > ChannelControllerPriority) {
-                    containsChannels = true;
-                }
-            });
-
-            if (!isValid) {
-                throw Error(validationError);
-            }
-
-            if (containsChannels) {
-                throw Error(validationErrorInExt);
-            }
-        }
         // Initial validation complete
 
-        // Concat all available extensions before sorting by priority
-        this._extensions.push(this._channelController, ...extensions, ...this.config.extensions);
+        this._extensions.push(this._channelController);
+        // Sort by priority
         this._extensions = this._extensions.sort((a, b) => {
             let extA = (<ITelemetryPlugin>a);
             let extB = (<ITelemetryPlugin>b);
@@ -126,7 +115,7 @@ export class AppInsightsCore implements IAppInsightsCore {
                 continue;
             }
 
-            if (curr.priority === ChannelControllerPriority) {
+            if (curr.priority === this._channelController.priority) {
                 c = idx + 1;
                 break; // channel controller will set remaining pipeline
             }
@@ -140,7 +129,7 @@ export class AppInsightsCore implements IAppInsightsCore {
         // initialize remaining regular plugins
         this._extensions.forEach(ext => {
             let e = ext as ITelemetryPlugin;
-            if (e && e.priority < ChannelControllerPriority) {
+            if (e && e.priority < this._channelController.priority) {
                 ext.initialize(this.config, this, this._extensions); // initialize
             }
         });
@@ -157,7 +146,7 @@ export class AppInsightsCore implements IAppInsightsCore {
 
     track(telemetryItem: ITelemetryItem) {
         if (telemetryItem === null) {
-            this._notifiyInvalidEvent(telemetryItem);
+            this._notififyInvalidEvent(telemetryItem);
             // throw error
             throw Error("Invalid telemetry item");
         }
@@ -238,114 +227,23 @@ export class AppInsightsCore implements IAppInsightsCore {
     private _validateTelmetryItem(telemetryItem: ITelemetryItem) {
 
         if (CoreUtils.isNullOrUndefined(telemetryItem.name)) {
-            this._notifiyInvalidEvent(telemetryItem);
+            this._notififyInvalidEvent(telemetryItem);
             throw Error("telemetry name required");
         }
 
         if (CoreUtils.isNullOrUndefined(telemetryItem.time)) {
-            this._notifiyInvalidEvent(telemetryItem);
+            this._notififyInvalidEvent(telemetryItem);
             throw Error("telemetry timestamp required");
         }
 
         if (CoreUtils.isNullOrUndefined(telemetryItem.iKey)) {
-            this._notifiyInvalidEvent(telemetryItem);
+            this._notififyInvalidEvent(telemetryItem);
             throw Error("telemetry instrumentationKey required");
         }
     }
 
-    private _notifiyInvalidEvent(telemetryItem: ITelemetryItem): void {
+    private _notififyInvalidEvent(telemetryItem: ITelemetryItem): void {
         this._notificationManager.eventsDiscarded([telemetryItem], EventsDiscardedReason.InvalidEvent);
     }
 }
 
-class ChannelController implements ITelemetryPlugin {
-
-    private channelQueue: Array<IChannelControls[]>;
-
-    public processTelemetry(item: ITelemetryItem) {
-        this.channelQueue.forEach(queues => {
-            // pass on to first item in queue
-            if (queues.length > 0) {
-                queues[0].processTelemetry(item);
-            }
-        });
-    }
-
-    public get ChannelControls(): Array<IChannelControls[]> {
-        return this.channelQueue;
-    }
-
-    identifier: string = "ChannelControllerPlugin";
-
-    setNextPlugin: (next: ITelemetryPlugin) => {}; // channel controller is last in pipeline
-
-    priority: number = ChannelControllerPriority; // in reserved range 100 to 200
-
-    initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
-        if ((<any>config).isCookieUseDisabled) {
-            CoreUtils.disableCookies();
-        }
-
-        this.channelQueue = new Array<IChannelControls[]>();
-        if (config.channels) {
-            let invalidChannelIdentifier = undefined;
-            config.channels.forEach(queue => {
-
-                if (queue && queue.length > 0) {
-                    queue = queue.sort((a, b) => { // sort based on priority within each queue
-                        return a.priority - b.priority;
-                    });
-
-                    // Initialize each plugin
-                    queue.forEach(queueItem => {
-                        if (queueItem.priority < ChannelControllerPriority) {
-                            invalidChannelIdentifier = queueItem.identifier;
-                        }
-                        queueItem.initialize(config, core, extensions)
-                    });
-
-                    if (invalidChannelIdentifier) {
-                        throw Error(ChannelValidationMessage + invalidChannelIdentifier);
-                    }
-
-                    for (let i = 1; i < queue.length; i++) {
-                        queue[i - 1].setNextPlugin(queue[i]); // setup processing chain
-                    }
-
-                    this.channelQueue.push(queue);
-                }
-            });
-        }
-
-        let arr = new Array<IChannelControls>();
-
-        for (let i = 0; i < extensions.length; i++) {
-            let plugin = <IChannelControls>extensions[i];
-            if (plugin.priority > ChannelControllerPriority) {
-                arr.push(plugin);
-            }
-        }
-
-        if (arr.length > 0) {
-            // sort if not sorted
-            arr = arr.sort((a, b) => {
-                return a.priority - b.priority;
-            });
-
-            // Initialize each plugin
-            arr.forEach(queueItem => queueItem.initialize(config, core, extensions));
-
-            // setup next plugin
-            for (let i = 1; i < arr.length; i++) {
-                arr[i - 1].setNextPlugin(arr[i]);
-            }
-
-            this.channelQueue.push(arr);
-        }
-    }
-}
-
-const validationError = "Extensions must provide callback to initialize";
-const validationErrorInExt = "Channels must be provided through config.channels only";
-const ChannelControllerPriority = 500;
-const ChannelValidationMessage = "Channel has invalid priority";
