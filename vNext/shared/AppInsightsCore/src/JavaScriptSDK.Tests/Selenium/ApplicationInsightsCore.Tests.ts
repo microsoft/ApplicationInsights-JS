@@ -33,10 +33,10 @@ export class ApplicationInsightsCoreTests extends TestClass {
                     Assert.ok(true, "Validates configuration");
                 }
 
-                let config2 : IConfiguration = {
-                        endpointUrl: "https://dc.services.visualstudio.com/v2/track",
-                        instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864",
-                        extensionConfig: {}
+                let config2: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864",
+                    extensionConfig: {}
                 };
 
                 try {
@@ -44,7 +44,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 } catch (error) {
                     Assert.ok(true, "Validates extensions are provided");
                 }
-                let config : IConfiguration = {
+                let config: IConfiguration = {
                     endpointUrl: "https://dc.services.visualstudio.com/v2/track",
                     instrumentationKey: "",
                     extensionConfig: {}
@@ -104,7 +104,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
 
                 let appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize(
-                    {instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41"},
+                    { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" },
                     [samplingPlugin, channelPlugin]);
                 Assert.ok(!!samplingPlugin.nexttPlugin, "setup prior to pipeline initialization");
             }
@@ -125,11 +125,11 @@ export class ApplicationInsightsCoreTests extends TestClass {
 
                 let appInsightsCore = new AppInsightsCore();
                 try {
-                appInsightsCore.initialize(
-                    {instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41"},
-                    [samplingPlugin, samplingPlugin1, channelPlugin]);
+                    appInsightsCore.initialize(
+                        { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" },
+                        [samplingPlugin, samplingPlugin1, channelPlugin]);
 
-                Assert.ok("No error on dupicate priority");
+                    Assert.ok("No error on duplicate priority");
                 } catch (error) {
                     Assert.ok(false); // duplicate priority does not throw error
                 }
@@ -142,7 +142,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 let channelPlugin = new ChannelPlugin();
                 let appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize(
-                    {instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41"},
+                    { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" },
                     [channelPlugin]);
 
                 Assert.ok(!channelPlugin.isFlushInvoked, "Flush not called on initialize");
@@ -165,10 +165,10 @@ export class ApplicationInsightsCoreTests extends TestClass {
 
                 let appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize(
-                    {instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", channels: [[channelPlugin1]]},
+                    { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", channels: [[channelPlugin1]] },
                     [channelPlugin]);
 
-                
+
                 let channelQueues = appInsightsCore.getTransmissionControls();
                 Assert.equal(2, channelQueues.length, "Total number of channel queues");
                 Assert.equal(1, channelQueues[0].length, "Number of channels in queue 1");
@@ -185,11 +185,11 @@ export class ApplicationInsightsCoreTests extends TestClass {
 
                 const channelPlugin = new ChannelPlugin();
                 const appInsightsCore = new AppInsightsCore();
-                appInsightsCore.initialize({instrumentationKey: expectedIKey}, [channelPlugin]);
+                appInsightsCore.initialize({ instrumentationKey: expectedIKey }, [channelPlugin]);
                 const validateStub = this.sandbox.stub(appInsightsCore, "_validateTelmetryItem");
 
                 // Act
-                let bareItem: ITelemetryItem = {name: 'test item'};
+                let bareItem: ITelemetryItem = { name: 'test item' };
                 appInsightsCore.track(bareItem);
                 this.clock.tick(1);
 
@@ -207,7 +207,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 // Setup
                 const channelPlugin = new ChannelPlugin();
                 const appInsightsCore = new AppInsightsCore();
-                appInsightsCore.initialize({instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", loggingLevelTelemetry: 999}, [channelPlugin]);
+                appInsightsCore.initialize({ instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", loggingLevelTelemetry: 999 }, [channelPlugin]);
 
                 const messageId: _InternalMessageId = _InternalMessageId.CannotAccessCookie; // can be any id
                 const messageKey = appInsightsCore.logger['AIInternalMessagePrefix'] + messageId;
@@ -254,7 +254,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 // Setup
                 const channelPlugin = new ChannelPlugin();
                 const appInsightsCore = new AppInsightsCore();
-                const initFunction = () => appInsightsCore.initialize({instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41"}, [channelPlugin]);
+                const initFunction = () => appInsightsCore.initialize({ instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" }, [channelPlugin]);
 
                 // Assert precondition
                 Assert.ok(!appInsightsCore["_isInitialized"], "PRE: core constructed but not initialized");
@@ -283,7 +283,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                     }, [channelPlugin]);
                 const trackTraceSpy = this.sandbox.stub(appInsightsCore, "track");
 
-                Assert.equal(0 ,appInsightsCore.logger.queue.length, "Queue is empty");
+                Assert.equal(0, appInsightsCore.logger.queue.length, "Queue is empty");
 
                 // Setup queue
                 const queue: Array<_InternalLogMessage> = appInsightsCore.logger.queue;
@@ -298,7 +298,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 this.clock.tick(1);
 
                 // Assert postcondition
-                Assert.equal(0 ,appInsightsCore.logger.queue.length, "Queue is empty");
+                Assert.equal(0, appInsightsCore.logger.queue.length, "Queue is empty");
 
                 const data1 = trackTraceSpy.args[0][0];
                 Assert.ok(data1.baseData.message.indexOf("Hello1") !== -1);
@@ -363,9 +363,9 @@ export class ApplicationInsightsCoreTests extends TestClass {
 
                 let appInsightsCore = new AppInsightsCore();
                 try {
-                appInsightsCore.initialize(
-                    {instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", extensions: [samplingPlugin]},
-                    [channelPlugin]);
+                    appInsightsCore.initialize(
+                        { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", extensions: [samplingPlugin] },
+                        [channelPlugin]);
                 } catch (error) {
                     Assert.ok(false, "No error expected");
                 }
@@ -394,9 +394,9 @@ export class ApplicationInsightsCoreTests extends TestClass {
 
                 let appInsightsCore = new AppInsightsCore();
                 try {
-                appInsightsCore.initialize(
-                    {instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41"},
-                    [testPlugin, samplingPlugin, channelPlugin]);
+                    appInsightsCore.initialize(
+                        { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" },
+                        [testPlugin, samplingPlugin, channelPlugin]);
                 } catch (error) {
                     Assert.ok(false, "Exception not expected");
                 }
@@ -426,16 +426,16 @@ export class ApplicationInsightsCoreTests extends TestClass {
                     },
                     []);
 
-                    Assert.ok(channelPlugin1._nextPlugin === channelPlugin2);
-                    Assert.ok(CoreUtils.isNullOrUndefined(channelPlugin3._nextPlugin));
-                    let channelControls = appInsightsCore.getTransmissionControls();
-                    Assert.ok(channelControls.length === 2);
-                    Assert.ok(channelControls[0].length ===2);
-                    Assert.ok(channelControls[1].length === 1);
-                    Assert.ok(channelControls[0][0] === channelPlugin1);
-                    Assert.ok(channelControls[1][0] === channelPlugin3);
-                    Assert.ok(channelPlugin2._nextPlugin === undefined);
-                    Assert.ok(channelPlugin3._nextPlugin === undefined);
+                Assert.ok(channelPlugin1._nextPlugin === channelPlugin2);
+                Assert.ok(CoreUtils.isNullOrUndefined(channelPlugin3._nextPlugin));
+                let channelControls = appInsightsCore.getTransmissionControls();
+                Assert.ok(channelControls.length === 2);
+                Assert.ok(channelControls[0].length === 2);
+                Assert.ok(channelControls[1].length === 1);
+                Assert.ok(channelControls[0][0] === channelPlugin1);
+                Assert.ok(channelControls[1][0] === channelPlugin3);
+                Assert.ok(channelPlugin2._nextPlugin === undefined);
+                Assert.ok(channelPlugin3._nextPlugin === undefined);
             }
         });
 
@@ -458,15 +458,15 @@ export class ApplicationInsightsCoreTests extends TestClass {
                     },
                     [channelPlugin1, channelPlugin2, channelPlugin3]);
 
-                    Assert.ok(channelPlugin1._nextPlugin === channelPlugin2);
-                    Assert.ok(channelPlugin2._nextPlugin === channelPlugin3);
-                    Assert.ok(CoreUtils.isNullOrUndefined(channelPlugin3._nextPlugin));
-                    let channelControls = appInsightsCore.getTransmissionControls();
-                    Assert.ok(channelControls.length === 1);
-                    Assert.ok(channelControls[0].length ===3);
-                    Assert.ok(channelControls[0][0] === channelPlugin1);
-                    Assert.ok(channelControls[0][1] === channelPlugin2);
-                    Assert.ok(channelControls[0][2] === channelPlugin3);
+                Assert.ok(channelPlugin1._nextPlugin === channelPlugin2);
+                Assert.ok(channelPlugin2._nextPlugin === channelPlugin3);
+                Assert.ok(CoreUtils.isNullOrUndefined(channelPlugin3._nextPlugin));
+                let channelControls = appInsightsCore.getTransmissionControls();
+                Assert.ok(channelControls.length === 1);
+                Assert.ok(channelControls[0].length === 3);
+                Assert.ok(channelControls[0][0] === channelPlugin1);
+                Assert.ok(channelControls[0][1] === channelPlugin2);
+                Assert.ok(channelControls[0][2] === channelPlugin3);
             }
         });
 
@@ -479,25 +479,43 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 channelPlugin.priority = 1001;
                 let samplingPlugin = new TestSamplingPlugin(true);
                 const appInsightsCore = new AppInsightsCore();
-                appInsightsCore.initialize({instrumentationKey: expectedIKey}, [samplingPlugin, channelPlugin]);
+                appInsightsCore.initialize({ instrumentationKey: expectedIKey }, [samplingPlugin, channelPlugin]);
 
                 // Act
                 let bareItem: ITelemetryItem = {
                     name: 'test item',
                     ext: {
                         "user": { "id": "test" }
-                    }, 
-                    tags: [ { "device.id": "AABA40BC-EB0D-44A7-96F5-ED2103E47AE9"} ],
+                    },
+                    tags: [{ "device.id": "AABA40BC-EB0D-44A7-96F5-ED2103E47AE9" }],
                     data: {
                         "custom data": {
                             "data1": "value1"
                         }
                     },
                     baseType: "PageviewData",
-                    baseData: { name: "Test Page"}
+                    baseData: { name: "Test Page" }
                 };
 
                 appInsightsCore.track(bareItem);
+            }
+        });
+
+        this.testCase({
+            name: "Channels work even if no extensions are present",
+            test: () => {
+                let channelPlugin = new ChannelPlugin();
+                channelPlugin.priority = 1030;
+                let appInsightsCore = new AppInsightsCore();
+                const channelSpy = this.sandbox.stub(channelPlugin, "processTelemetry");
+                appInsightsCore.initialize(
+                    {
+                        instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", channels: [[channelPlugin]]
+                    }, []);
+                let event: ITelemetryItem = { name: 'test' };
+                appInsightsCore.track(event);
+                const evt = channelSpy.args[0][0];
+                Assert.ok(evt.name == "test");
             }
         });
     }
@@ -541,10 +559,10 @@ class TestSamplingPlugin implements ITelemetryPlugin {
         }
 
         let pluginConfig = config.extensions ? config.extensions[this.identifier] : null;
-        this.samplingPercentage = pluginConfig? pluginConfig.samplingPercentage : 100;
+        this.samplingPercentage = pluginConfig ? pluginConfig.samplingPercentage : 100;
     }
 
-    private _setNextPlugin(next: ITelemetryPlugin) : void {
+    private _setNextPlugin(next: ITelemetryPlugin): void {
         this.nexttPlugin = next;
     }
 }
