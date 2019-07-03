@@ -60,22 +60,19 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
         if (CoreUtils.isNullOrUndefined(event)) {
             // TODO(barustum): throw an internal event once we have support for internal logging
         } else {
-            // if the event is not sampled in, do not bother going through the pipeline
-            if (this.context.sample.isSampledIn(event)) {
-                // If the envelope is PageView, reset the internal message count so that we can send internal telemetry for the new page.
-                if (event.name === PageView.envelopeType) {
-                    this._logger.resetInternalMessageCount();
-                }
-
-                if (this.context.session) {
-                    // If customer did not provide custom session id update the session manager
-                    if (typeof this.context.session.id !== "string") {
-                        this.context.sessionManager.update();
-                    }
-                }
-
-                this._processTelemetryInternal(event);
+            // If the envelope is PageView, reset the internal message count so that we can send internal telemetry for the new page.
+            if (event.name === PageView.envelopeType) {
+                this._logger.resetInternalMessageCount();
             }
+
+            if (this.context.session) {
+                // If customer did not provide custom session id update the session manager
+                if (typeof this.context.session.id !== "string") {
+                    this.context.sessionManager.update();
+                }
+            }
+
+            this._processTelemetryInternal(event);
 
             if (!CoreUtils.isNullOrUndefined(this._nextPlugin)) {
                 this._nextPlugin.processTelemetry(event);
@@ -118,7 +115,6 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
         this.context.applyWebContext(event);
 
         this.context.applyLocationContext(event); // legacy tags
-        this.context.applySampleContext(event); // legacy tags
         this.context.applyInternalContext(event); // legacy tags
         this.context.cleanUp(event);
     }
