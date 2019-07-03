@@ -25,10 +25,9 @@ import {
     SampleRate
 } from '@microsoft/applicationinsights-common';
 import {
-    ITelemetryPlugin, ITelemetryItem, IConfiguration,
+    ITelemetryPlugin, ITelemetryItem, IConfiguration, CoreUtils,
     _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
 } from '@microsoft/applicationinsights-core-js';
-import { CoreUtils } from '@microsoft/applicationinsights-core-js';
 import { Offline } from './Offline';
 import { Sample } from './TelemetryProcessors/Sample'
 
@@ -194,6 +193,7 @@ export class Sender implements IChannelControlsAI {
                     "Telemetry item was sampled out and not sent", { SampleRate: this._sample.sampleRate });
                 return;
             } else {
+                telemetryItem.tags = telemetryItem.tags || <any>{};
                 telemetryItem.tags[SampleRate] = this._sample.sampleRate;
             }
 
