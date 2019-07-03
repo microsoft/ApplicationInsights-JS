@@ -163,6 +163,14 @@ By default, this SDK will **not** handle state based route changing that occurs 
 Currently, we support a separate [React plugin](#available-extensions-for-the-sdk) which you can initialize with this SDK. It will also accomplish route change tracking for you, as well as collect [other React specific telemetry](./vNext/extensions/applicationinsights-react-js).
 ```
 
+## Source Map Support
+
+The minified callstack of your exception telemetry can be unminified in the Azure Portal. All existing integrations on the Exception Details panel will work with the newly unminified callstack. Drag and drop source map unminifying supports all existing and future JS SDKs (+Node.JS), so you do not need to upgrade your SDK version. To view your unminified callstack,
+1. Select an Exception Telemetry item in the Azure Portal to view its "End-to-end transaction details"
+2. Identify which source maps correspond to this call stack. The source map must match a stack frame's source file, but suffixed with `.map`
+3. Drag and drop the source maps onto the call stack in the Azure Portal
+![](https://i.imgur.com/Efue9nU.gif)
+
 ## Examples
 
 For runnable examples, see [Application Insights Javascript SDK Samples](https://github.com/topics/applicationinsights-js-demo)
