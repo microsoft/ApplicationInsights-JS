@@ -134,6 +134,11 @@ export class AppInsightsCore implements IAppInsightsCore {
             }
         });
 
+        // Remove sender channels from main list
+        if (c < this._extensions.length) {
+            this._extensions.splice(c);
+        }
+
         if (this.getTransmissionControls().length === 0) {
             throw new Error("No channels available");
         }
@@ -168,6 +173,9 @@ export class AppInsightsCore implements IAppInsightsCore {
         this._validateTelmetryItem(telemetryItem);
 
         // invoke any common telemetry processors before sending through pipeline
+        if (this._extensions.length == 0) {
+            this._channelController.processTelemetry(telemetryItem); // Pass to Channel controller so data is sent to correct channel queues
+        }
         let i = 0;
         while (i < this._extensions.length) {
             if ((<any>this._extensions[i]).processTelemetry) {
