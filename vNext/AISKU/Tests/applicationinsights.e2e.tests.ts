@@ -38,6 +38,7 @@ export class ApplicationInsightsTests extends TestClass {
     // Context
     private tagKeys = new ContextTagKeys();
     private _config;
+    private _appId: string;
 
     public testInitialize() {
         try {
@@ -369,6 +370,9 @@ export class ApplicationInsightsTests extends TestClass {
                 stepDelay: 5000,
                 steps: [
                     () => {
+                        this._ai["dependencies"]["_config"].disableCorrelationHeaders = true;
+                        this._appId = this._ai["dependencies"]["_config"].appId;
+                        this._ai["dependencies"]["_config"].appId = null;
                         fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
                         Assert.ok(true, "fetch monitoring is instrumented");
                     },
@@ -379,6 +383,8 @@ export class ApplicationInsightsTests extends TestClass {
                     () => {
                         fetch('https://httpbin.org/status/200');
                         Assert.ok(true, "fetch monitoring is instrumented");
+                        this._ai["dependencies"]["_config"].disableCorrelationHeaders = false;
+                        this._ai["dependencies"]["_config"].appId = this._appId;
                     }
                 ]
                     .concat(this.asserts(3))
@@ -387,8 +393,8 @@ export class ApplicationInsightsTests extends TestClass {
                         Assert.equal("Fetch", this.trackSpy.args[0][0].type, "request is Fetch type");
                         Assert.equal('value', this.trackSpy.args[0][0].properties.requestHeaders['header'], "fetch request's customer defined request header is stored");
                         Assert.notEqual(undefined, this.trackSpy.args[0][0].properties.responseHeaders, "fetch request's reponse header is stored");
-                        Assert.equal(undefined, this.trackSpy.args[1][0].properties.requestHeaders['header'], "customer doesn't define a header field");
-                        Assert.equal(undefined, this.trackSpy.args[2][0].properties.requestHeaders['header'], "customer doesn't define a header field");
+                        Assert.equal(undefined, this.trackSpy.args[1][0].properties.requestHeaders, "customer doesn't define a header field");
+                        Assert.equal(undefined, this.trackSpy.args[2][0].properties.requestHeaders, "customer doesn't define a header field");
                     })
             });
         } else {
