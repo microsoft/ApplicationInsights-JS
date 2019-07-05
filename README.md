@@ -158,7 +158,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 
 ## Single Page Applications
 
-By default, this SDK will **not** handle state based route changing that occurs in single page applications unless you use a plugin designed for your frontend framework (Angular, React, Vue, etc). <!-- To enable enable automatic route change tracking for your single page application, you can add `enableAutoRouteTracking: true` to the setup configuration. -->
+By default, this SDK will **not** handle state based route changing that occurs in single page applications. To enable enable automatic route change tracking for your single page application, you can add `enableAutoRouteTracking: true` to your setup configuration.
 
 Currently, we support a separate [React plugin](#available-extensions-for-the-sdk) which you can initialize with this SDK. It will also accomplish route change tracking for you, as well as collect [other React specific telemetry](./vNext/extensions/applicationinsights-react-js).
 ```
