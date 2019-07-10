@@ -161,7 +161,6 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 By default, this SDK will **not** handle state based route changing that occurs in single page applications. To enable enable automatic route change tracking for your single page application, you can add `enableAutoRouteTracking: true` to your setup configuration.
 
 Currently, we support a separate [React plugin](#available-extensions-for-the-sdk) which you can initialize with this SDK. It will also accomplish route change tracking for you, as well as collect [other React specific telemetry](./vNext/extensions/applicationinsights-react-js).
-```
 
 ## Source Map Support
 
