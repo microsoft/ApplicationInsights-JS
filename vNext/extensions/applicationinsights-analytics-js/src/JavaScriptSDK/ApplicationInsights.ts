@@ -38,6 +38,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public config: IConfig;
     public core: IAppInsightsCore;
     public queue: (() => void)[];
+    public autoRoutePVDelay = 500; // ms; Time to wait after a route change before triggering a pageview to allow DOM changes to take place
 
     private _isInitialized: boolean = false;
     private _globalconfig: IConfiguration;
@@ -252,7 +253,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      */
     public sendPageViewInternal(pageView: IPageViewTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         if (typeof document !== "undefined") {
-            pageView.refUri = pageView.refUri || document.referrer;
+            pageView.refUri = pageView.refUri === undefined ? document.referrer : pageView.refUri;
         }
 
         let telemetryItem = TelemetryItemCreator.create<IPageViewTelemetryInternal>(
@@ -607,7 +608,10 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                     _self._properties.context.telemetryTrace.traceID = Util.newId();
                     _self._properties.context.telemetryTrace.name = window.location.pathname;
                 }
-                _self.trackPageView({ properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
+                setTimeout(() => {
+                    // todo: override start time so that it is not affected by autoRoutePVDelay
+                    _self.trackPageView({ refUri: null, properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
+                }, _self.autoRoutePVDelay);
             });
         }
 
