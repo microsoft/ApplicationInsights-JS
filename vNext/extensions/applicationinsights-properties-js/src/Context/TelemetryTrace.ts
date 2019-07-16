@@ -11,7 +11,7 @@ export class TelemetryTrace implements ITelemetryTrace {
     public name: string;
 
     constructor(id?: string, parentId?: string, name?: string) {
-        this.traceID = id || Util.newId();
+        this.traceID = id || Util.generateW3CTraceId();
         this.parentID = parentId;
         this.name = name;
         if (window && window.location && window.location.pathname) {

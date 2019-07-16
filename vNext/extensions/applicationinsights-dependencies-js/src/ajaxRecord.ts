@@ -57,10 +57,12 @@ export class ajaxRecord {
 
 
     public id: string;
+    public spanId: string;
 
-    constructor(id: string, logger: IDiagnosticLogger) {
+    constructor(id: string, logger: IDiagnosticLogger, spanId?: string) {
         this.id = id;
         this._logger = logger;
+        this.spanId = spanId;
     }
 
 

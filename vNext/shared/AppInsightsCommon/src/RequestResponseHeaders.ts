@@ -24,6 +24,16 @@ export class RequestHeaders {
     public static requestIdHeader = "Request-Id";
 
     /**
+     * W3C distributed tracing protocol header
+     */
+    public static traceParentHeader = "Trace-Parent";
+
+    /**
+     * W3C distributed tracing protocol state header
+     */
+    public static traceStateHeader: "Trace-state";
+
+    /**
      * Sdk-Context header
      * If this header passed with appId in content then appId will be returned back by the backend.
      */

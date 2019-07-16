@@ -13,3 +13,4 @@ export { CoreUtils } from "./JavaScriptSDK/CoreUtils";
 export { NotificationManager } from "./JavaScriptSDK/NotificationManager";
 export { DiagnosticLogger, _InternalLogMessage } from './JavaScriptSDK/DiagnosticLogger';
 export { _InternalMessageId, LoggingSeverity } from './JavaScriptSDK.Enums/LoggingEnums';
+export { DistributedTracingModes } from './JavaScriptSDK.Enums/DistributedTracingModes';
