@@ -5,13 +5,6 @@ import {
     ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
 } from './EnvelopeCreator';
-import { EventValidator } from './TelemetryValidation/EventValidator';
-import { TraceValidator } from './TelemetryValidation/TraceValidator';
-import { ExceptionValidator } from './TelemetryValidation/ExceptionValidator';
-import { MetricValidator } from './TelemetryValidation/MetricValidator';
-import { PageViewPerformanceValidator } from './TelemetryValidation/PageViewPerformanceValidator';
-import { PageViewValidator } from './TelemetryValidation/PageViewValidator';
-import { RemoteDepdencyValidator } from './TelemetryValidation/RemoteDepdencyValidator';
 import { Serializer } from './Serializer'; // todo move to channel
 import {
     DisabledPropertyName, RequestHeaders, Util,
@@ -21,14 +14,15 @@ import {
     IChannelControlsAI,
     ConfigurationManager, IConfig,
     ProcessLegacy,
-    BreezeChannelIdentifier
+    BreezeChannelIdentifier,
+    SampleRate
 } from '@microsoft/applicationinsights-common';
 import {
-    ITelemetryPlugin, ITelemetryItem, IConfiguration,
+    ITelemetryPlugin, ITelemetryItem, IConfiguration, CoreUtils,
     _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
 } from '@microsoft/applicationinsights-core-js';
-import { CoreUtils } from '@microsoft/applicationinsights-core-js';
 import { Offline } from './Offline';
+import { Sample } from './TelemetryProcessors/Sample'
 
 declare var XDomainRequest: {
     prototype: IXDomainRequest;
@@ -39,6 +33,7 @@ export class Sender implements IChannelControlsAI {
     public priority: number = 1001;
 
     public identifier: string = BreezeChannelIdentifier;
+
 
     public pause(): void {
         throw new Error("Method not implemented.");
@@ -112,6 +107,7 @@ export class Sender implements IChannelControlsAI {
 
     private _logger: IDiagnosticLogger;
     private _serializer: Serializer;
+    protected _sample: Sample;
 
     public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]): void {
         this._logger = core.logger;
@@ -129,6 +125,7 @@ export class Sender implements IChannelControlsAI {
 
         this._buffer = (this._config.enableSessionStorageBuffer && Util.canUseSessionStorage())
             ? new SessionStorageSendBuffer(this._logger, this._config) : new ArraySendBuffer(this._config);
+        this._sample = new Sample(this._config.samplingPercentage(), this._logger);
 
         if (!this._config.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
             this._sender = this._beaconSender;
@@ -175,12 +172,16 @@ export class Sender implements IChannelControlsAI {
                 this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.SenderNotInitialized, "Sender was not initialized");
                 return;
             }
-
-            // first we need to validate that the envelope passed down is valid
-            let isValid: boolean = Sender._validate(telemetryItem);
-            if (!isValid) {
-                this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryEnvelopeInvalid, "Invalid telemetry envelope");
+          
+            // check if this item should be sampled in, else add sampleRate tag
+            if (!this._isSampledIn(telemetryItem)) {
+                // Item is sampled out, do not send it
+                this._logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TelemetrySampledAndNotSent,
+                    "Telemetry item was sampled out and not sent", { SampleRate: this._sample.sampleRate });
                 return;
+            } else {
+                telemetryItem.tags = telemetryItem.tags || <any>{};
+                telemetryItem.tags[SampleRate] = this._sample.sampleRate;
             }
 
             // construct an envelope that Application Insights endpoint can understand
@@ -460,7 +461,8 @@ export class Sender implements IChannelControlsAI {
             isRetryDisabled: () => false,
             isBeaconApiDisabled: () => true,
             instrumentationKey: () => undefined,  // Channel doesn't need iKey, it should be set already
-            namePrefix: () => undefined
+            namePrefix: () => undefined,
+            samplingPercentage: () => 100
         }
     }
 
@@ -475,31 +477,13 @@ export class Sender implements IChannelControlsAI {
             isRetryDisabled: undefined,
             isBeaconApiDisabled: undefined,
             instrumentationKey: undefined,
-            namePrefix: undefined
+            namePrefix: undefined,
+            samplingPercentage: undefined
         };
     }
 
-    private static _validate(envelope: ITelemetryItem): boolean {
-        // call the appropriate Validate depending on the baseType
-        switch (envelope.baseType) {
-            case Event.dataType:
-                return EventValidator.EventValidator.Validate(envelope);
-            case Trace.dataType:
-                return TraceValidator.TraceValidator.Validate(envelope);
-            case Exception.dataType:
-                return ExceptionValidator.ExceptionValidator.Validate(envelope);
-            case Metric.dataType:
-                return MetricValidator.MetricValidator.Validate(envelope);
-            case PageView.dataType:
-                return PageViewValidator.PageViewValidator.Validate(envelope);
-            case PageViewPerformance.dataType:
-                return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(envelope);
-            case RemoteDependencyData.dataType:
-                return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(envelope);
-
-            default:
-                return EventValidator.EventValidator.Validate(envelope);
-        }
+    private _isSampledIn(envelope: ITelemetryItem): boolean {
+        return this._sample.isSampledIn(envelope);
     }
 
     /**
@@ -526,7 +510,7 @@ export class Sender implements IChannelControlsAI {
             this._onSuccess(payload, payload.length);
         } else {
             this._xhrSender(payload, true);
-            this._logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");     
+            this._logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
         }
     }
 

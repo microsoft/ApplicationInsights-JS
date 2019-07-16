@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-react-js",
-    "version": "2.0.2",
+    "version": "2.1.1",
     "description": "Microsoft Application Insights React plugin",
     "main": "dist/applicationinsights-react-js.js",
     "module": "dist-esm/applicationinsights-react-js.js",
@@ -38,8 +38,8 @@
         "typescript": "2.5.3"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "2.0.1",
-        "@microsoft/applicationinsights-common": "2.0.1",
+        "@microsoft/applicationinsights-core-js": "2.1.0",
+        "@microsoft/applicationinsights-common": "2.1.0",
         "tslib": "^1.9.3",
         "react": "^16.8.6",
         "history": "^4.9.0"

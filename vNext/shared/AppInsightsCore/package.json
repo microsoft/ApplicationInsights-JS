@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-core-js",
     "author": "Microsoft Corporation",
-    "version": "2.0.1",
+    "version": "2.1.0",
     "description": "Microsoft Application Insights Core Javascript SDK",
     "keywords": [
         "azure",
@@ -15,7 +15,6 @@
     "main": "dist/applicationinsights-core-js.js",
     "module": "dist-esm/applicationinsights-core-js.js",
     "types": "types/applicationinsights-core-js.d.ts",
-    "browser": "browser/applicationinsights-core-js.min.js",
     "scripts": {
         "clean": "grunt clean",
         "build": "npm run build:esm && npm run build:browser",
