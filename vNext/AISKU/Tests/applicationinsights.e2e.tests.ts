@@ -1,7 +1,7 @@
 /// <reference path='./TestFramework/Common.ts' />
 import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Util, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData } from '@microsoft/applicationinsights-common';
+import { IDependencyTelemetry, ContextTagKeys, Util, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders } from '@microsoft/applicationinsights-common';
 import { AppInsightsCore, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { AjaxPlugin } from '@microsoft/applicationinsights-dependencies-js';
@@ -58,7 +58,8 @@ export class ApplicationInsightsTests extends TestClass {
                 maxBatchInterval: 2500,
                 disableExceptionTracking: false,
                 namePrefix: this.sessionPrefix,
-                enableCorsCorrelation: true
+                enableCorsCorrelation: true,
+                distributedTracingMode: DistributedTracingModes.AI_AND_W3C
             };
 
             var init = new ApplicationInsights({

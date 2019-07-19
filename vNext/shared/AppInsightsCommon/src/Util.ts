@@ -411,7 +411,7 @@ export class Util {
     /**
      * generate W3C trace id
      */
-    public static generateW3CTraceId() {
+    public static generateW3CId() {
         var hexValues = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
 
         // rfc4122 version 4 UUID without dashes and with lowercase letters

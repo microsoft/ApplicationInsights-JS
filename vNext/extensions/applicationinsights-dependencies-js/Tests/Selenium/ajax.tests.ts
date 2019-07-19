@@ -1,6 +1,6 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 import { AjaxMonitor } from "../../src/ajax";
-import { RemoteDependencyData, DisabledPropertyName, IConfig } from "@microsoft/applicationinsights-common";
+import { RemoteDependencyData, DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders } from "@microsoft/applicationinsights-common";
 import { AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls } from "@microsoft/applicationinsights-core-js";
 
 export class AjaxTests extends TestClass {
@@ -414,6 +414,29 @@ export class AjaxTests extends TestClass {
                 Assert.ok(spy.calledOnce, "sendPrefixInstrumentor should be called only once");
             }
         });
+
+        this.testCase({
+            name: "Ajax: should create and pass a traceparent header if w3c is enabled",
+            test: () => {
+                var ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
+                appInsightsCore.initialize(coreConfig, [ajax, new TestChannelPlugin()]);
+                ajax['currentWindowHost'] = "www.example.com";
+                ajax['_config'].appId = "appId";
+                ajax['_config'].distributedTracingMode = DistributedTracingModes.AI_AND_W3C;
+                
+                // Act
+                var xhr = new XMLHttpRequest();
+                var stub = this.sandbox.stub(xhr, "setRequestHeader");
+                xhr.open("GET", "http://www.example.com");
+                xhr.send();
+
+                // Assert
+                Assert.equal(true, stub.calledWith(RequestHeaders.requestIdHeader)); // AI
+                Assert.equal(true, stub.calledWith(RequestHeaders.traceParentHeader)); // W3C
+            }
+        })
     }
 
     private testAjaxSuccess(responseCode: number, success: boolean) {

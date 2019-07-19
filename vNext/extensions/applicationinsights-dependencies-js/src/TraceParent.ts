@@ -12,12 +12,12 @@ export class Traceparent {
         if (traceId && Traceparent.isValidTraceId(traceId)) {
             this.traceId = traceId;
         } else {
-            this.traceId = Util.generateW3CTraceId();
+            this.traceId = Util.generateW3CId();
         }
         if (spanId && Traceparent.isValidSpanId(spanId)) {
             this.spanId = spanId;
         } else {
-            this.spanId = Util.generateW3CTraceId().substr(0, 16);
+            this.spanId = Util.generateW3CId().substr(0, 16);
         }
     }
 

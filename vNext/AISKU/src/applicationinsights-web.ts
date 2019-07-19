@@ -35,7 +35,8 @@ export {
     PageView,
     PageViewPerformance,
     RemoteDependencyData,
-    Trace
+    Trace,
+    DistributedTracingModes
 } from "@microsoft/applicationinsights-common";
 export { Sender } from "@microsoft/applicationinsights-channel-js";
 export { ApplicationInsights as ApplicationAnalytics } from "@microsoft/applicationinsights-analytics-js";

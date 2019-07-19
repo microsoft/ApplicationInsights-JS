@@ -14,3 +14,21 @@ export enum StorageType {
  * For instance: (Fieldtype.Required | FieldType.Array) will mark the field as required and indicate it's an array
  */
 export enum FieldType { Default = 0, Required = 1, Array = 2, Hidden = 4 };
+
+export enum DistributedTracingModes {
+    /**
+     * (Default) Send Application Insights correlation headers
+     */
+
+    AI=0,
+
+    /**
+     * Send both W3C Trace Context headers and back-compatibility Application Insights headers
+     */
+    AI_AND_W3C,
+
+    /**
+     * Send W3C Trace Context headers
+     */
+    W3C
+}

@@ -4,11 +4,11 @@
 import {
     RequestHeaders, Util, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
     RemoteDependencyData, DateTimeUtils, DisabledPropertyName, Data, IDependencyTelemetry,
-    IConfig, ConfigurationManager, ITelemetryContext, PropertiesPluginIdentifier, IPropertiesPlugin
+    IConfig, ConfigurationManager, ITelemetryContext, PropertiesPluginIdentifier, IPropertiesPlugin, DistributedTracingModes
 } from '@microsoft/applicationinsights-common';
 import {
     CoreUtils, LoggingSeverity, _InternalMessageId, IDiagnosticLogger,
-    IAppInsightsCore, ITelemetryPlugin, IConfiguration, IPlugin, ITelemetryItem, DistributedTracingModes
+    IAppInsightsCore, ITelemetryPlugin, IConfiguration, IPlugin, ITelemetryItem
 } from '@microsoft/applicationinsights-core-js';
 import { ajaxRecord } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
@@ -126,10 +126,10 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         let spanId: string;
         if (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) {
             // this format corresponds with activity logic on server-side and is required for the correct correlation
-            spanId = Util.generateW3CTraceId().substr(0, 16);
+            spanId = Util.generateW3CId().substr(0, 16);
             id = "|" + this._context.telemetryTrace.traceID + "." + spanId;
         } else {
-            spanId = Util.generateW3CTraceId();
+            spanId = Util.generateW3CId();
             id = spanId;
         }
 
@@ -400,10 +400,10 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         if (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) {
 
             // this format corresponds with activity logic on server-side and is required for the correct correlation
-            spanId = Util.generateW3CTraceId().substr(0, 16);
+            spanId = Util.generateW3CId().substr(0, 16);
             id = "|" + this._context.telemetryTrace.traceID + "." + spanId;
         } else {
-            spanId = Util.generateW3CTraceId();
+            spanId = Util.generateW3CId();
             id = spanId;
         }
         let ajaxData: ajaxRecord = new ajaxRecord(id, this._core.logger, spanId);

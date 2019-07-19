@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IConfiguration, CoreUtils, DistributedTracingModes } from '@microsoft/applicationinsights-core-js';
+import { IConfiguration, CoreUtils } from '@microsoft/applicationinsights-core-js';
+import { DistributedTracingModes } from '../Enums';
 
 /**
  * @description Configuration settings for how telemetry is sent

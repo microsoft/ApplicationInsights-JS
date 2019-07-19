@@ -26,12 +26,12 @@ export class RequestHeaders {
     /**
      * W3C distributed tracing protocol header
      */
-    public static traceParentHeader = "Trace-Parent";
+    public static traceParentHeader = "traceparent";
 
     /**
      * W3C distributed tracing protocol state header
      */
-    public static traceStateHeader: "Trace-state";
+    public static traceStateHeader: "tracestate"; // currently not used
 
     /**
      * Sdk-Context header
