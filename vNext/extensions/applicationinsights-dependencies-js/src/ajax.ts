@@ -122,18 +122,10 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     }
 
     private openHandler(xhr: XMLHttpRequestInstrumented, method, url, async) {
-        let id: string;
-        let spanId: string;
-        if (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) {
-            // this format corresponds with activity logic on server-side and is required for the correct correlation
-            spanId = Util.generateW3CId().substr(0, 16);
-            id = "|" + this._context.telemetryTrace.traceID + "." + spanId;
-        } else {
-            spanId = Util.generateW3CId();
-            id = spanId;
-        }
+        var traceID = (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) ? this._context.telemetryTrace.traceID : Util.generateW3CId();
+        var spanID = Util.generateW3CId().substr(0, 16);
 
-        var ajaxData = new ajaxRecord(id, this._core.logger, spanId);
+        var ajaxData = new ajaxRecord(traceID, spanID, this._core.logger);
         ajaxData.method = method;
         ajaxData.requestUrl = url;
         ajaxData.xhrMonitoringState.openDone = true;
@@ -253,7 +245,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         }
         else {
             var dependency = <IDependencyTelemetry>{
-                id: xhr.ajaxData.id,
+                id: "|" + xhr.ajaxData.traceID + "." + xhr.ajaxData.spanID,
                 target: xhr.ajaxData.getAbsoluteUrl(),
                 name: xhr.ajaxData.getPathName(),
                 type: "Ajax",
@@ -395,18 +387,10 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     }
 
     private createFetchRecord(input?: Request | string, init?: RequestInit): ajaxRecord {
-        let id: string;
-        let spanId: string;
-        if (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) {
+        var traceID = (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) ? this._context.telemetryTrace.traceID : Util.generateW3CId();
+        var spanID = Util.generateW3CId().substr(0, 16);
 
-            // this format corresponds with activity logic on server-side and is required for the correct correlation
-            spanId = Util.generateW3CId().substr(0, 16);
-            id = "|" + this._context.telemetryTrace.traceID + "." + spanId;
-        } else {
-            spanId = Util.generateW3CId();
-            id = spanId;
-        }
-        let ajaxData: ajaxRecord = new ajaxRecord(id, this._core.logger, spanId);
+        var ajaxData = new ajaxRecord(traceID, spanID, this._core.logger);
         ajaxData.requestSentTime = DateTimeUtils.Now();
 
         if (input instanceof Request) {
@@ -436,21 +420,16 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 // not using original request headers will result in them being lost
                 init.headers = new Headers(init.headers || (input instanceof Request ? (input.headers || {}) : {}));
                 if (this._config.distributedTracingMode === DistributedTracingModes.AI || this._config.distributedTracingMode === DistributedTracingModes.AI_AND_W3C) {
-                    init.headers.set(RequestHeaders.requestIdHeader, ajaxData.id);
+                    var id = "|" + ajaxData.traceID + "." + ajaxData.spanID;
+                    init.headers.set(RequestHeaders.requestIdHeader, id);
                 }
                 let appId: string = this._config.appId || this._context.appId();
                 if (appId) {
                     init.headers.set(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
                 }
-
                 if (this._config.distributedTracingMode === DistributedTracingModes.AI_AND_W3C || this._config.distributedTracingMode === DistributedTracingModes.W3C) {
-                    let traceparent;
-                    if (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) {
-                        traceparent = new Traceparent(this._context.telemetryTrace.traceID, ajaxData.spanId);
-                    } else {
-                        traceparent = new Traceparent(ajaxData.spanId);
-                    }
-                    init.headers.set(RequestHeaders.traceParentHeader, traceparent);
+                    var traceparent = new Traceparent(ajaxData.traceID, ajaxData.spanID);
+                    init.headers.set(RequestHeaders.traceParentHeader, traceparent.toString());
                 }
                 return init;
             }
@@ -458,19 +437,17 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         } else if (xhr) { // XHR
             if (this.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(this._config, xhr.ajaxData.getAbsoluteUrl(),
                 this.currentWindowHost)) {
-                xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
+                if (this._config.distributedTracingMode === DistributedTracingModes.AI || this._config.distributedTracingMode === DistributedTracingModes.AI_AND_W3C) {
+                    var id = "|" + xhr.ajaxData.traceID + "." + xhr.ajaxData.spanID;
+                    xhr.setRequestHeader(RequestHeaders.requestIdHeader, id);
+                }
                 var appId = this._config.appId || this._context.appId();
                 if (appId) {
                     xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
                 }
                 if (this._config.distributedTracingMode === DistributedTracingModes.AI_AND_W3C || this._config.distributedTracingMode === DistributedTracingModes.W3C) {
-                    let traceparent;
-                    if (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) {
-                        traceparent = new Traceparent(this._context.telemetryTrace.traceID, ajaxData.spanId);
-                    } else {
-                        traceparent = new Traceparent(ajaxData.spanId);
-                    }
-                    xhr.setRequestHeader(RequestHeaders.traceParentHeader, traceparent);
+                    var traceparent = new Traceparent(xhr.ajaxData.traceID, xhr.ajaxData.spanID);
+                    xhr.setRequestHeader(RequestHeaders.traceParentHeader, traceparent.toString());
                 }
             }
 
@@ -520,7 +497,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     });
             } else {
                 let dependency: IDependencyTelemetry = {
-                    id: ajaxData.id,
+                    id: "|" + ajaxData.traceID + "." + ajaxData.spanID,
                     target: ajaxData.getAbsoluteUrl(),
                     name: ajaxData.getPathName(),
                     type: "Fetch",
@@ -571,7 +548,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     });
             } else {
                 let dependency: IDependencyTelemetry = {
-                    id: ajaxData.id,
+                    id: "|" + ajaxData.traceID + "." + ajaxData.spanID,
                     target: ajaxData.getAbsoluteUrl(),
                     name: ajaxData.getPathName(),
                     type: "Fetch",
