@@ -118,7 +118,7 @@ export class SenderTests extends TestClass {
 
                 const xhrSenderSpy = this.sandbox.stub(sender, "_xhrSender");
                 const beaconSenderSpy = this.sandbox.stub(navigator, "sendBeacon");
-               
+
                 sender.initialize({
                     instrumentationKey: 'abc',
                     isBeaconApiDisabled: true
@@ -199,7 +199,7 @@ export class SenderTests extends TestClass {
                 cr["logger"] = new DiagnosticLogger();
                 const MAX_PROPERTIES_SIZE = 8000;
                 let payload = new Array(MAX_PROPERTIES_SIZE).join('a');
-                
+
                 const beaconSenderSpy = this.sandbox.stub(navigator, "sendBeacon", (a, b) => false);
                 const xhrSenderSpy = this.sandbox.spy(sender, "_xhrSender");
 
@@ -223,7 +223,7 @@ export class SenderTests extends TestClass {
                     };
                     telemetryItems[i] = telemetryItem;
                 }
-                
+
 
                 Assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
                 Assert.ok(beaconSenderSpy.notCalled, "Beacon API was not called before");
@@ -260,7 +260,7 @@ export class SenderTests extends TestClass {
                         }
 
                     },
-                    tags: [{"ai.internal.sdkVersion": "javascript:2.1.0"}],
+                    tags: [{"ai.internal.sdkVersion": "javascript:2.1.1"}],
                     data: {
                         "property1": "val1",
                         "measurement1": 50.0,
@@ -305,7 +305,7 @@ export class SenderTests extends TestClass {
                 Assert.equal("d041d2e5fa834b4f9eee41ac163bf402", appInsightsEnvelope.tags["ai.session.id"]);
                 Assert.equal("browser", appInsightsEnvelope.tags["ai.device.id"]);
                 Assert.equal("Browser", appInsightsEnvelope.tags["ai.device.type"]);
-                Assert.equal("javascript:2.1.0", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
+                Assert.equal("javascript:2.1.1", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
 
                 // Assert name
                 Assert.ok(appInsightsEnvelope.name);
@@ -375,7 +375,7 @@ export class SenderTests extends TestClass {
                 Assert.ok(baseData.ver);
                 Assert.equal(2, baseData.ver);
 
-                Assert.equal("javascript:2.1.0", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
+                Assert.equal("javascript:2.1.1", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
 
             }
         })
