@@ -394,10 +394,10 @@ export class ApplicationInsightsTests extends TestClass {
                         Assert.ok(this.trackSpy.calledThrice, "trackDependencyDataInternal is called");
                         Assert.equal("Fetch", this.trackSpy.args[0][0].type, "request is Fetch type");
                         Assert.equal('value', this.trackSpy.args[0][0].properties.requestHeaders['header'], "fetch request's user defined request header is stored");
-                        Assert.notEqual(undefined, this.trackSpy.args[0][0].properties.responseHeaders, "fetch request's reponse header is stored");
+                        Assert.ok(this.trackSpy.args[0][0].properties.responseHeaders, "fetch request's reponse header is stored");
                         Assert.equal(2, Object.keys(this.trackSpy.args[1][0].properties.requestHeaders).length, "two request headers set up when there's no user defined request header");
-                        Assert.notEqual(undefined, this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
-                        Assert.notEqual(undefined, this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
+                        Assert.ok(this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
+                        Assert.ok(this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
                     })
             });
         } else {
