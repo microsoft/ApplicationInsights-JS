@@ -308,7 +308,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     // xhr.getAllResponseHeaders() method returns all the response headers, separated by CRLF, as a string or null
                     // the regex converts the header string into an array of individual headers
                     var arr = headers.trim().split(/[\r\n]+/);
-                    var responseHeaderMap = {};
+                    const responseHeaderMap = {};
                     arr.forEach(function (line) {
                         var parts = line.split(': ');
                         var header = parts.shift();
@@ -586,19 +586,17 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 if (this._config.enableRequestHeaderTracking) {
                     if (Object.keys(ajaxData.requestHeaders).length > 0) {
                         dependency.properties = dependency.properties || {};
-                        dependency.properties.requestHeaders = {};
                         dependency.properties.requestHeaders = ajaxData.requestHeaders;
                     }               
                 }
 
                 if (this._config.enableResponseHeaderTracking) {          
-                    var responseHeaderMap = {};
+                    const responseHeaderMap = {};
                     response.headers.forEach((value, name) => {
                         responseHeaderMap[name] = value;
                     });
                     if (Object.keys(responseHeaderMap).length > 0) {
                         dependency.properties = dependency.properties || {};
-                        dependency.properties.responseHeaders = {};
                         dependency.properties.responseHeaders = responseHeaderMap;
                     }
                 }

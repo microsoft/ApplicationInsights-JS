@@ -1,7 +1,7 @@
 /// <reference path='./TestFramework/Common.ts' />
 import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Util, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData } from '@microsoft/applicationinsights-common';
+import { IDependencyTelemetry, ContextTagKeys, Util, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, RequestHeaders } from '@microsoft/applicationinsights-common';
 import { AppInsightsCore, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { AjaxPlugin } from '@microsoft/applicationinsights-dependencies-js';
@@ -377,9 +377,6 @@ export class ApplicationInsightsTests extends TestClass {
                 stepDelay: 5000,
                 steps: [
                     () => {
-                        this._ai["dependencies"]["_config"].disableCorrelationHeaders = true;
-                        this._appId = this._ai["dependencies"]["_config"].appId;
-                        this._ai["dependencies"]["_config"].appId = null;
                         fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
                         Assert.ok(true, "fetch monitoring is instrumented");
                     },
@@ -390,18 +387,17 @@ export class ApplicationInsightsTests extends TestClass {
                     () => {
                         fetch('https://httpbin.org/status/200');
                         Assert.ok(true, "fetch monitoring is instrumented");
-                        this._ai["dependencies"]["_config"].disableCorrelationHeaders = false;
-                        this._ai["dependencies"]["_config"].appId = this._appId;
                     }
                 ]
                     .concat(this.asserts(3))
                     .concat(() => {
                         Assert.ok(this.trackSpy.calledThrice, "trackDependencyDataInternal is called");
                         Assert.equal("Fetch", this.trackSpy.args[0][0].type, "request is Fetch type");
-                        Assert.equal('value', this.trackSpy.args[0][0].properties.requestHeaders['header'], "fetch request's customer defined request header is stored");
+                        Assert.equal('value', this.trackSpy.args[0][0].properties.requestHeaders['header'], "fetch request's user defined request header is stored");
                         Assert.notEqual(undefined, this.trackSpy.args[0][0].properties.responseHeaders, "fetch request's reponse header is stored");
-                        Assert.equal(undefined, this.trackSpy.args[1][0].properties.requestHeaders, "customer doesn't define a header field");
-                        Assert.equal(undefined, this.trackSpy.args[2][0].properties.requestHeaders, "customer doesn't define a header field");
+                        Assert.equal(2, Object.keys(this.trackSpy.args[1][0].properties.requestHeaders).length, "two request headers set up when there's no user defined request header");
+                        Assert.notEqual(undefined, this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
+                        Assert.notEqual(undefined, this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
                     })
             });
         } else {
