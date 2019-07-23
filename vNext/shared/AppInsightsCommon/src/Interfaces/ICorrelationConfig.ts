@@ -9,6 +9,8 @@ export interface ICorrelationConfig {
     disableAjaxTracking: boolean;
     disableFetchTracking: boolean;
     appId?: string;
+    enableRequestHeaderTracking?: boolean;
+    enableResponseHeaderTracking?: boolean;
 
     correlationHeaderDomains?: string[]
 }
