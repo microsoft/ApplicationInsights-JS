@@ -53,6 +53,7 @@ export class ApplicationInsightsTests extends TestClass {
             test: () => {
                 // Setup
                 var appInsights = new ApplicationInsights();
+                appInsights.autoRoutePVDelay = 500;
                 var core = new AppInsightsCore();
                 var channel = new ChannelPlugin();
                 appInsights['_properties'] = <any>{
@@ -66,6 +67,7 @@ export class ApplicationInsightsTests extends TestClass {
                     enableAutoRouteTracking: true
                 }, [appInsights, channel]);
                 window.dispatchEvent(new Event('locationchange'));
+                this.clock.tick(500);
 
                 // Assert
                 Assert.ok(trackPageViewStub.calledOnce);

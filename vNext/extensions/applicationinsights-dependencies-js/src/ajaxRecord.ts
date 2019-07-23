@@ -17,6 +17,7 @@ export class XHRMonitoringState {
 export class ajaxRecord {
     public completed = false;
     public requestHeadersSize = null;
+    public requestHeaders = null;
     public ttfb = null;
     public responseReceivingDuration = null;
     public callbackDuration = null;
