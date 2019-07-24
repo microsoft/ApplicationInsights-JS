@@ -1,7 +1,5 @@
 ﻿(function() {
-    var sdkInstance = "appInsightsSDK";
-    window[sdkInstance] = "appInsights";
-    var aiName = window[sdkInstance]; // provide non default instance name through key appInsightsSDK
+    var aiName = "appInsights";
     var aisdk = window[aiName] || (function (aiConfig) {
         var appInsights = {
             config: aiConfig
