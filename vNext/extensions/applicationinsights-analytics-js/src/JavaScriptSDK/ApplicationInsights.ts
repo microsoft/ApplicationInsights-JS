@@ -58,6 +58,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     // This counter keeps increasing even after the limit is reached.
     private _trackAjaxAttempts: number = 0;
 
+    // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
+    private _urlArr: string[] = [];
+
     constructor() {
         this.initialize = this._initialize.bind(this);
     }
@@ -609,8 +612,15 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                     _self._properties.context.telemetryTrace.name = window.location.pathname;
                 }
                 setTimeout(() => {
+                    if (this._urlArr.length == 2) {
+                        var prevUrl = this._urlArr[1];
+                        this._urlArr[0] = prevUrl;
+                        this._urlArr[1] = window.location.href;
+                    } else {
+                        this._urlArr.push(window.location.href);
+                    }
                     // todo: override start time so that it is not affected by autoRoutePVDelay
-                    _self.trackPageView({ refUri: null, properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
+                    _self.trackPageView({ refUri: this._urlArr[0], properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
                 }, _self.autoRoutePVDelay);
             });
         }
