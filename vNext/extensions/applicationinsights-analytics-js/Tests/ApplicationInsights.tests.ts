@@ -59,7 +59,8 @@ export class ApplicationInsightsTests extends TestClass {
                 appInsights['_properties'] = <any>{
                     context: { telemetryTrace: { traceID: 'not set', name: 'name not set' } }
                 }
-                appInsights['_urlArr'] = ["refUri", "prevUri"];
+                appInsights['_prevUri'] = "firstUri";
+                appInsights['_currUri'] = "secondUri";
                 const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
 
                 // Act
@@ -76,9 +77,9 @@ export class ApplicationInsightsTests extends TestClass {
                 Assert.ok(appInsights['_properties'].context.telemetryTrace.name);
                 Assert.notEqual(appInsights['_properties'].context.telemetryTrace.traceID, 'not set', 'current operation id is updated after route change');
                 Assert.notEqual(appInsights['_properties'].context.telemetryTrace.name, 'name not set', 'current operation name is updated after route change');
-                Assert.equal(appInsights['_urlArr'][0], 'prevUri', "the previous uri is copied over to first spot");
-                Assert.equal(appInsights['_urlArr'][1], window.location.href, "the current uri is stored on the second spot");
-                Assert.equal(appInsights['_urlArr'][0], trackPageViewStub.args[0][0].refUri, "previous uri is assigned to refUri and send as an argument of trackPageview method");
+                Assert.equal(appInsights['_prevUri'], 'secondUri', "the previous uri is stored on variable _prevUri");
+                Assert.equal(appInsights['_currUri'], window.location.href, "the current uri is stored on variable _currUri");
+                Assert.equal(appInsights['_prevUri'], trackPageViewStub.args[0][0].refUri, "previous uri is assigned to refUri and send as an argument of trackPageview method");
             }
         });
 
