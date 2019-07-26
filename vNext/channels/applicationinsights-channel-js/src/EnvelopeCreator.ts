@@ -402,6 +402,7 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
             }
         }
 
+        EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, properties, measurements);
         let baseData = new PageView(logger, name, url, duration, properties, measurements, id);
         let data = new Data<PageView>(PageView.dataType, baseData);
         return EnvelopeCreator.createEnvelope<PageView>(logger, PageView.envelopeType, telemetryItem, data);
@@ -424,6 +425,7 @@ export class PageViewPerformanceEnvelopeCreator extends EnvelopeCreator {
         let url = bd.uri || (bd as any).url;
         let properties = bd.properties;
         let measurements = bd.measurements;
+        EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, properties, measurements);
         let baseData = new PageViewPerformance(logger, name, url, undefined, properties, measurements, bd);
         let data = new Data<PageViewPerformance>(PageViewPerformance.dataType, baseData);
         return EnvelopeCreator.createEnvelope<PageViewPerformance>(logger, PageViewPerformance.envelopeType, telemetryItem, data);
