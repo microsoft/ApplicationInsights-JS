@@ -47,5 +47,6 @@ export { IOperatingSystem } from './Interfaces/Context/IOperatingSystem';
 export { IPropertiesPlugin } from './Interfaces/IPropertiesPlugin';
 export { IUser, IUserContext } from './Interfaces/Context/IUser';
 export { ITelemetryTrace, ITraceState } from './Interfaces/Context/ITelemetryTrace';
+export { DistributedTracingModes } from './Enums';
 export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
 export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";

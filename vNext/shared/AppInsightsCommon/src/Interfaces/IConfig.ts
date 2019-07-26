@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { IConfiguration, CoreUtils } from '@microsoft/applicationinsights-core-js';
+import { DistributedTracingModes } from '../Enums';
 
 /**
  * @description Configuration settings for how telemetry is sent
@@ -148,6 +149,15 @@ export interface IConfig {
      * @defaultValue false
      */
     disableCorrelationHeaders?: boolean;
+
+    /**
+     * @description Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests. 
+     * AI_AND_W3C is provided for back-compatibility with any legacy Application Insights instrumented services
+     * @type {enum}
+     * @memberof IConfig
+     * @defaultValue AI
+     */
+    distributedTracingMode?: DistributedTracingModes;
 
     /**
      * @description Disable correlation headers for specific domain
