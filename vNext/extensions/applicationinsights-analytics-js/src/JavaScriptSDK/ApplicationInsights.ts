@@ -619,10 +619,10 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 } else {
                     this._currUri = window.location.href;
                 }
-                setTimeout(() => {
+                setTimeout(((uri: string) => {
                     // todo: override start time so that it is not affected by autoRoutePVDelay
-                    _self.trackPageView({ refUri: this._prevUri, properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
-                }, _self.autoRoutePVDelay);
+                    _self.trackPageView({ refUri: uri, properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
+                }).bind(this, this._prevUri), _self.autoRoutePVDelay);
             });
         }
 
