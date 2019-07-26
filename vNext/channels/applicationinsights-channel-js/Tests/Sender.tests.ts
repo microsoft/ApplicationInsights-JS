@@ -563,7 +563,7 @@ export class SenderTests extends TestClass {
                     },
                     data: {
                         "property3": "val3",
-                        "measurement1": 1000
+                        "measurement3": 1000
                     }
                 };
 
@@ -591,8 +591,8 @@ export class SenderTests extends TestClass {
                 Assert.equal("val2", baseData.properties["property2"]);
 
                 // Assert deprecated data custom properties/measurements
-                Assert.equal("val3", baseData.propeties["property3"])
-                Assert.equal("measurement1", 1000);
+                Assert.equal("val3", baseData.properties["property3"])
+                Assert.equal(1000, baseData.measurements["measurement3"]);
 
                 // Assert Page View name
                 Assert.ok(baseData.name);
