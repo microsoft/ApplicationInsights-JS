@@ -477,8 +477,8 @@ export class AjaxTests extends TestClass {
                 appInsightsCore.initialize(coreConfig, [ajax, new TestChannelPlugin()]);
                 ajax['currentWindowHost'] = "www.example.com";
                 ajax['_config'].appId = "appId";
-                ajax['_config'].distributedTracingMode = DistributedTracingModes.AI_AND_W3C;
-                
+                ajax['_isUsingW3CHeaders'] = true;
+
                 // Act
                 var xhr = new XMLHttpRequest();
                 var stub = this.sandbox.stub(xhr, "setRequestHeader");

@@ -36,6 +36,8 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     protected _nextPlugin: ITelemetryPlugin;
     protected _trackAjaxAttempts: number = 0;
     private _context: ITelemetryContext;
+    private _isUsingW3CHeaders: boolean;
+    private _isUsingAIHeaders: boolean;
 
     constructor() {
         this.currentWindowHost = window && window.location && window.location.host && window.location.host.toLowerCase();
@@ -123,7 +125,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     }
 
     private openHandler(xhr: XMLHttpRequestInstrumented, method, url, async) {
-        var traceID = (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) ? this._context.telemetryTrace.traceID : Util.generateW3CId();
+        var traceID = (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) || Util.generateW3CId();
         var spanID = Util.generateW3CId().substr(0, 16);
 
         var ajaxData = new ajaxRecord(traceID, spanID, this._core.logger);
@@ -270,9 +272,8 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     requestSentTime: xhr.ajaxData.requestSentTime,
                     responseFinishedTime: xhr.ajaxData.responseFinishedTime
                 });
-        }
-        else {
-            var dependency = <IDependencyTelemetry>{
+        } else {
+            const dependency = <IDependencyTelemetry>{
                 id: "|" + xhr.ajaxData.traceID + "." + xhr.ajaxData.spanID,
                 target: xhr.ajaxData.getAbsoluteUrl(),
                 name: xhr.ajaxData.getPathName(),
@@ -444,7 +445,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     }
 
     private createFetchRecord(input?: Request | string, init?: RequestInit): ajaxRecord {
-        var traceID = (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) ? this._context.telemetryTrace.traceID : Util.generateW3CId();
+        var traceID = (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) || Util.generateW3CId();
         var spanID = Util.generateW3CId().substr(0, 16);
 
         var ajaxData = new ajaxRecord(traceID, spanID, this._core.logger);
@@ -482,7 +483,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 // so, if they exist use only them, otherwise use request's because they should have been applied in the first place
                 // not using original request headers will result in them being lost
                 init.headers = new Headers(init.headers || (input instanceof Request ? (input.headers || {}) : {}));
-                if (this._config.distributedTracingMode === DistributedTracingModes.AI || this._config.distributedTracingMode === DistributedTracingModes.AI_AND_W3C) {
+                if (this._isUsingAIHeaders) {
                     var id = "|" + ajaxData.traceID + "." + ajaxData.spanID;
                     init.headers.set(RequestHeaders.requestIdHeader, id);
                     if (this._config.enableRequestHeaderTracking) {
@@ -496,7 +497,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                         ajaxData.requestHeaders[RequestHeaders.requestContextHeader] = RequestHeaders.requestContextAppIdFormat + appId;
                     }
                 }
-                if (this._config.distributedTracingMode === DistributedTracingModes.AI_AND_W3C || this._config.distributedTracingMode === DistributedTracingModes.W3C) {
+                if (this._isUsingW3CHeaders) {
                     var traceparent = new Traceparent(ajaxData.traceID, ajaxData.spanID);
                     init.headers.set(RequestHeaders.traceParentHeader, traceparent.toString());
                     if (this._config.enableRequestHeaderTracking) {
@@ -509,7 +510,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         } else if (xhr) { // XHR
             if (this.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(this._config, xhr.ajaxData.getAbsoluteUrl(),
                 this.currentWindowHost)) {
-                if (this._config.distributedTracingMode === DistributedTracingModes.AI || this._config.distributedTracingMode === DistributedTracingModes.AI_AND_W3C) {
+                if (this._isUsingAIHeaders) {
                     var id = "|" + xhr.ajaxData.traceID + "." + xhr.ajaxData.spanID;
                     xhr.setRequestHeader(RequestHeaders.requestIdHeader, id);
                     if (this._config.enableRequestHeaderTracking) {
@@ -523,7 +524,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                         xhr.ajaxData.requestHeaders[RequestHeaders.requestContextHeader] = RequestHeaders.requestContextAppIdFormat + appId;
                     }
                 }
-                if (this._config.distributedTracingMode === DistributedTracingModes.AI_AND_W3C || this._config.distributedTracingMode === DistributedTracingModes.W3C) {
+                if (this._isUsingW3CHeaders) {
                     var traceparent = new Traceparent(xhr.ajaxData.traceID, xhr.ajaxData.spanID);
                     xhr.setRequestHeader(RequestHeaders.traceParentHeader, traceparent.toString());
                     if (this._config.enableRequestHeaderTracking) {
@@ -577,7 +578,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                         responseFinishedTime: ajaxData.responseFinishedTime
                     });
             } else {
-                let dependency: IDependencyTelemetry = {
+                const dependency: IDependencyTelemetry = {
                     id: "|" + ajaxData.traceID + "." + ajaxData.spanID,
                     target: ajaxData.getAbsoluteUrl(),
                     name: ajaxData.getPathName(),
@@ -741,6 +742,9 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             for (let field in defaultConfig) {
                 this._config[field] = ConfigurationManager.getConfig(config, field, AjaxMonitor.identifier, defaultConfig[field]);
             }
+
+            this._isUsingAIHeaders = this._config.distributedTracingMode === DistributedTracingModes.AI || this._config.distributedTracingMode === DistributedTracingModes.AI_AND_W3C;
+            this._isUsingW3CHeaders = this._config.distributedTracingMode === DistributedTracingModes.AI_AND_W3C || this._config.distributedTracingMode === DistributedTracingModes.W3C;
 
             if (this._config.disableAjaxTracking === false) {
                 this.instrumentXhr();

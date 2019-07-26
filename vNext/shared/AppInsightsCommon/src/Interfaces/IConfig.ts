@@ -152,7 +152,7 @@ export interface IConfig {
 
     /**
      * @description Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests. 
-     * The existing back-compatibility AI headers will also be included. Enabling W3C only mode may break existing correlation with other Application Insights instrumented services, suggest to use AI_AND_W3C setting if the application is talking to services like so. Default=AI
+     * AI_AND_W3C is provided for back-compatibility with any legacy Application Insights instrumented services
      * @type {enum}
      * @memberof IConfig
      * @defaultValue AI
