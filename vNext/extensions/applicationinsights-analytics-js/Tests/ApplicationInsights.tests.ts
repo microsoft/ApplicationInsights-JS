@@ -59,6 +59,8 @@ export class ApplicationInsightsTests extends TestClass {
                 appInsights['_properties'] = <any>{
                     context: { telemetryTrace: { traceID: 'not set', name: 'name not set' } }
                 }
+                appInsights['_prevUri'] = "firstUri";
+                appInsights['_currUri'] = "secondUri";
                 const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
 
                 // Act
@@ -75,6 +77,50 @@ export class ApplicationInsightsTests extends TestClass {
                 Assert.ok(appInsights['_properties'].context.telemetryTrace.name);
                 Assert.notEqual(appInsights['_properties'].context.telemetryTrace.traceID, 'not set', 'current operation id is updated after route change');
                 Assert.notEqual(appInsights['_properties'].context.telemetryTrace.name, 'name not set', 'current operation name is updated after route change');
+                Assert.equal(appInsights['_prevUri'], 'secondUri', "the previous uri is stored on variable _prevUri");
+                Assert.equal(appInsights['_currUri'], window.location.href, "the current uri is stored on variable _currUri");
+                Assert.equal(appInsights['_prevUri'], trackPageViewStub.args[0][0].refUri, "previous uri is assigned to refUri and send as an argument of trackPageview method");
+            }
+        });
+
+        this.testCase({
+            name: 'enableAutoRouteTracking: route changes trigger a new pageview with correct refUri when route changes happening before the timer autoRoutePVDelay stops',
+            test: () => {
+                // Setup
+                var appInsights = new ApplicationInsights();
+                appInsights.autoRoutePVDelay = 500;
+                var core = new AppInsightsCore();
+                var channel = new ChannelPlugin();
+                appInsights['_properties'] = <any>{
+                    context: { telemetryTrace: { traceID: 'not set', name: 'name not set' } }
+                }
+                appInsights['_prevUri'] = "firstUri";
+                const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
+
+                // Act
+                core.initialize(<IConfig & IConfiguration>{
+                    instrumentationKey: '',
+                    enableAutoRouteTracking: true
+                }, [appInsights, channel]);
+                window.dispatchEvent(new Event('locationchange'));
+                this.clock.tick(200);
+
+                // set up second dispatch
+                window.dispatchEvent(new Event('locationchange'));
+                this.clock.tick(500);
+
+
+                // Assert
+                Assert.ok(trackPageViewStub.calledTwice);
+                Assert.ok(appInsights['_properties'].context.telemetryTrace.traceID);
+                Assert.ok(appInsights['_properties'].context.telemetryTrace.name);
+                Assert.notEqual(appInsights['_properties'].context.telemetryTrace.traceID, 'not set', 'current operation id is updated after route change');
+                Assert.notEqual(appInsights['_properties'].context.telemetryTrace.name, 'name not set', 'current operation name is updated after route change');
+                // first trackPageView event
+                Assert.equal(trackPageViewStub.args[0][0].refUri, 'firstUri', "first trackPageview event: refUri grabs the value of existing _prevUri");
+                Assert.equal(appInsights['_currUri'], window.location.href, "first trackPageview event: the current uri is stored on variable _currUri");
+                // second trackPageView event
+                Assert.equal(trackPageViewStub.args[1][0].refUri, window.location.href, "second trackPageview event: refUri grabs the value of updated _prevUri, which is the first pageView event's _currUri");
             }
         });
 
