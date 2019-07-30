@@ -248,10 +248,16 @@ ITelemetryPlugin has a simpler base type IPlugin that you can instantiate for in
 1. Install all dependencies
 	```
 	npm install
+	npm install -g @microsoft/rush
 	```
-2. Build and test
+2. Navigate to the vNext folder and update rush dependencies
 	```
-	npm run build
+	cd vnext
+	rush update
+	```
+3. Build and test
+	```
+	rush build
 	npm run test
 	```
 
