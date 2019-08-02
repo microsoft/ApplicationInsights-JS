@@ -11,7 +11,7 @@ var aisdk = window[aiName] || (function (aiConfig) {
     var localDocument = document, localWindow = window, scriptText = "script";
     setTimeout(function () {
         var scriptElement = localDocument.createElement(scriptText);
-        scriptElement.src = aiConfig.url || "https://az416426.vo.msecnd.net/next/ai.2.min.js";
+        scriptElement.src = aiConfig.url || "https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js";
         localDocument.getElementsByTagName(scriptText)[0].parentNode.appendChild(scriptElement);
     });
 
