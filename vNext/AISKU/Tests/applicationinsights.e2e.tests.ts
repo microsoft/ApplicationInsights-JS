@@ -399,7 +399,7 @@ export class ApplicationInsightsTests extends TestClass {
                         Assert.equal(3, Object.keys(this.trackSpy.args[1][0].properties.requestHeaders).length, "two request headers set up when there's no user defined request header");
                         Assert.ok(this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
                         Assert.ok(this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
-                        Assert.ok(this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparentHeader");
+                        Assert.ok(this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparent");
                     })
             });
         } else {
