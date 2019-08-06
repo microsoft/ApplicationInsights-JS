@@ -50,6 +50,7 @@ var aisdk = window[aiName] || (function (aiConfig) {
     createLazyMethod("start" + trackEvent);
     createLazyMethod("stop" + trackEvent);
 
+    createLazyMethod("addTelemetryInitializer");
     createLazyMethod("setAuthenticatedUserContext");
     createLazyMethod("clearAuthenticatedUserContext");
     createLazyMethod("flush");
