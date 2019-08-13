@@ -423,8 +423,8 @@ export class PageViewPerformanceEnvelopeCreator extends EnvelopeCreator {
         const bd = telemetryItem.baseData as IPageViewPerformanceTelemetry;
         let name = bd.name;
         let url = bd.uri || (bd as any).url;
-        let properties = bd.properties;
-        let measurements = bd.measurements;
+        let properties = bd.properties || {};
+        let measurements = bd.measurements || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, properties, measurements);
         let baseData = new PageViewPerformance(logger, name, url, undefined, properties, measurements, bd);
         let data = new Data<PageViewPerformance>(PageViewPerformance.dataType, baseData);
