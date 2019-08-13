@@ -58,6 +58,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     // This counter keeps increasing even after the limit is reached.
     private _trackAjaxAttempts: number = 0;
 
+    // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
+    private _urlArr: string[] = [];
+    private _prevUri: string = window.location.href;
+    private _currUri: string;
+
     constructor() {
         this.initialize = this._initialize.bind(this);
     }
@@ -605,13 +610,19 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
             window.addEventListener(_self.config.namePrefix + "locationchange", () => {
                 if (_self._properties && _self._properties.context && _self._properties.context.telemetryTrace) {
-                    _self._properties.context.telemetryTrace.traceID = Util.newId();
+                    _self._properties.context.telemetryTrace.traceID = Util.generateW3CId();
                     _self._properties.context.telemetryTrace.name = window.location.pathname;
                 }
-                setTimeout(() => {
+                if (this._currUri) {
+                    this._prevUri = this._currUri;
+                    this._currUri = window.location.href;
+                } else {
+                    this._currUri = window.location.href;
+                }
+                setTimeout(((uri: string) => {
                     // todo: override start time so that it is not affected by autoRoutePVDelay
-                    _self.trackPageView({ refUri: null, properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
-                }, _self.autoRoutePVDelay);
+                    _self.trackPageView({ refUri: uri, properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
+                }).bind(this, this._prevUri), _self.autoRoutePVDelay);
             });
         }
 

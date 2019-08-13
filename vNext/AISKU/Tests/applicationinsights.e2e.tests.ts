@@ -1,7 +1,7 @@
 /// <reference path='./TestFramework/Common.ts' />
 import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Util, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, RequestHeaders } from '@microsoft/applicationinsights-common';
+import { IDependencyTelemetry, ContextTagKeys, Util, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders } from '@microsoft/applicationinsights-common';
 import { AppInsightsCore, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { AjaxPlugin } from '@microsoft/applicationinsights-dependencies-js';
@@ -62,7 +62,8 @@ export class ApplicationInsightsTests extends TestClass {
                 maxBatchInterval: 2500,
                 disableExceptionTracking: false,
                 namePrefix: this.sessionPrefix,
-                enableCorsCorrelation: true
+                enableCorsCorrelation: true,
+                distributedTracingMode: DistributedTracingModes.AI_AND_W3C
             };
 
             var init = new ApplicationInsights({
@@ -395,9 +396,10 @@ export class ApplicationInsightsTests extends TestClass {
                         Assert.equal("Fetch", this.trackSpy.args[0][0].type, "request is Fetch type");
                         Assert.equal('value', this.trackSpy.args[0][0].properties.requestHeaders['header'], "fetch request's user defined request header is stored");
                         Assert.ok(this.trackSpy.args[0][0].properties.responseHeaders, "fetch request's reponse header is stored");
-                        Assert.equal(2, Object.keys(this.trackSpy.args[1][0].properties.requestHeaders).length, "two request headers set up when there's no user defined request header");
+                        Assert.equal(3, Object.keys(this.trackSpy.args[1][0].properties.requestHeaders).length, "two request headers set up when there's no user defined request header");
                         Assert.ok(this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
                         Assert.ok(this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
+                        Assert.ok(this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparent");
                     })
             });
         } else {

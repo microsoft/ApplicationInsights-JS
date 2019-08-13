@@ -12,10 +12,21 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 ## Clone and setup
 1. Clone the repository and create a new branch
-2. Navigate to the vNext folder
-3. run **rush update**
-4. run **npm install**
-5. run **rush build**
+2. Install all dependencies
+	```
+	npm install
+	npm install -g @microsoft/rush
+	```
+3. Navigate to the vNext folder and update rush dependencies
+	```
+	cd vnext
+	rush update
+	```
+4. Build and test
+	```
+	rush build
+	npm run test
+	```
 
 ## Build and test
 

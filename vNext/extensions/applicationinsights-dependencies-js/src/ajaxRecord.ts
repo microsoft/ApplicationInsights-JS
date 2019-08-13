@@ -57,13 +57,14 @@ export class ajaxRecord {
     public clientFailure = 0;
 
 
-    public id: string;
+    public traceID: string;
+    public spanID: string;
 
-    constructor(id: string, logger: IDiagnosticLogger) {
-        this.id = id;
+    constructor(traceID: string, spanID: string, logger: IDiagnosticLogger) {
+        this.traceID = traceID;
+        this.spanID = spanID;
         this._logger = logger;
     }
-
 
     public getAbsoluteUrl() {
         return this.requestUrl ? UrlHelper.getAbsoluteUrl(this.requestUrl) : null;

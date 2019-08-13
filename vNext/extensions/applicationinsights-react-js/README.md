@@ -46,7 +46,7 @@ class MyComponent extends React.Component {
     ...
 }
 
-export default withAITracking(appInsights, MyComponent);
+export default withAITracking(reactPlugin,appInsights, MyComponent);
 ```
 
 ## Configuration
