@@ -26,16 +26,6 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public registerTests() {
-        this.testCase({
-            name: '_createDomEvent: creates new event if constructor is undefined',
-            test: () => {
-                const origEvent = (window as any).Event;
-                (window as any).Event = {};
-                const event = ApplicationInsights['_createDomEvent']('something');
-                Assert.equal('something', event.type);
-                (window as any).Event = origEvent;
-            }
-        });
 
         this.testCase({
             name: 'enableAutoRouteTracking: event listener is added to the popstate event',
@@ -79,7 +69,7 @@ export class ApplicationInsightsTests extends TestClass {
                     instrumentationKey: '',
                     enableAutoRouteTracking: true
                 }, [appInsights, channel]);
-                window.dispatchEvent(ApplicationInsights['_createDomEvent']('locationchange'));
+                window.dispatchEvent(Util.createDomEvent('locationchange'));
                 this.clock.tick(500);
 
                 // Assert
@@ -113,11 +103,11 @@ export class ApplicationInsightsTests extends TestClass {
                     instrumentationKey: '',
                     enableAutoRouteTracking: true
                 }, [appInsights, channel]);
-                window.dispatchEvent(ApplicationInsights['_createDomEvent']('locationchange'));
+                window.dispatchEvent(Util.createDomEvent('locationchange'));
                 this.clock.tick(200);
 
                 // set up second dispatch
-                window.dispatchEvent(ApplicationInsights['_createDomEvent']('locationchange'));
+                window.dispatchEvent(Util.createDomEvent('locationchange'));
                 this.clock.tick(500);
 
 
@@ -156,7 +146,7 @@ export class ApplicationInsightsTests extends TestClass {
                     instrumentationKey: '',
                     enableAutoRouteTracking: true
                 }, [appInsights, channel]);
-                window.dispatchEvent(ApplicationInsights['_createDomEvent']('locationchange'));
+                window.dispatchEvent(Util.createDomEvent('locationchange'));
 
                 // Assert
                 Assert.ok(true, 'App does not crash when history object is incomplete');
