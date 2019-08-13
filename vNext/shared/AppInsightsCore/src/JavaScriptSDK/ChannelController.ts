@@ -51,6 +51,10 @@ export class ChannelController implements ITelemetryPlugin {
                         return a.priority - b.priority;
                     });
 
+                    for (let i = 1; i < queue.length; i++) {
+                        queue[i - 1].setNextPlugin(queue[i]); // setup processing chain
+                    }
+
                     // Initialize each plugin
                     queue.forEach(queueItem => {
                         if (queueItem.priority < ChannelControllerPriority) {
@@ -61,10 +65,6 @@ export class ChannelController implements ITelemetryPlugin {
 
                     if (invalidChannelIdentifier) {
                         throw Error(ChannelValidationMessage + invalidChannelIdentifier);
-                    }
-
-                    for (let i = 1; i < queue.length; i++) {
-                        queue[i - 1].setNextPlugin(queue[i]); // setup processing chain
                     }
 
                     this.channelQueue.push(queue);
