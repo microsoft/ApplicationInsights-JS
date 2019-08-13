@@ -1,6 +1,6 @@
 /// <reference path="./TestFramework/Common.ts" />
 
-import { UrlHelper, CorrelationIdHelper } from "../src/Util";
+import { UrlHelper, CorrelationIdHelper, Util } from "../src/Util";
 import { ICorrelationConfig } from "../src/Interfaces/ICorrelationConfig";
 
 export class UtilTests extends TestClass {
@@ -16,6 +16,17 @@ export class UtilTests extends TestClass {
     public testCleanup() {}
 
     public registerTests() {
+        this.testCase({
+            name: 'createDomEvent: creates new event if constructor is undefined',
+            test: () => {
+                const origEvent = (window as any).Event;
+                (window as any).Event = {};
+                const event = Util.createDomEvent('something');
+                Assert.equal('something', event.type);
+                (window as any).Event = origEvent;
+            }
+        });
+
         this.testCase({
             name: "UrlHelper: parseUrl should contain host field even if document.createElement is not defined",
             test: () => {

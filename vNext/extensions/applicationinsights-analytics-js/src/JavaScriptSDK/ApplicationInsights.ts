@@ -92,6 +92,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         return config;
     }
 
+
     public processTelemetry(env: ITelemetryItem) {
         var doNotSendItem = false;
         var telemetryInitializersCount = this._telemetryInitializers.length;
@@ -581,7 +582,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
          */
         if (this.config.enableAutoRouteTracking === true
             && typeof history === "object" && typeof history.pushState === "function" && typeof history.replaceState === "function"
-            && typeof window === "object") {
+            && typeof window === "object"
+            && typeof Event !== "undefined") {
             const _self = this;
             // Find the properties plugin
             extensions.forEach(extension => {
@@ -592,20 +594,20 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
             history.pushState = ( f => function pushState() {
                 var ret = f.apply(this, arguments);
-                window.dispatchEvent(new Event(_self.config.namePrefix + "pushState"));
-                window.dispatchEvent(new Event(_self.config.namePrefix + "locationchange"));
+                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "pushState"));
+                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
                 return ret;
             })(history.pushState);
 
             history.replaceState = ( f => function replaceState(){
                 var ret = f.apply(this, arguments);
-                window.dispatchEvent(new Event(_self.config.namePrefix + "replaceState"));
-                window.dispatchEvent(new Event(_self.config.namePrefix + "locationchange"));
+                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "replaceState"));
+                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
                 return ret;
             })(history.replaceState);
 
             window.addEventListener(_self.config.namePrefix + "popstate",()=>{
-                window.dispatchEvent(new Event(_self.config.namePrefix + "locationchange"));
+                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
             });
 
             window.addEventListener(_self.config.namePrefix + "locationchange", () => {

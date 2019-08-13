@@ -20,6 +20,19 @@ export class Util {
     ];
     public static NotSpecified = "not_specified";
 
+    public static createDomEvent(eventName: string): Event {
+        let event: Event = null;
+
+        if (typeof Event === "function") { // Use Event constructor when available
+            event = new Event(eventName);
+        } else { // Event has no constructor in IE
+            event = document.createEvent("Event");
+            event.initEvent(eventName, true, true);
+        }
+
+        return event;
+    }
+
     /*
      * Force the SDK not to use local and session storage
     */

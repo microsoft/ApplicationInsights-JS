@@ -26,6 +26,7 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public registerTests() {
+
         this.testCase({
             name: 'enableAutoRouteTracking: event listener is added to the popstate event',
             test: () => {
@@ -68,7 +69,7 @@ export class ApplicationInsightsTests extends TestClass {
                     instrumentationKey: '',
                     enableAutoRouteTracking: true
                 }, [appInsights, channel]);
-                window.dispatchEvent(new Event('locationchange'));
+                window.dispatchEvent(Util.createDomEvent('locationchange'));
                 this.clock.tick(500);
 
                 // Assert
@@ -102,11 +103,11 @@ export class ApplicationInsightsTests extends TestClass {
                     instrumentationKey: '',
                     enableAutoRouteTracking: true
                 }, [appInsights, channel]);
-                window.dispatchEvent(new Event('locationchange'));
+                window.dispatchEvent(Util.createDomEvent('locationchange'));
                 this.clock.tick(200);
 
                 // set up second dispatch
-                window.dispatchEvent(new Event('locationchange'));
+                window.dispatchEvent(Util.createDomEvent('locationchange'));
                 this.clock.tick(500);
 
 
@@ -145,7 +146,7 @@ export class ApplicationInsightsTests extends TestClass {
                     instrumentationKey: '',
                     enableAutoRouteTracking: true
                 }, [appInsights, channel]);
-                window.dispatchEvent(new Event('locationchange'));
+                window.dispatchEvent(Util.createDomEvent('locationchange'));
 
                 // Assert
                 Assert.ok(true, 'App does not crash when history object is incomplete');
