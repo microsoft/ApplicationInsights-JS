@@ -99,6 +99,9 @@ module.exports = function (grunt) {
             react: {
                 tsconfig: './vNext/extensions/applicationinsights-react-js/tsconfig.json'
             },
+            angular: {
+                tsconfig: './vNext/extensions/applicationinsights-angular-js/tsconfig.json'
+            },
             reactnative: {
                 tsconfig: './vNext/extensions/applicationinsights-react-native/tsconfig.json',
                 src: [
@@ -362,6 +365,7 @@ module.exports = function (grunt) {
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiestests", ["ts:properties", "ts:propertiestests", "qunit:properties"]);
     grunt.registerTask("react", ["ts:react"]);
+    grunt.registerTask("angular", ["ts:angular"]);
     grunt.registerTask("reacttests", ["run:reacttests"]);
     grunt.registerTask("reactnative", ["ts:reactnative"]);
     grunt.registerTask("reactnativetests", ["ts:reactnative", "ts:reactnativetests", "qunit:reactnative"]);

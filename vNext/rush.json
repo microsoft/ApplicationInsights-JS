@@ -41,6 +41,10 @@
     {
       "packageName": "@microsoft/applicationinsights-react-js",
       "projectFolder": "extensions/applicationinsights-react-js"
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-angular-js",
+      "projectFolder": "extensions/applicationinsights-angular-js"
     }
   ]
  }
