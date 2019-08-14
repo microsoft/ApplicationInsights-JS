@@ -87,13 +87,14 @@ export class ChannelController implements ITelemetryPlugin {
                 return a.priority - b.priority;
             });
 
-            // Initialize each plugin
-            arr.forEach(queueItem => queueItem.initialize(config, core, extensions));
-
             // setup next plugin
             for (let i = 1; i < arr.length; i++) {
-                arr[i - 1].setNextPlugin(arr[i]);
+                arr[i - 1].
+                (arr[i]);
             }
+
+            // Initialize each plugin
+            arr.forEach(queueItem => queueItem.initialize(config, core, extensions));    
 
             this.channelQueue.push(arr);
         }
