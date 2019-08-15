@@ -155,6 +155,9 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | enableCorsCorrelation | false | If true, the SDK will add two headers ('Request-Id' and 'Request-Context') to all CORS requests tocorrelate outgoing AJAX dependencies with corresponding requests on the server side. Default is false |
 | namePrefix | undefined | An optional value that will be used as name postfix for localStorage and cookie name.
 | enableAutoRouteTracking | false | Automatically track route changes in Single Page Applications (SPA). If true, each route change will send a new Pageview to Application Insights. Hash route changes changes (`example.com/foo#bar`) are also recorded as new page views.
+| enableRequestHeaderTracking | false | If true, AJAX & Fetch request headers is tracked, default is false.
+| enableResponseHeaderTracking | false | If true, AJAX & Fetch request's response headers is tracked, default is false.
+| distributedTracingMode | DistributedTracingModes.AI | Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests. AI_AND_W3C is provided for back-compatibility with any legacy Application Insights instrumented services.
 
 ## Single Page Applications
 
