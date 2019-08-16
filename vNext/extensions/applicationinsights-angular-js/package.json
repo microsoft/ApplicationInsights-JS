@@ -34,10 +34,10 @@
         "@angular/platform-browser": "^5.0.0",
         "@microsoft/applicationinsights-common": "2.1.1",
         "@microsoft/applicationinsights-core-js": "2.1.1",
+        "rxjs": "^5.5.2",
         "tslib": "^1.9.3",
         "types": "^0.1.1",
-        "zone.js": "^0.8.14",
-        "rxjs": "^5.5.2"
+        "zone.js": "^0.8.14"
     },
     "license": "MIT"
 }
