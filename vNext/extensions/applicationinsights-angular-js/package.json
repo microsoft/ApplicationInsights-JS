@@ -27,17 +27,17 @@
         "rollup-plugin-replace": "^2.1.0",
         "rollup-plugin-uglify": "^6.0.0",
         "ts-node": "^8.3.0",
-        "typescript": "^2.5.3"
+        "typescript": "^2.5.3",
+        "rxjs": "^5.5.2",
+        "types": "^0.1.1",
+        "zone.js": "^0.8.14",
+        "@angular/common": "^5.0.0",
+        "@angular/platform-browser": "^5.0.0"
     },
     "dependencies": {
-        "@angular/common": "^5.0.0",
-        "@angular/platform-browser": "^5.0.0",
         "@microsoft/applicationinsights-common": "2.1.1",
         "@microsoft/applicationinsights-core-js": "2.1.1",
-        "rxjs": "^5.5.2",
-        "tslib": "^1.9.3",
-        "types": "^0.1.1",
-        "zone.js": "^0.8.14"
+        "tslib": "^1.9.3"
     },
     "license": "MIT"
 }
