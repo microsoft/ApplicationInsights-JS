@@ -1,0 +1,41 @@
+{
+    "name": "@microsoft/applicationinsights-angular-js",
+    "version": "2.2.0",
+    "description": "Microsoft Application Insights Angular plugin",
+    "main": "dist/applicationinsights-angular-js.js",
+    "module": "dist-esm/applicationinsights-angular-js.js",
+    "types": "types/applicationinsights-angular-js.d.ts",
+    "sideEffects": false,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/vNext/extensions/applicationinsights-angular-js"
+    },
+    "scripts": {
+        "build": "npm run build:esm && npm run build:browser",
+        "build:esm": "tsc -p tsconfig.json",
+        "build:browser": "rollup -c"
+    },
+    "devDependencies": {
+        "@angular/core": "~8.1.2",
+        "@angular/router": "~8.1.2",
+        "grunt": "1.0.1",
+        "rollup": "^0.66.0",
+        "rollup-plugin-commonjs": "^9.3.4",
+        "rollup-plugin-node-resolve": "^3.4.0",
+        "rollup-plugin-replace": "^2.1.0",
+        "rollup-plugin-uglify": "^6.0.0",
+        "ts-node": "^8.3.0",
+        "typescript": "~3.4.3",
+        "rxjs": "~6.4.0",
+        "types": "^0.1.1",
+        "zone.js": "~0.9.1",
+        "@angular/common": "~8.1.2",
+        "@angular/platform-browser": "~8.1.2"
+    },
+    "dependencies": {
+        "@microsoft/applicationinsights-common": "2.2.0",
+        "@microsoft/applicationinsights-core-js": "2.2.0",
+        "tslib": "^1.9.3"
+    },
+    "license": "MIT"
+}
