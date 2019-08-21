@@ -534,7 +534,7 @@ class TestChannelPlugin implements IChannelControls {
         this.isTearDownInvoked = true;
     }
 
-    flush(async?: boolean, callBack?: () => void): void {
+    flush(async?: boolean, isBeaconSender?: boolean, callBack?: () => void): void {
         this.isFlushInvoked = true;
         if (callBack) {
             callBack();

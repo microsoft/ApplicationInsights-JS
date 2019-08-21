@@ -44,11 +44,8 @@ export class Sender implements IChannelControlsAI {
     }
 
     public flush(async?: boolean, isBeaconSender?: boolean) {
-        if (isBeaconSender) {
-            this._sender = this._beaconSender;
-        }
         try {
-            this.triggerSend(async);
+            this.triggerSend(async, isBeaconSender);
         } catch (e) {
             this._logger.throwInternal(LoggingSeverity.CRITICAL,
                 _InternalMessageId.FlushFailed,
@@ -309,9 +306,9 @@ export class Sender implements IChannelControlsAI {
     /**
      * Immediately send buffered data
      * @param async {boolean} - Indicates if the events should be sent asynchronously
+     * @param isBeaconSender {boolean} - Indicates if the events hould be sent using beacons
      */
-    public triggerSend(async?: boolean) {
-        if (!async) async = true;
+    public triggerSend(async: boolean = true, isBeaconSender?: boolean) {
         try {
             // Send data only if disableTelemetry is false
             if (!this._config.disableTelemetry()) {
@@ -320,7 +317,11 @@ export class Sender implements IChannelControlsAI {
                     var payload = this._buffer.getItems();
 
                     // invoke send
-                    this._sender(payload, async);
+                    if (isBeaconSender && navigator.sendBeacon(this._config.endpointUrl())) {
+                        this._beaconSender(payload, async);
+                    } else {
+                        this._sender(payload, async);
+                    }
                 }
 
                 // update lastSend time to enable throttling
