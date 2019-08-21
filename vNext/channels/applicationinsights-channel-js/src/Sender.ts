@@ -317,7 +317,7 @@ export class Sender implements IChannelControlsAI {
                     var payload = this._buffer.getItems();
 
                     // invoke send
-                    if (isBeaconSender && navigator.sendBeacon(this._config.endpointUrl())) {
+                    if (isBeaconSender && Util.IsBeaconApiSupported()) {
                         this._beaconSender(payload, async);
                     } else {
                         this._sender(payload, async);
