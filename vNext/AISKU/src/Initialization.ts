@@ -25,7 +25,7 @@ export interface Snippet {
 
 export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
     appInsights: ApplicationInsights;
-    flush: (async?: boolean) => void;
+    flush: (async?: boolean, isBeaconSender?: boolean) => void;
 };
 
 /**
@@ -225,12 +225,13 @@ export class Initialization implements IApplicationInsights {
     /**
      * Manually trigger an immediate send of all telemetry still in the buffer.
      * @param {boolean} [async=true]
+     * @param {boolean} [isBeaconSender]
      * @memberof Initialization
      */
-    public flush(async: boolean = true) {
+    public flush(async: boolean = true, isBeaconSender?: boolean) {
         this.core.getTransmissionControls().forEach(channels => {
             channels.forEach(channel => {
-                channel.flush(async);
+                channel.flush(async, isBeaconSender);
             })
         })
     }
@@ -336,7 +337,7 @@ export class Initialization implements IApplicationInsights {
 
                 //appInsightsInstance.context._sender.triggerSend();
 
-                appInsightsInstance.flush(false);
+                appInsightsInstance.flush(false, true);
 
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire

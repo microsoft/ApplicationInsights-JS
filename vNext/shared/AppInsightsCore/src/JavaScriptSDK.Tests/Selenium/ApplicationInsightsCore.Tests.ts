@@ -147,7 +147,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
 
                 Assert.ok(!channelPlugin.isFlushInvoked, "Flush not called on initialize");
                 appInsightsCore.getTransmissionControls().forEach(queues => {
-                    queues.forEach(q => q.flush(true));
+                    queues.forEach(q => q.flush(true, false));
                 });
 
                 Assert.ok(channelPlugin.isFlushInvoked, "Flush triggered for channel");

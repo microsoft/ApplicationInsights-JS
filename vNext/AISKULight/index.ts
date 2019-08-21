@@ -75,13 +75,14 @@ export class ApplicationInsights {
     /**
      * Immediately send all batched telemetry
      * @param {boolean} [async=true]
+     * @param {boolean} [isBeaconSender]
      * @memberof ApplicationInsights
      */
-    public flush(async: boolean = true) {
+    public flush(async: boolean = true, isBeaconSender?: boolean) {
         this.core.getTransmissionControls().forEach(controls => {
             controls.forEach(plugin => {
                 async
-                    ? (<Sender>plugin).flush()
+                    ? (<Sender>plugin).flush(async, isBeaconSender)
                     : (<Sender>plugin).triggerSend(async);
             });
         });

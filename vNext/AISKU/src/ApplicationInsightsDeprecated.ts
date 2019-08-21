@@ -99,8 +99,8 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
         this.appInsightsNew.trackTrace(<ITraceTelemetry>{ message: message, severityLevel: severityLevel });
     }
 
-    flush(async?: boolean) {
-        this.appInsightsNew.flush(async);
+    flush(async?: boolean, isBeaconSender?: boolean) {
+        this.appInsightsNew.flush(async, isBeaconSender);
     }
 
     setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean) {
@@ -327,7 +327,7 @@ export interface IAppInsightsDeprecated {
      * Immediately send all queued telemetry.
      * @param {boolean} async - If flush should be call asynchronously
      */
-    flush(async?: boolean);
+    flush(async?: boolean, isBeaconSender?: boolean);
 
 
     /**

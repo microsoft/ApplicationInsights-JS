@@ -43,9 +43,12 @@ export class Sender implements IChannelControlsAI {
         throw new Error("Method not implemented.");
     }
 
-    public flush() {
+    public flush(async?: boolean, isBeaconSender?: boolean) {
+        if (isBeaconSender) {
+            this._sender = this._beaconSender;
+        }
         try {
-            this.triggerSend();
+            this.triggerSend(async);
         } catch (e) {
             this._logger.throwInternal(LoggingSeverity.CRITICAL,
                 _InternalMessageId.FlushFailed,
@@ -307,7 +310,8 @@ export class Sender implements IChannelControlsAI {
      * Immediately send buffered data
      * @param async {boolean} - Indicates if the events should be sent asynchronously
      */
-    public triggerSend(async = true) {
+    public triggerSend(async?: boolean) {
+        if (!async) async = true;
         try {
             // Send data only if disableTelemetry is false
             if (!this._config.disableTelemetry()) {
