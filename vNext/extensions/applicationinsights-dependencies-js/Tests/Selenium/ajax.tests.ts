@@ -515,6 +515,7 @@ export class AjaxTests extends TestClass {
 class TestChannelPlugin implements IChannelControls {
 
     public isFlushInvoked = false;
+    public isFlushThroughBeaconSenderInvoked = false;
     public isTearDownInvoked = false;
     public isResumeInvoked = false;
     public isPauseInvoked = false;
@@ -539,6 +540,11 @@ class TestChannelPlugin implements IChannelControls {
         if (callBack) {
             callBack();
         }
+    }
+
+    flushThroughBeaconSender() {
+        this.isFlushThroughBeaconSenderInvoked = true;
+        this.flush();
     }
 
     public processTelemetry;

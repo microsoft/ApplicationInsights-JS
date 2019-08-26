@@ -147,9 +147,10 @@ export class ApplicationInsightsCoreTests extends TestClass {
 
                 Assert.ok(!channelPlugin.isFlushInvoked, "Flush not called on initialize");
                 appInsightsCore.getTransmissionControls().forEach(queues => {
-                    queues.forEach(q => q.flush(true));
+                    queues.forEach(q => q.flushThroughBeaconSender(true));
                 });
 
+                Assert.ok(channelPlugin.isFlushThroughBeaconSenderInvoked, "FlushThroughBeaconSender triggered for channel")
                 Assert.ok(channelPlugin.isFlushInvoked, "Flush triggered for channel");
             }
         });
@@ -570,6 +571,7 @@ class TestSamplingPlugin implements ITelemetryPlugin {
 class ChannelPlugin implements IChannelControls {
     public _nextPlugin: ITelemetryPlugin;
     public isFlushInvoked = false;
+    public isFlushThroughBeaconSenderInvoked = false;
     public isTearDownInvoked = false;
     public isResumeInvoked = false;
     public isPauseInvoked = false;
@@ -595,6 +597,11 @@ class ChannelPlugin implements IChannelControls {
         if (callBack) {
             callBack();
         }
+    }
+
+    flushThroughBeaconSender() {
+        this.isFlushThroughBeaconSenderInvoked = true;
+        this.flush();
     }
 
     public processTelemetry;
