@@ -230,7 +230,7 @@ export class Initialization implements IApplicationInsights {
     public flush(async: boolean = true) {
         this.core.getTransmissionControls().forEach(channels => {
             channels.forEach(channel => {
-                channel.flush(async);
+                channel.flushThroughBeaconSender(async);
             })
         })
     }

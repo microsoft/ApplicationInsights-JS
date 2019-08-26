@@ -286,6 +286,14 @@ export interface IConfig {
      */
     enableResponseHeaderTracking?: boolean;
 
+    /**
+     * @description An optional value that will use beaconSender to flush events.
+     * @type {boolean}
+     * @memberof IConfig
+     * @defaultValue false
+     */
+    isBeaconFlush?: boolean;
+
     // Internal
 
     /**
