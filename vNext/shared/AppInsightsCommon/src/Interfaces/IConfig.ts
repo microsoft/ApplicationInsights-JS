@@ -292,7 +292,7 @@ export interface IConfig {
      * @memberof IConfig
      * @defaultValue false
      */
-    isBeaconFlush?: boolean;
+    onunloadDisableBeacon?: boolean;
 
     // Internal
 

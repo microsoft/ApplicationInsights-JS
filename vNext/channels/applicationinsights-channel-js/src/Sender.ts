@@ -29,6 +29,8 @@ declare var XDomainRequest: {
     new(): IXDomainRequest;
 };
 
+export type SenderFunction = (payload: string[], isAsync: boolean) => void;
+
 export class Sender implements IChannelControlsAI {
     public priority: number = 1001;
 
@@ -54,11 +56,19 @@ export class Sender implements IChannelControlsAI {
         }
     }
 
-    public flushThroughBeaconSender() {
-        if (!this._config.isBeaconApiDisabled && this._config.isBeaconFlush && Util.IsBeaconApiSupported) {
-          this._triggerSendFromFlush = true;  
+    public unload() {
+        if (!this._config.onunloadDisableBeacon() && Util.IsBeaconApiSupported()) {
+            try {
+                this.triggerSend(true, this._beaconSender);
+            } catch (e) {
+                this._logger.throwInternal(LoggingSeverity.CRITICAL,
+                    _InternalMessageId.FailedToUnloadThroughBeacon,
+                    "failed to flush with beacon sender on page unload, telemetry will not be collected: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) });
+            }
+        } else {
+            this.flush();
         }
-        this.flush();
     }
 
     public teardown(): void {
@@ -73,8 +83,7 @@ export class Sender implements IChannelControlsAI {
     /**
      * A method which will cause data to be send to the url
      */
-    public _sender: (payload: string[], isAsync: boolean) => void;
-
+    public _sender: SenderFunction;
     /**
      * A send buffer object
      */
@@ -89,11 +98,6 @@ export class Sender implements IChannelControlsAI {
      * Whether XMLHttpRequest object is supported. Older version of IE (8,9) do not support it.
      */
     public _XMLHttpRequestSupported: boolean = false;
-
-    /**
-     * Whether triggerSend from flush.
-     */
-    private _triggerSendFromFlush: boolean = false;
 
     /**
      * How many times in a row a retryable error condition has occurred.
@@ -319,7 +323,7 @@ export class Sender implements IChannelControlsAI {
      * Immediately send buffered data
      * @param async {boolean} - Indicates if the events should be sent asynchronously
      */
-    public triggerSend(async: boolean = true) {
+    public triggerSend(async = true, forcedSender?: SenderFunction) {
         try {
             // Send data only if disableTelemetry is false
             if (!this._config.disableTelemetry()) {
@@ -328,9 +332,8 @@ export class Sender implements IChannelControlsAI {
                     var payload = this._buffer.getItems();
 
                     // invoke send
-                    if (this._triggerSendFromFlush) {
-                        this._beaconSender(payload, async);
-                        this._triggerSendFromFlush = false;
+                    if (forcedSender) {
+                        forcedSender.call(this, payload, async);
                     } else {
                         this._sender(payload, async);
                     }
@@ -477,7 +480,7 @@ export class Sender implements IChannelControlsAI {
             enableSessionStorageBuffer: () => true,
             isRetryDisabled: () => false,
             isBeaconApiDisabled: () => true,
-            isBeaconFlush: () => false,
+            onunloadDisableBeacon: () => false,
             instrumentationKey: () => undefined,  // Channel doesn't need iKey, it should be set already
             namePrefix: () => undefined,
             samplingPercentage: () => 100
@@ -494,7 +497,7 @@ export class Sender implements IChannelControlsAI {
             enableSessionStorageBuffer: undefined,
             isRetryDisabled: undefined,
             isBeaconApiDisabled: undefined,
-            isBeaconFlush: undefined,
+            onunloadDisableBeacon: undefined,
             instrumentationKey: undefined,
             namePrefix: undefined,
             samplingPercentage: undefined

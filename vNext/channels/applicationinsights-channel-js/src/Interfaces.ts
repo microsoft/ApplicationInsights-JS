@@ -38,10 +38,10 @@ export interface ISenderConfig {
     isBeaconApiDisabled: () => boolean;
 
     /**
-     * Is beacon flush disabled.
+     * Is beacon disabled on page unload.
      * If enabled, flush events through beaconSender.
      */
-    isBeaconFlush: () => boolean;
+    onunloadDisableBeacon: () => boolean;
 
     /**
      * (Optional) Override the instrumentation key that this channel instance sends to

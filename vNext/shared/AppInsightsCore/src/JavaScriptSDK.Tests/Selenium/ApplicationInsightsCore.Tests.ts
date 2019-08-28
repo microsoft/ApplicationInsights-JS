@@ -145,13 +145,12 @@ export class ApplicationInsightsCoreTests extends TestClass {
                     { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" },
                     [channelPlugin]);
 
-                Assert.ok(!channelPlugin.isFlushInvoked, "Flush not called on initialize");
+                Assert.ok(!channelPlugin.isUnloadInvoked, "Unload not called on initialize");
                 appInsightsCore.getTransmissionControls().forEach(queues => {
-                    queues.forEach(q => q.flushThroughBeaconSender(true));
+                    queues.forEach(q => q.unload(true));
                 });
 
-                Assert.ok(channelPlugin.isFlushThroughBeaconSenderInvoked, "FlushThroughBeaconSender triggered for channel")
-                Assert.ok(channelPlugin.isFlushInvoked, "Flush triggered for channel");
+                Assert.ok(channelPlugin.isUnloadInvoked, "Unload triggered for channel");
             }
         });
 
@@ -571,7 +570,7 @@ class TestSamplingPlugin implements ITelemetryPlugin {
 class ChannelPlugin implements IChannelControls {
     public _nextPlugin: ITelemetryPlugin;
     public isFlushInvoked = false;
-    public isFlushThroughBeaconSenderInvoked = false;
+    public isUnloadInvoked = false;
     public isTearDownInvoked = false;
     public isResumeInvoked = false;
     public isPauseInvoked = false;
@@ -599,9 +598,8 @@ class ChannelPlugin implements IChannelControls {
         }
     }
 
-    flushThroughBeaconSender() {
-        this.isFlushThroughBeaconSenderInvoked = true;
-        this.flush();
+    unload(async?: boolean) {
+        this.isUnloadInvoked = true;
     }
 
     public processTelemetry;
