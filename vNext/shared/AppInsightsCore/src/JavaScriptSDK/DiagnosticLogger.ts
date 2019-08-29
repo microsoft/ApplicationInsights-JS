@@ -62,8 +62,8 @@ export class DiagnosticLogger implements IDiagnosticLogger {
     public consoleLoggingLevel = () => 0;
 
     /**
-     * 0: OFF (default)
-     * 1: CRITICAL
+     * 0: OFF
+     * 1: CRITICAL (default)
      * 2: >= WARNING
      */
     public telemetryLoggingLevel = () => 1;
