@@ -246,7 +246,7 @@ export class Initialization implements IApplicationInsights {
         this.core.getTransmissionControls().forEach(channels => {
             channels.forEach(channel => {
                 if (channel.onunloadFlush) {
-                    channel.onunloadFlush(async);
+                    channel.onunloadFlush();
                 } else {
                     channel.flush(async);
                 }

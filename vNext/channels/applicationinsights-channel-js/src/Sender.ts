@@ -57,7 +57,7 @@ export class Sender implements IChannelControlsAI {
     }
 
     public onunloadFlush() {
-        if (!this._config.onunloadDisableBeacon() && Util.IsBeaconApiSupported()) {
+        if ((this._config.onunloadDisableBeacon() === false || this._config.isBeaconApiDisabled() === false) && Util.IsBeaconApiSupported()) {
             try {
                 this.triggerSend(true, this._beaconSender);
             } catch (e) {
@@ -322,6 +322,7 @@ export class Sender implements IChannelControlsAI {
     /**
      * Immediately send buffered data
      * @param async {boolean} - Indicates if the events should be sent asynchronously
+     * @param forcedSender {SenderFunction} - Indicates the forcedSender, undefined if not passed
      */
     public triggerSend(async = true, forcedSender?: SenderFunction) {
         try {

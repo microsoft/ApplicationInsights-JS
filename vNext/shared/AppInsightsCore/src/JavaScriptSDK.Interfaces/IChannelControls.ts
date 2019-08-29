@@ -34,9 +34,8 @@ export interface IChannelControls extends ITelemetryPlugin {
     /**
      * Try to send data immediately using beaconSender when page unload; channel should default to sending data asynchronously.
      * Fall back to xhr sender if beacon is not supported.
-     * @param async: send data asynchronously when true
      */
-    onunloadFlush(async: boolean): void;
+    onunloadFlush(): void;
 }
 
 export const MinChannelPriorty: number = 100;
