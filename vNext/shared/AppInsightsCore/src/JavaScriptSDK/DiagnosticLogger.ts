@@ -55,8 +55,8 @@ export class DiagnosticLogger implements IDiagnosticLogger {
     public enableDebugExceptions = () => false;
 
     /**
-     * 0: OFF
-     * 1: CRITICAL (default)
+     * 0: OFF (default)
+     * 1: CRITICAL
      * 2: >= WARNING
      */
     public consoleLoggingLevel = () => 0;
