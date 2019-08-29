@@ -56,13 +56,13 @@ export class Sender implements IChannelControlsAI {
         }
     }
 
-    public unload() {
+    public onunloadFlush() {
         if (!this._config.onunloadDisableBeacon() && Util.IsBeaconApiSupported()) {
             try {
                 this.triggerSend(true, this._beaconSender);
             } catch (e) {
                 this._logger.throwInternal(LoggingSeverity.CRITICAL,
-                    _InternalMessageId.FailedToUnloadThroughBeacon,
+                    _InternalMessageId.FailedToSendQueuedTelemetry,
                     "failed to flush with beacon sender on page unload, telemetry will not be collected: " + Util.getExceptionName(e),
                     { exception: Util.dump(e) });
             }

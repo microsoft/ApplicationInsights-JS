@@ -147,7 +147,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
 
                 Assert.ok(!channelPlugin.isUnloadInvoked, "Unload not called on initialize");
                 appInsightsCore.getTransmissionControls().forEach(queues => {
-                    queues.forEach(q => q.unload(true));
+                    queues.forEach(q => q.onunloadFlush(true));
                 });
 
                 Assert.ok(channelPlugin.isUnloadInvoked, "Unload triggered for channel");
@@ -598,7 +598,7 @@ class ChannelPlugin implements IChannelControls {
         }
     }
 
-    unload(async?: boolean) {
+    onunloadFlush(async?: boolean) {
         this.isUnloadInvoked = true;
     }
 

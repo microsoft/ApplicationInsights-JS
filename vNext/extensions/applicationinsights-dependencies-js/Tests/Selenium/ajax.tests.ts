@@ -542,7 +542,7 @@ class TestChannelPlugin implements IChannelControls {
         }
     }
 
-    unload(async?: boolean) {
+    onunloadFlush(async?: boolean) {
         this.isUnloadInvoked = true;
     }
 

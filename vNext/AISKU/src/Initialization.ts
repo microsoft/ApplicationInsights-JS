@@ -26,7 +26,7 @@ export interface Snippet {
 export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
     appInsights: ApplicationInsights;
     flush: (async?: boolean) => void;
-    unload: (async?: boolean) => void;
+    onunloadFlush: (async?: boolean) => void;
 };
 
 /**
@@ -242,11 +242,11 @@ export class Initialization implements IApplicationInsights {
      * @param {boolean} [async=true]
      * @memberof Initialization
      */
-    public unload(async: boolean = true) {
+    public onunloadFlush(async: boolean = true) {
         this.core.getTransmissionControls().forEach(channels => {
             channels.forEach(channel => {
-                if (channel.unload) {
-                    channel.unload(async);
+                if (channel.onunloadFlush) {
+                    channel.onunloadFlush(async);
                 } else {
                     channel.flush(async);
                 }
@@ -354,7 +354,7 @@ export class Initialization implements IApplicationInsights {
                 // impact on user experience.
 
                 //appInsightsInstance.context._sender.triggerSend();
-                appInsightsInstance.unload(false);
+                appInsightsInstance.onunloadFlush(false);
                 
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire

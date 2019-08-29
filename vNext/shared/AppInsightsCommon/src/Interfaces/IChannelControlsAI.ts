@@ -4,6 +4,5 @@
 import { IChannelControls } from "@microsoft/applicationinsights-core-js";
 
 export interface IChannelControlsAI extends IChannelControls {
-    flush();
-    unload();
+    onunloadFlush();
 }
