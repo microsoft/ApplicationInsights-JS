@@ -406,7 +406,8 @@ export class SenderTests extends TestClass {
                         duration: 123,
                         type: 'Fetch',
                         data: 'some data',
-                        target: 'https://example.com/test/name'
+                        target: 'https://example.com/test/name?q=bar',
+                        correlationContext: "cid-v1:foo"
                     },
                     data: {
                         property1: "val1",
@@ -446,7 +447,7 @@ export class SenderTests extends TestClass {
                 Assert.equal(true, baseData.success);
                 Assert.equal(200, baseData.resultCode);
                 Assert.equal("Some name given", baseData.name);
-                Assert.equal("example.com", baseData.target);
+                Assert.equal("example.com| cid-v1:foo", baseData.target);
 
                 // Assert ver
                 Assert.ok(baseData.ver);

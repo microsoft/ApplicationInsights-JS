@@ -256,8 +256,9 @@ export class DependencyEnvelopeCreator extends EnvelopeCreator {
         let success = bd.success;
         let resultCode = bd.responseCode;
         let requestAPI = bd.type;
+        let correlationContext = bd.correlationContext;
         let method = bd.properties && bd.properties[HttpMethod] ? bd.properties[HttpMethod] : "GET";
-        let baseData = new RemoteDependencyData(logger, id, absoluteUrl, command, duration, success, resultCode, method, requestAPI, customProperties, customMeasurements);
+        let baseData = new RemoteDependencyData(logger, id, absoluteUrl, command, duration, success, resultCode, method, requestAPI, correlationContext, customProperties, customMeasurements);
         let data = new Data<RemoteDependencyData>(RemoteDependencyData.dataType, baseData);
         return EnvelopeCreator.createEnvelope<RemoteDependencyData>(logger, RemoteDependencyData.envelopeType, telemetryItem, data);
     }
