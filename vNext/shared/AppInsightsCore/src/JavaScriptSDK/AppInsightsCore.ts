@@ -208,7 +208,7 @@ export class AppInsightsCore implements IAppInsightsCore {
     /**
      * Periodically check logger.queue for
      */
-    pollInternalLogs(): number {
+    pollInternalLogs(intervalMS?: number, eventName?: string): number {
         let interval = this.config.diagnosticLogInterval;
         if (!(interval > 0)) {
             interval = 10000;
@@ -219,7 +219,7 @@ export class AppInsightsCore implements IAppInsightsCore {
 
             queue.forEach((logMessage: _InternalLogMessage) => {
                 const item: ITelemetryItem = {
-                    name: "InternalMessageId: " + logMessage.messageId,
+                    name: eventName ? eventName : "InternalMessageId: " + logMessage.messageId,
                     iKey: this.config.instrumentationKey,
                     time: new Date().toISOString(),
                     baseType: _InternalLogMessage.dataType,
