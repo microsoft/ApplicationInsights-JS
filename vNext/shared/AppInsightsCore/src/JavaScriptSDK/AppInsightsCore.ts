@@ -208,7 +208,7 @@ export class AppInsightsCore implements IAppInsightsCore {
     /**
      * Periodically check logger.queue for
      */
-    pollInternalLogs(intervalMS?: number, eventName?: string): number {
+    pollInternalLogs(eventName?: string): number {
         let interval = this.config.diagnosticLogInterval;
         if (!(interval > 0)) {
             interval = 10000;
