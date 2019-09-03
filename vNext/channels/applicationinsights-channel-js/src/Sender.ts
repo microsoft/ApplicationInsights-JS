@@ -29,6 +29,8 @@ declare var XDomainRequest: {
     new(): IXDomainRequest;
 };
 
+export type SenderFunction = (payload: string[], isAsync: boolean) => void;
+
 export class Sender implements IChannelControlsAI {
     public priority: number = 1001;
 
@@ -54,6 +56,21 @@ export class Sender implements IChannelControlsAI {
         }
     }
 
+    public onunloadFlush() {
+        if ((this._config.onunloadDisableBeacon() === false || this._config.isBeaconApiDisabled() === false) && Util.IsBeaconApiSupported()) {
+            try {
+                this.triggerSend(true, this._beaconSender);
+            } catch (e) {
+                this._logger.throwInternal(LoggingSeverity.CRITICAL,
+                    _InternalMessageId.FailedToSendQueuedTelemetry,
+                    "failed to flush with beacon sender on page unload, telemetry will not be collected: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) });
+            }
+        } else {
+            this.flush();
+        }
+    }
+
     public teardown(): void {
         throw new Error("Method not implemented.");
     }
@@ -66,8 +83,7 @@ export class Sender implements IChannelControlsAI {
     /**
      * A method which will cause data to be send to the url
      */
-    public _sender: (payload: string[], isAsync: boolean) => void;
-
+    public _sender: SenderFunction;
     /**
      * A send buffer object
      */
@@ -306,8 +322,9 @@ export class Sender implements IChannelControlsAI {
     /**
      * Immediately send buffered data
      * @param async {boolean} - Indicates if the events should be sent asynchronously
+     * @param forcedSender {SenderFunction} - Indicates the forcedSender, undefined if not passed
      */
-    public triggerSend(async = true) {
+    public triggerSend(async = true, forcedSender?: SenderFunction) {
         try {
             // Send data only if disableTelemetry is false
             if (!this._config.disableTelemetry()) {
@@ -316,7 +333,11 @@ export class Sender implements IChannelControlsAI {
                     var payload = this._buffer.getItems();
 
                     // invoke send
-                    this._sender(payload, async);
+                    if (forcedSender) {
+                        forcedSender.call(this, payload, async);
+                    } else {
+                        this._sender(payload, async);
+                    }
                 }
 
                 // update lastSend time to enable throttling
@@ -460,6 +481,7 @@ export class Sender implements IChannelControlsAI {
             enableSessionStorageBuffer: () => true,
             isRetryDisabled: () => false,
             isBeaconApiDisabled: () => true,
+            onunloadDisableBeacon: () => false,
             instrumentationKey: () => undefined,  // Channel doesn't need iKey, it should be set already
             namePrefix: () => undefined,
             samplingPercentage: () => 100
@@ -476,6 +498,7 @@ export class Sender implements IChannelControlsAI {
             enableSessionStorageBuffer: undefined,
             isRetryDisabled: undefined,
             isBeaconApiDisabled: undefined,
+            onunloadDisableBeacon: undefined,
             instrumentationKey: undefined,
             namePrefix: undefined,
             samplingPercentage: undefined

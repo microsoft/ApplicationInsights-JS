@@ -26,6 +26,7 @@ export interface Snippet {
 export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
     appInsights: ApplicationInsights;
     flush: (async?: boolean) => void;
+    onunloadFlush: (async?: boolean) => void;
 };
 
 /**
@@ -236,6 +237,24 @@ export class Initialization implements IApplicationInsights {
     }
 
     /**
+     * Manually trigger an immediate send of all telemetry still in the buffer using beacon Sender.
+     * Fall back to xhr sender if beacon is not supported.
+     * @param {boolean} [async=true]
+     * @memberof Initialization
+     */
+    public onunloadFlush(async: boolean = true) {
+        this.core.getTransmissionControls().forEach(channels => {
+            channels.forEach(channel => {
+                if (channel.onunloadFlush) {
+                    channel.onunloadFlush();
+                } else {
+                    channel.flush(async);
+                }
+            })
+        })
+    }
+
+    /**
      * Initialize this instance of ApplicationInsights
      * @returns {IApplicationInsights}
      * @memberof Initialization
@@ -335,9 +354,8 @@ export class Initialization implements IApplicationInsights {
                 // impact on user experience.
 
                 //appInsightsInstance.context._sender.triggerSend();
-
-                appInsightsInstance.flush(false);
-
+                appInsightsInstance.onunloadFlush(false);
+                
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
                 let ext = appInsightsInstance.appInsights.core['_extensions'][PropertiesPluginIdentifier];

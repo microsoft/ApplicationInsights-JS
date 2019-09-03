@@ -515,6 +515,7 @@ export class AjaxTests extends TestClass {
 class TestChannelPlugin implements IChannelControls {
 
     public isFlushInvoked = false;
+    public isUnloadInvoked = false;
     public isTearDownInvoked = false;
     public isResumeInvoked = false;
     public isPauseInvoked = false;
@@ -539,6 +540,10 @@ class TestChannelPlugin implements IChannelControls {
         if (callBack) {
             callBack();
         }
+    }
+
+    onunloadFlush(async?: boolean) {
+        this.isUnloadInvoked = true;
     }
 
     public processTelemetry;
