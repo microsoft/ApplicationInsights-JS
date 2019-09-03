@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web-basic",
-    "version": "2.2.0",
+    "version": "2.2.1",
     "description": "Microsoft Application Insights Javascript SDK core and channel",
     "main": "dist/applicationinsights-web-basic.js",
     "module": "dist-esm/index.js",
@@ -22,9 +22,9 @@
         "rollup": "^0.66.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-common": "2.2.0",
-        "@microsoft/applicationinsights-channel-js": "2.2.0",
-        "@microsoft/applicationinsights-core-js": "2.2.0"
+        "@microsoft/applicationinsights-common": "2.2.1",
+        "@microsoft/applicationinsights-channel-js": "2.2.1",
+        "@microsoft/applicationinsights-core-js": "2.2.1"
     },
     "peerDependencies": {
       "tslib": "^1.9.3"

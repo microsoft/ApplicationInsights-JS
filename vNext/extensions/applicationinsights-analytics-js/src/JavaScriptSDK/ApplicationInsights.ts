@@ -31,7 +31,7 @@ import * as properties from "@microsoft/applicationinsights-properties-js";
 const durationProperty: string = "duration";
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
-    public static Version = "2.2.0"; // Not currently used anywhere
+    public static Version = "2.2.1"; // Not currently used anywhere
     public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
     public identifier: string = "ApplicationInsightsAnalytics"; // do not change name or priority
     public priority: number = 180; // take from reserved priority range 100- 200
