@@ -59,7 +59,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     private _trackAjaxAttempts: number = 0;
 
     // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
-    private _prevUri: string = window.location && window.location.href || "";
+    private _prevUri: string = typeof window === "object" && window.location && window.location.href || "";
     private _currUri: string;
 
     constructor() {
