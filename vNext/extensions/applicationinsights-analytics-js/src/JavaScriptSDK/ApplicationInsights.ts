@@ -59,8 +59,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     private _trackAjaxAttempts: number = 0;
 
     // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
-    private _urlArr: string[] = [];
-    private _prevUri: string = window.location.href;
+    private _prevUri: string = typeof window === "object" && window.location && window.location.href || "";
     private _currUri: string;
 
     constructor() {
@@ -613,13 +612,13 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             window.addEventListener(_self.config.namePrefix + "locationchange", () => {
                 if (_self._properties && _self._properties.context && _self._properties.context.telemetryTrace) {
                     _self._properties.context.telemetryTrace.traceID = Util.generateW3CId();
-                    _self._properties.context.telemetryTrace.name = window.location.pathname;
+                    _self._properties.context.telemetryTrace.name = window.location && window.location.pathname || "_unknown_";
                 }
                 if (this._currUri) {
                     this._prevUri = this._currUri;
-                    this._currUri = window.location.href;
+                    this._currUri = window.location && window.location.href || "";
                 } else {
-                    this._currUri = window.location.href;
+                    this._currUri = window.location && window.location.href || "";
                 }
                 setTimeout(((uri: string) => {
                     // todo: override start time so that it is not affected by autoRoutePVDelay
