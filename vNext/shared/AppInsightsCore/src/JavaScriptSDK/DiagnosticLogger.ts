@@ -55,18 +55,18 @@ export class DiagnosticLogger implements IDiagnosticLogger {
     public enableDebugExceptions = () => false;
 
     /**
-     * 0: OFF
-     * 1: CRITICAL (default)
-     * 2: >= WARNING
-     */
-    public consoleLoggingLevel = () => 1;
-
-    /**
      * 0: OFF (default)
      * 1: CRITICAL
      * 2: >= WARNING
      */
-    public telemetryLoggingLevel = () => 0;
+    public consoleLoggingLevel = () => 0;
+
+    /**
+     * 0: OFF
+     * 1: CRITICAL (default)
+     * 2: >= WARNING
+     */
+    public telemetryLoggingLevel = () => 1;
 
     /**
      * The maximum number of internal messages allowed to be sent per page view
