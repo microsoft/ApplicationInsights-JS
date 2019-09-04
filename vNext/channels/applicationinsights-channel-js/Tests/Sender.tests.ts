@@ -447,7 +447,7 @@ export class SenderTests extends TestClass {
                 Assert.equal(true, baseData.success);
                 Assert.equal(200, baseData.resultCode);
                 Assert.equal("Some name given", baseData.name);
-                Assert.equal("example.com| cid-v1:foo", baseData.target);
+                Assert.equal("example.com | cid-v1:foo", baseData.target);
 
                 // Assert ver
                 Assert.ok(baseData.ver);
