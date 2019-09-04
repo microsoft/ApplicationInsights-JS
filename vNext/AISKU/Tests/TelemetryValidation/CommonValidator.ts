@@ -11,6 +11,10 @@ export class CommonValidator implements ITypeValidator {
             return false;
         };
 
+        if (item.data.baseData.ver !== 2) {
+            return false;
+        }
+
         // verify item.data has baseType field
         if (!item.data.baseType) {
             return false;

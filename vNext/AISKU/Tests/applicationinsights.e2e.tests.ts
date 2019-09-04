@@ -71,6 +71,9 @@ export class ApplicationInsightsTests extends TestClass {
             });
             init.loadAppInsights();
             this._ai = init;
+            this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
+                Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
+            });
 
 
             // Setup Sinon stuff
@@ -706,7 +709,7 @@ export class ApplicationInsightsTests extends TestClass {
                         return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
                     case RemoteDependencyData.dataType:
                         return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
-        
+
                     default:
                         return EventValidator.EventValidator.Validate(payload, baseType);
                 }
