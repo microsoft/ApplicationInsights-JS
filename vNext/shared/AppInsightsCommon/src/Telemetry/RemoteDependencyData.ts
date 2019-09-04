@@ -57,7 +57,7 @@ export class RemoteDependencyData extends GeneratedRemoteDependencyData implemen
         this.data = DataSanitizer.sanitizeUrl(logger, commandName) || dependencyFields.data; // get a value from hosturl if commandName not available
         this.target = DataSanitizer.sanitizeString(logger, dependencyFields.target);
         if (correlationContext) {
-            this.target = `${this.target}| ${correlationContext}`;
+            this.target = `${this.target} | ${correlationContext}`;
         }
         this.name = DataSanitizer.sanitizeString(logger, dependencyFields.name);
 
