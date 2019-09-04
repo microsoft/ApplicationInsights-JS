@@ -24,7 +24,8 @@ export class ExceptionTests extends TestClass {
                 var exceptionInterface: IExceptionInternal = exception.toInterface();
                 Assert.deepEqual(exception.id, exceptionInterface.id);
                 Assert.deepEqual(exception.problemGroup, exceptionInterface.problemGroup);
-                Assert.deepEqual(exception.ver, exceptionInterface.ver);
+                Assert.deepEqual("4.0", exceptionInterface.ver, "Default format expects CS4.0");
+                Assert.deepEqual(2, exception.ver, "Breeze format expects CS2.0");
                 Assert.deepEqual(exception.isManual, exceptionInterface.isManual);
                 Assert.deepEqual(exception.exceptions.map((exception: any) => exception.toInterface()), exceptionInterface.exceptions);
                 Assert.deepEqual(exception.severityLevel, exceptionInterface.severityLevel);

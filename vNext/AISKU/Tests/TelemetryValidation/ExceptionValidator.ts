@@ -12,10 +12,15 @@ export class ExceptionValidator implements ITypeValidator {
         }
 
         // verify item has ver and exceptions fields
-        if (!item.data.baseData || 
-            !item.data.baseData.ver || 
+        if (!item.data.baseData ||
+            !item.data.baseData.ver ||
             !item.data.baseData.exceptions) {
             return false;
+        }
+
+        // Exception.ver should be a number for breeze channel, but a string in CS4.0
+        if (item.data.baseData.ver !== 2) {
+            return false; // not a valid breeze exception
         }
 
         if (!ExceptionValidator._validateExceptions(item.data.baseData.exceptions)) {
@@ -27,10 +32,10 @@ export class ExceptionValidator implements ITypeValidator {
 
     private static _validateExceptions(exceptions: any[]): boolean {
         // verify exceptions has typeName, message, hasFullStack, stack, parsedStack fields
-        if (!exceptions[0].typeName || 
-            !exceptions[0].message || 
-            !exceptions[0].hasFullStack || 
-            !exceptions[0].stack || 
+        if (!exceptions[0].typeName ||
+            !exceptions[0].message ||
+            !exceptions[0].hasFullStack ||
+            !exceptions[0].stack ||
             !exceptions[0].parsedStack) {
             return false;
         }

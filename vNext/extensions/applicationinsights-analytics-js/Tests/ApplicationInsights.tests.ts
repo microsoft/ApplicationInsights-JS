@@ -1,6 +1,6 @@
 /// <reference path="./TestFramework/Common.ts" />
 
-import { Util, Exception, SeverityLevel, Trace, PageViewPerformance, PageView, IConfig } from "@microsoft/applicationinsights-common";
+import { Util, Exception, SeverityLevel, Trace, PageViewPerformance, IConfig, IExceptionInternal } from "@microsoft/applicationinsights-common";
 import {
     ITelemetryItem, AppInsightsCore,
     IPlugin, IConfiguration
@@ -360,6 +360,11 @@ export class ApplicationInsightsTests extends TestClass {
                 // Test
                 appInsights.trackException({error: new Error(), severityLevel: SeverityLevel.Critical});
                 Assert.ok(trackStub.calledOnce, "single exception is tracked");
+
+                // Verify ver is a string, as required by CS4.0
+                const baseData = (trackStub.args[0][0] as ITelemetryItem).baseData as IExceptionInternal;
+                Assert.equal("string", typeof baseData.ver, "Exception.ver should be a string for CS4.0");
+                Assert.equal("4.0", baseData.ver);
             }
         });
 

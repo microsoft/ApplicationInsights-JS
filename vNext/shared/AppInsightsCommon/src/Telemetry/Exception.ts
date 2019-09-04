@@ -10,7 +10,7 @@ import { FieldType } from '../Enums';
 import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
 import { Util } from '../Util';
 import { IDiagnosticLogger, CoreUtils } from '@microsoft/applicationinsights-core-js';
-import { IExceptionInternal, IExceptionTelemetry, IExceptionDetailsInternal, IExceptionStackFrameInternal } from '../Interfaces/IExceptionTelemetry';
+import { IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal } from '../Interfaces/IExceptionTelemetry';
 
 export class Exception extends ExceptionData implements ISerializable {
 
@@ -51,7 +51,7 @@ export class Exception extends ExceptionData implements ISerializable {
             if (exception.problemGroup) this.problemGroup = exception.problemGroup;
 
             // bool/int types, use isNullOrUndefined
-            if (!CoreUtils.isNullOrUndefined(exception.ver)) this.ver = exception.ver;
+            this.ver = 2; // TODO: handle the CS"4.0" ==> breeze 2 conversion in a better way
             if (!CoreUtils.isNullOrUndefined(exception.isManual)) this.isManual = exception.isManual;
         }
 
@@ -72,7 +72,7 @@ export class Exception extends ExceptionData implements ISerializable {
             || undefined;
 
         return <IExceptionInternal>{
-            ver: ver,
+            ver: "4.0", // TODO: handle the CS"4.0" ==> breeze 2 conversion in a better way
             exceptions: exceptionDetailsInterface,
             severityLevel,
             properties,
