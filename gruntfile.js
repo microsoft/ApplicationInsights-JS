@@ -6,15 +6,15 @@ module.exports = function (grunt) {
             },
             files: {
                 src: [
-                    './vNext/shared/AppInsightsCommon/**/*.ts',
-                    './vNext/extensions/**/*.ts',
-                    './vNext/AISKU/**/*.ts',
+                    './shared/AppInsightsCommon/**/*.ts',
+                    './extensions/**/*.ts',
+                    './AISKU/**/*.ts',
                     '!./**/node_modules/**',
                     '!./**/Tests/**',
                     '!./**/dist-esm/**',
                     '!./**/Generated/**',
-                    './JavaScript/**/*.ts',
-                    '!./JavaScript/JavaScriptSDK.Tests/**'
+                    './legacy/JavaScript/**/*.ts',
+                    '!./legacy/JavaScript/JavaScriptSDK.Tests/**'
                 ],
             }
         },
@@ -25,183 +25,183 @@ module.exports = function (grunt) {
             default: {
                 tsconfig: './tsconfig.json',
                 src: [
-                    'JavaScript/JavaScriptSDK.Interfaces/*.ts',
-                    'JavaScript/JavaScriptSDK/*.ts',
+                    'legacy/JavaScript/JavaScriptSDK.Interfaces/*.ts',
+                    'legacy/JavaScript/JavaScriptSDK/*.ts',
                 ],
-                out: 'bundle/ai.js',
+                out: 'legacy/bundle/ai.js',
             },
             core: {
-                tsconfig: './vNext/shared/AppInsightsCore/tsconfig.json'
+                tsconfig: './shared/AppInsightsCore/tsconfig.json'
             },
             coretest: {
-                tsconfig: './vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/tsconfig.json',
+                tsconfig: './shared/AppInsightsCore/src/JavaScriptSDK.Tests/tsconfig.json',
                 src: [
-                    './vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests.ts',
-                    './vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/aitests.ts'
+                    './shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/ApplicationInsightsCore.Tests.ts',
+                    './shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/aitests.ts'
                 ],
-                out: 'vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/aicore.tests.js'
+                out: 'shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/aicore.tests.js'
             },
             common: {
-                tsconfig: './vNext/shared/AppInsightsCommon/tsconfig.json'
+                tsconfig: './shared/AppInsightsCommon/tsconfig.json'
             },
             commontest: {
-                tsconfig: './vNext/shared/AppInsightsCommon/Tests/tsconfig.json',
+                tsconfig: './shared/AppInsightsCommon/Tests/tsconfig.json',
                 src: [
-                    './vNext/shared/AppInsightsCommon/Tests/Selenium/appinsights-common.tests.ts',
+                    './shared/AppInsightsCommon/Tests/Selenium/appinsights-common.tests.ts',
                 ],
-                out: 'vNext/shared/AppInsightsCommon/Tests/Selenium/aicommon.tests.js'
+                out: 'shared/AppInsightsCommon/Tests/Selenium/aicommon.tests.js'
             },
             appinsights: {
-                tsconfig: './vNext/extensions/applicationinsights-analytics-js/tsconfig.json',
+                tsconfig: './extensions/applicationinsights-analytics-js/tsconfig.json',
             },
             appinsightstests: {
-                tsconfig: './vNext/extensions/applicationinsights-analytics-js/Tests/tsconfig.json',
+                tsconfig: './extensions/applicationinsights-analytics-js/Tests/tsconfig.json',
                 src: [
-                    './vNext/extensions/applicationinsights-analytics-js/Tests/Selenium/*.ts',
-                    './vNext/extensions/applicationinsights-analytics-js/Tests/*.ts'
+                    './extensions/applicationinsights-analytics-js/Tests/Selenium/*.ts',
+                    './extensions/applicationinsights-analytics-js/Tests/*.ts'
                 ],
-                out: 'vNext/extensions/applicationinsights-analytics-js/Tests/Selenium/appinsights-analytics.tests.js'
+                out: 'extensions/applicationinsights-analytics-js/Tests/Selenium/appinsights-analytics.tests.js'
             },
             aisku: {
-                tsconfig: './vNext/AISKU/tsconfig.json',
+                tsconfig: './AISKU/tsconfig.json',
                 src: [
-                    'vNext/AISKU/src/*.ts'
+                    'AISKU/src/*.ts'
                 ]
             },
             aiskulite: {
-                tsconfig: './vNext/AISKULight/tsconfig.json',
+                tsconfig: './AISKULight/tsconfig.json',
                 src: [
-                    'vNext/AISKULight/*.ts'
+                    'AISKULight/*.ts'
                 ]
             },
             aiskutests: {
-                tsconfig: './vNext/AISKU/Tests/tsconfig.json',
+                tsconfig: './AISKU/Tests/tsconfig.json',
                 src: [
-                    'vNext/AISKU/Tests/Selenium/*.ts',
-                    'vNext/AISKU/Tests/*.ts'
+                    'AISKU/Tests/Selenium/*.ts',
+                    'AISKU/Tests/*.ts'
                 ],
-                out: 'vNext/AISKU/Tests/Selenium/appinsights-sdk.tests.js'
+                out: 'AISKU/Tests/Selenium/appinsights-sdk.tests.js'
             },
             properties: {
-                tsconfig: './vNext/extensions/applicationinsights-properties-js/tsconfig.json',
+                tsconfig: './extensions/applicationinsights-properties-js/tsconfig.json',
                 src: [
-                    './vNext/extensions/applicationinsights-properties-js/*.ts',
-                    './vNext/extensions/applicationinsights-properties-js/Context/*.ts',
-                    './vNext/extensions/applicationinsights-properties-js/Interfaces/Context/*.ts',
-                    './vNext/extensions/applicationinsights-properties-js/Interfaces/*.ts'
+                    './extensions/applicationinsights-properties-js/*.ts',
+                    './extensions/applicationinsights-properties-js/Context/*.ts',
+                    './extensions/applicationinsights-properties-js/Interfaces/Context/*.ts',
+                    './extensions/applicationinsights-properties-js/Interfaces/*.ts'
                 ]
             },
             propertiestests: {
-                tsconfig: './vNext/extensions/applicationinsights-properties-js/Tests/tsconfig.json',
-                src: './vNext/extensions/applicationinsights-properties-js/Tests/**/*.ts',
-                out: './vNext/extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
+                tsconfig: './extensions/applicationinsights-properties-js/Tests/tsconfig.json',
+                src: './extensions/applicationinsights-properties-js/Tests/**/*.ts',
+                out: './extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
             },
             react: {
-                tsconfig: './vNext/extensions/applicationinsights-react-js/tsconfig.json'
+                tsconfig: './extensions/applicationinsights-react-js/tsconfig.json'
             },
             reactnative: {
-                tsconfig: './vNext/extensions/applicationinsights-react-native/tsconfig.json',
+                tsconfig: './extensions/applicationinsights-react-native/tsconfig.json',
                 src: [
-                    './vNext/extensions/applicationinsights-react-native/src/index.ts'
+                    './extensions/applicationinsights-react-native/src/index.ts'
                 ]
             },
             reactnativetests: {
-                tsconfig: './vNext/extensions/applicationinsights-react-native/Tests/tsconfig.json',
-                src: './vNext/extensions/applicationinsights-react-native/Tests/**/*.ts',
-                out: './vNext/extensions/applicationinsights-react-native/Tests/Selenium/reactnativeplugin.tests.js'
+                tsconfig: './extensions/applicationinsights-react-native/Tests/tsconfig.json',
+                src: './extensions/applicationinsights-react-native/Tests/**/*.ts',
+                out: './extensions/applicationinsights-react-native/Tests/Selenium/reactnativeplugin.tests.js'
             },
             deps: {
-                tsconfig: './vNext/extensions/applicationinsights-dependencies-js/tsconfig.json'
+                tsconfig: './extensions/applicationinsights-dependencies-js/tsconfig.json'
             },
             depstest: {
-                tsconfig: './vNext/extensions/applicationinsights-dependencies-js/Tests/tsconfig.json',
+                tsconfig: './extensions/applicationinsights-dependencies-js/Tests/tsconfig.json',
                 src: [
-                    './vNext/extensions/applicationinsights-dependencies-js/Tests/Selenium/*.ts',
-                    './vNext/extensions/applicationinsights-dependencies-js/Tests/TestsFramework/*.ts'
+                    './extensions/applicationinsights-dependencies-js/Tests/Selenium/*.ts',
+                    './extensions/applicationinsights-dependencies-js/Tests/TestsFramework/*.ts'
                 ],
-                out: './vNext/extensions/applicationinsights-dependencies-js/Tests/Selenium/dependencies.tests.js'
+                out: './extensions/applicationinsights-dependencies-js/Tests/Selenium/dependencies.tests.js'
             },
             aichannel: {
-                tsconfig: './vNext/channels/applicationinsights-channel-js/tsconfig.json'
+                tsconfig: './channels/applicationinsights-channel-js/tsconfig.json'
             },
             aichanneltest: {
-                tsconfig: './vNext/channels/applicationinsights-channel-js/Tests/tsconfig.json',
+                tsconfig: './channels/applicationinsights-channel-js/Tests/tsconfig.json',
                 src: [
-                    './vNext/channels/applicationinsights-channel-js/Tests/Selenium/*.ts',
-                    './vNext/channels/applicationinsights-channel-js/Tests/*.ts',
+                    './channels/applicationinsights-channel-js/Tests/Selenium/*.ts',
+                    './channels/applicationinsights-channel-js/Tests/*.ts',
                 ],
-                out: './vNext/channels/applicationinsights-channel-js/Tests/Selenium/aichannel.tests.js'
+                out: './channels/applicationinsights-channel-js/Tests/Selenium/aichannel.tests.js'
             },
             module: {
                 // Use a different tsconfig for building module in order to not generate a declaration file for module, while keeping declaration for other modules
                 tsconfig: './tsconfigmodule.json',
                 src: [
-                    'JavaScript/JavaScriptSDK.Interfaces/*.ts',
-                    'JavaScript/JavaScriptSDK.Module/*.ts',
+                    'legacy/JavaScript/JavaScriptSDK.Interfaces/*.ts',
+                    'legacy/JavaScript/JavaScriptSDK.Module/*.ts',
                 ],
-                out: 'bundle/ai.module.js'
+                out: 'legacy/bundle/ai.module.js'
             },
             types: {
                 tsconfig: './tsconfig.json',
                 src: [
-                    'JavaScript/JavaScriptSDK.Tests/DefinitionTypes/*.ts'
+                    'legacy/JavaScript/JavaScriptSDK.Tests/DefinitionTypes/*.ts'
                 ],
-                out: 'bundle/test/ai.types.js'
+                out: 'legacy/bundle/test/ai.types.js'
             },
             test: {
                 tsconfig: './tsconfig.json',
                 src: [
-                    'JavaScript/JavaScriptSDK.Tests/Selenium/*.ts'
+                    'legacy/JavaScript/JavaScriptSDK.Tests/Selenium/*.ts'
                 ],
-                out: 'JavaScript/JavaScriptSDK.Tests/Selenium/ai.tests.js'
+                out: 'legacy/JavaScript/JavaScriptSDK.Tests/Selenium/ai.tests.js'
             },
             testSchema: {
                 tsconfig: './tsconfig.json',
                 src: [
-                    'JavaScript/JavaScriptSDK.Tests/Contracts/Generated/*.ts'
+                    'legacy/JavaScript/JavaScriptSDK.Tests/Contracts/Generated/*.ts'
                 ],
-                out: 'bundle/test/ai.schema.tests.js'
+                out: 'legacy/bundle/test/ai.schema.tests.js'
             },
             testE2E: {
                 tsconfig: './tsconfig.json',
                 files: [
                     {
-                        src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/DisableTelemetry.tests.ts',
-                        dest: 'bundle/test/e2e/DisableTelemetry.tests.js'
+                        src: 'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/DisableTelemetry.tests.ts',
+                        dest: 'legacy/bundle/test/e2e/DisableTelemetry.tests.js'
                     },
                     {
-                        src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/PublicApi.tests.ts',
-                        dest: 'bundle/test/e2e/PublicApiTests.tests.js'
+                        src: 'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/PublicApi.tests.ts',
+                        dest: 'legacy/bundle/test/e2e/PublicApiTests.tests.js'
                     },
                     {
-                        src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/SanitizerE2E.tests.ts',
-                        dest: 'bundle/test/e2e/SanitizerE2E.tests.js'
+                        src: 'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/SanitizerE2E.tests.ts',
+                        dest: 'legacy/bundle/test/e2e/SanitizerE2E.tests.js'
                     },
                     {
-                        src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/SenderE2E.tests.ts',
-                        dest: 'bundle/test/e2e/SenderE2E.tests.js'
+                        src: 'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/SenderE2E.tests.ts',
+                        dest: 'legacy/bundle/test/e2e/SenderE2E.tests.js'
                     },
                     {
-                        src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/Snippet.tests.ts',
-                        dest: 'bundle/test/e2e/Snippet.tests.js'
+                        src: 'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/Snippet.tests.ts',
+                        dest: 'legacy/bundle/test/e2e/Snippet.tests.js'
                     },
                     {
-                        src: 'JavaScript/JavaScriptSDK.Tests/E2ETests/ValidateApi.tests.ts',
-                        dest: 'bundle/test/e2e/ValidateApi.tests.js'
+                        src: 'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/ValidateApi.tests.ts',
+                        dest: 'legacy/bundle/test/e2e/ValidateApi.tests.js'
                     }
                 ],
-                outDir: 'bundle/test/e2e'
+                outDir: 'legacy/bundle/test/e2e'
             }
         },
         uglify: {
             ai: {
                 files: {
-                    'bundle/ai.0.js': ['bundle/ai.js'],
+                    'legacy/bundle/ai.0.js': ['legacy/bundle/ai.js'],
                 },
                 options: {
                     sourceMap: true,
                     sourceMapIncludeSources: true,
-                    sourceMapIn: 'bundle/ai.js.map',
+                    sourceMapIn: 'legacy/bundle/ai.js.map',
                     compress: {
                         ie8: true
                     },
@@ -212,32 +212,32 @@ module.exports = function (grunt) {
             },
             snippet: {
                 files: {
-                    'bundle/snippet/snippet.min.js': ['JavaScript/JavaScriptSDK/snippet.js']
+                    'legacy/bundle/snippet/snippet.min.js': ['legacy/JavaScript/JavaScriptSDK/snippet.js']
                 }
             },
             snippetvNext: {
                 files: {
-                    'vNext/AISKU/snippet/snippet.min.js': ['vNext/AISKU/snippet/snippet.js']
+                    'AISKU/snippet/snippet.min.js': ['AISKU/snippet/snippet.js']
                 }
             }
         },
         run: {
             reacttests: {
-                exec: 'cd vNext/extensions/applicationinsights-react-js && npm run test'
+                exec: 'cd extensions/applicationinsights-react-js && npm run test'
             }
         },
         qunit: {
             all: {
                 options: {
                     urls: [
-                        'JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html',
-                        'JavaScript/JavaScriptSDK.Tests/Contracts/Schema.tests.htm',
-                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.DisableTelemetry.tests.htm',
-                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.PublicApi.tests.htm',
-                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.SanitizerE2E.tests.htm',
-                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.Sender.tests.htm',
-                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.snippetTests.htm',
-                        'JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.ValidateApi.tests.htm'
+                        'legacy/JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html',
+                        'legacy/JavaScript/JavaScriptSDK.Tests/Contracts/Schema.tests.htm',
+                        'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.DisableTelemetry.tests.htm',
+                        'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.PublicApi.tests.htm',
+                        'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.SanitizerE2E.tests.htm',
+                        'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.Sender.tests.htm',
+                        'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.snippetTests.htm',
+                        'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.ValidateApi.tests.htm'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -248,7 +248,7 @@ module.exports = function (grunt) {
             core: {
                 options: {
                     urls: [
-                        './vNext/shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/Tests.html'
+                        './shared/AppInsightsCore/src/JavaScriptSDK.Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -259,7 +259,7 @@ module.exports = function (grunt) {
             common: {
                 options: {
                     urls: [
-                        './vNext/shared/AppInsightsCommon/Tests/Selenium/Tests.html'
+                        './shared/AppInsightsCommon/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -270,7 +270,7 @@ module.exports = function (grunt) {
             aitests: {
                 options: {
                     urls: [
-                        './vNext/extensions/applicationinsights-analytics-js/Tests/Selenium/Tests.html'
+                        './extensions/applicationinsights-analytics-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -281,7 +281,7 @@ module.exports = function (grunt) {
             deps: {
                 options: {
                     urls: [
-                        './vNext/extensions/applicationinsights-dependencies-js/Tests/Selenium/Tests.html'
+                        './extensions/applicationinsights-dependencies-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -292,7 +292,7 @@ module.exports = function (grunt) {
             properties: {
                 options: {
                     urls: [
-                        './vNext/extensions/applicationinsights-properties-js/Tests/Selenium/Tests.html'
+                        './extensions/applicationinsights-properties-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 5 * 60 * 1000, // 5 min
                     console: false,
@@ -303,7 +303,7 @@ module.exports = function (grunt) {
             reactnative: {
                 options: {
                     urls: [
-                        './vNext/extensions/applicationinsights-react-native/Tests/Selenium/Tests.html'
+                        './extensions/applicationinsights-react-native/Tests/Selenium/Tests.html'
                     ],
                     timeout: 5 * 60 * 1000, // 5 min
                     console: true,
@@ -314,7 +314,7 @@ module.exports = function (grunt) {
             aisku: {
                 options: {
                     urls: [
-                        './vNext/AISKU/Tests/Selenium/Tests.html'
+                        './AISKU/Tests/Selenium/Tests.html'
                     ],
                     timeout: 5 * 60 * 1000, // 5 min
                     console: false,
@@ -325,7 +325,7 @@ module.exports = function (grunt) {
             aichannel: {
                 options: {
                     urls: [
-                        './vNext/channels/applicationinsights-channel-js/Tests/Selenium/Tests.html'
+                        './channels/applicationinsights-channel-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,

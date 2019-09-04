@@ -17,9 +17,8 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 	npm install
 	npm install -g @microsoft/rush
 	```
-3. Navigate to the vNext folder and update rush dependencies
+3. Navigate to the root folder and update rush dependencies
 	```
-	cd vnext
 	rush update
 	```
 4. Build and test
@@ -30,7 +29,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 ## Build and test
 
-The vNext folder contains 8 packages that are components of this next version of the SDK. When making changes in multiple packages, you can build using the following commands in vNext folder:
+The root folder contains 8 packages that are components of this next version of the SDK. When making changes in multiple packages, you can build using the following commands in root folder:
 
 1. rush rebuild --verbose
 
@@ -40,4 +39,4 @@ The vNext folder contains 8 packages that are components of this next version of
 
     This will run tests in all packages in parallel.
 
-If you are changing package versions or adding/removing any package dependencies, run> **rush update --purge --recheck --full** before building. Please check-in any files that change under vNext\common\ folder.
+If you are changing package versions or adding/removing any package dependencies, run> **rush update --purge --recheck --full** before building. Please check-in any files that change under common\ folder.
