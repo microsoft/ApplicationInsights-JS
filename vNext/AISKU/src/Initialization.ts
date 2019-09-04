@@ -53,7 +53,7 @@ export class Initialization implements IApplicationInsights {
         // ensure instrumentationKey is specified
         if (config && !config.instrumentationKey) {
             config = <any>snippet;
-            ApplicationInsights.Version = "2.2.1"; // Not currently used anywhere
+            ApplicationInsights.Version = "2.2.2"; // Not currently used anywhere
         }
 
         this.appInsights = new ApplicationInsights();
@@ -355,7 +355,7 @@ export class Initialization implements IApplicationInsights {
 
                 //appInsightsInstance.context._sender.triggerSend();
                 appInsightsInstance.onunloadFlush(false);
-                
+
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
                 let ext = appInsightsInstance.appInsights.core['_extensions'][PropertiesPluginIdentifier];
