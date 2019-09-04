@@ -1,7 +1,7 @@
 import { Util } from '@microsoft/applicationinsights-common';
 
 export class Traceparent {
-    private static DEFAULT_TRACE_FLAG = "00";
+    private static DEFAULT_TRACE_FLAG = "01";
     private static DEFAULT_VERSION = "00";
     public spanId: string;
     public traceFlag: string = Traceparent.DEFAULT_TRACE_FLAG;
