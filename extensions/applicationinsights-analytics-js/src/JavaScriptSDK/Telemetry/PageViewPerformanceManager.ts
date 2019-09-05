@@ -38,13 +38,22 @@ export class PageViewPerformanceManager {
          *  |---network---||---request---|---response---|---dom---|
          *  |--------------------------total----------------------|
          */
+        var navigationTiming = this.getPerformanceNavigationTiming();
         var timing = this.getPerformanceTiming();
-        if (timing) {
-            var total = DateTimeUtils.GetDuration(timing.navigationStart, timing.loadEventEnd);
-            var network = DateTimeUtils.GetDuration(timing.navigationStart, timing.connectEnd);
-            var request = DateTimeUtils.GetDuration(timing.requestStart, timing.responseStart);
-            var response = DateTimeUtils.GetDuration(timing.responseStart, timing.responseEnd);
-            var dom = DateTimeUtils.GetDuration(timing.responseEnd, timing.loadEventEnd);
+        if (navigationTiming || timing) {
+            if (navigationTiming) {
+                var total = navigationTiming.duration;
+                var network = DateTimeUtils.GetDuration(navigationTiming.startTime, navigationTiming.connectEnd);
+                var request = DateTimeUtils.GetDuration(navigationTiming.requestStart, navigationTiming.responseStart);
+                var response = DateTimeUtils.GetDuration(navigationTiming.responseStart, navigationTiming.responseEnd);
+                var dom = DateTimeUtils.GetDuration(navigationTiming.responseEnd, navigationTiming.loadEventEnd);
+            } else {
+                var total = DateTimeUtils.GetDuration(timing.navigationStart, timing.loadEventEnd);
+                var network = DateTimeUtils.GetDuration(timing.navigationStart, timing.connectEnd);
+                var request = DateTimeUtils.GetDuration(timing.requestStart, timing.responseStart);
+                var response = DateTimeUtils.GetDuration(timing.responseStart, timing.responseEnd);
+                var dom = DateTimeUtils.GetDuration(timing.responseEnd, timing.loadEventEnd);
+            }
 
             if (total == 0) {
                 this._logger.throwInternal(
@@ -82,13 +91,27 @@ export class PageViewPerformanceManager {
         }
     }
 
-    public getPerformanceTiming(): PerformanceTiming {
+    public getPerformanceTiming(): PerformanceTiming | null {
         if (this.isPerformanceTimingSupported()) {
             return window.performance.timing;
         }
 
         return null;
     }
+    public getPerformanceNavigationTiming(): PerformanceNavigationTiming | null {
+        if (this.isPerformanceNavigationTimingSupported()) {
+            return window.performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
+        }
+
+        return null;
+    }
+
+    /**
+    * Returns true is window PerformanceNavigationTiming API is supported, false otherwise.
+    */
+   public isPerformanceNavigationTimingSupported() {
+    return typeof window != "undefined" && window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType("navigation").length > 0;
+}
 
     /**
     * Returns true is window performance timing API is supported, false otherwise.
