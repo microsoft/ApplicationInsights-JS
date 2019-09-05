@@ -95,7 +95,7 @@ export interface IAutoExceptionTelemetry {
 }
 
 export interface IExceptionInternal {
-    ver: number;
+    ver: string;
     id: string;
     exceptions: IExceptionDetailsInternal[];
     severityLevel?: SeverityLevel | number;
