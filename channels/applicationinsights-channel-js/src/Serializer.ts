@@ -13,21 +13,21 @@ export class Serializer {
      * Serializes the current object to a JSON string.
      */
     public serialize(input: ISerializable): string {
-        var output = this._serializeObject(input, "root");
+        const output = this._serializeObject(input, "root");
         return JSON.stringify(output);
     }
 
     private _serializeObject(source: ISerializable, name: string): any {
-        var circularReferenceCheck = "__aiCircularRefCheck";
-        var output = {};
+        const circularReferenceCheck = "__aiCircularRefCheck";
+        let output = {};
 
         if (!source) {
-            this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSerializeObject, "cannot serialize object because it is null or undefined", { name: name }, true);
+            this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSerializeObject, "cannot serialize object because it is null or undefined", { name }, true);
             return output;
         }
 
         if (source[circularReferenceCheck]) {
-            this._logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.CircularReferenceDetected, "Circular reference detected while serializing object", { name: name }, true);
+            this._logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.CircularReferenceDetected, "Circular reference detected while serializing object", { name }, true);
             return output;
         }
 
@@ -40,9 +40,9 @@ export class Serializer {
             } else if (name === "tags") {
                 output = this._serializeStringMap(source, "string", name);
             } else if (Util.isArray(source)) {
-                output = this._serializeArray(<any>source, name);
+                output = this._serializeArray(source as any, name);
             } else {
-                this._logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.CannotSerializeObjectNonSerializable, "Attempting to serialize an object which does not implement ISerializable", { name: name }, true);
+                this._logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.CannotSerializeObjectNonSerializable, "Attempting to serialize an object which does not implement ISerializable", { name }, true);
 
                 try {
                     // verify that the object can be stringified
@@ -58,22 +58,22 @@ export class Serializer {
         }
 
         source[circularReferenceCheck] = true;
-        for (var field in source.aiDataContract) {
+        for (const field in source.aiDataContract) {
 
-            var contract = source.aiDataContract[field];
-            var isRequired = (typeof contract === "function") ? (contract() & FieldType.Required) : (contract & FieldType.Required);
-            var isHidden = (typeof contract === "function") ? (contract() & FieldType.Hidden) : (contract & FieldType.Hidden);
-            var isArray = contract & FieldType.Array;
+            const contract = source.aiDataContract[field];
+            const isRequired = (typeof contract === "function") ? (contract() & FieldType.Required) : (contract & FieldType.Required);
+            const isHidden = (typeof contract === "function") ? (contract() & FieldType.Hidden) : (contract & FieldType.Hidden);
+            const isArray = contract & FieldType.Array;
 
-            var isPresent = source[field] !== undefined;
-            var isObject = typeof source[field] === "object" && source[field] !== null;
+            const isPresent = source[field] !== undefined;
+            const isObject = typeof source[field] === "object" && source[field] !== null;
 
             if (isRequired && !isPresent && !isArray) {
                 this._logger.throwInternal(
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.MissingRequiredFieldSpecification,
                     "Missing required field specification. The field is required but not present on source",
-                    { field: field, name: name });
+                    { field, name });
 
                 // If not in debug mode, continue and hope the error is permissible
                 continue;
@@ -84,7 +84,7 @@ export class Serializer {
                 continue;
             }
 
-            var value;
+            let value;
             if (isObject) {
                 if (isArray) {
                     // special case; resurse on each object in the source array
@@ -108,8 +108,8 @@ export class Serializer {
         return output;
     }
 
-    private _serializeArray(sources: Array<ISerializable>, name: string): Array<any> {
-        var output = undefined;
+    private _serializeArray(sources: ISerializable[], name: string): any[] {
+        let output;
 
         if (!!sources) {
             if (!Util.isArray(sources)) {
@@ -117,12 +117,12 @@ export class Serializer {
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.ItemNotInArray,
                     "This field was specified as an array in the contract but the item is not an array.\r\n",
-                    { name: name }, true);
+                    { name }, true);
             } else {
                 output = [];
-                for (var i = 0; i < sources.length; i++) {
-                    var source = sources[i];
-                    var item = this._serializeObject(source, name + "[" + i + "]");
+                for (let i = 0; i < sources.length; i++) {
+                    const source = sources[i];
+                    const item = this._serializeObject(source, name + "[" + i + "]");
                     output.push(item);
                 }
             }
@@ -132,11 +132,11 @@ export class Serializer {
     }
 
     private _serializeStringMap(map, expectedType, name) {
-        var output = undefined;
+        let output;
         if (map) {
             output = {};
-            for (var field in map) {
-                var value = map[field];
+            for (const field in map) {
+                const value = map[field];
                 if (expectedType === "string") {
                     if (value === undefined) {
                         output[field] = "undefined";
@@ -155,7 +155,7 @@ export class Serializer {
                     } else if (value === null) {
                         output[field] = "null";
                     } else {
-                        var num = parseFloat(value);
+                        const num = parseFloat(value);
                         if (isNaN(num)) {
                             output[field] = "NaN";
                         }
