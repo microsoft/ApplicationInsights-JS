@@ -30,12 +30,6 @@ export interface IChannelControls extends ITelemetryPlugin {
      * @param callBack: if specified, notify caller when send is complete 
      */
     flush(async: boolean, callBack?: () => void): void;
-
-    /**
-     * Try to send data immediately using beaconSender when page unload; channel should default to sending data asynchronously.
-     * Fall back to xhr sender if beacon is not supported.
-     */
-    onunloadFlush(): void;
 }
 
 export const MinChannelPriorty: number = 100;
