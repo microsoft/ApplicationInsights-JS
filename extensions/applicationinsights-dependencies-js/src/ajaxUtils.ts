@@ -5,9 +5,9 @@ import { CoreUtils } from '@microsoft/applicationinsights-core-js';
 
 export class stringUtils {
     public static GetLength(strObject) {
-        var res = 0;
+        let res = 0;
         if (!CoreUtils.isNullOrUndefined(strObject)) {
-            var stringified = "";
+            let stringified = "";
             try {
                 stringified = strObject.toString();
             } catch (ex) {
@@ -23,13 +23,13 @@ export class stringUtils {
 }
 
 export class EventHelper {
-    ///<summary>Binds the specified function to an event, so that the function gets called whenever the event fires on the object</summary>
-    ///<param name="obj">Object to which </param>
-    ///<param name="eventNameWithoutOn">String that specifies any of the standard DHTML Events without "on" prefix</param>
-    ///<param name="handlerRef">Pointer that specifies the function to call when event fires</param>
-    ///<returns>True if the function was bound successfully to the event, otherwise false</returns>
+    /// <summary>Binds the specified function to an event, so that the function gets called whenever the event fires on the object</summary>
+    /// <param name="obj">Object to which </param>
+    /// <param name="eventNameWithoutOn">String that specifies any of the standard DHTML Events without "on" prefix</param>
+    /// <param name="handlerRef">Pointer that specifies the function to call when event fires</param>
+    /// <returns>True if the function was bound successfully to the event, otherwise false</returns>
     public static AttachEvent(obj, eventNameWithoutOn, handlerRef) {
-        var result = false;
+        let result = false;
         if (!CoreUtils.isNullOrUndefined(obj)) {
             if (!CoreUtils.isNullOrUndefined(obj.attachEvent)) {
                 // IE before version 9                    

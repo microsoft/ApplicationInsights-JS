@@ -10,7 +10,7 @@ export class XHRMonitoringState {
     public sendDone: boolean = false;
     public abortDone: boolean = false;
 
-    //<summary>True, if onreadyStateChangeCallback function attached to xhr, otherwise false</summary>
+    // <summary>True, if onreadyStateChangeCallback function attached to xhr, otherwise false</summary>
     public onreadystatechangeCallbackAttached = false;
 }
 
@@ -28,37 +28,37 @@ export class ajaxRecord {
     public requestSize = 0;
     public method = null;
 
-    ///<summary>Returns the HTTP status code.</summary>
+    /// <summary>Returns the HTTP status code.</summary>
     public status = null;
 
-    //<summary>The timestamp when open method was invoked</summary>
+    // <summary>The timestamp when open method was invoked</summary>
     public requestSentTime = null;
 
-    //<summary>The timestamps when first byte was received</summary>
+    // <summary>The timestamps when first byte was received</summary>
     public responseStartedTime = null;
 
-    //<summary>The timestamp when last byte was received</summary>
+    // <summary>The timestamp when last byte was received</summary>
     public responseFinishedTime = null;
 
-    //<summary>The timestamp when onreadystatechange callback in readyState 4 finished</summary>
+    // <summary>The timestamp when onreadystatechange callback in readyState 4 finished</summary>
     public callbackFinishedTime = null;
 
-    //<summary>The timestamp at which ajax was ended</summary>
+    // <summary>The timestamp at which ajax was ended</summary>
     public endTime = null;
 
-    //<summary>The original xhr onreadystatechange event</summary>
+    // <summary>The original xhr onreadystatechange event</summary>
     public originalOnreadystatechage = null;
 
     public xhrMonitoringState: XHRMonitoringState = new XHRMonitoringState();
 
-    private _logger: IDiagnosticLogger;
-
-    //<summary>Determines whether or not JavaScript exception occured in xhr.onreadystatechange code. 1 if occured, otherwise 0.</summary>
+    // <summary>Determines whether or not JavaScript exception occured in xhr.onreadystatechange code. 1 if occured, otherwise 0.</summary>
     public clientFailure = 0;
 
 
     public traceID: string;
     public spanID: string;
+
+    private _logger: IDiagnosticLogger;
 
     constructor(traceID: string, spanID: string, logger: IDiagnosticLogger) {
         this.traceID = traceID;

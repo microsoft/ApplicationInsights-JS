@@ -1,6 +1,14 @@
 import { Util } from '@microsoft/applicationinsights-common';
 
 export class Traceparent {
+
+    public static isValidTraceId(id: string): boolean {
+        return id.match(/^[0-9a-f]{32}$/) && id !== "00000000000000000000000000000000";
+    }
+
+    public static isValidSpanId(id: string): boolean {
+        return id.match(/^[0-9a-f]{16}$/) && id !== "0000000000000000";
+    }
     private static DEFAULT_TRACE_FLAG = "01";
     private static DEFAULT_VERSION = "00";
     public spanId: string;
@@ -19,14 +27,6 @@ export class Traceparent {
         } else {
             this.spanId = Util.generateW3CId().substr(0, 16);
         }
-    }
-
-    public static isValidTraceId(id: string): boolean {
-        return id.match(/^[0-9a-f]{32}$/) && id !== "00000000000000000000000000000000";
-    }
-
-    public static isValidSpanId(id: string): boolean {
-        return id.match(/^[0-9a-f]{16}$/) && id !== "0000000000000000";
     }
 
     public toString(): string {
