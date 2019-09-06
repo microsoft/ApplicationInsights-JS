@@ -5,6 +5,19 @@ import { CommonValidator } from './CommonValidator';
 export class ExceptionValidator implements ITypeValidator {
     static ExceptionValidator = new ExceptionValidator();
 
+    private static _validateExceptions(exceptions: any[]): boolean {
+        // verify exceptions has typeName, message, hasFullStack, stack, parsedStack fields
+        if (!exceptions[0].typeName ||
+            !exceptions[0].message ||
+            !exceptions[0].hasFullStack ||
+            !exceptions[0].stack ||
+            !exceptions[0].parsedStack) {
+            return false;
+        }
+
+        return true;
+    }
+
     Validate(item: IEnvelope, baseType: string): boolean {
         // verify item passes CommonValidator
         if (!CommonValidator.CommonValidator.Validate(item, baseType)) {
@@ -24,19 +37,6 @@ export class ExceptionValidator implements ITypeValidator {
         }
 
         if (!ExceptionValidator._validateExceptions(item.data.baseData.exceptions)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private static _validateExceptions(exceptions: any[]): boolean {
-        // verify exceptions has typeName, message, hasFullStack, stack, parsedStack fields
-        if (!exceptions[0].typeName ||
-            !exceptions[0].message ||
-            !exceptions[0].hasFullStack ||
-            !exceptions[0].stack ||
-            !exceptions[0].parsedStack) {
             return false;
         }
 

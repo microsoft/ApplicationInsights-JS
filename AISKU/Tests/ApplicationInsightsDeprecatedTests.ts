@@ -19,7 +19,7 @@ export class ApplicationInsightsDeprecatedTests extends TestClass {
         try {
 
             this.useFakeServer = false;
-            (<any>sinon.fakeServer).restore();
+            (sinon.fakeServer as any).restore();
             this.useFakeTimers = false;
             this.clock.restore();
 
@@ -33,9 +33,9 @@ export class ApplicationInsightsDeprecatedTests extends TestClass {
                 version: 1.0
             }
 
-            this._aiDeprecated = <IAppInsightsDeprecated>(ApplicationInsightsContainer.getAppInsights(this._snippet, this._snippet.version)); 
+            this._aiDeprecated = ((ApplicationInsightsContainer.getAppInsights(this._snippet, this._snippet.version)) as IAppInsightsDeprecated); 
             // Setup Sinon stuff
-            let appInsights = (<any>this._aiDeprecated).appInsightsNew;
+            const appInsights = (this._aiDeprecated as any).appInsightsNew;
             const sender: Sender = appInsights.core['_channelController'].channelQueue[0][0];
             this.errorSpy = this.sandbox.spy(sender, '_onError');
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
@@ -58,7 +58,7 @@ export class ApplicationInsightsDeprecatedTests extends TestClass {
             test: () => {
 
                 Assert.ok(this._aiDeprecated, 'ApplicationInsights SDK exists');
-                Assert.ok((<IAppInsightsDeprecated>this._aiDeprecated).downloadAndSetup); // has legacy method
+                Assert.ok((this._aiDeprecated as IAppInsightsDeprecated).downloadAndSetup); // has legacy method
             }
         });
     }
@@ -102,7 +102,7 @@ export class ApplicationInsightsDeprecatedTests extends TestClass {
             steps: [
                 () => {
                     console.log("* calling trackMetric " + new Date().toISOString());
-                    for (var i = 0; i < 100; i++) {
+                    for (let i = 0; i < 100; i++) {
                         this._aiDeprecated.trackMetric("test" + i,Math.round(100 * Math.random()));
                     }
                     console.log("* done calling trackMetric " + new Date().toISOString());
@@ -124,7 +124,7 @@ export class ApplicationInsightsDeprecatedTests extends TestClass {
     private boilerPlateAsserts = () => {
         Assert.ok(this.successSpy.called, "success");
         Assert.ok(!this.errorSpy.called, "no error sending");
-        var isValidCallCount = this.loggingSpy.callCount === 0;
+        const isValidCallCount = this.loggingSpy.callCount === 0;
         Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
         if (!isValidCallCount) {
             while (this.loggingSpy.args.length) {
@@ -133,7 +133,7 @@ export class ApplicationInsightsDeprecatedTests extends TestClass {
         }
     }
     private asserts: any = (expectedCount: number) => [() => {
-        var message = "polling: " + new Date().toISOString();
+        const message = "polling: " + new Date().toISOString();
         Assert.ok(true, message);
         console.log(message);
 

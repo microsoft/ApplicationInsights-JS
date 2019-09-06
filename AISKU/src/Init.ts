@@ -7,7 +7,7 @@ import { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
 export { Initialization as ApplicationInsights, Snippet } from "./Initialization";
 
 "use strict";
-//should be global function that should load as soon as SDK loads
+// should be global function that should load as soon as SDK loads
 try {
 
     // E2E sku on load initializes core and pipeline using snippet as input for configuration
@@ -19,7 +19,7 @@ try {
 
         if (window[aiName] !== undefined) {
             // this is the typical case for browser+snippet
-            var snippet: Snippet = window[aiName] || <any>{ version: 2.0 };
+            const snippet: Snippet = window[aiName] || ({ version: 2.0 } as any);
 
             // overwrite snippet with full appInsights
             // for 2.0 initialize only if required
