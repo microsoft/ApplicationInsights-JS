@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ISession } from '@microsoft/applicationinsights-common';
-import {
-    Util, DateTimeUtils
-} from '@microsoft/applicationinsights-common';
+import { ISession, Util, DateTimeUtils } from '@microsoft/applicationinsights-common';
 import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity, CoreUtils, DiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 
 export interface ISessionConfig {
@@ -39,9 +36,9 @@ export class _SessionManager {
     public static acquisitionSpan = 86400000; // 24 hours in ms
     public static renewalSpan = 1800000; // 30 minutes in ms
     public static cookieUpdateInterval = 60000 // 1 minute in ms
+    private static cookieNameConst = 'ai_session';
     public automaticSession: Session;
     public config: ISessionConfig;
-    private static cookieNameConst = 'ai_session';
 
     private cookieUpdatedTimestamp: number;
     private _logger: IDiagnosticLogger;
@@ -55,7 +52,7 @@ export class _SessionManager {
         }
 
         if (!config) {
-            config = <any>{};
+            config = ({} as any);
         }
 
         if (!(typeof config.sessionExpirationMs === "function")) {
@@ -77,10 +74,10 @@ export class _SessionManager {
             this.initializeAutomaticSession();
         }
 
-        var now = DateTimeUtils.Now();
+        const now = DateTimeUtils.Now();
 
-        var acquisitionExpired = now - this.automaticSession.acquisitionDate > this.config.sessionExpirationMs();
-        var renewalExpired = now - this.automaticSession.renewalDate > this.config.sessionRenewalMs();
+        const acquisitionExpired = now - this.automaticSession.acquisitionDate > this.config.sessionExpirationMs();
+        const renewalExpired = now - this.automaticSession.renewalDate > this.config.sessionRenewalMs();
 
         // renew if acquisitionSpan or renewalSpan has ellapsed
         if (acquisitionExpired || renewalExpired) {
@@ -109,7 +106,7 @@ export class _SessionManager {
      *  initialize the automatic session.
      */
     private initializeAutomaticSession() {
-        var cookie = Util.getCookie(this._logger, this._storageNamePrefix());
+        const cookie = Util.getCookie(this._logger, this._storageNamePrefix());
         if (cookie && typeof cookie.split === "function") {
             this.initializeAutomaticSessionWithData(cookie);
         } else {
@@ -117,7 +114,7 @@ export class _SessionManager {
             // This can happen if the session expired or the user actively deleted the cookie
             // We only want to recover data if the cookie is missing from expiry. We should respect the user's wishes if the cookie was deleted actively.
             // The User class handles this for us and deletes our local storage object if the persistent user cookie was removed.
-            var storage = Util.getStorage(this._logger, this._storageNamePrefix());
+            const storage = Util.getStorage(this._logger, this._storageNamePrefix());
             if (storage) {
                 this.initializeAutomaticSessionWithData(storage);
             }
@@ -135,7 +132,7 @@ export class _SessionManager {
      *  @param {string} sessionData - The string stored in an ai_session cookie or local storage backup
      */
     private initializeAutomaticSessionWithData(sessionData: string) {
-        var params = sessionData.split("|");
+        const params = sessionData.split("|");
 
         if (params.length > 0) {
             this.automaticSession.id = params[0];
@@ -143,13 +140,13 @@ export class _SessionManager {
 
         try {
             if (params.length > 1) {
-                var acq = +params[1];
+                const acq = +params[1];
                 this.automaticSession.acquisitionDate = +new Date(acq);
                 this.automaticSession.acquisitionDate = this.automaticSession.acquisitionDate > 0 ? this.automaticSession.acquisitionDate : 0;
             }
 
             if (params.length > 2) {
-                var renewal = +params[2];
+                const renewal = +params[2];
                 this.automaticSession.renewalDate = +new Date(renewal);
                 this.automaticSession.renewalDate = this.automaticSession.renewalDate > 0 ? this.automaticSession.renewalDate : 0;
             }
@@ -161,7 +158,7 @@ export class _SessionManager {
                 { exception: Util.dump(e) });
         }
 
-        if (this.automaticSession.renewalDate == 0) {
+        if (this.automaticSession.renewalDate === 0) {
             this._logger.throwInternal(LoggingSeverity.WARNING,
                 _InternalMessageId.SessionRenewalDateIsZero,
                 "AI session renewal date is 0, session will be reset.");
@@ -169,7 +166,7 @@ export class _SessionManager {
     }
 
     private renew() {
-        var now = DateTimeUtils.Now();
+        const now = DateTimeUtils.Now();
 
         this.automaticSession.id = Util.newId();
         this.automaticSession.acquisitionDate = now;
@@ -188,10 +185,10 @@ export class _SessionManager {
     private setCookie(guid: string, acq: number, renewal: number) {
         // Set cookie to expire after the session expiry time passes or the session renewal deadline, whichever is sooner
         // Expiring the cookie will cause the session to expire even if the user isn't on the page
-        var acquisitionExpiry = acq + this.config.sessionExpirationMs();
-        var renewalExpiry = renewal + this.config.sessionRenewalMs();
-        var cookieExpiry = new Date();
-        var cookie = [guid, acq, renewal];
+        const acquisitionExpiry = acq + this.config.sessionExpirationMs();
+        const renewalExpiry = renewal + this.config.sessionRenewalMs();
+        const cookieExpiry = new Date();
+        const cookie = [guid, acq, renewal];
 
         if (acquisitionExpiry < renewalExpiry) {
             cookieExpiry.setTime(acquisitionExpiry);
@@ -199,7 +196,7 @@ export class _SessionManager {
             cookieExpiry.setTime(renewalExpiry);
         }
 
-        var cookieDomnain = this.config.cookieDomain ? this.config.cookieDomain() : null;
+        const cookieDomnain = this.config.cookieDomain ? this.config.cookieDomain() : null;
 
         Util.setCookie(this._logger, this._storageNamePrefix(), cookie.join('|') + ';expires=' + cookieExpiry.toUTCString(), cookieDomnain);
 

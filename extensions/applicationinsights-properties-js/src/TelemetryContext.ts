@@ -43,7 +43,7 @@ export class TelemetryContext implements ITelemetryContext {
     }
 
     public applySessionContext(event: ITelemetryItem) {
-        let sessionContext = this.session || this.sessionManager.automaticSession;
+        const sessionContext = this.session || this.sessionManager.automaticSession;
         if (sessionContext) {
             if (typeof sessionContext.id === "string") {
                 event.ext.app.sesId = sessionContext.id;
@@ -120,7 +120,7 @@ export class TelemetryContext implements ITelemetryContext {
 
     public applyOperationContext(event: ITelemetryItem) {
         if (this.telemetryTrace) {
-            let trace = event.ext.trace || <ITelemetryTrace>{traceID: undefined, parentID: undefined};
+            const trace = event.ext.trace || ({traceID: undefined, parentID: undefined} as ITelemetryTrace);
             if (typeof this.telemetryTrace.traceID === "string") {
                 trace.traceID = this.telemetryTrace.traceID;
             }
@@ -152,7 +152,7 @@ export class TelemetryContext implements ITelemetryContext {
 
             // stays in tags
             if (typeof this.user.accountId === "string") {
-                let item = {};
+                const item = {};
                 event.tags[CtxTagKeys.userAccountId] = this.user.accountId;
             }
 

@@ -32,7 +32,7 @@ export class ReactNativePluginTests extends TestClass {
         this.testCase({
             name: 'processTelemetry appends device fields',
             test: () => {
-                var expectation: ITelemetryItem = {
+                const expectation: ITelemetryItem = {
                     name: 'a name',
                     ext: {
                         device: {
@@ -42,7 +42,7 @@ export class ReactNativePluginTests extends TestClass {
                         }
                     }
                 };
-                var actual: ITelemetryItem = {
+                const actual: ITelemetryItem = {
                     name: 'a name'
                 };
                 this.plugin['_initialized'] = true;
@@ -129,7 +129,7 @@ export class ReactNativePluginTests extends TestClass {
         this.testCase({
             name: 'Autocollection runs when empty config is passed',
             test: () => {
-                this.plugin = new ReactNativePlugin(<any>{});
+                this.plugin = new ReactNativePlugin({} as any);
                 const autoCollectStub = this.sandbox.stub(this.plugin, '_collectDeviceInfo');
                 this.plugin.initialize(this.config, this.core, []);
 
@@ -141,7 +141,7 @@ export class ReactNativePluginTests extends TestClass {
         this.testCase({
             name: 'Autocollection runs when random config is passed',
             test: () => {
-                this.plugin = new ReactNativePlugin(<any>{foo: 'bar'});
+                this.plugin = new ReactNativePlugin({foo: 'bar'} as any);
                 const autoCollectStub = this.sandbox.stub(this.plugin, '_collectDeviceInfo');
                 this.plugin.initialize(this.config, this.core, []);
 

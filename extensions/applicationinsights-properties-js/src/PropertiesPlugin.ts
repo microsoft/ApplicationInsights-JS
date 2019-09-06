@@ -13,15 +13,6 @@ import { PageView, ConfigurationManager,
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 
 export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPlugin {
-    public context: TelemetryContext;
-    private _logger: IDiagnosticLogger;
-    private _breezeChannel: IPlugin; // optional. If exists, grab appId from it
-
-    public priority = 110;
-    public identifier = PropertiesPluginIdentifier;
-
-    private _nextPlugin: ITelemetryPlugin;
-    private _extensionConfig: ITelemetryConfig;
 
     public static getDefaultConfig(): ITelemetryConfig {
         const defaultConfig: ITelemetryConfig = {
@@ -38,11 +29,20 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
         }
         return defaultConfig;
     }
+    public context: TelemetryContext;
+
+    public priority = 110;
+    public identifier = PropertiesPluginIdentifier;
+    private _logger: IDiagnosticLogger;
+    private _breezeChannel: IPlugin; // optional. If exists, grab appId from it
+
+    private _nextPlugin: ITelemetryPlugin;
+    private _extensionConfig: ITelemetryConfig;
 
     initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) {
         const defaultConfig: ITelemetryConfig = PropertiesPlugin.getDefaultConfig();
         this._extensionConfig = this._extensionConfig || PropertiesPlugin.getDefaultConfig();
-        for (let field in defaultConfig) {
+        for (const field in defaultConfig) {
             this._extensionConfig[field] = () => ConfigurationManager.getConfig(config, field, this.identifier, defaultConfig[field]());
         }
 
