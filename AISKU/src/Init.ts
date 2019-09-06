@@ -11,6 +11,7 @@ export { Initialization as ApplicationInsights, Snippet } from "./Initialization
 try {
 
     // E2E sku on load initializes core and pipeline using snippet as input for configuration
+    // tslint:disable-next-line: no-var-keyword
     var aiName;
     if (typeof window !== "undefined" && typeof JSON !== "undefined") {
         // get snippet or initialize to an empty object

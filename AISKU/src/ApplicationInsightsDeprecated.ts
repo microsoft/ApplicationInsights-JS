@@ -107,12 +107,12 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     }
 
     trackEvent(name: string, properties?: Object, measurements?: Object) {
-        this.appInsightsNew.trackEvent(<IEventTelemetry>{ name});
+        this.appInsightsNew.trackEvent({ name} as IEventTelemetry);
     }
 
     trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
         this.appInsightsNew.trackDependencyData(
-            <IDependencyTelemetry>{
+            {
                 id,
                 target: absoluteUrl,
                 type: pathName,
@@ -120,21 +120,21 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
                 properties: { HttpMethod: method },
                 success,
                 responseCode: resultCode
-            });
+            } as IDependencyTelemetry);
     }
 
     trackException(exception: Error, handledAt?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, severityLevel?: any) {
-        this.appInsightsNew.trackException(<IExceptionTelemetry>{
+        this.appInsightsNew.trackException({
             exception
-        });
+        } as IExceptionTelemetry);
     }
 
     trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: { [name: string]: string; }) {
-        this.appInsightsNew.trackMetric(<IMetricTelemetry>{name, average, sampleCount, min, max});
+        this.appInsightsNew.trackMetric({name, average, sampleCount, min, max} as IMetricTelemetry);
     }
 
     trackTrace(message: string, properties?: { [name: string]: string; }, severityLevel?: any) {
-        this.appInsightsNew.trackTrace(<ITraceTelemetry>{ message, severityLevel });
+        this.appInsightsNew.trackTrace({ message, severityLevel } as ITraceTelemetry);
     }
 
     flush(async?: boolean) {
@@ -150,7 +150,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     }
 
     _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
-        this.appInsightsNew._onerror(<IAutoExceptionTelemetry>{ message, url, lineNumber, columnNumber, error });
+        this.appInsightsNew._onerror({ message, url, lineNumber, columnNumber, error } as IAutoExceptionTelemetry);
     }
 
 

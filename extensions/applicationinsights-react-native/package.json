@@ -14,7 +14,8 @@
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "grunt reactnative",
         "build:browser": "echo \"No browser version\"",
-        "test": "grunt reactnativetests"
+        "test": "grunt reactnativetests",
+        "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
         "typescript": "2.5.3",
@@ -27,7 +28,9 @@
         "rollup-plugin-uglify": "^6.0.0",
         "rollup": "^0.66.0",
         "react-native": "0.59.8",
-        "react": "16.8.3"
+        "react": "16.8.3",
+        "tslint": "^5.19.0",
+        "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
         "react-native-device-info": "^2.0.2",

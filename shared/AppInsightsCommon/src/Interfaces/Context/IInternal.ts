@@ -3,8 +3,8 @@
 
 export interface IInternal {
     /**
-    * The SDK version used to create this telemetry item.
-    */
+     * The SDK version used to create this telemetry item.
+     */
     sdkVersion: string;
 
     /**

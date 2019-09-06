@@ -4,8 +4,7 @@
 import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
-import { Util } from '../Util';
-import { AjaxHelper } from '../Util';
+import { Util, AjaxHelper} from '../Util';
 import { RemoteDependencyData as GeneratedRemoteDependencyData } from '../Interfaces/Contracts/Generated/RemoteDependencyData';
 import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 
@@ -53,7 +52,7 @@ export class RemoteDependencyData extends GeneratedRemoteDependencyData implemen
 
         this.type = DataSanitizer.sanitizeString(logger, requestAPI);
 
-        var dependencyFields = AjaxHelper.ParseDependencyPath(logger, absoluteUrl, method, commandName);
+        const dependencyFields = AjaxHelper.ParseDependencyPath(logger, absoluteUrl, method, commandName);
         this.data = DataSanitizer.sanitizeUrl(logger, commandName) || dependencyFields.data; // get a value from hosturl if commandName not available
         this.target = DataSanitizer.sanitizeString(logger, dependencyFields.target);
         if (correlationContext) {

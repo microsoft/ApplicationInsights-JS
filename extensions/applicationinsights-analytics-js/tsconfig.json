@@ -13,7 +13,6 @@
     "noEmitHelpers": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationMap": true,
     "declarationDir": "extensions/applicationinsights-analytics-js/types",
     "outDir": "./dist-esm",
     "rootDir": "./extensions/applicationinsights-analytics-js/src"

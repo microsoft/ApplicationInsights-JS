@@ -23,9 +23,12 @@
        "no-empty": false,
        "forin": false,
        "ban-types": false,
-       "no-shadowed-variable": false,
-       "no-angle-bracket-type-assertion": false,
+       "member-ordering": false,
+       "no-unused-expression": false,
+       "prefer-conditional-expression": false,
+       "no-this-assignment": false,
        "no-object-literal-type-assertion": false,
-       "prefer-conditional-expression": false
+       "radix": false,
+       "no-shadowed-variable": false
     }
 }

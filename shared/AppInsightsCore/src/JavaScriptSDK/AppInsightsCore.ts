@@ -173,7 +173,7 @@ export class AppInsightsCore implements IAppInsightsCore {
         this._validateTelmetryItem(telemetryItem);
 
         // invoke any common telemetry processors before sending through pipeline
-        if (this._extensions.length == 0) {
+        if (this._extensions.length === 0) {
             this._channelController.processTelemetry(telemetryItem); // Pass to Channel controller so data is sent to correct channel queues
         }
         let i = 0;

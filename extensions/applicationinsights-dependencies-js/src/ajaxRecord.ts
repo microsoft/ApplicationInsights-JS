@@ -75,7 +75,7 @@ export class ajaxRecord {
     }
 
     public CalculateMetrics = function () {
-        var self = this;
+        const self = this;
         // round to 3 decimal points
         self.ajaxTotalDuration = Math.round(DateTimeUtils.GetDuration(self.requestSentTime, self.responseFinishedTime) * 1000) / 1000;
     }

@@ -9,6 +9,15 @@
           "safeForSimultaneousRushProcesses": false,
           "enableParallelism": true,
           "ignoreMissingScript": false
+        },
+        {
+          "commandKind": "bulk",
+          "name": "lint",
+          "summary": "Run all tslint for all packages",
+          "description": "Runs tslint for all projects",
+          "safeForSimultaneousRushProcesses": false,
+          "enableParallelism": true,
+          "ignoreMissingScript": false
         }
     ]
 }

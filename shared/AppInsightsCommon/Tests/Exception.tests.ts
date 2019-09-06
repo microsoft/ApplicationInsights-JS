@@ -18,10 +18,10 @@ export class ExceptionTests extends TestClass {
         this.testCase({
             name: "Exception: Exception can be exported to interface format",
             test: () => {
-                var exception = new Exception(this.logger, new Error("test error"));
+                const exception = new Exception(this.logger, new Error("test error"));
                 Assert.ok(exception, "Exception is created");
 
-                var exceptionInterface: IExceptionInternal = exception.toInterface();
+                const exceptionInterface: IExceptionInternal = exception.toInterface();
                 Assert.deepEqual(exception.id, exceptionInterface.id);
                 Assert.deepEqual(exception.problemGroup, exceptionInterface.problemGroup);
                 Assert.deepEqual("4.0", exceptionInterface.ver, "Default format expects CS4.0");
@@ -32,7 +32,7 @@ export class ExceptionTests extends TestClass {
                 Assert.deepEqual(exception.properties, exceptionInterface.properties);
                 Assert.deepEqual(exception.measurements, exceptionInterface.measurements);
 
-                var exceptionConverted = Exception.CreateFromInterface(this.logger, exceptionInterface);
+                const exceptionConverted = Exception.CreateFromInterface(this.logger, exceptionInterface);
                 Assert.deepEqual(exception, exceptionConverted);
             }
         });
@@ -40,10 +40,10 @@ export class ExceptionTests extends TestClass {
         this.testCase({
             name: "ExceptionDetails: ExceptionDetails can be exported to interface format",
             test: () => {
-                var exceptionDetails = new _ExceptionDetails(this.logger, new Error("test error"));
+                const exceptionDetails = new _ExceptionDetails(this.logger, new Error("test error"));
                 Assert.ok(exceptionDetails, "ExceptionDetails instance is created");
 
-                var exceptionDetailsInterface: IExceptionDetailsInternal = exceptionDetails.toInterface();
+                const exceptionDetailsInterface: IExceptionDetailsInternal = exceptionDetails.toInterface();
                 Assert.deepEqual(exceptionDetails.id, exceptionDetailsInterface.id);
                 Assert.deepEqual(exceptionDetails.outerId, exceptionDetailsInterface.outerId);
                 Assert.deepEqual(exceptionDetails.typeName, exceptionDetailsInterface.typeName);
@@ -52,7 +52,7 @@ export class ExceptionTests extends TestClass {
                 Assert.deepEqual(exceptionDetails.stack, exceptionDetailsInterface.stack);
                 Assert.deepEqual(exceptionDetails.parsedStack && exceptionDetails.parsedStack.map((frame: _StackFrame) => frame.toInterface()), exceptionDetailsInterface.parsedStack);
 
-                var exceptionDetailsConverted = _ExceptionDetails.CreateFromInterface(this.logger, exceptionDetailsInterface);
+                const exceptionDetailsConverted = _ExceptionDetails.CreateFromInterface(this.logger, exceptionDetailsInterface);
                 Assert.deepEqual(exceptionDetails, exceptionDetailsConverted);
             }
         });
@@ -66,10 +66,10 @@ export class ExceptionTests extends TestClass {
                     Assert.ok(true);
                     return;
                 }
-                var stackFrame = new _StackFrame(stack.split("\n")[0], 0);
+                const stackFrame = new _StackFrame(stack.split("\n")[0], 0);
                 Assert.ok(stackFrame, "StackFrame instance is created");
 
-                var stackFrameInterface: IExceptionStackFrameInternal = stackFrame.toInterface();
+                const stackFrameInterface: IExceptionStackFrameInternal = stackFrame.toInterface();
                 Assert.deepEqual(stackFrame.level, stackFrameInterface.level);
                 Assert.deepEqual(stackFrame.method, stackFrameInterface.method);
                 Assert.deepEqual(stackFrame.assembly, stackFrameInterface.assembly);

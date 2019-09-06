@@ -197,7 +197,8 @@ export interface IConfig {
      */
     cookieDomain?: string;
 
-    /** Default false. If false, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error), 503 (service unavailable), and 0 (offline, only if detected)
+    /** 
+     * Default false. If false, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error), 503 (service unavailable), and 0 (offline, only if detected)
      * @description
      * @type {boolean}
      * @memberof IConfig

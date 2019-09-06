@@ -31,7 +31,7 @@ export class Envelope extends AIEnvelope implements IEnvelope {
             iKey: FieldType.Required,
             name: FieldType.Required,
             sampleRate: () => {
-                return (this.sampleRate == 100) ? FieldType.Hidden : FieldType.Required;
+                return (this.sampleRate === 100) ? FieldType.Hidden : FieldType.Required;
             },
             tags: FieldType.Required,
             data: FieldType.Required

@@ -5,7 +5,7 @@ import { ICorrelationConfig } from "../src/Interfaces/ICorrelationConfig";
 
 export class UtilTests extends TestClass {
     private testRegexLists = (config: ICorrelationConfig, exp: boolean, host: string) => {
-        var stub = sinon.stub(UrlHelper, "parseUrl", (str: string) => ({host: str}));
+        const stub = sinon.stub(UrlHelper, "parseUrl", (str: string) => ({host: str}));
         Assert.equal(exp, CorrelationIdHelper.canIncludeCorrelationHeader(config, host, "not used"), host);
         stub.restore();
     };
@@ -30,7 +30,7 @@ export class UtilTests extends TestClass {
         this.testCase({
             name: "UrlHelper: parseUrl should contain host field even if document.createElement is not defined",
             test: () => {
-                var origCreateElement = document.createElement;
+                const origCreateElement = document.createElement;
                 document.createElement = null;
 
                 let passed;
@@ -63,10 +63,10 @@ export class UtilTests extends TestClass {
         this.testCase({
             name: "CorrelationidHelper: canIncludeCorrelationHeader should follow included domains",
             test: () => {
-                var config = <ICorrelationConfig>{
+                const config = {
                     enableCorsCorrelation: true,
                     correlationHeaderDomains: ["azure.com", "prefix.bing.com"]
-                }
+                } as ICorrelationConfig
                 this.testRegexLists(config, false, "test");
                 this.testRegexLists(config, true, "portal.azure.com");
                 this.testRegexLists(config, true, "azure.com");
@@ -79,10 +79,10 @@ export class UtilTests extends TestClass {
         this.testCase({
             name: "CorrelationidHelper: canIncludeCorrelationHeader should follow excluded domains",
             test: () => {
-                var config = <ICorrelationConfig>{
+                const config = {
                     enableCorsCorrelation: true,
                     correlationHeaderExcludedDomains: ["test", "*.azure.com"]
-                }
+                } as ICorrelationConfig
                 this.testRegexLists(config, false, "test");
                 this.testRegexLists(config, false, "portal.azure.com");
                 this.testRegexLists(config, true, "azure.com");
@@ -95,11 +95,11 @@ export class UtilTests extends TestClass {
         this.testCase({
             name: "CorrelationidHelper: canIncludeCorrelationHeader should check excluded domains if included domains list is also provided",
             test: () => {
-                var config = <ICorrelationConfig>{
+                const config = {
                     enableCorsCorrelation: true,
                     correlationHeaderExcludedDomains: ["test", "*.azure.com", "ignore.microsoft.com"],
                     correlationHeaderDomains: ["azure.com", "prefix.bing.com", "*.microsoft.com"]
-                }
+                } as ICorrelationConfig
                 this.testRegexLists(config, false, "test");
                 this.testRegexLists(config, false, "portal.azure.com");
                 this.testRegexLists(config, true, "azure.com");

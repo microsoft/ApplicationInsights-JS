@@ -60,9 +60,9 @@ export class Util {
      * @return {Storage} Returns storage object verified that it is usable
      */
     private static _getVerifiedStorageObject(storageType: StorageType): Storage {
-        var storage: Storage = null;
-        var fail: boolean;
-        var uid;
+        let storage: Storage = null;
+        let fail: boolean;
+        let uid;
         try {
             if (typeof window === 'undefined') {
                 return null;
@@ -70,7 +70,7 @@ export class Util {
             uid = new Date;
             storage = storageType === StorageType.LocalStorage ? window.localStorage : window.sessionStorage;
             storage.setItem(uid, uid);
-            fail = storage.getItem(uid) != uid;
+            fail = storage.getItem(uid) !== uid;
             storage.removeItem(uid);
             if (fail) {
                 storage = null;
@@ -112,7 +112,7 @@ export class Util {
      *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
      */
     public static getStorage(logger: IDiagnosticLogger, name: string): string {
-        var storage = Util._getLocalStorageObject();
+        const storage = Util._getLocalStorageObject();
         if (storage !== null) {
             try {
                 return storage.getItem(name);
@@ -137,7 +137,7 @@ export class Util {
      *  @returns {boolean} True if the storage object could be written.
      */
     public static setStorage(logger: IDiagnosticLogger, name: string, data: string): boolean {
-        var storage = Util._getLocalStorageObject();
+        const storage = Util._getLocalStorageObject();
         if (storage !== null) {
             try {
                 storage.setItem(name, data);
@@ -162,7 +162,7 @@ export class Util {
      *  @returns {boolean} True if the storage object could be removed.
      */
     public static removeStorage(logger: IDiagnosticLogger, name: string): boolean {
-        var storage = Util._getLocalStorageObject();
+        const storage = Util._getLocalStorageObject();
         if (storage !== null) {
             try {
                 storage.removeItem(name);
@@ -211,10 +211,10 @@ export class Util {
      *  @returns {string[]} List of session storage keys
      */
     public static getSessionStorageKeys(): string[] {
-        var keys = [];
+        const keys = [];
 
         if (Util.canUseSessionStorage()) {
-            for (var key in window.sessionStorage) {
+            for (const key in window.sessionStorage) {
                 keys.push(key);
             }
         }
@@ -228,7 +228,7 @@ export class Util {
      *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
      */
     public static getSessionStorage(logger: IDiagnosticLogger, name: string): string {
-        var storage = Util._getSessionStorageObject();
+        const storage = Util._getSessionStorageObject();
         if (storage !== null) {
             try {
                 return storage.getItem(name);
@@ -253,7 +253,7 @@ export class Util {
      *  @returns {boolean} True if the storage object could be written.
      */
     public static setSessionStorage(logger: IDiagnosticLogger, name: string, data: string): boolean {
-        var storage = Util._getSessionStorageObject();
+        const storage = Util._getSessionStorageObject();
         if (storage !== null) {
             try {
                 storage.setItem(name, data);
@@ -278,7 +278,7 @@ export class Util {
      *  @returns {boolean} True if the storage object could be removed.
      */
     public static removeSessionStorage(logger: IDiagnosticLogger, name: string): boolean {
-        var storage = Util._getSessionStorageObject();
+        const storage = Util._getSessionStorageObject();
         if (storage !== null) {
             try {
                 storage.removeItem(name);
@@ -328,8 +328,8 @@ export class Util {
      * helper method to set userId and sessionId cookie
      */
     public static setCookie(logger: IDiagnosticLogger, name, value, domain?) {
-        var domainAttrib = "";
-        var secureAttrib = "";
+        let domainAttrib = "";
+        let secureAttrib = "";
 
         if (domain) {
             domainAttrib = ";domain=" + domain;
@@ -360,12 +360,12 @@ export class Util {
             return;
         }
 
-        var value = "";
+        let value = "";
         if (name && name.length) {
-            var cookieName = name + "=";
-            var cookies = Util.document.cookie.split(";");
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = cookies[i];
+            const cookieName = name + "=";
+            const cookies = Util.document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i];
                 cookie = Util.trim(cookie);
                 if (cookie && cookie.indexOf(cookieName) === 0) {
                     value = cookie.substring(cookieName.length, cookies[i].length);
@@ -392,7 +392,7 @@ export class Util {
      * helper method to trim strings (IE8 does not implement String.prototype.trim)
      */
     public static trim(str: any): string {
-        if (typeof str !== "string") return str;
+        if (typeof str !== "string") { return str; }
         return str.replace(/^\s+|\s+$/g, "");
     }
 
@@ -400,14 +400,14 @@ export class Util {
      * generate random id string
      */
     public static newId(): string {
-        var base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+        const base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
-        var result = "";
+        let result = "";
         // tslint:disable-next-line:insecure-random
-        var random = Math.random() * 1073741824; //5 symbols in base64, almost maxint
+        let random = Math.random() * 1073741824; // 5 symbols in base64, almost maxint
 
         while (random > 0) {
-            var char = base64chars.charAt(random % 64);
+            const char = base64chars.charAt(random % 64);
             result += char;
             random = Math.floor(random / 64);
         }
@@ -425,11 +425,11 @@ export class Util {
      * generate W3C trace id
      */
     public static generateW3CId() {
-        var hexValues = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
+        const hexValues = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
 
         // rfc4122 version 4 UUID without dashes and with lowercase letters
-        var oct = "", tmp;
-        for (var a = 0; a < 4; a++) {
+        let oct = "", tmp;
+        for (let a = 0; a < 4; a++) {
             tmp = Util.random32();
             oct +=
                 hexValues[tmp & 0xF] +
@@ -443,7 +443,7 @@ export class Util {
         }
 
         // "Set the two most significant bits (bits 6 and 7) of the clock_seq_hi_and_reserved to zero and one, respectively"
-        var clockSequenceHi = hexValues[8 + (Math.random() * 4) | 0];
+        const clockSequenceHi = hexValues[8 + (Math.random() * 4) | 0];
         return oct.substr(0, 8) + oct.substr(9, 4) + "4" + oct.substr(13, 3) + clockSequenceHi + oct.substr(16, 3) + oct.substr(19, 12);
     }
 
@@ -476,8 +476,8 @@ export class Util {
             if (Date.prototype.toISOString) {
                 return date.toISOString();
             } else {
-                const pad = function (num: number) {
-                    var r = String(num);
+                const pad = (num: number) => {
+                    let r = String(num);
                     if (r.length === 1) {
                         r = "0" + r;
                     }
@@ -501,8 +501,8 @@ export class Util {
      * Gets IE version if we are running on IE, or null otherwise
      */
     public static getIEVersion(userAgentStr: string = null): number {
-        var myNav = userAgentStr ? userAgentStr.toLowerCase() : navigator.userAgent.toLowerCase();
-        return (myNav.indexOf('msie') != -1) ? parseInt(myNav.split('msie')[1]) : null;
+        const myNav = userAgentStr ? userAgentStr.toLowerCase() : navigator.userAgent.toLowerCase();
+        return (myNav.indexOf('msie') !== -1) ? parseInt(myNav.split('msie')[1]) : null;
     }
 
     /**
@@ -515,11 +515,11 @@ export class Util {
 
         totalms = Math.round(totalms);
 
-        var ms = "" + totalms % 1000;
-        var sec = "" + Math.floor(totalms / 1000) % 60;
-        var min = "" + Math.floor(totalms / (1000 * 60)) % 60;
-        var hour = "" + Math.floor(totalms / (1000 * 60 * 60)) % 24;
-        var days = Math.floor(totalms / (1000 * 60 * 60 * 24));
+        let ms = "" + totalms % 1000;
+        let sec = "" + Math.floor(totalms / 1000) % 60;
+        let min = "" + Math.floor(totalms / (1000 * 60)) % 60;
+        let hour = "" + Math.floor(totalms / (1000 * 60 * 60)) % 24;
+        const days = Math.floor(totalms / (1000 * 60 * 60 * 24));
 
         ms = ms.length === 1 ? "00" + ms : ms.length === 2 ? "0" + ms : ms;
         sec = sec.length < 2 ? "0" + sec : sec;
@@ -530,19 +530,19 @@ export class Util {
     }
 
     /**
-    * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error
-    * happens in a script from other domain (cross origin, CORS).
-    */
+     * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error
+     * happens in a script from other domain (cross origin, CORS).
+     */
     public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
         return (message === "Script error." || message === "Script error") && !error;
     }
 
     /**
-    * Returns string representation of an object suitable for diagnostics logging.
-    */
+     * Returns string representation of an object suitable for diagnostics logging.
+     */
     public static dump(object: any): string {
-        var objectTypeDump: string = Object.prototype.toString.call(object);
-        var propertyValueDump: string = JSON.stringify(object);
+        const objectTypeDump: string = Object.prototype.toString.call(object);
+        let propertyValueDump: string = JSON.stringify(object);
         if (objectTypeDump === "[object Error]") {
             propertyValueDump = "{ stack: '" + object.stack + "', message: '" + object.message + "', name: '" + object.name + "'";
         }
@@ -551,10 +551,10 @@ export class Util {
     }
 
     /**
-    * Returns the name of object if it's an Error. Otherwise, returns empty string.
-    */
+     * Returns the name of object if it's an Error. Otherwise, returns empty string.
+     */
     public static getExceptionName(object: any): string {
-        var objectTypeDump: string = Object.prototype.toString.call(object);
+        const objectTypeDump: string = Object.prototype.toString.call(object);
         if (objectTypeDump === "[object Error]") {
             return object.name;
         }
@@ -573,7 +573,7 @@ export class Util {
         }
 
         // Create verb for the event
-        var verbEventName = 'on' + eventName;
+        const verbEventName = 'on' + eventName;
 
         // check if addEventListener is available
         if (window.addEventListener) {
@@ -591,7 +591,7 @@ export class Util {
      * Tells if a browser supports a Beacon API
      */
     public static IsBeaconApiSupported(): boolean {
-        return ('sendBeacon' in navigator && (<any>navigator).sendBeacon);
+        return ('sendBeacon' in navigator && (navigator as any).sendBeacon);
     }
 
     public static getExtension(extensions: IPlugin[], identifier: string) {
@@ -624,8 +624,8 @@ export class UrlHelper {
     }
 
     public static getAbsoluteUrl(url): string {
-        var result: string;
-        var a = UrlHelper.parseUrl(url);
+        let result: string;
+        const a = UrlHelper.parseUrl(url);
         if (a) {
             result = a.href;
         }
@@ -634,8 +634,8 @@ export class UrlHelper {
     }
 
     public static getPathName(url): string {
-        var result: string;
-        var a = UrlHelper.parseUrl(url);
+        let result: string;
+        const a = UrlHelper.parseUrl(url);
         if (a) {
             result = a.pathname;
         }
@@ -653,7 +653,7 @@ export class UrlHelper {
 
     // Fallback method to grab host from url if document.createElement method is not available
     public static parseHost(url: string) {
-        var match = url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i);
+        const match = url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i);
         if (match != null && match.length > 2 && typeof match[2] === 'string' && match[2].length > 0) {
             return match[2];
         } else {
@@ -666,8 +666,8 @@ export class CorrelationIdHelper {
     public static correlationIdPrefix = "cid-v1:";
 
     /**
-    * Checks if a request url is not on a excluded domain list and if it is safe to add correlation headers
-    */
+     * Checks if a request url is not on a excluded domain list and if it is safe to add correlation headers
+     */
     public static canIncludeCorrelationHeader(config: ICorrelationConfig, requestUrl: string, currentHost: string) {
         if (config && config.disableCorrelationHeaders) {
             return false;
@@ -677,16 +677,16 @@ export class CorrelationIdHelper {
             return false;
         }
 
-        let requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
+        const requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
         if ((!config || !config.enableCorsCorrelation) && requestHost !== currentHost) {
             return false;
         }
 
-        let includedDomains = config && config.correlationHeaderDomains;
+        const includedDomains = config && config.correlationHeaderDomains;
         if (includedDomains) {
             let matchExists;
             includedDomains.forEach((domain) => {
-                let regex = new RegExp(domain.toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
+                const regex = new RegExp(domain.toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
                 matchExists = matchExists || regex.test(requestHost);
             });
 
@@ -695,13 +695,13 @@ export class CorrelationIdHelper {
             }
         }
 
-        let excludedDomains = config && config.correlationHeaderExcludedDomains;
-        if (!excludedDomains || excludedDomains.length == 0) {
+        const excludedDomains = config && config.correlationHeaderExcludedDomains;
+        if (!excludedDomains || excludedDomains.length === 0) {
             return true;
         }
 
         for (let i = 0; i < excludedDomains.length; i++) {
-            let regex = new RegExp(excludedDomains[i].toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
+            const regex = new RegExp(excludedDomains[i].toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
             if (regex.test(requestHost)) {
                 return false;
             }
@@ -711,8 +711,8 @@ export class CorrelationIdHelper {
     }
 
     /**
-    * Combines target appId and target role name from response header.
-    */
+     * Combines target appId and target role name from response header.
+     */
     public static getCorrelationContext(responseHeader: string) {
         if (responseHeader) {
             const correlationId = CorrelationIdHelper.getCorrelationContextValue(responseHeader, RequestHeaders.requestContextTargetKey);
@@ -723,14 +723,14 @@ export class CorrelationIdHelper {
     }
 
     /**
-    * Gets key from correlation response header
-    */
+     * Gets key from correlation response header
+     */
     public static getCorrelationContextValue(responseHeader: string, key: string) {
         if (responseHeader) {
             const keyValues = responseHeader.split(",");
             for (let i = 0; i < keyValues.length; ++i) {
                 const keyValue = keyValues[i].split("=");
-                if (keyValue.length == 2 && keyValue[0] == key) {
+                if (keyValue.length === 2 && keyValue[0] === key) {
                     return keyValue[1];
                 }
             }
@@ -743,7 +743,7 @@ export class AjaxHelper {
         let target, name = commandName, data = commandName;
 
         if (absoluteUrl && absoluteUrl.length > 0) {
-            var parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)
+            const parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)
             target = parsedUrl.host;
             if (!name) {
                 if (parsedUrl.pathname != null) {
@@ -763,9 +763,9 @@ export class AjaxHelper {
         }
 
         return {
-            target: target,
-            name: name,
-            data: data
+            target,
+            name,
+            data
         };
     }
 }
@@ -777,21 +777,21 @@ export class DateTimeUtils {
     /**
      * Get the number of milliseconds since 1970/01/01 in local timezone
      */
-    public static Now = (typeof window === 'undefined') ? function () { return new Date().getTime(); } :
+    public static Now = (typeof window === 'undefined') ? () => new Date().getTime() :
         (window.performance && window.performance.now && window.performance.timing) ?
-            function () {
+            () => {
                 return window.performance.now() + window.performance.timing.navigationStart;
             }
             :
-            function () {
+            () => {
                 return new Date().getTime();
             }
 
     /**
      * Gets duration between two timestamps
      */
-    public static GetDuration = function (start: number, end: number): number {
-        var result = null;
+    public static GetDuration = (start: number, end: number): number => {
+        let result = null;
         if (start !== 0 && end !== 0 && !CoreUtils.isNullOrUndefined(start) && !CoreUtils.isNullOrUndefined(end)) {
             result = end - start;
         }

@@ -3,8 +3,8 @@
 
 export interface IUser {
     /**
-    * The telemetry configuration.
-    */
+     * The telemetry configuration.
+     */
     config: any;
 
     /**

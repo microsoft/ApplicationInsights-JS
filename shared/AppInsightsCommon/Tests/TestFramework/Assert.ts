@@ -1,11 +1,12 @@
 /// <reference path="../External/qunit.d.ts" />
 
-/** Wrapper around QUnit asserts. This class has two purposes:
+/** 
+ * Wrapper around QUnit asserts. This class has two purposes:
  * - Make Assertion methods easy to discover.
  * - Make them consistent with XUnit assertions in the order of the actual and expected parameter values.
  */
 class Assert {
-    /**
+   /**
     * A deep recursive comparison assertion, working on primitive types, arrays, objects, 
     * regular expressions, dates and functions.
     *
@@ -21,7 +22,7 @@ class Assert {
         return deepEqual(actual, expected, message);
     }
 
-    /** 
+   /** 
     * A non-strict comparison assertion, roughly equivalent to JUnit assertEquals.
     *
     * The equal assertion uses the simple comparison operator (==) to compare the actual 
@@ -37,7 +38,7 @@ class Assert {
         return equal(actual, expected, message);
     }
 
-    /**
+   /**
     * An inverted deep recursive comparison assertion, working on primitive types, 
     * arrays, objects, regular expressions, dates and functions.
     *
@@ -53,7 +54,7 @@ class Assert {
         return notDeepEqual(actual, expected, message);
     }
 
-    /**
+   /**
     * A non-strict comparison assertion, checking for inequality.
     *
     * The notEqual assertion uses the simple inverted comparison operator (!=) to compare 
@@ -77,7 +78,7 @@ class Assert {
         return propEqual(actual, expected, message);
     }
 
-    /**
+   /**
     * A non-strict comparison assertion, checking for inequality.
     *
     * The notStrictEqual assertion uses the strict inverted comparison operator (!==) 
@@ -93,7 +94,7 @@ class Assert {
         return notStrictEqual(actual, expected, message);
     }
 
-    /**
+   /**
     * A boolean assertion, equivalent to CommonJS's assert.ok() and JUnit's assertTrue(). 
     * Passes if the first argument is truthy.
     *
@@ -108,7 +109,7 @@ class Assert {
         return ok(state, message);
     }
 
-    /**
+   /**
     * A strict type and value comparison assertion.
     *
     * The strictEqual() assertion provides the most rigid comparison of type and value with 
@@ -122,7 +123,7 @@ class Assert {
         return strictEqual(actual, expected, message);
     }
 
-    /**
+   /**
     * Assertion to test if a callback throws an exception when run.
     * 
     * When testing code that is expected to throw an exception based on a specific set of 
@@ -134,7 +135,7 @@ class Assert {
     */
     public static throws(block: () => any, expected: any, message?: string): any;
 
-    /**
+   /**
     * @param block Function to execute
     * @param message A short description of the assertion
     */

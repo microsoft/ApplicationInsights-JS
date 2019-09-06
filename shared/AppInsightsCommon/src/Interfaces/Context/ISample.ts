@@ -3,7 +3,7 @@
 
 export interface ISample {
     /**
-    * Sample rate
-    */
+     * Sample rate
+     */
     sampleRate: number;
 }
