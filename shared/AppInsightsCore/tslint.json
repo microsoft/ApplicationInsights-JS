@@ -26,6 +26,24 @@
        "possible-timing-attack": true,
        "react-anchor-blank-noopener": true,
        "react-iframe-missing-sandbox": true,
-       "react-no-dangerous-html": true
+       "react-no-dangerous-html": true,
+       "ordered-imports": false,
+       "variable-name": false,
+       "member-access": false,
+       "object-literal-sort-keys": false,
+       "no-bitwise": false,
+       "one-variable-per-declaration": false,
+       "max-classes-per-file": false,
+       "no-console": false,
+       "prefer-for-of": false,
+       "class-name": false,
+       "interface-name": false,
+       "no-empty-interface": false,
+       "no-string-literal": false,
+       "no-reference": false,
+       "no-empty": false,
+       "forin": false,
+       "ban-types": false,
+       "member-ordering": false
     }
 }
