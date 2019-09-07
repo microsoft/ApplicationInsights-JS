@@ -542,10 +542,6 @@ class TestChannelPlugin implements IChannelControls {
         }
     }
 
-    onunloadFlush(async?: boolean) {
-        this.isUnloadInvoked = true;
-    }
-
     public processTelemetry;
 
     public identifier = "Sender";
