@@ -8,9 +8,9 @@
       "resolved": "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.5.5.tgz"
     },
     "@babel/core": {
-      "version": "7.5.5",
+      "version": "7.6.0",
       "from": "@babel/core@^7.1.0",
-      "resolved": "https://registry.npmjs.org/@babel/core/-/core-7.5.5.tgz",
+      "resolved": "https://registry.npmjs.org/@babel/core/-/core-7.6.0.tgz",
       "dependencies": {
         "debug": {
           "version": "4.1.1",
@@ -25,9 +25,9 @@
       }
     },
     "@babel/generator": {
-      "version": "7.5.5",
-      "from": "@babel/generator@^7.5.5",
-      "resolved": "https://registry.npmjs.org/@babel/generator/-/generator-7.5.5.tgz"
+      "version": "7.6.0",
+      "from": "@babel/generator@^7.6.0",
+      "resolved": "https://registry.npmjs.org/@babel/generator/-/generator-7.6.0.tgz"
     },
     "@babel/helper-function-name": {
       "version": "7.1.0",
@@ -50,9 +50,9 @@
       "resolved": "https://registry.npmjs.org/@babel/helper-split-export-declaration/-/helper-split-export-declaration-7.4.4.tgz"
     },
     "@babel/helpers": {
-      "version": "7.5.5",
-      "from": "@babel/helpers@^7.5.5",
-      "resolved": "https://registry.npmjs.org/@babel/helpers/-/helpers-7.5.5.tgz"
+      "version": "7.6.0",
+      "from": "@babel/helpers@^7.6.0",
+      "resolved": "https://registry.npmjs.org/@babel/helpers/-/helpers-7.6.0.tgz"
     },
     "@babel/highlight": {
       "version": "7.5.0",
@@ -77,9 +77,9 @@
       }
     },
     "@babel/parser": {
-      "version": "7.5.5",
-      "from": "@babel/parser@^7.5.5",
-      "resolved": "https://registry.npmjs.org/@babel/parser/-/parser-7.5.5.tgz"
+      "version": "7.6.0",
+      "from": "@babel/parser@^7.6.0",
+      "resolved": "https://registry.npmjs.org/@babel/parser/-/parser-7.6.0.tgz"
     },
     "@babel/plugin-syntax-object-rest-spread": {
       "version": "7.2.0",
@@ -87,19 +87,19 @@
       "resolved": "https://registry.npmjs.org/@babel/plugin-syntax-object-rest-spread/-/plugin-syntax-object-rest-spread-7.2.0.tgz"
     },
     "@babel/runtime": {
-      "version": "7.5.5",
+      "version": "7.6.0",
       "from": "@babel/runtime@^7.1.2",
-      "resolved": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.5.5.tgz"
+      "resolved": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.6.0.tgz"
     },
     "@babel/template": {
-      "version": "7.4.4",
-      "from": "@babel/template@^7.4.4",
-      "resolved": "https://registry.npmjs.org/@babel/template/-/template-7.4.4.tgz"
+      "version": "7.6.0",
+      "from": "@babel/template@^7.6.0",
+      "resolved": "https://registry.npmjs.org/@babel/template/-/template-7.6.0.tgz"
     },
     "@babel/traverse": {
-      "version": "7.5.5",
-      "from": "@babel/traverse@^7.5.5",
-      "resolved": "https://registry.npmjs.org/@babel/traverse/-/traverse-7.5.5.tgz",
+      "version": "7.6.0",
+      "from": "@babel/traverse@^7.6.0",
+      "resolved": "https://registry.npmjs.org/@babel/traverse/-/traverse-7.6.0.tgz",
       "dependencies": {
         "debug": {
           "version": "4.1.1",
@@ -114,9 +114,9 @@
       }
     },
     "@babel/types": {
-      "version": "7.5.5",
-      "from": "@babel/types@^7.5.5",
-      "resolved": "https://registry.npmjs.org/@babel/types/-/types-7.5.5.tgz"
+      "version": "7.6.1",
+      "from": "@babel/types@^7.6.0",
+      "resolved": "https://registry.npmjs.org/@babel/types/-/types-7.6.1.tgz"
     },
     "@cnakazawa/watch": {
       "version": "1.0.3",
@@ -419,9 +419,9 @@
       "resolved": "https://registry.npmjs.org/@types/yargs/-/yargs-13.0.2.tgz"
     },
     "@types/yargs-parser": {
-      "version": "13.0.0",
+      "version": "13.1.0",
       "from": "@types/yargs-parser@*",
-      "resolved": "https://registry.npmjs.org/@types/yargs-parser/-/yargs-parser-13.0.0.tgz"
+      "resolved": "https://registry.npmjs.org/@types/yargs-parser/-/yargs-parser-13.1.0.tgz"
     },
     "abab": {
       "version": "2.0.1",
@@ -3970,7 +3970,7 @@
     },
     "tslint": {
       "version": "5.19.0",
-      "from": "tslint@^5.11.0",
+      "from": "tslint@^5.19.0",
       "resolved": "https://registry.npmjs.org/tslint/-/tslint-5.19.0.tgz",
       "dependencies": {
         "ansi-styles": {
@@ -4014,6 +4014,11 @@
           "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-5.5.0.tgz"
         }
       }
+    },
+    "tslint-config-prettier": {
+      "version": "1.18.0",
+      "from": "tslint-config-prettier@^1.18.0",
+      "resolved": "https://registry.npmjs.org/tslint-config-prettier/-/tslint-config-prettier-1.18.0.tgz"
     },
     "tslint-microsoft-contrib": {
       "version": "5.2.1",
