@@ -9,7 +9,7 @@ export { INotificationListener } from "./JavaScriptSDK.Interfaces/INotificationL
 export { IDiagnosticLogger } from "./JavaScriptSDK.Interfaces/IDiagnosticLogger";
 export { EventsDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
-export { AppInsightsBaseCore } from './JavaScriptSDK/AppInsightsBaseCore';
+export { BaseCore } from './JavaScriptSDK/BaseCore';
 export { CoreUtils } from "./JavaScriptSDK/CoreUtils";
 export { NotificationManager } from "./JavaScriptSDK/NotificationManager";
 export { DiagnosticLogger, _InternalLogMessage } from './JavaScriptSDK/DiagnosticLogger';

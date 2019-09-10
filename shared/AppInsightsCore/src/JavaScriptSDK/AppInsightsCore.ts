@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { AppInsightsBaseCore } from './AppInsightsBaseCore';
+import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
+import { BaseCore } from './BaseCore';
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
@@ -9,24 +10,24 @@ import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotification
 import { NotificationManager } from "./NotificationManager";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { _InternalLogMessage, DiagnosticLogger } from "./DiagnosticLogger";
-import { ChannelController } from './ChannelController';
 
 "use strict";
 
-export class AppInsightsCore extends AppInsightsBaseCore {
-    public baseCore: AppInsightsBaseCore;
+export class AppInsightsCore implements IAppInsightsCore {
+    public baseCore: BaseCore;
+    public config: IConfiguration;
     public logger: IDiagnosticLogger;
 
     protected _notificationManager: NotificationManager;
 
     constructor() {
-        super();
-        this.baseCore = new AppInsightsBaseCore();
+        this.baseCore = new BaseCore();
     }
 
     initialize(config: IConfiguration, extensions: IPlugin[]): void {
         this._notificationManager = new NotificationManager();
         this.logger = new DiagnosticLogger(config);
+        this.config = config;
         
         this.baseCore.initialize(config, extensions, this.logger, this._notificationManager);
     }

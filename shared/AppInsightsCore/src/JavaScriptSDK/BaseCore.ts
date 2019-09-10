@@ -16,7 +16,7 @@ import { ChannelController } from './ChannelController';
 
 const validationError = "Extensions must provide callback to initialize";
 
-export class AppInsightsBaseCore implements IAppInsightsCore {
+export class BaseCore implements IAppInsightsCore {
 
     public static defaultConfig: IConfiguration;
     public config: IConfiguration;
