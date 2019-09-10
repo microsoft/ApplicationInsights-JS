@@ -36,7 +36,7 @@ export class ApplicationInsightsDeprecatedTests extends TestClass {
             this._aiDeprecated = <IAppInsightsDeprecated>(ApplicationInsightsContainer.getAppInsights(this._snippet, this._snippet.version)); 
             // Setup Sinon stuff
             let appInsights = (<any>this._aiDeprecated).appInsightsNew;
-            const sender: Sender = appInsights.core['_channelController'].channelQueue[0][0];
+            const sender: Sender = appInsights.core.baseCore['_channelController'].channelQueue[0][0];
             this.errorSpy = this.sandbox.spy(sender, '_onError');
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
             this.loggingSpy = this.sandbox.stub(appInsights.core.logger, 'throwInternal');

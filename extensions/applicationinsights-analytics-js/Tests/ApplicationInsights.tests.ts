@@ -293,7 +293,7 @@ export class ApplicationInsightsTests extends TestClass {
                     [plugin]
                 );
                 var appInsights = new ApplicationInsights();
-                appInsights.initialize({instrumentationKey: core.config.instrumentationKey}, core, []);
+                appInsights.initialize({instrumentationKey: core.baseCore.config.instrumentationKey}, core, []);
                 var trackStub = this.sandbox.stub(appInsights.core, "track");
 
                 let envelope: ITelemetryItem;

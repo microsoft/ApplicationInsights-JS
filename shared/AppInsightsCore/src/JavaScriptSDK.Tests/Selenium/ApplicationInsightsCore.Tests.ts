@@ -190,11 +190,11 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const channelPlugin = new ChannelPlugin();
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize({ instrumentationKey: expectedIKey }, [channelPlugin]);
-                const validateStub = this.sandbox.stub(appInsightsCore, "_validateTelmetryItem");
+                const validateStub = this.sandbox.stub(appInsightsCore.baseCore, "_validateTelmetryItem");
 
                 // Act
                 const bareItem: ITelemetryItem = { name: 'test item' };
-                appInsightsCore.track(bareItem);
+                appInsightsCore.baseCore.track(bareItem);
                 this.clock.tick(1);
 
                 // Test
@@ -261,13 +261,13 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const initFunction = () => appInsightsCore.initialize({ instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" }, [channelPlugin]);
 
                 // Assert precondition
-                Assert.ok(!appInsightsCore["_isInitialized"], "PRE: core constructed but not initialized");
+                Assert.ok(!appInsightsCore.baseCore["_isInitialized"], "PRE: core constructed but not initialized");
 
                 // Init
                 initFunction();
 
                 // Assert initialized
-                Assert.ok(appInsightsCore["_isInitialized"], "core is initialized");
+                Assert.ok(appInsightsCore.baseCore["_isInitialized"], "core is initialized");
 
                 Assert.throws(initFunction, Error, "Core cannot be reinitialized");
             }
@@ -285,7 +285,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                         instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41",
                         diagnosticLogInterval: 1
                     }, [channelPlugin]);
-                const trackTraceSpy = this.sandbox.stub(appInsightsCore, "track");
+                const trackTraceSpy = this.sandbox.stub(appInsightsCore.baseCore, "track");
 
                 Assert.equal(0, appInsightsCore.logger.queue.length, "Queue is empty");
 
@@ -375,7 +375,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 }
 
                 let found = false;
-                (appInsightsCore as any)._extensions.forEach(ext => {
+                (appInsightsCore.baseCore as any)._extensions.forEach(ext => {
                     if (ext.identifier === samplingPlugin.identifier) {
                         found = true;
                     }
@@ -405,7 +405,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                     Assert.ok(false, "Exception not expected");
                 }
 
-                Assert.ok(typeof ((appInsightsCore as any)._extensions[0].processTelemetry) !== 'function', "Extensions can be provided through overall configuration");
+                Assert.ok(typeof ((appInsightsCore.baseCore as any)._extensions[0].processTelemetry) !== 'function', "Extensions can be provided through overall configuration");
             }
         });
 
@@ -501,7 +501,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                     baseData: { name: "Test Page" }
                 };
 
-                appInsightsCore.track(bareItem);
+                appInsightsCore.baseCore.track(bareItem);
             }
         });
 
@@ -517,7 +517,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                         instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", channels: [[channelPlugin]]
                     }, []);
                 const event: ITelemetryItem = { name: 'test' };
-                appInsightsCore.track(event);
+                appInsightsCore.baseCore.track(event);
                 const evt = channelSpy.args[0][0];
                 Assert.ok(evt.name === "test");
             }
