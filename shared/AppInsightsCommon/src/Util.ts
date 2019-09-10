@@ -62,16 +62,16 @@ export class Util {
     private static _getVerifiedStorageObject(storageType: StorageType): Storage {
         let storage: Storage = null;
         let fail: boolean;
-        let uid;
+        let uid: Date;
         try {
             if (typeof window === 'undefined') {
                 return null;
             }
             uid = new Date;
             storage = storageType === StorageType.LocalStorage ? window.localStorage : window.sessionStorage;
-            storage.setItem(uid, uid);
-            fail = storage.getItem(uid) !== uid;
-            storage.removeItem(uid);
+            storage.setItem(uid.toString(), uid.toString());
+            fail = storage.getItem(uid.toString()) !== uid.toString();
+            storage.removeItem(uid.toString());
             if (fail) {
                 storage = null;
             }
