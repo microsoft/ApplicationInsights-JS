@@ -44,24 +44,11 @@ export class AppInsightsCore implements IAppInsightsCore {
             // throw error
             throw Error("Invalid telemetry item");
         }
-
-        if (!telemetryItem.iKey) {
-            // setup default iKey if not passed in
-            telemetryItem.iKey = this.config.instrumentationKey;
-        }
-        if (!telemetryItem.time) {
-            // add default timestamp if not passed in
-            telemetryItem.time = new Date().toISOString();
-        }
-        if (CoreUtils.isNullOrUndefined(telemetryItem.ver)) {
-            // CommonSchema 4.0
-            telemetryItem.ver = "4.0";
-        }
         
         // do basic validation before sending it through the pipeline
-        this._validateTelmetryItem(telemetryItem);
+        this._validateTelemetryItem(telemetryItem);
 
-        this.baseCore.trackItem(telemetryItem);
+        this.baseCore.track(telemetryItem);
     }
 
     /**
@@ -113,21 +100,11 @@ export class AppInsightsCore implements IAppInsightsCore {
         }, interval) as any;
     }
 
-    private _validateTelmetryItem(telemetryItem: ITelemetryItem) {
+    private _validateTelemetryItem(telemetryItem: ITelemetryItem) {
 
         if (CoreUtils.isNullOrUndefined(telemetryItem.name)) {
             this._notifyInvalidEvent(telemetryItem);
             throw Error("telemetry name required");
-        }
-
-        if (CoreUtils.isNullOrUndefined(telemetryItem.time)) {
-            this._notifyInvalidEvent(telemetryItem);
-            throw Error("telemetry timestamp required");
-        }
-
-        if (CoreUtils.isNullOrUndefined(telemetryItem.iKey)) {
-            this._notifyInvalidEvent(telemetryItem);
-            throw Error("telemetry instrumentationKey required");
         }
     }
 

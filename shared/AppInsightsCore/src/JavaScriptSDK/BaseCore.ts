@@ -151,11 +151,6 @@ export class BaseCore implements IAppInsightsCore {
     }
 
     track(telemetryItem: ITelemetryItem) {
-        if (telemetryItem === null) {
-            // throw error
-            throw Error("Invalid telemetry item");
-        }
-
         if (!telemetryItem.iKey) {
             // setup default iKey if not passed in
             telemetryItem.iKey = this.config.instrumentationKey;
@@ -169,13 +164,6 @@ export class BaseCore implements IAppInsightsCore {
             telemetryItem.ver = "4.0";
         }
 
-        // do basic validation before sending it through the pipeline
-        this._validateTelmetryItem(telemetryItem);
-
-        this.trackItem(telemetryItem);
-    }
-
-    trackItem(telemetryItem: ITelemetryItem) {
         // invoke any common telemetry processors before sending through pipeline
         if (this._extensions.length == 0) {
             this._channelController.processTelemetry(telemetryItem); // Pass to Channel controller so data is sent to correct channel queues
@@ -188,21 +176,6 @@ export class BaseCore implements IAppInsightsCore {
             }
 
             i++;
-        }
-    }
-
-    private _validateTelmetryItem(telemetryItem: ITelemetryItem) {
-
-        if (CoreUtils.isNullOrUndefined(telemetryItem.name)) {
-            throw Error("telemetry name required");
-        }
-
-        if (CoreUtils.isNullOrUndefined(telemetryItem.time)) {
-            throw Error("telemetry timestamp required");
-        }
-
-        if (CoreUtils.isNullOrUndefined(telemetryItem.iKey)) {
-            throw Error("telemetry instrumentationKey required");
         }
     }
 }

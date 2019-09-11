@@ -190,7 +190,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const channelPlugin = new ChannelPlugin();
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize({ instrumentationKey: expectedIKey }, [channelPlugin]);
-                const validateStub = this.sandbox.stub(appInsightsCore, "_validateTelmetryItem");
+                const validateStub = this.sandbox.stub(appInsightsCore, "_validateTelemetryItem");
 
                 // Act
                 const bareItem: ITelemetryItem = { name: 'test item' };
