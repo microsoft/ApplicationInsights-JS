@@ -7,7 +7,9 @@ import { IPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
+import { EventsDiscardedReason } from "../JavaScriptSDK.Enums/EventsDiscardedReason";
 import { NotificationManager } from "./NotificationManager";
+import { CoreUtils } from "./CoreUtils";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { _InternalLogMessage, DiagnosticLogger } from "./DiagnosticLogger";
 
@@ -37,7 +39,29 @@ export class AppInsightsCore implements IAppInsightsCore {
     }
 
     track(telemetryItem: ITelemetryItem) {
-        this.baseCore.track(telemetryItem);
+        if (telemetryItem === null) {
+            this._notifyInvalidEvent(telemetryItem);
+            // throw error
+            throw Error("Invalid telemetry item");
+        }
+
+        if (!telemetryItem.iKey) {
+            // setup default iKey if not passed in
+            telemetryItem.iKey = this.config.instrumentationKey;
+        }
+        if (!telemetryItem.time) {
+            // add default timestamp if not passed in
+            telemetryItem.time = new Date().toISOString();
+        }
+        if (CoreUtils.isNullOrUndefined(telemetryItem.ver)) {
+            // CommonSchema 4.0
+            telemetryItem.ver = "4.0";
+        }
+        
+        // do basic validation before sending it through the pipeline
+        this._validateTelmetryItem(telemetryItem);
+
+        this.baseCore.trackItem(telemetryItem);
     }
 
     /**
@@ -47,7 +71,9 @@ export class AppInsightsCore implements IAppInsightsCore {
      * @param {INotificationListener} listener - An INotificationListener object.
      */
     addNotificationListener(listener: INotificationListener): void {
-        this.baseCore.addNotificationListener(listener);
+        if (this._notificationManager) {
+            this._notificationManager.addNotificationListener(listener);
+        }
     }
 
     /**
@@ -55,7 +81,9 @@ export class AppInsightsCore implements IAppInsightsCore {
      * @param {INotificationListener} listener - INotificationListener to remove.
      */
     removeNotificationListener(listener: INotificationListener): void {
-        this.baseCore.removeNotificationListener(listener);
+        if (this._notificationManager) {
+            this._notificationManager.removeNotificationListener(listener);
+        }
     }
 
     /**
@@ -83,5 +111,29 @@ export class AppInsightsCore implements IAppInsightsCore {
             });
             queue.length = 0;
         }, interval) as any;
+    }
+
+    private _validateTelmetryItem(telemetryItem: ITelemetryItem) {
+
+        if (CoreUtils.isNullOrUndefined(telemetryItem.name)) {
+            this._notifyInvalidEvent(telemetryItem);
+            throw Error("telemetry name required");
+        }
+
+        if (CoreUtils.isNullOrUndefined(telemetryItem.time)) {
+            this._notifyInvalidEvent(telemetryItem);
+            throw Error("telemetry timestamp required");
+        }
+
+        if (CoreUtils.isNullOrUndefined(telemetryItem.iKey)) {
+            this._notifyInvalidEvent(telemetryItem);
+            throw Error("telemetry instrumentationKey required");
+        }
+    }
+
+    private _notifyInvalidEvent(telemetryItem: ITelemetryItem): void {
+        if (this._notificationManager) {
+            this._notificationManager.eventsDiscarded([telemetryItem], EventsDiscardedReason.InvalidEvent);
+        }
     }
 }

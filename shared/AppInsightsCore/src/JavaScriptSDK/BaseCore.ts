@@ -5,8 +5,6 @@ import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
-import { EventsDiscardedReason } from "../JavaScriptSDK.Enums/EventsDiscardedReason";
 import { CoreUtils } from "./CoreUtils";
 import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
@@ -154,7 +152,6 @@ export class BaseCore implements IAppInsightsCore {
 
     track(telemetryItem: ITelemetryItem) {
         if (telemetryItem === null) {
-            this._notifyInvalidEvent(telemetryItem);
             // throw error
             throw Error("Invalid telemetry item");
         }
@@ -175,6 +172,10 @@ export class BaseCore implements IAppInsightsCore {
         // do basic validation before sending it through the pipeline
         this._validateTelmetryItem(telemetryItem);
 
+        this.trackItem(telemetryItem);
+    }
+
+    trackItem(telemetryItem: ITelemetryItem) {
         // invoke any common telemetry processors before sending through pipeline
         if (this._extensions.length == 0) {
             this._channelController.processTelemetry(telemetryItem); // Pass to Channel controller so data is sent to correct channel queues
@@ -190,50 +191,18 @@ export class BaseCore implements IAppInsightsCore {
         }
     }
 
-    /**
-     * Adds a notification listener. The SDK calls methods on the listener when an appropriate notification is raised.
-     * The added plugins must raise notifications. If the plugins do not implement the notifications, then no methods will be
-     * called.
-     * @param {INotificationListener} listener - An INotificationListener object.
-     */
-    addNotificationListener(listener: INotificationListener): void {
-        if (this._notificationManager) {
-            this._notificationManager.addNotificationListener(listener);
-        }
-    }
-
-    /**
-     * Removes all instances of the listener.
-     * @param {INotificationListener} listener - INotificationListener to remove.
-     */
-    removeNotificationListener(listener: INotificationListener): void {
-        if (this._notificationManager) {
-            this._notificationManager.removeNotificationListener(listener);
-        }
-    }
-
     private _validateTelmetryItem(telemetryItem: ITelemetryItem) {
 
         if (CoreUtils.isNullOrUndefined(telemetryItem.name)) {
-            this._notifyInvalidEvent(telemetryItem);
             throw Error("telemetry name required");
         }
 
         if (CoreUtils.isNullOrUndefined(telemetryItem.time)) {
-            this._notifyInvalidEvent(telemetryItem);
             throw Error("telemetry timestamp required");
         }
 
         if (CoreUtils.isNullOrUndefined(telemetryItem.iKey)) {
-            this._notifyInvalidEvent(telemetryItem);
             throw Error("telemetry instrumentationKey required");
         }
     }
-
-    private _notifyInvalidEvent(telemetryItem: ITelemetryItem): void {
-        if (this._notificationManager) {
-            this._notificationManager.eventsDiscarded([telemetryItem], EventsDiscardedReason.InvalidEvent);
-        }
-    }
 }
-

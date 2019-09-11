@@ -190,7 +190,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const channelPlugin = new ChannelPlugin();
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize({ instrumentationKey: expectedIKey }, [channelPlugin]);
-                const validateStub = this.sandbox.stub(appInsightsCore.baseCore, "_validateTelmetryItem");
+                const validateStub = this.sandbox.stub(appInsightsCore, "_validateTelmetryItem");
 
                 // Act
                 const bareItem: ITelemetryItem = { name: 'test item' };
@@ -285,7 +285,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                         instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41",
                         diagnosticLogInterval: 1
                     }, [channelPlugin]);
-                const trackTraceSpy = this.sandbox.stub(appInsightsCore.baseCore, "track");
+                const trackTraceSpy = this.sandbox.stub(appInsightsCore, "track");
 
                 Assert.equal(0, appInsightsCore.logger.queue.length, "Queue is empty");
 

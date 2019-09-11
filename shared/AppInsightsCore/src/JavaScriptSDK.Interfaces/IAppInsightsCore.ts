@@ -39,13 +39,13 @@ export interface IAppInsightsCore {
      * called.
      * @param {INotificationListener} listener - An INotificationListener object.
      */
-    addNotificationListener(listener: INotificationListener): void;
+    addNotificationListener?(listener: INotificationListener): void;
 
     /**
      * Removes all instances of the listener.
      * @param {INotificationListener} listener - INotificationListener to remove.
      */
-    removeNotificationListener(listener: INotificationListener): void;
+    removeNotificationListener?(listener: INotificationListener): void;
 
     pollInternalLogs?(eventName?: string): number;
 }
