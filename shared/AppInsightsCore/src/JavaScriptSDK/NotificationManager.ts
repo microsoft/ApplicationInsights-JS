@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
+import { INotificationManager } from './../JavaScriptSDK.Interfaces/INotificationManager';
 
 /**
  * Class to manage sending notifications to all the listeners.
  */
-export class NotificationManager {
+export class NotificationManager implements INotificationManager {
     listeners: INotificationListener[] = [];
 
     /**

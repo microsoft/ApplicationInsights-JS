@@ -332,7 +332,7 @@ export class ApplicationInsightsTests extends TestClass {
         this.testCase({
             name: "DependenciesPlugin: initialization yields a defined _context value",
             test: () => {
-                const extensions = (<AppInsightsCore>this._ai.core)._extensions;
+                const extensions = (<AppInsightsCore>this._ai.core).baseCore._extensions;
                 let ajax: AjaxPlugin, extIx=0;
                 while (!ajax && extIx < extensions.length) {
                     if (extensions[extIx].identifier === AjaxPlugin.identifier) {
