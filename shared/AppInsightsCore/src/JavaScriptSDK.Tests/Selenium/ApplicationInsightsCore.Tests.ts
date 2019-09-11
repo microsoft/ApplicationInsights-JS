@@ -194,7 +194,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
 
                 // Act
                 const bareItem: ITelemetryItem = { name: 'test item' };
-                appInsightsCore.baseCore.track(bareItem);
+                appInsightsCore.track(bareItem);
                 this.clock.tick(1);
 
                 // Test
@@ -501,7 +501,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                     baseData: { name: "Test Page" }
                 };
 
-                appInsightsCore.baseCore.track(bareItem);
+                appInsightsCore.track(bareItem);
             }
         });
 
@@ -517,7 +517,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                         instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", channels: [[channelPlugin]]
                     }, []);
                 const event: ITelemetryItem = { name: 'test' };
-                appInsightsCore.baseCore.track(event);
+                appInsightsCore.track(event);
                 const evt = channelSpy.args[0][0];
                 Assert.ok(evt.name === "test");
             }
