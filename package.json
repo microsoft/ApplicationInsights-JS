@@ -11,11 +11,11 @@
         "azure"
     ],
     "scripts": {
-        "analytics": "cd ./vNext/extensions/applicationinsights-analytics-js && npm i",
-        "common": "cd ./vNext/shared/AppInsightsCommon/ && npm i",
-        "dependencies": "cd ./vNext/extensions/applicationinsights-dependencies-js && npm i",
-        "properties": "cd ./vNext/extensions/applicationinsights-properties-js && npm i",
-        "aisku": "cd ./vNext/AISKU && npm i",
+        "analytics": "cd ./extensions/applicationinsights-analytics-js && npm i",
+        "common": "cd ./shared/AppInsightsCommon/ && npm i",
+        "dependencies": "cd ./extensions/applicationinsights-dependencies-js && npm i",
+        "properties": "cd ./extensions/applicationinsights-properties-js && npm i",
+        "aisku": "cd ./AISKU && npm i",
         "build-prefixes": "npm-run-all --serial analytics common dependencies properties aisku",
         "test": "grunt test"
     },
@@ -33,12 +33,15 @@
         "grunt": "1.0.1",
         "grunt-contrib-qunit": "2.0.0",
         "grunt-contrib-uglify": "3.1.0",
+        "grunt-run": "^0.8.1",
         "grunt-ts": "^6.0.0-beta.22",
         "grunt-tslint": "^5.0.2",
-        "grunt-run": "^0.8.1",
         "npm-run-all": "^4.1.3",
-        "tslint": "^5.11.0",
+        "tslint": "^5.19.0",
         "tslint-microsoft-contrib": "^5.2.1",
         "typescript": "2.5.3"
+    },
+    "dependencies": {
+        "tslint-config-prettier": "^1.18.0"
     }
 }

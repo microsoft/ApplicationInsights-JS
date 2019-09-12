@@ -13,10 +13,9 @@ jobs:
       name: "Prod build and test"
       script:
       - grunt test
-    - stage: "VNext build and test"
-      name: "VNext build and test"
+    - stage: "build and test"
+      name: "build and test"
       script:
-      - cd vNext
       - set -e
       - set NO_UPDATE_NOTIFIER=1
 
