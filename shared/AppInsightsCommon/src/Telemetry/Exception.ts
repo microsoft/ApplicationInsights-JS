@@ -31,8 +31,8 @@ export class Exception extends ExceptionData implements ISerializable {
     }
 
     /**
-    * Constructs a new instance of the ExceptionTelemetry object
-    */
+     * Constructs a new instance of the ExceptionTelemetry object
+     */
     constructor(logger: IDiagnosticLogger, exception: Error | IExceptionInternal, properties?: {[key: string]: any}, measurements?: {[key: string]: number}, severityLevel?: SeverityLevel, id?: string) {
         super();
 
@@ -40,19 +40,19 @@ export class Exception extends ExceptionData implements ISerializable {
             this.exceptions = [new _ExceptionDetails(logger, exception)];
             this.properties = DataSanitizer.sanitizeProperties(logger, properties);
             this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
-            if (severityLevel) this.severityLevel = severityLevel;
-            if (id) this.id = id;
+            if (severityLevel) { this.severityLevel = severityLevel; }
+            if (id) { this.id = id; }
         } else {
             this.exceptions = exception.exceptions;
             this.properties = exception.properties;
             this.measurements = exception.measurements;
-            if (exception.severityLevel) this.severityLevel = exception.severityLevel;
-            if (exception.id) this.id = exception.id;
-            if (exception.problemGroup) this.problemGroup = exception.problemGroup;
+            if (exception.severityLevel) { this.severityLevel = exception.severityLevel; }
+            if (exception.id) { this.id = exception.id; }
+            if (exception.problemGroup) { this.problemGroup = exception.problemGroup; }
 
             // bool/int types, use isNullOrUndefined
             this.ver = 2; // TODO: handle the CS"4.0" ==> breeze 2 conversion in a better way
-            if (!CoreUtils.isNullOrUndefined(exception.isManual)) this.isManual = exception.isManual;
+            if (!CoreUtils.isNullOrUndefined(exception.isManual)) { this.isManual = exception.isManual; }
         }
 
     }
@@ -71,7 +71,7 @@ export class Exception extends ExceptionData implements ISerializable {
             && exceptions.map((exception: _ExceptionDetails) => exception.toInterface())
             || undefined;
 
-        return <IExceptionInternal>{
+        return {
             ver: "4.0", // TODO: handle the CS"4.0" ==> breeze 2 conversion in a better way
             exceptions: exceptionDetailsInterface,
             severityLevel,
@@ -80,25 +80,25 @@ export class Exception extends ExceptionData implements ISerializable {
             problemGroup,
             id,
             isManual
-        };
+        } as IExceptionInternal;
     }
 
     /**
-    * Creates a simple exception with 1 stack frame. Useful for manual constracting of exception.
-    */
+     * Creates a simple exception with 1 stack frame. Useful for manual constracting of exception.
+     */
     public static CreateSimpleException(message: string, typeName: string, assembly: string, fileName: string,
         details: string, line: number): Exception {
 
-        return <Exception>{
+        return {
             exceptions: [
-                <ExceptionDetails>{
+                {
                     hasFullStack: true,
-                    message: message,
+                    message,
                     stack: details,
-                    typeName: typeName
-                }
+                    typeName
+                } as ExceptionDetails
             ]
-        };
+        } as Exception;
     }
 }
 
@@ -120,7 +120,7 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
         if (exception instanceof Error) {
             this.typeName = DataSanitizer.sanitizeString(logger, exception.name) || Util.NotSpecified;
             this.message = DataSanitizer.sanitizeMessage(logger, exception.message) || Util.NotSpecified;
-            var stack = exception.stack;
+            const stack = exception.stack;
             this.parsedStack = _ExceptionDetails.parseStack(stack);
             this.stack = DataSanitizer.sanitizeException(logger, stack);
             this.hasFullStack = Util.isArray(this.parsedStack) && this.parsedStack.length > 0;
@@ -155,23 +155,23 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
             && exception.parsedStack.map(frame => _StackFrame.CreateFromInterface(frame)))
             || exception.parsedStack;
 
-        const exceptionDetails = new _ExceptionDetails(logger, {...exception, parsedStack: parsedStack});
+        const exceptionDetails = new _ExceptionDetails(logger, {...exception, parsedStack});
 
         return exceptionDetails;
     }
 
     private static parseStack(stack): _StackFrame[] {
-        var parsedStack: _StackFrame[] = undefined;
+        let parsedStack: _StackFrame[];
         if (typeof stack === "string") {
-            var frames = stack.split('\n');
+            const frames = stack.split('\n');
             parsedStack = [];
-            var level = 0;
+            let level = 0;
 
-            var totalSizeInBytes = 0;
-            for (var i = 0; i <= frames.length; i++) {
-                var frame = frames[i];
+            let totalSizeInBytes = 0;
+            for (let i = 0; i <= frames.length; i++) {
+                const frame = frames[i];
                 if (_StackFrame.regex.test(frame)) {
-                    var parsedFrame = new _StackFrame(frames[i], level++);
+                    const parsedFrame = new _StackFrame(frames[i], level++);
                     totalSizeInBytes += parsedFrame.sizeInBytes;
                     parsedStack.push(parsedFrame);
                 }
@@ -179,24 +179,24 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
 
             // DP Constraint - exception parsed stack must be < 32KB
             // remove frames from the middle to meet the threshold
-            var exceptionParsedStackThreshold = 32 * 1024;
+            const exceptionParsedStackThreshold = 32 * 1024;
             if (totalSizeInBytes > exceptionParsedStackThreshold) {
-                var left = 0;
-                var right = parsedStack.length - 1;
-                var size = 0;
-                var acceptedLeft = left;
-                var acceptedRight = right;
+                let left = 0;
+                let right = parsedStack.length - 1;
+                let size = 0;
+                let acceptedLeft = left;
+                let acceptedRight = right;
 
                 while (left < right) {
                     // check size
-                    var lSize = parsedStack[left].sizeInBytes;
-                    var rSize = parsedStack[right].sizeInBytes;
+                    const lSize = parsedStack[left].sizeInBytes;
+                    const rSize = parsedStack[right].sizeInBytes;
                     size += lSize + rSize;
 
                     if (size > exceptionParsedStackThreshold) {
 
                         // remove extra frames from the middle
-                        var howMany = acceptedRight - acceptedLeft + 1;
+                        const howMany = acceptedRight - acceptedLeft + 1;
                         parsedStack.splice(acceptedLeft, howMany);
                         break;
                     }
@@ -220,7 +220,7 @@ export class _StackFrame extends StackFrame implements ISerializable {
     // regex to match stack frames from ie/chrome/ff
     // methodName=$2, fileName=$4, lineNo=$5, column=$6
     public static regex = /^([\s]+at)?(.*?)(\@|\s\(|\s)([^\(\@\n]+):([0-9]+):([0-9]+)(\)?)$/;
-    public static baseSize = 58; //'{"method":"","level":,"assembly":"","fileName":"","line":}'.length
+    public static baseSize = 58; // '{"method":"","level":,"assembly":"","fileName":"","line":}'.length
     public sizeInBytes = 0;
 
     public aiDataContract = {
@@ -241,7 +241,7 @@ export class _StackFrame extends StackFrame implements ISerializable {
             this.assembly = Util.trim(frame);
             this.fileName = "";
             this.line = 0;
-            var matches = frame.match(_StackFrame.regex);
+            const matches = frame.match(_StackFrame.regex);
             if (matches && matches.length >= 5) {
                 this.method = Util.trim(matches[2]) || this.method;
                 this.fileName = Util.trim(matches[4]);

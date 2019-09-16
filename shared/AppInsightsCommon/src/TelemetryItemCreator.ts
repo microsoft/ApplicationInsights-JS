@@ -32,7 +32,7 @@ export class TelemetryItemCreator {
                 throw Error("Input doesn't contain all required fields");
         }
 
-        let telemetryItem: ITelemetryItem = {
+        const telemetryItem: ITelemetryItem = {
             name: envelopeName,
             time: new Date().toISOString(),
             iKey: "", // this will be set in TelemetryContext
@@ -40,13 +40,13 @@ export class TelemetryItemCreator {
             tags: [],
             data: {
             },
-            baseType: baseType,
+            baseType,
             baseData: item // Part B
         };
 
         // Part C
         if (!CoreUtils.isNullOrUndefined(customProperties)) {
-            for (var prop in customProperties) {
+            for (const prop in customProperties) {
                 if (customProperties.hasOwnProperty(prop)) {
                     telemetryItem.data[prop] = customProperties[prop];
                 }

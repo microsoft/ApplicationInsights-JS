@@ -7,173 +7,10 @@ import { ITelemetryItem, IDiagnosticLogger, IConfiguration } from "@microsoft/ap
 
 // ToDo: fix properties and measurements once updates are done to common
 export class AppInsightsDeprecated implements IAppInsightsDeprecated {
-    public config: IConfig & IConfiguration;
-    public snippet: Snippet;
-    public context: ITelemetryContext;
-    public logger: IDiagnosticLogger;
-    queue: (() => void)[];
-    private appInsightsNew: ApplicationInsights;
-    private _hasLegacyInitializers = false;
-    private _queue = [];
-
-    /**
-    * The array of telemetry initializers to call before sending each telemetry item.
-    */
-
-    public addTelemetryInitializers(callBack: (env: IEnvelope) => boolean | void) {
-
-        // Add initializer to current processing only if there is any old telemetry initializer
-        if (!this._hasLegacyInitializers) {
-
-            this.appInsightsNew.addTelemetryInitializer(item => {
-                this._processLegacyInitializers(item); // setup call back for each legacy processor
-            })
-
-            this._hasLegacyInitializers = true;
-        }
-
-        this._queue.push(callBack);
-    }
-
-    private _processLegacyInitializers(item: ITelemetryItem): ITelemetryItem {
-
-        // instead of mapping new to legacy and then back again and repeating in channel, attach callback for channel to call
-        item.tags[ProcessLegacy] = this._queue;
-        return item;
-    }
-
-    constructor(snippet: Snippet, appInsightsNew: ApplicationInsights) {
-        this.config = AppInsightsDeprecated.getDefaultConfig(snippet.config);
-        this.appInsightsNew = appInsightsNew;
-        this.context = { addTelemetryInitializer: this.addTelemetryInitializers.bind(this) }
-    }
-
-    startTrackPage(name?: string) {
-        this.appInsightsNew.startTrackPage(name);
-    }
-
-    stopTrackPage(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }) {
-        this.appInsightsNew.stopTrackPage(name, url, properties); // update
-    }
-
-    trackPageView(name?: string, url?: string, properties?: {[key: string]: string }, measurements?: {[key: string]: number }, duration?: number) {
-        let telemetry: IPageViewTelemetry = {
-            name: name,
-            uri: url,
-            properties: properties,
-            measurements: measurements
-        };
-
-        // fix for props, measurements, duration
-        this.appInsightsNew.trackPageView(telemetry);
-    }
-
-    trackEvent(name: string, properties?: Object, measurements?: Object) {
-        this.appInsightsNew.trackEvent(<IEventTelemetry>{ name: name});
-    }
-
-    trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
-        this.appInsightsNew.trackDependencyData(
-            <IDependencyTelemetry>{
-                id: id,
-                target: absoluteUrl,
-                type: pathName,
-                duration: totalTime,
-                properties: { HttpMethod: method },
-                success: success,
-                responseCode: resultCode
-            });
-    }
-
-    trackException(exception: Error, handledAt?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, severityLevel?: any) {
-        this.appInsightsNew.trackException(<IExceptionTelemetry>{
-            exception: exception
-        });
-    }
-
-    trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: { [name: string]: string; }) {
-        this.appInsightsNew.trackMetric(<IMetricTelemetry>{name: name, average: average, sampleCount: sampleCount, min: min, max: max});
-    }
-
-    trackTrace(message: string, properties?: { [name: string]: string; }, severityLevel?: any) {
-        this.appInsightsNew.trackTrace(<ITraceTelemetry>{ message: message, severityLevel: severityLevel });
-    }
-
-    flush(async?: boolean) {
-        this.appInsightsNew.flush(async);
-    }
-
-    setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean) {
-        this.appInsightsNew.context.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
-    }
-
-    clearAuthenticatedUserContext() {
-        this.appInsightsNew.context.user.clearAuthenticatedUserContext();
-    }
-
-    _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
-        this.appInsightsNew._onerror(<IAutoExceptionTelemetry>{ message: message, url: url, lineNumber: lineNumber, columnNumber: columnNumber, error: error });
-    }
-
-
-    startTrackEvent(name: string) {
-        this.appInsightsNew.startTrackEvent(name);
-    }
-
-    stopTrackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }) {
-        this.appInsightsNew.stopTrackEvent(name, properties, measurements);
-    }
-
-    downloadAndSetup?(config: IConfig): void {
-        throw new Error("downloadAndSetup not implemented in web SKU");
-    }
-
-    public updateSnippetDefinitions(snippet: Snippet) {
-        // apply full appInsights to the global instance
-        // Note: This must be called before loadAppInsights is called
-        for (var field in this) {
-            if (typeof field === 'string') {
-                snippet[field as string] = this[field];
-            }
-        }
-    }
-
-    // note: these are split into methods to enable unit tests
-    public loadAppInsights() {
-
-        // initialize global instance of appInsights
-        //var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.config);
-
-        // implement legacy version of trackPageView for 0.10<
-        if (this.config["iKey"]) {
-            var originalTrackPageView = this.trackPageView;
-            this.trackPageView = (pagePath?: string, properties?: Object, measurements?: Object) => {
-                originalTrackPageView.apply(this, [null, pagePath, properties, measurements]);
-            }
-        }
-
-        // implement legacy pageView interface if it is present in the snippet
-        var legacyPageView = "logPageView";
-        if (typeof this.snippet[legacyPageView] === "function") {
-            this[legacyPageView] = (pagePath?: string, properties?: {[key: string]: string }, measurements?: {[key: string]: number }) => {
-                this.trackPageView(null, pagePath, properties, measurements);
-            }
-        }
-
-        // implement legacy event interface if it is present in the snippet
-        var legacyEvent = "logEvent";
-        if (typeof this.snippet[legacyEvent] === "function") {
-            this[legacyEvent] = (name: string, props?: Object, measurements?: Object) => {
-                this.trackEvent(name, props, measurements);
-            }
-        }
-
-        return this;
-    }
 
     private static getDefaultConfig(config?: any): any {
         if (!config) {
-            config = <any>{};
+            config = ({} as any);
         }
 
         // set default values
@@ -214,6 +51,170 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
 
         return config;
     }
+    
+    public config: IConfig & IConfiguration;
+    public snippet: Snippet;
+    public context: ITelemetryContext;
+    public logger: IDiagnosticLogger;
+    queue: Array<() => void>;
+    private appInsightsNew: ApplicationInsights;
+    private _hasLegacyInitializers = false;
+    private _queue = [];
+
+    constructor(snippet: Snippet, appInsightsNew: ApplicationInsights) {
+        this.config = AppInsightsDeprecated.getDefaultConfig(snippet.config);
+        this.appInsightsNew = appInsightsNew;
+        this.context = { addTelemetryInitializer: this.addTelemetryInitializers.bind(this) }
+    }
+
+   /**
+    * The array of telemetry initializers to call before sending each telemetry item.
+    */
+
+    public addTelemetryInitializers(callBack: (env: IEnvelope) => boolean | void) {
+
+        // Add initializer to current processing only if there is any old telemetry initializer
+        if (!this._hasLegacyInitializers) {
+
+            this.appInsightsNew.addTelemetryInitializer(item => {
+                this._processLegacyInitializers(item); // setup call back for each legacy processor
+            })
+
+            this._hasLegacyInitializers = true;
+        }
+
+        this._queue.push(callBack);
+    }
+
+    startTrackPage(name?: string) {
+        this.appInsightsNew.startTrackPage(name);
+    }
+
+    stopTrackPage(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }) {
+        this.appInsightsNew.stopTrackPage(name, url, properties); // update
+    }
+
+    trackPageView(name?: string, url?: string, properties?: {[key: string]: string }, measurements?: {[key: string]: number }, duration?: number) {
+        const telemetry: IPageViewTelemetry = {
+            name,
+            uri: url,
+            properties,
+            measurements
+        };
+
+        // fix for props, measurements, duration
+        this.appInsightsNew.trackPageView(telemetry);
+    }
+
+    trackEvent(name: string, properties?: Object, measurements?: Object) {
+        this.appInsightsNew.trackEvent({ name} as IEventTelemetry);
+    }
+
+    trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number) {
+        this.appInsightsNew.trackDependencyData(
+            {
+                id,
+                target: absoluteUrl,
+                type: pathName,
+                duration: totalTime,
+                properties: { HttpMethod: method },
+                success,
+                responseCode: resultCode
+            } as IDependencyTelemetry);
+    }
+
+    trackException(exception: Error, handledAt?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, severityLevel?: any) {
+        this.appInsightsNew.trackException({
+            exception
+        } as IExceptionTelemetry);
+    }
+
+    trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: { [name: string]: string; }) {
+        this.appInsightsNew.trackMetric({name, average, sampleCount, min, max} as IMetricTelemetry);
+    }
+
+    trackTrace(message: string, properties?: { [name: string]: string; }, severityLevel?: any) {
+        this.appInsightsNew.trackTrace({ message, severityLevel } as ITraceTelemetry);
+    }
+
+    flush(async?: boolean) {
+        this.appInsightsNew.flush(async);
+    }
+
+    setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean) {
+        this.appInsightsNew.context.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
+    }
+
+    clearAuthenticatedUserContext() {
+        this.appInsightsNew.context.user.clearAuthenticatedUserContext();
+    }
+
+    _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error) {
+        this.appInsightsNew._onerror({ message, url, lineNumber, columnNumber, error } as IAutoExceptionTelemetry);
+    }
+
+
+    startTrackEvent(name: string) {
+        this.appInsightsNew.startTrackEvent(name);
+    }
+
+    stopTrackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }) {
+        this.appInsightsNew.stopTrackEvent(name, properties, measurements);
+    }
+
+    downloadAndSetup?(config: IConfig): void {
+        throw new Error("downloadAndSetup not implemented in web SKU");
+    }
+
+    public updateSnippetDefinitions(snippet: Snippet) {
+        // apply full appInsights to the global instance
+        // Note: This must be called before loadAppInsights is called
+        for (const field in this) {
+            if (typeof field === 'string') {
+                snippet[field as string] = this[field];
+            }
+        }
+    }
+
+    // note: these are split into methods to enable unit tests
+    public loadAppInsights() {
+
+        // initialize global instance of appInsights
+        // var appInsights = new Microsoft.ApplicationInsights.AppInsights(this.config);
+
+        // implement legacy version of trackPageView for 0.10<
+        if (this.config["iKey"]) {
+            const originalTrackPageView = this.trackPageView;
+            this.trackPageView = (pagePath?: string, properties?: Object, measurements?: Object) => {
+                originalTrackPageView.apply(this, [null, pagePath, properties, measurements]);
+            }
+        }
+
+        // implement legacy pageView interface if it is present in the snippet
+        const legacyPageView = "logPageView";
+        if (typeof this.snippet[legacyPageView] === "function") {
+            this[legacyPageView] = (pagePath?: string, properties?: {[key: string]: string }, measurements?: {[key: string]: number }) => {
+                this.trackPageView(null, pagePath, properties, measurements);
+            }
+        }
+
+        // implement legacy event interface if it is present in the snippet
+        const legacyEvent = "logEvent";
+        if (typeof this.snippet[legacyEvent] === "function") {
+            this[legacyEvent] = (name: string, props?: Object, measurements?: Object) => {
+                this.trackEvent(name, props, measurements);
+            }
+        }
+
+        return this;
+    }
+
+    private _processLegacyInitializers(item: ITelemetryItem): ITelemetryItem {
+
+        // instead of mapping new to legacy and then back again and repeating in channel, attach callback for channel to call
+        item.tags[ProcessLegacy] = this._queue;
+        return item;
+    }
 }
 
 export interface IAppInsightsDeprecated {
@@ -230,14 +231,14 @@ export interface IAppInsightsDeprecated {
     */
     queue: Array<() => void>;
 
-    /**
+   /**
     * Starts timing how long the user views a page or other item. Call this when the page opens.
     * This method doesn't send any telemetry. Call `stopTrackPage` to log the page when it closes.
     * @param   name  A string that idenfities this item, unique within this HTML document. Defaults to the document title.
     */
     startTrackPage(name?: string);
 
-    /**
+   /**
     * Logs how long a page or other item was visible, after `startTrackPage`. Call this when the page closes.
     * @param   name  The string you used as the name in startTrackPage. Defaults to the document title.
     * @param   url   String - a relative or absolute URL that identifies the page or other item. Defaults to the window location.
@@ -272,7 +273,7 @@ export interface IAppInsightsDeprecated {
      */
     stopTrackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
 
-    /**
+   /**
     * Log a user action or other occurrence.
     * @param   name    A string to identify this event in the portal.
     * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
@@ -314,7 +315,7 @@ export interface IAppInsightsDeprecated {
      */
     trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: { [name: string]: string; });
 
-    /**
+   /**
     * Log a diagnostic message.
     * @param   message A message string
     * @param   properties  map[string, string] - additional data used to filter traces in the portal. Defaults to empty.
@@ -330,7 +331,7 @@ export interface IAppInsightsDeprecated {
     flush(async?: boolean);
 
 
-    /**
+   /**
     * Sets the autheticated user id and the account id in this session.
     * User auth id and account id should be of type string. They should not contain commas, semi-colons, equal signs, spaces, or vertical-bars.
     *
@@ -363,7 +364,7 @@ export interface IAppInsightsDeprecated {
 
 export interface ITelemetryContext {
 
-    /**
+   /**
     * Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one,
     * in the order they were added, before the telemetry item is pushed for sending.
     * If one of the telemetry initializers returns false or throws an error then the telemetry item will not be sent.

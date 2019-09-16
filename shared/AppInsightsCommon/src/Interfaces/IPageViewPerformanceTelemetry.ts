@@ -12,12 +12,12 @@ export interface IPageViewPerformanceTelemetry {
      */
     uri?: string;
     /**
-    * Performance total in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff". This is total duration in timespan format.
-    */
+     * Performance total in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff". This is total duration in timespan format.
+     */
     perfTotal?: string;
     /**
-    * Performance total in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff". This represents the total page load time.
-    */
+     * Performance total in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff". This represents the total page load time.
+     */
     duration?: string;
     /**
      * Sent request time in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff
@@ -32,8 +32,8 @@ export interface IPageViewPerformanceTelemetry {
      */
     receivedResponse?: string;
     /**
-    * DOM processing time in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff
-    */
+     * DOM processing time in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff
+     */
     domProcessing?: string;
 
     /**

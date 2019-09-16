@@ -13,7 +13,6 @@
     "noEmitHelpers": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationMap": true,
     "declarationDir": "shared/AppInsightsCommon/types",
     "outDir": "dist-esm",
     "rootDir": "shared/AppInsightsCommon/src"

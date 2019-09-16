@@ -23,7 +23,7 @@ export class PageVisitTimeManager {
         this._logger = logger;
     }
 
-    /**
+   /**
     * Tracks the previous page visit time telemetry (if exists) and starts timing of new page visit time
     * @param currentPageName Name of page to begin timing for visit duration
     * @param currentPageUrl Url of page to begin timing for visit duration
@@ -32,7 +32,7 @@ export class PageVisitTimeManager {
 
         try {
             // Restart timer for new page view
-            var prevPageVisitTimeData = this.restartPageVisitTimer(currentPageName, currentPageUrl);
+            const prevPageVisitTimeData = this.restartPageVisitTimer(currentPageName, currentPageUrl);
 
             // If there was a page already being timed, track the visit time for it now.
             if (prevPageVisitTimeData) {
@@ -50,7 +50,7 @@ export class PageVisitTimeManager {
      */
     public restartPageVisitTimer(pageName: string, pageUrl: string) {
         try {
-            var prevPageVisitData = this.stopPageVisitTimer();
+            const prevPageVisitData = this.stopPageVisitTimer();
             this.startPageVisitTimer(pageName, pageUrl);
 
             return prevPageVisitData;
@@ -72,12 +72,12 @@ export class PageVisitTimeManager {
                     throw new Error("Cannot call startPageVisit consecutively without first calling stopPageVisit");
                 }
 
-                var currPageVisitData = new PageVisitData(pageName, pageUrl);
-                var currPageVisitDataStr = JSON.stringify(currPageVisitData);
+                const currPageVisitData = new PageVisitData(pageName, pageUrl);
+                const currPageVisitDataStr = JSON.stringify(currPageVisitData);
                 Util.setSessionStorage(this._logger, this.prevPageVisitDataKeyName, currPageVisitDataStr);
             }
         } catch (e) {
-            //TODO: Remove this catch in next phase, since if start is called twice in a row the exception needs to be propagated out
+            // TODO: Remove this catch in next phase, since if start is called twice in a row the exception needs to be propagated out
             this._logger.warnToConsole("Call to start failed: " + Util.dump(e));
         }
     }
@@ -91,14 +91,14 @@ export class PageVisitTimeManager {
             if (Util.canUseSessionStorage()) {
 
                 // Define end time of page's visit
-                var pageVisitEndTime = Date.now();
+                const pageVisitEndTime = Date.now();
 
                 // Try to retrieve  page name and start time from session storage
-                var pageVisitDataJsonStr = Util.getSessionStorage(this._logger, this.prevPageVisitDataKeyName);
+                const pageVisitDataJsonStr = Util.getSessionStorage(this._logger, this.prevPageVisitDataKeyName);
                 if (pageVisitDataJsonStr) {
 
                     // if previous page data exists, set end time of visit
-                    var prevPageVisitData: PageVisitData = JSON.parse(pageVisitDataJsonStr);
+                    const prevPageVisitData: PageVisitData = JSON.parse(pageVisitDataJsonStr);
                     prevPageVisitData.pageVisitTime = pageVisitEndTime - prevPageVisitData.pageVisitStartTime;
 
                     // Remove data from storage since we already used it

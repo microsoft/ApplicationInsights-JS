@@ -14,13 +14,12 @@
     "noEmitHelpers": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationMap": true,
     "declarationDir": "extensions/applicationinsights-react-js/types",
     "outDir": "dist-esm",
     "rootDir": "extensions/applicationinsights-react-js/src"
   },
   "include": [
-    "./src/*.ts"
+    "./src/**/*.ts"
   ],
   "exclude": [
     "node_modules"

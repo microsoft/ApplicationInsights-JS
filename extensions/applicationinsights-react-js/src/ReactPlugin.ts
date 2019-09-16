@@ -15,9 +15,9 @@ import { IReactExtensionConfig } from './Interfaces/IReactExtensionConfig';
 import { History, LocationListener, Location, Action } from "history";
 
 export default class ReactPlugin implements ITelemetryPlugin {
-    private _logger: IDiagnosticLogger;
     public priority = 185;
     public identifier = 'ReactPlugin';
+    private _logger: IDiagnosticLogger;
 
     private _analyticsPlugin: IAppInsights;
     private _nextPlugin: ITelemetryPlugin;
@@ -30,9 +30,9 @@ export default class ReactPlugin implements ITelemetryPlugin {
                 : { history: null };
         this._logger = core.logger;
         extensions.forEach(ext => {
-            let identifier = (ext as ITelemetryPlugin).identifier;
+            const identifier = (ext as ITelemetryPlugin).identifier;
             if (identifier === 'ApplicationInsightsAnalytics') {
-                this._analyticsPlugin = (<any>ext) as IAppInsights;
+                this._analyticsPlugin = (ext as any) as IAppInsights;
             }
         });
         if (this._extensionConfig.history) {
@@ -82,7 +82,7 @@ export default class ReactPlugin implements ITelemetryPlugin {
     }
 
     private addHistoryListener(history: History): void {
-        let locationListener: LocationListener = (location: Location, action: Action): void => {
+        const locationListener: LocationListener = (location: Location, action: Action): void => {
             // Timeout to ensure any changes to the DOM made by route changes get included in pageView telemetry
             setTimeout(() => {
                 const pageViewTelemetry: IPageViewTelemetry = { uri: location.pathname };

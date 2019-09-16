@@ -10,7 +10,8 @@
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "grunt aiskulite",
         "build:browser": "rollup -c",
-        "test": "echo 'No tests'"
+        "test": "echo 'No tests'",
+        "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
         "grunt": "1.0.1",
@@ -19,7 +20,9 @@
         "rollup-plugin-uglify": "^6.0.0",
         "source-map-loader": "^0.2.3",
         "typescript": "2.5.3",
-        "rollup": "^0.66.0"
+        "rollup": "^0.66.0",
+        "tslint": "^5.19.0",
+        "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
         "@microsoft/applicationinsights-common": "2.2.2",
@@ -27,6 +30,6 @@
         "@microsoft/applicationinsights-core-js": "2.2.2"
     },
     "peerDependencies": {
-      "tslib": "^1.9.3"
+        "tslib": "^1.9.3"
     }
 }

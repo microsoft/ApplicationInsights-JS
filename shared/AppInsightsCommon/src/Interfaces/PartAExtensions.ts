@@ -11,4 +11,4 @@ export class Extensions {
     public static SDKExt = "sdk";
 }
 
-export var CtxTagKeys = new ContextTagKeys();
+export let CtxTagKeys = new ContextTagKeys();

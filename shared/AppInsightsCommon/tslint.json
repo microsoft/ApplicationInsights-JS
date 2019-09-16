@@ -1,0 +1,11 @@
+{
+    "extends": [
+        "../../tslint-base.json"
+    ],
+    "rules": {
+        "prefer-conditional-expression": false, 
+        "radix": false, 
+        "no-shadowed-variable": false,
+        "member-ordering": false
+    }
+}

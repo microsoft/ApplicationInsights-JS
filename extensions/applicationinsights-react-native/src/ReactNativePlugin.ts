@@ -16,13 +16,13 @@ import DeviceInfo from 'react-native-device-info';
 import { INativeDevice, IReactNativePluginConfig } from './Interfaces';
 
 export class ReactNativePlugin implements ITelemetryPlugin {
-    private _initialized: boolean = false;
-    private _device: INativeDevice;
-    private _config: IReactNativePluginConfig;
 
     identifier: string = 'AppInsightsReactNativePlugin';
     priority: number = 140;
     _nextPlugin?: ITelemetryPlugin;
+    private _initialized: boolean = false;
+    private _device: INativeDevice;
+    private _config: IReactNativePluginConfig;
 
     constructor(config?: IReactNativePluginConfig) {
         this._config = config || this._getDefaultConfig();
@@ -87,7 +87,7 @@ export class ReactNativePlugin implements ITelemetryPlugin {
     private _applyDeviceContext(item: ITelemetryItem) {
         if (this._device) {
             item.ext = item.ext || {};
-            item.ext.device = item.ext.device || <IDevice>{};
+            item.ext.device = item.ext.device || ({} as IDevice);
             if (typeof this._device.id === 'string') {
                 item.ext.device.localId = this._device.id;
             }

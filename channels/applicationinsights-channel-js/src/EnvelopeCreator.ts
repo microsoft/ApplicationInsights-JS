@@ -19,15 +19,12 @@ const baseData: string = "baseData";
 
 export abstract class EnvelopeCreator {
     public static Version = "2.2.2";
-    protected _logger: IDiagnosticLogger;
-
-    abstract Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem): IEnvelope;
 
     protected static extractProperties(data: { [key: string]: any }): { [key: string]: any } {
         let customProperties: { [key: string]: any } = null;
-        for (let key in data) {
+        for (const key in data) {
             if (data.hasOwnProperty(key)) {
-                let value = data[key];
+                const value = data[key];
                 if (typeof value !== "number") {
                     if (!customProperties) {
                         customProperties = {};
@@ -42,9 +39,9 @@ export abstract class EnvelopeCreator {
 
     protected static extractPropsAndMeasurements(data: { [key: string]: any }, properties: { [key: string]: any }, measurements: { [key: string]: any }) {
         if (!CoreUtils.isNullOrUndefined(data)) {
-            for (let key in data) {
+            for (const key in data) {
                 if (data.hasOwnProperty(key)) {
-                    let value = data[key];
+                    const value = data[key];
                     if (typeof value === "number") {
                         measurements[key] = value;
                     } else if (typeof value === "string") {
@@ -59,9 +56,9 @@ export abstract class EnvelopeCreator {
 
     // TODO: Do we want this to take logger as arg or use this._logger as nonstatic?
     protected static createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, telemetryItem: ITelemetryItem, data: Data<T>): IEnvelope {
-        let envelope = new Envelope(logger, data, envelopeType);
+        const envelope = new Envelope(logger, data, envelopeType);
         envelope.iKey = telemetryItem.iKey;
-        let iKeyNoDashes = telemetryItem.iKey.replace(/-/g, "");
+        const iKeyNoDashes = telemetryItem.iKey.replace(/-/g, "");
         envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
 
         // extract all extensions from ctx
@@ -97,7 +94,7 @@ export abstract class EnvelopeCreator {
                 env.tags[CtxTagKeys.userAuthUserId] = item.ext.user.authId;
             }
 
-            let userId = item.ext.user.id || item.ext.user.localId;
+            const userId = item.ext.user.id || item.ext.user.localId;
             if (userId) {
                 env.tags[CtxTagKeys.userId] = userId;
             }
@@ -125,7 +122,7 @@ export abstract class EnvelopeCreator {
 
 
         if (item.ext.web) {
-            let web: IWeb = <IWeb>item.ext.web;
+            const web: IWeb = item.ext.web as IWeb;
 
             if (web.browserLang) {
                 env.tags[CtxTagKeys.deviceLanguage] = web.browserLang;
@@ -206,10 +203,10 @@ export abstract class EnvelopeCreator {
         //     ]
         //   }
 
-        let tgs = {};
+        const tgs = {};
         // deals with tags.push({object})
         for(let i = item.tags.length - 1; i >= 0; i--){
-            let tg = item.tags[i];
+            const tg = item.tags[i];
             // Object.keys returns an array of keys
             Object.keys(tg).forEach(key => {
                 tgs[key] = tg[key];
@@ -217,7 +214,7 @@ export abstract class EnvelopeCreator {
             item.tags.splice(i, 1);
         }
         // deals with tags[key]=value
-        for(let tg in item.tags){
+        for(const tg in item.tags){
             tgs[tg] = item.tags[tg];
         }
 
@@ -227,6 +224,9 @@ export abstract class EnvelopeCreator {
             env.tags[CtxTagKeys.internalSdkVersion] = `javascript:${EnvelopeCreator.Version}`;
         }
     }
+    protected _logger: IDiagnosticLogger;
+
+    abstract Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem): IEnvelope;
 }
 
 export class DependencyEnvelopeCreator extends EnvelopeCreator {
@@ -240,26 +240,26 @@ export class DependencyEnvelopeCreator extends EnvelopeCreator {
                 _InternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
         }
 
-        let customMeasurements = telemetryItem.baseData.measurements || {};
-        let customProperties = telemetryItem.baseData.properties || {};
+        const customMeasurements = telemetryItem.baseData.measurements || {};
+        const customProperties = telemetryItem.baseData.properties || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
-        let bd = telemetryItem.baseData as IDependencyTelemetry;
+        const bd = telemetryItem.baseData as IDependencyTelemetry;
         if (CoreUtils.isNullOrUndefined(bd)) {
             logger.warnToConsole("Invalid input for dependency data");
             return null;
         }
 
-        let id = bd.id;
-        let absoluteUrl = bd.target;
-        let command = bd.name;
-        let duration = bd.duration;
-        let success = bd.success;
-        let resultCode = bd.responseCode;
-        let requestAPI = bd.type;
-        let correlationContext = bd.correlationContext;
-        let method = bd.properties && bd.properties[HttpMethod] ? bd.properties[HttpMethod] : "GET";
-        let baseData = new RemoteDependencyData(logger, id, absoluteUrl, command, duration, success, resultCode, method, requestAPI, correlationContext, customProperties, customMeasurements);
-        let data = new Data<RemoteDependencyData>(RemoteDependencyData.dataType, baseData);
+        const id = bd.id;
+        const absoluteUrl = bd.target;
+        const command = bd.name;
+        const duration = bd.duration;
+        const success = bd.success;
+        const resultCode = bd.responseCode;
+        const requestAPI = bd.type;
+        const correlationContext = bd.correlationContext;
+        const method = bd.properties && bd.properties[HttpMethod] ? bd.properties[HttpMethod] : "GET";
+        const baseData = new RemoteDependencyData(logger, id, absoluteUrl, command, duration, success, resultCode, method, requestAPI, correlationContext, customProperties, customMeasurements);
+        const data = new Data<RemoteDependencyData>(RemoteDependencyData.dataType, baseData);
         return EnvelopeCreator.createEnvelope<RemoteDependencyData>(logger, RemoteDependencyData.envelopeType, telemetryItem, data);
     }
 }
@@ -292,9 +292,9 @@ export class EventEnvelopeCreator extends EnvelopeCreator {
 
         // Exract root level properties from part C telemetryItem.data
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
-        let eventName = telemetryItem.baseData.name;
-        let baseData = new Event(logger, eventName, customProperties, customMeasurements);
-        let data = new Data<Event>(Event.dataType, baseData);
+        const eventName = telemetryItem.baseData.name;
+        const baseData = new Event(logger, eventName, customProperties, customMeasurements);
+        const data = new Data<Event>(Event.dataType, baseData);
         return EnvelopeCreator.createEnvelope<Event>(logger, Event.envelopeType, telemetryItem, data);
     }
 }
@@ -309,9 +309,9 @@ export class ExceptionEnvelopeCreator extends EnvelopeCreator {
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
         }
-        let bd = telemetryItem.baseData as IExceptionInternal;
-        let baseData = Exception.CreateFromInterface(logger, bd);
-        let data = new Data<Exception>(Exception.dataType, baseData);
+        const bd = telemetryItem.baseData as IExceptionInternal;
+        const baseData = Exception.CreateFromInterface(logger, bd);
+        const data = new Data<Exception>(Exception.dataType, baseData);
         return EnvelopeCreator.createEnvelope<Exception>(logger, Exception.envelopeType, telemetryItem, data);
     }
 }
@@ -327,16 +327,16 @@ export class MetricEnvelopeCreator extends EnvelopeCreator {
                 _InternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
         }
 
-        let props = telemetryItem.baseData.properties || {};
+        const props = telemetryItem.baseData.properties || {};
         let customProperties = EnvelopeCreator.extractProperties(telemetryItem.data);
         customProperties = { ...props, ...customProperties };
-        let name = telemetryItem.baseData.name;
-        let average = telemetryItem.baseData.average;
-        let sampleCount = telemetryItem.baseData.sampleCount;
-        let min = telemetryItem.baseData.min;
-        let max = telemetryItem.baseData.max;
-        let baseData = new Metric(logger, name, average, sampleCount, min, max, customProperties);
-        let data = new Data<Metric>(Metric.dataType, baseData);
+        const name = telemetryItem.baseData.name;
+        const average = telemetryItem.baseData.average;
+        const sampleCount = telemetryItem.baseData.sampleCount;
+        const min = telemetryItem.baseData.min;
+        const max = telemetryItem.baseData.max;
+        const baseData = new Metric(logger, name, average, sampleCount, min, max, customProperties);
+        const data = new Data<Metric>(Metric.dataType, baseData);
         return EnvelopeCreator.createEnvelope<Metric>(logger, Metric.envelopeType, telemetryItem, data);
     }
 }
@@ -353,7 +353,7 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
         }
 
         // Since duration is not part of the domain properties in Common Schema, extract it from part C
-        let duration = undefined;
+        let duration;
         if (!CoreUtils.isNullOrUndefined(telemetryItem.baseData) &&
             !CoreUtils.isNullOrUndefined(telemetryItem.baseData.properties) &&
             !CoreUtils.isNullOrUndefined(telemetryItem.baseData.properties.duration)) { // from part B properties
@@ -365,18 +365,18 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
             delete telemetryItem.data["duration"];
         }
 
-        let bd = telemetryItem.baseData as IPageViewTelemetryInternal;
+        const bd = telemetryItem.baseData as IPageViewTelemetryInternal;
 
          // special case: pageview.id is grabbed from current operation id. Analytics plugin is decoupled from properties plugin, so this is done here instead. This can be made a default telemetry intializer instead if needed to be decoupled from channel
         let currentContextId;
         if (telemetryItem.ext && telemetryItem.ext.trace && telemetryItem.ext.trace.traceID) {
             currentContextId = telemetryItem.ext.trace.traceID;
         }
-        let id = bd.id || currentContextId
-        let name = bd.name;
-        let url = bd.uri;
-        let properties = bd.properties || {};
-        let measurements = bd.measurements || {};
+        const id = bd.id || currentContextId
+        const name = bd.name;
+        const url = bd.uri;
+        const properties = bd.properties || {};
+        const measurements = bd.measurements || {};
 
         // refUri is a field that Breeze still does not recognize as part of Part B. For now, put it in Part C until it supports it as a domain property
         if (!CoreUtils.isNullOrUndefined(bd.refUri)) {
@@ -395,8 +395,8 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
 
         // pageTags is a field that Breeze still does not recognize as part of Part B. For now, put it in Part C until it supports it as a domain property
         if (!CoreUtils.isNullOrUndefined(bd.properties)) {
-            let pageTags = bd.properties;
-            for (let key in pageTags) {
+            const pageTags = bd.properties;
+            for (const key in pageTags) {
                 if (pageTags.hasOwnProperty(key)) {
                     properties[key] = pageTags[key];
                 }
@@ -404,8 +404,8 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
         }
 
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, properties, measurements);
-        let baseData = new PageView(logger, name, url, duration, properties, measurements, id);
-        let data = new Data<PageView>(PageView.dataType, baseData);
+        const baseData = new PageView(logger, name, url, duration, properties, measurements, id);
+        const data = new Data<PageView>(PageView.dataType, baseData);
         return EnvelopeCreator.createEnvelope<PageView>(logger, PageView.envelopeType, telemetryItem, data);
     }
 }
@@ -422,13 +422,13 @@ export class PageViewPerformanceEnvelopeCreator extends EnvelopeCreator {
         }
 
         const bd = telemetryItem.baseData as IPageViewPerformanceTelemetry;
-        let name = bd.name;
-        let url = bd.uri || (bd as any).url;
-        let properties = bd.properties || {};
-        let measurements = bd.measurements || {};
+        const name = bd.name;
+        const url = bd.uri || (bd as any).url;
+        const properties = bd.properties || {};
+        const measurements = bd.measurements || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, properties, measurements);
-        let baseData = new PageViewPerformance(logger, name, url, undefined, properties, measurements, bd);
-        let data = new Data<PageViewPerformance>(PageViewPerformance.dataType, baseData);
+        const baseData = new PageViewPerformance(logger, name, url, undefined, properties, measurements, bd);
+        const data = new Data<PageViewPerformance>(PageViewPerformance.dataType, baseData);
         return EnvelopeCreator.createEnvelope<PageViewPerformance>(logger, PageViewPerformance.envelopeType, telemetryItem, data);
     }
 }
@@ -444,12 +444,12 @@ export class TraceEnvelopeCreator extends EnvelopeCreator {
                 _InternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
         }
 
-        let message = telemetryItem.baseData.message;
-        let severityLevel = telemetryItem.baseData.severityLevel;
-        let customProperties = EnvelopeCreator.extractProperties(telemetryItem.data);
+        const message = telemetryItem.baseData.message;
+        const severityLevel = telemetryItem.baseData.severityLevel;
+        const customProperties = EnvelopeCreator.extractProperties(telemetryItem.data);
         const props = { ...customProperties, ...telemetryItem.baseData.properties };
-        let baseData = new Trace(logger, message, severityLevel, props);
-        let data = new Data<Trace>(Trace.dataType, baseData);
+        const baseData = new Trace(logger, message, severityLevel, props);
+        const data = new Data<Trace>(Trace.dataType, baseData);
         return EnvelopeCreator.createEnvelope<Trace>(logger, Trace.envelopeType, telemetryItem, data);
     }
 }

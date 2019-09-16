@@ -48,8 +48,8 @@ export class ApplicationInsights {
      */
     public initialize(): void {
         this.core = new AppInsightsCore();
-        let extensions = [];
-        let appInsightsChannel: Sender = new Sender();
+        const extensions = [];
+        const appInsightsChannel: Sender = new Sender();
 
         extensions.push(appInsightsChannel);
 
@@ -81,8 +81,8 @@ export class ApplicationInsights {
         this.core.getTransmissionControls().forEach(controls => {
             controls.forEach(plugin => {
                 async
-                    ? (<Sender>plugin).flush()
-                    : (<Sender>plugin).triggerSend(async);
+                    ? (plugin as Sender).flush()
+                    : (plugin as Sender).triggerSend(async);
             });
         });
     }

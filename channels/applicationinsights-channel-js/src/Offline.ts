@@ -7,16 +7,9 @@ import { CoreUtils } from '@microsoft/applicationinsights-core-js';
  */
 export class OfflineListener {
     public static Offline = new OfflineListener;
-    private _onlineStatus: boolean = true;
     public isListening: boolean;
-
-    private _setOnline() {
-        this._onlineStatus = true;
-    }
-    private _setOffline() {
-        this._onlineStatus = false;
-    }
-
+    private _onlineStatus: boolean = true;
+    
     constructor() {
         try {
             if (typeof window === 'undefined') {
@@ -26,12 +19,12 @@ export class OfflineListener {
                 window.addEventListener('offline', this._setOffline.bind(this), false);
                 this.isListening = true;
             } else if (document && document.body) {
-                (<any>document.body).ononline = this._setOnline.bind(this);
-                (<any>document.body).onoffline = this._setOffline.bind(this)
+                (document.body as any).ononline = this._setOnline.bind(this);
+                (document.body as any).onoffline = this._setOffline.bind(this)
                 this.isListening = true;
             } else if (document) {
-                (<any>document).ononline = this._setOnline.bind(this);
-                (<any>document).onoffline = this._setOffline.bind(this)
+                (document as any).ononline = this._setOnline.bind(this);
+                (document as any).onoffline = this._setOffline.bind(this)
                 this.isListening = true;
             } else {
                 // Could not find a place to add event listener
@@ -39,7 +32,7 @@ export class OfflineListener {
             }
         } catch (e) {
 
-            //this makes react-native less angry
+            // this makes react-native less angry
             this.isListening = false;
         }
     }
@@ -57,6 +50,13 @@ export class OfflineListener {
 
     public isOffline(): boolean {
         return !this.isOnline();
+    }
+
+    private _setOnline() {
+        this._onlineStatus = true;
+    }
+    private _setOffline() {
+        this._onlineStatus = false;
     }
 }
 

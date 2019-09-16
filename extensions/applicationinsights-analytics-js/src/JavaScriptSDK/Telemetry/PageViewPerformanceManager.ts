@@ -10,8 +10,8 @@ import {
 } from '@microsoft/applicationinsights-core-js';
 
 /**
-* Class encapsulates sending page view performance telemetry.
-*/
+ * Class encapsulates sending page view performance telemetry.
+ */
 export class PageViewPerformanceManager {
     private _logger: IDiagnosticLogger;
     private MAX_DURATION_ALLOWED = 3600000; // 1h
@@ -38,8 +38,8 @@ export class PageViewPerformanceManager {
          *  |---network---||---request---|---response---|---dom---|
          *  |--------------------------total----------------------|
          */
-        var navigationTiming = this.getPerformanceNavigationTiming();
-        var timing = this.getPerformanceTiming();
+        const navigationTiming = this.getPerformanceNavigationTiming();
+        const timing = this.getPerformanceTiming();
         if (navigationTiming || timing) {
             if (navigationTiming) {
                 var total = navigationTiming.duration;
@@ -55,19 +55,19 @@ export class PageViewPerformanceManager {
                 var dom = DateTimeUtils.GetDuration(timing.responseEnd, timing.loadEventEnd);
             }
 
-            if (total == 0) {
+            if (total === 0) {
                 this._logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.ErrorPVCalc,
                     "error calculating page view performance.",
-                    { total: total, network: network, request: request, response: response, dom: dom });
+                    { total, network, request, response, dom });
 
             } else if (!this.shouldCollectDuration(total, network, request, response, dom)) {
                 this._logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.InvalidDurationValue,
                     "Invalid page load duration value. Browser perf data won't be sent.",
-                    { total: total, network: network, request: request, response: response, dom: dom });
+                    { total, network, request, response, dom });
 
             } else if (total < Math.floor(network) + Math.floor(request) + Math.floor(response) + Math.floor(dom)) {
                 // some browsers may report individual components incorrectly so that the sum of the parts will be bigger than total PLT
@@ -76,7 +76,7 @@ export class PageViewPerformanceManager {
                     LoggingSeverity.WARNING,
                     _InternalMessageId.ClientPerformanceMathError,
                     "client performance math error.",
-                    { total: total, network: network, request: request, response: response, dom: dom });
+                    { total, network, request, response, dom });
 
             } else {
                 pageViewPerformance.durationMs = total;
@@ -106,26 +106,26 @@ export class PageViewPerformanceManager {
         return null;
     }
 
-    /**
+   /**
     * Returns true is window PerformanceNavigationTiming API is supported, false otherwise.
     */
    public isPerformanceNavigationTimingSupported() {
-    return typeof window != "undefined" && window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType("navigation").length > 0;
+    return typeof window !== "undefined" && window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType("navigation").length > 0;
 }
 
-    /**
+   /**
     * Returns true is window performance timing API is supported, false otherwise.
     */
     public isPerformanceTimingSupported() {
-        return typeof window != "undefined" && window.performance && window.performance.timing;
+        return typeof window !== "undefined" && window.performance && window.performance.timing;
     }
 
-    /**
+   /**
     * As page loads different parts of performance timing numbers get set. When all of them are set we can report it.
     * Returns true if ready, false otherwise.
     */
     public isPerformanceTimingDataReady() {
-        var timing = window.performance.timing;
+        const timing = window.performance.timing;
 
         return timing.domainLookupStart > 0
             && timing.navigationStart > 0
@@ -137,13 +137,13 @@ export class PageViewPerformanceManager {
             && timing.domLoading > 0;
     }
 
-    /**
+   /**
     * This method tells if given durations should be excluded from collection.
     */
     public shouldCollectDuration(...durations: number[]): boolean {
         // a full list of Google crawlers user agent strings - https://support.google.com/webmasters/answer/1061943?hl=en
-        let botAgentNames = ['googlebot', 'adsbot-google', 'apis-google', 'mediapartners-google'];
-        let userAgent = navigator.userAgent;
+        const botAgentNames = ['googlebot', 'adsbot-google', 'apis-google', 'mediapartners-google'];
+        const userAgent = navigator.userAgent;
         let isGoogleBot = false;
 
         if (userAgent) {
@@ -157,7 +157,7 @@ export class PageViewPerformanceManager {
             return false;
         } else {
             // for other page views, don't report if it's outside of a reasonable range
-            for (var i = 0; i < durations.length; i++) {
+            for (let i = 0; i < durations.length; i++) {
                 if (durations[i] >= this.MAX_DURATION_ALLOWED) {
                     return false;
                 }

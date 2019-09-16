@@ -27,7 +27,7 @@ export class Metric extends MetricData implements ISerializable {
     constructor(logger: IDiagnosticLogger, name: string, value: number, count?: number, min?: number, max?: number, properties?: any) {
         super();
 
-        var dataPoint = new DataPoint();
+        const dataPoint = new DataPoint();
         dataPoint.count = count > 0 ? count : undefined;
         dataPoint.max = isNaN(max) || max === null ? undefined : max;
         dataPoint.min = isNaN(min) || min === null ? undefined : min;

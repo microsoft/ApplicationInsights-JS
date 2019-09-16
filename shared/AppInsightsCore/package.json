@@ -20,7 +20,8 @@
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "grunt core",
         "build:browser": "rollup -c rollup.config.js",
-        "test": "grunt coretest"
+        "test": "grunt coretest",
+        "lint": "tslint -p tsconfig.json"
     },
     "repository": {
         "type": "git",
@@ -37,7 +38,8 @@
         "rollup-plugin-node-resolve": "^3.4.0",
         "rollup-plugin-replace": "^2.1.0",
         "rollup-plugin-uglify": "^6.0.0",
-        "tslint": "^5.11.0",
+        "tslint": "^5.19.0",
+        "tslint-config-prettier": "^1.18.0",
         "tslint-microsoft-contrib": "^5.2.1",
         "typescript": "2.5.3",
         "rollup": "^0.66.0"

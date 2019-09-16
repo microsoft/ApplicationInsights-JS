@@ -6,8 +6,8 @@ import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId } from '@microso
 export class DataSanitizer {
 
     /**
-    * Max length allowed for custom names.
-    */
+     * Max length allowed for custom names.
+     */
     public static MAX_NAME_LENGTH = 150;
 
     /**
@@ -41,13 +41,13 @@ export class DataSanitizer {
     public static MAX_EXCEPTION_LENGTH = 32768;
 
     public static sanitizeKeyAndAddUniqueness(logger: IDiagnosticLogger, key, map) {
-        var origLength = key.length;
-        var field = DataSanitizer.sanitizeKey(logger, key);
+        const origLength = key.length;
+        let field = DataSanitizer.sanitizeKey(logger, key);
 
         // validation truncated the length.  We need to add uniqueness
         if (field.length !== origLength) {
-            var i = 0;
-            var uniqueField = field;
+            let i = 0;
+            let uniqueField = field;
             while (map[uniqueField] !== undefined) {
                 i++;
                 uniqueField = field.substring(0, DataSanitizer.MAX_NAME_LENGTH - 3) + DataSanitizer.padNumber(i);
@@ -70,7 +70,7 @@ export class DataSanitizer {
                     LoggingSeverity.WARNING,
                     _InternalMessageId.NameTooLong,
                     "name is too long.  It has been truncated to " + DataSanitizer.MAX_NAME_LENGTH + " characters.",
-                    { name: name }, true);
+                    { name }, true);
             }
         }
 
@@ -88,7 +88,7 @@ export class DataSanitizer {
                     LoggingSeverity.WARNING,
                     _InternalMessageId.StringValueTooLong,
                     "string value is too long. It has been truncated to " + maxLength + " characters.",
-                    { value: value }, true);
+                    { value }, true);
             }
         }
 
@@ -107,7 +107,7 @@ export class DataSanitizer {
                 logger.throwInternal(
                     LoggingSeverity.WARNING, _InternalMessageId.MessageTruncated,
                     "message is too long, it has been truncated to " + DataSanitizer.MAX_MESSAGE_LENGTH + " characters.",
-                    { message: message },
+                    { message },
                     true);
             }
         }
@@ -122,7 +122,7 @@ export class DataSanitizer {
                 exceptionTrunc = exception.substring(0, DataSanitizer.MAX_EXCEPTION_LENGTH);
                 logger.throwInternal(
                     LoggingSeverity.WARNING, _InternalMessageId.ExceptionTruncated, "exception is too long, it has been truncated to " + DataSanitizer.MAX_EXCEPTION_LENGTH + " characters.",
-                    { exception: exception }, true);
+                    { exception }, true);
             }
         }
 
@@ -131,9 +131,9 @@ export class DataSanitizer {
 
     public static sanitizeProperties(logger: IDiagnosticLogger, properties) {
         if (properties) {
-            var tempProps = {};
-            for (var prop in properties) {
-                var value = properties[prop];
+            const tempProps = {};
+            for (let prop in properties) {
+                let value = properties[prop];
                 if (typeof value === "object" && typeof JSON !== "undefined") {
                     // Stringify any part C properties
                     try {
@@ -154,9 +154,9 @@ export class DataSanitizer {
 
     public static sanitizeMeasurements(logger: IDiagnosticLogger, measurements) {
         if (measurements) {
-            var tempMeasurements = {};
-            for (var measure in measurements) {
-                var value = measurements[measure];
+            const tempMeasurements = {};
+            for (let measure in measurements) {
+                const value = measurements[measure];
                 measure = DataSanitizer.sanitizeKeyAndAddUniqueness(logger, measure, tempMeasurements);
                 tempMeasurements[measure] = value;
             }
@@ -189,7 +189,7 @@ export class DataSanitizer {
     }
 
     public static padNumber(num) {
-        var s = "00" + num;
+        const s = "00" + num;
         return s.substr(s.length - 3);
     }
 
@@ -197,7 +197,7 @@ export class DataSanitizer {
      * helper method to trim strings (IE8 does not implement String.prototype.trim)
      */
     public static trim(str: any): string {
-        if (typeof str !== "string") return str;
+        if (typeof str !== "string") { return str; }
         return str.replace(/^\s+|\s+$/g, "");
     }
 }

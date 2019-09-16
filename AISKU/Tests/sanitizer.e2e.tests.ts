@@ -17,11 +17,11 @@ export class SanitizerE2ETests extends TestClass {
     public testInitialize() {
         try{
             this.useFakeServer = false;
-            (<any>sinon.fakeServer).restore();
+            (sinon.fakeServer as any).restore();
             this.useFakeTimers = false;
             this.clock.restore();
 
-            var init = new ApplicationInsights({
+            const init = new ApplicationInsights({
                 config: {
                     instrumentationKey: this._instrumentationKey,
                     extensionConfig: {
@@ -55,7 +55,7 @@ export class SanitizerE2ETests extends TestClass {
     }
 
     private addAsyncTests(): void {
-        var boilerPlateAsserts = () => {
+        const boilerPlateAsserts = () => {
             Assert.ok(this.successSpy.called, "success");
             Assert.ok(!this.errorSpy.called, "no error sending");
         }
@@ -71,10 +71,10 @@ export class SanitizerE2ETests extends TestClass {
                         responseCode: 200
                     });
                 }
-            ].concat(<any>PollingAssert.createPollingAssert(() => {
+            ].concat(PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (this.successSpy.called || this.errorSpy.called);
-            }, "Wait for response"))
+            }, "Wait for response") as any)
                 .concat(() => {
                     boilerPlateAsserts();
                 })
@@ -91,21 +91,21 @@ export class SanitizerE2ETests extends TestClass {
             steps: [
                 () => {
 
-                    var properties = {
+                    const properties = {
                         "property1%^~`": "hello",
                         "property2*&#+": "world"
                     };
 
-                    var measurements = {
+                    const measurements = {
                         "measurement@|": 300
                     };
 
                     this._ai.trackMetric({name: "test", average: 5});
                 },
-            ].concat(<any>PollingAssert.createPollingAssert(() => {
+            ].concat(PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
-            }, "Wait for response"))
+            }, "Wait for response") as any)
                 .concat(() => {
                     boilerPlateAsserts();
                 })
@@ -116,21 +116,21 @@ export class SanitizerE2ETests extends TestClass {
             stepDelay: this.delay,
             steps: [
                 () => {
-                    var properties = {
+                    const properties = {
                         "abcdefghijklmnopqrstuvwxyz": "hello",
                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ": "world"
                     };
 
-                    var measurements = {
+                    const measurements = {
                         "(1234567890/ \_-.)": 300
                     };
 
                     this._ai.trackMetric({name: "test", average: 5});
                 },
-            ].concat(<any>PollingAssert.createPollingAssert(() => {
+            ].concat(PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
-            }, "Wait for response"))
+            }, "Wait for response") as any)
                 .concat(() => {
                     boilerPlateAsserts();
                 })
@@ -141,15 +141,15 @@ export class SanitizerE2ETests extends TestClass {
             stepDelay: this.delay,
             steps: [
                 () => {
-                    var len = 150;
-                    var name = new Array(len + 1).join('a');
+                    const len = 150;
+                    const name = new Array(len + 1).join('a');
 
-                    this._ai.trackMetric({name: name, average: 5});
+                    this._ai.trackMetric({name, average: 5});
                 },
-            ].concat(<any>PollingAssert.createPollingAssert(() => {
+            ].concat(PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
-            }, "Wait for response"))
+            }, "Wait for response") as any)
                 .concat(() => {
                     boilerPlateAsserts();
                 })
@@ -160,19 +160,19 @@ export class SanitizerE2ETests extends TestClass {
             stepDelay: this.delay,
             steps: [
                 () => {
-                    var len = 1024;
-                    var value = new Array(len + 1).join('a');
+                    const len = 1024;
+                    const value = new Array(len + 1).join('a');
 
-                    var properties = {
+                    const properties = {
                         "testProp": value
                     };
 
                     this._ai.trackMetric({name: "test", average: 5});
                 },
-            ].concat(<any>PollingAssert.createPollingAssert(() => {
+            ].concat(PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
-            }, "Wait for response"))
+            }, "Wait for response") as any)
                 .concat(() => {
                     boilerPlateAsserts();
                 })
@@ -183,16 +183,16 @@ export class SanitizerE2ETests extends TestClass {
             stepDelay: this.delay,
             steps: [
                 () => {
-                    var len = 2048;
-                    var url = "http://hello.com/";
+                    const len = 2048;
+                    let url = "http://hello.com/";
                     url = url + new Array(len - url.length + 1).join('a');
 
                     this._ai.trackPageView({name: "test", uri: url});
                 },
-            ].concat(<any>PollingAssert.createPollingAssert(() => {
+            ].concat(PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
-            }, "Wait for response"))
+            }, "Wait for response") as any)
                 .concat(() => {
                     boilerPlateAsserts();
                 })
@@ -203,15 +203,15 @@ export class SanitizerE2ETests extends TestClass {
             stepDelay: this.delay,
             steps: [
                 () => {
-                    var len = 32768;
-                    var message = new Array(len + 1).join('a');
+                    const len = 32768;
+                    const message = new Array(len + 1).join('a');
 
-                    this._ai.trackTrace({message: message, severityLevel: 0});
+                    this._ai.trackTrace({message, severityLevel: 0});
                 },
-            ].concat(<any>PollingAssert.createPollingAssert(() => {
+            ].concat(PollingAssert.createPollingAssert(() => {
                 Assert.ok(true, "waiting for response " + new Date().toISOString());
                 return (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called);
-            }, "Wait for response"))
+            }, "Wait for response") as any)
                 .concat(() => {
                     boilerPlateAsserts();
                 })

@@ -1,0 +1,36 @@
+{
+    "defaultSeverity": "error",
+    "extends": [
+        "tslint:latest",
+        "tslint-config-prettier"
+    ],
+    "rules": {
+       "no-eval": true,
+       "ordered-imports": false,
+       "variable-name": false,
+       "member-access": false,
+       "object-literal-sort-keys": false,
+       "no-bitwise": false,
+       "one-variable-per-declaration": false,
+       "max-classes-per-file": false,
+       "no-console": false,
+       "prefer-for-of": false,
+       "class-name": false,
+       "interface-name": false,
+       "no-empty-interface": false,
+       "no-string-literal": false,
+       "no-reference": false,
+       "no-empty": false,
+       "forin": false,
+       "ban-types": false,
+       "no-shadowed-variable": false,
+       "no-implicit-dependencies": false,
+       "no-object-literal-type-assertion": false,
+       "no-this-assignment":false,
+       "unified-signatures": false,
+       "no-unused-expression": false,
+       "no-var-keyword": false,
+       "no-duplicate-variable": false,
+       "prefer-const": false
+    }
+}

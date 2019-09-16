@@ -53,12 +53,12 @@ class PerformanceTestHelper extends TestClass {
         this.useFakeTimers = false;
         this.clock.restore();
 
-        this.appInsights = new Microsoft.ApplicationInsights.AppInsights(<any>{
+        this.appInsights = new Microsoft.ApplicationInsights.AppInsights({
             instrumentationKey: "3e6a441c-b52b-4f39-8944-f81dd6c2dc46",
             url: "file:///C:/src/sdk/src/JavaScript/JavaScriptSDK.Tests//E2ETests/ai.js",
             endpointUrl: "https://dc.services.visualstudio.com/v2/track",
             maxBatchInterval: 0
-        });
+        } as any);
 
         this.appInsights.context._sender._sender = () => null;
         this.testProperties = { p1: "val", p2: "val", p3: "val", p4: "val", p5: "val", p6: "val", p7: "val" };
@@ -69,37 +69,12 @@ class PerformanceTestHelper extends TestClass {
     public testCleanup() {
         this.useFakeServer = true;
         this.useFakeTimers = true;
-        var serializedPerfResults: string = window["perfResults"] || "[]";
-        var perfResults: IPerfResult[] = <any>(JSON.parse(serializedPerfResults));
+        const serializedPerfResults: string = window["perfResults"] || "[]";
+        let perfResults: IPerfResult[] = (JSON.parse(serializedPerfResults)) as any;
         perfResults = perfResults.concat(this.results);
         window["perfResults"] = JSON.stringify(perfResults);
         window["perfResultsCsv"] = this.toCsv(perfResults).csv;
         window["perfResultsCsvHeaders"] = this.toCsv(perfResults).headers;
-    }
-
-    private toCsv(array: any[]) {
-        var headers = "";
-        if (array.length > 0) {
-            var names = [];
-            for (var name in array[0]) {
-                names.push(name);
-            }
-
-            headers = names.join(",");
-        }
-
-        var csv = [];
-        for (var i = 0; i < array.length; i++) {
-            var datum = array[i];
-            var values = [];
-            for (var j = 0; j < names.length; j++) {
-                values.push(datum[names[j]]);
-            }
-
-            csv.push(values.join(","));
-        }
-
-        return { headers: headers, csv: csv.join("\r\n") };
     }
 
     public enqueueTest(name: string, action: () => void) {
@@ -115,7 +90,7 @@ class PerformanceTestHelper extends TestClass {
     }
 
     public onTestsComplete() {
-        var perfLogging = new Microsoft.ApplicationInsights.AppInsights(<any>{
+        const perfLogging = new Microsoft.ApplicationInsights.AppInsights({
             instrumentationKey: "1a6933ad-f260-447f-a2b0-e2233f6658eb",
             url: "file:///C:/src/sdk/src/JavaScript/JavaScriptSDK.Tests//E2ETests/ai.js",
             endpointUrl: "http://prodintdataforker.azurewebsites.net/dcservices?intKey=4d93aad0-cf1d-45b7-afc9-14f55504f6d5",
@@ -123,30 +98,30 @@ class PerformanceTestHelper extends TestClass {
             sessionExpirationMs: 24 * 60 * 60 * 1000,
             maxBatchSizeInBytes: 1000000,
             maxBatchInterval: 0
-        });
+        } as any);
 
         perfLogging.context._sender._sender = (payload) => {
-            var xhr = new sinon["xhr"].workingXHR();
+            const xhr = new sinon["xhr"].workingXHR();
             xhr.open("POST", perfLogging.config.endpointUrl, true);
             xhr.setRequestHeader("Content-type", "application/json");
             xhr.send(payload);
         }
 
         JSLitmus.stop();
-        for (var i = 0; i < JSLitmus._tests.length; i++) {
-            var test = JSLitmus._tests[i];
-            var opsPerSec = test.count / test.time;
+        for (let i = 0; i < JSLitmus._tests.length; i++) {
+            const test = JSLitmus._tests[i];
+            const opsPerSec = test.count / test.time;
             Assert.ok(true, test.name + " operations per sec:" + opsPerSec);
 
-            var timeInMs = <number>test.time;
-            var date = +new Date;
-            var oneHr = 60 * 60 * 1000;
-            var oneHrDate = Math.floor(date / oneHr) * oneHr;
-            var friendlyDate = new Date(oneHrDate).toISOString();
-            var platform = <string>test.platform;
-            var browser = "internetExplorer";
-            var name = <string>test.name;
-            var group = name.split(".")[0];
+            const timeInMs = test.time as number;
+            const date = +new Date;
+            const oneHr = 60 * 60 * 1000;
+            const oneHrDate = Math.floor(date / oneHr) * oneHr;
+            const friendlyDate = new Date(oneHrDate).toISOString();
+            const platform = test.platform as string;
+            let browser = "internetExplorer";
+            const name = test.name as string;
+            const group = name.split(".")[0];
             if (platform.toLowerCase().indexOf("chrome") >= 0) {
                 browser = "chrome";
             } else if (platform.toLowerCase().indexOf("firefox") >= 0) {
@@ -155,29 +130,29 @@ class PerformanceTestHelper extends TestClass {
                 browser = "safari";
             }
 
-            var result: IPerfResult = {
-                name: name,
-                timeInMs: timeInMs,
+            const result: IPerfResult = {
+                name,
+                timeInMs,
                 operationCount: 1,
                 opsPerSec: 1 / (timeInMs / 1000),
                 period: 1,
-                date: date,
-                oneHrDate: oneHrDate,
-                friendlyDate: friendlyDate,
-                group: group,
-                platform: platform,
-                browser: browser,
-                os: <string>test.os,
+                date,
+                oneHrDate,
+                friendlyDate,
+                group,
+                platform,
+                browser,
+                os: test.os as string,
                 millisecondsPerOp: (timeInMs / 1),
                 microsecondsPerOp: (timeInMs / 1) * 1000,
                 secondsPerOp: (timeInMs / 1) / 1000
             };
 
             perfLogging.trackMetric(result.name, opsPerSec);
-            var event = new Microsoft.ApplicationInsights.Telemetry.Event(result.name, opsPerSec, result);
-            var data = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.Event>(
+            const event = new Microsoft.ApplicationInsights.Telemetry.Event(result.name, opsPerSec, result);
+            const data = new Microsoft.ApplicationInsights.Telemetry.Common.Data<Microsoft.ApplicationInsights.Telemetry.Event>(
                 Microsoft.ApplicationInsights.Telemetry.Event.dataType, event);
-            var envelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(data, Microsoft.ApplicationInsights.Telemetry.Event.envelopeType);
+            const envelope = new Microsoft.ApplicationInsights.Telemetry.Common.Envelope(data, Microsoft.ApplicationInsights.Telemetry.Event.envelopeType);
             perfLogging.context.track(envelope);
 
             this.results.push(result);
@@ -195,6 +170,31 @@ class PerformanceTestHelper extends TestClass {
         }
     }
 
+    private toCsv(array: any[]) {
+        let headers = "";
+        if (array.length > 0) {
+            const names = [];
+            for (const name in array[0]) {
+                names.push(name);
+            }
+
+            headers = names.join(",");
+        }
+
+        const csv = [];
+        for (let i = 0; i < array.length; i++) {
+            const datum = array[i];
+            const values = [];
+            for (let j = 0; j < names.length; j++) {
+                values.push(datum[names[j]]);
+            }
+
+            csv.push(values.join(","));
+        }
+
+        return { headers, csv: csv.join("\r\n") };
+    }
+
     /**
      * Synchronously loads jquery
      * we could regress the test suite and develop sublte jquery dependencies in the product code
@@ -204,11 +204,11 @@ class PerformanceTestHelper extends TestClass {
     private synchronouslyLoadJquery() {
         if (!window["$"]) {
             // get some kind of XMLHttpRequest
-            var xhrObj = <any>false;
+            let xhrObj = false as any;
             if (window["ActiveXObject"]) {
-                xhrObj = <any>new ActiveXObject("Microsoft.XMLHTTP");
+                xhrObj = (new ActiveXObject("Microsoft.XMLHTTP") as any);
             } else if (window["XMLHttpRequest"]) {
-                xhrObj = <any>new XMLHttpRequest();
+                xhrObj = (new XMLHttpRequest() as any);
             } else {
                 alert("Please upgrade your browser!  Your browser does not support AJAX!");
             }
@@ -218,7 +218,7 @@ class PerformanceTestHelper extends TestClass {
             xhrObj.send('');
 
             // add the returned content to a newly created script tag
-            var script = document.createElement('script');
+            const script = document.createElement('script');
             script.type = "text/javascript";
             script.text = xhrObj.responseText;
             document.getElementsByTagName('head')[0].appendChild(script);

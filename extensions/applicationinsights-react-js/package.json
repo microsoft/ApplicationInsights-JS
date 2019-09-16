@@ -15,7 +15,8 @@
         "build:esm": "grunt react",
         "build:browser": "rollup -c",
         "test": "jest --config test/jestconfig.json",
-        "test-watch": "jest --config test/jestconfig.json --watch"
+        "test-watch": "jest --config test/jestconfig.json --watch",
+        "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
         "@types/node": "11.13.2",
@@ -35,7 +36,9 @@
         "rollup-plugin-replace": "^2.1.0",
         "rollup-plugin-uglify": "^6.0.0",
         "rollup-plugin-commonjs": "^9.3.4",
-        "typescript": "2.5.3"
+        "typescript": "2.5.3",
+        "tslint": "^5.19.0",
+        "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
         "@microsoft/applicationinsights-core-js": "2.2.2",

@@ -71,7 +71,7 @@ export class ArraySendBuffer implements ISendBuffer {
 
     public batchPayloads(payload: string[]): string {
         if (payload && payload.length > 0) {
-            var batch = this._config.emitLineDelimitedJson() ?
+            const batch = this._config.emitLineDelimitedJson() ?
                 payload.join("\n") :
                 "[" + payload.join(",") + "]";
 
@@ -112,8 +112,8 @@ export class SessionStorageSendBuffer implements ISendBuffer {
         this._logger = logger;
         this._config = config;
 
-        var bufferItems = this.getBuffer(SessionStorageSendBuffer.BUFFER_KEY);
-        var notDeliveredItems = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+        const bufferItems = this.getBuffer(SessionStorageSendBuffer.BUFFER_KEY);
+        const notDeliveredItems = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
 
         this._buffer = bufferItems.concat(notDeliveredItems);
 
@@ -166,7 +166,7 @@ export class SessionStorageSendBuffer implements ISendBuffer {
 
     public batchPayloads(payload: string[]): string {
         if (payload && payload.length > 0) {
-            var batch = this._config.emitLineDelimitedJson() ?
+            const batch = this._config.emitLineDelimitedJson() ?
                 payload.join("\n") :
                 "[" + payload.join(",") + "]";
 
@@ -180,7 +180,7 @@ export class SessionStorageSendBuffer implements ISendBuffer {
         this._buffer = this.removePayloadsFromBuffer(payload, this._buffer);
         this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
 
-        var sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+        let sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
         if (sentElements instanceof Array && payload instanceof Array) {
             sentElements = sentElements.concat(payload);
 
@@ -201,18 +201,18 @@ export class SessionStorageSendBuffer implements ISendBuffer {
     }
 
     public clearSent(payload: string[]) {
-        var sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+        let sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
         sentElements = this.removePayloadsFromBuffer(payload, sentElements);
 
         this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
     }
 
     private removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
-        var remaining: string[] = [];
+        const remaining: string[] = [];
 
-        for (var i in buffer) {
-            var contains = false;
-            for (var j in payloads) {
+        for (const i in buffer) {
+            let contains = false;
+            for (const j in payloads) {
                 if (payloads[j] === buffer[i]) {
                     contains = true;
                     break;
@@ -231,9 +231,9 @@ export class SessionStorageSendBuffer implements ISendBuffer {
         let prefixedKey = key;
         try {
             prefixedKey = this._config.namePrefix && this._config.namePrefix() ? this._config.namePrefix() + "_" + prefixedKey : prefixedKey;
-            var bufferJson = Util.getSessionStorage(this._logger, prefixedKey);
+            const bufferJson = Util.getSessionStorage(this._logger, prefixedKey);
             if (bufferJson) {
-                var buffer: string[] = JSON.parse(bufferJson);
+                const buffer: string[] = JSON.parse(bufferJson);
                 if (buffer) {
                     return buffer;
                 }
@@ -252,7 +252,7 @@ export class SessionStorageSendBuffer implements ISendBuffer {
         let prefixedKey = key;
         try {
             prefixedKey = this._config.namePrefix && this._config.namePrefix() ? this._config.namePrefix() + "_" + prefixedKey : prefixedKey;
-            var bufferJson = JSON.stringify(buffer);
+            const bufferJson = JSON.stringify(buffer);
             Util.setSessionStorage(this._logger, prefixedKey, bufferJson);
         } catch (e) {
             // if there was an error, clear the buffer

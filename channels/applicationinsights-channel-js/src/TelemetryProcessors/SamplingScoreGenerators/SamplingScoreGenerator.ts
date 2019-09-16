@@ -15,7 +15,7 @@ export class SamplingScoreGenerator {
     }
 
     public getSamplingScore(item: ITelemetryItem): number {
-        var score: number = 0;
+        let score: number = 0;
         if (item.tags && item.tags[this.keys.userId]) { // search in tags first, then ext
             score = this.hashCodeGeneragor.getHashCodeScore(item.tags[this.keys.userId]);
         } else if (item.ext && item.ext.user && item.ext.user.id) {
