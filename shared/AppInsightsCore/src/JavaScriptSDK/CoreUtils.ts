@@ -12,7 +12,7 @@ export class CoreUtils {
 
 /**
  * Creates a new GUID.
- * @return {string} A GUID.
+ * @return {string} A GUID.
  */
 
     public static disableCookies() {

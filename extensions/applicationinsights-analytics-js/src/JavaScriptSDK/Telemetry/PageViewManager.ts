@@ -11,16 +11,16 @@ import {
 import { PageViewPerformanceManager } from './PageViewPerformanceManager';
 
 /**
-* Internal interface to pass appInsights object to subcomponents without coupling 
-*/
+ * Internal interface to pass appInsights object to subcomponents without coupling 
+ */
 export interface IAppInsightsInternal {
     sendPageViewInternal(pageViewItem: IPageViewTelemetryInternal, properties?: Object, systemProperties?: Object);
     sendPageViewPerformanceInternal(pageViewPerformance: IPageViewPerformanceTelemetryInternal, properties?: Object, systemProperties?: Object);
 }
 
 /**
-* Class encapsulates sending page views and page view performance telemetry.
-*/
+ * Class encapsulates sending page views and page view performance telemetry.
+ */
 export class PageViewManager {
     private pageViewPerformanceSent: boolean = false;
 
@@ -38,13 +38,13 @@ export class PageViewManager {
         this.appInsights = appInsights;
         this._pageViewPerformanceManager = pageViewPerformanceManager;
         if (core) {
-            this._channel = () => <IChannelControls[][]>(core.getTransmissionControls());
+            this._channel = () => (core.getTransmissionControls()) as IChannelControls[][];
             this._logger = core.logger;
         }
 
     }
 
-    /**
+   /**
     * Currently supported cases:
     * 1) (default case) track page view called with default parameters, overridePageViewDuration = false. Page view is sent with page view performance when navigation timing data is available.
     *    a. If navigation timing is not supported then page view is sent right away with undefined duration. Page view performance is not sent.
@@ -55,12 +55,12 @@ export class PageViewManager {
     * In all cases page view performance is sent once (only for the 1st call of trackPageView), or not sent if navigation timing is not supported.
     */
     public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any }) {
-        let name = pageView.name;
+        const name = pageView.name;
         if (CoreUtils.isNullOrUndefined(name) || typeof name !== "string") {
             pageView.name = window.document && window.document.title || "";
         }
 
-        let uri = pageView.uri;
+        const uri = pageView.uri;
         if (CoreUtils.isNullOrUndefined(uri) || typeof uri !== "string") {
             pageView.uri = window.location && window.location.href || "";
         }
@@ -84,11 +84,11 @@ export class PageViewManager {
             return;
         }
 
-        var pageViewSent = false;
-        var customDuration = undefined;
+        let pageViewSent = false;
+        let customDuration;
 
         // if the performance timing is supported by the browser, calculate the custom duration
-        var start = this._pageViewPerformanceManager.getPerformanceTiming().navigationStart;
+        const start = this._pageViewPerformanceManager.getPerformanceTiming().navigationStart;
         customDuration = DateTimeUtils.GetDuration(start, +new Date);
         if (!this._pageViewPerformanceManager.shouldCollectDuration(customDuration)) {
             customDuration = undefined;
@@ -96,7 +96,7 @@ export class PageViewManager {
 
         // if the user has provided duration, send a page view telemetry with the provided duration. Otherwise, if
         // overridePageViewDuration is set to true, send a page view telemetry with the custom duration calculated earlier
-        let duration = undefined;
+        let duration;
         if (!CoreUtils.isNullOrUndefined(customProperties) &&
             !CoreUtils.isNullOrUndefined(customProperties.duration)) {
             duration = customProperties.duration;
@@ -120,17 +120,17 @@ export class PageViewManager {
         }
 
         // now try to send the page view performance telemetry
-        var maxDurationLimit = 60000;
+        const maxDurationLimit = 60000;
         if (!customProperties) {
             customProperties = {};
         }
-        var handle = setInterval((() => {
+        const handle = setInterval((() => {
             try {
                 if (this._pageViewPerformanceManager.isPerformanceTimingDataReady()) {
                     clearInterval(handle);
-                    let pageViewPerformance: IPageViewPerformanceTelemetryInternal = {
-                        name: name,
-                        uri: uri
+                    const pageViewPerformance: IPageViewPerformanceTelemetryInternal = {
+                        name,
+                        uri
                     };
                     this._pageViewPerformanceManager.populatePageViewPerformanceEvent(pageViewPerformance);
 

@@ -41,3 +41,7 @@ jobs:
       - echo 'Running test...' && echo -en 'travis_fold:start:tests\\r'
       - node common/scripts/install-run-rush.js test --verbose
       - echo -en 'travis_fold:end:tests\\r'
+
+      - echo 'Running tslint...' && echo -en 'travis_fold:start:lint\\r' 
+      - node common/scripts/install-run-rush.js lint --verbose
+      - echo -en 'travis_fold:end:lint\\r'

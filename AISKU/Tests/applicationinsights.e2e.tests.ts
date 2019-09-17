@@ -50,7 +50,7 @@ export class ApplicationInsightsTests extends TestClass {
     public testInitialize() {
         try {
             this.useFakeServer = false;
-            (<any>sinon.fakeServer).restore();
+            (sinon.fakeServer as any).restore();
             this.useFakeTimers = false;
             this.clock.restore();
             this._config = {
@@ -66,7 +66,7 @@ export class ApplicationInsightsTests extends TestClass {
                 distributedTracingMode: DistributedTracingModes.AI_AND_W3C
             };
 
-            var init = new ApplicationInsights({
+            const init = new ApplicationInsights({
                 config: this._config
             });
             init.loadAppInsights();
@@ -142,7 +142,7 @@ export class ApplicationInsightsTests extends TestClass {
                 if (this.successSpy.called) {
                     const payloadStr: string[] = this.successSpy.args[0][0];
                     const payload = JSON.parse(payloadStr[0]);
-                    let data = payload.data;
+                    const data = payload.data;
                     Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
                     Assert.ok(data && data.baseData && data.baseData.measurements["measurement1"]);
                 }
@@ -157,7 +157,7 @@ export class ApplicationInsightsTests extends TestClass {
             }].concat(this.asserts(1)).concat(() => {
                 const payloadStr: string[] = this.successSpy.args[0][0];
                 const payload = JSON.parse(payloadStr[0]);
-                let data = payload.data;
+                const data = payload.data;
                 Assert.ok(data && data.baseData &&
                     data.baseData.properties["foo"] && data.baseData.properties["prop2"]);
                 Assert.equal("bar", data.baseData.properties["foo"]);
@@ -175,7 +175,7 @@ export class ApplicationInsightsTests extends TestClass {
                     Assert.ok(false, 'trackException test not run');
                 } catch (e) {
                     exception = e;
-                    this._ai.trackException({ exception: exception });
+                    this._ai.trackException({ exception });
                 }
                 Assert.ok(exception);
             }].concat(this.asserts(1))
@@ -191,7 +191,7 @@ export class ApplicationInsightsTests extends TestClass {
                     Assert.ok(false, 'trackException test not run');
                 } catch (e) {
                     exception = e;
-                    this._ai.trackException(<any>{ error: exception });
+                    this._ai.trackException({ error: exception } as any);
                 }
                 Assert.ok(exception);
             }].concat(this.asserts(1))
@@ -203,7 +203,7 @@ export class ApplicationInsightsTests extends TestClass {
             steps: [
                 () => {
                     console.log("* calling trackMetric " + new Date().toISOString());
-                    for (var i = 0; i < 100; i++) {
+                    for (let i = 0; i < 100; i++) {
                         this._ai.trackMetric({ name: "test" + i, average: Math.round(100 * Math.random()) });
                     }
                     console.log("* done calling trackMetric " + new Date().toISOString());
@@ -223,7 +223,7 @@ export class ApplicationInsightsTests extends TestClass {
                 if (this.successSpy.called) {
                     const payloadStr: string[] = this.successSpy.args[0][0];
                     const payload = JSON.parse(payloadStr[0]);
-                    let data = payload.data;
+                    const data = payload.data;
                     Assert.ok(data.baseData.id, "pageView id is defined");
                     Assert.ok(data.baseData.id.length > 0);
                     Assert.ok(payload.tags["ai.operation.id"]);
@@ -249,7 +249,7 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    var exception = null;
+                    let exception = null;
                     try {
                         window["a"]["b"]();
                     } catch (e) {
@@ -258,7 +258,7 @@ export class ApplicationInsightsTests extends TestClass {
 
                     Assert.ok(exception);
 
-                    this._ai.trackException({ exception: exception });
+                    this._ai.trackException({ exception });
                     this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
                     this._ai.trackTrace({ message: "test" });
                     this._ai.trackPageView({}); // sends 2
@@ -273,7 +273,7 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    var exception = null;
+                    let exception = null;
                     try {
                         window["a"]["b"]();
                     } catch (e) {
@@ -281,8 +281,8 @@ export class ApplicationInsightsTests extends TestClass {
                     }
                     Assert.ok(exception);
 
-                    for (var i = 0; i < 100; i++) {
-                        this._ai.trackException({ exception: exception });
+                    for (let i = 0; i < 100; i++) {
+                        this._ai.trackException({ exception });
                         this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
                         this._ai.trackTrace({ message: "test" });
                         this._ai.trackPageView({ name: `${i}` }); // sends 2 1st time
@@ -297,7 +297,7 @@ export class ApplicationInsightsTests extends TestClass {
             steps: [
                 () => {
                     // Setup
-                    var telemetryInitializer = {
+                    const telemetryInitializer = {
                         init: (envelope) => {
                             envelope.baseData.name = 'other name'
                             return true;
@@ -332,7 +332,7 @@ export class ApplicationInsightsTests extends TestClass {
         this.testCase({
             name: "DependenciesPlugin: initialization yields a defined _context value",
             test: () => {
-                const extensions = (<AppInsightsCore>this._ai.core).baseCore._extensions;
+                const extensions = (this._ai.core as AppInsightsCore).baseCore._extensions;
                 let ajax: AjaxPlugin, extIx=0;
                 while (!ajax && extIx < extensions.length) {
                     if (extensions[extIx].identifier === AjaxPlugin.identifier) {
@@ -368,7 +368,7 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    let xhr = new XMLHttpRequest();
+                    const xhr = new XMLHttpRequest();
                     xhr.open('GET', 'https://httpbin.org/status/200');
                     xhr.send();
                     Assert.ok(true);
@@ -428,7 +428,7 @@ export class ApplicationInsightsTests extends TestClass {
                 }
             ]
             .concat(this.asserts(1))
-            .concat(<any>PollingAssert.createPollingAssert(() => {
+            .concat(PollingAssert.createPollingAssert(() => {
                 if (this.successSpy.called) {
                     const payloadStr: string[] = this.successSpy.args[0][0];
                     Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
@@ -443,7 +443,7 @@ export class ApplicationInsightsTests extends TestClass {
                     }
                     return false;
                 }
-            }, 'Set custom tags'))
+            }, 'Set custom tags') as any)
         });
 
         this.testCaseAsync({
@@ -458,7 +458,7 @@ export class ApplicationInsightsTests extends TestClass {
                 }
             ]
             .concat(this.asserts(1))
-            .concat(<any>PollingAssert.createPollingAssert(() => {
+            .concat(PollingAssert.createPollingAssert(() => {
                 if (this.successSpy.called) {
                     const payloadStr: string[] = this.successSpy.args[0][0];
                     Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
@@ -473,7 +473,7 @@ export class ApplicationInsightsTests extends TestClass {
                     }
                     return false;
                 }
-            }, 'Set custom tags'))
+            }, 'Set custom tags') as any)
         });
 
         this.testCaseAsync({
@@ -491,7 +491,7 @@ export class ApplicationInsightsTests extends TestClass {
                 }
             ]
             .concat(this.asserts(1))
-            .concat(<any>PollingAssert.createPollingAssert(() => {
+            .concat(PollingAssert.createPollingAssert(() => {
                 if (this.successSpy.called) {
                     const payloadStr: string[] = this.successSpy.args[0][0];
                     Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
@@ -515,7 +515,7 @@ export class ApplicationInsightsTests extends TestClass {
                     }
                     return false;
                 }
-            }, 'Set custom tags'))
+            }, 'Set custom tags') as any)
         });
 
         this.testCaseAsync({
@@ -523,13 +523,13 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = <TelemetryContext>(this._ai.context);
+                    const context = (this._ai.context) as TelemetryContext;
                     context.user.setAuthenticatedUserContext('10001');
                     this._ai.trackTrace({ message: 'authUserContext test' });
                 }
             ]
                 .concat(this.asserts(1))
-                .concat(<any>PollingAssert.createPollingAssert(() => {
+                .concat(PollingAssert.createPollingAssert(() => {
                     if (this.successSpy.called) {
                         const payloadStr: string[] = this.successSpy.args[0][0];
                         if (payloadStr.length !== 1) {
@@ -543,7 +543,7 @@ export class ApplicationInsightsTests extends TestClass {
                         }
                     }
                     return false;
-                }, 'user.authenticatedId'))
+                }, 'user.authenticatedId') as any)
         });
 
         this.testCaseAsync({
@@ -551,13 +551,13 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = <TelemetryContext>(this._ai.context);
+                    const context = (this._ai.context) as TelemetryContext;
                     context.user.setAuthenticatedUserContext('10001', 'account123');
                     this._ai.trackTrace({ message: 'authUserContext test' });
                 }
             ]
                 .concat(this.asserts(1))
-                .concat(<any>PollingAssert.createPollingAssert(() => {
+                .concat(PollingAssert.createPollingAssert(() => {
                     if (this.successSpy.called) {
                         const payloadStr: string[] = this.successSpy.args[0][0];
                         if (payloadStr.length !== 1) {
@@ -569,11 +569,11 @@ export class ApplicationInsightsTests extends TestClass {
                             const authTag: string = this.tagKeys.userAuthUserId;
                             const accountTag: string = this.tagKeys.userAccountId;
                             return '10001' === payload.tags[authTag] /*&&
-                            'account123' === payload.tags[accountTag] */; //bug https://msazure.visualstudio.com/One/_workitems/edit/3508825
+                            'account123' === payload.tags[accountTag] */; // bug https://msazure.visualstudio.com/One/_workitems/edit/3508825
                         }
                     }
                     return false;
-                }, 'user.authenticatedId'))
+                }, 'user.authenticatedId') as any)
         });
 
         this.testCaseAsync({
@@ -581,13 +581,13 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = <TelemetryContext>(this._ai.context);
+                    const context = (this._ai.context) as TelemetryContext;
                     context.user.setAuthenticatedUserContext("\u0428", "\u0429");
                     this._ai.trackTrace({ message: 'authUserContext test' });
                 }
             ]
                 .concat(this.asserts(1))
-                .concat(<any>PollingAssert.createPollingAssert(() => {
+                .concat(PollingAssert.createPollingAssert(() => {
                     if (this.successSpy.called) {
                         const payloadStr: string[] = this.successSpy.args[0][0];
                         if (payloadStr.length !== 1) {
@@ -599,11 +599,11 @@ export class ApplicationInsightsTests extends TestClass {
                             const authTag: string = this.tagKeys.userAuthUserId;
                             const accountTag: string = this.tagKeys.userAccountId;
                             return '\u0428' === payload.tags[authTag] /* &&
-                            '\u0429' === payload.tags[accountTag] */; //bug https://msazure.visualstudio.com/One/_workitems/edit/3508825
+                            '\u0429' === payload.tags[accountTag] */; // bug https://msazure.visualstudio.com/One/_workitems/edit/3508825
                         }
                     }
                     return false;
-                }, 'user.authenticatedId'))
+                }, 'user.authenticatedId') as any)
         });
 
         this.testCaseAsync({
@@ -611,14 +611,14 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = <TelemetryContext>(this._ai.context);
+                    const context = (this._ai.context) as TelemetryContext;
                     context.user.setAuthenticatedUserContext('10002', 'account567');
                     context.user.clearAuthenticatedUserContext();
                     this._ai.trackTrace({ message: 'authUserContext test' });
                 }
             ]
                 .concat(this.asserts(1))
-                .concat(<any>PollingAssert.createPollingAssert(() => {
+                .concat(PollingAssert.createPollingAssert(() => {
                     if (this.successSpy.called) {
                         const payloadStr: string[] = this.successSpy.args[0][0];
                         if (payloadStr.length !== 1) {
@@ -634,7 +634,7 @@ export class ApplicationInsightsTests extends TestClass {
                         }
                     }
                     return false;
-                }, 'user.authenticatedId'))
+                }, 'user.authenticatedId') as any)
         });
 
         // This doesn't need to be e2e
@@ -642,7 +642,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext does not set the cookie by default',
             test: () => {
                 // Setup
-                const context = <TelemetryContext>(this._ai.context);
+                const context = (this._ai.context) as TelemetryContext;
                 const authSpy: SinonSpy = this.sandbox.spy(context.user, 'setAuthenticatedUserContext');
                 const cookieSpy: SinonSpy = this.sandbox.spy(Util, 'setCookie');
 
@@ -660,7 +660,7 @@ export class ApplicationInsightsTests extends TestClass {
     private boilerPlateAsserts = () => {
         Assert.ok(this.successSpy.called, "success");
         Assert.ok(!this.errorSpy.called, "no error sending");
-        var isValidCallCount = this.loggingSpy.callCount === 0;
+        const isValidCallCount = this.loggingSpy.callCount === 0;
         Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
         if (!isValidCallCount) {
             while (this.loggingSpy.args.length) {
@@ -669,7 +669,7 @@ export class ApplicationInsightsTests extends TestClass {
         }
     }
     private asserts: any = (expectedCount: number) => [() => {
-        var message = "polling: " + new Date().toISOString();
+        const message = "polling: " + new Date().toISOString();
         Assert.ok(true, message);
         console.log(message);
 

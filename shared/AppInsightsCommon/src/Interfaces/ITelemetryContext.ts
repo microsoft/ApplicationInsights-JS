@@ -11,8 +11,8 @@ import { ITelemetryTrace } from './Context/ITelemetryTrace';
 
 export interface ITelemetryContext {
     /**
-    * The object describing a component tracked by this object.
-    */
+     * The object describing a component tracked by this object.
+     */
     application: IApplication;
 
     /**
@@ -21,8 +21,8 @@ export interface ITelemetryContext {
     device: IDevice;
 
     /**
-    * The object describing internal settings.
-    */
+     * The object describing internal settings.
+     */
     internal: IInternal;
 
     /**

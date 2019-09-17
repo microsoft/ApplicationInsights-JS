@@ -34,16 +34,16 @@ export class TelemetryItemCreatorTests extends TestClass {
             name: "TelemetryItemCreatorTests: create a valid ITelemetryItem for a page view performance item",
             test: () => {
                 // setup
-                let name = "testName";
-                let uri = "testUri";
-                var pageViewPerformance = new PageViewPerformance(this._core.logger, name, uri, null);
-                let properties = {
+                const name = "testName";
+                const uri = "testUri";
+                const pageViewPerformance = new PageViewPerformance(this._core.logger, name, uri, null);
+                const properties = {
                     "propKey1": "PropVal1",
                     "propKey2": "PropVal2"
                 };
 
                 // act
-                let telemetryItem = TelemetryItemCreator.create<PageViewPerformance>(
+                const telemetryItem = TelemetryItemCreator.create<PageViewPerformance>(
                     pageViewPerformance,
                     PageViewPerformance.dataType,
                     PageViewPerformance.envelopeType,
@@ -62,19 +62,19 @@ export class TelemetryItemCreatorTests extends TestClass {
             name: "TelemetryItemCreatorTests: create a valid ITelemetryItem for a page view item",
             test: () => {
                 // setup
-                let name = "testName";
-                let uri = "testUri";
-                var pageView: IPageViewTelemetry = {
-                    name: name,
-                    uri: uri
+                const name = "testName";
+                const uri = "testUri";
+                const pageView: IPageViewTelemetry = {
+                    name,
+                    uri
                 };
-                let properties = {
+                const properties = {
                     "propKey1": "PropVal1",
                     "propKey2": "PropVal2"
                 };
 
                 // act
-                let telemetryItem = TelemetryItemCreator.create<IPageViewTelemetry>(
+                const telemetryItem = TelemetryItemCreator.create<IPageViewTelemetry>(
                     pageView,
                     PageView.dataType,
                     PageView.envelopeType,
@@ -98,6 +98,12 @@ class ChannelPlugin implements IPlugin {
     public isResumeInvoked = false;
     public isPauseInvoked = false;
 
+    public processTelemetry;
+
+    public identifier = "Sender";
+
+    public priority: number = 1001;
+
     constructor() {
         this.processTelemetry = this._processTelemetry.bind(this);
     }
@@ -119,16 +125,10 @@ class ChannelPlugin implements IPlugin {
             callBack();
         }
     }
-
-    public processTelemetry;
-
-    public identifier = "Sender";
     
     setNextPlugin(next: any) {
         // no next setup
     }
-
-    public priority: number = 1001;
 
     public initialize = (config: IConfiguration) => {
     }

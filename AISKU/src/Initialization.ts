@@ -48,11 +48,11 @@ export class Initialization implements IApplicationInsights {
         // initialize the queue and config in case they are undefined
         snippet.queue = snippet.queue || [];
         snippet.version = snippet.version || 2.0; // Default to new version
-        var config: IConfiguration & IConfig = snippet.config || <any>{};
+        let config: IConfiguration & IConfig = snippet.config || ({} as any);
 
         // ensure instrumentationKey is specified
         if (config && !config.instrumentationKey) {
-            config = <any>snippet;
+            config = (snippet as any);
             ApplicationInsights.Version = "2.2.2"; // Not currently used anywhere
         }
 
@@ -104,8 +104,8 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public trackException(exception: IExceptionTelemetry): void {
-        if (!exception.exception && (<any>exception).error) {
-            exception.exception = (<any>exception).error;
+        if (!exception.exception && (exception as any).error) {
+            exception.exception = (exception as any).error;
         }
         this.appInsights.trackException(exception);
     }
@@ -266,8 +266,8 @@ export class Initialization implements IApplicationInsights {
             throw new Error("Extensions not allowed in legacy mode");
         }
 
-        let extensions = [];
-        let appInsightsChannel: Sender = new Sender();
+        const extensions = [];
+        const appInsightsChannel: Sender = new Sender();
 
         extensions.push(appInsightsChannel);
         extensions.push(this.properties);
@@ -295,7 +295,7 @@ export class Initialization implements IApplicationInsights {
     public updateSnippetDefinitions(snippet: Snippet) {
         // apply full appInsights to the global instance
         // Note: This must be called before loadAppInsights is called
-        for (var field in this) {
+        for (const field in this) {
             if (typeof field === 'string') {
                 snippet[field as string] = this[field];
             }
@@ -313,9 +313,9 @@ export class Initialization implements IApplicationInsights {
         try {
             if (Util.isArray(this.snippet.queue)) {
                 // note: do not check length in the for-loop conditional in case something goes wrong and the stub methods are not overridden.
-                var length = this.snippet.queue.length;
-                for (var i = 0; i < length; i++) {
-                    var call = this.snippet.queue[i];
+                const length = this.snippet.queue.length;
+                for (let i = 0; i < length; i++) {
+                    const call = this.snippet.queue[i];
                     call();
                 }
 
@@ -323,7 +323,7 @@ export class Initialization implements IApplicationInsights {
                 delete this.snippet.queue;
             }
         } catch (exception) {
-            var properties: any = {};
+            const properties: any = {};
             if (exception && typeof exception.toString === "function") {
                 properties.exception = exception.toString();
             }
@@ -345,7 +345,7 @@ export class Initialization implements IApplicationInsights {
         // Add callback to push events when the user navigates away
 
         if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
-            var performHousekeeping = function () {
+            const performHousekeeping = () => {
                 // Adds the ability to flush all data before the page unloads.
                 // Note: This approach tries to push an async request with all the pending events onbeforeunload.
                 // Firefox does not respect this.Other browsers DO push out the call with < 100% hit rate.
@@ -353,12 +353,12 @@ export class Initialization implements IApplicationInsights {
                 // Another approach would be to make this call sync with a acceptable timeout to reduce the
                 // impact on user experience.
 
-                //appInsightsInstance.context._sender.triggerSend();
+                // appInsightsInstance.context._sender.triggerSend();
                 appInsightsInstance.onunloadFlush(false);
 
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
-                let ext = appInsightsInstance.appInsights.core['_extensions'][PropertiesPluginIdentifier];
+                const ext = appInsightsInstance.appInsights.core['_extensions'][PropertiesPluginIdentifier];
                 if (ext && ext.context && ext.context._sessionManager) {
                     ext.context._sessionManager.backup();
                 }

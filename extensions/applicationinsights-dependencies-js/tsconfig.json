@@ -13,13 +13,12 @@
     "noEmitHelpers": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationMap": true,
     "declarationDir": "extensions/applicationinsights-dependencies-js/types",
     "outDir": "dist-esm",
     "rootDir": "extensions/applicationinsights-dependencies-js/src"
   },
   "include": [
-    "./src/**"
+    "./src/**/*.ts"
   ],
   "exclude": [
     "node_modules"

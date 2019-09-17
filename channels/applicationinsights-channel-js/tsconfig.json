@@ -13,7 +13,6 @@
     "noEmitHelpers": true,
     "importHelpers": true,
     "declaration": true,
-    "declarationMap": true,
     "declarationDir": "channels/applicationinsights-channel-js/types",
     "outDir": "dist-esm",
     "rootDir": "./channels/applicationinsights-channel-js/src"

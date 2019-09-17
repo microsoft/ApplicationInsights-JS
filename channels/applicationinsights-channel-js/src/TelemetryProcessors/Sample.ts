@@ -7,18 +7,15 @@ import { ITelemetryItem, IDiagnosticLogger, _InternalMessageId, LoggingSeverity,
 
 export class Sample implements ISample {
     public sampleRate: number;
-    private samplingScoreGenerator: SamplingScoreGenerator;
-    private _logger: IDiagnosticLogger;
 
     // We're using 32 bit math, hence max value is (2^31 - 1)
     public INT_MAX_VALUE: number = 2147483647;
+    private samplingScoreGenerator: SamplingScoreGenerator;
+    private _logger: IDiagnosticLogger;
 
     constructor(sampleRate: number, logger?: IDiagnosticLogger) {
-        if (CoreUtils.isNullOrUndefined(logger)) {
-            this._logger = new DiagnosticLogger();
-        } else {
-            this._logger = logger;
-        }
+        this._logger = CoreUtils.isNullOrUndefined(logger) ? new DiagnosticLogger() : logger;
+        
         if (sampleRate > 100 || sampleRate < 0) {
             this._logger.throwInternal(LoggingSeverity.WARNING,
                 _InternalMessageId.SampleRateOutOfRange,
@@ -31,11 +28,11 @@ export class Sample implements ISample {
         this.samplingScoreGenerator = new SamplingScoreGenerator();
     }
 
-    /**
+   /**
     * Determines if an envelope is sampled in (i.e. will be sent) or not (i.e. will be dropped).
     */
     public isSampledIn(envelope: ITelemetryItem): boolean {
-        let samplingPercentage = this.sampleRate; // 0 - 100
+        const samplingPercentage = this.sampleRate; // 0 - 100
         let isSampledIn = false;
 
         if (samplingPercentage === null || samplingPercentage === undefined || samplingPercentage >= 100) {

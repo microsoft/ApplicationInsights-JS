@@ -13,7 +13,6 @@
     "noEmitHelpers": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationMap": true,
     "declarationDir": "extensions/applicationinsights-react-native/dist-esm",
     "outDir": "dist-esm",
     "rootDir": "extensions/applicationinsights-react-native/src"

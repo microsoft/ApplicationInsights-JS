@@ -2,7 +2,7 @@
 /// <reference path="TestClass.ts" />
 
 class PollingAssert {
-    /**
+   /**
     * Starts polling assertion function for a period of time after which it's considered failed.
     * @param {() => boolean} assertionFunctionReturnsBoolean - funciton returning true if condition passes and false if condition fails. Assertion will be done on this function's result.
     * @param {string} assertDescription - message shown with the assertion
@@ -11,9 +11,9 @@ class PollingAssert {
     * @returns {(nextTestStep) => void} callback which will be invoked by the TestClass
     */
     public static createPollingAssert(assertionFunctionReturnsBoolean: () => boolean, assertDescription: string, timeoutSeconds: number = 30, pollIntervalMs: number = 500): (nextTestStep) => void {
-        var pollingAssert = (nextTestStep) => {
-            var timeout = new Date(new Date().getTime() + timeoutSeconds * 1000);
-            var polling = () => {
+        const pollingAssert = (nextTestStep) => {
+            const timeout = new Date(new Date().getTime() + timeoutSeconds * 1000);
+            const polling = () => {
                 if (assertionFunctionReturnsBoolean.apply(this)) {
                     Assert.ok(true, assertDescription);
                     nextTestStep();

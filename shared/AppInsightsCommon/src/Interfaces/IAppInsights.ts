@@ -3,8 +3,7 @@
 
 import { IEventTelemetry } from './IEventTelemetry';
 import { IPageViewTelemetry } from './IPageViewTelemetry';
-import { IExceptionTelemetry } from './IExceptionTelemetry';
-import { IAutoExceptionTelemetry } from './IExceptionTelemetry';
+import { IExceptionTelemetry, IAutoExceptionTelemetry } from './IExceptionTelemetry';
 import { ITraceTelemetry } from './ITraceTelemetry';
 import { IMetricTelemetry } from  './IMetricTelemetry';
 import { IPageViewPerformanceTelemetry } from './IPageViewPerformanceTelemetry';

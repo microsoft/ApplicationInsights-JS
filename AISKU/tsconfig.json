@@ -13,13 +13,12 @@
     "noEmitHelpers": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationMap": true,
     "declarationDir": "AISKU/dist-esm",
     "outDir": "dist-esm",
     "rootDir": "./AISKU/src"
   },
   "include": [
-    "./src/**"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules"

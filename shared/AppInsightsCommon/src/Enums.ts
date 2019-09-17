@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 /**
-* Type of storage to differentiate between local storage and session storage
-*/
+ * Type of storage to differentiate between local storage and session storage
+ */
 export enum StorageType {
     LocalStorage,
     SessionStorage

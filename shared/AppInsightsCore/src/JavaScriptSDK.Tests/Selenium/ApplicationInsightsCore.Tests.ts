@@ -580,6 +580,12 @@ class ChannelPlugin implements IChannelControls {
     public isPauseInvoked = false;
     public version: string = "1.0.33-Beta";
 
+    public processTelemetry;
+
+    public identifier = "Sender";
+
+    public priority: number = 1001;
+
     constructor() {
         this.processTelemetry = this._processTelemetry.bind(this);
     }
@@ -606,15 +612,9 @@ class ChannelPlugin implements IChannelControls {
         this.isUnloadInvoked = true;
     }
 
-    public processTelemetry;
-
-    public identifier = "Sender";
-
     setNextPlugin(next: ITelemetryPlugin) {
         this._nextPlugin = next;
     }
-
-    public priority: number = 1001;
 
     public initialize = (config: IConfiguration) => {
     }
@@ -625,10 +625,11 @@ class ChannelPlugin implements IChannelControls {
 }
 
 class TestPlugin implements IPlugin {
-    private _config: IConfiguration;
     public identifier: string = "TestPlugin";
     public version: string = "1.0.31-Beta";
 
+    private _config: IConfiguration;
+    
     public initialize(config: IConfiguration) {
         this._config = config;
         // do custom one time initialization

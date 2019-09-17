@@ -22,7 +22,7 @@ describe("ReactAI", () => {
       instrumentationKey: 'instrumentation_key',
       extensionConfig: {
         [reactPlugin.identifier]: {
-          history: history
+          history
         }
       }
     }, core, []);
@@ -34,7 +34,7 @@ describe("ReactAI", () => {
     const history = createBrowserHistory();
     jest.useFakeTimers();
     init();
-    let analyticsExtension = {
+    const analyticsExtension = {
       initialize: (config, core, extensions) => { },
       trackEvent: (event, customProperties) => { },
       trackPageView: (pageView, customProperties) => { },
@@ -52,12 +52,12 @@ describe("ReactAI", () => {
       setNextPlugin: (next) => { },
       identifier: "ApplicationInsightsAnalytics"
     };
-    let channel = new ChannelPlugin();
-    let config: IConfiguration = {
+    const channel = new ChannelPlugin();
+    const config: IConfiguration = {
       instrumentationKey: 'instrumentation_key',
       extensionConfig: {
         [reactPlugin.identifier]: {
-          history: history
+          history
         },
       }
     };
@@ -70,7 +70,7 @@ describe("ReactAI", () => {
     history.push("/new-fancy-page");
     jest.runOnlyPendingTimers();
     expect(analyticsExtension.trackPageView).toHaveBeenCalledTimes(2);
-    var event: IPageViewTelemetry = analyticsMock.mock.calls[0][0]
+    let event: IPageViewTelemetry = analyticsMock.mock.calls[0][0]
     expect(event.uri).toBe("/home");
     event = analyticsMock.mock.calls[1][0]
     expect(event.uri).toBe("/new-fancy-page");
@@ -80,12 +80,12 @@ describe("ReactAI", () => {
     const history = createBrowserHistory();
     jest.useFakeTimers();
     init();
-    let channel = new ChannelPlugin();
-    let config: IConfiguration = {
+    const channel = new ChannelPlugin();
+    const config: IConfiguration = {
       instrumentationKey: 'instrumentation_key',
       extensionConfig: {
         [reactPlugin.identifier]: {
-          history: history
+          history
         }
       }
     };
@@ -103,6 +103,10 @@ class ChannelPlugin implements IPlugin {
   public isTearDownInvoked = false;
   public isResumeInvoked = false;
   public isPauseInvoked = false;
+
+  public identifier = "Sender";
+
+  public priority: number = 1001;
 
   constructor() {
     this.processTelemetry = this._processTelemetry.bind(this);
@@ -128,13 +132,9 @@ class ChannelPlugin implements IPlugin {
 
   public processTelemetry(env: ITelemetryItem) { }
 
-  public identifier = "Sender";
-
   setNextPlugin(next: any) {
     // no next setup
   }
-
-  public priority: number = 1001;
 
   public initialize = (config: IConfiguration, core: AppInsightsCore, plugin: IPlugin[]) => {
   }

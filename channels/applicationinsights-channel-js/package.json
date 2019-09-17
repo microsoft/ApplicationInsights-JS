@@ -12,7 +12,8 @@
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "grunt aichannel",
         "build:browser": "rollup -c",
-        "test": "grunt aichanneltest"
+        "test": "grunt aichanneltest",
+        "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
         "grunt": "1.0.1",
@@ -24,7 +25,8 @@
         "rollup-plugin-replace": "^2.1.0",
         "rollup-plugin-uglify": "^6.0.0",
         "typescript": "2.5.3",
-        "tslint": "^5.11.0",
+        "tslint": "^5.19.0",
+        "tslint-config-prettier": "^1.18.0",
         "rollup": "^0.66.0"
     },
     "dependencies": {
