@@ -3,8 +3,8 @@
 
 export interface ISession {
     /**
-    * The session ID.
-    */
+     * The session ID.
+     */
     id?: string;
 
     /**

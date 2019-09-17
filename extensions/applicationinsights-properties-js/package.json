@@ -14,7 +14,8 @@
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "grunt properties",
         "build:browser": "rollup -c",
-        "test": "grunt propertiestests"
+        "test": "grunt propertiestests",
+        "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
         "typescript": "2.5.3",
@@ -25,7 +26,9 @@
         "rollup-plugin-node-resolve": "^3.4.0",
         "rollup-plugin-replace": "^2.1.0",
         "rollup-plugin-uglify": "^6.0.0",
-        "rollup": "^0.66.0"
+        "rollup": "^0.66.0",
+        "tslint": "^5.19.0",
+        "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
         "@microsoft/applicationinsights-core-js": "2.2.2",

@@ -39,18 +39,18 @@ export class SampleTests extends TestClass {
             test: () => {
                 this.sample = new Sample(33);
 
-                var userid = "asdf";
+                const userid = "asdf";
 
-                var item1 = this.getTelemetryItem();
+                const item1 = this.getTelemetryItem();
                 item1.tags["ai.user.id"] = userid;
                 item1.tags["ai.operation.id"] = "operation 1";
 
-                var item2 = this.getTelemetryItem();
+                const item2 = this.getTelemetryItem();
                 item2.tags["ai.user.id"] = userid;
                 item2.tags["ai.operation.id"] = "operation 1";
 
-                var isSampledIn1 = this.sample.isSampledIn(item1);
-                var isSampledIn2 = this.sample.isSampledIn(item2);
+                const isSampledIn1 = this.sample.isSampledIn(item1);
+                const isSampledIn2 = this.sample.isSampledIn(item2);
 
                 Assert.equal(isSampledIn1, isSampledIn2);
             }
@@ -96,11 +96,11 @@ export class SampleTests extends TestClass {
                 // setup
                 this.sample = new Sample(33);
 
-                var envelope1 = this.getTelemetryItem();
+                const envelope1 = this.getTelemetryItem();
                 envelope1.tags["ai.user.id"] = null;
                 envelope1.tags["ai.operation.id"] = null;
 
-                var mathRandomSpy = this.sandbox.spy(Math, "random");
+                const mathRandomSpy = this.sandbox.spy(Math, "random");
 
                 // act
                 this.sample.isSampledIn(envelope1);
@@ -115,26 +115,26 @@ export class SampleTests extends TestClass {
             test: () => {
 
                 // setup
-                var errorRange = 5;
-                var totalItems = 1000;
-                var ids = [];
-                for (var i = 0; i < totalItems; ++i) {
+                const errorRange = 5;
+                const totalItems = 1000;
+                const ids = [];
+                for (let i = 0; i < totalItems; ++i) {
                     ids.push(Util.newId());
                 }
 
-                var sampleRates = [50, 33, 25, 20, 16, 10];
+                const sampleRates = [50, 33, 25, 20, 16, 10];
 
                 // act
                 sampleRates.forEach((sampleRate) => {
-                    var sut = new HashCodeScoreGenerator();
-                    var countOfSampledItems = 0;
+                    const sut = new HashCodeScoreGenerator();
+                    let countOfSampledItems = 0;
 
-                    ids.forEach(function (id) {
-                        if (sut.getHashCodeScore(id) < sampleRate)++countOfSampledItems;
+                    ids.forEach((id) => {
+                        if (sut.getHashCodeScore(id) < sampleRate) {++countOfSampledItems; }
                     });
 
                     // Assert
-                    var actualSampleRate = 100 * countOfSampledItems / totalItems;
+                    const actualSampleRate = 100 * countOfSampledItems / totalItems;
                     Assert.ok(Math.abs(actualSampleRate - sampleRate) < errorRange,
                         "Actual sampling (" + actualSampleRate + ") does not fall into +-2% range from expected rate (" + sampleRate + ")");
                 });

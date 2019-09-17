@@ -72,13 +72,13 @@ export class SenderTests extends TestClass {
         this.testCase({
             name: "telemetry is not send when legacy telemetry initializer returns false",
             test: () => {
-                let cr = new AppInsightsCore();
+                const cr = new AppInsightsCore();
                 cr.logger = new DiagnosticLogger({instrumentationKey: "ikey"});
                 this._sender.initialize({
                     instrumentationKey: 'abc'
                 }, cr, []);
 
-                let nextPlugin = <ITelemetryPlugin> {
+                const nextPlugin = <ITelemetryPlugin> {
                     identifier: "foo",
                     processTelemetry: (it) => {},
                     priority: 200,
@@ -86,7 +86,7 @@ export class SenderTests extends TestClass {
                 };
                 this._sender.setNextPlugin(nextPlugin);
 
-                const processTelemetrySpy = this.sandbox.stub((<any>this._sender)._nextPlugin, "processTelemetry");
+                const processTelemetrySpy = this.sandbox.stub((this._sender as any)._nextPlugin, "processTelemetry");
                 const telemetryItem: ITelemetryItem = {
                     name: 'fake item',
                     iKey: 'iKey',
@@ -111,10 +111,10 @@ export class SenderTests extends TestClass {
             name: 'BeaconAPI is not used when isBeaconApiDisabled flag is true',
             test: () => {
                 if (!navigator.sendBeacon) {
-                    navigator['sendBeacon'] = (url: string, data?: any) => { return true; };
+                    navigator['sendBeacon'] = (url: string, data?: any) => true;
                 }
-                let sender = new Sender();
-                let cr = new AppInsightsCore();
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
 
                 const xhrSenderSpy = this.sandbox.stub(sender, "_xhrSender");
                 const beaconSenderSpy = this.sandbox.stub(navigator, "sendBeacon");
@@ -151,11 +151,11 @@ export class SenderTests extends TestClass {
             name: 'beaconSender is called when isBeaconApiDisabled flag is false',
             test: () => {
                 if (!navigator.sendBeacon) {
-                    navigator['sendBeacon'] = (url: string, data?: any) => { return true; };
+                    navigator['sendBeacon'] = (url: string, data?: any) => true;
                 }
 
-                let cr = new AppInsightsCore();
-                let sender = new Sender();
+                const cr = new AppInsightsCore();
+                const sender = new Sender();
 
                 const beaconSenderSpy = this.sandbox.stub(navigator, "sendBeacon", (a, b) => true);
                 const xhrSenderSpy = this.sandbox.spy(sender, "_xhrSender");
@@ -192,13 +192,13 @@ export class SenderTests extends TestClass {
             name: 'BeaconAPI is not used when isBeaconApiDisabled flag is false but payload size is over 64k, fall off to xhr sender',
             test: () => {
                 if (!navigator.sendBeacon) {
-                    navigator['sendBeacon'] = (url: string, data?: any) => { return true; };
+                    navigator['sendBeacon'] = (url: string, data?: any) => true;
                 }
-                let sender = new Sender();
-                let cr = new AppInsightsCore();
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
                 cr["logger"] = new DiagnosticLogger();
                 const MAX_PROPERTIES_SIZE = 8000;
-                let payload = new Array(MAX_PROPERTIES_SIZE).join('a');
+                const payload = new Array(MAX_PROPERTIES_SIZE).join('a');
 
                 const beaconSenderSpy = this.sandbox.stub(navigator, "sendBeacon", (a, b) => false);
                 const xhrSenderSpy = this.sandbox.spy(sender, "_xhrSender");
@@ -208,8 +208,8 @@ export class SenderTests extends TestClass {
                     isBeaconApiDisabled: false
                 }, cr, []);
 
-                let telemetryItems: ITelemetryItem[] = [];
-                for (var i = 0; i < 8; i ++) {
+                const telemetryItems: ITelemetryItem[] = [];
+                for (let i = 0; i < 8; i ++) {
                     const telemetryItem: ITelemetryItem = {
                         name: 'fake item',
                         iKey: 'iKey',
@@ -217,7 +217,7 @@ export class SenderTests extends TestClass {
                         baseData: {},
                         data: {
                             properties: {
-                                payload: payload
+                                payload
                             }
                         }
                     };
@@ -230,7 +230,7 @@ export class SenderTests extends TestClass {
                 Assert.ok(xhrSenderSpy.notCalled, "xhr sender was not called before");
 
                 try {
-                    for (var i = 0; i < 8; i++) {
+                    for (let i = 0; i < 8; i++) {
                         sender.processTelemetry(telemetryItems[i]);
                     }
                     sender.flush();
@@ -246,7 +246,7 @@ export class SenderTests extends TestClass {
         this.testCase({
             name: "AppInsightsTests: AppInsights Envelope created for Custom Event",
             test: () => {
-                let inputEnvelope: ITelemetryItem = {
+                const inputEnvelope: ITelemetryItem = {
                     name: "test",
                     time: new Date("2018-06-12").toISOString(),
                     iKey: "iKey",
@@ -271,12 +271,12 @@ export class SenderTests extends TestClass {
                         "name": "Event Name"
                     }
                 };
-                let appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+                const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
 
-                let baseData = appInsightsEnvelope.data.baseData;
+                const baseData = appInsightsEnvelope.data.baseData;
 
                 // Assert measurements
-                let resultMeasurements = baseData.measurements;
+                const resultMeasurements = baseData.measurements;
                 Assert.ok(resultMeasurements);
                 Assert.ok(resultMeasurements["measurement1"]);
                 Assert.equal(50.0, resultMeasurements["measurement1"]);
@@ -323,7 +323,7 @@ export class SenderTests extends TestClass {
         this.testCase({
             name: "AppInsightsTests: AppInsights Envelope  unknown type returns custom Event data type",
             test: () => {
-                let inputEnvelope: ITelemetryItem = {
+                const inputEnvelope: ITelemetryItem = {
                     name: "test",
                     time: new Date("2018-06-12").toISOString(),
                     iKey: "iKey",
@@ -346,11 +346,11 @@ export class SenderTests extends TestClass {
                         vScrollOffset: 292
                     }
                 };
-                let appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
-                let baseData = appInsightsEnvelope.data.baseData;
+                const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+                const baseData = appInsightsEnvelope.data.baseData;
 
                 // Assert measurements
-                let resultMeasurements = baseData.measurements;
+                const resultMeasurements = baseData.measurements;
                 Assert.ok(resultMeasurements);
                 Assert.ok(resultMeasurements["measurement1"]);
                 Assert.equal(50.0, resultMeasurements["measurement1"]);
@@ -384,7 +384,7 @@ export class SenderTests extends TestClass {
             name: "AppInsightsTests: AppInsights Envelope create for Dependency Data",
             test: () => {
                 // setup
-                let inputEnvelope: ITelemetryItem = {
+                const inputEnvelope: ITelemetryItem = {
                     name: "test",
                     time: new Date("2018-06-12").toISOString(),
                     iKey: "iKey",
@@ -419,15 +419,15 @@ export class SenderTests extends TestClass {
                 }
 
                 // act
-                let appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
-                let { baseData } = appInsightsEnvelope.data;
+                const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+                const { baseData } = appInsightsEnvelope.data;
 
                 // assert
-                let resultDuration = baseData.duration;
+                const resultDuration = baseData.duration;
                 Assert.equal("00:00:00.123", resultDuration);
 
                 // Assert measurements
-                let resultMeasurements = baseData.measurements;
+                const resultMeasurements = baseData.measurements;
                 Assert.ok(resultMeasurements);
                 Assert.ok(resultMeasurements["measurement1"]);
                 Assert.equal(50.0, resultMeasurements["measurement1"]);
@@ -482,7 +482,7 @@ export class SenderTests extends TestClass {
             name: "AppInsightsTests: When name is not provided, it is obtained from hostname",
             test: () => {
                 // setup
-                let inputEnvelope: ITelemetryItem = {
+                const inputEnvelope: ITelemetryItem = {
                     name: "test",
                     time: new Date("2018-06-12").toISOString(),
                     iKey: "iKey",
@@ -515,8 +515,8 @@ export class SenderTests extends TestClass {
                 }
 
                 // act
-                let appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
-                let { baseData } = appInsightsEnvelope.data;
+                const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+                const { baseData } = appInsightsEnvelope.data;
 
                 // Assert baseData
                 Assert.ok(baseData.name);
@@ -532,7 +532,7 @@ export class SenderTests extends TestClass {
             name: "AppInsightsTests: AppInsights Envelope created for Page View",
             test: () => {
                 // setup
-                let inputEnvelope: ITelemetryItem = {
+                const inputEnvelope: ITelemetryItem = {
                     name: "test",
                     time: new Date("2018-06-12").toISOString(),
                     iKey: "iKey",
@@ -569,16 +569,16 @@ export class SenderTests extends TestClass {
                 };
 
                 // Act
-                let appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
-                let baseData = appInsightsEnvelope.data.baseData;
+                const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+                const baseData = appInsightsEnvelope.data.baseData;
 
                 // Assert duration
-                let resultDuration = baseData.duration;
+                const resultDuration = baseData.duration;
                 Assert.equal("00:05:00.000", resultDuration);
 
                 // Assert measurements
-                let resultMeasurements = baseData.measurements;
-                let  props = baseData.properties;
+                const resultMeasurements = baseData.measurements;
+                const  props = baseData.properties;
                 Assert.ok(resultMeasurements);
                 Assert.ok(resultMeasurements["measurement1"]);
                 Assert.equal(50.0, resultMeasurements["measurement1"]);
@@ -645,7 +645,7 @@ export class SenderTests extends TestClass {
             name: "AppInsightsTests: AppInsights Envelope created for Page View with duration in customProperties Part C",
             test: () => {
                 // setup
-                let inputEnvelope: ITelemetryItem = {
+                const inputEnvelope: ITelemetryItem = {
                     name: "test",
                     time: new Date("2018-06-12").toISOString(),
                     iKey: "iKey",
@@ -680,11 +680,11 @@ export class SenderTests extends TestClass {
                 };
 
                 // Act
-                let appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
-                let baseData = appInsightsEnvelope.data.baseData;
+                const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+                const baseData = appInsightsEnvelope.data.baseData;
 
                 // Assert duration
-                let resultDuration = baseData.duration;
+                const resultDuration = baseData.duration;
                 Assert.equal("00:05:00.000", resultDuration);
             }
         });
@@ -719,8 +719,8 @@ export class SenderTests extends TestClass {
                 };
 
                 // Act
-                let appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
-                let baseData = appInsightsEnvelope.data.baseData;
+                const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+                const baseData = appInsightsEnvelope.data.baseData;
 
                 Assert.equal(-1, JSON.stringify(baseData).indexOf("property3"), "ExceptionData: searching: customProperties (item.data) are not added to telemetry envelope")
                 Assert.equal("val1", baseData.properties["property1"], "ExceptionData: properties (item.baseData.properties) are added to telemetry envelope");
@@ -769,7 +769,7 @@ export class SenderTests extends TestClass {
             name: "AppInsightsTests: AppInsights Envelope created for Page View with new web extension",
             test: () => {
                 // setup
-                let inputEnvelope: ITelemetryItem = {
+                const inputEnvelope: ITelemetryItem = {
                     name: "test",
                     time: new Date("2018-06-12").toISOString(),
                     iKey: "iKey",
@@ -799,11 +799,11 @@ export class SenderTests extends TestClass {
                 };
 
                 // Act
-                let appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
-                let baseData = appInsightsEnvelope.data.baseData;
+                const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+                const baseData = appInsightsEnvelope.data.baseData;
 
                 // Assert measurements
-                let resultMeasurements = baseData.measurements;
+                const resultMeasurements = baseData.measurements;
                 Assert.ok(resultMeasurements);
                 Assert.ok(resultMeasurements["measurement1"]);
                 Assert.equal(50.0, resultMeasurements["measurement1"]);

@@ -11,7 +11,6 @@
     "noEmitHelpers": true,
     "alwaysStrict": true,
     "declaration": true,
-    "declarationMap": true,
     "declarationDir": "shared/AppInsightsCore/types",
     "outDir": "./dist-esm",
     "rootDir": "shared/AppInsightsCore/src",

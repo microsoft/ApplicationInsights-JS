@@ -44,6 +44,15 @@ export class BaseCore implements IAppInsightsCore {
         this.config = config;
 
         this._notificationManager = notificationManager;
+        if (!this._notificationManager) {
+            this._notificationManager = Object.create({
+                addNotificationListener: (listener) => {},
+                removeNotificationListener: (listener) => {},
+                eventsSent: (events) => {},
+                eventsDiscarded: (events: ITelemetryItem[], reason: number) => {}
+            })
+        }
+
         this.config.extensions = CoreUtils.isNullOrUndefined(this.config.extensions) ? [] : this.config.extensions;
 
         // add notification to the extensions in the config so other plugins can access it
@@ -53,6 +62,13 @@ export class BaseCore implements IAppInsightsCore {
         }
 
         this.logger = logger;
+        if (!this.logger) {
+            this.logger = Object.create({
+                throwInternal: (severity, msgId, msg: string, properties?: Object, isUserAct = false) => {},
+                warnToConsole: (message: string) => {},
+                resetInternalMessageCount: () => {}
+            })
+        }
 
         // Concat all available extensions 
         this._extensions.push(...extensions, ...this.config.extensions);
@@ -165,7 +181,7 @@ export class BaseCore implements IAppInsightsCore {
         }
 
         // invoke any common telemetry processors before sending through pipeline
-        if (this._extensions.length == 0) {
+        if (this._extensions.length === 0) {
             this._channelController.processTelemetry(telemetryItem); // Pass to Channel controller so data is sent to correct channel queues
         }
         let i = 0;

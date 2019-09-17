@@ -17,11 +17,11 @@ export class ValidateE2ETests extends TestClass {
     public testInitialize() {
         try{
             this.useFakeServer = false;
-            (<any>sinon.fakeServer).restore();
+            (sinon.fakeServer as any).restore();
             this.useFakeTimers = false;
             this.clock.restore();
 
-            var init = new ApplicationInsights({
+            const init = new ApplicationInsights({
                 config: {
                     instrumentationKey: this._instrumentationKey,
                     extensionConfig: {
@@ -66,7 +66,7 @@ export class ValidateE2ETests extends TestClass {
                 .concat(this.waitForResponse())
                 .concat(this.boilerPlateAsserts)
                 .concat(() => {
-                    var acceptedItems = this.successSpy.args[0][1];
+                    const acceptedItems = this.successSpy.args[0][1];
                     Assert.equal(2, acceptedItems, "backend should accept two events");
                 })
         });
@@ -76,13 +76,13 @@ export class ValidateE2ETests extends TestClass {
         stepDelay: this.delay,
         steps: [
             () => {
-                var s1 = "شلاؤيثبلاهتنمةىخحضقسفعشلاؤيصثبل";
-                var s2 = "Ինչու՞ նրանք չեն խոսում Հայերեն";
-                var s3 = "ওরা কন বাংলা বলেত পাের না";
-                var s4 = "妣 啊 僜刓嘰塡奬〉媆孿 偁偄偙 偁A偄E偆I偊O偍U";
-                var s5 = "ßüµ€ÄäÖö€ ερτυθιοπαδφγηξκλζχψωβνΔΦΓΗΞΚΛΨΩΘ რატომ";
-                var s6 = "йцуукенгшщзхъфываполджэс";
-                var s7 = "\x0000\x0001\x0002\x0003\x0004\x0005\x0006\x0007\x0008\x009F";
+                const s1 = "شلاؤيثبلاهتنمةىخحضقسفعشلاؤيصثبل";
+                const s2 = "Ինչու՞ նրանք չեն խոսում Հայերեն";
+                const s3 = "ওরা কন বাংলা বলেত পাের না";
+                const s4 = "妣 啊 僜刓嘰塡奬〉媆孿 偁偄偙 偁A偄E偆I偊O偍U";
+                const s5 = "ßüµ€ÄäÖö€ ερτυθιοπαδφγηξκλζχψωβνΔΦΓΗΞΚΛΨΩΘ რატომ";
+                const s6 = "йцуукенгшщзхъфываполджэс";
+                const s7 = "\x0000\x0001\x0002\x0003\x0004\x0005\x0006\x0007\x0008\x009F";
 
                 // white spaces
                 this._ai.trackTrace({message: " abcd efg   "}, { " abc " : "value 1", " " : "value 2" });
@@ -95,7 +95,7 @@ export class ValidateE2ETests extends TestClass {
             .concat(this.waitForResponse())
             .concat(this.boilerPlateAsserts)
             .concat(() => {
-                var acceptedItems = this.successSpy.args[0][1];
+                const acceptedItems = this.successSpy.args[0][1];
                 Assert.equal(4, acceptedItems, "backend should accept all four events");
             })
     });
@@ -105,7 +105,7 @@ export class ValidateE2ETests extends TestClass {
         stepDelay: this.delay,
         steps: [
             () => {
-                var s1 = "[]{};,.)(*&^%$#@/\\";
+                const s1 = "[]{};,.)(*&^%$#@/\\";
 
                 this._ai.trackTrace({message: s1}, { p: s1 });
                 this._ai.trackTrace({message: "a"}, { "[]{};,.)(*&^%$#@/\\": "b" });
@@ -113,22 +113,22 @@ export class ValidateE2ETests extends TestClass {
             .concat(this.waitForResponse())
             .concat(this.boilerPlateAsserts)
             .concat(() => {
-                var acceptedItems = this.successSpy.args[0][1];
+                const acceptedItems = this.successSpy.args[0][1];
                 Assert.equal(2, acceptedItems, "backend should accept the event");
             })
     });
     }
 
     private waitForResponse() {
-        return <any>PollingAssert.createPollingAssert(() => {
+        return PollingAssert.createPollingAssert(() => {
             return (this.successSpy.called || this.errorSpy.called);
-        }, "Wait for response" + new Date().toISOString(), 15, 1000)
+        }, "Wait for response" + new Date().toISOString(), 15, 1000) as any
     }
 
     private boilerPlateAsserts() {
         Assert.ok(this.successSpy.called, "success");
         Assert.ok(!this.errorSpy.called, "no error sending");
-        var isValidCallCount = this.loggingSpy.callCount === 0;
+        const isValidCallCount = this.loggingSpy.callCount === 0;
         Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
         if (!isValidCallCount) {
             while (this.loggingSpy.args.length) {

@@ -19,8 +19,8 @@ export class Internal implements IInternal {
     public agentVersion: string;
 
     /**
-    * Constructs a new instance of the internal telemetry data class.
-    */
+     * Constructs a new instance of the internal telemetry data class.
+     */
     constructor(config: ITelemetryConfig) {
         this.sdkVersion = (config.sdkExtension && config.sdkExtension() ? config.sdkExtension() + "_" : "") + "javascript:" + Version;
     }

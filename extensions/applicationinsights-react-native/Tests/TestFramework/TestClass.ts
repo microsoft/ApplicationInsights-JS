@@ -5,10 +5,6 @@
 
 class TestClass {
 
-    constructor(name?: string) {
-        QUnit.module(name);
-    }
-
     public static isPollingStepFlag = "isPollingStep";
 
     /** The instance of the currently running suite. */
@@ -19,6 +15,10 @@ class TestClass {
 
     /** Turns on/off sinon's fake implementation of XMLHttpRequest. On by default. */
     public useFakeServer: boolean = true;
+
+    constructor(name?: string) {
+        QUnit.module(name);
+    }
 
     /** Method called before the start of each test method */
     public testInitialize() {
@@ -47,8 +47,8 @@ class TestClass {
         }
 
         // Create a wrapper around the test method so we can do test initilization and cleanup.
-        var testMethod = (assert) => {
-            var done = assert.async();
+        const testMethod = (assert) => {
+            const done = assert.async();
 
             // Save off the instance of the currently running suite.
             TestClass.currentTestClass = this;
@@ -57,13 +57,13 @@ class TestClass {
             try {
                 this._testStarting();
 
-                var steps = testInfo.steps;
-                var trigger = () => {
+                const steps = testInfo.steps;
+                const trigger = () => {
                     if (steps.length) {
-                        var step = steps.shift();
+                        const step = steps.shift();
 
                         // The callback which activates the next test step.
-                        var nextTestStepTrigger = () => {
+                        const nextTestStepTrigger = () => {
                             setTimeout(() => {
                                 trigger();
                             }, testInfo.stepDelay);
@@ -122,7 +122,7 @@ class TestClass {
         }
 
         // Create a wrapper around the test method so we can do test initilization and cleanup.
-        var testMethod = () => {
+        const testMethod = () => {
             // Save off the instance of the currently running suite.
             TestClass.currentTestClass = this;
 
@@ -147,7 +147,7 @@ class TestClass {
     /** Called when the test is starting. */
     private _testStarting() {
         // Initialize the sandbox similar to what is done in sinon.js "test()" override. See note on class.
-        var config = (<any>sinon).getConfig(sinon.config);
+        const config = (sinon as any).getConfig(sinon.config);
         config.useFakeTimers = this.useFakeTimers;
         config.useFakeServer = this.useFakeServer;
 
@@ -167,7 +167,7 @@ class TestClass {
         }
         else {
             // Verify the sandbox and restore.
-            (<any>this.sandbox).verifyAndRestore();
+            (this.sandbox as any).verifyAndRestore();
         }
 
         this.testCleanup();
@@ -233,11 +233,11 @@ class TestClass {
 }
 
 // Configure Sinon
-sinon.assert.fail = function (msg?) {
+sinon.assert.fail = (msg?) => {
     Assert.ok(false, msg);
 };
 
-sinon.assert.pass = function (assertion) {
+sinon.assert.pass = (assertion) => {
     Assert.ok(assertion, "sinon assert");
 };
 

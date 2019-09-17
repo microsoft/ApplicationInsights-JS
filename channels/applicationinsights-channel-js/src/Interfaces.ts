@@ -4,7 +4,7 @@ export interface ISenderConfig {
      */
     endpointUrl: () => string;
 
-    /**
+   /**
     * The JSON format (normal vs line delimited). True means line delimited JSON.
     */
     emitLineDelimitedJson: () => boolean;

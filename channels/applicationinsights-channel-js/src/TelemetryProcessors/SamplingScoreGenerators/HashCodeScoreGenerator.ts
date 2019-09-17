@@ -9,21 +9,21 @@ export class HashCodeScoreGenerator {
     private static MIN_INPUT_LENGTH: number = 8;
 
     public getHashCodeScore(key: string): number {
-        var score = this.getHashCode(key) / HashCodeScoreGenerator.INT_MAX_VALUE;
+        const score = this.getHashCode(key) / HashCodeScoreGenerator.INT_MAX_VALUE;
         return score * 100;
     }
 
     public getHashCode(input: string): number {
-        if (input == "") { return 0; }
+        if (input === "") { return 0; }
 
         while (input.length < HashCodeScoreGenerator.MIN_INPUT_LENGTH) {
             input = input.concat(input);
         }
 
         // 5381 is a magic number: http://stackoverflow.com/questions/10696223/reason-for-5381-number-in-djb-hash-function
-        var hash: number = 5381;
+        let hash: number = 5381;
 
-        for (var i: number = 0; i < input.length; ++i) {
+        for (let i: number = 0; i < input.length; ++i) {
             hash = ((hash << 5) + hash) + input.charCodeAt(i);
             // 'hash' is of number type which means 53 bit integer (http://www.ecma-international.org/ecma-262/6.0/#sec-ecmascript-language-types-number-type)
             // 'hash & hash' will keep it 32 bit integer - just to make it clearer what the result is.
