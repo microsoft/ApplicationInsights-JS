@@ -20,8 +20,6 @@
     "@angular/platform-browser-dynamic": "~8.1.2",
     "@angular/router": "~8.1.2",
     "@microsoft/applicationinsights-angular-js": "file:../",
-    "@microsoft/applicationinsights-common": "file:../../../shared/AppInsightsCommon",
-    "@microsoft/applicationinsights-core-js": "file:../../../shared/AppInsightsCore",
     "rxjs": "~6.4.0",
     "tslib": "^1.9.0",
     "zone.js": "~0.9.1"

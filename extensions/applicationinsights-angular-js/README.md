@@ -1,7 +1,7 @@
 # Microsoft Application Insights JavaScript SDK - Angular Plugin
 
 [![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
-[![npm version]()]()
+[![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-analytics-js.svg)]()
 
 Angular Plugin for the Application Insights Javascript SDK, enables the following:
 
@@ -58,13 +58,6 @@ export class AppComponent {
 }
 
 ```
-
-
-## Sample App
-
-[Azure-Samples/application-insights-angular-demo]().
-
-
 
 ## Contributing
 

@@ -224,6 +224,9 @@ module.exports = function (grunt) {
         run: {
             reacttests: {
                 exec: 'cd extensions/applicationinsights-react-js && npm run test'
+            },
+            angulartests: {
+                exec: 'cd extensions/applicationinsights-angular-js && npm run test'
             }
         },
         qunit: {
@@ -356,7 +359,7 @@ module.exports = function (grunt) {
     grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
     grunt.registerTask("aiskutests", ["ts:aisku", "ts:aiskutests", "qunit:aisku"]);
     grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
-    grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests", "reacttests"]);
+    grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests", "reacttests", "angulartests"]);
     grunt.registerTask("coretest", ["ts:core", "ts:coretest", "qunit:core"]);
     grunt.registerTask("commontest", ["ts:common", "ts:commontest", "qunit:common"]);
     grunt.registerTask("properties", ["ts:properties"]);
@@ -365,6 +368,7 @@ module.exports = function (grunt) {
     grunt.registerTask("reacttests", ["run:reacttests"]);
     grunt.registerTask("reactnative", ["ts:reactnative"]);
     grunt.registerTask("reactnativetests", ["ts:reactnative", "ts:reactnativetests", "qunit:reactnative"]);
+    grunt.registerTask("angulartests", ["run:angulartests"]);
     grunt.registerTask("deps", ["ts:deps"]);
     grunt.registerTask("depstest", ["ts:deps", "ts:depstest", "qunit:deps"]);
     grunt.registerTask("aichannel", ["ts:aichannel"]);

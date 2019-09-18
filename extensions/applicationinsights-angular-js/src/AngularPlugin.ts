@@ -1,6 +1,3 @@
-import { NavigationEnd, Router } from '@angular/router';
-import { filter } from 'rxjs/operators'
-
 /**
  * Angular.ts
  * @copyright Microsoft 2019
@@ -17,10 +14,10 @@ import {
 import { IAngularExtensionConfig } from './Interfaces/IAngularExtensionConfig';
 
 export default class AngularPlugin implements ITelemetryPlugin {
-    private _logger: IDiagnosticLogger;
     public priority = 186;
     public identifier = 'AngularPlugin';
 
+    private _logger: IDiagnosticLogger;
     private _analyticsPlugin: IAppInsights;
     private _nextPlugin: ITelemetryPlugin;
     private _extensionConfig: IAngularExtensionConfig;
@@ -32,16 +29,19 @@ export default class AngularPlugin implements ITelemetryPlugin {
                 : { router: null };
         this._logger = core.logger;
         extensions.forEach(ext => {
-            let identifier = (ext as ITelemetryPlugin).identifier;
+            const identifier = (ext as ITelemetryPlugin).identifier;
             if (identifier === 'ApplicationInsightsAnalytics') {
-                this._analyticsPlugin = (<any>ext) as IAppInsights;
+                this._analyticsPlugin = (ext as any) as IAppInsights;
             }
         });
         if (this._extensionConfig.router) {
             this._extensionConfig.router.events.subscribe(event => {
                 if (event.constructor.name === "NavigationEnd") {
-                    const pageViewTelemetry: IPageViewTelemetry = { uri: this._extensionConfig.router.url };
-                    this.trackPageView(pageViewTelemetry);
+                    // Timeout to ensure any changes to the DOM made by route changes get included in pageView telemetry
+                    setTimeout(() => {
+                        const pageViewTelemetry: IPageViewTelemetry = { uri: this._extensionConfig.router.url };
+                        this.trackPageView(pageViewTelemetry);
+                    }, 500);
                 }
             });
             const pageViewTelemetry: IPageViewTelemetry = {
