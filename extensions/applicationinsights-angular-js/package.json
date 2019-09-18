@@ -14,7 +14,7 @@
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "tsc -p tsconfig.json",
         "build:browser": "rollup -c",
-        "test": "cd test-app && ng test",
+        "test": "cd test-app && npm install && ng test",
         "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {

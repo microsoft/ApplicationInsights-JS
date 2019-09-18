@@ -2,26 +2,6 @@
   "name": "rush-common",
   "version": "0.0.0",
   "dependencies": {
-    "@angular/common": {
-      "version": "8.1.3",
-      "from": "@angular/common@~8.1.2",
-      "resolved": "https://registry.npmjs.org/@angular/common/-/common-8.1.3.tgz"
-    },
-    "@angular/core": {
-      "version": "8.1.3",
-      "from": "@angular/core@~8.1.2",
-      "resolved": "https://registry.npmjs.org/@angular/core/-/core-8.1.3.tgz"
-    },
-    "@angular/platform-browser": {
-      "version": "8.1.3",
-      "from": "@angular/platform-browser@~8.1.2",
-      "resolved": "https://registry.npmjs.org/@angular/platform-browser/-/platform-browser-8.1.3.tgz"
-    },
-    "@angular/router": {
-      "version": "8.1.3",
-      "from": "@angular/router@~8.1.2",
-      "resolved": "https://registry.npmjs.org/@angular/router/-/router-8.1.3.tgz"
-    },
     "@babel/code-frame": {
       "version": "7.5.5",
       "from": "@babel/code-frame@^7.0.0",
@@ -308,18 +288,6 @@
       "from": "projects\\applicationinsights-analytics-js.tgz",
       "resolved": "file:projects\\applicationinsights-analytics-js.tgz"
     },
-    "@rush-temp/applicationinsights-angular-js": {
-      "version": "0.0.0",
-      "from": "projects\\applicationinsights-angular-js.tgz",
-      "resolved": "file:projects\\applicationinsights-angular-js.tgz",
-      "dependencies": {
-        "typescript": {
-          "version": "3.4.5",
-          "from": "typescript@~3.4.3",
-          "resolved": "https://registry.npmjs.org/typescript/-/typescript-3.4.5.tgz"
-        }
-      }
-    },
     "@rush-temp/applicationinsights-channel-js": {
       "version": "0.0.0",
       "from": "projects\\applicationinsights-channel-js.tgz",
@@ -523,11 +491,6 @@
           "resolved": "https://registry.npmjs.org/normalize-path/-/normalize-path-2.1.1.tgz"
         }
       }
-    },
-    "arg": {
-      "version": "4.1.1",
-      "from": "arg@^4.1.0",
-      "resolved": "https://registry.npmjs.org/arg/-/arg-4.1.1.tgz"
     },
     "argparse": {
       "version": "1.0.10",
@@ -2707,7 +2670,7 @@
     },
     "make-error": {
       "version": "1.3.5",
-      "from": "make-error@^1.1.1",
+      "from": "make-error@1.x",
       "resolved": "https://registry.npmjs.org/make-error/-/make-error-1.3.5.tgz"
     },
     "makeerror": {
@@ -3470,11 +3433,6 @@
       "from": "rsvp@^4.8.4",
       "resolved": "https://registry.npmjs.org/rsvp/-/rsvp-4.8.5.tgz"
     },
-    "rxjs": {
-      "version": "6.4.0",
-      "from": "rxjs@~6.4.0",
-      "resolved": "https://registry.npmjs.org/rxjs/-/rxjs-6.4.0.tgz"
-    },
     "safe-buffer": {
       "version": "5.1.2",
       "from": "safe-buffer@~5.1.1",
@@ -4010,11 +3968,6 @@
         }
       }
     },
-    "ts-node": {
-      "version": "8.4.1",
-      "from": "ts-node@^8.3.0",
-      "resolved": "https://registry.npmjs.org/ts-node/-/ts-node-8.4.1.tgz"
-    },
     "tslib": {
       "version": "1.10.0",
       "from": "tslib@^1.9.3",
@@ -4108,11 +4061,6 @@
       "version": "0.0.6",
       "from": "typedarray@>=0.0.6 <0.0.7",
       "resolved": "https://registry.npmjs.org/typedarray/-/typedarray-0.0.6.tgz"
-    },
-    "types": {
-      "version": "0.1.1",
-      "from": "types@>=0.1.1 <0.2.0",
-      "resolved": "https://registry.npmjs.org/types/-/types-0.1.1.tgz"
     },
     "typescript": {
       "version": "2.5.3",
@@ -4348,16 +4296,6 @@
       "version": "2.4.1",
       "from": "yauzl@2.4.1",
       "resolved": "https://registry.npmjs.org/yauzl/-/yauzl-2.4.1.tgz"
-    },
-    "yn": {
-      "version": "3.1.1",
-      "from": "yn@^3.0.0",
-      "resolved": "https://registry.npmjs.org/yn/-/yn-3.1.1.tgz"
-    },
-    "zone.js": {
-      "version": "0.9.1",
-      "from": "zone.js@~0.9.1",
-      "resolved": "https://registry.npmjs.org/zone.js/-/zone.js-0.9.1.tgz"
     }
   }
 }
