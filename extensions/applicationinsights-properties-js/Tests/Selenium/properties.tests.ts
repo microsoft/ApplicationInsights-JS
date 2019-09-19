@@ -73,7 +73,7 @@ export class PropertiesTests extends TestClass {
                     instrumentationKey: 'key',
                     extensionConfig: {}
                 }, this.core, []);
-
+                this.properties.context.user._isNewUser = false;
                 // Act
                 const item: ITelemetryItem = {name: 'item'};
                 this.properties.processTelemetry(item);
@@ -103,6 +103,27 @@ export class PropertiesTests extends TestClass {
             }
         });
 
+        this.testCase({
+            name: 'User: track is triggered if user context is first time initialized',
+            test: () => {
+                // setup
+                var setCookieStub = this.sandbox.stub(Util, "setCookie", () => {});
+                var trackStub = this.sandbox.stub(this.core, "track", () => {});
+
+                // Act
+                Assert.ok(setCookieStub.notCalled, 'Cookie not yet generated');
+                Assert.ok(trackStub.notCalled, 'track is not yet triggered');
+                this.properties.initialize(this.getEmptyConfig(), this.core, []);
+                Assert.ok(setCookieStub.called, 'Cookie generated');
+
+                // Assert
+                Assert.equal(true, this.properties.context.user._isNewUser, 'current user is a new user');
+                const item: ITelemetryItem = {name: 'item'};
+                this.properties.processTelemetry(item);
+                Assert.ok(trackStub.called, 'track is triggered');
+                Assert.equal(false, this.properties.context.user._isNewUser, 'current user is not new user with ai_user cookie set')
+            }
+        });
 
         this.testCase({
             name: "ai_user cookie is set with acq date and year expiration",
