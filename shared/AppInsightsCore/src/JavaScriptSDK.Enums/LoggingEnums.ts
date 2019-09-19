@@ -90,6 +90,7 @@ export const _InternalMessageId = {
     CannotAccessCookie: 68,
     IdTooLong: 69,
     InvalidEvent: 70,
-    FailedMonitorAjaxSetRequestHeader: 71
+    FailedMonitorAjaxSetRequestHeader: 71,
+    SendBrowserInfoOnUserInit: 72
 };
 export type _InternalMessageId = number | typeof _InternalMessageId;

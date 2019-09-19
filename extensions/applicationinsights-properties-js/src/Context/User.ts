@@ -41,7 +41,7 @@ export class User implements IUser {
      */
     public accountAcquisitionDate: string;
 
-    public _isNewUser?: boolean = false;
+    public isNewUser = false;
 
     private _logger: IDiagnosticLogger;
 
@@ -51,7 +51,7 @@ export class User implements IUser {
         // get userId or create new one if none exists
         const cookie = Util.getCookie(this._logger, User.userCookieName);
         if (cookie) {
-            this._isNewUser = false;
+            this.isNewUser = false;
             const params = cookie.split(User.cookieSeparator);
             if (params.length > 0) {
                 this.id = params[0];
@@ -65,7 +65,7 @@ export class User implements IUser {
             const date = new Date();
             const acqStr = Util.toISOStringForIE8(date);
             this.accountAcquisitionDate = acqStr;
-            this._isNewUser = true;
+            this.isNewUser = true;
             // without expiration, cookies expire at the end of the session
             // set it to 365 days from now
             // 365 * 24 * 60 * 60 * 1000 = 31536000000 

@@ -108,11 +108,11 @@ export class PropertiesTests extends TestClass {
             test: () => {
                 // setup
                 var setCookieStub = this.sandbox.stub(Util, "setCookie", () => {});
-                var trackStub = this.sandbox.stub(this.core, "track", () => {});
+                var loggingStub = this.sandbox.stub(this.core.logger, "logInternalMessage");
 
                 // Act
                 Assert.ok(setCookieStub.notCalled, 'Cookie not yet generated');
-                Assert.ok(trackStub.notCalled, 'track is not yet triggered');
+                Assert.ok(loggingStub.notCalled, 'logInternalMessage is not yet triggered');
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
                 Assert.ok(setCookieStub.called, 'Cookie generated');
 
@@ -120,7 +120,8 @@ export class PropertiesTests extends TestClass {
                 Assert.equal(true, this.properties.context.user._isNewUser, 'current user is a new user');
                 const item: ITelemetryItem = {name: 'item'};
                 this.properties.processTelemetry(item);
-                Assert.ok(trackStub.called, 'track is triggered');
+                // this.clock.tick(1000);
+                Assert.ok(loggingStub.called, 'logInternalMessage is triggered');
                 Assert.equal(false, this.properties.context.user._isNewUser, 'current user is not new user with ai_user cookie set')
             }
         });

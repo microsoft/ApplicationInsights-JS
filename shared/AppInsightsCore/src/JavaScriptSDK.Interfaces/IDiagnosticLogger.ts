@@ -52,4 +52,11 @@ export interface IDiagnosticLogger {
      * Resets the internal message count
      */
     resetInternalMessageCount(): void;
+
+    /**
+     * Logs a message to the internal queue.
+     * @param severity {LoggingSeverity} - The severity of the log message
+     * @param message {_InternalLogMessage} - The message to log.
+     */
+    logInternalMessage?(severity: LoggingSeverity, message: _InternalLogMessage): void;
 }

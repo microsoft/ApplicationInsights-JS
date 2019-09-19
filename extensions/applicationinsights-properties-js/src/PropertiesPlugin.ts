@@ -5,7 +5,7 @@
 
 import {
     ITelemetryPlugin, IConfiguration, CoreUtils,
-    IAppInsightsCore, IPlugin, ITelemetryItem, IDiagnosticLogger, _InternalLogMessage
+    IAppInsightsCore, IPlugin, ITelemetryItem, IDiagnosticLogger, _InternalLogMessage, LoggingSeverity, _InternalMessageId
 } from '@microsoft/applicationinsights-core-js';
 import { TelemetryContext } from './TelemetryContext';
 import { PageView, ConfigurationManager,
@@ -39,14 +39,9 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
     private _nextPlugin: ITelemetryPlugin;
     private _extensionConfig: ITelemetryConfig;
 
-    protected _core: IAppInsightsCore;
-    protected _config: IConfiguration & IConfig;
-
     initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) {
         const defaultConfig: ITelemetryConfig = PropertiesPlugin.getDefaultConfig();
         this._extensionConfig = this._extensionConfig || PropertiesPlugin.getDefaultConfig();
-        this._core = core;
-        this._config = config;
         for (const field in defaultConfig) {
             this._extensionConfig[field] = () => ConfigurationManager.getConfig(config, field, this.identifier, defaultConfig[field]());
         }
@@ -79,16 +74,10 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
 
             this._processTelemetryInternal(event);
 
-            if (this.context && this.context.user && this.context.user._isNewUser) {
-                const item: ITelemetryItem = {
-                    name: "new user generated",
-                    iKey: this._config.instrumentationKey,
-                    time: new Date().toISOString(),
-                    baseType: _InternalLogMessage.dataType,
-                    baseData: { message: navigator.userAgent }
-                };
-                this.context.user._isNewUser = false;
-                this._core.track(item);
+            if (this.context && this.context.user && this.context.user.isNewUser) {
+                this.context.user.isNewUser = false;
+                const message = new _InternalLogMessage(_InternalMessageId.SendBrowserInfoOnUserInit, navigator.userAgent);
+                this._logger.logInternalMessage(LoggingSeverity.CRITICAL, message);
             }
 
             if (!CoreUtils.isNullOrUndefined(this._nextPlugin)) {
