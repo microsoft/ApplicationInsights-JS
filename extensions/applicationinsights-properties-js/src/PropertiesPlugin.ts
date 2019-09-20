@@ -5,7 +5,7 @@
 
 import {
     ITelemetryPlugin, IConfiguration, CoreUtils,
-    IAppInsightsCore, IPlugin, ITelemetryItem, IDiagnosticLogger
+    IAppInsightsCore, IPlugin, ITelemetryItem, IDiagnosticLogger, _InternalLogMessage, LoggingSeverity, _InternalMessageId
 } from '@microsoft/applicationinsights-core-js';
 import { TelemetryContext } from './TelemetryContext';
 import { PageView, ConfigurationManager,
@@ -73,6 +73,12 @@ export default class PropertiesPlugin implements ITelemetryPlugin, IPropertiesPl
             }
 
             this._processTelemetryInternal(event);
+
+            if (this.context && this.context.user && this.context.user.isNewUser) {
+                this.context.user.isNewUser = false;
+                const message = new _InternalLogMessage(_InternalMessageId.SendBrowserInfoOnUserInit, navigator.userAgent);
+                this._logger.logInternalMessage(LoggingSeverity.CRITICAL, message);
+            }
 
             if (!CoreUtils.isNullOrUndefined(this._nextPlugin)) {
                 this._nextPlugin.processTelemetry(event);
