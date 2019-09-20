@@ -73,7 +73,7 @@ export class PropertiesTests extends TestClass {
                     instrumentationKey: 'key',
                     extensionConfig: {}
                 }, this.core, []);
-                this.properties.context.user._isNewUser = false;
+                this.properties.context.user.isNewUser = false;
                 // Act
                 const item: ITelemetryItem = {name: 'item'};
                 this.properties.processTelemetry(item);
@@ -117,12 +117,12 @@ export class PropertiesTests extends TestClass {
                 Assert.ok(setCookieStub.called, 'Cookie generated');
 
                 // Assert
-                Assert.equal(true, this.properties.context.user._isNewUser, 'current user is a new user');
+                Assert.equal(true, this.properties.context.user.isNewUser, 'current user is a new user');
                 const item: ITelemetryItem = {name: 'item'};
                 this.properties.processTelemetry(item);
                 // this.clock.tick(1000);
                 Assert.ok(loggingStub.called, 'logInternalMessage is triggered');
-                Assert.equal(false, this.properties.context.user._isNewUser, 'current user is not new user with ai_user cookie set')
+                Assert.equal(false, this.properties.context.user.isNewUser, 'current user is not new user with ai_user cookie set')
             }
         });
 
