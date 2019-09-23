@@ -171,7 +171,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
      * @param severity {LoggingSeverity} - The severity of the log message
      * @param message {_InternalLogMessage} - The message to log.
      */
-    private logInternalMessage(severity: LoggingSeverity, message: _InternalLogMessage): void {
+    public logInternalMessage(severity: LoggingSeverity, message: _InternalLogMessage): void {
         if (this._areInternalMessagesThrottled()) {
             return;
         }
