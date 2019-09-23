@@ -12,5 +12,6 @@ export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseCore } from './JavaScriptSDK/BaseCore';
 export { CoreUtils } from "./JavaScriptSDK/CoreUtils";
 export { NotificationManager } from "./JavaScriptSDK/NotificationManager";
+export { INotificationManager } from "./JavaScriptSDK.Interfaces/INotificationManager";
 export { DiagnosticLogger, _InternalLogMessage } from './JavaScriptSDK/DiagnosticLogger';
 export { _InternalMessageId, LoggingSeverity } from './JavaScriptSDK.Enums/LoggingEnums';
