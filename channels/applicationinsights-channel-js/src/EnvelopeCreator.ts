@@ -18,7 +18,7 @@ const baseType: string = "baseType";
 const baseData: string = "baseData";
 
 export abstract class EnvelopeCreator {
-    public static Version = "2.2.3";
+    public static Version = "2.2.4";
 
     protected static extractProperties(data: { [key: string]: any }): { [key: string]: any } {
         let customProperties: { [key: string]: any } = null;
