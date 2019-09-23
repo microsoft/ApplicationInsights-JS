@@ -15,7 +15,7 @@ import { _InternalLogMessage, DiagnosticLogger } from "./DiagnosticLogger";
 
 "use strict";
 
-export class AppInsightsCore implements IAppInsightsCore {
+export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
     public baseCore: BaseCore;
     public config: IConfiguration;
     public logger: IDiagnosticLogger;
@@ -23,7 +23,7 @@ export class AppInsightsCore implements IAppInsightsCore {
     protected _notificationManager: NotificationManager;
 
     constructor() {
-        this.baseCore = new BaseCore();
+        super();
     }
 
     initialize(config: IConfiguration, extensions: IPlugin[]): void {
@@ -31,11 +31,11 @@ export class AppInsightsCore implements IAppInsightsCore {
         this.logger = new DiagnosticLogger(config);
         this.config = config;
         
-        this.baseCore.initialize(config, extensions, this.logger, this._notificationManager);
+        super.initialize(config, extensions, this.logger, this._notificationManager);
     }
 
     getTransmissionControls(): IChannelControls[][] {
-        return this.baseCore.getTransmissionControls();
+        return super.getTransmissionControls();
     }
 
     track(telemetryItem: ITelemetryItem) {
@@ -48,7 +48,7 @@ export class AppInsightsCore implements IAppInsightsCore {
         // do basic validation before sending it through the pipeline
         this._validateTelemetryItem(telemetryItem);
 
-        this.baseCore.track(telemetryItem);
+        super.track(telemetryItem);
     }
 
     /**
@@ -77,7 +77,7 @@ export class AppInsightsCore implements IAppInsightsCore {
      * Periodically check logger.queue for
      */
     pollInternalLogs(eventName?: string): number {
-        let interval = this.baseCore.config.diagnosticLogInterval;
+        let interval = this.config.diagnosticLogInterval;
         if (!(interval > 0)) {
             interval = 10000;
         }
@@ -88,7 +88,7 @@ export class AppInsightsCore implements IAppInsightsCore {
             queue.forEach((logMessage: _InternalLogMessage) => {
                 const item: ITelemetryItem = {
                     name: eventName ? eventName : "InternalMessageId: " + logMessage.messageId,
-                    iKey: this.baseCore.config.instrumentationKey,
+                    iKey: this.config.instrumentationKey,
                     time: new Date().toISOString(),
                     baseType: _InternalLogMessage.dataType,
                     baseData: { message: logMessage.message }
