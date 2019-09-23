@@ -261,13 +261,13 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const initFunction = () => appInsightsCore.initialize({ instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" }, [channelPlugin]);
 
                 // Assert precondition
-                Assert.ok(!appInsightsCore.baseCore["_isInitialized"], "PRE: core constructed but not initialized");
+                Assert.ok(!appInsightsCore["_isInitialized"], "PRE: core constructed but not initialized");
 
                 // Init
                 initFunction();
 
                 // Assert initialized
-                Assert.ok(appInsightsCore.baseCore["_isInitialized"], "core is initialized");
+                Assert.ok(appInsightsCore["_isInitialized"], "core is initialized");
 
                 Assert.throws(initFunction, Error, "Core cannot be reinitialized");
             }
@@ -375,7 +375,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 }
 
                 let found = false;
-                (appInsightsCore.baseCore as any)._extensions.forEach(ext => {
+                (appInsightsCore as any)._extensions.forEach(ext => {
                     if (ext.identifier === samplingPlugin.identifier) {
                         found = true;
                     }
@@ -405,7 +405,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                     Assert.ok(false, "Exception not expected");
                 }
 
-                Assert.ok(typeof ((appInsightsCore.baseCore as any)._extensions[0].processTelemetry) !== 'function', "Extensions can be provided through overall configuration");
+                Assert.ok(typeof ((appInsightsCore as any)._extensions[0].processTelemetry) !== 'function', "Extensions can be provided through overall configuration");
             }
         });
 
