@@ -1,5 +1,5 @@
 import { ITypeValidator } from './ITypeValidator';
-import { IEnvelope } from '@microsoft/applicationinsights-common';
+import { IEnvelope, SampleRate } from '@microsoft/applicationinsights-common';
 
 export class CommonValidator implements ITypeValidator {
 
