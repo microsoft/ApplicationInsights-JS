@@ -4,9 +4,6 @@ import { Sample } from "../src/TelemetryProcessors/Sample";
 import { ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { PageView, TelemetryItemCreator, IPageViewTelemetry, Util, SampleRate } from "@microsoft/applicationinsights-common";
 import { HashCodeScoreGenerator } from "../src/TelemetryProcessors/SamplingScoreGenerators/HashCodeScoreGenerator";
-import { Envelope } from "@microsoft/applicationinsights-common/types/Interfaces/Contracts/Generated/Envelope";
-import { EnvelopeCreator } from "../src/EnvelopeCreator";
-import { Sender } from "../src/Sender";
 
 export class SampleTests extends TestClass {
     private sample: Sample
@@ -144,13 +141,6 @@ export class SampleTests extends TestClass {
                 });
             }
         });
-
-        this.testCase({
-            name: 'Sampling: sampleRate is generated as a field in the envelope when it is less than 100',
-            test: () => {
-                const sender = new Sender();
-            }
-        })
     }
 
     private getTelemetryItem(): ITelemetryItem {
@@ -158,12 +148,6 @@ export class SampleTests extends TestClass {
             name: 'some page',
             uri: 'some uri'
         }, PageView.dataType, PageView.envelopeType, null);
-    }
-
-    private getEnvelope(): Envelope {
-        return EnvelopeCreator.createEnvelope<>({
-
-        })
     }
 
     private getMetricItem(): ITelemetryItem {
