@@ -101,8 +101,8 @@ export class ApplicationInsightsTests extends TestClass {
         this.addGenericE2ETests();
         this.addAnalyticsApiTests();
         this.addAsyncTests();
-        // this.addDependencyPluginTests();
-        // this.addPropertiesPluginTests();
+        this.addDependencyPluginTests();
+        this.addPropertiesPluginTests();
     }
 
     public addGenericE2ETests(): void {
