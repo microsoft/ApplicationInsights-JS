@@ -5,3 +5,4 @@ export const DisabledPropertyName: string = "Microsoft_ApplicationInsights_Bypas
 export const SampleRate = "sampleRate";
 export const ProcessLegacy = "ProcessLegacy";
 export const HttpMethod = "http.method";
+export const DEFAULT_BREEZE_ENDPOINT = "https://dc.services.visualstudio.com";
