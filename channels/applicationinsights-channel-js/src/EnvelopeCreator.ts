@@ -58,7 +58,9 @@ export abstract class EnvelopeCreator {
     // TODO: Do we want this to take logger as arg or use this._logger as nonstatic?
     protected static createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, telemetryItem: ITelemetryItem, data: Data<T>): IEnvelope {
         const envelope = new Envelope(logger, data, envelopeType);
-        if (telemetryItem[SampleRate]) envelope.sampleRate = telemetryItem[SampleRate];
+        if (telemetryItem[SampleRate]) {
+            envelope.sampleRate = telemetryItem[SampleRate];
+        }
         envelope.iKey = telemetryItem.iKey;
         const iKeyNoDashes = telemetryItem.iKey.replace(/-/g, "");
         envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
