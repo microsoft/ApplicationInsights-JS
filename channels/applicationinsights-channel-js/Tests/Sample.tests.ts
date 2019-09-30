@@ -2,7 +2,7 @@
 
 import { Sample } from "../src/TelemetryProcessors/Sample";
 import { ITelemetryItem } from "@microsoft/applicationinsights-core-js";
-import { PageView, TelemetryItemCreator, IPageViewTelemetry, Util, SampleRate } from "@microsoft/applicationinsights-common";
+import { PageView, TelemetryItemCreator, IPageViewTelemetry, Util } from "@microsoft/applicationinsights-common";
 import { HashCodeScoreGenerator } from "../src/TelemetryProcessors/SamplingScoreGenerators/HashCodeScoreGenerator";
 
 export class SampleTests extends TestClass {
@@ -31,7 +31,6 @@ export class SampleTests extends TestClass {
 
                 Assert.ok(this.sample.isSampledIn(this.item));
                 Assert.ok(scoreStub.notCalled);
-                Assert.ok(!this.item[SampleRate], "sampleRate field is hidden when the sampling percentage is 100");
             }
         });
 

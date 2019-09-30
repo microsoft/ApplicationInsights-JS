@@ -41,7 +41,6 @@ export class ApplicationInsightsTests extends TestClass {
     private userSpy: SinonSpy;
     private sessionPrefix: string = Util.newId();
     private trackSpy: SinonSpy;
-    private isSampledInSpy: SinonSpy;
     private envelopeConstructorSpy: SinonSpy;
 
     // Context
@@ -85,7 +84,7 @@ export class ApplicationInsightsTests extends TestClass {
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
             this.loggingSpy = this.sandbox.stub(this._ai['core'].logger, 'throwInternal');
             this.trackSpy = this.sandbox.spy(this._ai['dependencies'], 'trackDependencyDataInternal')
-            this.isSampledInSpy = this.sandbox.stub(sender, '_isSampledIn', () => true);
+            this.sandbox.stub(sender, '_isSampledIn', () => true);
             this.envelopeConstructorSpy = this.sandbox.spy(Sender, 'constructEnvelope');
         } catch (e) {
             console.error('Failed to initialize');
