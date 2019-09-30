@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// @duplicate of https://github.com/microsoft/ApplicationInsights-node.js/blob/develop/Library/ConnectionStringParser.ts
+
 import { ConnectionString, ConnectionStringKey } from "./Interfaces/ConnectionString";
 import { DEFAULT_BREEZE_ENDPOINT } from "./Constants";
 
