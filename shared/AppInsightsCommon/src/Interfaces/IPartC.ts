@@ -12,7 +12,7 @@ export interface IPartC {
 
     /**
      * Property bag to contain additional custom measurements (Part C)
-     * measurements field is deprecated, please use properties instead
+     * @deprecated -- please use properties instead
      */
     measurements?: { [key: string]: number };
 }
