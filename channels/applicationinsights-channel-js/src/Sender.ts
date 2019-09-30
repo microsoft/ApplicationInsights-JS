@@ -264,8 +264,7 @@ export class Sender implements IChannelControlsAI {
                     "Telemetry item was sampled out and not sent", { SampleRate: this._sample.sampleRate });
                 return;
             } else {
-                telemetryItem.tags = telemetryItem.tags || ({} as any);
-                telemetryItem.tags[SampleRate] = this._sample.sampleRate;
+                telemetryItem[SampleRate] = this._sample.sampleRate;
             }
 
             // construct an envelope that Application Insights endpoint can understand
