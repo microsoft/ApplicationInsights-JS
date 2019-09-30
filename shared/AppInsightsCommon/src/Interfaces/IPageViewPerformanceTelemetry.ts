@@ -1,9 +1,9 @@
-import { IProperties } from './IProperties';
+import { IPartC } from './IPartC';
 
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-export interface IPageViewPerformanceTelemetry extends IProperties {
+export interface IPageViewPerformanceTelemetry extends IPartC {
     /**
      * name String - The name of the page. Defaults to the document title.
      */

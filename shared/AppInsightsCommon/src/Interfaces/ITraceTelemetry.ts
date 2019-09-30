@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { SeverityLevel } from './Contracts/Generated/SeverityLevel'
-import { IProperties } from './IProperties';
+import { IPartC } from './IPartC';
 
-export interface ITraceTelemetry extends IProperties{
+export interface ITraceTelemetry extends IPartC {
     /**
      * @description A message string
      * @type {string}

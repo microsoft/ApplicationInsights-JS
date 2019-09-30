@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 import { SeverityLevel } from './Contracts/Generated/SeverityLevel'
-import { IProperties } from './IProperties';
+import { IPartC } from './IPartC';
 
 /**
  * @export
  * @interface IExceptionTelemetry
  * @description Exception interface used as primary parameter to trackException
  */
-export interface IExceptionTelemetry extends IProperties{
+export interface IExceptionTelemetry extends IPartC {
     /**
      * Unique guid identifying this error
      */
@@ -81,7 +81,7 @@ export interface IAutoExceptionTelemetry {
     error: Error;
 }
 
-export interface IExceptionInternal extends IProperties {
+export interface IExceptionInternal extends IPartC {
     ver: string;
     id: string;
     exceptions: IExceptionDetailsInternal[];

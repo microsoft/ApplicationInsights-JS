@@ -1,9 +1,9 @@
-import { IProperties } from './IProperties';
+import { IPartC } from './IPartC';
 
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-export interface IMetricTelemetry extends IProperties {
+export interface IMetricTelemetry extends IPartC {
     /**
      * @description (required) - name of this metric
      * @type {string}

@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IProperties } from './IProperties';
+import { IPartC } from './IPartC';
 
 /**
  * DependencyTelemetry telemetry interface
  */
 
-export interface IDependencyTelemetry extends IProperties {
+export interface IDependencyTelemetry extends IPartC {
     id: string;
     name?: string;
     duration?: number;

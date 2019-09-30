@@ -1,4 +1,4 @@
-import { IProperties } from './IProperties';
+import { IPartC } from './IPartC';
 
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
@@ -6,7 +6,7 @@ import { IProperties } from './IProperties';
 /**
  * Pageview telemetry interface
  */
-export interface IPageViewTelemetry extends IProperties {
+export interface IPageViewTelemetry extends IPartC {
     /**
      * name String - The string you used as the name in startTrackPage. Defaults to the document title.
      */

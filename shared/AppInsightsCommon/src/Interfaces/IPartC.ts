@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 /**
- * Properties telemetry interface
+ * PartC  telemetry interface
  */
-
-export interface IProperties {
+export interface IPartC {
     /**
      * Property bag to contain additional custom properties (Part C)
      */
@@ -13,6 +12,7 @@ export interface IProperties {
 
     /**
      * Property bag to contain additional custom measurements (Part C)
+     * measurements field is deprecated, please use properties instead
      */
-    measurements?: { [key: string]: number }; // deprecated, please use properties instead
+    measurements?: { [key: string]: number };
 }
