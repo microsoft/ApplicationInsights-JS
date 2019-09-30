@@ -9,11 +9,15 @@ import { IChannelControls } from "./IChannelControls";
  * Configuration provided to SDK core
  */
 export interface IConfiguration {
+    /**
+     * Instrumentation key of resource. Either this or connectionString must be specified.
+     */
+    instrumentationKey?: string;
 
     /**
-     * Instrumentation key of resource
+     * Connection string of resource. Either this or instrumentationKey must be specified.
      */
-    instrumentationKey: string; // todo: update later for multi-tenant?
+    connectionString?: string;
 
     /**
      * Polling interval (in ms) for internal logging queue
@@ -27,13 +31,13 @@ export interface IConfiguration {
 
     /**
      * Console logging level. All logs with a severity level higher
-     * than the configured level will be printed to console. Otherwise 
+     * than the configured level will be printed to console. Otherwise
      * they are suppressed. ie Level 2 will print both CRITICAL and
      * WARNING logs to console, level 1 prints only CRITICAL.
-     * 
-     * Note: Logs sent as telemetry to instrumentation key will also 
+     *
+     * Note: Logs sent as telemetry to instrumentation key will also
      * be logged to console if their severity meets the configured loggingConsoleLevel
-     * 
+     *
      * 0: ALL console logging off
      * 1: logs to console: severity >= CRITICAL
      * 2: logs to console: severity >= WARNING
@@ -44,7 +48,7 @@ export interface IConfiguration {
      * Telemtry logging level to instrumentation key. All logs with a severity
      * level higher than the configured level will sent as telemetry data to
      * the configured instrumentation key.
-     * 
+     *
      * 0: ALL iKey logging off
      * 1: logs to iKey: severity >= CRITICAL
      * 2: logs to iKey: severity >= WARNING
@@ -55,7 +59,7 @@ export interface IConfiguration {
      * If enabled, uncaught exceptions will be thrown to help with debugging
      */
     enableDebugExceptions?: boolean;
-    
+
     /**
      * Endpoint where telemetry data is sent
      */
@@ -72,7 +76,7 @@ export interface IConfiguration {
     extensions?: ITelemetryPlugin[];
 
     /**
-     * Channel queues that is setup by caller in desired order. 
+     * Channel queues that is setup by caller in desired order.
      * If channels are provided here, core will ignore any channels that are already setup, example if there is a SKU with an initialized channel
      */
     channels?: IChannelControls[][];

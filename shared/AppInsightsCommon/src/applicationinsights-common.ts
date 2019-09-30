@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 export { Util, CorrelationIdHelper, UrlHelper, DateTimeUtils } from './Util';
+export { ConnectionStringParser } from './ConnectionStringParser';
 export { FieldType } from './Enums';
 export { RequestHeaders } from './RequestResponseHeaders';
-export { DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod } from './Constants';
+export { DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT } from './Constants';
 export { Data as AIData } from './Interfaces/Contracts/Generated/Data';
 export { Base as AIBase } from './Interfaces/Contracts/Generated/Base';
 export { ISerializable } from './Interfaces/Telemetry/ISerializable';

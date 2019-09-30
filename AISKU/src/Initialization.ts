@@ -4,8 +4,8 @@
 import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, IChannelControls } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Util, IConfig, IDependencyTelemetry, IPageViewPerformanceTelemetry,IPropertiesPlugin,
-         IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, ITelemetryContext,
-         IMetricTelemetry, IEventTelemetry, IAppInsights, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-common";
+        IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, ITelemetryContext,
+        IMetricTelemetry, IEventTelemetry, IAppInsights, PropertiesPluginIdentifier, ConnectionStringParser } from "@microsoft/applicationinsights-common";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { PropertiesPlugin, TelemetryContext } from "@microsoft/applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
@@ -49,6 +49,13 @@ export class Initialization implements IApplicationInsights {
         snippet.queue = snippet.queue || [];
         snippet.version = snippet.version || 2.0; // Default to new version
         let config: IConfiguration & IConfig = snippet.config || ({} as any);
+
+        if (config.connectionString) {
+            const cs = ConnectionStringParser.parse(config.connectionString);
+            const ingest = cs.ingestionendpoint;
+            config.endpointUrl = ingest ? `${ingest}/v2/track` : config.endpointUrl; // only add /v2/track when from connectionstring
+            config.instrumentationKey = cs.instrumentationkey || config.instrumentationKey;
+        }
 
         // ensure instrumentationKey is specified
         if (config && !config.instrumentationKey) {
@@ -199,7 +206,7 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie = false): void {
-         this.properties.context.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
+        this.properties.context.user.setAuthenticatedUserContext(authenticatedUserId, accountId, storeInCookie);
     }
 
     /**
@@ -207,7 +214,7 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public clearAuthenticatedUserContext(): void {
-         this.properties.context.user.clearAuthenticatedUserContext();
+        this.properties.context.user.clearAuthenticatedUserContext();
     }
 
     // Dependencies Plugin
