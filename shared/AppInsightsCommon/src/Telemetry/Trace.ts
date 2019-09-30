@@ -24,11 +24,12 @@ export class Trace extends MessageData implements ISerializable {
     /**
      * Constructs a new instance of the TraceTelemetry object
      */
-    constructor(logger: IDiagnosticLogger, message: string, severityLevel?: SeverityLevel, properties?: any) {
+    constructor(logger: IDiagnosticLogger, message: string, severityLevel?: SeverityLevel, properties?: any, measurements?: { [key: string]: number }) {
         super();
         message = message || Util.NotSpecified;
         this.message = DataSanitizer.sanitizeMessage(logger, message);
         this.properties = DataSanitizer.sanitizeProperties(logger, properties);
+        this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
 
         if (severityLevel) {
             this.severityLevel = severityLevel;

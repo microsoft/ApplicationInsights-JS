@@ -1,7 +1,9 @@
+import { IProperties } from './IProperties';
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-export interface IPageViewPerformanceTelemetry {
+export interface IPageViewPerformanceTelemetry extends IProperties {
     /**
      * name String - The name of the page. Defaults to the document title.
      */
@@ -35,16 +37,6 @@ export interface IPageViewPerformanceTelemetry {
      * DOM processing time in TimeSpan 'G' (general long) format: d:hh:mm:ss.fffffff
      */
     domProcessing?: string;
-
-    /**
-     * Property bag to contain additional custom properties (Part C)
-     */
-    properties?: { [key: string]: any };
-
-    /**
-     * Property bag to contain additional custom measurements (Part C)
-     */
-    measurements?: { [key: string]: number };
 }
 
 export interface IPageViewPerformanceTelemetryInternal extends IPageViewPerformanceTelemetry {

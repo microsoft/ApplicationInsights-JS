@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 
 import { SeverityLevel } from './Contracts/Generated/SeverityLevel'
+import { IProperties } from './IProperties';
 
-export interface ITraceTelemetry {
+export interface ITraceTelemetry extends IProperties{
     /**
      * @description A message string
      * @type {string}
@@ -17,9 +18,4 @@ export interface ITraceTelemetry {
      * @memberof ITraceTelemetry
      */
     severityLevel?: SeverityLevel;
-
-    /**
-     * property bag to contain an extension to domain properties - extension to Part B
-     */
-    properties?: { [key: string]: any };
 }
