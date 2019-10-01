@@ -3,11 +3,11 @@
 
 import {
     RequestHeaders, Util, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
-    RemoteDependencyData, DateTimeUtils, DisabledPropertyName, Data, IDependencyTelemetry,
-    IConfig, ConfigurationManager, ITelemetryContext, PropertiesPluginIdentifier, IPropertiesPlugin, DistributedTracingModes
+    RemoteDependencyData, DateTimeUtils, DisabledPropertyName, IDependencyTelemetry,
+    IConfig, ConfigurationManager, ITelemetryContext, PropertiesPluginIdentifier, DistributedTracingModes
 } from '@microsoft/applicationinsights-common';
 import {
-    CoreUtils, LoggingSeverity, _InternalMessageId, IDiagnosticLogger,
+    CoreUtils, LoggingSeverity, _InternalMessageId,
     IAppInsightsCore, ITelemetryPlugin, IConfiguration, IPlugin, ITelemetryItem
 } from '@microsoft/applicationinsights-core-js';
 import { ajaxRecord } from './ajaxRecord';
@@ -37,7 +37,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             disableAjaxTracking: false,
             disableFetchTracking: true,
             disableCorrelationHeaders: false,
-            distributedTracingMode: DistributedTracingModes.AI,
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
             correlationHeaderExcludedDomains: [
                 "*.blob.core.windows.net",
                 "*.blob.core.chinacloudapi.cn",
