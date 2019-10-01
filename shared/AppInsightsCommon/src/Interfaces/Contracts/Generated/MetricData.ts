@@ -25,11 +25,17 @@ export class MetricData extends Domain {
      */
     public properties: any;
 
+    /**
+     * Collection of custom measurements.
+     */
+    public measurements: any;
+
     constructor() {
         super();
 
         this.ver = 2;
         this.metrics = [];
         this.properties = {};
+        this.measurements = {};
     }
 }
