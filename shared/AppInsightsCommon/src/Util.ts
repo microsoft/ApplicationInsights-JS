@@ -213,7 +213,7 @@ export class Util {
     public static getSessionStorageKeys(): string[] {
         const keys = [];
 
-        if (Util.canUseSessionStorage()) {
+        if (Util.canUseSessionStorage() && typeof window === "object") {
             for (const key in window.sessionStorage) {
                 keys.push(key);
             }

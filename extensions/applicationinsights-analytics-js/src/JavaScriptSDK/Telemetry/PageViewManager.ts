@@ -57,12 +57,12 @@ export class PageViewManager {
     public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any }) {
         let name = pageView.name;
         if (CoreUtils.isNullOrUndefined(name) || typeof name !== "string") {
-            name = pageView.name = window.document && window.document.title || "";
+            name = pageView.name = typeof window === "object" && window.document && window.document.title || "";
         }
 
         let uri = pageView.uri;
         if (CoreUtils.isNullOrUndefined(uri) || typeof uri !== "string") {
-            uri = pageView.uri = window.location && window.location.href || "";
+            uri = pageView.uri = typeof window === "object" && window.location && window.location.href || "";
         }
 
         // case 1a. if performance timing is not supported by the browser, send the page view telemetry with the duration provided by the user. If the user

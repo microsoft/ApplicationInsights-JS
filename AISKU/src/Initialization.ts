@@ -344,7 +344,7 @@ export class Initialization implements IApplicationInsights {
     public addHousekeepingBeforeUnload(appInsightsInstance: IApplicationInsights): void {
         // Add callback to push events when the user navigates away
 
-        if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload && ('onbeforeunload' in window)) {
+        if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload && typeof window === "object" && ('onbeforeunload' in window)) {
             const performHousekeeping = () => {
                 // Adds the ability to flush all data before the page unloads.
                 // Note: This approach tries to push an async request with all the pending events onbeforeunload.

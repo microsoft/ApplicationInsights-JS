@@ -319,7 +319,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public startTrackPage(name?: string) {
         try {
             if (typeof name !== "string") {
-                name = window.document && window.document.title || "";
+                name = typeof window === "object" && window.document && window.document.title || "";
             }
 
             this._pageTracking.start(name);
@@ -344,11 +344,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: number }) {
         try {
             if (typeof name !== "string") {
-                name = window.document && window.document.title || "";
+                name = typeof window === "object" && window.document && window.document.title || "";
             }
 
             if (typeof url !== "string") {
-                url = window.location && window.location.href || "";
+                url = typeof window === "object" && window.location && window.location.href || "";
             }
 
             this._pageTracking.stop(name, url, properties, measurement);
@@ -555,7 +555,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
         const instance: IAppInsights = this;
         if (this.config.disableExceptionTracking === false &&
-            !this.config.autoExceptionInstrumented) {
+            !this.config.autoExceptionInstrumented && typeof window === "object") {
             // We want to enable exception auto collection and it has not been done so yet
             const onerror = "onerror";
             const originalOnError = window[onerror];
