@@ -6,7 +6,6 @@ import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { DataPoint } from './Common/DataPoint';
-import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
 import { Util } from '../Util';
 import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 
@@ -24,7 +23,7 @@ export class Metric extends MetricData implements ISerializable {
     /**
      * Constructs a new instance of the MetricTelemetry object
      */
-    constructor(logger: IDiagnosticLogger, name: string, value: number, count?: number, min?: number, max?: number, properties?: any) {
+    constructor(logger: IDiagnosticLogger, name: string, value: number, count?: number, min?: number, max?: number, properties?: any, measurements?: { [key: string]: number }) {
         super();
 
         const dataPoint = new DataPoint();
@@ -36,5 +35,6 @@ export class Metric extends MetricData implements ISerializable {
 
         this.metrics = [dataPoint];
         this.properties = DataSanitizer.sanitizeProperties(logger, properties);
+        this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
     }
 }

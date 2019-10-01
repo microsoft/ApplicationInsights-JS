@@ -1,7 +1,9 @@
+import { IPartC } from './IPartC';
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-export interface IMetricTelemetry {
+export interface IMetricTelemetry extends IPartC {
     /**
      * @description (required) - name of this metric
      * @type {string}
