@@ -30,10 +30,16 @@ export class MessageData extends Domain {
      */
     public properties: any;
 
+    /**
+     * Collection of custom measurements.
+     */
+    public measurements: any;
+
     constructor() {
         super();
 
         this.ver = 2;
         this.properties = {};
+        this.measurements = {};
     }
 }

@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 import { SeverityLevel } from './Contracts/Generated/SeverityLevel'
+import { IPartC } from './IPartC';
 
 /**
  * @export
  * @interface IExceptionTelemetry
  * @description Exception interface used as primary parameter to trackException
  */
-export interface IExceptionTelemetry {
+export interface IExceptionTelemetry extends IPartC {
     /**
      * Unique guid identifying this error
      */
@@ -36,20 +37,6 @@ export interface IExceptionTelemetry {
      * @memberof IExceptionTelemetry
      */
     severityLevel?: SeverityLevel | number;
-
-    /**
-     * Collection of custom properties
-     * @type {{ [key: any]: string}}
-     * @memberof IExceptionTelemetry
-     */
-    properties?: { [key: string]: any};
-
-    /**
-     * Collection of custom measurements
-     * @type {{ [key: string]: number}}
-     * @memberof IExceptionTelemetry
-     */
-    measurements?: { [key: string]: number};
 }
 
 /**
@@ -94,15 +81,13 @@ export interface IAutoExceptionTelemetry {
     error: Error;
 }
 
-export interface IExceptionInternal {
+export interface IExceptionInternal extends IPartC {
     ver: string;
     id: string;
     exceptions: IExceptionDetailsInternal[];
     severityLevel?: SeverityLevel | number;
     problemGroup: string;
     isManual: boolean;
-    properties: { [key: string]: any};
-    measurements: { [key: string]: number};
 }
 
 export interface IExceptionDetailsInternal {
