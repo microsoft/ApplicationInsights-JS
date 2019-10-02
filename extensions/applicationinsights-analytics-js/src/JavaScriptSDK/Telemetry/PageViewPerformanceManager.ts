@@ -92,14 +92,14 @@ export class PageViewPerformanceManager {
     }
 
     public getPerformanceTiming(): PerformanceTiming | null {
-        if (this.isPerformanceTimingSupported() && typeof window === "object") {
+        if (this.isPerformanceTimingSupported()) {
             return window.performance.timing;
         }
 
         return null;
     }
     public getPerformanceNavigationTiming(): PerformanceNavigationTiming | null {
-        if (this.isPerformanceNavigationTimingSupported() && typeof window === "object") {
+        if (this.isPerformanceNavigationTimingSupported()) {
             return window.performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
         }
 

@@ -243,7 +243,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
 
     // Fetch Stuff
     protected instrumentFetch(): void {
-        if (!this.supportsFetch() || this._fetchInitialized || !window) {
+        if (!this.supportsFetch() || this._fetchInitialized) {
             return;
         }
         const originalFetch: (input?: Request | string, init?: RequestInit) => Promise<Response> = window.fetch;
