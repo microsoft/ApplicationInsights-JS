@@ -305,6 +305,14 @@ export interface IConfig {
      */
     autoExceptionInstrumented?: boolean;
     correlationHeaderDomains?: string[]
+
+    /**
+     * @ignore
+     * @description Internal only
+     * @type {boolean}
+     * @memberof IConfig
+     */
+    autoUnhandledPromiseInstrumented?: boolean;
 }
 
 export class ConfigurationManager {
