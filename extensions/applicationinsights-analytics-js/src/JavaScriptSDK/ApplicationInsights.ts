@@ -585,6 +585,25 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             this.config.autoExceptionInstrumented = true;
         }
 
+        if (this.config.disableExceptionTracking === false &&
+            !this.config.autoUnhandledPromiseInstrumented) {
+            // We want to enable exception auto collection and it has not been done so yet
+            const onunhandledrejection = "onunhandledrejection";
+            const originalOnUnhandledRejection = window[onunhandledrejection];
+            window.onunhandledrejection = (error: PromiseRejectionEvent) => {
+                const handled = originalOnUnhandledRejection && (originalOnUnhandledRejection.call(window, error) as any);
+                if (handled !== true) { // handled could be typeof function
+                    instance._onerror({
+                        reason: error.reason,
+                        error
+                    });
+                }
+
+                return handled;
+            }
+            this.config.autoUnhandledPromiseInstrumented = true;
+        }
+
         /**
          * Create a custom "locationchange" event which is triggered each time the history object is changed
          */
