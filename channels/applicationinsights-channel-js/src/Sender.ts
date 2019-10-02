@@ -431,7 +431,7 @@ export class Sender implements IChannelControlsAI {
     /**
      * error handler
      */
-    public _onError(payload: string[], message: string, event?: ErrorEvent) {
+    public _onError(payload: string[], message: string, event?: ProgressEvent<EventTarget>) {
         this._logger.throwInternal(
             LoggingSeverity.WARNING,
             _InternalMessageId.OnError,
@@ -554,7 +554,7 @@ export class Sender implements IChannelControlsAI {
         }
 
         xhr.onreadystatechange = () => this._xhrReadyStateChange(xhr, payload, payload.length);
-        xhr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessageXhr(xhr), event);
+        xhr.onerror = (event: ProgressEvent<EventTarget>) => this._onError(payload, this._formatErrorMessageXhr(xhr), event);
 
         // compose an array of payloads
         const batch = this._buffer.batchPayloads(payload);
@@ -682,7 +682,7 @@ export class Sender implements IChannelControlsAI {
     private _xdrSender(payload: string[], isAsync: boolean) {
         const xdr = new XDomainRequest();
         xdr.onload = () => this._xdrOnLoad(xdr, payload);
-        xdr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessageXdr(xdr), event);
+        xdr.onerror = (event: ProgressEvent<EventTarget>) => this._onError(payload, this._formatErrorMessageXdr(xdr), event);
 
         // XDomainRequest requires the same protocol as the hosting page.
         // If the protocol doesn't match, we can't send the telemetry :(.

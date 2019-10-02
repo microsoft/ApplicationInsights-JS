@@ -563,7 +563,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 const handled = originalOnError && (originalOnError(message, url, lineNumber, columnNumber, error) as any);
                 if (handled !== true) { // handled could be typeof function
                     instance._onerror({
-                        message,
+                        message: message.toString(),
                         url,
                         lineNumber,
                         columnNumber,
@@ -585,8 +585,11 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 const handled = originalOnUnhandledRejection && (originalOnUnhandledRejection.call(window, error) as any);
                 if (handled !== true) { // handled could be typeof function
                     instance._onerror({
-                        reason: error.reason,
-                        error
+                        message: error.reason.toString(),
+                        error: error.reason instanceof Error ? error.reason : new Error(error.reason.toString()),
+                        url: window.location.href,
+                        lineNumber: 0,
+                        columnNumber: 0
                     });
                 }
 
