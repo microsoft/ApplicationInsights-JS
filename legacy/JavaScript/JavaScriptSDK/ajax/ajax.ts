@@ -84,14 +84,14 @@ module Microsoft.ApplicationInsights {
         private instrumentOpen() {
             var originalOpen = XMLHttpRequest.prototype.open;
             var ajaxMonitorInstance = this;
-            XMLHttpRequest.prototype.open = function (method, url, async) {
+            XMLHttpRequest.prototype.open = function (method: string, url: string) {
                 try {
                     if (ajaxMonitorInstance.isMonitoredInstance(this, true) &&
                         (
                             !(<XMLHttpRequestInstrumented>this).ajaxData ||
                             !(<XMLHttpRequestInstrumented>this).ajaxData.xhrMonitoringState.openDone
                         )) {
-                        ajaxMonitorInstance.openHandler(this, method, url, async);
+                        ajaxMonitorInstance.openHandler(this, method, url);
                     }
                 } catch (e) {
                     _InternalLogging.throwInternal(
@@ -104,11 +104,11 @@ module Microsoft.ApplicationInsights {
                         });
                 }
 
-                return originalOpen.apply(this, arguments);
+                originalOpen.apply(this, arguments);
             };
         }
 
-        private openHandler(xhr: XMLHttpRequestInstrumented, method, url, async) {
+        private openHandler(xhr: XMLHttpRequestInstrumented, method, url) {
             // this format corresponds with activity logic on server-side and is required for the correct correlation
             var id = "|" + this.appInsights.context.operation.id + "." + Util.newId();
 
