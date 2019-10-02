@@ -44,7 +44,7 @@
         "source-map-loader": "^0.2.3",
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
-        "typescript": "2.5.3"
+        "typescript": "3.6.3"
     },
     "dependencies": {
         "@microsoft/applicationinsights-analytics-js": "2.2.4",
