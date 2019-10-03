@@ -18,7 +18,7 @@
         "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
-        "typescript": "2.5.3",
+        "typescript": "3.6.3",
         "grunt": "1.0.1",
         "grunt-contrib-qunit": "2.0.0",
         "grunt-contrib-uglify": "3.1.0",
