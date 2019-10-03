@@ -28,10 +28,6 @@ import * as properties from "@microsoft/applicationinsights-properties-js";
 
 "use strict";
 
-declare global {
-    interface Window { onunhandledrejection: ((this: Window, ev: PromiseRejectionEvent) => any) | null; }
-}
-
 const durationProperty: string = "duration";
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
@@ -567,7 +563,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 const handled = originalOnError && (originalOnError(message, url, lineNumber, columnNumber, error) as any);
                 if (handled !== true) { // handled could be typeof function
                     instance._onerror({
-                        message,
+                        message: message instanceof Error ? message.message : message.toString(),
                         url,
                         lineNumber,
                         columnNumber,

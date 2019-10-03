@@ -84,14 +84,14 @@ module Microsoft.ApplicationInsights {
         private instrumentOpen() {
             var originalOpen = XMLHttpRequest.prototype.open;
             var ajaxMonitorInstance = this;
-            XMLHttpRequest.prototype.open = function (method, url, async) {
+            XMLHttpRequest.prototype.open = function (method, url) {
                 try {
                     if (ajaxMonitorInstance.isMonitoredInstance(this, true) &&
                         (
                             !(<XMLHttpRequestInstrumented>this).ajaxData ||
                             !(<XMLHttpRequestInstrumented>this).ajaxData.xhrMonitoringState.openDone
                         )) {
-                        ajaxMonitorInstance.openHandler(this, method, url, async);
+                        ajaxMonitorInstance.openHandler(this, method, url);
                     }
                 } catch (e) {
                     _InternalLogging.throwInternal(
@@ -108,7 +108,7 @@ module Microsoft.ApplicationInsights {
             };
         }
 
-        private openHandler(xhr: XMLHttpRequestInstrumented, method, url, async) {
+        private openHandler(xhr: XMLHttpRequestInstrumented, method, url) {
             // this format corresponds with activity logic on server-side and is required for the correct correlation
             var id = "|" + this.appInsights.context.operation.id + "." + Util.newId();
 
@@ -160,7 +160,7 @@ module Microsoft.ApplicationInsights {
         private sendHandler(xhr: XMLHttpRequestInstrumented, content) {
             xhr.ajaxData.requestSentTime = dateTime.Now();
 
-            if (CorrelationIdHelper.canIncludeCorrelationHeader(this.appInsights.config, xhr.ajaxData.getAbsoluteUrl(), 
+            if (CorrelationIdHelper.canIncludeCorrelationHeader(this.appInsights.config, xhr.ajaxData.getAbsoluteUrl(),
                 this.currentWindowHost)) {
                 xhr.setRequestHeader(RequestHeaders.requestIdHeader, xhr.ajaxData.id);
                 if (this.appInsights.context) {
@@ -228,7 +228,7 @@ module Microsoft.ApplicationInsights {
             xhr.ajaxData.responseFinishedTime = dateTime.Now();
             xhr.ajaxData.status = xhr.status;
             xhr.ajaxData.CalculateMetrics();
-            
+
             if (xhr.ajaxData.ajaxTotalDuration < 0) {
                 _InternalLogging.throwInternal(
                     LoggingSeverity.WARNING,
@@ -242,20 +242,20 @@ module Microsoft.ApplicationInsights {
             }
             else {
                 var dependency = new Telemetry.RemoteDependencyData(
-                    xhr.ajaxData.id, 
-                    xhr.ajaxData.getAbsoluteUrl(), 
-                    xhr.ajaxData.getPathName(), 
-                    xhr.ajaxData.ajaxTotalDuration, 
-                    (+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400, 
-                    +xhr.ajaxData.status, 
-                    xhr.ajaxData.method);                
+                    xhr.ajaxData.id,
+                    xhr.ajaxData.getAbsoluteUrl(),
+                    xhr.ajaxData.getPathName(),
+                    xhr.ajaxData.ajaxTotalDuration,
+                    (+(xhr.ajaxData.status)) >= 200 && (+(xhr.ajaxData.status)) < 400,
+                    +xhr.ajaxData.status,
+                    xhr.ajaxData.method);
 
                 // enrich dependency target with correlation context from the server
                 var correlationContext = this.getCorrelationContext(xhr);
                 if (correlationContext) {
                     dependency.target = dependency.target + " | " + correlationContext;
                 }
-            
+
                 this.appInsights.trackDependencyData(dependency);
 
                 xhr.ajaxData = null;
@@ -281,7 +281,7 @@ module Microsoft.ApplicationInsights {
                         ajaxDiagnosticsMessage: AjaxMonitor.getFailedAjaxDiagnosticsMessage(xhr),
                         exception: Microsoft.ApplicationInsights.Util.dump(e)
                     });
-            }          
+            }
         }
     }
 }

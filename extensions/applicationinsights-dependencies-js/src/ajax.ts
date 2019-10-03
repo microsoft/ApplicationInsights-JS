@@ -343,14 +343,14 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     private instrumentOpen() {
         const originalOpen = XMLHttpRequest.prototype.open;
         const ajaxMonitorInstance = this;
-        XMLHttpRequest.prototype.open = function (method, url, async) {
+        XMLHttpRequest.prototype.open = function (method, url) {
             try {
                 if (ajaxMonitorInstance.isMonitoredInstance(this, true) &&
                     (
                         !(this as XMLHttpRequestInstrumented).ajaxData ||
                         !(this as XMLHttpRequestInstrumented).ajaxData.xhrMonitoringState.openDone
                     )) {
-                    ajaxMonitorInstance.openHandler(this, method, url, async);
+                    ajaxMonitorInstance.openHandler(this, method, url);
                 }
             } catch (e) {
                 ajaxMonitorInstance._core.logger.throwInternal(
@@ -367,7 +367,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         };
     }
 
-    private openHandler(xhr: XMLHttpRequestInstrumented, method, url, async) {
+    private openHandler(xhr: XMLHttpRequestInstrumented, method, url) {
         const traceID = (this._context && this._context.telemetryTrace && this._context.telemetryTrace.traceID) || Util.generateW3CId();
         const spanID = Util.generateW3CId().substr(0, 16);
 
@@ -528,7 +528,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 }
             }
 
-            if (this._config.enableResponseHeaderTracking) { 
+            if (this._config.enableResponseHeaderTracking) {
                 const headers = xhr.getAllResponseHeaders();
                 if (headers) {
                     // xhr.getAllResponseHeaders() method returns all the response headers, separated by CRLF, as a string or null
@@ -548,7 +548,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     }
                 }
             }
-            
+
             this.trackDependencyDataInternal(dependency);
 
             xhr.ajaxData = null;
@@ -681,10 +681,10 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     if (Object.keys(ajaxData.requestHeaders).length > 0) {
                         dependency.properties = dependency.properties || {};
                         dependency.properties.requestHeaders = ajaxData.requestHeaders;
-                    }               
+                    }
                 }
 
-                if (this._config.enableResponseHeaderTracking) {          
+                if (this._config.enableResponseHeaderTracking) {
                     const responseHeaderMap = {};
                     response.headers.forEach((value, name) => {
                         responseHeaderMap[name] = value;
