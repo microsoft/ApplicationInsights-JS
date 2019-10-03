@@ -125,9 +125,10 @@ export class PageViewPerformanceManager {
     * Returns true if ready, false otherwise.
     */
     public isPerformanceTimingDataReady() {
-        const timing = window.performance.timing;
+        const timing = typeof window === "object" && window.performance.timing;
 
-        return timing.domainLookupStart > 0
+        return typeof window === "object"
+            && timing.domainLookupStart > 0
             && timing.navigationStart > 0
             && timing.responseStart > 0
             && timing.requestStart > 0
