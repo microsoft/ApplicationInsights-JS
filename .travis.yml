@@ -6,6 +6,7 @@ before_install:
 
 before_script:
   - npm install grunt-cli -g
+  - npm install @microsoft/rush -g
 
 jobs:
   include:
