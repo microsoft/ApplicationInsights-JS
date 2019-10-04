@@ -9,10 +9,10 @@
         "azure"
     ],
     "scripts": {
-        "postinstall": "rush install",
-        "build": "rush build --verbose",
-        "test": "rush test --verbose",
-        "lint": "rush lint --verbose"
+        "postinstall": "node common/scripts/install-run-rush.js update --recheck --full --purge",
+        "build": "node common/scripts/install-run-rush.js rebuild",
+        "test": "node common/scripts/install-run-rush.js test --verbose",
+        "lint": "node common/scripts/install-run-rush.js lint --verbose"
     },
     "repository": {
         "type": "git",
@@ -36,8 +36,5 @@
         "tslint-microsoft-contrib": "^5.2.1",
         "tslint-config-prettier": "^1.18.0",
         "typescript": "2.5.3"
-    },
-    "peerDependencies": {
-        "@microsoft/rush": "^5.14.0"
     }
 }
