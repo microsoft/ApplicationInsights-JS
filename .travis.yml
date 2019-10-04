@@ -3,10 +3,10 @@ node_js:
   - "10.9"
 before_install:
   - npm i -g npm@4.5.0
+  - npm install @microsoft/rush -g
 
 before_script:
   - npm install grunt-cli -g
-  - npm install @microsoft/rush -g
 
 jobs:
   include:
