@@ -24,7 +24,7 @@
 [![gzip size](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)
 
 
-> ***Note:*** The documentation for `applicationinsights-js` has moved [here](./legacy/legacy_README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights).
+> ***Note:*** The documentation for `applicationinsights-js` has moved [here](./legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights).
 
 ## Getting Started
 1. Create an Application Insights resource in Azure by following [these instructions](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-javascript?toc=/azure/azure-monitor/toc.json).
@@ -282,3 +282,22 @@ Latest ✔ | Latest ✔ | 9+ ✔ | Latest ✔ | Latest ✔ |
 
 ## Contributing
 Read our [contributing guide](./CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Application Insights.
+
+### Build and Test this Project
+
+```zsh
+npm install -g @microsoft/rush
+npm install
+npm run build
+```
+
+### Submitting a Change to this Project
+
+```zsh
+<...added some code...>
+rush change
+<...enter details>
+git add <...your changes and rush change file...>
+git commit -m "info about your change"
+git push
+```

@@ -1,8 +1,6 @@
 {
-    "name": "applicationinsights-js",
-    "version": "1.0.20",
+    "name": "@microsoft/applicationinsights-web",
     "description": "Microsoft Application Insights JavaScript SDK",
-    "main": "bundle/ai.module.js",
     "keywords": [
         "browser performance monitoring",
         "script errors",
@@ -11,13 +9,10 @@
         "azure"
     ],
     "scripts": {
-        "analytics": "cd ./extensions/applicationinsights-analytics-js && npm i",
-        "common": "cd ./shared/AppInsightsCommon/ && npm i",
-        "dependencies": "cd ./extensions/applicationinsights-dependencies-js && npm i",
-        "properties": "cd ./extensions/applicationinsights-properties-js && npm i",
-        "aisku": "cd ./AISKU && npm i",
-        "build-prefixes": "npm-run-all --serial analytics common dependencies properties aisku",
-        "test": "grunt test"
+        "postinstall": "rush install",
+        "build": "rush build --verbose",
+        "test": "rush test --verbose",
+        "lint": "rush lint --verbose"
     },
     "repository": {
         "type": "git",
@@ -30,18 +25,21 @@
     },
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "devDependencies": {
-        "grunt": "1.0.1",
-        "grunt-contrib-qunit": "2.0.0",
-        "grunt-contrib-uglify": "3.1.0",
+        "grunt": "^1.0.1",
+        "grunt-cli": "^1.3.2",
+        "grunt-contrib-qunit": "^2.0.0",
+        "grunt-contrib-uglify": "^3.1.0",
         "grunt-run": "^0.8.1",
         "grunt-ts": "^6.0.0-beta.22",
         "grunt-tslint": "^5.0.2",
         "npm-run-all": "^4.1.3",
         "tslint": "^5.19.0",
         "tslint-microsoft-contrib": "^5.2.1",
+        "tslint-config-prettier": "^1.18.0",
         "typescript": "2.5.3"
     },
-    "dependencies": {
-        "tslint-config-prettier": "^1.18.0"
-    }
+    "peerDependencies": {
+        "@microsoft/rush": "^5.14.0"
+    },
+    "dependencies": {}
 }
