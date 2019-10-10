@@ -42,6 +42,7 @@ export class ApplicationInsightsTests extends TestClass {
     private userSpy: SinonSpy;
     private sessionPrefix: string = Util.newId();
     private trackSpy: SinonSpy;
+    private envelopeConstructorSpy: SinonSpy;
 
     // Context
     private tagKeys = new ContextTagKeys();
@@ -64,7 +65,8 @@ export class ApplicationInsightsTests extends TestClass {
                 disableExceptionTracking: false,
                 namePrefix: this.sessionPrefix,
                 enableCorsCorrelation: true,
-                distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+                distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+                samplingPercentage: 50
             };
 
             const init = new ApplicationInsights({
@@ -83,6 +85,8 @@ export class ApplicationInsightsTests extends TestClass {
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
             this.loggingSpy = this.sandbox.stub(this._ai['core'].logger, 'throwInternal');
             this.trackSpy = this.sandbox.spy(this._ai['dependencies'], 'trackDependencyDataInternal')
+            this.sandbox.stub(sender, '_isSampledIn', () => true);
+            this.envelopeConstructorSpy = this.sandbox.spy(Sender, 'constructEnvelope');
         } catch (e) {
             console.error('Failed to initialize', e);
         }
@@ -656,6 +660,16 @@ export class ApplicationInsightsTests extends TestClass {
                 Assert.ok(cookieSpy.notCalled, 'cookie never set');
             }
         });
+
+        this.testCase({
+            name: 'Sampling: sampleRate is generated as a field in the envelope when it is less than 100',
+            test: () => {
+                this._ai.trackEvent({ name: 'event' });
+                Assert.ok(this.envelopeConstructorSpy.called);
+                const envelope = this.envelopeConstructorSpy.returnValues[0];
+                Assert.equal(envelope.sampleRate, 50, "sampleRate is generated");
+            }
+        })
     }
 
     private boilerPlateAsserts = () => {

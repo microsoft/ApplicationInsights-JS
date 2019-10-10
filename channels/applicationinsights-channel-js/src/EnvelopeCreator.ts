@@ -6,7 +6,8 @@ import {
     HttpMethod, IPageViewTelemetryInternal, IWeb,
     Util,
     IExceptionTelemetry,
-    IExceptionInternal
+    IExceptionInternal,
+    SampleRate
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, CoreUtils,
@@ -19,23 +20,6 @@ const baseData: string = "baseData";
 
 export abstract class EnvelopeCreator {
     public static Version = "2.2.4";
-
-    protected static extractProperties(data: { [key: string]: any }): { [key: string]: any } {
-        let customProperties: { [key: string]: any } = null;
-        for (const key in data) {
-            if (data.hasOwnProperty(key)) {
-                const value = data[key];
-                if (typeof value !== "number") {
-                    if (!customProperties) {
-                        customProperties = {};
-                    }
-                    customProperties[key] = value;
-                }
-            }
-        }
-
-        return customProperties;
-    }
 
     protected static extractPropsAndMeasurements(data: { [key: string]: any }, properties: { [key: string]: any }, measurements: { [key: string]: any }) {
         if (!CoreUtils.isNullOrUndefined(data)) {
@@ -57,6 +41,9 @@ export abstract class EnvelopeCreator {
     // TODO: Do we want this to take logger as arg or use this._logger as nonstatic?
     protected static createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, telemetryItem: ITelemetryItem, data: Data<T>): IEnvelope {
         const envelope = new Envelope(logger, data, envelopeType);
+        if (telemetryItem[SampleRate]) {
+            envelope.sampleRate = telemetryItem[SampleRate];
+        }
         envelope.iKey = telemetryItem.iKey;
         const iKeyNoDashes = telemetryItem.iKey.replace(/-/g, "");
         envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
@@ -328,14 +315,14 @@ export class MetricEnvelopeCreator extends EnvelopeCreator {
         }
 
         const props = telemetryItem.baseData.properties || {};
-        let customProperties = EnvelopeCreator.extractProperties(telemetryItem.data);
-        customProperties = { ...props, ...customProperties };
+        const measurements = telemetryItem.baseData.measurements || {};
+        EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, props, measurements);
         const name = telemetryItem.baseData.name;
         const average = telemetryItem.baseData.average;
         const sampleCount = telemetryItem.baseData.sampleCount;
         const min = telemetryItem.baseData.min;
         const max = telemetryItem.baseData.max;
-        const baseData = new Metric(logger, name, average, sampleCount, min, max, customProperties);
+        const baseData = new Metric(logger, name, average, sampleCount, min, max, props, measurements);
         const data = new Data<Metric>(Metric.dataType, baseData);
         return EnvelopeCreator.createEnvelope<Metric>(logger, Metric.envelopeType, telemetryItem, data);
     }
@@ -446,9 +433,10 @@ export class TraceEnvelopeCreator extends EnvelopeCreator {
 
         const message = telemetryItem.baseData.message;
         const severityLevel = telemetryItem.baseData.severityLevel;
-        const customProperties = EnvelopeCreator.extractProperties(telemetryItem.data);
-        const props = { ...customProperties, ...telemetryItem.baseData.properties };
-        const baseData = new Trace(logger, message, severityLevel, props);
+        const props = telemetryItem.baseData.properties || {};
+        const measurements = telemetryItem.baseData.measurements || {};
+        EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, props, measurements);
+        const baseData = new Trace(logger, message, severityLevel, props, measurements);
         const data = new Data<Trace>(Trace.dataType, baseData);
         return EnvelopeCreator.createEnvelope<Trace>(logger, Trace.envelopeType, telemetryItem, data);
     }

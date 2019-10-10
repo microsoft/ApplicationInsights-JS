@@ -264,8 +264,7 @@ export class Sender implements IChannelControlsAI {
                     "Telemetry item was sampled out and not sent", { SampleRate: this._sample.sampleRate });
                 return;
             } else {
-                telemetryItem.tags = telemetryItem.tags || ({} as any);
-                telemetryItem.tags[SampleRate] = this._sample.sampleRate;
+                telemetryItem[SampleRate] = this._sample.sampleRate;
             }
 
             // construct an envelope that Application Insights endpoint can understand
@@ -687,7 +686,7 @@ export class Sender implements IChannelControlsAI {
 
         // XDomainRequest requires the same protocol as the hosting page.
         // If the protocol doesn't match, we can't send the telemetry :(.
-        const hostingProtocol = window.location && window.location.protocol
+        const hostingProtocol = typeof window === "object" && window.location && window.location.protocol || "";
         if (this._config.endpointUrl().lastIndexOf(hostingProtocol, 0) !== 0) {
             this._logger.throwInternal(
                 LoggingSeverity.WARNING,
