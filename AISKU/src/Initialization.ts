@@ -57,12 +57,6 @@ export class Initialization implements IApplicationInsights {
             config.instrumentationKey = cs.instrumentationkey || config.instrumentationKey;
         }
 
-        // ensure instrumentationKey is specified
-        if (config && !config.instrumentationKey) {
-            config = (snippet as any);
-            ApplicationInsights.Version = "2.2.4"; // Not currently used anywhere
-        }
-
         this.appInsights = new ApplicationInsights();
 
         this.properties = new PropertiesPlugin();
