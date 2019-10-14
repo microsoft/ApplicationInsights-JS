@@ -15,6 +15,7 @@ import { RemoteDepdencyValidator } from './TelemetryValidation/RemoteDepdencyVal
 
 export class ApplicationInsightsTests extends TestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
+    private static readonly _connectionString = `InstrumentationKey=${ApplicationInsightsTests._instrumentationKey}`;
     private static readonly _expectedTrackMethods = [
         "startTrackPage",
         "stopTrackPage",
@@ -55,7 +56,7 @@ export class ApplicationInsightsTests extends TestClass {
             this.useFakeTimers = false;
             this.clock.restore();
             this._config = {
-                instrumentationKey: ApplicationInsightsTests._instrumentationKey,
+                connectionString: ApplicationInsightsTests._connectionString,
                 disableAjaxTracking: false,
                 disableFetchTracking: false,
                 enableRequestHeaderTracking: true,
@@ -87,7 +88,7 @@ export class ApplicationInsightsTests extends TestClass {
             this.sandbox.stub(sender, '_isSampledIn', () => true);
             this.envelopeConstructorSpy = this.sandbox.spy(Sender, 'constructEnvelope');
         } catch (e) {
-            console.error('Failed to initialize');
+            console.error('Failed to initialize', e);
         }
     }
 
