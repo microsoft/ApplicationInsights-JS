@@ -24,7 +24,7 @@
 [![gzip size](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)
 
 
-> ***Note:*** The documentation for `applicationinsights-js` has moved [here](./legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights).
+> ***Note:*** The documentation for `applicationinsights-js@1.0.20` has moved [here](./legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights).
 
 ## Getting Started
 1. Create an Application Insights resource in Azure by following [these instructions](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-javascript?toc=/azure/azure-monitor/toc.json).
@@ -105,7 +105,7 @@ Telemetry initializers are used to modify the contents of collected telemetry be
 The input argument to `addTelemetryInitializer` is a callback that takes a [`ITelemetryItem`](./API-reference.md#addTelemetryInitializer) as an argument and returns a `boolean` or `void`. If returning `false`, the telemetry item is not sent, else it proceeds to the next telemetry initializer, if any, or is sent to the telemetry collection endpoint.
 
 An example of using telemetry initializers:
-```ts
+```js
 var telemetryInitializer = (envelope) => {
   envelope.data.someField = 'This item passed through my telemetry initializer';
 };
@@ -114,6 +114,15 @@ appInsights.trackTrace({message: 'This message will use a telemetry initializer'
 
 appInsights.addTelemetryInitializer(() => false); // Nothing is sent after this is executed
 appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
+```
+
+#### Example: (Setting Cloud Role Name)[https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-map#set-cloud-role-name]
+```js
+var telemetryInitializer = (envelope) => {
+  envelope.tags["ai.cloud.role"] = "your role name";
+  envelope.tags["ai.cloud.roleInstance"] = "your role instance";
+}
+appInsights.addTelemetryInitializer(telemetryInitializer);
 ```
 
 ## Configuration
