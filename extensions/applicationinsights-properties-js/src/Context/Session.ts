@@ -76,8 +76,8 @@ export class _SessionManager {
 
         const now = DateTimeUtils.Now();
 
-        const acquisitionExpired = now - this.automaticSession.acquisitionDate > this.config.sessionExpirationMs();
-        const renewalExpired = now - this.automaticSession.renewalDate > this.config.sessionRenewalMs();
+        const acquisitionExpired = this.config.sessionExpirationMs() === 0 ? false : now - this.automaticSession.acquisitionDate > this.config.sessionExpirationMs();
+        const renewalExpired = this.config.sessionExpirationMs() === 0 ? false : now - this.automaticSession.renewalDate > this.config.sessionRenewalMs();
 
         // renew if acquisitionSpan or renewalSpan has ellapsed
         if (acquisitionExpired || renewalExpired) {
@@ -198,7 +198,11 @@ export class _SessionManager {
 
         const cookieDomnain = this.config.cookieDomain ? this.config.cookieDomain() : null;
 
-        Util.setCookie(this._logger, this._storageNamePrefix(), cookie.join('|') + ';expires=' + cookieExpiry.toUTCString(), cookieDomnain);
+        // if sessionExpirationMs is set to 0, it means the expiry is set to 0 for this session cookie
+        // A cookie with 0 expiry in the session cookie will never expire for that browser session.  If the browser is closed the cookie expires.  
+        // Another browser instance does not inherit this cookie.
+        const UTCString = this.config.sessionExpirationMs() === 0 ? '0' : cookieExpiry.toUTCString();
+        Util.setCookie(this._logger, this._storageNamePrefix(), cookie.join('|') + ';expires=' + UTCString, cookieDomnain);
 
         this.cookieUpdatedTimestamp = DateTimeUtils.Now();
     }
