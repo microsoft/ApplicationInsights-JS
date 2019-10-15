@@ -13,9 +13,9 @@
     "noEmitHelpers": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationDir": "extensions/applicationinsights-react-native/dist-esm",
+    "declarationDir": "dist-esm",
     "outDir": "dist-esm",
-    "rootDir": "extensions/applicationinsights-react-native/src"
+    "rootDir": "src"
   },
   "include": [
     "./src/**/*.ts"

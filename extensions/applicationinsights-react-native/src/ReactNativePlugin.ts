@@ -80,8 +80,8 @@ export class ReactNativePlugin implements ITelemetryPlugin {
      */
     private _collectDeviceInfo() {
         this._device.deviceClass = DeviceInfo.getDeviceTypeSync();
-        this._device.id = DeviceInfo.getUniqueIdSync(); // Installation ID
-        this._device.model = DeviceInfo.getModelSync();
+        this._device.id = DeviceInfo.getUniqueId(); // Installation ID
+        this._device.model = DeviceInfo.getModel();
     }
 
     private _applyDeviceContext(item: ITelemetryItem) {
