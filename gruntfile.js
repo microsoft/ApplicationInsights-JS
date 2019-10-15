@@ -364,7 +364,7 @@ module.exports = function (grunt) {
     grunt.registerTask("react", ["ts:react"]);
     grunt.registerTask("reacttests", ["run:reacttests"]);
     grunt.registerTask("reactnative", ["ts:reactnative"]);
-    grunt.registerTask("reactnativetests", ["ts:reactnative", "ts:reactnativetests", "qunit:reactnative"]);
+    grunt.registerTask("reactnativetests", ["qunit:reactnative"]);
     grunt.registerTask("deps", ["ts:deps"]);
     grunt.registerTask("depstest", ["ts:deps", "ts:depstest", "qunit:deps"]);
     grunt.registerTask("aichannel", ["ts:aichannel"]);
