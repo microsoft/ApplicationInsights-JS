@@ -12,13 +12,14 @@
     "scripts": {
         "prepublishOnly": "npm run build",
         "build": "npm run build:esm && npm run build:browser",
-        "build:esm": "grunt reactnative",
+        "build:esm": "tsc -p tsconfig.json",
+        "build:test": "tsc -p Tests/tsconfig.json",
         "build:browser": "echo \"No browser version\"",
-        "test": "grunt reactnativetests",
+        "test": "npm run build:test && grunt reactnativetests",
         "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
-        "typescript": "2.5.3",
+        "typescript": "^3.6.4",
         "grunt": "1.0.1",
         "grunt-contrib-qunit": "2.0.0",
         "grunt-contrib-uglify": "3.1.0",
@@ -27,11 +28,12 @@
         "rollup-plugin-replace": "^2.1.0",
         "rollup-plugin-uglify": "^6.0.0",
         "rollup": "^0.66.0",
-        "react-native-device-info": "^3.1.4",
+        "react-native-device-info": "^4.0.1",
         "react-native": "0.59.8",
         "react": "16.8.3",
         "tslint": "^5.19.0",
-        "tslint-config-prettier": "^1.18.0"
+        "tslint-config-prettier": "^1.18.0",
+        "qunit": "^2.9.3"
     },
     "dependencies": {
         "@microsoft/applicationinsights-core-js": "^2.2.4",
@@ -40,7 +42,7 @@
     },
     "peerDependencies": {
         "react-native": "*",
-        "react-native-device-info": "^3.1.4"
+        "react-native-device-info": "^4.0.1"
     },
     "license": "MIT"
 }
