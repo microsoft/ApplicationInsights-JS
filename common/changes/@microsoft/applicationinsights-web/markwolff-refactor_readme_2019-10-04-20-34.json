@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "packageName": "@microsoft/applicationinsights-web",
+      "comment": "",
+      "type": "none"
+    }
+  ],
+  "packageName": "@microsoft/applicationinsights-web",
+  "email": "marwolff@microsoft.com"
+}

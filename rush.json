@@ -1,5 +1,5 @@
 
- {
+{
   "$schema": "https://developer.microsoft.com/json-schemas/rush/v5/rush.schema.json",
 
   "npmVersion": "4.5.0",
@@ -8,39 +8,48 @@
   "projects": [
     {
       "packageName": "@microsoft/applicationinsights-core-js",
-      "projectFolder": "shared/AppInsightsCore"
+      "projectFolder": "shared/AppInsightsCore",
+      "shouldPublish": true
     },
     {
       "packageName": "@microsoft/applicationinsights-common",
-      "projectFolder": "shared/AppInsightsCommon"
+      "projectFolder": "shared/AppInsightsCommon",
+      "shouldPublish": true
     },
     {
       "packageName": "@microsoft/applicationinsights-properties-js",
-      "projectFolder": "extensions/applicationinsights-properties-js"
+      "projectFolder": "extensions/applicationinsights-properties-js",
+      "shouldPublish": true
     },
     {
       "packageName": "@microsoft/applicationinsights-dependencies-js",
-      "projectFolder": "extensions/applicationinsights-dependencies-js"
+      "projectFolder": "extensions/applicationinsights-dependencies-js",
+      "shouldPublish": true
     },
     {
       "packageName": "@microsoft/applicationinsights-analytics-js",
-      "projectFolder": "extensions/applicationinsights-analytics-js"
+      "projectFolder": "extensions/applicationinsights-analytics-js",
+      "shouldPublish": true
     },
     {
       "packageName": "@microsoft/applicationinsights-channel-js",
-      "projectFolder": "channels/applicationinsights-channel-js"
+      "projectFolder": "channels/applicationinsights-channel-js",
+      "shouldPublish": true
     },
     {
       "packageName": "@microsoft/applicationinsights-web",
-      "projectFolder": "AISKU"
+      "projectFolder": "AISKU",
+      "shouldPublish": true
     },
     {
       "packageName": "@microsoft/applicationinsights-web-basic",
-      "projectFolder": "AISKULight"
+      "projectFolder": "AISKULight",
+      "shouldPublish": true
     },
     {
       "packageName": "@microsoft/applicationinsights-react-js",
-      "projectFolder": "extensions/applicationinsights-react-js"
+      "projectFolder": "extensions/applicationinsights-react-js",
+      "shouldPublish": true
     }
   ]
- }
+}

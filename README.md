@@ -21,7 +21,7 @@
 [![minified size size](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js.svg?label=minified%20size)
 [![gzip size](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)
 
-> ***Note:*** The documentation for `applicationinsights-js` has moved [here](./legacy/legacy_README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights).
+> ***Note:*** The documentation for `applicationinsights-js@1.0.20` has moved [here](./legacy/README.md). If you are looking to upgrade to the new version of the SDK, please see the [Upgrade Guide](#upgrading-from-the-old-version-of-application-insights).
 
 ## Getting Started
 
@@ -128,7 +128,7 @@ The input argument to `addTelemetryInitializer` is a callback that takes a [`ITe
 
 An example of using telemetry initializers:
 
-```ts
+```js
 var telemetryInitializer = (envelope) => {
   envelope.data.someField = 'This item passed through my telemetry initializer';
 };
@@ -137,6 +137,15 @@ appInsights.trackTrace({message: 'This message will use a telemetry initializer'
 
 appInsights.addTelemetryInitializer(() => false); // Nothing is sent after this is executed
 appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
+```
+
+#### Example: (Setting Cloud Role Name)[https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-map#set-cloud-role-name]
+```js
+var telemetryInitializer = (envelope) => {
+  envelope.tags["ai.cloud.role"] = "your role name";
+  envelope.tags["ai.cloud.roleInstance"] = "your role instance";
+}
+appInsights.addTelemetryInitializer(telemetryInitializer);
 ```
 
 ## Configuration
@@ -320,3 +329,22 @@ Latest ✔ | Latest ✔ | 9+ ✔ | Latest ✔ | Latest ✔ |
 ## Contributing
 
 Read our [contributing guide](./CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Application Insights.
+
+### Build and Test this Project
+
+```zsh
+npm install -g @microsoft/rush
+npm install
+npm run build
+```
+
+### Submitting a Change to this Project
+
+```zsh
+<...added some code...>
+rush change
+<...enter details>
+git add <...your changes and rush change file...>
+git commit -m "info about your change"
+git push
+```

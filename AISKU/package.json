@@ -12,7 +12,7 @@
     },
     "scripts": {
         "clean": "rm -rfv browser types dist-esm",
-        "build": "npm run build:esm && npm run build:browser && grunt snippetvnext",
+        "build": "npm run build:esm && npm run build:browser",
         "build:esm": "grunt aisku",
         "build:browser": "rollup -c",
         "test": "grunt aiskutests",
