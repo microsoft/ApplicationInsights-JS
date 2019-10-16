@@ -328,7 +328,7 @@ export class Util {
      * helper method to set userId and sessionId cookie
      */
     public static setCookie(logger: IDiagnosticLogger, name, value, domain?) {
-        value = value + ";SameSite=none";
+        value = value + ";SameSite=None";
         let domainAttrib = "";
         let secureAttrib = "";
 
