@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web",
-    "version": "2.2.5",
+    "version": "2.3.0",
     "description": "Microsoft Application Insights Javascript SDK API 1.0 beta",
     "main": "dist/applicationinsights-web.js",
     "module": "dist-esm/applicationinsights-web.js",
