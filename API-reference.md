@@ -126,6 +126,18 @@ Parameter | Type | Description
 `duration?` | number | **Optional**<br>Elapsed time of request & reply
 `method?` | string | **Optional**<br>Represents request verb (GET, POST, etc.)
 
+### trackEvent
+
+```ts
+applicationInsights.trackEvent(event: IEventTelemetry, customProperties?: { [key: string]: any })
+```
+
+The `IEventTelemetry` interface is below:
+
+Parameter | Type | Description
+---|---|---
+`name` | string | **Required**<br>An event name string.
+
 ### flush
 
 ```ts
