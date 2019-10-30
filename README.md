@@ -231,7 +231,8 @@ This version comes with the bare minimum amount of features and functionalities 
 ## Upgrading from the old Version of Application Insights
 
 Breaking changes in the SDK V2 version:
-- To allow for better API signatures, some of the apis such as trackPageView, trackException have been updated. Running in IE8 or lower versions of the browser is not supported.
+- To allow for better API signatures, some of the apis such as trackPageView, trackException have been updated.
+- ES3 (IE8) compatibility, while running in IE8 or lower versions of the browser is not an officially supported scenario we are working to maintain ES3 level compatibility to ensure that the SDK will not cause any unexpected failures due to Javascript parsing error. See [ES3/IE8 Compatibility](#es3ie8-compatibility) below for further information.
 - Telemetry envelope has field name and structure changes due to data schema updates.
 - Moved `context.operation` to `context.telemetryTrace`. Some fields were also changed (`operation.id` --> `telemetryTrace.traceID`)
   - If you want to maunally refresh the current pageview id (e.g. in SPA apps) this can be done with `appInsights.properties.context.telemetryTrace.traceID = Util.newId()`
@@ -324,7 +325,7 @@ While the script downloads from the CDN, all tracking of your page is queued. On
 
 ![Chrome](https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png) | ![Firefox](https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png) | ![IE](https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png) | ![Opera](https://raw.githubusercontent.com/alrra/browser-logos/master/src/opera/opera_48x48.png) | ![Safari](https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png)
 --- | --- | --- | --- | --- |
-Latest ✔ | Latest ✔ | 9+ ✔ | Latest ✔ | Latest ✔ |
+Latest ✔ | Latest ✔ | 9+ Full ✔<br>8- Compatible | Latest ✔ | Latest ✔ |
 
 ## Contributing
 
@@ -348,3 +349,53 @@ git add <...your changes and rush change file...>
 git commit -m "info about your change"
 git push
 ```
+
+## ES3/IE8 Compatibility
+
+As an SDK there are numerous users which cannot control the browsers that their customers use. As such we need to ensure that this SDK continues to "work" and does not break the JS execution when loaded by an older browser. While it would be ideal to just not support IE8 and older generation (ES3) browsers there are numerous large customers/users that continue to require pages to "work" and as noted they may or cannot control which browser that their end users choose to use.
+
+This does NOT mean that we will only support the lowest common set of features, just that we need to maintain ES3 code compatibility and when adding new features they will need to be added in a manner that would not break ES3 Javascript parsing and added as an optional feature.
+
+As part of enabling ES3/IE8 support we have set the ```tsconfig.json``` to ES3 and ```uglify``` settings in ```rollup.config.js``` transformations to support ie8. This provides a first level of support which blocks anyone from adding unsupported ES3 features to the code and enables the generated javascript to be validily parsed in an ES3+ environment.
+
+Ensuring that the generated code is compatible with ES3 is only the first step, JS parsers will still parse the code when an unsupport core function is used, it will just fail or throw an exception at runtime. Therefore, we also need to require/use polyfil implementations or helper functions to handle those scenarios.
+
+It should also be noted that the overall goal of ES3/IE8 compatibility is the support at least the following 2 usage usage patterns. By supporting these two (2) basic use-cases, application/developers will be able to determine what browsers their users are using and whether they are experiencing any issues. As the SDK will report the data to the server, thus enabling the insights into whether they need to either fully support ES3/IE8 or provide some sort of browser upgrade notifications.
+- track()
+- trackException()
+
+Beyond terminating support for older browsers that only support ES3, (which we cannot do at this point in time) we will endeavour to maintain support for the above two (2) use-cases.
+
+### ES3/IE8 Features, Solutions, Workarounds and Polyfil style helper functions
+As part of contributing to the project the following table highlights all of the currently known issues and the available solution/workaround. During PR and reviewing please ensure that you do not use the unsupported feature directly and instead use (or provide) the helper, soultion or workaround.
+
+This table does not attempt to include ALL of the ES3 unsuported features, just the currently known functions that where being used at the time or writing. You are welcome to contribute to provide additional helpers, workarounds or documentation of values that should not be used.
+
+|  Feature  |  Description  |  Helper, Solution or Workaround |
+|-----------|-----------------|-----------------|
+| ```JSON.stringify(obj)``` | We have a hard requirement on JSON support, however, because of the size of adding a specific JSON polyfil just for our usage we decided not to include our own version. As such any user of this Api **MUST** include a JSON polyfil implementation, otherwise, the API simply will not work. | App/Site **MUST** provide their own JSON polyfil.
+| ```Object.keys()``` | Not provided by ES3, use the helper  | ```CoreUtils.objKeys(obj: {}): string[]``` |
+| ES5+ getters/setters<br>```Object.defineProperty(...)``` | Code will needs to created the individual getters/setters manually in a static initializer. See ```ChannelController.ts``` for example usage.<br>However, to ensure compatibility actual usage of any getters/setters internally in the primary SDK code is not permitted. They may (and should) be used in unit tests to ensure that if used they function as expected (in an ES5+ environment).| ``` CoreUtils.objDefineAccessors<T>(target:any, prop:string, getProp?:() => T, setProp?: (v:T) => void) : boolean``` |
+| ```Object.create(protoObj)``` | Not supported in an ES3 environment, use the helper or direct construct the object with SON style notation (if possible) | ```CoreUtils.objCreate(obj:object):any``` |
+| ```Object.create(protoObj, descriptorSet)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Object.defineProperties()``` | Not supported and no provided workaround/solution. | N/A |
+| ```Object.getOwnPropertyNames(obj)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Object.getPrototypeOf(obj)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Object.getOwnPropertyDescriptor(obj)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Object.getOwnPropertyNames()``` | Not supported and no provided workaround/solution. | N/A |
+| ```Object.preventExtensions(obj)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Object.isExtensible(obj)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Object.seal(obj)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Object.isSealed(obj)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Object.freeze(obj)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Object.isFrozen(obj)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Array.prototype.indexOf(...)``` | Use the provided helper | ```CoreUtils.arrIndexOf<T>(arr: T[], searchElement: T, fromIndex?: number): number``` |
+| ```Array.prototype.lastIndexOf(...)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Array.prototype.every(...)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Array.prototype.some(...)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Array.prototype.forEach(...)``` | Use the provided helper. | ```arrForEach<T>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => void, thisArg?: any):void``` |
+| ```Array.prototype.map(...)``` | Use the provided helper. | ```CoreUtils.arrMap<T,R>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => R, thisArg?: any): R[]``` |
+| ```Array.prototype.filter(...)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Array.prototype.reduce(...)``` | Use the provided helper. | ```CoreUtils.arrReduce<T,R>(arr: T[], callbackfn: (previousValue: T|R, currentValue?: T, currentIndex?: number, array?: T[]) => R, initialValue?: R): R``` |
+| ```Array.prototype.reduceRight(...)``` | Not supported and no provided workaround/solution. | N/A |
+| ```Date.prototype.toISOString()``` | Use the provided helper | ```CoreUtils.toISOString(date: Date)``` |

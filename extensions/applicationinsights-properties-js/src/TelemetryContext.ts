@@ -3,7 +3,7 @@
  * @copyright Microsoft 2018
  */
 
-import { ITelemetryItem, IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
+import { ITelemetryItem, IDiagnosticLogger, CoreUtils } from '@microsoft/applicationinsights-core-js';
 import { Session, _SessionManager } from './Context/Session';
 import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, IWeb, SampleRate, CtxTagKeys } from '@microsoft/applicationinsights-common';
 import { Application } from './Context/Application';
@@ -168,22 +168,22 @@ export class TelemetryContext implements ITelemetryContext {
     }
 
     public cleanUp(event:ITelemetryItem) {
-        if (event.ext[Extensions.DeviceExt] && Object.keys(event.ext[Extensions.DeviceExt]).length === 0) {
+        if (event.ext[Extensions.DeviceExt] && CoreUtils.objKeys(event.ext[Extensions.DeviceExt]).length === 0) {
             delete event.ext[Extensions.DeviceExt];
         }
-        if (event.ext[Extensions.UserExt] && Object.keys(event.ext[Extensions.UserExt]).length === 0) {
+        if (event.ext[Extensions.UserExt] && CoreUtils.objKeys(event.ext[Extensions.UserExt]).length === 0) {
             delete event.ext[Extensions.UserExt];
         }
-        if (event.ext[Extensions.WebExt] && Object.keys(event.ext[Extensions.WebExt]).length === 0) {
+        if (event.ext[Extensions.WebExt] && CoreUtils.objKeys(event.ext[Extensions.WebExt]).length === 0) {
             delete event.ext[Extensions.WebExt];
         }
-        if (event.ext[Extensions.OSExt] && Object.keys(event.ext[Extensions.OSExt]).length === 0) {
+        if (event.ext[Extensions.OSExt] && CoreUtils.objKeys(event.ext[Extensions.OSExt]).length === 0) {
             delete event.ext[Extensions.OSExt];
         }
-        if (event.ext[Extensions.AppExt] && Object.keys(event.ext[Extensions.AppExt]).length === 0) {
+        if (event.ext[Extensions.AppExt] && CoreUtils.objKeys(event.ext[Extensions.AppExt]).length === 0) {
             delete event.ext[Extensions.AppExt];
         }
-        if (event.ext[Extensions.TraceExt] && Object.keys(event.ext[Extensions.TraceExt]).length === 0) {
+        if (event.ext[Extensions.TraceExt] && CoreUtils.objKeys(event.ext[Extensions.TraceExt]).length === 0) {
             delete event.ext[Extensions.TraceExt];
         }
     }

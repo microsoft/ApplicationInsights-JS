@@ -59,7 +59,7 @@ export class Exception extends ExceptionData implements ISerializable {
 
     public static CreateFromInterface(logger: IDiagnosticLogger, exception: IExceptionInternal): Exception {
         const exceptions: _ExceptionDetails[] = exception.exceptions
-            && exception.exceptions.map((ex: IExceptionDetailsInternal) => _ExceptionDetails.CreateFromInterface(logger, ex));
+            && CoreUtils.arrMap(exception.exceptions, (ex: IExceptionDetailsInternal) => _ExceptionDetails.CreateFromInterface(logger, ex));
         const exceptionData = new Exception(logger, {...exception, exceptions});
         return exceptionData;
     }
@@ -68,7 +68,7 @@ export class Exception extends ExceptionData implements ISerializable {
         const { exceptions, properties, measurements, severityLevel, ver, problemGroup, id, isManual } = this;
 
         const exceptionDetailsInterface = exceptions instanceof Array
-            && exceptions.map((exception: _ExceptionDetails) => exception.toInterface())
+            && CoreUtils.arrMap(exceptions, (exception: _ExceptionDetails) => exception.toInterface())
             || undefined;
 
         return {
@@ -135,7 +135,7 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
 
     public toInterface(): IExceptionDetailsInternal {
         const parsedStack = this.parsedStack instanceof Array
-            && this.parsedStack.map((frame: _StackFrame) => frame.toInterface());
+            && CoreUtils.arrMap(this.parsedStack, (frame: _StackFrame) => frame.toInterface());
 
         const exceptionDetailsInterface: IExceptionDetailsInternal = {
             id: this.id,
@@ -152,7 +152,7 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
 
     public static CreateFromInterface(logger, exception: IExceptionDetailsInternal): _ExceptionDetails {
         const parsedStack = (exception.parsedStack instanceof Array
-            && exception.parsedStack.map(frame => _StackFrame.CreateFromInterface(frame)))
+            &&CoreUtils.arrMap(exception.parsedStack, frame => _StackFrame.CreateFromInterface(frame)))
             || exception.parsedStack;
 
         const exceptionDetails = new _ExceptionDetails(logger, {...exception, parsedStack});

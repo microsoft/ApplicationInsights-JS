@@ -521,7 +521,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             }
 
             if (this._config.enableRequestHeaderTracking) {
-                if (Object.keys(xhr.ajaxData.requestHeaders).length > 0) {
+                if (CoreUtils.objKeys(xhr.ajaxData.requestHeaders).length > 0) {
                     dependency.properties = dependency.properties || {};
                     dependency.properties.requestHeaders = {};
                     dependency.properties.requestHeaders = xhr.ajaxData.requestHeaders;
@@ -535,13 +535,13 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     // the regex converts the header string into an array of individual headers
                     const arr = headers.trim().split(/[\r\n]+/);
                     const responseHeaderMap = {};
-                    arr.forEach((line) => {
+                    CoreUtils.arrForEach(arr, (line) => {
                         const parts = line.split(': ');
                         const header = parts.shift();
                         const value = parts.join(': ');
                         responseHeaderMap[header] = value;
                     });
-                    if (Object.keys(responseHeaderMap).length > 0) {
+                    if (CoreUtils.objKeys(responseHeaderMap).length > 0) {
                         dependency.properties = dependency.properties || {};
                         dependency.properties.responseHeaders = {};
                         dependency.properties.responseHeaders = responseHeaderMap;
@@ -678,7 +678,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 }
 
                 if (this._config.enableRequestHeaderTracking) {
-                    if (Object.keys(ajaxData.requestHeaders).length > 0) {
+                    if (CoreUtils.objKeys(ajaxData.requestHeaders).length > 0) {
                         dependency.properties = dependency.properties || {};
                         dependency.properties.requestHeaders = ajaxData.requestHeaders;
                     }               
@@ -689,7 +689,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     response.headers.forEach((value, name) => {
                         responseHeaderMap[name] = value;
                     });
-                    if (Object.keys(responseHeaderMap).length > 0) {
+                    if (CoreUtils.objKeys(responseHeaderMap).length > 0) {
                         dependency.properties = dependency.properties || {};
                         dependency.properties.responseHeaders = responseHeaderMap;
                     }

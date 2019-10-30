@@ -64,7 +64,7 @@ class AppInsightsModule {
     }
 
     private static _download(aiConfig: Microsoft.ApplicationInsights.IConfig) {
-        AppInsightsModule.appInsightsInstance.config = aiConfig;
+        AppInsightsModule.getAppInsightsInstance().config = aiConfig;
         var aiObject = window[AppInsightsModule.appInsightsName];
 
         // if script was previously downloaded and initialized, queue will be deleted, reinitialize it
@@ -95,7 +95,15 @@ class AppInsightsModule {
 
     }
 
-    public static get appInsightsInstance(): Microsoft.ApplicationInsights.IAppInsights {
+    /**
+     * This property returns the current instance of the appInsights, the property is optional as
+     * it will only defined when running in an ES5+ browser, if your users are using an ES3 browser 
+     * (IE8) you should use the function getter(getAppInsightsInstance()) instead.
+     * This change was added in Nov'19 and may not be published -- check your deployed version
+     */
+    public static readonly appInsightsInstance?: Microsoft.ApplicationInsights.IAppInsights;
+
+    public static getAppInsightsInstance(): Microsoft.ApplicationInsights.IAppInsights {
         if (typeof window === 'undefined') {
             return;
         }
@@ -110,8 +118,25 @@ class AppInsightsModule {
         return window[AppInsightsModule.appInsightsName];
     }
 
+    /**
+     * Static constructor, attempt to ES5 get accessor
+     */
+    private static _staticInit = (() => {
+        // Dynamically create get/set property accessors
 
+        let defineProp = Object["defineProperty"];
+        try {
+            defineProp && defineProp(AppInsightsModule.prototype, "appInsightsInstance", {
+                get: AppInsightsModule.getAppInsightsInstance,
+                enumerable: true,
+                configurable: true
+            });
+        } catch (e) {
+            // IE8 Defines a defineProperty on Object but it's only supported for DOM elements so it will throw
+            // We will just ignore this here.
+        }
+    })();
 }
 
-export var AppInsights: Microsoft.ApplicationInsights.IAppInsights = AppInsightsModule.appInsightsInstance;
+export var AppInsights: Microsoft.ApplicationInsights.IAppInsights = AppInsightsModule.getAppInsightsInstance();
 export var Util: typeof Microsoft.ApplicationInsights.UtilHelpers;

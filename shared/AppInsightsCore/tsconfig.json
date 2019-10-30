@@ -5,7 +5,7 @@
     "noImplicitAny": false,
     "module": "es6",
     "moduleResolution": "node",
-    "target": "es5",
+    "target": "es3",
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
     "noEmitHelpers": true,

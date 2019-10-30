@@ -85,11 +85,11 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
         return setInterval(() => {
             const queue: _InternalLogMessage[] = this.logger ? this.logger.queue : [];
 
-            queue.forEach((logMessage: _InternalLogMessage) => {
+            CoreUtils.arrForEach(queue, (logMessage: _InternalLogMessage) => {
                 const item: ITelemetryItem = {
                     name: eventName ? eventName : "InternalMessageId: " + logMessage.messageId,
                     iKey: this.config.instrumentationKey,
-                    time: new Date().toISOString(),
+                    time: CoreUtils.toISOString(new Date()),
                     baseType: _InternalLogMessage.dataType,
                     baseData: { message: logMessage.message }
                 };

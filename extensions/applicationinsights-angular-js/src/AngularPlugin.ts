@@ -28,7 +28,7 @@ export default class AngularPlugin implements ITelemetryPlugin {
                 ? (config.extensionConfig[this.identifier] as IAngularExtensionConfig)
                 : { router: null };
         this._logger = core.logger;
-        extensions.forEach(ext => {
+        CoreUtils.arrForEach(extensions, ext => {
             const identifier = (ext as ITelemetryPlugin).identifier;
             if (identifier === 'ApplicationInsightsAnalytics') {
                 this._analyticsPlugin = (ext as any) as IAppInsights;

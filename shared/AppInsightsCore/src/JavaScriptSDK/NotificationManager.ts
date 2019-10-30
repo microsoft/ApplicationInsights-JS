@@ -3,6 +3,7 @@
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { INotificationManager } from './../JavaScriptSDK.Interfaces/INotificationManager';
+import { CoreUtils } from "./CoreUtils";
 
 /**
  * Class to manage sending notifications to all the listeners.
@@ -23,10 +24,10 @@ export class NotificationManager implements INotificationManager {
      * @param {INotificationListener} listener - AWTNotificationListener to remove.
      */
     removeNotificationListener(listener: INotificationListener): void {
-        let index: number = this.listeners.indexOf(listener);
+        let index: number = CoreUtils.arrIndexOf(this.listeners, listener);
         while (index > -1) {
             this.listeners.splice(index, 1);
-            index = this.listeners.indexOf(listener);
+            index = CoreUtils.arrIndexOf(this.listeners, listener);
         }
     }
 

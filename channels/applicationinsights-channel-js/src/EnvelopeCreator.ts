@@ -194,8 +194,8 @@ export abstract class EnvelopeCreator {
         // deals with tags.push({object})
         for(let i = item.tags.length - 1; i >= 0; i--){
             const tg = item.tags[i];
-            // Object.keys returns an array of keys
-            Object.keys(tg).forEach(key => {
+            // CoreUtils.objKeys returns an array of keys
+            CoreUtils.arrForEach(CoreUtils.objKeys(tg), key => {
                 tgs[key] = tg[key];
             })
             item.tags.splice(i, 1);

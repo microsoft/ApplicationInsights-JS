@@ -253,3 +253,4 @@ package-deps.json
 aicore.tests.js*
 aicore.tests.d.ts
 ai.tests.d.ts
+/.vs

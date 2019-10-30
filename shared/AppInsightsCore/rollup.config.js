@@ -41,6 +41,7 @@ const browserRollupConfigFactory = isProduction => {
     browserRollupConfig.output.file = `browser/${outputName}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
+        ie8: true,
         output: {
           preamble: banner
         }
@@ -77,6 +78,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
     nodeRollupConfig.output.file = `dist/${outputName}.min.js`;
     nodeRollupConfig.plugins.push(
       uglify({
+        ie8: true,
         output: {
           preamble: banner
         }
