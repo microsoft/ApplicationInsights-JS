@@ -55,6 +55,15 @@ var aisdk = window[aiName] || (function (aiConfig) {
     createLazyMethod("clearAuthenticatedUserContext");
     createLazyMethod("flush");
 
+    // expose SeverityLevel enum
+    appInsights['SeverityLevel'] = {
+        Verbose : 0,
+        Information : 1,
+        Warning : 2,
+        Error : 3,
+        Critical : 4,
+    };
+    
     // Collect global errors
     // Note: ApplicationInsightsAnalytics is the extension string identifier for
     //  AppAnalytics. It is defined in ApplicationInsights.ts:ApplicationInsights.identifer
