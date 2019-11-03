@@ -323,7 +323,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     private supportsAjaxMonitoring(): boolean {
         let result = true;
 
-        if (typeof XMLHttpRequest !== 'function' ||
+        if (typeof XMLHttpRequest === 'undefined' ||
             CoreUtils.isNullOrUndefined(XMLHttpRequest) ||
             CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype) ||
             CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype.open) ||
