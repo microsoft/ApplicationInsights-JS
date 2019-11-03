@@ -23,7 +23,7 @@ module Microsoft.ApplicationInsights {
         private currentWindowHost;
 
         constructor(appInsights: Microsoft.ApplicationInsights.AppInsights) {
-            this.currentWindowHost = typeof window == 'object' ? window.location.host && window.location.host.toLowerCase() : undefined;
+            this.currentWindowHost = typeof window === 'object' ? window.location.host && window.location.host.toLowerCase() : undefined;
             this.appInsights = appInsights;
             this.initialized = false;
             this.Init();
