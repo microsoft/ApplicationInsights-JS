@@ -24,7 +24,7 @@ export class ChannelController implements ITelemetryPlugin {
     private channelQueue: IChannelControls[][];
 
     public processTelemetry(item: ITelemetryItem) {
-        this.channelQueue.forEach(queues => {
+        CoreUtils.arrForEach(this.channelQueue, queues => {
             // pass on to first item in queue
             if (queues.length > 0) {
                 queues[0].processTelemetry(item);
@@ -32,7 +32,7 @@ export class ChannelController implements ITelemetryPlugin {
         });
     }
 
-    public get ChannelControls(): IChannelControls[][] {
+    public getChannelControls(): IChannelControls[][] {
         return this.channelQueue;
     }
 
@@ -44,7 +44,7 @@ export class ChannelController implements ITelemetryPlugin {
         this.channelQueue = new Array<IChannelControls[]>();
         if (config.channels) {
             let invalidChannelIdentifier;
-            config.channels.forEach(queue => {
+            CoreUtils.arrForEach(config.channels, queue => {
 
                 if (queue && queue.length > 0) {
                     queue = queue.sort((a, b) => { // sort based on priority within each queue
@@ -56,7 +56,7 @@ export class ChannelController implements ITelemetryPlugin {
                     }
 
                     // Initialize each plugin
-                    queue.forEach(queueItem => {
+                    CoreUtils.arrForEach(queue, queueItem => {
                         if (queueItem.priority < ChannelControllerPriority) {
                             invalidChannelIdentifier = queueItem.identifier;
                         }
@@ -91,10 +91,19 @@ export class ChannelController implements ITelemetryPlugin {
                 arr[i - 1].setNextPlugin(arr[i]);
             }
             // Initialize each plugin
-            arr.forEach(queueItem => queueItem.initialize(config, core, extensions));
+            CoreUtils.arrForEach(arr, queueItem => queueItem.initialize(config, core, extensions));
 
             this.channelQueue.push(arr);
         }
     }
+
+    /**
+     * Static constructor, attempt to create accessors
+     */
+    // tslint:disable-next-line
+    private static _staticInit = (() => {
+        // Dynamically create get/set property accessors
+        CoreUtils.objDefineAccessors(ChannelController.prototype, "ChannelControls", ChannelController.prototype.getChannelControls);
+    })();
 }
 

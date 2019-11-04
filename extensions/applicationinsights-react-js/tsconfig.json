@@ -5,7 +5,7 @@
     "noImplicitAny": false,
     "module": "es6",
     "moduleResolution": "Node",
-    "target": "es5",
+    "target": "es3",
     "jsx": "react",
     "alwaysStrict": true,
     "suppressImplicitAnyIndexErrors": true,

@@ -78,8 +78,8 @@ export class ApplicationInsights {
      * @memberof ApplicationInsights
      */
     public flush(async: boolean = true) {
-        this.core.getTransmissionControls().forEach(controls => {
-            controls.forEach(plugin => {
+        CoreUtils.arrForEach(this.core.getTransmissionControls(), controls => {
+            CoreUtils.arrForEach(controls, plugin => {
                 async
                     ? (plugin as Sender).flush()
                     : (plugin as Sender).triggerSend(async);

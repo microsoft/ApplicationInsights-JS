@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, IChannelControls } from "@microsoft/applicationinsights-core-js";
+import { CoreUtils, IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, IChannelControls } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Util, IConfig, IDependencyTelemetry, IPageViewPerformanceTelemetry,IPropertiesPlugin,
         IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, ITelemetryContext,
@@ -230,8 +230,8 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public flush(async: boolean = true) {
-        this.core.getTransmissionControls().forEach(channels => {
-            channels.forEach(channel => {
+        CoreUtils.arrForEach(this.core.getTransmissionControls(), channels => {
+            CoreUtils.arrForEach(channels, channel => {
                 channel.flush(async);
             })
         })
@@ -244,8 +244,8 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public onunloadFlush(async: boolean = true) {
-        this.core.getTransmissionControls().forEach(channels => {
-            channels.forEach((channel: IChannelControls & Sender) => {
+        CoreUtils.arrForEach(this.core.getTransmissionControls(), channels => {
+            CoreUtils.arrForEach(channels, (channel: IChannelControls & Sender) => {
                 if (channel.onunloadFlush) {
                     channel.onunloadFlush();
                 } else {

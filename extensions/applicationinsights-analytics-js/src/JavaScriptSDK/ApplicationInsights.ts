@@ -585,7 +585,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             && typeof Event !== "undefined") {
             const _self = this;
             // Find the properties plugin
-            extensions.forEach(extension => {
+            CoreUtils.arrForEach(extensions, extension => {
                 if (extension.identifier === PropertiesPluginIdentifier) {
                     this._properties = extension as properties.PropertiesPlugin;
                 }

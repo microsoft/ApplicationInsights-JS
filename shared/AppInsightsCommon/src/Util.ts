@@ -8,6 +8,9 @@ import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 
+// Adding common usage of prototype as a string to enable indexed lookup to assist with minification
+const prototype = "prototype";
+
 export class Util {
     private static document: any = typeof document !== "undefined" ? document : {};
     private static _canUseLocalStorage: boolean = undefined;
@@ -452,51 +455,23 @@ export class Util {
      * Check if an object is of type Array
      */
     public static isArray(obj: any): boolean {
-        return Object.prototype.toString.call(obj) === "[object Array]";
+        return Object[prototype].toString.call(obj) === "[object Array]";
     }
 
     /**
      * Check if an object is of type Error
      */
     public static isError(obj: any): boolean {
-        return Object.prototype.toString.call(obj) === "[object Error]";
+        return Object[prototype].toString.call(obj) === "[object Error]";
     }
 
     /**
      * Check if an object is of type Date
      */
-    public static isDate(obj: any): boolean {
-        return Object.prototype.toString.call(obj) === "[object Date]";
-    }
+    public static isDate = CoreUtils.isDate;
 
-    /**
-     * Convert a date to I.S.O. format in IE8
-     */
-    public static toISOStringForIE8(date: Date) {
-        if (Util.isDate(date)) {
-            if (Date.prototype.toISOString) {
-                return date.toISOString();
-            } else {
-                const pad = (num: number) => {
-                    let r = String(num);
-                    if (r.length === 1) {
-                        r = "0" + r;
-                    }
-
-                    return r;
-                }
-
-                return date.getUTCFullYear()
-                    + "-" + pad(date.getUTCMonth() + 1)
-                    + "-" + pad(date.getUTCDate())
-                    + "T" + pad(date.getUTCHours())
-                    + ":" + pad(date.getUTCMinutes())
-                    + ":" + pad(date.getUTCSeconds())
-                    + "." + String((date.getUTCMilliseconds() / 1000).toFixed(3)).slice(2, 5)
-                    + "Z";
-            }
-        }
-    }
+    // Keeping this name for backward compatibility (for now)
+    public static toISOStringForIE8 = CoreUtils.toISOString;
 
     /**
      * Gets IE version if we are running on IE, or null otherwise
@@ -542,7 +517,7 @@ export class Util {
      * Returns string representation of an object suitable for diagnostics logging.
      */
     public static dump(object: any): string {
-        const objectTypeDump: string = Object.prototype.toString.call(object);
+        const objectTypeDump: string = Object[prototype].toString.call(object);
         let propertyValueDump: string = JSON.stringify(object);
         if (objectTypeDump === "[object Error]") {
             propertyValueDump = "{ stack: '" + object.stack + "', message: '" + object.message + "', name: '" + object.name + "'";
@@ -555,7 +530,7 @@ export class Util {
      * Returns the name of object if it's an Error. Otherwise, returns empty string.
      */
     public static getExceptionName(object: any): string {
-        const objectTypeDump: string = Object.prototype.toString.call(object);
+        const objectTypeDump: string = Object[prototype].toString.call(object);
         if (objectTypeDump === "[object Error]") {
             return object.name;
         }
@@ -686,7 +661,7 @@ export class CorrelationIdHelper {
         const includedDomains = config && config.correlationHeaderDomains;
         if (includedDomains) {
             let matchExists;
-            includedDomains.forEach((domain) => {
+            CoreUtils.arrForEach(includedDomains, (domain) => {
                 const regex = new RegExp(domain.toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
                 matchExists = matchExists || regex.test(requestHost);
             });

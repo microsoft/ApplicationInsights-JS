@@ -34,7 +34,7 @@ export class TelemetryItemCreator {
 
         const telemetryItem: ITelemetryItem = {
             name: envelopeName,
-            time: new Date().toISOString(),
+            time: CoreUtils.toISOString(new Date()),
             iKey: "", // this will be set in TelemetryContext
             ext: systemProperties ? systemProperties : {}, // part A
             tags: [],

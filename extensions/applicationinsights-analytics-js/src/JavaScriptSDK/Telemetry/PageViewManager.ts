@@ -73,7 +73,7 @@ export class PageViewManager {
                 pageView,
                 customProperties
             );
-            this._channel().forEach(queues => { queues.forEach(q => q.flush(true)) })
+            CoreUtils.arrForEach(this._channel(), queues => { CoreUtils.arrForEach(queues, q => q.flush(true)) })
 
             // no navigation timing (IE 8, iOS Safari 8.4, Opera Mini 8 - see http://caniuse.com/#feat=nav-timing)
             this._logger.throwInternal(
@@ -115,7 +115,7 @@ export class PageViewManager {
                 pageView,
                 customProperties
             );
-            this._channel().forEach(queues => { queues.forEach(q => q.flush(true)) })
+            CoreUtils.arrForEach(this._channel(), queues => { CoreUtils.arrForEach(queues, q => q.flush(true)) })
             pageViewSent = true;
         }
 
@@ -141,7 +141,7 @@ export class PageViewManager {
                         this.appInsights.sendPageViewInternal(
                             pageView,
                             customProperties);
-                        this._channel().forEach(queues => { queues.forEach(q => q.flush(true)) })
+                            CoreUtils.arrForEach(this._channel(), queues => { CoreUtils.arrForEach(queues, q => q.flush(true)) })
                     } else {
                         if (!pageViewSent) {
                             customProperties["duration"] = pageViewPerformance.durationMs;
@@ -154,7 +154,7 @@ export class PageViewManager {
                             this.appInsights.sendPageViewPerformanceInternal(pageViewPerformance, customProperties);
                             this.pageViewPerformanceSent = true;
                         }
-                        this._channel().forEach(queues => { queues.forEach(q => q.flush(true)) })
+                        CoreUtils.arrForEach(this._channel(), queues => { CoreUtils.arrForEach(queues, q => q.flush(true)) })
                     }
                 } else if (DateTimeUtils.GetDuration(start, +new Date) > maxDurationLimit) {
                     // if performance timings are not ready but we exceeded the maximum duration limit, just log a page view telemetry
@@ -166,7 +166,7 @@ export class PageViewManager {
                             pageView,
                             customProperties
                         );
-                        this._channel().forEach(queues => { queues.forEach(q => q.flush(true)) })
+                        CoreUtils.arrForEach(this._channel(), queues => { CoreUtils.arrForEach(queues, q => q.flush(true)) })
                     }
                 }
             } catch (e) {

@@ -45,7 +45,7 @@ export class BaseCore implements IAppInsightsCore {
 
         this._notificationManager = notificationManager;
         if (!this._notificationManager) {
-            this._notificationManager = Object.create({
+            this._notificationManager = CoreUtils.objCreate({
                 addNotificationListener: (listener) => {},
                 removeNotificationListener: (listener) => {},
                 eventsSent: (events) => {},
@@ -63,7 +63,7 @@ export class BaseCore implements IAppInsightsCore {
 
         this.logger = logger;
         if (!this.logger) {
-            this.logger = Object.create({
+            this.logger = CoreUtils.objCreate({
                 throwInternal: (severity, msgId, msg: string, properties?: Object, isUserAct = false) => {},
                 warnToConsole: (message: string) => {},
                 resetInternalMessageCount: () => {}
@@ -74,7 +74,7 @@ export class BaseCore implements IAppInsightsCore {
         this._extensions.push(...extensions, ...this.config.extensions);
 
         // Initial validation 
-        this._extensions.forEach((extension: ITelemetryPlugin) => {
+        CoreUtils.arrForEach(this._extensions, (extension: ITelemetryPlugin) => {
             let isValid = true;
             if (CoreUtils.isNullOrUndefined(extension) || CoreUtils.isNullOrUndefined(extension.initialize)) {
                 isValid = false;
@@ -110,7 +110,7 @@ export class BaseCore implements IAppInsightsCore {
 
         // Check if any two extensions have the same priority, then warn to console
         const priority = {};
-        this._extensions.forEach(ext => {
+        CoreUtils.arrForEach(this._extensions, ext => {
             const t = (ext as ITelemetryPlugin);
             if (t && t.priority) {
                 if (!CoreUtils.isNullOrUndefined(priority[t.priority])) {
@@ -144,7 +144,7 @@ export class BaseCore implements IAppInsightsCore {
         this._channelController.initialize(this.config, this, this._extensions);
 
         // initialize remaining regular plugins
-        this._extensions.forEach(ext => {
+        CoreUtils.arrForEach(this._extensions, ext => {
             const e = ext as ITelemetryPlugin;
             if (e && e.priority < this._channelController.priority) {
                 ext.initialize(this.config, this, this._extensions); // initialize
@@ -163,7 +163,7 @@ export class BaseCore implements IAppInsightsCore {
     }
 
     getTransmissionControls(): IChannelControls[][] {
-        return this._channelController.ChannelControls;
+        return this._channelController.getChannelControls();
     }
 
     track(telemetryItem: ITelemetryItem) {
@@ -173,7 +173,7 @@ export class BaseCore implements IAppInsightsCore {
         }
         if (!telemetryItem.time) {
             // add default timestamp if not passed in
-            telemetryItem.time = new Date().toISOString();
+            telemetryItem.time = CoreUtils.toISOString(new Date());
         }
         if (CoreUtils.isNullOrUndefined(telemetryItem.ver)) {
             // CommonSchema 4.0

@@ -277,7 +277,7 @@ export class Sender implements IChannelControlsAI {
             let doNotSendItem = false;
             // this is for running in legacy mode, where customer may already have a custom initializer present
             if (telemetryItem.tags && telemetryItem.tags[ProcessLegacy]) {
-                telemetryItem.tags[ProcessLegacy].forEach((callBack: (env: IEnvelope) => boolean | void) => {
+                CoreUtils.arrForEach(telemetryItem.tags[ProcessLegacy], (callBack: (env: IEnvelope) => boolean | void) => {
                     try {
                         if (callBack && callBack(aiEnvelope) === false) {
                             doNotSendItem = true;
