@@ -23,7 +23,7 @@ module Microsoft.ApplicationInsights {
         private currentWindowHost;
 
         constructor(appInsights: Microsoft.ApplicationInsights.AppInsights) {
-            this.currentWindowHost = window.location.host && window.location.host.toLowerCase();
+            this.currentWindowHost = typeof window === 'object' ? window.location.host && window.location.host.toLowerCase() : undefined;
             this.appInsights = appInsights;
             this.initialized = false;
             this.Init();
@@ -63,7 +63,8 @@ module Microsoft.ApplicationInsights {
         ///<returns>True if Ajax monitoring is supported on this page, otherwise false</returns>
         private supportsMonitoring(): boolean {
             var result = true;
-            if (extensions.IsNullOrUndefined(XMLHttpRequest) ||
+            if (typeof XMLHttpRequest !== 'function' ||
+                extensions.IsNullOrUndefined(XMLHttpRequest) ||
                 extensions.IsNullOrUndefined(XMLHttpRequest.prototype) ||
                 extensions.IsNullOrUndefined(XMLHttpRequest.prototype.open) ||
                 extensions.IsNullOrUndefined(XMLHttpRequest.prototype.send) ||
