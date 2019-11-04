@@ -89,13 +89,13 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     protected _config: ICorrelationConfig;
     protected _nextPlugin: ITelemetryPlugin;
     protected _trackAjaxAttempts: number = 0;
-    private currentWindowHost;
+    private currentWindowHost: string;
     private _context: ITelemetryContext;
     private _isUsingW3CHeaders: boolean;
     private _isUsingAIHeaders: boolean;
 
     constructor() {
-        this.currentWindowHost = window && window.location && window.location.host && window.location.host.toLowerCase();
+        this.currentWindowHost = typeof window === 'object' && window.location && window.location.host && window.location.host.toLowerCase();
         this.initialized = false;
         this._fetchInitialized = false;
     }
@@ -322,7 +322,9 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     /// <returns>True if Ajax monitoring is supported on this page, otherwise false</returns>
     private supportsAjaxMonitoring(): boolean {
         let result = true;
-        if (CoreUtils.isNullOrUndefined(XMLHttpRequest) ||
+
+        if (typeof XMLHttpRequest === 'undefined' ||
+            CoreUtils.isNullOrUndefined(XMLHttpRequest) ||
             CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype) ||
             CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype.open) ||
             CoreUtils.isNullOrUndefined(XMLHttpRequest.prototype.send) ||
@@ -583,7 +585,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
 
     private supportsFetch(): boolean {
         let result: boolean = true;
-        if (!window || CoreUtils.isNullOrUndefined((window as any).Request) ||
+        if (typeof window !== 'object' || CoreUtils.isNullOrUndefined((window as any).Request) ||
             CoreUtils.isNullOrUndefined((window as any).Request.prototype) ||
             CoreUtils.isNullOrUndefined(window.fetch)) {
             result = false;
