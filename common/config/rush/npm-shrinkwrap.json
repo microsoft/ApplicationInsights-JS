@@ -1089,7 +1089,7 @@
     },
     "domhandler": {
       "version": "2.4.2",
-      "from": "domhandler@^2.3.0",
+      "from": "domhandler@^2.3.1",
       "resolved": "https://registry.npmjs.org/domhandler/-/domhandler-2.4.2.tgz"
     },
     "domutils": {
@@ -2944,9 +2944,9 @@
       "resolved": "https://registry.npmjs.org/object.values/-/object.values-1.1.0.tgz"
     },
     "on-finished": {
-      "version": "2.3.0",
-      "from": "on-finished@>=2.3.0 <2.4.0",
-      "resolved": "https://registry.npmjs.org/on-finished/-/on-finished-2.3.0.tgz"
+      "version": "2.3.1",
+      "from": "on-finished@>=2.3.1 <2.4.0",
+      "resolved": "https://registry.npmjs.org/on-finished/-/on-finished-2.3.1.tgz"
     },
     "once": {
       "version": "1.4.0",
@@ -3093,9 +3093,9 @@
       "resolved": "https://registry.npmjs.org/phantomjs-prebuilt/-/phantomjs-prebuilt-2.1.16.tgz"
     },
     "pify": {
-      "version": "2.3.0",
+      "version": "2.3.1",
       "from": "pify@>=2.0.0 <3.0.0",
-      "resolved": "https://registry.npmjs.org/pify/-/pify-2.3.0.tgz"
+      "resolved": "https://registry.npmjs.org/pify/-/pify-2.3.1.tgz"
     },
     "pinkie": {
       "version": "2.0.4",
@@ -3373,7 +3373,7 @@
     },
     "rimraf": {
       "version": "2.2.8",
-      "from": "rimraf@>=2.2.8 <2.3.0",
+      "from": "rimraf@>=2.2.8 <2.3.1",
       "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.2.8.tgz"
     },
     "rollup": {
@@ -3985,7 +3985,7 @@
         },
         "chalk": {
           "version": "2.4.2",
-          "from": "chalk@^2.3.0",
+          "from": "chalk@^2.3.1",
           "resolved": "https://registry.npmjs.org/chalk/-/chalk-2.4.2.tgz"
         },
         "commander": {
@@ -4182,9 +4182,9 @@
       "resolved": "https://registry.npmjs.org/whatwg-encoding/-/whatwg-encoding-1.0.5.tgz"
     },
     "whatwg-mimetype": {
-      "version": "2.3.0",
+      "version": "2.3.1",
       "from": "whatwg-mimetype@^2.1.0",
-      "resolved": "https://registry.npmjs.org/whatwg-mimetype/-/whatwg-mimetype-2.3.0.tgz"
+      "resolved": "https://registry.npmjs.org/whatwg-mimetype/-/whatwg-mimetype-2.3.1.tgz"
     },
     "whatwg-url": {
       "version": "6.5.0",

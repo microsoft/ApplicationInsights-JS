@@ -13,6 +13,14 @@ jobs:
       - npm install
       - grunt
       - grunt test
+    - stage: "Build and Test: React Native Plugin"
+      name: "Build and Test: React Native Plugin"
+      script:
+      - cd extensions/applicationinsights-react-native
+      - npm install
+      - npm run build
+      - npm run test
+      - npm run lint
     - stage: "build and test"
       name: "build and test"
       script:

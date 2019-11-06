@@ -79,7 +79,7 @@ export class ReactNativePlugin implements ITelemetryPlugin {
      * Automatically collects native device info for this device
      */
     private _collectDeviceInfo() {
-        this._device.deviceClass = DeviceInfo.getDeviceTypeSync();
+        this._device.deviceClass = DeviceInfo.getDeviceType();
         this._device.id = DeviceInfo.getUniqueId(); // Installation ID
         this._device.model = DeviceInfo.getModel();
     }
