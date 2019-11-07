@@ -6,15 +6,23 @@ before_install:
   - npm i -g grunt-cli
 jobs:
   include:
-    - stage: "Prod build and test"
-      name: "Prod build and test"
+    - stage: "Build and Test: Legacy"
+      name: "Build and Test: Legacy"
       script:
       - cd legacy/
       - npm install
       - grunt
       - grunt test
-    - stage: "build and test"
-      name: "build and test"
+    - stage: "Build and Test: React Native Plugin"
+      name: "Build and Test: React Native Plugin"
+      script:
+      - cd extensions/applicationinsights-react-native
+      - npm install
+      - npm run build
+      - npm run test
+      - npm run lint
+    - stage: "Build and Test: @microsoft/applicationinsights-web "
+      name: "Build and Test: @microsoft/applicationinsights-web "
       script:
       - set -e
       - set NO_UPDATE_NOTIFIER=1

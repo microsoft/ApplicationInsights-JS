@@ -31,7 +31,7 @@ import * as properties from "@microsoft/applicationinsights-properties-js";
 const durationProperty: string = "duration";
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
-    public static Version = "2.3.0"; // Not currently used anywhere
+    public static Version = "2.3.1"; // Not currently used anywhere
 
     public static getDefaultConfig(config?: IConfig): IConfig {
         if (!config) {
