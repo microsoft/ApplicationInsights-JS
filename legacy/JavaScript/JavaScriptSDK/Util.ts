@@ -320,6 +320,7 @@ module Microsoft.ApplicationInsights {
          * helper method to set userId and sessionId cookie
          */
         public static setCookie(name, value, domain?) {
+            value = value + ";SameSite=None";
             var domainAttrib = "";
             var secureAttrib = "";
 
