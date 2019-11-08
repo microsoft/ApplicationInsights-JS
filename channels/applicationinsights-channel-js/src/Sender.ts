@@ -20,6 +20,7 @@ import {
 import {
     ITelemetryPlugin, ITelemetryItem, IConfiguration, CoreUtils,
     _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
+    getWindow, getNavigator, getJSON
 } from '@microsoft/applicationinsights-core-js';
 import { Offline } from './Offline';
 import { Sample } from './TelemetryProcessors/Sample'
@@ -214,12 +215,12 @@ export class Sender implements IChannelControlsAI {
         if (!this._config.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
             this._sender = this._beaconSender;
         } else {
-            if (typeof XMLHttpRequest !== "undefined") {
+            if (!CoreUtils.isUndefined(XMLHttpRequest)) {
                 const testXhr = new XMLHttpRequest();
                 if ("withCredentials" in testXhr) {
                     this._sender = this._xhrSender;
                     this._XMLHttpRequestSupported = true;
-                } else if (typeof XDomainRequest !== "undefined") {
+                } else if (!CoreUtils.isUndefined(XDomainRequest)) {
                     this._sender = this._xdrSender; // IE 8 and 9
                 }
             }
@@ -525,7 +526,7 @@ export class Sender implements IChannelControlsAI {
         const plainTextBatch = new Blob([batch], { type: 'text/plain;charset=UTF-8' });
 
         // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
-        const queued = navigator.sendBeacon(url, plainTextBatch);
+        const queued = getNavigator().sendBeacon(url, plainTextBatch);
 
         if (queued) {
             this._buffer.markAsSent(payload);
@@ -570,7 +571,7 @@ export class Sender implements IChannelControlsAI {
     private _parseResponse(response: any): IBackendResponse {
         try {
             if (response && response !== "") {
-                const result = JSON.parse(response);
+                const result = getJSON().parse(response);
 
                 if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
                     result.itemsReceived - result.itemsAccepted === result.errors.length) {
@@ -680,13 +681,14 @@ export class Sender implements IChannelControlsAI {
      * appId from the backend for the correct correlation.
      */
     private _xdrSender(payload: string[], isAsync: boolean) {
+        let _window = getWindow();
         const xdr = new XDomainRequest();
         xdr.onload = () => this._xdrOnLoad(xdr, payload);
         xdr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessageXdr(xdr), event);
 
         // XDomainRequest requires the same protocol as the hosting page.
         // If the protocol doesn't match, we can't send the telemetry :(.
-        const hostingProtocol = typeof window === "object" && window.location && window.location.protocol || "";
+        const hostingProtocol = _window && _window.location && _window.location.protocol || "";
         if (this._config.endpointUrl().lastIndexOf(hostingProtocol, 0) !== 0) {
             this._logger.throwInternal(
                 LoggingSeverity.WARNING,

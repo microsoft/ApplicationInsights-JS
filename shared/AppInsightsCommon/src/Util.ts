@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { StorageType } from "./Enums";
-import { CoreUtils, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin } from "@microsoft/applicationinsights-core-js";
+import { CoreUtils, EventHelper, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin, getWindow, getDocument, getNavigator, hasJSON, getJSON } from "@microsoft/applicationinsights-core-js";
 import { IConfig } from "./Interfaces/IConfig";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
@@ -11,8 +11,11 @@ import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 // Adding common usage of prototype as a string to enable indexed lookup to assist with minification
 const prototype = "prototype";
 
+var _window = getWindow();
+var _navigator = getNavigator();
+
 export class Util {
-    private static document: any = typeof document !== "undefined" ? document : {};
+    private static document: any = getDocument()||{};
     private static _canUseLocalStorage: boolean = undefined;
     private static _canUseSessionStorage: boolean = undefined;
     // listing only non-geo specific locations
@@ -26,10 +29,10 @@ export class Util {
     public static createDomEvent(eventName: string): Event {
         let event: Event = null;
 
-        if (typeof Event === "function") { // Use Event constructor when available
+        if (CoreUtils.isFunction(Event)) { // Use Event constructor when available
             event = new Event(eventName);
         } else { // Event has no constructor in IE
-            event = document.createEvent("Event");
+            event = getDocument().createEvent("Event");
             event.initEvent(eventName, true, true);
         }
 
@@ -67,11 +70,11 @@ export class Util {
         let fail: boolean;
         let uid: Date;
         try {
-            if (typeof window === 'undefined') {
+            if (CoreUtils.isNullOrUndefined(_window)) {
                 return null;
             }
             uid = new Date;
-            storage = storageType === StorageType.LocalStorage ? window.localStorage : window.sessionStorage;
+            storage = storageType === StorageType.LocalStorage ? _window.localStorage : _window.sessionStorage;
             storage.setItem(uid.toString(), uid.toString());
             fail = storage.getItem(uid.toString()) !== uid.toString();
             storage.removeItem(uid.toString());
@@ -217,7 +220,7 @@ export class Util {
         const keys = [];
 
         if (Util.canUseSessionStorage()) {
-            for (const key in window.sessionStorage) {
+            for (const key in _window.sessionStorage) {
                 keys.push(key);
             }
         }
@@ -396,7 +399,7 @@ export class Util {
      * helper method to trim strings (IE8 does not implement String.prototype.trim)
      */
     public static trim(str: any): string {
-        if (typeof str !== "string") { return str; }
+        if (!CoreUtils.isString(str)) { return str; }
         return str.replace(/^\s+|\s+$/g, "");
     }
 
@@ -477,7 +480,7 @@ export class Util {
      * Gets IE version if we are running on IE, or null otherwise
      */
     public static getIEVersion(userAgentStr: string = null): number {
-        const myNav = userAgentStr ? userAgentStr.toLowerCase() : navigator.userAgent.toLowerCase();
+        const myNav = userAgentStr ? userAgentStr.toLowerCase() : (_navigator ? _navigator.userAgent.toLowerCase() : "");
         return (myNav.indexOf('msie') !== -1) ? parseInt(myNav.split('msie')[1]) : null;
     }
 
@@ -518,9 +521,11 @@ export class Util {
      */
     public static dump(object: any): string {
         const objectTypeDump: string = Object[prototype].toString.call(object);
-        let propertyValueDump: string = JSON.stringify(object);
+        let propertyValueDump: string = "";
         if (objectTypeDump === "[object Error]") {
             propertyValueDump = "{ stack: '" + object.stack + "', message: '" + object.message + "', name: '" + object.name + "'";
+        } else if (hasJSON()) {
+            propertyValueDump = getJSON().stringify(object);
         }
 
         return objectTypeDump + propertyValueDump;
@@ -538,36 +543,20 @@ export class Util {
     }
 
     /**
-     * Adds an event handler for the specified event
+     * Adds an event handler for the specified event to the window
      * @param eventName {string} - The name of the event
      * @param callback {any} - The callback function that needs to be executed for the given event
      * @return {boolean} - true if the handler was successfully added
      */
     public static addEventHandler(eventName: string, callback: any): boolean {
-        if (typeof window === 'undefined' || !window || typeof eventName !== 'string' || typeof callback !== 'function') {
-            return false;
-        }
-
-        // Create verb for the event
-        const verbEventName = 'on' + eventName;
-
-        // check if addEventListener is available
-        if (window.addEventListener) {
-            window.addEventListener(eventName, callback, false);
-        } else if (window["attachEvent"]) { // For older browsers
-            window["attachEvent"](verbEventName, callback);
-        } else { // if all else fails
-            return false;
-        }
-
-        return true;
+        return EventHelper.Attach(_window, eventName, callback);
     }
 
     /**
      * Tells if a browser supports a Beacon API
      */
     public static IsBeaconApiSupported(): boolean {
-        return ('sendBeacon' in navigator && (navigator as any).sendBeacon);
+        return ('sendBeacon' in _navigator && (_navigator as any).sendBeacon);
     }
 
     public static getExtension(extensions: IPlugin[], identifier: string) {
@@ -586,7 +575,7 @@ export class Util {
 }
 
 export class UrlHelper {
-    private static document: any = typeof document !== "undefined" ? document : {};
+    private static document: any = getDocument()||{};
     private static htmlAnchorElement: HTMLAnchorElement;
 
     public static parseUrl(url): HTMLAnchorElement {
@@ -630,7 +619,7 @@ export class UrlHelper {
     // Fallback method to grab host from url if document.createElement method is not available
     public static parseHost(url: string) {
         const match = url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i);
-        if (match != null && match.length > 2 && typeof match[2] === 'string' && match[2].length > 0) {
+        if (match != null && match.length > 2 && CoreUtils.isString(match[2]) && match[2].length > 0) {
             return match[2];
         } else {
             return null;
@@ -753,10 +742,10 @@ export class DateTimeUtils {
     /**
      * Get the number of milliseconds since 1970/01/01 in local timezone
      */
-    public static Now = (typeof window === 'undefined') ? () => new Date().getTime() :
-        (window.performance && window.performance.now && window.performance.timing) ?
+    public static Now = CoreUtils.isUndefined(_window) ? () => new Date().getTime() :
+        (_window.performance && _window.performance.now && _window.performance.timing) ?
             () => {
-                return window.performance.now() + window.performance.timing.navigationStart;
+                return _window.performance.now() + _window.performance.timing.navigationStart;
             }
             :
             () => {

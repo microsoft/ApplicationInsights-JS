@@ -31,9 +31,9 @@ export class BaseCore implements IAppInsightsCore {
     }
 
     initialize(config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void {
-
+        let _this = this;
         // Make sure core is only initialized once
-        if (this._isInitialized) {
+        if (_this._isInitialized) {
             throw Error("Core should not be initialized more than once");
         }
 
@@ -41,11 +41,11 @@ export class BaseCore implements IAppInsightsCore {
             throw Error("Please provide instrumentation key");
         }
 
-        this.config = config;
+        _this.config = config;
 
-        this._notificationManager = notificationManager;
-        if (!this._notificationManager) {
-            this._notificationManager = CoreUtils.objCreate({
+        _this._notificationManager = notificationManager;
+        if (!_this._notificationManager) {
+            _this._notificationManager = CoreUtils.objCreate({
                 addNotificationListener: (listener) => {},
                 removeNotificationListener: (listener) => {},
                 eventsSent: (events) => {},
@@ -53,17 +53,17 @@ export class BaseCore implements IAppInsightsCore {
             })
         }
 
-        this.config.extensions = CoreUtils.isNullOrUndefined(this.config.extensions) ? [] : this.config.extensions;
+        _this.config.extensions = CoreUtils.isNullOrUndefined(_this.config.extensions) ? [] : _this.config.extensions;
 
         // add notification to the extensions in the config so other plugins can access it
-        this.config.extensionConfig = CoreUtils.isNullOrUndefined(this.config.extensionConfig) ? {} : this.config.extensionConfig;
-        if (this._notificationManager) {
-            this.config.extensionConfig.NotificationManager = this._notificationManager;
+        _this.config.extensionConfig = CoreUtils.isNullOrUndefined(_this.config.extensionConfig) ? {} : _this.config.extensionConfig;
+        if (_this._notificationManager) {
+            _this.config.extensionConfig.NotificationManager = _this._notificationManager;
         }
 
-        this.logger = logger;
-        if (!this.logger) {
-            this.logger = CoreUtils.objCreate({
+        _this.logger = logger;
+        if (!_this.logger) {
+            _this.logger = CoreUtils.objCreate({
                 throwInternal: (severity, msgId, msg: string, properties?: Object, isUserAct = false) => {},
                 warnToConsole: (message: string) => {},
                 resetInternalMessageCount: () => {}
@@ -71,10 +71,10 @@ export class BaseCore implements IAppInsightsCore {
         }
 
         // Concat all available extensions 
-        this._extensions.push(...extensions, ...this.config.extensions);
+        _this._extensions.push(...extensions, ..._this.config.extensions);
 
         // Initial validation 
-        CoreUtils.arrForEach(this._extensions, (extension: ITelemetryPlugin) => {
+        CoreUtils.arrForEach(_this._extensions, (extension: ITelemetryPlugin) => {
             let isValid = true;
             if (CoreUtils.isNullOrUndefined(extension) || CoreUtils.isNullOrUndefined(extension.initialize)) {
                 isValid = false;
@@ -86,23 +86,23 @@ export class BaseCore implements IAppInsightsCore {
 
         // Initial validation complete
 
-        this._extensions.push(this._channelController);
+        _this._extensions.push(_this._channelController);
         // Sort by priority
-        this._extensions = this._extensions.sort((a, b) => {
+        _this._extensions = _this._extensions.sort((a, b) => {
             const extA = (a as ITelemetryPlugin);
             const extB = (b as ITelemetryPlugin);
-            const typeExtA = typeof extA.processTelemetry;
-            const typeExtB = typeof extB.processTelemetry;
-            if (typeExtA === 'function' && typeExtB === 'function') {
+            const typeExtA = CoreUtils.isFunction(extA.processTelemetry);
+            const typeExtB = CoreUtils.isFunction(extB.processTelemetry);
+            if (typeExtA && typeExtB) {
                 return extA.priority - extB.priority;
             }
 
-            if (typeExtA === 'function' && typeExtB !== 'function') {
+            if (typeExtA && !typeExtB) {
                 // keep non telemetryplugin specific extensions at start
                 return 1;
             }
 
-            if (typeExtA !== 'function' && typeExtB === 'function') {
+            if (!typeExtA && typeExtB) {
                 return -1;
             }
         });
@@ -110,12 +110,12 @@ export class BaseCore implements IAppInsightsCore {
 
         // Check if any two extensions have the same priority, then warn to console
         const priority = {};
-        CoreUtils.arrForEach(this._extensions, ext => {
+        CoreUtils.arrForEach(_this._extensions, ext => {
             const t = (ext as ITelemetryPlugin);
             if (t && t.priority) {
                 if (!CoreUtils.isNullOrUndefined(priority[t.priority])) {
-                    if (this.logger) {
-                        this.logger.warnToConsole("Two extensions have same priority" + priority[t.priority] + ", " + t.identifier);
+                    if (_this.logger) {
+                        _this.logger.warnToConsole("Two extensions have same priority" + priority[t.priority] + ", " + t.identifier);
                     }
                 } else {
                     priority[t.priority] = t.identifier; // set a value
@@ -125,41 +125,41 @@ export class BaseCore implements IAppInsightsCore {
 
         let c = -1;
         // Set next plugin for all until channel controller
-        for (let idx = 0; idx < this._extensions.length - 1; idx++) {
-            const curr = (this._extensions[idx]) as ITelemetryPlugin;
-            if (curr && typeof curr.processTelemetry !== 'function') {
+        for (let idx = 0; idx < _this._extensions.length - 1; idx++) {
+            const curr = (_this._extensions[idx]) as ITelemetryPlugin;
+            if (curr && !CoreUtils.isFunction(curr.processTelemetry)) {
                 // these are initialized only, allowing an entry point for extensions to be initialized when SDK initializes
                 continue;
             }
 
-            if (curr.priority === this._channelController.priority) {
+            if (curr.priority === _this._channelController.priority) {
                 c = idx + 1;
                 break; // channel controller will set remaining pipeline
             }
 
-            (this._extensions[idx] as any).setNextPlugin(this._extensions[idx + 1]); // set next plugin
+            (_this._extensions[idx] as any).setNextPlugin(_this._extensions[idx + 1]); // set next plugin
         }
 
         // initialize channel controller first, this will initialize all channel plugins
-        this._channelController.initialize(this.config, this, this._extensions);
+        _this._channelController.initialize(_this.config, _this, _this._extensions);
 
         // initialize remaining regular plugins
-        CoreUtils.arrForEach(this._extensions, ext => {
+        CoreUtils.arrForEach(_this._extensions, ext => {
             const e = ext as ITelemetryPlugin;
-            if (e && e.priority < this._channelController.priority) {
-                ext.initialize(this.config, this, this._extensions); // initialize
+            if (e && e.priority < _this._channelController.priority) {
+                ext.initialize(_this.config, _this, _this._extensions); // initialize
             }
         });
 
         // Remove sender channels from main list
-        if (c < this._extensions.length) {
-            this._extensions.splice(c);
+        if (c < _this._extensions.length) {
+            _this._extensions.splice(c);
         }
 
-        if (this.getTransmissionControls().length === 0) {
+        if (_this.getTransmissionControls().length === 0) {
             throw new Error("No channels available");
         }
-        this._isInitialized = true;
+        _this._isInitialized = true;
     }
 
     getTransmissionControls(): IChannelControls[][] {
@@ -167,9 +167,10 @@ export class BaseCore implements IAppInsightsCore {
     }
 
     track(telemetryItem: ITelemetryItem) {
+        let _this = this;
         if (!telemetryItem.iKey) {
             // setup default iKey if not passed in
-            telemetryItem.iKey = this.config.instrumentationKey;
+            telemetryItem.iKey = _this.config.instrumentationKey;
         }
         if (!telemetryItem.time) {
             // add default timestamp if not passed in
@@ -181,13 +182,13 @@ export class BaseCore implements IAppInsightsCore {
         }
 
         // invoke any common telemetry processors before sending through pipeline
-        if (this._extensions.length === 0) {
-            this._channelController.processTelemetry(telemetryItem); // Pass to Channel controller so data is sent to correct channel queues
+        if (_this._extensions.length === 0) {
+            _this._channelController.processTelemetry(telemetryItem); // Pass to Channel controller so data is sent to correct channel queues
         }
         let i = 0;
-        while (i < this._extensions.length) {
-            if ((this._extensions[i] as any).processTelemetry) {
-                (this._extensions[i] as any).processTelemetry(telemetryItem); // pass on to first extension that can support processing
+        while (i < _this._extensions.length) {
+            if ((_this._extensions[i] as any).processTelemetry) {
+                (_this._extensions[i] as any).processTelemetry(telemetryItem); // pass on to first extension that can support processing
                 break;
             }
 

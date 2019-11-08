@@ -174,6 +174,13 @@ export interface IConfig {
     disableFlushOnBeforeUnload?: boolean;
 
     /**
+     * @description Default value of {@link #disableFlushOnBeforeUnload}. If true, flush method will not be called when onUnload event triggers.
+     * @type {boolean}
+     * @memberof IConfig
+     */
+    disableFlushOnUnload?: boolean;
+
+    /**
      * @description If true, the buffer with all unsent telemetry is stored in session storage. The buffer is restored on page load. Default is true.
      * @type {boolean}
      * @memberof IConfig

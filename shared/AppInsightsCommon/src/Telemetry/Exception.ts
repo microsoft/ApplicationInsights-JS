@@ -162,7 +162,7 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
 
     private static parseStack(stack): _StackFrame[] {
         let parsedStack: _StackFrame[];
-        if (typeof stack === "string") {
+        if (CoreUtils.isString(stack)) {
             const frames = stack.split('\n');
             parsedStack = [];
             let level = 0;
@@ -234,6 +234,8 @@ export class _StackFrame extends StackFrame implements ISerializable {
     constructor(sourceFrame: string | IExceptionStackFrameInternal, level: number) {
         super();
 
+        // Not converting this to CoreUtils.isString() as typescript uses this logic to "understand" the different
+        // types for the 2 different code paths
         if (typeof sourceFrame === "string") {
             const frame: string = sourceFrame;
             this.level = level;

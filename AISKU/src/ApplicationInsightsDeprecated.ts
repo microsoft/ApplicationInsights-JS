@@ -42,6 +42,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
             "*.blob.core.cloudapi.de",
             "*.blob.core.usgovcloudapi.net"];
         config.disableFlushOnBeforeUnload = Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
+        config.disableFlushOnUnload = Util.stringToBoolOrDefault(config.disableFlushOnUnload, config.disableFlushOnBeforeUnload);
         config.enableSessionStorageBuffer = Util.stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
         config.isRetryDisabled = Util.stringToBoolOrDefault(config.isRetryDisabled);
         config.isCookieUseDisabled = Util.stringToBoolOrDefault(config.isCookieUseDisabled);

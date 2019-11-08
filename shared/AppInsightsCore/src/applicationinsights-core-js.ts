@@ -10,7 +10,8 @@ export { IDiagnosticLogger } from "./JavaScriptSDK.Interfaces/IDiagnosticLogger"
 export { EventsDiscardedReason } from "./JavaScriptSDK.Enums/EventsDiscardedReason";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseCore } from './JavaScriptSDK/BaseCore';
-export { CoreUtils } from "./JavaScriptSDK/CoreUtils";
+export { CoreUtils, EventHelper } from "./JavaScriptSDK/CoreUtils";
+export { hasWindow, getWindow, hasDocument, getDocument, hasNavigator, getNavigator, hasHistory, getHistory, hasJSON, getJSON } from "./JavaScriptSDK/EnvUtils";
 export { NotificationManager } from "./JavaScriptSDK/NotificationManager";
 export { INotificationManager } from "./JavaScriptSDK.Interfaces/INotificationManager";
 export { DiagnosticLogger, _InternalLogMessage } from './JavaScriptSDK/DiagnosticLogger';
