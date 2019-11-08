@@ -3,9 +3,10 @@
 
 import React, { ErrorInfo } from "react";
 import { SeverityLevel, IAppInsights } from "@microsoft/applicationinsights-common";
+import ReactPlugin from "./ReactPlugin";
 
 export interface IAppInsightsErrorBoundaryProps {
-    appInsights: IAppInsights
+    appInsights: ReactPlugin
     onError: React.ComponentType<any>
 }
 
