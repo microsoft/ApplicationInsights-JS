@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-react-native",
-    "version": "2.1.0",
+    "version": "2.3.1",
     "description": "Microsoft Application Insights React Native Plugin",
     "main": "dist-esm/index.js",
     "types": "dist-esm/index.d.ts",
@@ -29,15 +29,15 @@
         "rollup-plugin-uglify": "^6.0.0",
         "rollup": "^0.66.0",
         "react-native-device-info": "^5.2.1",
-        "react-native": "0.59.8",
+        "react-native": "0.59.10",
         "react": "16.8.3",
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
         "qunit": "^2.9.3"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "^2.3.0",
-        "@microsoft/applicationinsights-common": "^2.3.0",
+        "@microsoft/applicationinsights-core-js": "^2.3.1",
+        "@microsoft/applicationinsights-common": "^2.3.1",
         "tslib": "^1.9.3"
     },
     "peerDependencies": {
