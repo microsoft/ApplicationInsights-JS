@@ -13,14 +13,6 @@ jobs:
       - npm install
       - grunt
       - grunt test
-    - stage: "Build and Test: React Native Plugin"
-      name: "Build and Test: React Native Plugin"
-      script:
-      - cd extensions/applicationinsights-react-native
-      - npm install
-      - npm run build
-      - npm run test
-      - npm run lint
     - stage: "Build and Test: @microsoft/applicationinsights-web "
       name: "Build and Test: @microsoft/applicationinsights-web "
       script:
@@ -53,3 +45,11 @@ jobs:
       - echo 'Running tslint...' && echo -en 'travis_fold:start:lint\\r'
       - node common/scripts/install-run-rush.js lint --verbose
       - echo -en 'travis_fold:end:lint\\r'
+    #- stage: "Build and Test: React Native Plugin"
+    #  name: "Build and Test: React Native Plugin"
+    #  script:
+    #  - cd extensions/applicationinsights-react-native
+    #  - npm install
+    #  - npm run build
+    #  - npm run test
+    #  - npm run lint
