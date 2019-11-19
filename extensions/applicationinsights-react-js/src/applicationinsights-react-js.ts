@@ -4,5 +4,19 @@
 import { IReactExtensionConfig } from "./Interfaces/IReactExtensionConfig";
 import ReactPlugin from "./ReactPlugin";
 import withAITracking from "./withAITracking";
+import {
+  AppInsightsContext,
+  useAppInsightsContext
+} from "./AppInsightsContext";
+import useTrackEvent from "./useTrackEvent";
+import useTrackMetric from "./useTrackMetric";
 
-export { ReactPlugin, IReactExtensionConfig, withAITracking };
+export {
+  ReactPlugin,
+  IReactExtensionConfig,
+  withAITracking,
+  AppInsightsContext,
+  useAppInsightsContext,
+  useTrackEvent,
+  useTrackMetric
+};
