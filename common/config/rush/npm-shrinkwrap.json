@@ -398,15 +398,27 @@
       "from": "@types/node@11.13.2",
       "resolved": "https://registry.npmjs.org/@types/node/-/node-11.13.2.tgz"
     },
+    "@types/prop-types": {
+      "version": "15.7.3",
+      "from": "@types/react@~15.7.3",
+      "resolved": "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.7.3.tgz"
+    },
     "@types/react": {
-      "version": "16.0.36",
-      "from": "@types/react@16.0.36",
-      "resolved": "https://registry.npmjs.org/@types/react/-/react-16.0.36.tgz"
+      "version": "16.9.11",
+      "from": "@types/react@~16.9.11",
+      "resolved": "https://registry.npmjs.org/@types/react/-/react-16.9.11.tgz",
+      "requires": {
+        "@types/prop-types": "*",
+        "csstype": "^2.2.0"
+      }
     },
     "@types/react-dom": {
-      "version": "16.0.3",
-      "from": "@types/react-dom@16.0.3",
-      "resolved": "https://registry.npmjs.org/@types/react-dom/-/react-dom-16.0.3.tgz"
+      "version": "16.9.4",
+      "from": "@types/react-dom@~16.9.4",
+      "resolved": "https://registry.npmjs.org/@types/react-dom/-/react-dom-16.9.4.tgz",
+      "requires": {
+        "@types/react": "*"
+      }
     },
     "@types/stack-utils": {
       "version": "1.0.1",
@@ -940,6 +952,10 @@
       "version": "0.3.8",
       "from": "cssom@>= 0.3.2 < 0.4.0",
       "resolved": "https://registry.npmjs.org/cssom/-/cssom-0.3.8.tgz"
+    },
+    "csstype": {
+      "version": "2.6.7",
+      "resolved": "https://registry.npmjs.org/csstype/-/csstype-2.6.7.tgz"
     },
     "cssstyle": {
       "version": "1.4.0",
