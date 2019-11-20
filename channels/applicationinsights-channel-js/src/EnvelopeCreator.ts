@@ -11,7 +11,8 @@ import {
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, CoreUtils,
-    IDiagnosticLogger, LoggingSeverity, _InternalMessageId
+    IDiagnosticLogger, LoggingSeverity, _InternalMessageId,
+    hasJSON, getJSON
 } from '@microsoft/applicationinsights-core-js';
 
 // these two constants are used to filter out properties not needed when trying to extract custom properties and measurements from the incoming payload
@@ -26,12 +27,12 @@ export abstract class EnvelopeCreator {
             for (const key in data) {
                 if (data.hasOwnProperty(key)) {
                     const value = data[key];
-                    if (typeof value === "number") {
+                    if (CoreUtils.isNumber(value)) {
                         measurements[key] = value;
-                    } else if (typeof value === "string") {
+                    } else if (CoreUtils.isString(value)) {
                         properties[key] = value;
-                    } else {
-                        properties[key] = JSON.stringify(value);
+                    } else if (hasJSON()) {
+                        properties[key] = getJSON().stringify(value);
                     }
                 }
             }

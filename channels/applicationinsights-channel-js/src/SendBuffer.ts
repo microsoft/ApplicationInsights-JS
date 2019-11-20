@@ -1,5 +1,5 @@
 ﻿import { Util } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON } from '@microsoft/applicationinsights-core-js';
 import { ISenderConfig } from './Interfaces';
 
 export interface ISendBuffer {
@@ -233,7 +233,7 @@ export class SessionStorageSendBuffer implements ISendBuffer {
             prefixedKey = this._config.namePrefix && this._config.namePrefix() ? this._config.namePrefix() + "_" + prefixedKey : prefixedKey;
             const bufferJson = Util.getSessionStorage(this._logger, prefixedKey);
             if (bufferJson) {
-                const buffer: string[] = JSON.parse(bufferJson);
+                const buffer: string[] = getJSON().parse(bufferJson);
                 if (buffer) {
                     return buffer;
                 }

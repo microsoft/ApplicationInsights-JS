@@ -6,7 +6,7 @@ import {
 } from '@microsoft/applicationinsights-common';
 import {
     IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
-    _InternalMessageId
+    _InternalMessageId, getNavigator, getWindow
 } from '@microsoft/applicationinsights-core-js';
 
 /**
@@ -110,14 +110,16 @@ export class PageViewPerformanceManager {
     * Returns true is window PerformanceNavigationTiming API is supported, false otherwise.
     */
    public isPerformanceNavigationTimingSupported() {
-    return typeof window !== "undefined" && window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType("navigation").length > 0;
+        let _window = getWindow();
+        return _window && _window.performance && _window.performance.getEntriesByType && _window.performance.getEntriesByType("navigation").length > 0;
 }
 
    /**
     * Returns true is window performance timing API is supported, false otherwise.
     */
     public isPerformanceTimingSupported() {
-        return typeof window !== "undefined" && window.performance && window.performance.timing;
+        let _window = getWindow();
+        return typeof _window !== "undefined" && _window.performance && _window.performance.timing;
     }
 
    /**
@@ -125,9 +127,10 @@ export class PageViewPerformanceManager {
     * Returns true if ready, false otherwise.
     */
     public isPerformanceTimingDataReady() {
-        const timing = typeof window === "object" && window.performance.timing;
+        let _window = getWindow();
+        const timing = _window && _window.performance.timing;
 
-        return typeof window === "object"
+        return _window
             && timing.domainLookupStart > 0
             && timing.navigationStart > 0
             && timing.responseStart > 0
@@ -142,9 +145,10 @@ export class PageViewPerformanceManager {
     * This method tells if given durations should be excluded from collection.
     */
     public shouldCollectDuration(...durations: number[]): boolean {
+        var _navigator = getNavigator() || {} as any;
         // a full list of Google crawlers user agent strings - https://support.google.com/webmasters/answer/1061943?hl=en
         const botAgentNames = ['googlebot', 'adsbot-google', 'apis-google', 'mediapartners-google'];
-        const userAgent = navigator.userAgent;
+        const userAgent = _navigator.userAgent;
         let isGoogleBot = false;
 
         if (userAgent) {

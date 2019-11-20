@@ -73,7 +73,6 @@ export class ChannelController implements ITelemetryPlugin {
         }
 
         let arr = new Array<IChannelControls>();
-
         for (let i = 0; i < extensions.length; i++) {
             const plugin = extensions[i] as IChannelControls;
             if (plugin.priority > ChannelControllerPriority) {

@@ -6,7 +6,7 @@ import {
 } from '@microsoft/applicationinsights-common';
 import {
     IAppInsightsCore, CoreUtils, IDiagnosticLogger, LoggingSeverity,
-    _InternalMessageId, IChannelControls
+    _InternalMessageId, IChannelControls, getWindow
 } from '@microsoft/applicationinsights-core-js';
 import { PageViewPerformanceManager } from './PageViewPerformanceManager';
 
@@ -55,14 +55,17 @@ export class PageViewManager {
     * In all cases page view performance is sent once (only for the 1st call of trackPageView), or not sent if navigation timing is not supported.
     */
     public trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any }) {
+
+        let _window = getWindow();
+
         let name = pageView.name;
         if (CoreUtils.isNullOrUndefined(name) || typeof name !== "string") {
-            name = pageView.name = typeof window === "object" && window.document && window.document.title || "";
+            name = pageView.name = _window && _window.document && _window.document.title || "";
         }
 
         let uri = pageView.uri;
         if (CoreUtils.isNullOrUndefined(uri) || typeof uri !== "string") {
-            uri = pageView.uri = typeof window === "object" && window.location && window.location.href || "";
+            uri = pageView.uri = _window && _window.location && _window.location.href || "";
         }
 
         // case 1a. if performance timing is not supported by the browser, send the page view telemetry with the duration provided by the user. If the user

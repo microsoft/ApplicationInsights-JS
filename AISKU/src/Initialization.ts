@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CoreUtils, IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, IChannelControls } from "@microsoft/applicationinsights-core-js";
+import { CoreUtils, IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, IChannelControls, EventHelper, hasWindow, hasDocument } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Util, IConfig, IDependencyTelemetry, IPageViewPerformanceTelemetry,IPropertiesPlugin,
         IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, ITelemetryContext,
@@ -261,9 +261,10 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public loadAppInsights(legacyMode: boolean = false): IApplicationInsights {
+        let _this = this;
 
         // dont allow additional channels/other extensions for legacy mode; legacy mode is only to allow users to switch with no code changes!
-        if (legacyMode && this.config.extensions && this.config.extensions.length > 0) {
+        if (legacyMode && _this.config.extensions && _this.config.extensions.length > 0) {
             throw new Error("Extensions not allowed in legacy mode");
         }
 
@@ -271,20 +272,20 @@ export class Initialization implements IApplicationInsights {
         const appInsightsChannel: Sender = new Sender();
 
         extensions.push(appInsightsChannel);
-        extensions.push(this.properties);
-        extensions.push(this.dependencies);
-        extensions.push(this.appInsights);
+        extensions.push(_this.properties);
+        extensions.push(_this.dependencies);
+        extensions.push(_this.appInsights);
 
         // initialize core
-        this.core.initialize(this.config, extensions);
+        _this.core.initialize(_this.config, extensions);
 
         // Empty queue of all api calls logged prior to sdk download
-        this.emptyQueue();
-        this.pollInternalLogs();
-        this.addHousekeepingBeforeUnload(this);
-        this.context = this.properties.context;
+        _this.emptyQueue();
+        _this.pollInternalLogs();
+        _this.addHousekeepingBeforeUnload(this);
+        _this.context = _this.properties.context;
 
-        return this;
+        return _this;
     }
 
     /**
@@ -297,7 +298,7 @@ export class Initialization implements IApplicationInsights {
         // apply full appInsights to the global instance
         // Note: This must be called before loadAppInsights is called
         for (const field in this) {
-            if (typeof field === 'string') {
+            if (CoreUtils.isString(field)) {
                 snippet[field as string] = this[field];
             }
         }
@@ -309,23 +310,23 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public emptyQueue() {
-
+        let _this = this;
         // call functions that were queued before the main script was loaded
         try {
-            if (Util.isArray(this.snippet.queue)) {
+            if (Util.isArray(_this.snippet.queue)) {
                 // note: do not check length in the for-loop conditional in case something goes wrong and the stub methods are not overridden.
-                const length = this.snippet.queue.length;
+                const length = _this.snippet.queue.length;
                 for (let i = 0; i < length; i++) {
-                    const call = this.snippet.queue[i];
+                    const call = _this.snippet.queue[i];
                     call();
                 }
 
-                this.snippet.queue = undefined;
-                delete this.snippet.queue;
+                _this.snippet.queue = undefined;
+                delete _this.snippet.queue;
             }
         } catch (exception) {
             const properties: any = {};
-            if (exception && typeof exception.toString === "function") {
+            if (exception && CoreUtils.isFunction(exception.toString)) {
                 properties.exception = exception.toString();
             }
 
@@ -345,10 +346,10 @@ export class Initialization implements IApplicationInsights {
     public addHousekeepingBeforeUnload(appInsightsInstance: IApplicationInsights): void {
         // Add callback to push events when the user navigates away
 
-        if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload && typeof window === "object" && ('onbeforeunload' in window)) {
+        if (hasWindow() || hasDocument()) {
             const performHousekeeping = () => {
                 // Adds the ability to flush all data before the page unloads.
-                // Note: This approach tries to push an async request with all the pending events onbeforeunload.
+                // Note: This approach tries to push a sync request with all the pending events onbeforeunload.
                 // Firefox does not respect this.Other browsers DO push out the call with < 100% hit rate.
                 // Telemetry here will help us analyze how effective this approach is.
                 // Another approach would be to make this call sync with a acceptable timeout to reduce the
@@ -365,17 +366,30 @@ export class Initialization implements IApplicationInsights {
                 }
             };
 
-            if (!Util.addEventHandler('beforeunload', performHousekeeping)) {
-                appInsightsInstance.appInsights.core.logger.throwInternal(
-                    LoggingSeverity.CRITICAL,
-                    _InternalMessageId.FailedToAddHandlerForOnBeforeUnload,
-                    'Could not add handler for beforeunload');
+            if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload) {
+                // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
+                // As just hooking the window does not always fire (on chrome) for page navigations.
+                let added = CoreUtils.addEventHandler('beforeunload', performHousekeeping);
+                added = CoreUtils.addEventHandler('pagehide', performHousekeeping) || added;
+                if (!added) {
+                    appInsightsInstance.appInsights.core.logger.throwInternal(
+                        LoggingSeverity.CRITICAL,
+                        _InternalMessageId.FailedToAddHandlerForOnBeforeUnload,
+                        'Could not add handler for beforeunload and pagehide');
+                }
+            }
+
+            // We also need to hook the pagehide event as not all versions of Safari support load/unload events.
+            if (!appInsightsInstance.appInsights.config.disableFlushOnUnload) {
+                // Not adding any telemetry as pagehide as it's not supported on all browsers
+                CoreUtils.addEventHandler('pagehide', performHousekeeping);
             }
         }
     }
 
     private getSKUDefaults() {
-        this.config.diagnosticLogInterval =
-            this.config.diagnosticLogInterval && this.config.diagnosticLogInterval > 0 ? this.config.diagnosticLogInterval : 10000;
+        let _this = this;
+        _this.config.diagnosticLogInterval =
+        _this.config.diagnosticLogInterval && _this.config.diagnosticLogInterval > 0 ? _this.config.diagnosticLogInterval : 10000;
     }
 }

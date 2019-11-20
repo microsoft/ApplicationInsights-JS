@@ -8,15 +8,14 @@ import {
     TelemetryItemCreator, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
-    ConfigurationManager, DateTimeUtils,
-    IExceptionInternal,
-    PropertiesPluginIdentifier
+    ConfigurationManager, DateTimeUtils, IExceptionInternal, PropertiesPluginIdentifier
 } from "@microsoft/applicationinsights-common";
 
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     ITelemetryPlugin, CoreUtils, ITelemetryItem,
     IDiagnosticLogger, LoggingSeverity, _InternalMessageId, ICustomProperties,
+    getWindow, getDocument, getHistory
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -84,10 +83,12 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     private _trackAjaxAttempts: number = 0;
 
     // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
-    private _prevUri: string = typeof window === "object" && window.location && window.location.href || "";
+    private _prevUri: string; // Assigned in the constructor
     private _currUri: string;
 
     constructor() {
+        let _window = getWindow();
+        this._prevUri = _window && _window.location && _window.location.href || "";
         this.initialize = this._initialize.bind(this);
     }
 
@@ -257,8 +258,9 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param systemProperties System level properties (Part A) that a user can add to the telemetry item
      */
     public sendPageViewInternal(pageView: IPageViewTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
-        if (typeof document !== "undefined") {
-            pageView.refUri = pageView.refUri === undefined ? document.referrer : pageView.refUri;
+        let _document = getDocument();
+        if (_document) {
+            pageView.refUri = pageView.refUri === undefined ? _document.referrer : pageView.refUri;
         }
 
         const telemetryItem = TelemetryItemCreator.create<IPageViewTelemetryInternal>(
@@ -318,8 +320,10 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      */
     public startTrackPage(name?: string) {
         try {
+            let _window = getWindow();
+
             if (typeof name !== "string") {
-                name = typeof window === "object" && window.document && window.document.title || "";
+                name = _window && _window.document && _window.document.title || "";
             }
 
             this._pageTracking.start(name);
@@ -343,12 +347,14 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      */
     public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: number }) {
         try {
+            let _window = getWindow();
+
             if (typeof name !== "string") {
-                name = typeof window === "object" && window.document && window.document.title || "";
+                name = _window && _window.document && _window.document.title || "";
             }
 
             if (typeof url !== "string") {
-                url = typeof window === "object" && window.location && window.location.href || "";
+                url = _window && _window.location && _window.location.href || "";
             }
 
             this._pageTracking.stop(name, url, properties, measurement);
@@ -421,7 +427,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public _onerror(exception: IAutoExceptionTelemetry): void {
         try {
             const properties = {
-                url: (exception && exception.url) || document.URL,
+                url: (exception && exception.url) || (getDocument()||{} as any).URL,
                 lineNumber: exception.lineNumber,
                 columnNumber: exception.columnNumber,
                 message: exception.message
@@ -553,13 +559,16 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             this.sendPageViewInternal(pageViewItem);
         }
 
+        let _window = getWindow();
+        let _history = getHistory();
+
         const instance: IAppInsights = this;
         if (this.config.disableExceptionTracking === false &&
-            !this.config.autoExceptionInstrumented && typeof window === "object") {
+            !this.config.autoExceptionInstrumented && _window) {
             // We want to enable exception auto collection and it has not been done so yet
             const onerror = "onerror";
-            const originalOnError = window[onerror];
-            window.onerror = (message, url, lineNumber, columnNumber, error) => {
+            const originalOnError = _window[onerror];
+            _window.onerror = (message, url, lineNumber, columnNumber, error) => {
                 const handled = originalOnError && (originalOnError(message, url, lineNumber, columnNumber, error) as any);
                 if (handled !== true) { // handled could be typeof function
                     instance._onerror({
@@ -580,8 +589,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
          * Create a custom "locationchange" event which is triggered each time the history object is changed
          */
         if (this.config.enableAutoRouteTracking === true
-            && typeof history === "object" && typeof history.pushState === "function" && typeof history.replaceState === "function"
-            && typeof window === "object"
+            && _history && CoreUtils.isFunction(_history.pushState) && CoreUtils.isFunction(_history.replaceState)
+            && _window
             && typeof Event !== "undefined") {
             const _self = this;
             // Find the properties plugin
@@ -591,34 +600,34 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 }
             });
 
-            history.pushState = ( f => function pushState() {
+            _history.pushState = ( f => function pushState() {
                 const ret = f.apply(this, arguments);
-                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "pushState"));
-                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
+                _window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "pushState"));
+                _window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
                 return ret;
-            })(history.pushState);
+            })(_history.pushState);
 
-            history.replaceState = ( f => function replaceState(){
+            _history.replaceState = ( f => function replaceState(){
                 const ret = f.apply(this, arguments);
-                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "replaceState"));
-                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
+                _window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "replaceState"));
+                _window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
                 return ret;
-            })(history.replaceState);
+            })(_history.replaceState);
 
-            window.addEventListener(_self.config.namePrefix + "popstate",()=>{
-                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
+            _window.addEventListener(_self.config.namePrefix + "popstate",()=>{
+                _window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
             });
 
-            window.addEventListener(_self.config.namePrefix + "locationchange", () => {
+            _window.addEventListener(_self.config.namePrefix + "locationchange", () => {
                 if (_self._properties && _self._properties.context && _self._properties.context.telemetryTrace) {
                     _self._properties.context.telemetryTrace.traceID = Util.generateW3CId();
-                    _self._properties.context.telemetryTrace.name = window.location && window.location.pathname || "_unknown_";
+                    _self._properties.context.telemetryTrace.name = _window.location && _window.location.pathname || "_unknown_";
                 }
                 if (this._currUri) {
                     this._prevUri = this._currUri;
-                    this._currUri = window.location && window.location.href || "";
+                    this._currUri = _window.location && _window.location.href || "";
                 } else {
-                    this._currUri = window.location && window.location.href || "";
+                    this._currUri = _window.location && _window.location.href || "";
                 }
                 setTimeout(((uri: string) => {
                     // todo: override start time so that it is not affected by autoRoutePVDelay

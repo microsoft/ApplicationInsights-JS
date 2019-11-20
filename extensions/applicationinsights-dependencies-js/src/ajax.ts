@@ -8,7 +8,8 @@ import {
 } from '@microsoft/applicationinsights-common';
 import {
     CoreUtils, LoggingSeverity, _InternalMessageId, IDiagnosticLogger,
-    IAppInsightsCore, ITelemetryPlugin, IConfiguration, IPlugin, ITelemetryItem
+    IAppInsightsCore, ITelemetryPlugin, IConfiguration, IPlugin, ITelemetryItem,
+    getWindow
 } from '@microsoft/applicationinsights-core-js';
 import { ajaxRecord } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
@@ -95,7 +96,8 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     private _isUsingAIHeaders: boolean;
 
     constructor() {
-        this.currentWindowHost = typeof window === 'object' && window.location && window.location.host && window.location.host.toLowerCase();
+        let _window = getWindow();
+        this.currentWindowHost = _window && _window.location && _window.location.host && _window.location.host.toLowerCase();
         this.initialized = false;
         this._fetchInitialized = false;
     }
@@ -246,9 +248,10 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         if (!this.supportsFetch() || this._fetchInitialized) {
             return;
         }
-        const originalFetch: (input?: Request | string, init?: RequestInit) => Promise<Response> = window.fetch;
+        let _window = getWindow();
+        const originalFetch: (input?: Request | string, init?: RequestInit) => Promise<Response> = _window.fetch;
         const fetchMonitorInstance: AjaxMonitor = this;
-        window.fetch = function fetch(input?: Request | string, init?: RequestInit): Promise<Response> {
+        _window.fetch = function fetch(input?: Request | string, init?: RequestInit): Promise<Response> {
             let fetchData: ajaxRecord;
             if (fetchMonitorInstance.isFetchInstrumented(input) && fetchMonitorInstance.isMonitoredInstance(undefined, undefined, input, init)) {
                 try {
@@ -464,7 +467,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
 
     private attachToOnReadyStateChange(xhr: XMLHttpRequestInstrumented) {
         const ajaxMonitorInstance = this;
-        xhr.ajaxData.xhrMonitoringState.onreadystatechangeCallbackAttached = EventHelper.AttachEvent(xhr, "readystatechange", () => {
+        xhr.ajaxData.xhrMonitoringState.onreadystatechangeCallbackAttached = EventHelper.Attach(xhr, "readystatechange", () => {
             try {
                 if (ajaxMonitorInstance.isMonitoredInstance(xhr)) {
                     if (xhr.readyState === 4) {
@@ -585,9 +588,10 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
 
     private supportsFetch(): boolean {
         let result: boolean = true;
-        if (typeof window !== 'object' || CoreUtils.isNullOrUndefined((window as any).Request) ||
-            CoreUtils.isNullOrUndefined((window as any).Request.prototype) ||
-            CoreUtils.isNullOrUndefined(window.fetch)) {
+        let _window = getWindow();
+        if (!_window || CoreUtils.isNullOrUndefined((_window as any).Request) ||
+            CoreUtils.isNullOrUndefined((_window as any).Request.prototype) ||
+            CoreUtils.isNullOrUndefined(_window.fetch)) {
             result = false;
         }
         return result;

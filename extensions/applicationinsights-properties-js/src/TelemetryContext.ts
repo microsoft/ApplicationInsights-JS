@@ -3,7 +3,7 @@
  * @copyright Microsoft 2018
  */
 
-import { ITelemetryItem, IDiagnosticLogger, CoreUtils } from '@microsoft/applicationinsights-core-js';
+import { ITelemetryItem, IDiagnosticLogger, CoreUtils, hasWindow } from '@microsoft/applicationinsights-core-js';
 import { Session, _SessionManager } from './Context/Session';
 import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, IWeb, SampleRate, CtxTagKeys } from '@microsoft/applicationinsights-common';
 import { Application } from './Context/Application';
@@ -29,7 +29,7 @@ export class TelemetryContext implements ITelemetryContext {
     public appId: () => string;
 
     constructor(logger: IDiagnosticLogger, defaultConfig: ITelemetryConfig) {
-        if (typeof window !== 'undefined') {
+        if (hasWindow()) {
             this.sessionManager = new _SessionManager(defaultConfig, logger);
             this.application = new Application();
             this.device = new Device();

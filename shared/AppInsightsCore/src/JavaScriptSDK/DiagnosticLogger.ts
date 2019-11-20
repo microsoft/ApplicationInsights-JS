@@ -5,6 +5,7 @@ import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration"
 import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { CoreUtils } from "./CoreUtils";
+import { hasJSON, getJSON } from "./EnvUtils";
 import { AppInsightsCore } from "./AppInsightsCore";
 
 export class _InternalLogMessage{
@@ -21,7 +22,11 @@ export class _InternalLogMessage{
     private static AiUserActionablePrefix = "AI: ";
 
     private static sanitizeDiagnosticText(text: string) {
-        return "\"" + text.replace(/\"/g, "") + "\"";
+        if (text) {
+            return "\"" + text.replace(/\"/g, "") + "\"";
+        }
+
+        return "";
     }
 
     public message: string;
@@ -34,9 +39,13 @@ export class _InternalLogMessage{
             (isUserAct ? _InternalLogMessage.AiUserActionablePrefix : _InternalLogMessage.AiNonUserActionablePrefix) +
             msgId;
 
+        let strProps:string = "";
+        if (hasJSON()) {
+            strProps = getJSON().stringify(properties);
+        }
         const diagnosticText =
             (msg ? " message:" + _InternalLogMessage.sanitizeDiagnosticText(msg) : "") +
-            (properties ? " props:" + _InternalLogMessage.sanitizeDiagnosticText(JSON.stringify(properties)) : "");
+            (properties ? " props:" + _InternalLogMessage.sanitizeDiagnosticText(strProps) : "");
 
         this.message += diagnosticText;
     }
@@ -117,28 +126,29 @@ export class DiagnosticLogger implements IDiagnosticLogger {
      */
     public throwInternal(severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) {
         const message = new _InternalLogMessage(msgId, msg, isUserAct, properties);
+        let _this = this;
 
-        if (this.enableDebugExceptions()) {
+        if (_this.enableDebugExceptions()) {
             throw message;
         } else {
-            if (typeof (message) !== "undefined" && !!message) {
-                if (typeof (message.message) !== "undefined") {
+            if (!CoreUtils.isUndefined(message) && !!message) {
+                if (!CoreUtils.isUndefined(message.message)) {
                     if (isUserAct) {
                         // check if this message type was already logged to console for this page view and if so, don't log it again
                         const messageKey: number = +message.messageId;
 
-                        if (!this._messageLogged[messageKey] || this.consoleLoggingLevel() >= LoggingSeverity.WARNING) {
-                            this.warnToConsole(message.message);
-                            this._messageLogged[messageKey] = true;
+                        if (!_this._messageLogged[messageKey] || _this.consoleLoggingLevel() >= LoggingSeverity.WARNING) {
+                            _this.warnToConsole(message.message);
+                            _this._messageLogged[messageKey] = true;
                         }
                     } else {
                         // don't log internal AI traces in the console, unless the verbose logging is enabled
-                        if (this.consoleLoggingLevel() >= LoggingSeverity.WARNING) {
-                            this.warnToConsole(message.message);
+                        if (_this.consoleLoggingLevel() >= LoggingSeverity.WARNING) {
+                            _this.warnToConsole(message.message);
                         }
                     }
 
-                    this.logInternalMessage(severity, message);
+                    _this.logInternalMessage(severity, message);
                 }
             }
         }
@@ -149,10 +159,10 @@ export class DiagnosticLogger implements IDiagnosticLogger {
      * @param message {string} - The warning message
      */
     public warnToConsole(message: string) {
-        if (typeof console !== "undefined" && !!console) {
-            if (typeof console.warn === "function") {
+        if (!CoreUtils.isUndefined(console) && !!console) {
+            if (CoreUtils.isFunction(console.warn)) {
                 console.warn(message);
-            } else if (typeof console.log === "function") {
+            } else if (CoreUtils.isFunction(console.log)) {
                 console.log(message);
             }
         }
@@ -172,35 +182,36 @@ export class DiagnosticLogger implements IDiagnosticLogger {
      * @param message {_InternalLogMessage} - The message to log.
      */
     public logInternalMessage(severity: LoggingSeverity, message: _InternalLogMessage): void {
-        if (this._areInternalMessagesThrottled()) {
+        let _this = this;
+        if (_this._areInternalMessagesThrottled()) {
             return;
         }
 
         // check if this message type was already logged for this session and if so, don't log it again
         let logMessage = true;
-        const messageKey = this.AIInternalMessagePrefix + message.messageId;
+        const messageKey = _this.AIInternalMessagePrefix + message.messageId;
 
         // if the session storage is not available, limit to only one message type per page view
-        if (this._messageLogged[messageKey]) {
+        if (_this._messageLogged[messageKey]) {
             logMessage = false;
         } else {
-            this._messageLogged[messageKey] = true;
+            _this._messageLogged[messageKey] = true;
         }
 
         if (logMessage) {
             // Push the event in the internal queue
-            if (severity <= this.telemetryLoggingLevel()) {
-                this.queue.push(message);
-                this._messageCount++;
+            if (severity <= _this.telemetryLoggingLevel()) {
+                _this.queue.push(message);
+                _this._messageCount++;
             }
 
             // When throttle limit reached, send a special event
-            if (this._messageCount === this.maxInternalMessageLimit()) {
+            if (_this._messageCount === _this.maxInternalMessageLimit()) {
                 const throttleLimitMessage = "Internal events throttle limit per PageView reached for this app.";
                 const throttleMessage = new _InternalLogMessage(_InternalMessageId.MessageLimitPerPVExceeded, throttleLimitMessage, false);
 
-                this.queue.push(throttleMessage);
-                this.warnToConsole(throttleLimitMessage);
+                _this.queue.push(throttleMessage);
+                _this.warnToConsole(throttleLimitMessage);
             }
         }
     }
