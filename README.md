@@ -29,7 +29,7 @@
 2. Grab the _Instrumentation Key_ (aka "ikey") from the resource you created in
    step 1. Later, you'll add it to the `instrumentationKey` setting of the Application Insights JavaScript SDK.
 3. Add Application Insights to your app. **There are 2 ways to do this.**
-    - Install via NPM. Then, [set up an instance of Application Insights in your app.](#npm-setup-(ignore-if-using-snippet-setup))
+    - Install via NPM. Then, [set up an instance of Application Insights in your app.](#npm-setup-ignore-if-using-snippet-setup)
         > *Note:* **Typings are included with this package**, so you do **not** need to install a separate typings package.
 
         ```sh
