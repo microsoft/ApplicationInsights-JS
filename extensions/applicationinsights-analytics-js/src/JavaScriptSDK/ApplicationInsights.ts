@@ -593,14 +593,14 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             !this.config.autoUnhandledPromiseInstrumented) {
             // We want to enable exception auto collection and it has not been done so yet
             const onunhandledrejection = "onunhandledrejection";
-            const originalOnUnhandledRejection = window[onunhandledrejection];
-            window.onunhandledrejection = (error: PromiseRejectionEvent) => {
-                const handled = originalOnUnhandledRejection && (originalOnUnhandledRejection.call(window, error) as any);
+            const originalOnUnhandledRejection = _window[onunhandledrejection];
+            _window.onunhandledrejection = (error: PromiseRejectionEvent) => {
+                const handled = originalOnUnhandledRejection && (originalOnUnhandledRejection.call(_window, error) as any);
                 if (handled !== true) { // handled could be typeof function
                     instance._onerror({
                         message: error.reason.toString(),
                         error: error.reason instanceof Error ? error.reason : new Error(error.reason.toString()),
-                        url: window.location.href,
+                        url: _window.location.href,
                         lineNumber: 0,
                         columnNumber: 0
                     });
