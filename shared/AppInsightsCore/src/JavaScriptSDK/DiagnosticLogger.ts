@@ -137,7 +137,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                         // check if this message type was already logged to console for this page view and if so, don't log it again
                         const messageKey: number = +message.messageId;
 
-                        if (!_this._messageLogged[messageKey] || _this.consoleLoggingLevel() >= LoggingSeverity.WARNING) {
+                        if (!_this._messageLogged[messageKey] && _this.consoleLoggingLevel() >= LoggingSeverity.WARNING) {
                             _this.warnToConsole(message.message);
                             _this._messageLogged[messageKey] = true;
                         }
