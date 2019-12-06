@@ -150,7 +150,12 @@ export class ApplicationInsightsDeprecatedTests extends TestClass {
         if(this.successSpy.called) {
             let currentCount: number = 0;
             this.successSpy.args.forEach(call => {
-                currentCount += call[1];
+                call[0].forEach(message => {
+                    // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                    if (message.indexOf("AI (Internal): 72 ") == -1) {
+                        currentCount ++;
+                    }
+                });
             });
             console.log('curr: ' + currentCount + ' exp: ' + expectedCount);
             return currentCount === expectedCount;

@@ -91,7 +91,7 @@ describe("ReactAI", () => {
     };
     core.initialize(config, [reactPlugin, channel]);
     // Mock logger
-    const loggerMock = reactPlugin["_logger"].throwInternal = jest.fn();
+    const loggerMock = core["logger"].throwInternal = jest.fn();
     history.push("/home");
     jest.runOnlyPendingTimers();
     expect(loggerMock).toHaveBeenCalledTimes(1);
