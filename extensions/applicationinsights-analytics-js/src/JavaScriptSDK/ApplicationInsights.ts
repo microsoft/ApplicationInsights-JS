@@ -590,7 +590,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         }
 
         if (this.config.disableExceptionTracking === false &&
-            !this.config.autoUnhandledPromiseInstrumented) {
+            !this.config.autoUnhandledPromiseInstrumented && _window) {
             // We want to enable exception auto collection and it has not been done so yet
             const onunhandledrejection = "onunhandledrejection";
             const originalOnUnhandledRejection = _window[onunhandledrejection];
