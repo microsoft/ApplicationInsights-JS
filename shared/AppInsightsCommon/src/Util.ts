@@ -633,7 +633,7 @@ export class CorrelationIdHelper {
     /**
      * Checks if a request url is not on a excluded domain list and if it is safe to add correlation headers
      */
-    public static canIncludeCorrelationHeader(config: ICorrelationConfig, requestUrl: string, currentHost: string) {
+    public static canIncludeCorrelationHeader(config: ICorrelationConfig, requestUrl: string, currentHost?: string) {
         if (config && config.disableCorrelationHeaders) {
             return false;
         }

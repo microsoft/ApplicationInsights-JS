@@ -153,7 +153,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
             }
             return init;
         } else if (xhr) { // XHR
-            if (this.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(this._config, xhr.ajaxData.getAbsoluteUrl(),
+            if (CorrelationIdHelper.canIncludeCorrelationHeader(this._config, xhr.ajaxData.getAbsoluteUrl(),
                 this.currentWindowHost)) {
                 if (this._isUsingAIHeaders) {
                     const id = "|" + xhr.ajaxData.traceID + "." + xhr.ajaxData.spanID;
@@ -533,7 +533,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                 }
             }
 
-            if (this._config.enableResponseHeaderTracking) { 
+            if (this._config.enableResponseHeaderTracking) {
                 const headers = xhr.getAllResponseHeaders();
                 if (headers) {
                     // xhr.getAllResponseHeaders() method returns all the response headers, separated by CRLF, as a string or null
@@ -553,7 +553,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     }
                 }
             }
-            
+
             this.trackDependencyDataInternal(dependency);
 
             xhr.ajaxData = null;
@@ -687,10 +687,10 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                     if (CoreUtils.objKeys(ajaxData.requestHeaders).length > 0) {
                         dependency.properties = dependency.properties || {};
                         dependency.properties.requestHeaders = ajaxData.requestHeaders;
-                    }               
+                    }
                 }
 
-                if (this._config.enableResponseHeaderTracking) {          
+                if (this._config.enableResponseHeaderTracking) {
                     const responseHeaderMap = {};
                     response.headers.forEach((value, name) => {
                         responseHeaderMap[name] = value;
