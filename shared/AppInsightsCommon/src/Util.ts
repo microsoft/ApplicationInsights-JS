@@ -643,7 +643,8 @@ export class CorrelationIdHelper {
         }
 
         const requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
-        if ((!config || !config.enableCorsCorrelation) && requestHost !== currentHost) {
+        // if !requestHost, it is probably not CORS
+        if ((!config || !config.enableCorsCorrelation) && requestHost && requestHost !== currentHost) {
             return false;
         }
 
