@@ -87,11 +87,11 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
     protected initialized: boolean; // ajax monitoring initialized
     protected _fetchInitialized: boolean; // fetch monitoring initialized
     protected _core: IAppInsightsCore;
-    protected _config: ICorrelationConfig;
+    protected _config: ICorrelationConfig = AjaxMonitor.getEmptyConfig();
     protected _nextPlugin: ITelemetryPlugin;
     protected _trackAjaxAttempts: number = 0;
     private currentWindowHost: string;
-    private _context: ITelemetryContext;
+    private _context?: ITelemetryContext;
     private _isUsingW3CHeaders: boolean;
     private _isUsingAIHeaders: boolean;
 
@@ -135,7 +135,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                         ajaxData.requestHeaders[RequestHeaders.requestIdHeader] = id;
                     }
                 }
-                const appId: string = this._config.appId || this._context.appId();
+                const appId: string = this._config.appId || (this._context && this._context.appId());
                 if (appId) {
                     init.headers.set(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
                     if (this._config.enableRequestHeaderTracking) {
@@ -162,7 +162,7 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
                         xhr.ajaxData.requestHeaders[RequestHeaders.requestIdHeader] = id;
                     }
                 }
-                const appId = this._config.appId || this._context.appId();
+                const appId = this._config.appId || (this._context && this._context.appId());
                 if (appId) {
                     xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
                     if (this._config.enableRequestHeaderTracking) {
@@ -187,7 +187,6 @@ export class AjaxMonitor implements ITelemetryPlugin, IDependenciesPlugin, IInst
         if (!this.initialized && !this._fetchInitialized) {
             this._core = core;
             const defaultConfig = AjaxMonitor.getDefaultConfig();
-            this._config = AjaxMonitor.getEmptyConfig();
             for (const field in defaultConfig) {
                 this._config[field] = ConfigurationManager.getConfig(config, field, AjaxMonitor.identifier, defaultConfig[field]);
             }

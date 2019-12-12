@@ -631,7 +631,11 @@ export class CorrelationIdHelper {
     public static correlationIdPrefix = "cid-v1:";
 
     /**
-     * Checks if a request url is not on a excluded domain list and if it is safe to add correlation headers
+     * Checks if a request url is not on a excluded domain list and if it is safe to add correlation headers.
+     * Headers are always included if the current domain matches the request domain. If they do not match (CORS),
+     * they are regexed across correlationHeaderDomains and correlationHeaderExcludedDomains to determine if headers are included.
+     * Some environments don't give information on currentHost via window.location.host (e.g. Cordova). In these cases, the user must
+     * manually supply domains to include correlation headers on. Else, no headers will be included at all.
      */
     public static canIncludeCorrelationHeader(config: ICorrelationConfig, requestUrl: string, currentHost?: string) {
         if (config && config.disableCorrelationHeaders) {
@@ -643,8 +647,7 @@ export class CorrelationIdHelper {
         }
 
         const requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
-        // if !requestHost, it is probably not CORS
-        if ((!config || !config.enableCorsCorrelation) && requestHost && requestHost !== currentHost) {
+        if ((!config || !config.enableCorsCorrelation) && requestHost !== currentHost) {
             return false;
         }
 
@@ -673,7 +676,9 @@ export class CorrelationIdHelper {
             }
         }
 
-        return true;
+        // if we don't know anything about the requestHost, require the user to use included/excludedDomains.
+        // Previously we always returned false for a falsy requestHost
+        return requestHost && requestHost.length > 0;
     }
 
     /**
