@@ -22,4 +22,4 @@
 
 
 Application Insights AI SKU is a package that combines commonly used packages for Web scenarios.
-Refer to [ApplicationInsights-JS](https://github.com/microsoft/applicationinsights-js) for more details on getting started.
+Refer to [our GitHub page](https://github.com/microsoft/applicationinsights-js) for more details on getting started.
