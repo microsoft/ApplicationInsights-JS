@@ -139,7 +139,7 @@ appInsights.addTelemetryInitializer(() => false); // Nothing is sent after this 
 appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
 ```
 
-#### Example: (Setting Cloud Role Name)[https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-map#set-cloud-role-name]
+#### Example: [Setting Cloud Role Name](https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-map#set-cloud-role-name)
 ```js
 var telemetryInitializer = (envelope) => {
   envelope.tags["ai.cloud.role"] = "your role name";
