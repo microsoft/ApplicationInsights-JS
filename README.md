@@ -81,6 +81,24 @@ appInsights.loadAppInsights();
 appInsights.trackPageView();
 ```
 
+#### (Alternative Setup Method) Include AI JS SDK script and initialize statically
+
+Use this approach if you would like to host AI JS SDK script on your endpoint or bundle it with other scripts. One popular example is Cordova applications (see [this blog post](http://www.teamfoundation.co.za/2016/02/application-insights-and-typescript/). After JS script has loaded, include the following snippet to initialize Application Insights:
+```html
+<!-- the snippet below assumes that JS SDK script has already loaded -->
+<script type="text/javascript" src="/pathToAIJSSDK.js"></script>
+<script type="text/javascript">
+    var snippet = {
+        config: {
+            instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
+        }
+    };
+    var init = new Microsoft.ApplicationInsights.ApplicationInsights(snippet);
+    var appInsights = init.loadAppInsights();
+    appInsights.trackPageView();
+</script>
+```
+
 ### Sending Telemetry to the Azure Portal
 
 If initialized using the snippet, your Application Insights instance is located by default at `window.appInsights`
@@ -139,7 +157,7 @@ appInsights.addTelemetryInitializer(() => false); // Nothing is sent after this 
 appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
 ```
 
-#### Example: (Setting Cloud Role Name)[https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-map#set-cloud-role-name]
+#### Example: [Setting Cloud Role Name](https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-map#set-cloud-role-name)
 ```js
 var telemetryInitializer = (envelope) => {
   envelope.tags["ai.cloud.role"] = "your role name";
