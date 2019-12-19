@@ -27,6 +27,10 @@ import * as properties from "@microsoft/applicationinsights-properties-js";
 
 "use strict";
 
+declare global {
+    interface Window { onunhandledrejection: ((this: Window, ev: PromiseRejectionEvent) => any) | null; }
+}
+
 const durationProperty: string = "duration";
 
 export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
@@ -583,6 +587,28 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 return handled;
             }
             this.config.autoExceptionInstrumented = true;
+        }
+
+        if (this.config.disableExceptionTracking === false &&
+            !this.config.autoUnhandledPromiseInstrumented && _window) {
+            // We want to enable exception auto collection and it has not been done so yet
+            const onunhandledrejection = "onunhandledrejection";
+            const originalOnUnhandledRejection = _window[onunhandledrejection];
+            _window.onunhandledrejection = (error: PromiseRejectionEvent) => {
+                const handled = originalOnUnhandledRejection && (originalOnUnhandledRejection.call(_window, error) as any);
+                if (handled !== true) { // handled could be typeof function
+                    instance._onerror({
+                        message: error.reason.toString(),
+                        error: error.reason instanceof Error ? error.reason : new Error(error.reason.toString()),
+                        url: _window.location.href,
+                        lineNumber: 0,
+                        columnNumber: 0
+                    });
+                }
+
+                return handled;
+            }
+            this.config.autoUnhandledPromiseInstrumented = true;
         }
 
         /**
