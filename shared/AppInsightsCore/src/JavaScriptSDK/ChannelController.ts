@@ -1,19 +1,68 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+"use strict";
+
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
-import { ITelemetryPlugin, IPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
+import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
+import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { CoreUtils } from "./CoreUtils";
 import { _InternalLogMessage } from "./DiagnosticLogger";
-
-"use strict";
+import { BaseTelemetryPlugin } from './BaseTelemetryPlugin';
+import { ProcessTelemetryContext } from './ProcessTelemetryContext';
+import { initializePlugins } from './TelemetryHelpers';
 
 const ChannelControllerPriority = 500;
 const ChannelValidationMessage = "Channel has invalid priority";
 
-export class ChannelController implements ITelemetryPlugin {
+let _arrForEach = CoreUtils.arrForEach;
+let _objDefineAccessors = CoreUtils.objDefineAccessors;
+
+function _checkQueuePriority(queue:IChannelControls[]) {
+    _arrForEach(queue, queueItem => {
+        if (queueItem.priority < ChannelControllerPriority) {
+            throw Error(ChannelValidationMessage + queueItem.identifier);
+        }
+    });
+}
+
+function _addChannelQueue(channelQueues:IChannelControls[][], queue:IChannelControls[]) {
+    if (queue && queue.length > 0) {
+        queue = queue.sort((a, b) => { // sort based on priority within each queue
+            return a.priority - b.priority;
+        });
+
+        _checkQueuePriority(queue);
+        channelQueues.push(queue);
+    }
+}
+
+function _createChannelQueues(channels:IChannelControls[][], extensions: IPlugin[]) {
+    let channelQueues:IChannelControls[][] = [];
+
+    if (channels) {
+        // Add and sort the configuration channel queues
+        _arrForEach(channels, queue => _addChannelQueue(channelQueues, queue));
+    }
+
+    if (extensions) {
+        // Create a new channel queue for any extensions with a priority > the ChannelControllerPriority
+        let extensionQueue:IChannelControls[] = [];
+        _arrForEach(extensions as IChannelControls[], plugin => {
+            if (plugin.priority > ChannelControllerPriority) {
+                extensionQueue.push(plugin);
+            }
+        });
+    
+        _addChannelQueue(channelQueues, extensionQueue);
+    }
+
+    return channelQueues;
+}
+
+export class ChannelController extends BaseTelemetryPlugin {
 
     identifier: string = "ChannelControllerPlugin";
 
@@ -21,79 +70,43 @@ export class ChannelController implements ITelemetryPlugin {
 
     priority: number = ChannelControllerPriority; // in reserved range 100 to 200
 
-    private channelQueue: IChannelControls[][];
+    private _channelQueue: IChannelControls[][];
 
-    public processTelemetry(item: ITelemetryItem) {
-        CoreUtils.arrForEach(this.channelQueue, queues => {
-            // pass on to first item in queue
-            if (queues.length > 0) {
-                queues[0].processTelemetry(item);
-            }
-        });
-    }
-
-    public getChannelControls(): IChannelControls[][] {
-        return this.channelQueue;
-    }
-
-    initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
-        if ((config as any).isCookieUseDisabled) {
-            CoreUtils.disableCookies();
-        }
-
-        this.channelQueue = new Array<IChannelControls[]>();
-        if (config.channels) {
-            let invalidChannelIdentifier;
-            CoreUtils.arrForEach(config.channels, queue => {
-
-                if (queue && queue.length > 0) {
-                    queue = queue.sort((a, b) => { // sort based on priority within each queue
-                        return a.priority - b.priority;
-                    });
-
-                    for (let i = 1; i < queue.length; i++) {
-                        queue[i - 1].setNextPlugin(queue[i]); // setup processing chain
-                    }
-
-                    // Initialize each plugin
-                    CoreUtils.arrForEach(queue, queueItem => {
-                        if (queueItem.priority < ChannelControllerPriority) {
-                            invalidChannelIdentifier = queueItem.identifier;
-                        }
-                        queueItem.initialize(config, core, extensions)
-                    });
-
-                    if (invalidChannelIdentifier) {
-                        throw Error(ChannelValidationMessage + invalidChannelIdentifier);
-                    }
-
-                    this.channelQueue.push(queue);
+    public processTelemetry(item: ITelemetryItem, itemCtx: IProcessTelemetryContext) {
+        if (this._channelQueue) {
+            _arrForEach(this._channelQueue, queues => {
+                // pass on to first item in queue
+                if (queues.length > 0) {
+                    // Copying the item context as we could have mutiple chains that are executing asynchronously
+                    // and calling _getDefTelCtx as it's possible that the caller doesn't pass any context
+                    let chainCtx = this._getTelCtx(itemCtx).createNew(queues); 
+                    chainCtx.processNext(item);
                 }
             });
         }
+    };
 
-        let arr = new Array<IChannelControls>();
-        for (let i = 0; i < extensions.length; i++) {
-            const plugin = extensions[i] as IChannelControls;
-            if (plugin.priority > ChannelControllerPriority) {
-                arr.push(plugin);
-            }
+    public getChannelControls(): IChannelControls[][] {
+        return this._channelQueue;
+    }
+
+    public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
+        let _self = this;
+        if (_self.isInitialized()) {
+            // already initialized
+            return;
         }
 
-        if (arr.length > 0) {
-            // sort if not sorted
-            arr = arr.sort((a, b) => {
-                return a.priority - b.priority;
-            });
-            // setup next plugin
-            for (let i = 1; i < arr.length; i++) {
-                arr[i - 1].setNextPlugin(arr[i]);
-            }
-            // Initialize each plugin
-            CoreUtils.arrForEach(arr, queueItem => queueItem.initialize(config, core, extensions));
+        super.initialize(config, core, extensions);
 
-            this.channelQueue.push(arr);
+        if ((config as any).isCookieUseDisabled) {
+            CoreUtils.disableCookies();
         }
+        
+        let channelQueue = _self._channelQueue = _createChannelQueues((config||{}).channels, extensions);
+
+        // Initialize the Queues
+        _arrForEach(channelQueue, queue => initializePlugins(new ProcessTelemetryContext(queue, config, core), extensions));
     }
 
     /**
@@ -102,7 +115,7 @@ export class ChannelController implements ITelemetryPlugin {
     // tslint:disable-next-line
     private static _staticInit = (() => {
         // Dynamically create get/set property accessors
-        CoreUtils.objDefineAccessors(ChannelController.prototype, "ChannelControls", ChannelController.prototype.getChannelControls);
+        _objDefineAccessors(ChannelController.prototype, "ChannelControls", ChannelController.prototype.getChannelControls);
+        _objDefineAccessors(ChannelController.prototype, "channelQueue", ChannelController.prototype.getChannelControls);
     })();
 }
-

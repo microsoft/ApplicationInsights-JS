@@ -8,44 +8,39 @@ import {
 } from "@microsoft/applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
-    ITelemetryPlugin, CoreUtils, ITelemetryItem,
-    IDiagnosticLogger, _InternalMessageId, LoggingSeverity, ICustomProperties
+    ITelemetryPlugin, BaseTelemetryPlugin, CoreUtils, ITelemetryItem, ITelemetryPluginChain,
+    IProcessTelemetryContext, _InternalMessageId, LoggingSeverity, ICustomProperties
 } from "@microsoft/applicationinsights-core-js";
 import { IAngularExtensionConfig } from './Interfaces/IAngularExtensionConfig';
 
-export default class AngularPlugin implements ITelemetryPlugin {
+export default class AngularPlugin extends BaseTelemetryPlugin {
     public priority = 186;
     public identifier = 'AngularPlugin';
 
-    private _logger: IDiagnosticLogger;
     private _analyticsPlugin: IAppInsights;
-    private _nextPlugin: ITelemetryPlugin;
-    private _extensionConfig: IAngularExtensionConfig;
 
-    initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) {
-        this._extensionConfig =
-            config.extensionConfig && config.extensionConfig[this.identifier]
-                ? (config.extensionConfig[this.identifier] as IAngularExtensionConfig)
-                : { router: null };
-        this._logger = core.logger;
+    initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) {
+        super.initialize(config, core, extensions, pluginChain);
+        let ctx = this._getTelCtx();
+        let extConfig = ctx.getExtCfg<IAngularExtensionConfig>(this.identifier, { router: null });
         CoreUtils.arrForEach(extensions, ext => {
             const identifier = (ext as ITelemetryPlugin).identifier;
             if (identifier === 'ApplicationInsightsAnalytics') {
                 this._analyticsPlugin = (ext as any) as IAppInsights;
             }
         });
-        if (this._extensionConfig.router) {
-            this._extensionConfig.router.events.subscribe(event => {
+        if (extConfig.router) {
+            extConfig.router.events.subscribe(event => {
                 if (event.constructor.name === "NavigationEnd") {
                     // Timeout to ensure any changes to the DOM made by route changes get included in pageView telemetry
                     setTimeout(() => {
-                        const pageViewTelemetry: IPageViewTelemetry = { uri: this._extensionConfig.router.url };
+                        const pageViewTelemetry: IPageViewTelemetry = { uri: extConfig.router.url };
                         this.trackPageView(pageViewTelemetry);
                     }, 500);
                 }
             });
             const pageViewTelemetry: IPageViewTelemetry = {
-                uri: this._extensionConfig.router.url
+                uri: extConfig.router.url
             };
             this.trackPageView(pageViewTelemetry);
         }
@@ -55,25 +50,15 @@ export default class AngularPlugin implements ITelemetryPlugin {
      * Add Part A fields to the event
      * @param event The event that needs to be processed
      */
-    processTelemetry(event: ITelemetryItem) {
-        if (!CoreUtils.isNullOrUndefined(this._nextPlugin)) {
-            this._nextPlugin.processTelemetry(event);
-        }
-    }
-
-    /**
-     * Sets the next plugin that comes after this plugin
-     * @param nextPlugin The next plugin
-     */
-    setNextPlugin(nextPlugin: ITelemetryPlugin) {
-        this._nextPlugin = nextPlugin;
+    processTelemetry(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
+        this.processNext(event, itemCtx);
     }
 
     trackMetric(metric: IMetricTelemetry, customProperties: ICustomProperties) {
         if (this._analyticsPlugin) {
             this._analyticsPlugin.trackMetric(metric, customProperties);
         } else {
-            this._logger.throwInternal(
+            this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, Angular plugin telemetry will not be sent: ");
         }
     }
@@ -82,7 +67,7 @@ export default class AngularPlugin implements ITelemetryPlugin {
         if (this._analyticsPlugin) {
             this._analyticsPlugin.trackPageView(pageView);
         } else {
-            this._logger.throwInternal(
+            this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, Angular plugin telemetry will not be sent: ");
         }
     }

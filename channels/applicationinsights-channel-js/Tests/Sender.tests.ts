@@ -38,10 +38,10 @@ export class SenderTests extends TestClass {
                     }, new AppInsightsCore(), []
                 );
 
-                Assert.equal(123, this._sender._config.maxBatchInterval(), 'Channel config can be set from root config (maxBatchInterval)');
-                Assert.equal('https://example.com', this._sender._config.endpointUrl(), 'Channel config can be set from root config (endpointUrl)');
-                Assert.notEqual(654, this._sender._config.maxBatchSizeInBytes(), 'Channel config does not equal root config option if extensionConfig field is also set');
-                Assert.equal(456, this._sender._config.maxBatchSizeInBytes(), 'Channel config prioritizes extensionConfig over root config');
+                Assert.equal(123, this._sender._senderConfig.maxBatchInterval(), 'Channel config can be set from root config (maxBatchInterval)');
+                Assert.equal('https://example.com', this._sender._senderConfig.endpointUrl(), 'Channel config can be set from root config (endpointUrl)');
+                Assert.notEqual(654, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config does not equal root config option if extensionConfig field is also set');
+                Assert.equal(456, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config prioritizes extensionConfig over root config');
             }
         });
 
@@ -60,7 +60,7 @@ export class SenderTests extends TestClass {
                     baseData: {}
                 };
                 try {
-                    this._sender.processTelemetry(telemetryItem);
+                    this._sender.processTelemetry(telemetryItem, null);
                 } catch(e) {
                     Assert.ok(false);
                 }
@@ -86,7 +86,7 @@ export class SenderTests extends TestClass {
                 };
                 this._sender.setNextPlugin(nextPlugin);
 
-                const processTelemetrySpy = this.sandbox.stub((this._sender as any)._nextPlugin, "processTelemetry");
+                const processTelemetrySpy = this.sandbox.stub(nextPlugin, "processTelemetry");
                 const telemetryItem: ITelemetryItem = {
                     name: 'fake item',
                     iKey: 'iKey',
@@ -98,7 +98,7 @@ export class SenderTests extends TestClass {
 
                 telemetryItem.tags["ProcessLegacy"] = [e => true, e => false, f=> true];
                 try {
-                    this._sender.processTelemetry(telemetryItem);
+                    this._sender.processTelemetry(telemetryItem, null);
                 } catch(e) {
                     Assert.ok(false);
                 }
@@ -136,7 +136,7 @@ export class SenderTests extends TestClass {
                 Assert.ok(xhrSenderSpy.notCalled, "xhr sender was not called before");
 
                 try {
-                    sender.processTelemetry(telemetryItem);
+                    sender.processTelemetry(telemetryItem, null);
                     sender.flush();
                 } catch(e) {
                     Assert.ok(false);
@@ -177,7 +177,7 @@ export class SenderTests extends TestClass {
                 Assert.ok(xhrSenderSpy.notCalled, "xhr sender was not called before");
 
                 try {
-                    sender.processTelemetry(telemetryItem);
+                    sender.processTelemetry(telemetryItem, null);
                     sender.flush();
                 } catch(e) {
                     Assert.ok(false);
@@ -231,7 +231,7 @@ export class SenderTests extends TestClass {
 
                 try {
                     for (let i = 0; i < 8; i++) {
-                        sender.processTelemetry(telemetryItems[i]);
+                        sender.processTelemetry(telemetryItems[i], null);
                     }
                     sender.flush();
                 } catch(e) {

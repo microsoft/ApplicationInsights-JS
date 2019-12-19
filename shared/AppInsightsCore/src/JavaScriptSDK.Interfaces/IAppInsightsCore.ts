@@ -6,6 +6,7 @@ import { IPlugin } from "./ITelemetryPlugin";
 import { IConfiguration } from "./IConfiguration";
 import { INotificationListener } from "./INotificationListener";
 import { IDiagnosticLogger } from './IDiagnosticLogger';
+import { IProcessTelemetryContext } from './IProcessTelemetryContext';
 
 "use strict";
 
@@ -17,6 +18,11 @@ export interface IAppInsightsCore {
     config: IConfiguration;
 
     logger: IDiagnosticLogger;
+
+    /**
+     * Returns a value that indicates whether the instance has already been previously initialized.
+     */
+    isInitialized?: () => boolean;
 
     /*
     * Initialization queue. Contains functions to run when appInsights initializes
@@ -48,4 +54,9 @@ export interface IAppInsightsCore {
     removeNotificationListener?(listener: INotificationListener): void;
 
     pollInternalLogs?(eventName?: string): number;
+
+    /**
+     * Return a new instance of the IProcessTelemetryContext for processing events
+     */
+    getProcessTelContext() : IProcessTelemetryContext;
 }
