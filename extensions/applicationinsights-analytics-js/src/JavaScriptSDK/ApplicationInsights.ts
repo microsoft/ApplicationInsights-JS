@@ -34,7 +34,7 @@ declare global {
 const durationProperty: string = "duration";
 
 export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
-    public static Version = "2.3.1"; // Not currently used anywhere
+    public static Version = "2.4.0-beta"; // Not currently used anywhere
 
     public static getDefaultConfig(config?: IConfig): IConfig {
         if (!config) {
@@ -47,7 +47,8 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
         config.disableExceptionTracking = Util.stringToBoolOrDefault(config.disableExceptionTracking);
         config.autoTrackPageVisitTime = Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
         config.overridePageViewDuration = Util.stringToBoolOrDefault(config.overridePageViewDuration);
-
+        config.enableUnhandledPromiseRejectionTracking = Util.stringToBoolOrDefault(config.enableUnhandledPromiseRejectionTracking);
+        
         if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
             config.samplingPercentage = 100;
         }
@@ -585,6 +586,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
         }
 
         if (this.config.disableExceptionTracking === false &&
+            this.config.enableUnhandledPromiseRejectionTracking === true &&
             !this.config.autoUnhandledPromiseInstrumented && _window) {
             // We want to enable exception auto collection and it has not been done so yet
             const onunhandledrejection = "onunhandledrejection";

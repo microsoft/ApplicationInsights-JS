@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-react-js",
-    "version": "2.3.1",
+    "version": "2.4.0-beta",
     "description": "Microsoft Application Insights React plugin",
     "main": "dist/applicationinsights-react-js.js",
     "module": "dist-esm/applicationinsights-react-js.js",
@@ -41,8 +41,8 @@
         "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "2.3.1",
-        "@microsoft/applicationinsights-common": "2.3.1",
+        "@microsoft/applicationinsights-core-js": "2.4.0-beta",
+        "@microsoft/applicationinsights-common": "2.4.0-beta",
         "tslib": "^1.9.3",
         "react": "^16.8.6",
         "history": "^4.9.0"

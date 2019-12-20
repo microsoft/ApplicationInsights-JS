@@ -320,6 +320,15 @@ export interface IConfig {
      * @memberof IConfig
      */
     autoUnhandledPromiseInstrumented?: boolean;
+
+    /**
+     * @description Default false. Define whether to track unhandled promise rejections and report as JS errors. 
+     * When disableExceptionTracking is enabled (dont track exceptions) this value will be false.
+     * @type {boolean}
+     * @memberof IConfig
+     * @defaultValue false
+     */
+    enableUnhandledPromiseRejectionTracking?: boolean;
 }
 
 export class ConfigurationManager {
