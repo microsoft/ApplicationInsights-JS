@@ -183,87 +183,13 @@ Clears the authenticated user id and the account id from the user context, and c
 public addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void)
 ```
 
-Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one, in the order they were added,
+Adds a telemetry initializer to the collection. Telemetry initializers will be called one by one with the telemetryItem of type [`ITelemetryItem`](./shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ITelemetryItem.ts), in the order they were added,
 before the telemetry item is pushed for sending.
 If one of the telemetry initializers returns false or throws an error, then the telemetry item will not be sent.
 
-```ts
-interface ITelemetryItem {
-    /**
-     * Unique name of the telemetry item
-     */
-    name: string;
-
-    /**
-     * Timestamp when item was sent
-     */
-    timestamp?: Date;
-
-    /**
-     * Identifier of the resource that uniquely identifies which resource data is sent to
-     */
-    instrumentationKey?: string;
-
-    /**
-     * System properties with well defined extensions, documentation coming soon
-     */
-    ctx?: {[key: string]: any};
-
-    /**
-     * Part A custom extensions
-     */
-    tags?: Tags[];
-
-    /**
-     * Telemetry type used for part B
-     */
-    baseType?: string;
-
-    /**
-     * Based on schema for part B
-     */
-    baseData?: { [key: string]: any };
-
-    /**
-     * Telemetry data used for Part C
-     */
-    data?: {
-        [key: string]: any;
-    },
-}
-```
-
 ### Custom extension
 
-A custom plugin can be loaded by the SDK through config.extensions. All plugins must implement ITelemetryPlugin interface. These provide the capability of inspecting and updating data as it leaves the system, but also provides additional functionality to for one time initialization of extension state and pass in custom configuration through SKU configuration etc.
-
-```ts
-interface ITelemetryPlugin {
-    /**
-    * Call back for telemetry processing before it is sent to next plugin for processing (needs to be invoked by caller)
-    */
-    processTelemetry: (env: ITelemetryItem) => void;
-
-    /**
-    * Extension name
-    */
-    identifier: string;
-
-    /**
-    * Set next extension for telemetry processing
-    */
-    setNextPlugin: (next: ITelemetryPlugin) => void;
-
-    /**
-    * Priority of the extension
-    *
-    * 1 - 100: customer plugins
-    * 100 - 199: reserved for internal plugins.
-    * > 200: channel plugins (that implement IChannelControls to send data to an endpoint)
-    */
-    priority: number;
-}
-```
+A custom plugin can be loaded by the SDK through config.extensions. All plugins must implement [`ITelemetryPlugin`](./shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts) interface. These provide the capability of inspecting and updating data as it leaves the system, but also provides additional functionality to for one time initialization of extension state and pass in custom configuration through SKU configuration etc.
 
 ## class TelemetryContext
 
