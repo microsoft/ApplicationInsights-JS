@@ -7,13 +7,11 @@ before_install:
 jobs:
   include:
     - stage: "Build and Test"
-      name: "Build and Test: Legacy"
       script:
       - cd legacy/
       - npm install
       - grunt
       - grunt test
-      name: "Build and Test: @microsoft/applicationinsights-web"
       script:
       - set -e
       - set NO_UPDATE_NOTIFIER=1
