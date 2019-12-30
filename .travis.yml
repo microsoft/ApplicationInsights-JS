@@ -6,7 +6,7 @@ before_install:
   - npm i -g grunt-cli
 jobs:
   include:
-    - script: ./.travis/test_rush
+    - script: ./.travis/test_rush.sh
       name: "Tests"
-    - script: ./.travis/test_legacy
+    - script: ./.travis/test_legacy.sh
       name: "Legacy Tests"
