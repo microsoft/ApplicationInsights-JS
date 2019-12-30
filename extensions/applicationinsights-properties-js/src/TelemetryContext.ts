@@ -3,7 +3,7 @@
  * @copyright Microsoft 2018
  */
 
-import { ITelemetryItem, IDiagnosticLogger, CoreUtils, hasWindow } from '@microsoft/applicationinsights-core-js';
+import { ITelemetryItem, IProcessTelemetryContext, IDiagnosticLogger, CoreUtils, hasWindow } from '@microsoft/applicationinsights-core-js';
 import { Session, _SessionManager } from './Context/Session';
 import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, IWeb, SampleRate, CtxTagKeys } from '@microsoft/applicationinsights-common';
 import { Application } from './Context/Application';
@@ -42,7 +42,7 @@ export class TelemetryContext implements ITelemetryContext {
         this.appId = () => null;
     }
 
-    public applySessionContext(event: ITelemetryItem) {
+    public applySessionContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         const sessionContext = this.session || this.sessionManager.automaticSession;
         if (sessionContext) {
             if (typeof sessionContext.id === "string") {
@@ -60,13 +60,13 @@ export class TelemetryContext implements ITelemetryContext {
         }
     }
 
-    public applyOperatingSystemContxt(event: ITelemetryItem) {
+    public applyOperatingSystemContxt(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         if (this.os && this.os.name) {
             event.ext.os = this.os;
         }
     }
 
-    public applyApplicationContext(event: ITelemetryItem) {
+    public applyApplicationContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         if (this.application) {
 
             if (typeof this.application.ver === "string") {
@@ -78,7 +78,7 @@ export class TelemetryContext implements ITelemetryContext {
         }
     }
 
-    public applyDeviceContext(event: ITelemetryItem) {
+    public applyDeviceContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
 
         if (this.device) {
             if (typeof this.device.id === "string") {
@@ -99,7 +99,7 @@ export class TelemetryContext implements ITelemetryContext {
         }
     }
 
-    public applyInternalContext(event: ITelemetryItem) {
+    public applyInternalContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         if (this.internal) {
             if (typeof this.internal.agentVersion === "string") {
                 event.tags[CtxTagKeys.internalAgentVersion] = this.internal.agentVersion; // not mapped in CS 4.0
@@ -110,7 +110,7 @@ export class TelemetryContext implements ITelemetryContext {
         }
     }
 
-    public applyLocationContext(event: ITelemetryItem) {
+    public applyLocationContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         if (this.location) {
             if (typeof this.location.ip === "string") {
                 event.tags[CtxTagKeys.locationIp] = this.location.ip;
@@ -118,7 +118,7 @@ export class TelemetryContext implements ITelemetryContext {
         }
     }
 
-    public applyOperationContext(event: ITelemetryItem) {
+    public applyOperationContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         if (this.telemetryTrace) {
             const trace = event.ext.trace || ({traceID: undefined, parentID: undefined} as ITelemetryTrace);
             if (typeof this.telemetryTrace.traceID === "string") {
@@ -137,14 +137,14 @@ export class TelemetryContext implements ITelemetryContext {
         }
     }
 
-    public applyWebContext(event: ITelemetryItem) {
+    public applyWebContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         if (this.web) {
             event.ext.web = event.ext.web || {};
             event.ext.web = this.web;
         }
     }
 
-    public applyUserContext(event: ITelemetryItem) {
+    public applyUserContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         if (this.user) {
             if (!event.tags) {
                 event.tags = [];
@@ -167,7 +167,7 @@ export class TelemetryContext implements ITelemetryContext {
         }
     }
 
-    public cleanUp(event:ITelemetryItem) {
+    public cleanUp(event:ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         if (event.ext[Extensions.DeviceExt] && CoreUtils.objKeys(event.ext[Extensions.DeviceExt]).length === 0) {
             delete event.ext[Extensions.DeviceExt];
         }

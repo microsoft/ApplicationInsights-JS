@@ -114,11 +114,11 @@ export class ApplicationInsightsTests extends TestClass {
                 // Assert.deepEqual(this._ai, window[this._aiName], `AI is available from window.${this._aiName}`);
 
                 Assert.ok(this._ai.appInsights, 'App Analytics exists');
-                Assert.equal(true, this._ai.appInsights['_isInitialized'], 'App Analytics is initialized');
+                Assert.equal(true, this._ai.appInsights.isInitialized(), 'App Analytics is initialized');
 
 
                 Assert.ok(this._ai.appInsights.core, 'Core exists');
-                Assert.equal(true, this._ai.appInsights.core['_isInitialized'],
+                Assert.equal(true, this._ai.appInsights.core.isInitialized(),
                     'Core is initialized');
             }
         });
@@ -318,7 +318,14 @@ export class ApplicationInsightsTests extends TestClass {
                 .concat(() => {
                     if (this.successSpy.called) {
                         const payloadStr: string[] = this.successSpy.args[0][0];
-                        Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                        let payloadItems = 0;
+                        payloadStr.forEach(message => {
+                            // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                            if (message.indexOf("AI (Internal): 72 ") == -1) {
+                                payloadItems ++;
+                            }
+                        });
+                        Assert.equal(1, payloadItems, 'Only 1 track item is sent');
                         const payload = JSON.parse(payloadStr[0]);
                         Assert.ok(payload);
 
@@ -536,12 +543,23 @@ export class ApplicationInsightsTests extends TestClass {
                 .concat(this.asserts(1))
                 .concat(PollingAssert.createPollingAssert(() => {
                     if (this.successSpy.called) {
-                        const payloadStr: string[] = this.successSpy.args[0][0];
-                        if (payloadStr.length !== 1) {
+                        let thePayload:string = null;
+                        let payloadEvents = 0;
+                        this.successSpy.args.forEach(call => {
+                            call[0].forEach(payloadStr => {
+                                // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                                if (payloadStr.indexOf("AI (Internal): 72 ") == -1) {
+                                    thePayload = payloadStr;
+                                    payloadEvents ++;
+                                }
+                            });
+                        });
+            
+                        if (payloadEvents !== 1) {
                             // Only 1 track should be sent
                             return false;
                         }
-                        const payload = JSON.parse(payloadStr[0]);
+                        const payload = JSON.parse(thePayload);
                         if (payload && payload.tags) {
                             const tagName: string = this.tagKeys.userAuthUserId;
                             return '10001' === payload.tags[tagName];
@@ -701,7 +719,12 @@ export class ApplicationInsightsTests extends TestClass {
         if (this.successSpy.called) {
             let currentCount: number = 0;
             this.successSpy.args.forEach(call => {
-                currentCount += call[1];
+                call[0].forEach(message => {
+                    // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                    if (message.indexOf("AI (Internal): 72 ") == -1) {
+                        currentCount ++;
+                    }
+                });
             });
             console.log('curr: ' + currentCount + ' exp: ' + expectedCount, ' appId: ' + this._ai.context.appId());
             if (currentCount === expectedCount && !!this._ai.context.appId()) {

@@ -261,13 +261,13 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const initFunction = () => appInsightsCore.initialize({ instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" }, [channelPlugin]);
 
                 // Assert precondition
-                Assert.ok(!appInsightsCore["_isInitialized"], "PRE: core constructed but not initialized");
+                Assert.ok(!appInsightsCore.isInitialized(), "PRE: core constructed but not initialized");
 
                 // Init
                 initFunction();
 
                 // Assert initialized
-                Assert.ok(appInsightsCore["_isInitialized"], "core is initialized");
+                Assert.ok(appInsightsCore.isInitialized(), "core is initialized");
 
                 Assert.throws(initFunction, Error, "Core cannot be reinitialized");
             }

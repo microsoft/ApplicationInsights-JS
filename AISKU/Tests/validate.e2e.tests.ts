@@ -95,7 +95,16 @@ export class ValidateE2ETests extends TestClass {
             .concat(this.waitForResponse())
             .concat(this.boilerPlateAsserts)
             .concat(() => {
-                const acceptedItems = this.successSpy.args[0][1];
+                let acceptedItems = 0;
+                this.successSpy.args.forEach(call => {
+                    call[0].forEach(message => {
+                        // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                        if (message.indexOf("AI (Internal): 72 ") == -1) {
+                            acceptedItems ++;
+                        }
+                    });
+                });
+
                 Assert.equal(4, acceptedItems, "backend should accept all four events");
             })
     });
