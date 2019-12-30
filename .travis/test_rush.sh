@@ -1,8 +1,8 @@
 set -e
 set NO_UPDATE_NOTIFIER=1
-echo 'Checking for missing change logs...' && echo -en 'travis_fold:start:change\\r'
-git fetch origin master:refs/remotes/origin/master -a
-node common/scripts/install-run-rush.js change -v
+# echo 'Checking for missing change logs...' && echo -en 'travis_fold:start:change\\r'
+# git fetch origin master:refs/remotes/origin/master -a
+# node common/scripts/install-run-rush.js change -v
 
 echo -en 'travis_fold:end:change\\r'
 echo 'Checking for inconsistent dependency versions' && echo -en 'travis_fold:start:check\\r'
