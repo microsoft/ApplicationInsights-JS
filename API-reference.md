@@ -1,7 +1,7 @@
 ### trackPageView
 
 ```ts
-applicationInsights.trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any })
+applicationInsights.trackPageView(pageView: IPageViewTelemetry)
 ```
 
 The `IPageViewTelemetry` interface is below:
@@ -14,7 +14,9 @@ Parameter | Type | Description
 `pageType?` | string | **Optional**<br>Page Type string. Describes how you classify this page, e.g. errorPage, formPage, etc.
 `isLoggedIn?` | boolean | **Optional**<br>Whether or not the user is logged in
 `pageTags?` | dictionary | **Optional**<br>Property bag to contain an extension to domain properties - extension to Part B
+`properties?` | dictionary | **Optional**<br>Map of string to any: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
+> *Note:* To send a custom duration (ms) of your pageview as an argument, it must be included in the `properties` named field. E.g `appInsights.trackPageView({ properties: { duration: 123.45 } });`.
 
 ### startTrackPage
 
@@ -31,7 +33,7 @@ Parameter | Type | Description
 ### stopTrackPage
 
 ```ts
-stopTrackPage(name?: string, url?: string, customProperties?: { [name: string]: any; });
+stopTrackPage(name?: string, url?: string);
 ```
 
 Stops the timer that was started by calling `startTrackPage` and sends the pageview load time telemetry with the specified properties and measurements. The duration of the page view will be the time between calling `startTrackPage` and `stopTrackPage`.
@@ -40,12 +42,11 @@ Parameter | Type | Description
 ---|---|---
 `name?` | string | **Optional**<br>The name used to identify the page in the portal. Defaults to the document title.
 `url?` |  string | **Optional**<br>A relative or absolute URL that identifies the page or similar item. Defaults to the window location.
-`customProperties?` | dictionary | **Optional**<br>Map of string to string: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
 ### trackMetric
 
 ```ts
-trackMetric(metric: IMetricTelemetry, customProperties?: {[name: string]: any})
+trackMetric(metric: IMetricTelemetry)
 ```
 
 Log a positive numeric value that is not associated with a specific event. Typically used to send regular reports of performance indicators.
@@ -61,11 +62,12 @@ Parameter | Type | Description
 `sampleCount?` | number | **Optional**<br>Count of measurements represented by the average. Defaults to 1. Should be >=1.
 `min?` | number | **Optional**<br>The smallest measurement in the sample. Defaults to the average. Should be >= 0.
 `max?` | number | **Optional**<br>The largest measurement in the sample. Defaults to the average. Should be >= 0.
+`properties?` | dictionary | **Optional**<br>Map of string to any: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
 ### trackException
 
 ```ts
-trackException(exception: IExceptionTelemtry, customProperties?: {[key: string]: any})
+trackException(exception: IExceptionTelemtry)
 ```
 
 Log an exception you have caught. Exceptions caught by the browser are also automatically logged.
@@ -76,6 +78,7 @@ Parameter | Type | Description
 ---|---|---
 `exception` | [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) | **Required**<br>Error object
 `severityLevel?` | [SeverityLevel (number)](https://github.com/microsoft/ApplicationInsights-JS/blob/master/legacy/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts) | **Optional**<br>Severity of the message, ranging from verbose to critical
+`properties?` | dictionary | **Optional**<br>Map of string to any: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
 By default, uncaught browser exceptions are caught by the SDK and reported to the portal. To disable this behavior, insert the following line in the config section below your instrumentation key:
 
@@ -89,7 +92,7 @@ By default, uncaught browser exceptions are caught by the SDK and reported to th
 ### trackTrace
 
 ```ts
-trackTrace(trace: ITraceTelemetry, customProperties?: {[key: string]: any})
+trackTrace(trace: ITraceTelemetry)
 ```
 
 Log a diagnostic event such as entering or leaving a method.
@@ -101,6 +104,7 @@ Parameter | Type | Description
 ---|---|---
 `message` | string | **Required**<br>Diagnostic data. Can be much longer than an event's name.
 `severityLevel?` | [SeverityLevel (number)](https://github.com/microsoft/ApplicationInsights-JS/blob/master/legacy/JavaScript/JavaScriptSDK.Interfaces/Contracts/Generated/SeverityLevel.ts) | **Optional**<br>Severity of the message, ranging from verbose to critical
+`properties?` | dictionary | **Optional**<br>Map of string to any: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
 In the portal, you can search on message content and [display individual trackTrace events](https://azure.microsoft.com/documentation/articles/app-insights-diagnostic-search/).
 (Unlike `trackEvent`, you can't filter on the message content in the portal.)
@@ -109,7 +113,7 @@ In the portal, you can search on message content and [display individual trackTr
 ### trackDependencyData
 
 ```ts
-trackDependencyData(dependency: IDependencyTelemetry, customProperties?: {[key: string]: any}, systemProperties?: {[key: string]: any})
+trackDependencyData(dependency: IDependencyTelemetry)
 ```
 
 Log a dependency call (for instance: ajax)
@@ -125,11 +129,12 @@ Parameter | Type | Description
 `commandName?` | string| **Optional**<br>Command used to make the dependency request
 `duration?` | number | **Optional**<br>Elapsed time of request & reply
 `method?` | string | **Optional**<br>Represents request verb (GET, POST, etc.)
+`properties?` | dictionary | **Optional**<br>Map of string to any: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
 ### trackEvent
 
 ```ts
-applicationInsights.trackEvent(event: IEventTelemetry, customProperties?: { [key: string]: any })
+applicationInsights.trackEvent(event: IEventTelemetry)
 ```
 
 The `IEventTelemetry` interface is below:
@@ -137,6 +142,7 @@ The `IEventTelemetry` interface is below:
 Parameter | Type | Description
 ---|---|---
 `name` | string | **Required**<br>An event name string.
+`properties?` | dictionary | **Optional**<br>Map of string to any: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
 ### flush
 

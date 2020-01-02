@@ -31,6 +31,17 @@ export interface IPageViewTelemetry extends IPartC {
      * isLoggedIn - boolean is user logged in
      */
     isLoggedIn?: boolean;
+
+    /**
+     * Property bag to contain additional custom properties (Part C)
+     */
+    properties?: {
+        /**
+         * The number of milliseconds it took to load the page. Defaults to undefined. If set to default value, page load time is calculated internally.
+         */
+        duration?: number;
+        [key: string]: any;
+    };
 }
 
 
