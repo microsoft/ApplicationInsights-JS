@@ -214,7 +214,7 @@ export class AjaxTests extends TestClass {
                 // Act
                 var xhr = new XMLHttpRequest();
                 xhr.onload = callback;
-                xhr.open("GET", "/bla");
+                xhr.open("GET", "example.com/bla");
                 xhr.send();
 
 
@@ -244,7 +244,7 @@ export class AjaxTests extends TestClass {
                 // Act
                 var xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = onreadystatechangeSpy;
-                xhr.open("GET", "/bla");
+                xhr.open("GET", "example.com/bla");
                 xhr.send();
 
                 Assert.ok(trackStub.notCalled, "TrackAjax should not be called yet");
@@ -270,7 +270,7 @@ export class AjaxTests extends TestClass {
 
                 // Act
                 var xhr = new XMLHttpRequest();
-                xhr.open("GET", "/bla");
+                xhr.open("GET", "example.com/bla");
                 xhr.send();
 
                 // Emulate response
@@ -293,7 +293,7 @@ export class AjaxTests extends TestClass {
 
                 // Act
                 var xhr = new XMLHttpRequest();
-                xhr.open("GET", "/bla");
+                xhr.open("GET", "example.com/bla");
                 xhr.send();
 
                 // Emulate response
@@ -343,7 +343,7 @@ export class AjaxTests extends TestClass {
                 var xhr = new XMLHttpRequest();
                 xhr.addEventListener("readystatechange", cb1);
                 xhr.addEventListener("readystatechange", cb2);
-                xhr.open("GET", "/bla");
+                xhr.open("GET", "example.com/bla");
                 xhr.onreadystatechange = cb3;
                 xhr.addEventListener("readystatechange", cb4);
                 xhr.addEventListener("readystatechange", cb5);
@@ -407,7 +407,7 @@ export class AjaxTests extends TestClass {
                             (<any>window.performance).tick(expectedResponseDuration);
                         }
                     }
-                    xhr.open("GET", "/bla");
+                    xhr.open("GET", "example.com/bla");
                     xhr.send();
                     // Emulate response
                     (<any>xhr).respond(404, {}, "");
@@ -432,7 +432,7 @@ export class AjaxTests extends TestClass {
 
                 // Act
                 var xhr = new XMLHttpRequest();
-                xhr.open("GET", "/bla");
+                xhr.open("GET", "example.com/bla");
                 xhr.send();
 
                 try {
@@ -456,10 +456,10 @@ export class AjaxTests extends TestClass {
 
                 // Act
                 var xhr = new XMLHttpRequest();
-                xhr.open("GET", "/bla");
+                xhr.open("GET", "example.com/bla");
 
                 try {
-                    xhr.open("GET", "/bla");
+                    xhr.open("GET", "example.com/bla");
                 } catch (e) { }
 
 
@@ -501,7 +501,7 @@ export class AjaxTests extends TestClass {
 
         // Act
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/bla");
+        xhr.open("GET", "example.com/bla");
         xhr.send();
 
         // Emulate response
