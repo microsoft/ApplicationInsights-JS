@@ -2,7 +2,7 @@
 /// <reference path="../../JavaScriptSDK/AppInsightsCore.ts" />
 /// <reference path="../../applicationinsights-core-js.ts" />
 
-import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, CoreUtils } from "../../applicationinsights-core-js"
+import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, CoreUtils, IAppInsightsCore } from "../../applicationinsights-core-js"
 import { AppInsightsCore } from "../../JavaScriptSDK/AppInsightsCore";
 import { IChannelControls } from "../../JavaScriptSDK.Interfaces/IChannelControls";
 import { _InternalMessageId, LoggingSeverity } from "../../JavaScriptSDK.Enums/LoggingEnums";
@@ -522,6 +522,36 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 Assert.ok(evt.name === "test");
             }
         });
+
+        this.testCase({
+            name: "ApplicationInsightsCore: Track queue event when not all extensions are initialized",
+            test: () => {
+                const trackPlugin = new TrackPlugin();
+                const channelPlugin = new ChannelPlugin();
+                channelPlugin.priority = 1001;
+                const appInsightsCore = new AppInsightsCore();
+                const channelSpy = this.sandbox.stub(channelPlugin, "processTelemetry");
+
+                trackPlugin.isInitialized = () => {
+                    return false;
+                }
+                appInsightsCore.initialize(
+                    { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" },
+                    [trackPlugin, channelPlugin]);
+
+                Assert.ok(appInsightsCore["_eventQueue"].length == 1, "Event queue wrong number of events");
+                appInsightsCore.track({name:"TestEvent"});
+                Assert.ok(appInsightsCore["_eventQueue"].length == 2, "Event queue wrong number of events");
+                Assert.ok(channelSpy.called == false, "Channel process incorrect number of times");
+                trackPlugin.isInitialized = () => {
+                    return true;
+                }
+                appInsightsCore.track({name:"TestEvent"});
+                Assert.ok(channelSpy.calledThrice, "Channel process incorrect number of times");
+                Assert.ok(appInsightsCore["_eventQueue"].length == 0, "Event queue wrong number of events");
+            }
+        });
+
     }
 }
 
@@ -620,7 +650,6 @@ class ChannelPlugin implements IChannelControls {
     }
 
     public _processTelemetry(env: ITelemetryItem) {
-
     }
 }
 
@@ -629,9 +658,32 @@ class TestPlugin implements IPlugin {
     public version: string = "1.0.31-Beta";
 
     private _config: IConfiguration;
-    
+
     public initialize(config: IConfiguration) {
         this._config = config;
         // do custom one time initialization
+    }
+}
+
+class TrackPlugin implements IPlugin {
+    public identifier: string = "TrackPlugin";
+    public version: string = "1.0.31-Beta";
+    public priority = 2;
+    public _nextPlugin: ITelemetryPlugin;
+    public isInitialized: any;
+    private _config: IConfiguration;
+
+    public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
+        this._config = config;
+        core.track({ name: 'test item' });
+
+    }
+
+    public setNextPlugin(next: ITelemetryPlugin) {
+        this._nextPlugin = next;
+    }
+
+    public processTelemetry(evt: ITelemetryItem) {
+        this._nextPlugin.processTelemetry(evt);
     }
 }
