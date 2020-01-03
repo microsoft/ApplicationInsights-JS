@@ -18,29 +18,30 @@ export default class AngularPlugin extends BaseTelemetryPlugin {
     public identifier = 'AngularPlugin';
 
     private _analyticsPlugin: IAppInsights;
+    private _extConfig: IAngularExtensionConfig;
 
     initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) {
         super.initialize(config, core, extensions, pluginChain);
         let ctx = this._getTelCtx();
-        let extConfig = ctx.getExtCfg<IAngularExtensionConfig>(this.identifier, { router: null });
+        this._extConfig = ctx.getExtCfg<IAngularExtensionConfig>(this.identifier, { router: null });
         CoreUtils.arrForEach(extensions, ext => {
             const identifier = (ext as ITelemetryPlugin).identifier;
             if (identifier === 'ApplicationInsightsAnalytics') {
                 this._analyticsPlugin = (ext as any) as IAppInsights;
             }
         });
-        if (extConfig.router) {
-            extConfig.router.events.subscribe(event => {
+        if (this._extConfig.router) {
+            this._extConfig.router.events.subscribe(event => {
                 if (event.constructor.name === "NavigationEnd") {
                     // Timeout to ensure any changes to the DOM made by route changes get included in pageView telemetry
                     setTimeout(() => {
-                        const pageViewTelemetry: IPageViewTelemetry = { uri: extConfig.router.url };
+                        const pageViewTelemetry: IPageViewTelemetry = { uri: this._extConfig.router.url };
                         this.trackPageView(pageViewTelemetry);
                     }, 500);
                 }
             });
             const pageViewTelemetry: IPageViewTelemetry = {
-                uri: extConfig.router.url
+                uri: this._extConfig.router.url
             };
             this.trackPageView(pageViewTelemetry);
         }
