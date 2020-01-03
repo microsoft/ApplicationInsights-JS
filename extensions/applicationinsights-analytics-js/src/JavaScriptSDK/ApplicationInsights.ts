@@ -524,7 +524,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
         this._pageViewManager = new PageViewManager(this, this.config.overridePageViewDuration, this.core, this._pageViewPerformanceManager);
         this._pageVisitTimeManager = new PageVisitTimeManager(this.diagLog(), (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime))
 
-        this._telemetryInitializers = [];
+        this._telemetryInitializers = this._telemetryInitializers || [];
         this._addDefaultTelemetryInitializers(configGetters);
 
 
