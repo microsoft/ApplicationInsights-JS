@@ -118,7 +118,7 @@ appInsights.stopTrackEvent("event", {customProp1: "some value"});
 appInsights.flush();
 ```
 
-Custom properties can be included in your telemetry through the `properies` named argument. This can be done with *any* of the Track APIs.
+Custom properties can be included in your telemetry through the `properties` named argument. This can be done with *any* of the Track APIs.
 
 ```js
 appInsights.trackEvent({
