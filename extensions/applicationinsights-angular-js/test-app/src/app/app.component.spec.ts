@@ -59,7 +59,7 @@ describe('Router: App', () => {
         }
       }
     }, core, []);
-    const angularConfig: IAngularExtensionConfig = angularPlugin['_extensionConfig'];
+    const angularConfig: IAngularExtensionConfig = angularPlugin['_extConfig'];
     expect(angularConfig.router).toEqual(router);
   }));
 
