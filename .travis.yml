@@ -10,3 +10,5 @@ jobs:
       name: "Tests"
     - script: ./.travis/test_legacy.sh
       name: "Legacy Tests"
+    - script: ./.travis/test_react_native.sh
+      name: "React Native Tests"
