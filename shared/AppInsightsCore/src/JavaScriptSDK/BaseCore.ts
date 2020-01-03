@@ -171,7 +171,7 @@ export class BaseCore implements IAppInsightsCore {
             // Release queue
             if (_this._eventQueue.length > 0) {
                 _arrForEach(_this._eventQueue, (event: ITelemetryItem) => {
-                    _this.getProcessTelContext().processNext(telemetryItem);
+                    _this.getProcessTelContext().processNext(event);
                 });
                 _this._eventQueue = [];
             }

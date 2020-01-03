@@ -540,14 +540,17 @@ export class ApplicationInsightsCoreTests extends TestClass {
                     [trackPlugin, channelPlugin]);
 
                 Assert.ok(appInsightsCore["_eventQueue"].length == 1, "Event queue wrong number of events");
-                appInsightsCore.track({name:"TestEvent"});
+                appInsightsCore.track({name:"TestEvent2"});
                 Assert.ok(appInsightsCore["_eventQueue"].length == 2, "Event queue wrong number of events");
                 Assert.ok(channelSpy.called == false, "Channel process incorrect number of times");
                 trackPlugin.isInitialized = () => {
                     return true;
                 }
-                appInsightsCore.track({name:"TestEvent"});
+                appInsightsCore.track({name:"TestEvent3"});
                 Assert.ok(channelSpy.calledThrice, "Channel process incorrect number of times");
+                Assert.ok(channelSpy.args[0][0].name == "TestEvent1", "Incorrect event");
+                Assert.ok(channelSpy.args[1][0].name == "TestEvent2", "Incorrect event");
+                Assert.ok(channelSpy.args[2][0].name == "TestEvent3", "Incorrect event");  
                 Assert.ok(appInsightsCore["_eventQueue"].length == 0, "Event queue wrong number of events");
             }
         });
@@ -675,7 +678,7 @@ class TrackPlugin implements IPlugin {
 
     public initialize(config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) {
         this._config = config;
-        core.track({ name: 'test item' });
+        core.track({ name: 'TestEvent1' });
 
     }
 
