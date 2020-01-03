@@ -201,13 +201,13 @@ export class BaseCore implements IAppInsightsCore {
         let _this = this;
         if (!_this._allExtensionsInitialized) {
             let extensions = _this._extensions;
-            let isAnyExtensionNotInit = false;
-            _arrForEach(extensions, (ext: ITelemetryPlugin) => {
+            _this._allExtensionsInitialized = true;
+            for (let ext of extensions) {
                 if (!_isNullOrUndefined(ext.isInitialized) && !ext.isInitialized()) {
-                    isAnyExtensionNotInit = true;
+                    _this._allExtensionsInitialized = false;
+                    break;
                 }
-            });
-            _this._allExtensionsInitialized = isAnyExtensionNotInit ? false : true;
+            }
         }
         return _this._allExtensionsInitialized;
     }
