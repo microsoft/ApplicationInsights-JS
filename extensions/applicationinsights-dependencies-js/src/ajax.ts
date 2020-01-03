@@ -87,10 +87,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
     priority: number = 120;
     protected initialized: boolean; // ajax monitoring initialized
     protected _fetchInitialized: boolean; // fetch monitoring initialized
-    protected _config: ICorrelationConfig;
+    protected _config: ICorrelationConfig = AjaxMonitor.getEmptyConfig();
     protected _trackAjaxAttempts: number = 0;
     private currentWindowHost: string;
-    private _context: ITelemetryContext;
+    private _context?: ITelemetryContext;
     private _isUsingW3CHeaders: boolean;
     private _isUsingAIHeaders: boolean;
 
@@ -128,7 +128,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         ajaxData.requestHeaders[RequestHeaders.requestIdHeader] = id;
                     }
                 }
-                const appId: string = _self._config.appId || _self._context.appId();
+                const appId: string = _self._config.appId ||(_self._context && _self._context.appId());
                 if (appId) {
                     init.headers.set(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
                     if (_self._config.enableRequestHeaderTracking) {
@@ -146,7 +146,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             }
             return init;
         } else if (xhr) { // XHR
-            if (_self.currentWindowHost && CorrelationIdHelper.canIncludeCorrelationHeader(_self._config, xhr.ajaxData.getAbsoluteUrl(),
+            if (CorrelationIdHelper.canIncludeCorrelationHeader(_self._config, xhr.ajaxData.getAbsoluteUrl(),
             _self.currentWindowHost)) {
                 if (_self._isUsingAIHeaders) {
                     const id = "|" + xhr.ajaxData.traceID + "." + xhr.ajaxData.spanID;
@@ -155,7 +155,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         xhr.ajaxData.requestHeaders[RequestHeaders.requestIdHeader] = id;
                     }
                 }
-                const appId = _self._config.appId || _self._context.appId();
+                const appId = _self._config.appId || (_self._context && _self._context.appId());
                 if (appId) {
                     xhr.setRequestHeader(RequestHeaders.requestContextHeader, RequestHeaders.requestContextAppIdFormat + appId);
                     if (_self._config.enableRequestHeaderTracking) {
@@ -182,7 +182,6 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let ctx = _self._getTelCtx();
         if (!_self.initialized && !_self._fetchInitialized) {
             const defaultConfig = AjaxMonitor.getDefaultConfig();
-            _self._config = AjaxMonitor.getEmptyConfig();
             for (const field in defaultConfig) {
                 _self._config[field] = ctx.getConfig(AjaxMonitor.identifier, field, defaultConfig[field]);
             }
@@ -537,7 +536,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 }
             }
 
-            if (_self._config.enableResponseHeaderTracking) { 
+            if (_self._config.enableResponseHeaderTracking) {
                 const headers = xhr.getAllResponseHeaders();
                 if (headers) {
                     // xhr.getAllResponseHeaders() method returns all the response headers, separated by CRLF, as a string or null
@@ -557,7 +556,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     }
                 }
             }
-            
+
             _self.trackDependencyDataInternal(dependency);
 
             xhr.ajaxData = null;
@@ -693,10 +692,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     if (CoreUtils.objKeys(ajaxData.requestHeaders).length > 0) {
                         dependency.properties = dependency.properties || {};
                         dependency.properties.requestHeaders = ajaxData.requestHeaders;
-                    }               
+                    }
                 }
 
-                if (_self._config.enableResponseHeaderTracking) {          
+                if (_self._config.enableResponseHeaderTracking) {
                     const responseHeaderMap = {};
                     response.headers.forEach((value, name) => {
                         responseHeaderMap[name] = value;
