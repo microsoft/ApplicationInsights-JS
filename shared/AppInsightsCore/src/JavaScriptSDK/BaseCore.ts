@@ -167,7 +167,7 @@ export class BaseCore implements IAppInsightsCore {
             telemetryItem.ver = "4.0";
         }
 
-        if (_this.areExtensionsInitialized()) {
+        if (_this.isInitialized()) {
             // Release queue
             if (_this._eventQueue.length > 0) {
                 _arrForEach(_this._eventQueue, (event: ITelemetryItem) => {
@@ -195,20 +195,5 @@ export class BaseCore implements IAppInsightsCore {
         }
 
         return new ProcessTelemetryContext(thePlugins, _this.config, _this);
-    }
-
-    areExtensionsInitialized(): boolean {
-        let _this = this;
-        if (!_this._allExtensionsInitialized) {
-            let extensions = _this._extensions;
-            _this._allExtensionsInitialized = true;
-            for (let ext of extensions) {
-                if (!_isNullOrUndefined(ext.isInitialized) && !ext.isInitialized()) {
-                    _this._allExtensionsInitialized = false;
-                    break;
-                }
-            }
-        }
-        return _this._allExtensionsInitialized;
     }
 }
