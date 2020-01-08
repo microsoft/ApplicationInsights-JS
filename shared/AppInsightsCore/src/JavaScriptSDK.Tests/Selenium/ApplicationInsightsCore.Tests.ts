@@ -531,26 +531,15 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 channelPlugin.priority = 1001;
                 const appInsightsCore = new AppInsightsCore();
                 const channelSpy = this.sandbox.stub(channelPlugin, "processTelemetry");
-
-                trackPlugin.isInitialized = () => {
-                    return false;
-                }
                 appInsightsCore.initialize(
                     { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" },
                     [trackPlugin, channelPlugin]);
 
                 Assert.ok(appInsightsCore["_eventQueue"].length == 1, "Event queue wrong number of events");
                 appInsightsCore.track({name:"TestEvent2"});
-                Assert.ok(appInsightsCore["_eventQueue"].length == 2, "Event queue wrong number of events");
-                Assert.ok(channelSpy.called == false, "Channel process incorrect number of times");
-                trackPlugin.isInitialized = () => {
-                    return true;
-                }
-                appInsightsCore.track({name:"TestEvent3"});
-                Assert.ok(channelSpy.calledThrice, "Channel process incorrect number of times");
+                Assert.ok(channelSpy.calledTwice, "Channel process incorrect number of times");
                 Assert.ok(channelSpy.args[0][0].name == "TestEvent1", "Incorrect event");
                 Assert.ok(channelSpy.args[1][0].name == "TestEvent2", "Incorrect event");
-                Assert.ok(channelSpy.args[2][0].name == "TestEvent3", "Incorrect event");  
                 Assert.ok(appInsightsCore["_eventQueue"].length == 0, "Event queue wrong number of events");
             }
         });

@@ -29,7 +29,6 @@ export class BaseCore implements IAppInsightsCore {
     public isInitialized: () => boolean;
     protected _notificationManager: INotificationManager;
     private _eventQueue: ITelemetryItem[];
-    private _allExtensionsInitialized: boolean;
     private _channelController: ChannelController;
     private _setInit: (value: boolean) => void;
 
