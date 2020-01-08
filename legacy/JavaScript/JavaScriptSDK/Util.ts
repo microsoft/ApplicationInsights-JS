@@ -320,7 +320,6 @@ module Microsoft.ApplicationInsights {
          * helper method to set userId and sessionId cookie
          */
         public static setCookie(name, value, domain?) {
-            value = value + ";SameSite=None";
             var domainAttrib = "";
             var secureAttrib = "";
 
@@ -330,6 +329,7 @@ module Microsoft.ApplicationInsights {
 
             if (Util.document.location && Util.document.location.protocol === "https:") {
                 secureAttrib = ";secure";
+                value = value + ";SameSite=None"; // SameSite can only be changed on secure pages
             }
 
             if (Util.canUseCookies()) {
