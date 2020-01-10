@@ -335,7 +335,6 @@ export class Util {
      * helper method to set userId and sessionId cookie
      */
     public static setCookie(logger: IDiagnosticLogger, name, value, domain?) {
-        value = value + ";SameSite=None";
         let domainAttrib = "";
         let secureAttrib = "";
 
@@ -345,6 +344,7 @@ export class Util {
 
         if (Util.document.location && Util.document.location.protocol === "https:") {
             secureAttrib = ";secure";
+            value = value + ";SameSite=None"; // SameSite can only be set on secure pages
         }
 
         if (Util.canUseCookies(logger)) {
@@ -625,7 +625,7 @@ export class UrlHelper {
                 return match[2];
             }
         }
-        
+
         return null;
     }
 }
