@@ -28,8 +28,9 @@ export class BaseCore implements IAppInsightsCore {
     public _extensions: IPlugin[];
     public isInitialized: () => boolean;
     protected _notificationManager: INotificationManager;
+    private _eventQueue: ITelemetryItem[];
     private _channelController: ChannelController;
-    private _setInit: (value:boolean) => void;
+    private _setInit: (value: boolean) => void;
 
     constructor() {
         let _isInitialized = false;
@@ -37,7 +38,8 @@ export class BaseCore implements IAppInsightsCore {
         _this._extensions = new Array<IPlugin>();
         _this._channelController = new ChannelController();
         _this.isInitialized = () => _isInitialized;
-        _this._setInit = (value:boolean) => { _isInitialized = value; }
+        _this._setInit = (value: boolean) => { _isInitialized = value; }
+        _this._eventQueue = [];
     }
 
     initialize(config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void {
@@ -85,7 +87,7 @@ export class BaseCore implements IAppInsightsCore {
         let allExtensions = [];
         allExtensions.push(...extensions, ...config.extensions);
         allExtensions = sortPlugins(allExtensions);
-        
+
         let coreExtensions = [];
         let channelExtensions = [];
 
@@ -104,7 +106,7 @@ export class BaseCore implements IAppInsightsCore {
 
             if (ext && extPriority) {
                 if (!_isNullOrUndefined(extPriorities[extPriority])) {
-                    logger.warnToConsole("Two extensions have same priority #" + extPriority +  " - " + extPriorities[extPriority] + ", " + identifier);
+                    logger.warnToConsole("Two extensions have same priority #" + extPriority + " - " + extPriorities[extPriority] + ", " + identifier);
                 } else {
                     // set a value
                     extPriorities[extPriority] = identifier;
@@ -164,15 +166,27 @@ export class BaseCore implements IAppInsightsCore {
             telemetryItem.ver = "4.0";
         }
 
-        // Process the telemetry plugin chain
-        _this.getProcessTelContext().processNext(telemetryItem);
+        if (_this.isInitialized()) {
+            // Release queue
+            if (_this._eventQueue.length > 0) {
+                _arrForEach(_this._eventQueue, (event: ITelemetryItem) => {
+                    _this.getProcessTelContext().processNext(event);
+                });
+                _this._eventQueue = [];
+            }
+            // Process the telemetry plugin chain
+            _this.getProcessTelContext().processNext(telemetryItem);
+        } else {
+            // Queue events until all extensions are initialized
+            _this._eventQueue.push(telemetryItem);
+        }
     }
 
-    getProcessTelContext() : IProcessTelemetryContext {
+    getProcessTelContext(): IProcessTelemetryContext {
         let _this = this;
         let extensions = _this._extensions;
-        let thePlugins:IPlugin[] = extensions;
-        
+        let thePlugins: IPlugin[] = extensions;
+
         // invoke any common telemetry processors before sending through pipeline
         if (!extensions || extensions.length === 0) {
             // Pass to Channel controller so data is sent to correct channel queues
