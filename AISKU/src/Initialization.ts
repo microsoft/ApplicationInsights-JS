@@ -6,6 +6,7 @@ import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js
 import { Util, IConfig, IDependencyTelemetry, IPageViewPerformanceTelemetry,IPropertiesPlugin,
         IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, ITelemetryContext,
         IMetricTelemetry, IEventTelemetry, IAppInsights, PropertiesPluginIdentifier, ConnectionStringParser } from "@microsoft/applicationinsights-common";
+import * as CommonTelemetry from "@microsoft/applicationinsights-common"
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { PropertiesPlugin, TelemetryContext } from "@microsoft/applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
@@ -28,6 +29,11 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
     flush: (async?: boolean) => void;
     onunloadFlush: (async?: boolean) => void;
 };
+
+/**
+ * Telemetry type classes, e.g. PageView, Exception, etc
+ */
+export const Telemetry = CommonTelemetry;
 
 /**
  * Application Insights API
