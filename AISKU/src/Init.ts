@@ -40,7 +40,7 @@ try {
                 // Hack: If legacy SDK exists, skip this step (Microsoft.ApplicationInsights exists).
                 // else write what was there for v2 SDK prior to rollup bundle output name.
                 // e.g Microsoft.ApplicationInsights.ApplicationInsights, Microsoft.ApplicationInsights.Telemetry
-                if (typeof window !== "undefined" && window && !((window as any).Microsoft && !(window as any).Microsoft.ApplicationInsights)) {
+                if (typeof window !== "undefined" && window && !((window as any).Microsoft && (window as any).Microsoft.ApplicationInsights)) {
                     (window as any).Microsoft = {
                         ApplicationInsights: {
                             ApplicationInsights: ApplicationInsights,
