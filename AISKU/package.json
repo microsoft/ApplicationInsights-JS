@@ -15,6 +15,7 @@
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "grunt aisku",
         "build:browser": "rollup -c",
+        "build:snippet": "grunt snippetvnext",
         "test": "grunt aiskutests",
         "lint": "tslint -p tsconfig.json",
         "nightwatch:chrome": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env chrome",
