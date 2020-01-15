@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Snippet } from "./Initialization";
+import { Initialization as ApplicationInsights, Telemetry, Snippet } from "./Initialization";
 import { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
 
 export { Initialization as ApplicationInsights, Telemetry, Snippet } from "./Initialization";
@@ -36,6 +36,18 @@ try {
             // for 2.0 initialize only if required
             if ((snippet.version === 2.0 && _window[aiName].initialize) || snippet.version === undefined ) {
                 ApplicationInsightsContainer.getAppInsights(snippet, snippet.version);
+
+                // Hack: If legacy SDK exists, skip this step (Microsoft.ApplicationInsights exists).
+                // else write what was there for v2 SDK prior to rollup bundle output name.
+                // e.g Microsoft.ApplicationInsights.ApplicationInsights, Microsoft.ApplicationInsights.Telemetry
+                if (typeof window !== "undefined" && window && !((window as any).Microsoft && !(window as any).Microsoft.ApplicationInsights)) {
+                    (window as any).Microsoft = {
+                        ApplicationInsights: {
+                            ApplicationInsights: ApplicationInsights,
+                            Telemetry: Telemetry
+                        }
+                    }
+                }
             }
         }
     } else {
