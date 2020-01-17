@@ -61,6 +61,7 @@ export class ApplicationInsightsTests extends TestClass {
                 disableFetchTracking: false,
                 enableRequestHeaderTracking: true,
                 enableResponseHeaderTracking: true,
+                includeResponseErrorData: true,
                 maxBatchInterval: 2500,
                 disableExceptionTracking: false,
                 namePrefix: this.sessionPrefix,

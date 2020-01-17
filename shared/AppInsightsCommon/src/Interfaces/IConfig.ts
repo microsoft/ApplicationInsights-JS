@@ -295,6 +295,14 @@ export interface IConfig {
     enableResponseHeaderTracking?: boolean;
 
     /**
+     * @description An optional value that will track Resonse Error data through trackDependency function.
+     * @type {boolean}
+     * @memberof IConfig
+     * @defaultValue false
+     */
+    includeResponseErrorData?: boolean;
+
+    /**
      * @description Default false. when tab is closed, the SDK will send all remaining telemetry using the [Beacon API](https://www.w3.org/TR/beacon)
      * @type {boolean}
      * @memberof IConfig

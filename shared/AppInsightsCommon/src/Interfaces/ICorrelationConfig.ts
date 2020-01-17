@@ -14,6 +14,7 @@ export interface ICorrelationConfig {
     appId?: string;
     enableRequestHeaderTracking?: boolean;
     enableResponseHeaderTracking?: boolean;
+    includeResponseErrorData?: boolean;
 
     correlationHeaderDomains?: string[]
 }
