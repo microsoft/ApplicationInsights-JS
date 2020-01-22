@@ -559,7 +559,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 }
             }
 
-            if (_self._config.includeResponseErrorData && xhr.status !== 200) {
+            if (_self._config.includeResponseErrorData && xhr.status >= 400) {
                 dependency.properties = dependency.properties || {};
                 dependency.properties.responseError = xhr.statusText + " - " + xhr.responseText;
             }
