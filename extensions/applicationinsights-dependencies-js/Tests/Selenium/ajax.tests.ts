@@ -117,11 +117,11 @@ export class AjaxTests extends TestClass {
         });
 
         this.testCase({
-            name: "Ajax: xhr respond error data is tracked as part C data when includeResponseErrorData flag is true",
+            name: "Ajax: xhr respond error data is tracked as part C data when disableAjaxErrorStatusText flag is false",
             test: () => {
                 let ajaxMonitor = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "abc", disableAjaxTracking: false, includeResponseErrorData: true };
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "abc", disableAjaxTracking: false, disableAjaxErrorStatusText: false };
                 appInsightsCore.initialize(coreConfig, [ajaxMonitor, new TestChannelPlugin()]);
 
                 var trackStub = this.sandbox.stub(ajaxMonitor, "trackDependencyDataInternal");
@@ -137,7 +137,7 @@ export class AjaxTests extends TestClass {
                 // assert
                 Assert.ok(trackStub.calledOnce, "trackDependencyDataInternal is called");
                 Assert.equal("Ajax", trackStub.args[0][0].type, "request is Ajax type");
-                Assert.notEqual(undefined, trackStub.args[0][0].properties.responseError, "xhr request's reponse error is stored in part C");
+                Assert.notEqual(undefined, trackStub.args[0][0].properties.responseText, "xhr request's reponse error is stored in part C");
             }
         });
 
