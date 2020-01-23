@@ -15,7 +15,7 @@ import {
     IPlugin, IConfiguration, IAppInsightsCore,
     BaseTelemetryPlugin, CoreUtils, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
     IDiagnosticLogger, LoggingSeverity, _InternalMessageId, ICustomProperties,
-    getWindow, getDocument, getHistory
+    getWindow, getDocument, getHistory, getLocation, EventHelper
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -32,6 +32,12 @@ declare global {
 }
 
 const durationProperty: string = "duration";
+
+function _dispatchEvent(target:EventTarget, evnt: Event) {
+    if (target && target.dispatchEvent && evnt) {
+        target.dispatchEvent(evnt);
+    }
+}
 
 export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
     public static Version = "2.4.0-beta"; // Not currently used anywhere
@@ -90,8 +96,8 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
 
     constructor() {
         super();
-        let _window = getWindow();
-        this._prevUri = _window && _window.location && _window.location.href || "";
+        let location = getLocation();
+        this._prevUri = location && location.href || "";
     }
 
     public processTelemetry(env: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
@@ -256,9 +262,9 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
      * @param systemProperties System level properties (Part A) that a user can add to the telemetry item
      */
     public sendPageViewInternal(pageView: IPageViewTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
-        let _document = getDocument();
-        if (_document) {
-            pageView.refUri = pageView.refUri === undefined ? _document.referrer : pageView.refUri;
+        let doc = getDocument();
+        if (doc) {
+            pageView.refUri = pageView.refUri === undefined ? doc.referrer : pageView.refUri;
         }
 
         const telemetryItem = TelemetryItemCreator.create<IPageViewTelemetryInternal>(
@@ -318,10 +324,9 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
      */
     public startTrackPage(name?: string) {
         try {
-            let _window = getWindow();
-
             if (typeof name !== "string") {
-                name = _window && _window.document && _window.document.title || "";
+                let doc = getDocument();
+                name = doc && doc.title || "";
             }
 
             this._pageTracking.start(name);
@@ -345,14 +350,14 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
      */
     public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: number }) {
         try {
-            let _window = getWindow();
-
             if (typeof name !== "string") {
-                name = _window && _window.document && _window.document.title || "";
+                let doc = getDocument();
+                name = doc && doc.title || "";
             }
 
             if (typeof url !== "string") {
-                url = _window && _window.location && _window.location.href || "";
+                let loc = getLocation();
+                url = loc && loc.href || "";
             }
 
             this._pageTracking.stop(name, url, properties, measurement);
@@ -561,6 +566,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
 
         let _window = getWindow();
         let _history = getHistory();
+        let _location = getLocation();
 
         const instance: IAppInsights = this;
         if (this.config.disableExceptionTracking === false &&
@@ -597,7 +603,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                     instance._onerror({
                         message: error.reason.toString(),
                         error: error.reason instanceof Error ? error.reason : new Error(error.reason.toString()),
-                        url: _window.location.href,
+                        url: _location ? _location.href : "",
                         lineNumber: 0,
                         columnNumber: 0
                     });
@@ -625,38 +631,40 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
 
             _history.pushState = ( f => function pushState() {
                 const ret = f.apply(this, arguments);
-                _window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "pushState"));
-                _window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
+                _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "pushState"));
+                _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "locationchange"));
                 return ret;
             })(_history.pushState);
 
             _history.replaceState = ( f => function replaceState(){
                 const ret = f.apply(this, arguments);
-                _window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "replaceState"));
-                _window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
+                _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "replaceState"));
+                _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "locationchange"));
                 return ret;
             })(_history.replaceState);
 
-            _window.addEventListener(_self.config.namePrefix + "popstate",()=>{
-                _window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
-            });
-
-            _window.addEventListener(_self.config.namePrefix + "locationchange", () => {
-                if (_self._properties && _self._properties.context && _self._properties.context.telemetryTrace) {
-                    _self._properties.context.telemetryTrace.traceID = Util.generateW3CId();
-                    _self._properties.context.telemetryTrace.name = _window.location && _window.location.pathname || "_unknown_";
-                }
-                if (this._currUri) {
-                    this._prevUri = this._currUri;
-                    this._currUri = _window.location && _window.location.href || "";
-                } else {
-                    this._currUri = _window.location && _window.location.href || "";
-                }
-                setTimeout(((uri: string) => {
-                    // todo: override start time so that it is not affected by autoRoutePVDelay
-                    _self.trackPageView({ refUri: uri, properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
-                }).bind(this, this._prevUri), _self.autoRoutePVDelay);
-            });
+            if (_window.addEventListener) {
+                _window.addEventListener(_self.config.namePrefix + "popstate",()=>{
+                    _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "locationchange"));
+                });
+    
+                _window.addEventListener(_self.config.namePrefix + "locationchange", () => {
+                    if (_self._properties && _self._properties.context && _self._properties.context.telemetryTrace) {
+                        _self._properties.context.telemetryTrace.traceID = Util.generateW3CId();
+                        _self._properties.context.telemetryTrace.name = _location && _location.pathname || "_unknown_";
+                    }
+                    if (this._currUri) {
+                        this._prevUri = this._currUri;
+                        this._currUri = _location && _location.href || "";
+                    } else {
+                        this._currUri = _location && _location.href || "";
+                    }
+                    setTimeout(((uri: string) => {
+                        // todo: override start time so that it is not affected by autoRoutePVDelay
+                        _self.trackPageView({ refUri: uri, properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
+                    }).bind(this, this._prevUri), _self.autoRoutePVDelay);
+                });
+            }
         }
 
         this.setInitialized(true);

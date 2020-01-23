@@ -8,6 +8,7 @@ class TestClass {
 
     /** The instance of the currently running suite. */
     public static currentTestClass: TestClass;
+    public static currentTestInfo: TestCase|TestCaseAsync;
 
     /** Turns on/off sinon's syncronous implementation of setTimeout. On by default. */
     public useFakeTimers: boolean = true;
@@ -51,21 +52,27 @@ class TestClass {
 
             // Save off the instance of the currently running suite.
             TestClass.currentTestClass = this;
+            TestClass.currentTestInfo = testInfo;
 
             // Run the test.
             try {
                 this._testStarting();
 
                 const steps = testInfo.steps;
+                let completed = false;
                 const trigger = () => {
-                    if (steps.length) {
+                    if (steps.length && !completed) {
                         const step = steps.shift();
 
                         // The callback which activates the next test step. 
                         const nextTestStepTrigger = () => {
-                            setTimeout(() => {
-                                trigger();
-                            }, testInfo.stepDelay);
+                            if (!completed) {
+                                setTimeout(() => {
+                                    if (!completed) {
+                                        trigger();
+                                    }
+                                }, testInfo.stepDelay);
+                            }
                         };
 
                         // There 2 types of test steps - simple and polling.
@@ -80,17 +87,18 @@ class TestClass {
                                 nextTestStepTrigger.call(this);
                             }
                         } catch (e) {
-                            this._testCompleted();
+                            console.error("Failed: Unexpected Exception: " + e);
+                            this._testCompleted(true);
                             Assert.ok(false, e.toString());
-
+                            completed = true;
                             // done is QUnit callback indicating the end of the test
                             done();
 
                             return;
                         }
-                    } else {
-                        this._testCompleted();
-
+                    } else if (!completed) {
+                        this._testCompleted(false);
+                        completed = true;
                         // done is QUnit callback indicating the end of the test
                         done();
                     }
@@ -98,6 +106,7 @@ class TestClass {
 
                 trigger();
             } catch (ex) {
+                console.error("Failed: Unexpected Exception: " + ex);
                 Assert.ok(false, "Unexpected Exception: " + ex);
                 this._testCompleted(true);
 
@@ -107,7 +116,7 @@ class TestClass {
         };
 
         // Register the test with QUnit
-        QUnit.test(testInfo.name, testMethod);
+        QUnit.test(testInfo.name + " - (Async)", testMethod);
     }
 
     /** Register a Javascript unit testcase. */
@@ -121,21 +130,30 @@ class TestClass {
         }
 
         // Create a wrapper around the test method so we can do test initilization and cleanup.
-        const testMethod = () => {
+        const testMethod = (assert) => {
+            // Treating all tests as async, so there is no issues with mixing them
+            let done = assert.async();
+
             // Save off the instance of the currently running suite.
             TestClass.currentTestClass = this;
+            TestClass.currentTestInfo = testInfo;
 
+            let failed = false;
             // Run the test.
             try {
                 this._testStarting();
 
                 testInfo.test.call(this);
 
-                this._testCompleted();
+                this._testCompleted(false);
             }
             catch (ex) {
+                console.error("Failed: Unexpected Exception: " + ex);
                 Assert.ok(false, "Unexpected Exception: " + ex);
                 this._testCompleted(true);
+            }
+            finally{
+                done();
             }
         };
 
@@ -159,7 +177,7 @@ class TestClass {
     }
 
     /** Called when the test is completed. */
-    private _testCompleted(failed?: boolean) {
+    private _testCompleted(failed: boolean) {
         if (failed) {
             // Just cleanup the sandbox since the test has already failed.
             this.sandbox.restore();
@@ -173,6 +191,7 @@ class TestClass {
 
         // Clear the instance of the currently running suite.
         TestClass.currentTestClass = null;
+        TestClass.currentTestInfo = null;
     }
 
     /**** Sinon methods and properties ***/
@@ -219,6 +238,32 @@ class TestClass {
             errorCode,
             { "Content-Type": "application/json" },
             JSON.stringify(data));
+    }
+
+    public getPayloadMessages(spy:SinonSpy, ignoreInit:boolean = false) {
+        let resultPayload = [];
+        if (spy.called && spy.args && spy.args.length > 0) {
+            spy.args.forEach(call => {
+                call[0].forEach(message => {
+                    // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                    if (ignoreInit || message.indexOf("AI (Internal): 72 ") === -1) {
+                        resultPayload.push(message);
+                    }
+                })
+            });
+        }
+
+        return resultPayload;
+    }
+
+    public dumpPayloadMessages(spy:SinonSpy) {
+        let msg = "Sent Messages";
+        if (spy.called && spy.args && spy.args.length > 0) {
+            spy.args[0][0].forEach((value, idx) => {
+                msg += "\n" + idx + ":" + value;
+            });
+        }
+        Assert.ok(false, msg);
     }
 
     protected setUserAgent(userAgent: string) {

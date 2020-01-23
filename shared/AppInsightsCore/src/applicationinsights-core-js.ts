@@ -14,7 +14,10 @@ export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseCore } from './JavaScriptSDK/BaseCore';
 export { BaseTelemetryPlugin } from './JavaScriptSDK/BaseTelemetryPlugin';
 export { CoreUtils, EventHelper } from "./JavaScriptSDK/CoreUtils";
-export { hasWindow, getWindow, hasDocument, getDocument, hasNavigator, getNavigator, hasHistory, getHistory, hasJSON, getJSON } from "./JavaScriptSDK/EnvUtils";
+export { 
+    getGlobal, getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, 
+    hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON
+} from "./JavaScriptSDK/EnvUtils";
 export { NotificationManager } from "./JavaScriptSDK/NotificationManager";
 export { INotificationManager } from "./JavaScriptSDK.Interfaces/INotificationManager";
 export { DiagnosticLogger, _InternalLogMessage } from './JavaScriptSDK/DiagnosticLogger';

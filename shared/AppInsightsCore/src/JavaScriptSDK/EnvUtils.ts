@@ -9,7 +9,71 @@
  * functions/properties only need to include those that are used within their own modules.
  */
 
+export const strUndefined = "undefined";
 export const strObject = "object";
+
+const strWindow = "window";
+const strDocument = "document";
+const strNavigator = "navigator";
+const strHistory = "history";
+const strLocation = "location";
+const strPerformance = "performance";
+const strJSON = "JSON";
+
+// To address compile time errors declaring these here
+declare var globalThis: Window;
+declare var global: Window;
+
+/**
+ * Returns the current global scope object, for a normal web page this will be the current
+ * window, for a Web Worker this will be current worker global scope via "self". The internal 
+ * implementation returns the first available instance object in the following order
+ * - globalThis (New standard)
+ * - self (Will return the current window instance for supported browsers)
+ * - window (fallback for older browser implementations)
+ * - global (NodeJS standard)
+ * - <null> (When all else fails)
+ * While the return type is a Window for the normal case, not all environments will support all
+ * of the properties or functions.
+ */
+export function getGlobal(): Window {
+    if (typeof globalThis !== strUndefined && globalThis) {
+        return globalThis;
+    }
+
+    if (typeof self !== strUndefined && self) {
+        return self;
+    }
+
+    if (typeof window !== strUndefined && window) {
+        return window;
+    }
+
+    if (typeof global !== strUndefined && global) {
+        return global;
+    }
+
+    return null;
+}
+
+/**
+ * Return the named global object if available, will return null if the object is not available.
+ * @param name The globally named object
+ */
+export function getGlobalInst<T>(name:string): T {
+    let gbl = getGlobal();
+    if (gbl && gbl[name]) {
+        return gbl[name] as T;
+    }
+
+    // Test workaround, for environments where <global>.window (when global == window) doesn't return the base window
+    if (name === strWindow && hasWindow()) {
+        // tslint:disable-next-line: no-angle-bracket-type-assertion
+        return <any>window as T;
+    }
+
+    return null;
+}
 
 /**
  * Checks if window object is available, this is required as we support the API running without a 
@@ -32,7 +96,8 @@ export function getWindow(): Window | null {
         return window;
     }
 
-    return null;
+    // Return the global instance or null
+    return getGlobalInst(strWindow);
 }
 
 /**
@@ -54,11 +119,9 @@ export function hasDocument(): boolean {
 export function getDocument(): Document | null {
     if (hasDocument()) {
         return document;
-    } else if (hasWindow()) {
-        return getWindow().document || null;
     }
 
-    return null;
+    return getGlobalInst(strDocument);
 }
 
 
@@ -83,7 +146,7 @@ export function getNavigator(): Navigator | null {
         return navigator;
     }
 
-    return null;
+    return getGlobalInst(strNavigator);
 }
 
 /**
@@ -107,7 +170,29 @@ export function getHistory(): History | null {
         return history;
     }
 
-    return null;
+    return getGlobalInst(strHistory);
+}
+
+/**
+ * Returns the global location object if it is present otherwise null.
+ * This helper is used to access the location object without causing an exception
+ * "Uncaught ReferenceError: location is not defined"
+ */
+export function getLocation(): Location | null {
+    if (typeof location === strObject && location) {
+        return location;
+    }
+
+    return getGlobalInst(strLocation);
+}
+
+/**
+ * Returns the performance object if it is present otherwise null.
+ * This helper is used to access the performance object from the current
+ * global instance which could be window or globalThis for a web worker
+ */
+export function getPerformance(): Performance | null {
+    return getGlobalInst(strPerformance);
 }
 
 /**
@@ -118,7 +203,7 @@ export function getHistory(): History | null {
  * Defined as a function to support lazy / late binding environments.
  */
 export function hasJSON(): boolean {
-    return Boolean(typeof JSON === strObject && JSON);
+    return Boolean((typeof JSON === strObject && JSON) || getGlobalInst(strJSON) !== null);
 }
 
 /**
@@ -128,10 +213,8 @@ export function hasJSON(): boolean {
  */
 export function getJSON(): JSON | null {
     if (hasJSON()) {
-        return JSON;
+        return JSON || getGlobalInst(strJSON);
     }
 
     return null;
 }
-
-
