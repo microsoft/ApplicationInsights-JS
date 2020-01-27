@@ -14,6 +14,7 @@ export interface ICorrelationConfig {
     appId?: string;
     enableRequestHeaderTracking?: boolean;
     enableResponseHeaderTracking?: boolean;
+    enableAjaxErrorStatusText?: boolean;
 
     correlationHeaderDomains?: string[]
 }

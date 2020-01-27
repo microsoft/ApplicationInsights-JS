@@ -117,6 +117,32 @@ export class AjaxTests extends TestClass {
         });
 
         this.testCase({
+            name: "Ajax: xhr respond error data is tracked as part C data when enableAjaxErrorStatusText flag is true",
+            test: () => {
+                let ajaxMonitor = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "abc", disableAjaxTracking: false, enableAjaxErrorStatusText: true };
+                appInsightsCore.initialize(coreConfig, [ajaxMonitor, new TestChannelPlugin()]);
+
+                var trackStub = this.sandbox.stub(ajaxMonitor, "trackDependencyDataInternal");
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.send();
+
+                // Emulate response
+                (<any>xhr).respond(403, {}, "error data with status code 403");
+
+                // assert
+                Assert.ok(trackStub.calledOnce, "trackDependencyDataInternal is called");
+                Assert.equal("Ajax", trackStub.args[0][0].type, "request is Ajax type");
+                Assert.notEqual(undefined, trackStub.args[0][0].properties.responseText, "xhr request's reponse error is stored in part C");
+            }
+        });
+
+
+        this.testCase({
             name: "Fetch: fetch with disabled flag isn't tracked",
             test: () => {
                 if (typeof fetch === 'undefined') {

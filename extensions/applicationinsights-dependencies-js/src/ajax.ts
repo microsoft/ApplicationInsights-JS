@@ -49,7 +49,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             appId: undefined,
             enableCorsCorrelation: false,
             enableRequestHeaderTracking: false,
-            enableResponseHeaderTracking: false
+            enableResponseHeaderTracking: false,
+            enableAjaxErrorStatusText: false
         }
         return config;
     }
@@ -66,7 +67,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             enableCorsCorrelation: undefined,
             correlationHeaderDomains: undefined,
             enableRequestHeaderTracking: undefined,
-            enableResponseHeaderTracking: undefined
+            enableResponseHeaderTracking: undefined,
+            enableAjaxErrorStatusText: undefined
         }
     }
 
@@ -555,6 +557,11 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         dependency.properties.responseHeaders = responseHeaderMap;
                     }
                 }
+            }
+
+            if (_self._config.enableAjaxErrorStatusText && xhr.status >= 400) {
+                dependency.properties = dependency.properties || {};
+                dependency.properties.responseText = xhr.statusText + " - " + xhr.responseText;
             }
 
             _self.trackDependencyDataInternal(dependency);
