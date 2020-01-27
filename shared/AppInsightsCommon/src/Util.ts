@@ -751,7 +751,7 @@ export class DateTimeUtils {
     /**
      * Get the number of milliseconds since 1970/01/01 in local timezone
      */
-    public static Now = CoreUtils.isUndefined(_window) ? () => new Date().getTime() :
+    public static Now = CoreUtils.isNullOrUndefined(_window) ? () => new Date().getTime() :
         (_window.performance && _window.performance.now && _window.performance.timing) ?
             () => {
                 return _window.performance.now() + _window.performance.timing.navigationStart;

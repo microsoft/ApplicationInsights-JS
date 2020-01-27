@@ -43,7 +43,7 @@ export class TelemetryContext implements ITelemetryContext {
     }
 
     public applySessionContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
-        const sessionContext = this.session || this.sessionManager.automaticSession;
+        const sessionContext = this.session || (this.sessionManager && this.sessionManager.automaticSession);
         if (sessionContext) {
             if (typeof sessionContext.id === "string") {
                 event.ext.app.sesId = sessionContext.id;
