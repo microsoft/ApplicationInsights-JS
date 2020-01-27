@@ -9,7 +9,7 @@ import {
 import {
     CoreUtils, LoggingSeverity, _InternalMessageId,
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
-    getWindow
+    getLocation, getGlobal
 } from '@microsoft/applicationinsights-core-js';
 import { ajaxRecord } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
@@ -98,8 +98,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
     constructor() {
         super();
-        let _window = getWindow();
-        this.currentWindowHost = _window && _window.location && _window.location.host && _window.location.host.toLowerCase();
+        let location = getLocation();
+        this.currentWindowHost = location && location.host && location.host.toLowerCase();
         this.initialized = false;
         this._fetchInitialized = false;
     }
@@ -246,10 +246,12 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         if (!_self.supportsFetch() || _self._fetchInitialized) {
             return;
         }
-        let _window = getWindow();
-        const originalFetch: (input?: Request | string, init?: RequestInit) => Promise<Response> = _window.fetch;
+
+        // Getting the global instance tp support web workers (which don't have window)
+        let global = getGlobal();
+        const originalFetch: (input?: Request | string, init?: RequestInit) => Promise<Response> = global.fetch;
         const fetchMonitorInstance: AjaxMonitor = _self;
-        _window.fetch = function fetch(input?: Request | string, init?: RequestInit): Promise<Response> {
+        global.fetch = function fetch(input?: Request | string, init?: RequestInit): Promise<Response> {
             let fetchData: ajaxRecord;
             if (fetchMonitorInstance.isFetchInstrumented(input) && fetchMonitorInstance.isMonitoredInstance(undefined, undefined, input, init)) {
                 try {
@@ -598,10 +600,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
     private supportsFetch(): boolean {
         let result: boolean = true;
-        let _window = getWindow();
-        if (!_window || _isNullOrUndefined((_window as any).Request) ||
-            _isNullOrUndefined((_window as any).Request.prototype) ||
-            _isNullOrUndefined(_window.fetch)) {
+        let _global = getGlobal();
+        if (!_global || _isNullOrUndefined((_global as any).Request) ||
+            _isNullOrUndefined((_global as any).Request.prototype) ||
+            _isNullOrUndefined(_global.fetch)) {
             result = false;
         }
         return result;

@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 "use strict";
-import { getWindow, getDocument }  from './EnvUtils';
+import { getWindow, getDocument, strUndefined }  from './EnvUtils';
 
 // Added to help with minfication
-export const Undefined = "undefined";
+export const Undefined = strUndefined;
 let prototype = "prototype";
 const strFunction = "function";
 const strObject = "object"

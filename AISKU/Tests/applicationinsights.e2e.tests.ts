@@ -2,7 +2,7 @@
 import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Util, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders } from '@microsoft/applicationinsights-common';
-import { AppInsightsCore, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, ITelemetryItem, getGlobal } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { AjaxPlugin } from '@microsoft/applicationinsights-dependencies-js';
 import { EventValidator } from './TelemetryValidation/EventValidator';
@@ -87,6 +87,7 @@ export class ApplicationInsightsTests extends TestClass {
             this.trackSpy = this.sandbox.spy(this._ai['dependencies'], 'trackDependencyDataInternal')
             this.sandbox.stub(sender, '_isSampledIn', () => true);
             this.envelopeConstructorSpy = this.sandbox.spy(Sender, 'constructEnvelope');
+            console.log("* testInitialize()");
         } catch (e) {
             console.error('Failed to initialize', e);
         }
@@ -95,6 +96,7 @@ export class ApplicationInsightsTests extends TestClass {
     public testCleanup() {
         this.useFakeServer = true;
         this.useFakeTimers = true;
+        console.log("* testCleanup(" + (TestClass.currentTestInfo ? TestClass.currentTestInfo.name : "<null>") + ")");
     }
 
     public registerTests() {
@@ -145,7 +147,7 @@ export class ApplicationInsightsTests extends TestClass {
             }].concat(this.asserts(1)).concat(() => {
 
                 if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     const payload = JSON.parse(payloadStr[0]);
                     const data = payload.data;
                     Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
@@ -160,7 +162,7 @@ export class ApplicationInsightsTests extends TestClass {
             steps: [() => {
                 this._ai.trackTrace({ message: 'trace', properties: { "foo": "bar", "prop2": "value2" } });
             }].concat(this.asserts(1)).concat(() => {
-                const payloadStr: string[] = this.successSpy.args[0][0];
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                 const payload = JSON.parse(payloadStr[0]);
                 const data = payload.data;
                 Assert.ok(data && data.baseData &&
@@ -226,7 +228,7 @@ export class ApplicationInsightsTests extends TestClass {
             ].concat(this.asserts(2)).concat(() => {
 
                 if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     const payload = JSON.parse(payloadStr[0]);
                     const data = payload.data;
                     Assert.ok(data.baseData.id, "pageView id is defined");
@@ -317,14 +319,8 @@ export class ApplicationInsightsTests extends TestClass {
                 .concat(this.asserts(1))
                 .concat(() => {
                     if (this.successSpy.called) {
-                        const payloadStr: string[] = this.successSpy.args[0][0];
-                        let payloadItems = 0;
-                        payloadStr.forEach(message => {
-                            // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
-                            if (message.indexOf("AI (Internal): 72 ") == -1) {
-                                payloadItems ++;
-                            }
-                        });
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                        let payloadItems = payloadStr.length;
                         Assert.equal(1, payloadItems, 'Only 1 track item is sent');
                         const payload = JSON.parse(payloadStr[0]);
                         Assert.ok(payload);
@@ -387,7 +383,8 @@ export class ApplicationInsightsTests extends TestClass {
                 }
             ].concat(this.asserts(1))
         });
-        if (window && window.fetch) {
+        let global = getGlobal();
+        if (global && global.fetch) {
             this.testCaseAsync({
                 name: "DependenciesPlugin: auto collection of outgoing fetch requests",
                 stepDelay: 5000,
@@ -436,15 +433,15 @@ export class ApplicationInsightsTests extends TestClass {
                     this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
                         item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
                     });
-                    this._ai.trackEvent({ name: "Custom event" });
+                    this._ai.trackEvent({ name: "Custom event via addTelemetryInitializer" });
                 }
             ]
             .concat(this.asserts(1))
             .concat(PollingAssert.createPollingAssert(() => {
                 if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
-                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     const payload = JSON.parse(payloadStr[0]);
+                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
                     Assert.ok(payload);
 
                     if (payload && payload.tags) {
@@ -472,7 +469,7 @@ export class ApplicationInsightsTests extends TestClass {
             .concat(this.asserts(1))
             .concat(PollingAssert.createPollingAssert(() => {
                 if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
                     const payload = JSON.parse(payloadStr[0]);
                     Assert.ok(payload);
@@ -499,15 +496,18 @@ export class ApplicationInsightsTests extends TestClass {
                         item.tags.push({[this.tagKeys.locationCountry]: "my.custom.location.country"});
                         item.tags.push({[this.tagKeys.operationId]: "my.custom.operation.id"});
                     });
-                    this._ai.trackEvent({ name: "Custom event" });
+                    this._ai.trackEvent({ name: "Custom event via shimmed addTelemetryInitializer" });
                 }
             ]
             .concat(this.asserts(1))
             .concat(PollingAssert.createPollingAssert(() => {
                 if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
-                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                     const payload = JSON.parse(payloadStr[0]);
+                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
+                    if (payloadStr.length > 1) {
+                        this.dumpPayloadMessages(this.successSpy);
+                    }
                     Assert.ok(payload);
 
                     if (payload && payload.tags) {
@@ -543,17 +543,9 @@ export class ApplicationInsightsTests extends TestClass {
                 .concat(this.asserts(1))
                 .concat(PollingAssert.createPollingAssert(() => {
                     if (this.successSpy.called) {
-                        let thePayload:string = null;
-                        let payloadEvents = 0;
-                        this.successSpy.args.forEach(call => {
-                            call[0].forEach(payloadStr => {
-                                // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
-                                if (payloadStr.indexOf("AI (Internal): 72 ") == -1) {
-                                    thePayload = payloadStr;
-                                    payloadEvents ++;
-                                }
-                            });
-                        });
+                        let payloadStr = this.getPayloadMessages(this.successSpy);
+                        let payloadEvents = payloadStr.length;
+                        let thePayload:string = payloadStr[0];
             
                         if (payloadEvents !== 1) {
                             // Only 1 track should be sent
@@ -582,7 +574,7 @@ export class ApplicationInsightsTests extends TestClass {
                 .concat(this.asserts(1))
                 .concat(PollingAssert.createPollingAssert(() => {
                     if (this.successSpy.called) {
-                        const payloadStr: string[] = this.successSpy.args[0][0];
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length !== 1) {
                             // Only 1 track should be sent
                             return false;
@@ -612,7 +604,7 @@ export class ApplicationInsightsTests extends TestClass {
                 .concat(this.asserts(1))
                 .concat(PollingAssert.createPollingAssert(() => {
                     if (this.successSpy.called) {
-                        const payloadStr: string[] = this.successSpy.args[0][0];
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length !== 1) {
                             // Only 1 track should be sent
                             return false;
@@ -643,7 +635,7 @@ export class ApplicationInsightsTests extends TestClass {
                 .concat(this.asserts(1))
                 .concat(PollingAssert.createPollingAssert(() => {
                     if (this.successSpy.called) {
-                        const payloadStr: string[] = this.successSpy.args[0][0];
+                        const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                         if (payloadStr.length !== 1) {
                             // Only 1 track should be sent
                             return false;
@@ -701,7 +693,7 @@ export class ApplicationInsightsTests extends TestClass {
             }
         }
     }
-    private asserts: any = (expectedCount: number) => [() => {
+    private asserts: any = (expectedCount: number, ignoreInit:boolean = false) => [() => {
         const message = "polling: " + new Date().toISOString();
         Assert.ok(true, message);
         console.log(message);
@@ -717,18 +709,11 @@ export class ApplicationInsightsTests extends TestClass {
         Assert.ok(true, "* checking success spy " + new Date().toISOString());
 
         if (this.successSpy.called) {
-            let currentCount: number = 0;
-            this.successSpy.args.forEach(call => {
-                call[0].forEach(message => {
-                    // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
-                    if (message.indexOf("AI (Internal): 72 ") == -1) {
-                        currentCount ++;
-                    }
-                });
-            });
+            let payloadStr = this.getPayloadMessages(this.successSpy, ignoreInit);
+            let currentCount: number = payloadStr.length;
             console.log('curr: ' + currentCount + ' exp: ' + expectedCount, ' appId: ' + this._ai.context.appId());
             if (currentCount === expectedCount && !!this._ai.context.appId()) {
-                const payloadStr: string[] = this.successSpy.args[0][0];
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                 const payload = JSON.parse(payloadStr[0]);
                 const baseType = payload.data.baseType;
                 // call the appropriate Validate depending on the baseType
