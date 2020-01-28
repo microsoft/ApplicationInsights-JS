@@ -3,7 +3,6 @@
 
 import { StorageType } from "./Enums";
 import { CoreUtils, EventHelper, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin, getWindow, getDocument, getNavigator, hasJSON, getJSON } from "@microsoft/applicationinsights-core-js";
-import { IConfig } from "./Interfaces/IConfig";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
