@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Initialization as ApplicationInsights, Snippet } from "./Initialization";
+import { Initialization as ApplicationInsights, Telemetry, Snippet } from "./Initialization";
 import { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
 
-export { Initialization as ApplicationInsights, Snippet } from "./Initialization";
+export { Initialization as ApplicationInsights, Telemetry, Snippet } from "./Initialization";
 
 "use strict";
 
@@ -44,6 +44,16 @@ try {
         }
     } else {
         _logWarn(aiName, "Missing window");
+    }
+    // Hack: If legacy SDK exists, skip this step (Microsoft.ApplicationInsights exists).
+    // else write what was there for v2 SDK prior to rollup bundle output name change.
+    // e.g Microsoft.ApplicationInsights.ApplicationInsights, Microsoft.ApplicationInsights.Telemetry
+    if (typeof window !== Undefined && window && !((window as any).Microsoft && (window as any).Microsoft.ApplicationInsights)) {
+        (window as any).Microsoft = {
+            ApplicationInsights: {
+                ApplicationInsights, Telemetry
+            }
+        }
     }
 } catch (e) {
     _logWarn(aiName, e.message);
