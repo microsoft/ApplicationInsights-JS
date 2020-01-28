@@ -42,13 +42,12 @@ try {
         _logWarn(aiName, "Missing window and/or JSON");
     }
     // Hack: If legacy SDK exists, skip this step (Microsoft.ApplicationInsights exists).
-    // else write what was there for v2 SDK prior to rollup bundle output name.
+    // else write what was there for v2 SDK prior to rollup bundle output name change.
     // e.g Microsoft.ApplicationInsights.ApplicationInsights, Microsoft.ApplicationInsights.Telemetry
     if (typeof window !== Undefined && window && !((window as any).Microsoft && (window as any).Microsoft.ApplicationInsights)) {
         (window as any).Microsoft = {
             ApplicationInsights: {
-                ApplicationInsights: ApplicationInsights,
-                Telemetry: Telemetry
+                ApplicationInsights, Telemetry
             }
         }
     }
