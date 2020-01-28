@@ -20,7 +20,7 @@ const baseType: string = "baseType";
 const baseData: string = "baseData";
 
 export abstract class EnvelopeCreator {
-    public static Version = "2.4.0-beta";
+    public static Version = "2.4.0";
 
     protected static extractPropsAndMeasurements(data: { [key: string]: any }, properties: { [key: string]: any }, measurements: { [key: string]: any }) {
         if (!CoreUtils.isNullOrUndefined(data)) {
