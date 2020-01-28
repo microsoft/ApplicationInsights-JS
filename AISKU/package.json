@@ -28,6 +28,7 @@
         "nightwatch:done": "curl http://localhost:8000/_done"
     },
     "devDependencies": {
+        "@microsoft/applicationinsights-rollup-es3" : "1.0.0",
         "chromedriver": "^2.45.0",
         "finalhandler": "^1.1.1",
         "grunt": "1.0.1",

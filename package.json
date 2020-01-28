@@ -12,7 +12,8 @@
         "postinstall": "node common/scripts/install-run-rush.js update",
         "build": "node common/scripts/install-run-rush.js rebuild",
         "test": "node common/scripts/install-run-rush.js test --verbose",
-        "lint": "node common/scripts/install-run-rush.js lint --verbose"
+        "lint": "node common/scripts/install-run-rush.js lint --verbose",
+        "rollupes3": "grunt rollupes3"
     },
     "repository": {
         "type": "git",
