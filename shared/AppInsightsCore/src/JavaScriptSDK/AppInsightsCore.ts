@@ -16,7 +16,6 @@ import { _InternalLogMessage, DiagnosticLogger } from "./DiagnosticLogger";
 "use strict";
 
 export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
-    public baseCore: BaseCore;
     public config: IConfiguration;
     public logger: IDiagnosticLogger;
 

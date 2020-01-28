@@ -89,7 +89,7 @@ export interface IConfig {
     samplingPercentage?: number;
 
     /**
-     * @description
+     * @description If true, on a pageview,the previous instrumented page's view time is tracked and sent as telemetry and a new timer is started for the current pageview. Default is false.
      * @type {boolean}
      * @memberof IConfig
      */
@@ -263,7 +263,7 @@ export interface IConfig {
     appId?: string;
 
     /**
-     * @description If true, the SDK will add two headers ('Request-Id' and 'Request-Context') to all CORS requests tocorrelate outgoing AJAX dependencies with corresponding requests on the server side. Default is false
+     * @description If true, the SDK will add two headers ('Request-Id' and 'Request-Context') to all CORS requests to correlate outgoing AJAX dependencies with corresponding requests on the server side. Default is false
      * @type {boolean}
      * @memberof IConfig
      * @defaultValue false
@@ -287,7 +287,7 @@ export interface IConfig {
     enableRequestHeaderTracking?: boolean;
 
     /**
-     * @description An optional value that will track Resonse Header through trackDependency function.
+     * @description An optional value that will track Response Header through trackDependency function.
      * @type {boolean}
      * @memberof IConfig
      * @defaultValue false
@@ -295,7 +295,7 @@ export interface IConfig {
     enableResponseHeaderTracking?: boolean;
 
     /**
-     * @description An optional value that will track Resonse Error data through trackDependency function.
+     * @description An optional value that will track Response Error data through trackDependency function.
      * @type {boolean}
      * @memberof IConfig
      * @defaultValue false
