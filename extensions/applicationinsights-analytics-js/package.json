@@ -18,6 +18,7 @@
         "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
+        "@microsoft/applicationinsights-rollup-es3" : "1.0.0",
         "@microsoft/applicationinsights-properties-js": "2.4.0-beta",
         "typescript": "2.5.3",
         "rollup-plugin-node-resolve": "^3.4.0",

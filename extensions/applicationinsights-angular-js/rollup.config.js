@@ -2,6 +2,7 @@ import nodeResolve from "rollup-plugin-node-resolve";
 import {uglify} from "rollup-plugin-uglify";
 import replace from "rollup-plugin-replace";
 import commonjs from "rollup-plugin-commonjs";
+import { es3Poly, es3Check } from "@microsoft/applicationinsights-rollup-es3";
 
 const version = require("./package.json").version;
 const outputName = "applicationinsights-angular-js";
@@ -36,7 +37,9 @@ const browserRollupConfigFactory = isProduction => {
       }),
       commonjs({
         include: 'node_modules/**'
-      })
+      }),
+      es3Poly(),
+      es3Check()
     ]
   };
 
@@ -75,7 +78,9 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       nodeResolve({ preferBuiltins: true }),
       commonjs({
         include: 'node_modules/**'
-      })
+      }),
+      es3Poly(),
+      es3Check()
     ]
   };
 
