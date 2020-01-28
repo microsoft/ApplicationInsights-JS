@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Util, ITelemetryTrace, ITraceState  } from '@microsoft/applicationinsights-common';
-import { getWindow } from '@microsoft/applicationinsights-core-js';
+import { getLocation } from '@microsoft/applicationinsights-core-js';
 
 export class TelemetryTrace implements ITelemetryTrace {
 
@@ -15,9 +15,9 @@ export class TelemetryTrace implements ITelemetryTrace {
         this.traceID = id || Util.generateW3CId();
         this.parentID = parentId;
         this.name = name;
-        let _window = getWindow();
-        if (!name && _window && _window.location && _window.location.pathname) {
-            this.name = _window.location.pathname;
+        let location = getLocation();
+        if (!name && location && location.pathname) {
+            this.name = location.pathname;
         }
     }
 }

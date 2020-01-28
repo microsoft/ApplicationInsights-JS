@@ -1,6 +1,7 @@
 import nodeResolve from "rollup-plugin-node-resolve";
 import {uglify} from "rollup-plugin-uglify";
 import replace from "rollup-plugin-replace";
+import { es3Poly, es3Check } from "@microsoft/applicationinsights-rollup-es3";
 
 const version = require("./package.json").version;
 const banner = [
@@ -31,7 +32,9 @@ const browserRollupConfigFactory = (isProduction, libV = '2') => {
       nodeResolve({
         browser: false,
         preferBuiltins: false
-      })
+      }),
+      es3Poly(),
+      es3Check()
     ]
   };
 
@@ -68,7 +71,9 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
           "// Licensed under the MIT License.": ""
         }
       }),
-      nodeResolve()
+      nodeResolve(),
+      es3Poly(),
+      es3Check()
     ]
   };
 

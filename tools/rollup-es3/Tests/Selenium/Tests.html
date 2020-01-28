@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Cache-control" content="no-Cache" />
+    <title>Tests for Es3 Rollup Plugin</title>
+    <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css">
+    <script src="http://sinonjs.org/releases/sinon-2.3.8.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script>
+    <script src="es3rolluptests.js"></script>
+
+    <script>
+        require.config({
+            baseUrl: '../',
+            paths: {
+                qunit: "./External/qunit-1.23.1",
+                "magic-string": "./External/magic-string.umd"
+            }
+        });
+
+        // Load core & common before channel tests
+        require([
+            'qunit', // Load qunit here instead of with tests, otherwise will not work
+            'magic-string'
+        ], function (QUnit, aicore) {
+            require.config({
+                baseUrl: './'
+            });
+
+            require([
+                "Tests/Selenium/Es3RollupTests"
+            ], function (tests) {
+                QUnit.start();
+                tests.runTests();
+            }, function (err) {
+                console.log('REQUIRE ERROR:', err.toString());
+            });
+        })
+
+    </script>
+</head>
+
+<body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <div id="error-message"></div>
+</body>
+
+</html>

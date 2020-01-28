@@ -132,6 +132,16 @@ module.exports = function (grunt) {
                 ],
                 out: './channels/applicationinsights-channel-js/Tests/Selenium/aichannel.tests.js'
             },
+            rollupes3: {
+                tsconfig: './tools/rollup-es3/tsconfig.json'
+            },
+            rollupes3test: {
+                tsconfig: './tools/rollup-es3/Tests/tsconfig.json',
+                src: [
+                    './tools/rollup-es3/Tests/Selenium/Es3RollupTests.ts'
+                ],
+                out: './tools/rollup-es3/Tests/Selenium/es3rolluptests.js'
+            },
             module: {
                 // Use a different tsconfig for building module in order to not generate a declaration file for module, while keeping declaration for other modules
                 tsconfig: './tsconfigmodule.json',
@@ -332,6 +342,17 @@ module.exports = function (grunt) {
                     summaryOnly: true,
                     '--web-security': 'false'
                 }
+            },
+            rollupes3: {
+                options: {
+                    urls: [
+                        './tools/rollup-es3/Tests/Selenium/Tests.html'
+                    ],
+                    timeout: 300 * 1000, // 5 min
+                    console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
+                }
             }
         }
     });
@@ -345,7 +366,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
     grunt.loadNpmTasks('grunt-run');
-    grunt.registerTask("default", ["ts:default", "uglify:ai", "uglify:snippet"]);
+    grunt.registerTask("default", ["ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3", "ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("core", ["ts:core"]);
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("module", ["ts:module"]);
@@ -369,4 +390,6 @@ module.exports = function (grunt) {
     grunt.registerTask("depstest", ["ts:deps", "ts:depstest", "qunit:deps"]);
     grunt.registerTask("aichannel", ["ts:aichannel"]);
     grunt.registerTask("aichanneltest", ["ts:aichannel", "ts:aichanneltest", "qunit:aichannel"]);
+    grunt.registerTask("rollupes3", ["ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3"]);
+    grunt.registerTask("rollupes3test", ["ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3"]);
 };

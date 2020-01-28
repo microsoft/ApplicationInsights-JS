@@ -2,7 +2,10 @@
 // Licensed under the MIT License.
 
 import { StorageType } from "./Enums";
-import { CoreUtils, EventHelper, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin, getWindow, getDocument, getNavigator, hasJSON, getJSON } from "@microsoft/applicationinsights-core-js";
+import { 
+    CoreUtils, EventHelper, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin, 
+    getGlobal, getGlobalInst, getWindow, getDocument, getNavigator, getPerformance, getLocation, hasJSON, getJSON 
+} from "@microsoft/applicationinsights-core-js";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
@@ -10,9 +13,8 @@ import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 // Adding common usage of prototype as a string to enable indexed lookup to assist with minification
 const prototype = "prototype";
 
-var _window = getWindow();
-var _navigator = getNavigator();
-var _isString = CoreUtils.isString;
+let _navigator = getNavigator();
+let _isString = CoreUtils.isString;
 
 export class Util {
     private static document: any = getDocument()||{};
@@ -32,8 +34,11 @@ export class Util {
         if (CoreUtils.isFunction(Event)) { // Use Event constructor when available
             event = new Event(eventName);
         } else { // Event has no constructor in IE
-            event = getDocument().createEvent("Event");
-            event.initEvent(eventName, true, true);
+            let doc = getDocument();
+            if (doc && doc.createEvent) {
+                event = doc.createEvent("Event");
+                event.initEvent(eventName, true, true);
+            }
         }
 
         return event;
@@ -70,11 +75,11 @@ export class Util {
         let fail: boolean;
         let uid: Date;
         try {
-            if (CoreUtils.isNullOrUndefined(_window)) {
+            if (CoreUtils.isNullOrUndefined(getGlobal())) {
                 return null;
             }
             uid = new Date;
-            storage = storageType === StorageType.LocalStorage ? _window.localStorage : _window.sessionStorage;
+            storage = storageType === StorageType.LocalStorage ? getGlobalInst("localStorage") : getGlobalInst("sessionStorage");
             storage.setItem(uid.toString(), uid.toString());
             fail = storage.getItem(uid.toString()) !== uid.toString();
             storage.removeItem(uid.toString());
@@ -220,7 +225,7 @@ export class Util {
         const keys = [];
 
         if (Util.canUseSessionStorage()) {
-            for (const key in _window.sessionStorage) {
+            for (const key in getGlobalInst("sessionStorage")) {
                 keys.push(key);
             }
         }
@@ -327,7 +332,7 @@ export class Util {
             };
         }
 
-        return CoreUtils._canUseCookies;
+        return CoreUtils._canUseCookies && Util.document && Util.document.cookie;
     }
 
     /**
@@ -341,7 +346,8 @@ export class Util {
             domainAttrib = ";domain=" + domain;
         }
 
-        if (Util.document.location && Util.document.location.protocol === "https:") {
+        let location = getLocation();
+        if (location && location.protocol === "https:") {
             secureAttrib = ";secure";
             value = value + ";SameSite=None"; // SameSite can only be set on secure pages
         }
@@ -480,7 +486,7 @@ export class Util {
      * Gets IE version if we are running on IE, or null otherwise
      */
     public static getIEVersion(userAgentStr: string = null): number {
-        const myNav = userAgentStr ? userAgentStr.toLowerCase() : (_navigator ? _navigator.userAgent.toLowerCase() : "");
+        const myNav = userAgentStr ? userAgentStr.toLowerCase() : (_navigator ? (_navigator.userAgent ||"").toLowerCase() : "");
         return (myNav.indexOf('msie') !== -1) ? parseInt(myNav.split('msie')[1]) : null;
     }
 
@@ -549,7 +555,7 @@ export class Util {
      * @return {boolean} - true if the handler was successfully added
      */
     public static addEventHandler(eventName: string, callback: any): boolean {
-        return EventHelper.Attach(_window, eventName, callback);
+        return EventHelper.Attach(getWindow(), eventName, callback);
     }
 
     /**
@@ -750,15 +756,15 @@ export class DateTimeUtils {
     /**
      * Get the number of milliseconds since 1970/01/01 in local timezone
      */
-    public static Now = CoreUtils.isNullOrUndefined(_window) ? () => new Date().getTime() :
-        (_window.performance && _window.performance.now && _window.performance.timing) ?
-            () => {
-                return _window.performance.now() + _window.performance.timing.navigationStart;
-            }
-            :
-            () => {
-                return new Date().getTime();
-            }
+    public static Now = () => {
+        // returns the window or webworker performance object
+        let perf = getPerformance();
+        if (perf && perf.now && perf.timing) {
+            return perf.now() + perf.timing.navigationStart
+        }
+    
+        return new Date().getTime()
+    };
 
     /**
      * Gets duration between two timestamps

@@ -6,7 +6,7 @@ import {
 } from '@microsoft/applicationinsights-common';
 import {
     IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
-    _InternalMessageId, getNavigator, getWindow
+    _InternalMessageId, getNavigator, getPerformance
 } from '@microsoft/applicationinsights-core-js';
 
 /**
@@ -93,14 +93,14 @@ export class PageViewPerformanceManager {
 
     public getPerformanceTiming(): PerformanceTiming | null {
         if (this.isPerformanceTimingSupported()) {
-            return window.performance.timing;
+            return getPerformance().timing;
         }
 
         return null;
     }
     public getPerformanceNavigationTiming(): PerformanceNavigationTiming | null {
         if (this.isPerformanceNavigationTimingSupported()) {
-            return window.performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
+            return getPerformance().getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
         }
 
         return null;
@@ -110,16 +110,16 @@ export class PageViewPerformanceManager {
     * Returns true is window PerformanceNavigationTiming API is supported, false otherwise.
     */
    public isPerformanceNavigationTimingSupported() {
-        let _window = getWindow();
-        return _window && _window.performance && _window.performance.getEntriesByType && _window.performance.getEntriesByType("navigation").length > 0;
+        let perf = getPerformance();
+        return perf && perf.getEntriesByType && perf.getEntriesByType("navigation").length > 0;
 }
 
    /**
     * Returns true is window performance timing API is supported, false otherwise.
     */
     public isPerformanceTimingSupported() {
-        let _window = getWindow();
-        return typeof _window !== "undefined" && _window.performance && _window.performance.timing;
+        let perf = getPerformance();
+        return perf && perf.timing;
     }
 
    /**
@@ -127,10 +127,10 @@ export class PageViewPerformanceManager {
     * Returns true if ready, false otherwise.
     */
     public isPerformanceTimingDataReady() {
-        let _window = getWindow();
-        const timing = _window && _window.performance.timing;
+        let perf = getPerformance();
+        const timing = perf ? perf.timing : 0;
 
-        return _window
+        return timing
             && timing.domainLookupStart > 0
             && timing.navigationStart > 0
             && timing.responseStart > 0
