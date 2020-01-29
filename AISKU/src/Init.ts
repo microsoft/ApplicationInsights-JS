@@ -35,7 +35,7 @@ try {
 
                 // overwrite snippet with full appInsights
                 // for 2.0 initialize only if required
-                if ((snippet.version === 2.0 && _window[aiName].initialize) || snippet.version === undefined ) {
+                if ((snippet.version === 2.0 && (_window[aiName] as any).initialize) || snippet.version === undefined ) {
                     ApplicationInsightsContainer.getAppInsights(snippet, snippet.version);
                 }
             }
