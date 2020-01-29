@@ -4,6 +4,13 @@
 /// <reference path="./Logging.ts" />
 /// <reference path="./UtilHelpers.ts" />
 
+
+function _endsWith(value:string, search:string) {
+    let len = value.length;
+    let start = len - search.length;
+    return value.substring(start >= 0 ? start : 0, len) === search;
+}
+
 module Microsoft.ApplicationInsights {
 
     /**
@@ -19,6 +26,8 @@ module Microsoft.ApplicationInsights {
         private static _canUseCookies: boolean = undefined;
         private static _canUseLocalStorage: boolean = undefined;
         private static _canUseSessionStorage: boolean = undefined;
+        private static _uaDisallowsSameSiteNone = null;
+
         // listing only non-geo specific locations
         private static _internalEndpoints: string[] = [
             "https://dc.services.visualstudio.com/v2/track",
@@ -316,6 +325,65 @@ module Microsoft.ApplicationInsights {
             return Util._canUseCookies;
         }
 
+        public static disallowsSameSiteNone(userAgent:string) {
+            if (typeof userAgent !== "string") {
+                return false;
+            }
+        
+            // Cover all iOS based browsers here. This includes:
+            // - Safari on iOS 12 for iPhone, iPod Touch, iPad
+            // - WkWebview on iOS 12 for iPhone, iPod Touch, iPad
+            // - Chrome on iOS 12 for iPhone, iPod Touch, iPad
+            // All of which are broken by SameSite=None, because they use the iOS networking stack
+            if (userAgent.indexOf("CPU iPhone OS 12") !== -1 || userAgent.indexOf("iPad; CPU OS 12") !== -1) {
+                return true;
+            }
+         
+            // Cover Mac OS X based browsers that use the Mac OS networking stack. This includes:
+            // - Safari on Mac OS X
+            // This does not include:
+            // - Internal browser on Mac OS X
+            // - Chrome on Mac OS X
+            // - Chromium on Mac OS X
+            // Because they do not use the Mac OS networking stack.
+            if (userAgent.indexOf("Macintosh; Intel Mac OS X 10_14") !== -1 && userAgent.indexOf("Version/") !== -1 && userAgent.indexOf("Safari") !== -1) {
+                return true;
+            }
+         
+            // Cover Mac OS X internal browsers that use the Mac OS networking stack. This includes:
+            // - Internal browser on Mac OS X
+            // This does not include:
+            // - Safari on Mac OS X
+            // - Chrome on Mac OS X
+            // - Chromium on Mac OS X
+            // Because they do not use the Mac OS networking stack.
+            if (userAgent.indexOf("Macintosh; Intel Mac OS X 10_14") !== -1 && _endsWith(userAgent, "AppleWebKit/605.1.15 (KHTML, like Gecko)")) {
+                return true;
+            }
+         
+            // Cover Chrome 50-69, because some versions are broken by SameSite=None, and none in this range require it.
+            // Note: this covers some pre-Chromium Edge versions, but pre-Chromim Edge does not require SameSite=None, so this is fine.
+            // Note: this regex applies to Windows, Mac OS X, and Linux, deliberately.
+            if (userAgent.indexOf("Chrome/5") !== -1 || userAgent.indexOf("Chrome/6") !== -1) {
+                return true;
+            }
+         
+            // Unreal Engine runs Chromium 59, but does not advertise as Chrome until 4.23. Treat versions of Unreal
+            // that don't specify their Chrome version as lacking support for SameSite=None.
+            if (userAgent.indexOf("UnrealEngine") !== -1 && userAgent.indexOf("Chrome") === -1) {
+                return true;
+            }
+         
+            // UCBrowser < 12.13.2 ignores Set-Cookie headers with SameSite=None
+            // NB: this rule isn't complete - you need regex to make a complete rule.
+            // See: https://www.chromium.org/updates/same-site/incompatible-clients
+            if (userAgent.indexOf("UCBrowser/12") !== -1 || userAgent.indexOf("UCBrowser/11") !== -1) {
+                return true;
+            }
+         
+            return false;
+        }
+    
         /**
          * helper method to set userId and sessionId cookie
          */
@@ -329,7 +397,15 @@ module Microsoft.ApplicationInsights {
 
             if (Util.document.location && Util.document.location.protocol === "https:") {
                 secureAttrib = ";secure";
-                value = value + ";SameSite=None"; // SameSite can only be changed on secure pages
+                if (Util._uaDisallowsSameSiteNone === null) {
+                    if (typeof navigator !== "undefined") {
+                        Util._uaDisallowsSameSiteNone = Util.disallowsSameSiteNone(navigator.userAgent);
+                    }
+                }
+                
+                if (!Util._uaDisallowsSameSiteNone) {
+                    value = value + ";SameSite=None"; // SameSite can only be changed on secure pages and browsers that support samesite=None setting
+                }
             }
 
             if (Util.canUseCookies()) {

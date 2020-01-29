@@ -369,9 +369,9 @@
       "resolved": "https://registry.npmjs.org/@types/babel__traverse/-/babel__traverse-7.0.8.tgz"
     },
     "@types/cheerio": {
-      "version": "0.22.15",
+      "version": "0.22.16",
       "from": "@types/cheerio@*",
-      "resolved": "https://registry.npmjs.org/@types/cheerio/-/cheerio-0.22.15.tgz"
+      "resolved": "https://registry.npmjs.org/@types/cheerio/-/cheerio-0.22.16.tgz"
     },
     "@types/enzyme": {
       "version": "3.1.8",
