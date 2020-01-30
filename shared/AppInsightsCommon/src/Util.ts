@@ -232,7 +232,7 @@ export class Util {
         const keys = [];
 
         if (Util.canUseSessionStorage()) {
-            for (const key in getGlobalInst("sessionStorage")) {
+            for (const key in getGlobalInst<any>("sessionStorage")) {
                 keys.push(key);
             }
         }
