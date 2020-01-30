@@ -96,7 +96,7 @@ export class ProcessTelemetryContext implements IProcessTelemetryContext {
     public getCfg: () => IConfiguration;
 
     public getExtCfg: <T>(identifier:string, defaultValue?:T|any) => T;
-
+                        
     public getConfig: (identifier:string, field: string, defaultValue?: number | string | boolean) => number | string | boolean;
 
     /**
@@ -137,7 +137,7 @@ export class ProcessTelemetryContext implements IProcessTelemetryContext {
     /**
      * Create a new context using the core and config from the current instance
      */
-    public createNew: (plugins?:IPlugin[], startAt?:IPlugin) => IProcessTelemetryContext;
+    public createNew: (plugins?:IPlugin[]|ITelemetryPluginChain, startAt?:IPlugin) => IProcessTelemetryContext;
 
     /**
      * Creates a new Telemetry Item context with the current config, core and plugin execution chain
