@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-angular-js",
-    "version": "2.4.1",
+    "version": "2.4.2",
     "description": "Microsoft Application Insights Angular plugin",
     "main": "dist/applicationinsights-angular-js.js",
     "module": "dist-esm/applicationinsights-angular-js.js",
@@ -18,7 +18,7 @@
         "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
-        "@microsoft/applicationinsights-rollup-es3" : "1.0.0",
+        "@microsoft/applicationinsights-rollup-es3" : "1.1.0",
         "@angular/core": "~8.1.2",
         "@angular/router": "~8.1.2",
         "grunt": "1.0.1",
@@ -38,8 +38,8 @@
         "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-common": "2.4.1",
-        "@microsoft/applicationinsights-core-js": "2.4.1",
+        "@microsoft/applicationinsights-common": "2.4.2",
+        "@microsoft/applicationinsights-core-js": "2.4.2",
         "tslib": "^1.9.3"
     },
     "license": "MIT"

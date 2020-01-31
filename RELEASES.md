@@ -1,8 +1,18 @@
 # Releases
 
+## 2.4.2
+
+### ES3 Support
+
+An additional conversion was required for ES3 support as TypeScript was adding a getter for embedding a constant enum into the Common class.
+
+### Changelog
+
+ - #1177 Add additional checks and polyfil for TypeScript get translations for constants
+
 ## v 2.4.1...2.4.0
 
-### ES3 Support (Complete)
+### ES3 Support
 
 With this release the source files can be loaded in an ES3 environment (IE7/8) and send requests to the server. As part of this change you will now receive requests from users using an older browser, prior to this version users using an ES3 base browser will (most likely) have been getting a javascript error, which would have caused no data to be sent.
 
