@@ -35,7 +35,12 @@ export interface IEs3CheckKeyword {
      *  A Set of strings to use for matching funcNames to ignore, this is required because of infra (build) issues
      * with negative lookbehind, internally this uses indexOf() to provide a partial existence check.
      */
-    ignoreFuncMatch?:string[]
+    ignoreFuncMatch?:string[],
+
+    /**
+     * The prefix added to any reported error, defaults to "Invalid ES3 function"
+     */
+    errorTitle?:string
 };
  
 /**
@@ -65,7 +70,12 @@ export interface IEs3Keyword extends IEs3CheckKeyword {
      * The replacement pattern to apply to the extracted regex, this becomes the polyFill implementation in the final
      * packaged code.
      */
-    replace: string
+    replace: string,
+
+    /**
+     * The prefix added to any reported error, defaults to "Invalid ES3 function"
+     */
+    errorTitle?:string
 };
 
 /**
@@ -111,4 +121,14 @@ export interface IEs3CheckRollupOptions {
      * false these are appended after the default values, and when true these are the only values used
      */
     keywords?:IEs3CheckKeyword[]
+};
+
+/**
+ * Identifies the optional options to be passed to the es3Check() rollup plugin
+ */
+export interface IImportCheckRollupOptions {
+    /**
+     * Identify the module names that you want to ban importing from
+     */
+    exclude?:string[]
 };

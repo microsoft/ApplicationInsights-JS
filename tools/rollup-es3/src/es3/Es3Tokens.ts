@@ -84,7 +84,28 @@ export const defaultEs3Tokens:IEs3Keyword[] = [
                 // Use existing function if available
                 "if (func) { return func(obj); } " +
                 "return obj; " +
-                "})(%args%)%semi%" 
+                "})(%args%)%semi%"
+    },
+    {
+        funcNames: [ /[\s\(,]get[\s]+([\w]+)[\s]*\(\)[\s]*\{/g ],
+        errorMsg: "[%funcName%] is not supported in an ES3 environment.",
+        extract: /([\s\(,])get[\s]+([\w]+)[\s]*\(\)[\s]*\{[\s]*return[\s]*([^;]*);[\s]*\}/g,
+        checkGroups: [2, 3],
+        namedGroups: [
+            { name: "src", idx: 0 },
+            { name: "prefix", idx: 1 },
+            { name: "name", idx: 2 },
+            { name: "value", idx: 3 },
+        ],
+        replace:"%prefix%%name%: (function(obj) { " +
+            "/* ai_es3polyfil get %name% */ " +
+            "if (obj == null || typeof obj !== \"object\") { return obj; } " +
+            "var cpy = obj.constructor(); " +
+            "for (var attr in obj) { " +
+                "if (obj.hasOwnPropery(attr)) { cpy[attr] = obj[attr]; } " +
+            "} " +
+            "return cpy; "+
+            "})(%value%)"
     }
 ];
 
@@ -165,6 +186,10 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
             "object-assign\\index.js",      // object-assign node module usage is only after checking for existance of Object.assign
             "object-assign/index.js"        // object-assign node module usage is only after checking for existance of Object.assign
         ]
+    },
+    {
+        funcNames: [ /[\s\(,][gs]et[\s]+([\w]+)[\s]*\(\)[\s]*\{/g ],
+        errorMsg: "[%funcName%] is not supported in an ES3 environment."
     }
 ];
 

@@ -87,25 +87,38 @@ export function es3Poly(options:IEs3RollupOptions = {}) {
         }
     }
 
-    function replaceTokens(code:string, theString:MagicString, id:string, entry:string, isTransform:boolean) {
-        let result = false;
+    function replaceTokens(code:string, id:string, entry:string, isTransform:boolean): MagicString {
+        let changed = false;
+        let theString = null;
         if (doReplace && code) {
+            theString = new MagicString(code);
             for (let idx in tokens) {
                 let keyword:IEs3Keyword = tokens[idx];
                 if (keyword && !isIgnore(id, keyword, isTransform)) {
-                    if (_replaceToken(keyword, code, theString, entry)) {
-                        result = true;
+                    try {
+                        if (_replaceToken(keyword, code, theString, entry)) {
+                            changed = true;
+                        }
+                    } catch (e) {
+                        // This occurs when we try and transform a chunk that has already been transformed
+                        // So reassigning the values and attempt to replace again, this may cause any possible 
+                        // map file to mismatch the source code, however, the wrapped code should still be mostly correct
+                        code = theString.toString();
+                        theString = new MagicString(code);
+                        if (_replaceToken(keyword, code, theString, entry)) {
+                            changed = true;
+                        }
                     }
                 }
             }
         }
 
-        return result;
+        return changed ? theString : null;
     }
 
     function doTransform(code:string, id:string, entry:string, isTransform:boolean) {
-        let theString = new MagicString(code);
-        if (!replaceTokens(code, theString, id, entry, isTransform)) {
+        let theString = replaceTokens(code, id, entry, isTransform);
+        if (theString === null) {
             return null;
         }
 

@@ -434,12 +434,13 @@ To ensure that the system conforms to the ES3 spec, by only using ES3 compatible
 
 - es3Poly() finds and rewrite several commonly incompatible functions (such as Object.defineProperty; Object.getOwnPropertyDescriptor; Object.create) with inline polyfill functions that either call the real implementation or provide a basic implementation so that the scripts can be loaded and executed.
 - es3Check() finds some of the known ES3 incompatible methods and will stop the packaging process if they are identified (and have not been polyfilled by es3Poly()), this provides a semi-automated validation of not just the application insights code, but also 3rd party libraries that it uses.
+- importCheck() checks that the source code does not include imports from specific files or packages, this has been added due to packaging issues while using es3Poly causing imported type values to be renamed as "name$$1", which causes uglify() to missing renaming in some cases where the original source is "name$1". So this is being used to ensure that each source file only imports the values from packages or the original source file and not the main module export like "index". The importCheck can be placed before the nodeResolve() or after the es3Check() the recommendation is to fail fast be having this before the resolve. It should also be noted that only if the import is used will it appear in the final output (packagin), so it may exist in the original source but the packaging will not fail in this case.
 
 To use these rollup plugins you simply need to add the following to your rollup.config.js
 
 To import the module
 ```
-import { es3Poly, es3Check } from "@microsoft/applicationinsights-rollup-es3";
+import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
 ```
 
 And then include as part of the packaging plugin list, if you use es3Poly()you should always include it before es3Check() 
@@ -447,13 +448,14 @@ And then include as part of the packaging plugin list, if you use es3Poly()you s
 ```
     plugins: [
       replace({ ... }),
+      importCheck({ exclude: [ "Index" ] }),
       nodeResolve({ browser: false, preferBuiltins: false }),
       es3Poly(),
       es3Check()
     ]
 ```
 
-Both plugins take an options which allows you to add additional checks and polyfill replacements. See the [Interfaces.ts]() for the definitions and [ES3Tokens.ts]() for the default values, which should provide the examples, if we have missed some common values that you require please feel free to raise an issue or provide a PR to add as the defaults.
+All plugins take an options which allows you to add additional checks and polyfill replacements. See the [Interfaces.ts]() for the definitions and [ES3Tokens.ts]() for the default values, which should provide the examples, if we have missed some common values that you require please feel free to raise an issue or provide a PR to add as the defaults.
 
 It should be noted at this point that the both react and react-native extensions will NOT work in an ES3/IE8 environment out of the box, primarily because of the react code and their dependencies.
 You *may* be able to workaround this limitation by providing and your own polyfill implementations for the unsupported methods.

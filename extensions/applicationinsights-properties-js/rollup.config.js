@@ -1,7 +1,7 @@
 import nodeResolve from "rollup-plugin-node-resolve";
 import {uglify} from "rollup-plugin-uglify";
 import replace from "rollup-plugin-replace";
-import { es3Poly, es3Check } from "@microsoft/applicationinsights-rollup-es3";
+import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
 
 const version = require("./package.json").version;
 const outputName = "applicationinsights-properties-js";
@@ -30,6 +30,7 @@ const browserRollupConfigFactory = isProduction => {
           "// Licensed under the MIT License.": ""
         }
       }),
+      importCheck({ exclude: [ "applicationinsights-properties-js" ] }),
       nodeResolve({
         browser: false,
         preferBuiltins: false
@@ -72,6 +73,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
           "// Licensed under the MIT License.": ""
         }
       }),
+      importCheck({ exclude: [ "applicationinsights-properties-js" ] }),
       nodeResolve(),
       es3Poly(),
       es3Check()
