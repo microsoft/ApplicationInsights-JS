@@ -1,6 +1,6 @@
 /// <reference path="./TestFramework/Common.ts" />
 
-import { es3Check, es3Poly } from "../src/applicationinsignts-rollup-es3";
+import { es3Check, es3Poly, importCheck } from "../src/applicationinsignts-rollup-es3";
 
 //import * as sinon from 'sinon';
 
@@ -41,6 +41,22 @@ export class Es3RollupTests extends TestClass {
         QUnit.assert.equal(plugin.transform(input, "testId"), null);
     }
 
+    public testImportCheck(options:any, input:string) {
+        let plugin = importCheck(options);
+
+        QUnit.assert.equal(plugin.name, "ai-rollup-importcheck");
+        QUnit.assert.equal(plugin.renderChunk(input, { filename: "test.js" }), null);
+        QUnit.assert.equal(plugin.transform(input, "testId"), null);
+    }
+
+    public testImportCheckFail(options:any, input:string, renderExpected:string, transformExpected:string = null) {
+        let plugin = importCheck(options);
+
+        QUnit.assert.equal(plugin.name, "ai-rollup-importcheck");
+
+        this.testError(plugin, input, input, renderExpected, transformExpected);
+    }
+
     private doTest(plugin:any, input:string, expected:string) {
         this.testExpected(plugin, input, expected);
         this.testExpected(plugin, this.convertNewlines(input, "\r"), this.convertNewlines(expected, "\r"));
@@ -60,11 +76,11 @@ export class Es3RollupTests extends TestClass {
     private testError(plugin:any, message:string, input:string, renderExpected:string, transformExpected:string = null) {
         QUnit.assert.throws(() => {
             plugin.renderChunk(input, { filename: "test.js" });
-        }, new Error(renderExpected), message);
+        }, new Error(renderExpected), "renderChunk:" + (message || input));
 
         QUnit.assert.throws(() => {
             plugin.transform(input, "test.js");
-        }, new Error(transformExpected || renderExpected.replace(/during renderChunk/g, "during transform")), message);
+        }, new Error(transformExpected || renderExpected.replace(/during renderChunk/g, "during transform")), "transform:" + (message || input));
     }
 
     public registerTests() {
@@ -171,6 +187,80 @@ export class Es3RollupTests extends TestClass {
                     "a = Object.seal(obj);",
                     "a = (function(obj) { /* ai_es3_polyfil seal */ var func = Object[\"seal\"]; if (func) { return func(obj); } return obj; })(obj);");
 
+            }
+        });
+
+        this.testCase({
+            name: "Test recursive replacements",
+            test: () => {
+                this.testExpected(
+                    es3Poly(),
+                    "    var PropertiesPluginIdentifier = \"AppInsightsPropertiesPlugin\";\n"+
+                    "    var BreezeChannelIdentifier = \"AppInsightsChannelPlugin\";\n"+
+                    "    var Common = /*#__PURE__*/Object.freeze({\n"+
+                    "    PropertiesPluginIdentifier: PropertiesPluginIdentifier,\n"+
+                    "    BreezeChannelIdentifier: BreezeChannelIdentifier,\n"+
+                    "    Util: Util,\n"+
+                    "    CorrelationIdHelper: CorrelationIdHelper,\n"+
+                    "    UrlHelper: UrlHelper,\n"+
+                    "    DateTimeUtils: DateTimeUtils,\n"+
+                    "    ConnectionStringParser: ConnectionStringParser,\n"+
+                    "    get FieldType () { return FieldType; },\n"+
+                    "    RequestHeaders: RequestHeaders,\n"+
+                    "    DisabledPropertyName: DisabledPropertyName,\n"+
+                    "    ProcessLegacy: ProcessLegacy,\n"+
+                    "    SampleRate: SampleRate,\n"+
+                    "    HttpMethod: HttpMethod,\n"+
+                    "    DEFAULT_BREEZE_ENDPOINT: DEFAULT_BREEZE_ENDPOINT,\n"+
+                    "    AIData: Data,\n"+
+                    "    AIBase: Base,\n"+
+                    "    Envelope: Envelope$1,\n"+
+                    "    Event: Event$1,\n"+
+                    "    Exception: Exception,\n"+
+                    "    Metric: Metric,\n"+
+                    "    PageView: PageView,\n"+
+                    "    get SeverityLevel () { return exports.SeverityLevel; },\n"+
+                    "    ConfigurationManager: ConfigurationManager,\n"+
+                    "    ContextTagKeys: ContextTagKeys,\n"+
+                    "    DataSanitizer: DataSanitizer,\n"+
+                    "    TelemetryItemCreator: TelemetryItemCreator,\n"+
+                    "    CtxTagKeys: CtxTagKeys,\n"+
+                    "    Extensions: Extensions,\n"+
+                    "    get DistributedTracingModes () { return exports.DistributedTracingModes; }\n"+
+                    "});",
+                    "    var PropertiesPluginIdentifier = \"AppInsightsPropertiesPlugin\";\n"+
+                    "    var BreezeChannelIdentifier = \"AppInsightsChannelPlugin\";\n"+
+                    "    var Common = /*#__PURE__*/(function(obj) { /* ai_es3_polyfil freeze */ var func = Object[\"freeze\"]; if (func) { return func(obj); } return obj; })({\n"+
+                    "    PropertiesPluginIdentifier: PropertiesPluginIdentifier,\n"+
+                    "    BreezeChannelIdentifier: BreezeChannelIdentifier,\n"+
+                    "    Util: Util,\n"+
+                    "    CorrelationIdHelper: CorrelationIdHelper,\n"+
+                    "    UrlHelper: UrlHelper,\n"+
+                    "    DateTimeUtils: DateTimeUtils,\n"+
+                    "    ConnectionStringParser: ConnectionStringParser,\n"+
+                    "    FieldType: (function(obj) { /* ai_es3polyfil get FieldType */ if (obj == null || typeof obj !== \"object\") { return obj; } var cpy = obj.constructor(); for (var attr in obj) { if (obj.hasOwnPropery(attr)) { cpy[attr] = obj[attr]; } } return cpy; })(FieldType),\n"+
+                    "    RequestHeaders: RequestHeaders,\n"+
+                    "    DisabledPropertyName: DisabledPropertyName,\n"+
+                    "    ProcessLegacy: ProcessLegacy,\n"+
+                    "    SampleRate: SampleRate,\n"+
+                    "    HttpMethod: HttpMethod,\n"+
+                    "    DEFAULT_BREEZE_ENDPOINT: DEFAULT_BREEZE_ENDPOINT,\n"+
+                    "    AIData: Data,\n"+
+                    "    AIBase: Base,\n"+
+                    "    Envelope: Envelope$1,\n"+
+                    "    Event: Event$1,\n"+
+                    "    Exception: Exception,\n"+
+                    "    Metric: Metric,\n"+
+                    "    PageView: PageView,\n"+
+                    "    SeverityLevel: (function(obj) { /* ai_es3polyfil get SeverityLevel */ if (obj == null || typeof obj !== \"object\") { return obj; } var cpy = obj.constructor(); for (var attr in obj) { if (obj.hasOwnPropery(attr)) { cpy[attr] = obj[attr]; } } return cpy; })(exports.SeverityLevel),\n"+
+                    "    ConfigurationManager: ConfigurationManager,\n"+
+                    "    ContextTagKeys: ContextTagKeys,\n"+
+                    "    DataSanitizer: DataSanitizer,\n"+
+                    "    TelemetryItemCreator: TelemetryItemCreator,\n"+
+                    "    CtxTagKeys: CtxTagKeys,\n"+
+                    "    Extensions: Extensions,\n"+
+                    "    DistributedTracingModes: (function(obj) { /* ai_es3polyfil get DistributedTracingModes */ if (obj == null || typeof obj !== \"object\") { return obj; } var cpy = obj.constructor(); for (var attr in obj) { if (obj.hasOwnPropery(attr)) { cpy[attr] = obj[attr]; } } return cpy; })(exports.DistributedTracingModes)\n"+
+                    "});");
             }
         });
 
@@ -448,6 +538,162 @@ export class Es3RollupTests extends TestClass {
                     "--------------------=([Object.keys(])=--------------------\n"
                     );
                                                                                                                                                                                                                                                                    
+            }
+        });
+
+        this.testCase({
+            name: "Test Import Check",
+            test: () => {
+                let plugin = importCheck({});
+
+                this.testImportCheck({}, "");
+                this.testImportCheck({ exclude: ["index"]}, "import {\nSomeClass\n} from './MyCode'");
+                this.testImportCheck({ exclude: ["index"]}, "import {\nSomeClass\n} from \"./MyCode\"");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import { A, B, C } from './Index';",
+                    "Invalid Import detected [import { A, B, C } from './Index'] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import { A, B, C } from './Index']\n" +
+                    "\n" +
+                    "--------------------=([import { A, B, C } from './Index'])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import { A, B, C } from \"./Index\";",
+                    "Invalid Import detected [import { A, B, C } from \"./Index\"] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import { A, B, C } from \"./Index\"]\n" +
+                    "\n" +
+                    "--------------------=([import { A, B, C } from \"./Index\"])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import { A, B, C } from './Index'",
+                    "Invalid Import detected [import { A, B, C } from './Index'] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import { A, B, C } from './Index']\n" +
+                    "\n" +
+                    "--------------------=([import { A, B, C } from './Index'])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import { A, B, C } from \"./Index\"",
+                    "Invalid Import detected [import { A, B, C } from \"./Index\"] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import { A, B, C } from \"./Index\"]\n" +
+                    "\n" +
+                    "--------------------=([import { A, B, C } from \"./Index\"])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import { A, B, C } from './index';",
+                    "Invalid Import detected [import { A, B, C } from './index'] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import { A, B, C } from './index']\n" +
+                    "\n" +
+                    "--------------------=([import { A, B, C } from './index'])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import { A, B, C } from \"./index\";",
+                    "Invalid Import detected [import { A, B, C } from \"./index\"] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import { A, B, C } from \"./index\"]\n" +
+                    "\n" +
+                    "--------------------=([import { A, B, C } from \"./index\"])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import { A, B, C } from './index'",
+                    "Invalid Import detected [import { A, B, C } from './index'] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import { A, B, C } from './index']\n" +
+                    "\n" +
+                    "--------------------=([import { A, B, C } from './index'])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import { A, B, C } from \"./index\"",
+                    "Invalid Import detected [import { A, B, C } from \"./index\"] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import { A, B, C } from \"./index\"]\n" +
+                    "\n" +
+                    "--------------------=([import { A, B, C } from \"./index\"])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import { A, B, C } from './folder/index';",
+                    "Invalid Import detected [import { A, B, C } from './folder/index'] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import { A, B, C } from './folder/index']\n" +
+                    "\n" +
+                    "--------------------=([import { A, B, C } from './folder/index'])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import { A, B, C } from \"./folder/index\";",
+                    "Invalid Import detected [import { A, B, C } from \"./folder/index\"] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import { A, B, C } from \"./folder/index\"]\n" +
+                    "\n" +
+                    "--------------------=([import { A, B, C } from \"./folder/index\"])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import { A, B, C } from './folder/index'",
+                    "Invalid Import detected [import { A, B, C } from './folder/index'] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import { A, B, C } from './folder/index']\n" +
+                    "\n" +
+                    "--------------------=([import { A, B, C } from './folder/index'])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import { A, B, C } from \"./folder/index\"",
+                    "Invalid Import detected [import { A, B, C } from \"./folder/index\"] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import { A, B, C } from \"./folder/index\"]\n" +
+                    "\n" +
+                    "--------------------=([import { A, B, C } from \"./folder/index\"])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import * from './Index';",
+                    "Invalid Import detected [import * from './Index'] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import * from './Index']\n" +
+                    "\n" +
+                    "--------------------=([import * from './Index'])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import * from \"./Index\";",
+                    "Invalid Import detected [import * from \"./Index\"] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import * from \"./Index\"]\n" +
+                    "\n" +
+                    "--------------------=([import * from \"./Index\"])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import * from './Index'",
+                    "Invalid Import detected [import * from './Index'] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import * from './Index']\n" +
+                    "\n" +
+                    "--------------------=([import * from './Index'])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import * from \"./Index\"",
+                    "Invalid Import detected [import * from \"./Index\"] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import * from \"./Index\"]\n" +
+                    "\n" +
+                    "--------------------=([import * from \"./Index\"])=--------------------\n");
+
+                    this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import * from './folder/Index';",
+                    "Invalid Import detected [import * from './folder/Index'] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import * from './folder/Index']\n" +
+                    "\n" +
+                    "--------------------=([import * from './folder/Index'])=--------------------\n");
+
+                this.testImportCheckFail(
+                    { exclude: [ "index" ]},
+                    "import * from \"./folder/Index\";",
+                    "Invalid Import detected [import * from \"./folder/Index\"] found on line [0], column [1], position [0] during renderChunk - test.js\n" +
+                    "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [import * from \"./folder/Index\"]\n" +
+                    "\n" +
+                    "--------------------=([import * from \"./folder/Index\"])=--------------------\n");
+
             }
         });
     }

@@ -15,7 +15,7 @@ export function formatError(keyword:IEs3CheckKeyword|IEs3Keyword, funcName:strin
     let lineStart = code.lastIndexOf("\n", pos);
     let column = lineStart !== -1 ? (pos - lineStart) : pos + 1;
   
-    var message = "Invalid ES3 function [" + funcName + "] found on line [" + lineNumber + "], column [" + column + "], position [" + pos + "] during " + (entry||"<processing>") + " - " + (id||"") + "\n";
+    var message = (keyword.errorTitle || "Invalid ES3 function") + " [" + funcName + "] found on line [" + lineNumber + "], column [" + column + "], position [" + pos + "] during " + (entry||"<processing>") + " - " + (id||"") + "\n";
     if (errorMsg) {
         message += errorMsg.replace("%funcName%", funcName) + "\n";
     }
