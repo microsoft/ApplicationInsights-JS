@@ -102,7 +102,7 @@ export const defaultEs3Tokens:IEs3Keyword[] = [
             "if (obj == null || typeof obj !== \"object\") { return obj; } " +
             "var cpy = obj.constructor(); " +
             "for (var attr in obj) { " +
-                "if (obj.hasOwnPropery(attr)) { cpy[attr] = obj[attr]; } " +
+                "if (obj.hasOwnProperty(attr)) { cpy[attr] = obj[attr]; } " +
             "} " +
             "return cpy; "+
             "})(%value%)"

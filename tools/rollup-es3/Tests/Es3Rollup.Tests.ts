@@ -238,7 +238,7 @@ export class Es3RollupTests extends TestClass {
                     "    UrlHelper: UrlHelper,\n"+
                     "    DateTimeUtils: DateTimeUtils,\n"+
                     "    ConnectionStringParser: ConnectionStringParser,\n"+
-                    "    FieldType: (function(obj) { /* ai_es3polyfil get FieldType */ if (obj == null || typeof obj !== \"object\") { return obj; } var cpy = obj.constructor(); for (var attr in obj) { if (obj.hasOwnPropery(attr)) { cpy[attr] = obj[attr]; } } return cpy; })(FieldType),\n"+
+                    "    FieldType: (function(obj) { /* ai_es3polyfil get FieldType */ if (obj == null || typeof obj !== \"object\") { return obj; } var cpy = obj.constructor(); for (var attr in obj) { if (obj.hasOwnProperty(attr)) { cpy[attr] = obj[attr]; } } return cpy; })(FieldType),\n"+
                     "    RequestHeaders: RequestHeaders,\n"+
                     "    DisabledPropertyName: DisabledPropertyName,\n"+
                     "    ProcessLegacy: ProcessLegacy,\n"+
@@ -252,14 +252,14 @@ export class Es3RollupTests extends TestClass {
                     "    Exception: Exception,\n"+
                     "    Metric: Metric,\n"+
                     "    PageView: PageView,\n"+
-                    "    SeverityLevel: (function(obj) { /* ai_es3polyfil get SeverityLevel */ if (obj == null || typeof obj !== \"object\") { return obj; } var cpy = obj.constructor(); for (var attr in obj) { if (obj.hasOwnPropery(attr)) { cpy[attr] = obj[attr]; } } return cpy; })(exports.SeverityLevel),\n"+
+                    "    SeverityLevel: (function(obj) { /* ai_es3polyfil get SeverityLevel */ if (obj == null || typeof obj !== \"object\") { return obj; } var cpy = obj.constructor(); for (var attr in obj) { if (obj.hasOwnProperty(attr)) { cpy[attr] = obj[attr]; } } return cpy; })(exports.SeverityLevel),\n"+
                     "    ConfigurationManager: ConfigurationManager,\n"+
                     "    ContextTagKeys: ContextTagKeys,\n"+
                     "    DataSanitizer: DataSanitizer,\n"+
                     "    TelemetryItemCreator: TelemetryItemCreator,\n"+
                     "    CtxTagKeys: CtxTagKeys,\n"+
                     "    Extensions: Extensions,\n"+
-                    "    DistributedTracingModes: (function(obj) { /* ai_es3polyfil get DistributedTracingModes */ if (obj == null || typeof obj !== \"object\") { return obj; } var cpy = obj.constructor(); for (var attr in obj) { if (obj.hasOwnPropery(attr)) { cpy[attr] = obj[attr]; } } return cpy; })(exports.DistributedTracingModes)\n"+
+                    "    DistributedTracingModes: (function(obj) { /* ai_es3polyfil get DistributedTracingModes */ if (obj == null || typeof obj !== \"object\") { return obj; } var cpy = obj.constructor(); for (var attr in obj) { if (obj.hasOwnProperty(attr)) { cpy[attr] = obj[attr]; } } return cpy; })(exports.DistributedTracingModes)\n"+
                     "});");
             }
         });
