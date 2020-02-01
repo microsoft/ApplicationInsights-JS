@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web-basic",
-    "version": "2.4.2",
+    "version": "2.4.3",
     "description": "Microsoft Application Insights Javascript SDK core and channel",
     "main": "dist/applicationinsights-web-basic.js",
     "module": "dist-esm/index.js",
@@ -14,7 +14,7 @@
         "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
-        "@microsoft/applicationinsights-rollup-es3" : "1.1.0",
+        "@microsoft/applicationinsights-rollup-es3" : "1.1.1",
         "grunt": "1.0.1",
         "rollup-plugin-node-resolve": "^3.4.0",
         "rollup-plugin-replace": "^2.1.0",
@@ -26,9 +26,9 @@
         "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-common": "2.4.2",
-        "@microsoft/applicationinsights-channel-js": "2.4.2",
-        "@microsoft/applicationinsights-core-js": "2.4.2"
+        "@microsoft/applicationinsights-common": "2.4.3",
+        "@microsoft/applicationinsights-channel-js": "2.4.3",
+        "@microsoft/applicationinsights-core-js": "2.4.3"
     },
     "peerDependencies": {
         "tslib": "^1.9.3"
