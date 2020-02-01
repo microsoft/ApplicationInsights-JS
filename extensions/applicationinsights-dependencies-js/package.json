@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-dependencies-js",
-    "version": "2.4.2",
+    "version": "2.4.3",
     "description": "Microsoft Application Insights XHR dependencies plugin",
     "main": "dist/applicationinsights-dependencies-js.js",
     "module": "dist-esm/applicationinsights-dependencies-js.js",
@@ -18,7 +18,7 @@
         "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
-        "@microsoft/applicationinsights-rollup-es3" : "1.1.0",
+        "@microsoft/applicationinsights-rollup-es3" : "1.1.1",
         "typescript": "2.5.3",
         "grunt": "1.0.1",
         "grunt-contrib-qunit": "2.0.0",
@@ -32,8 +32,8 @@
         "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "2.4.2",
-        "@microsoft/applicationinsights-common": "2.4.2",
+        "@microsoft/applicationinsights-core-js": "2.4.3",
+        "@microsoft/applicationinsights-common": "2.4.3",
         "tslib": "^1.9.3"
     },
     "license": "MIT"

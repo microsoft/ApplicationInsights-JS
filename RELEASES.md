@@ -1,5 +1,11 @@
 # Releases
 
+## 2.4.3
+
+## Changelog
+
+- Syntax error tools/rollup-es3/src/es3/Es3Tokens.ts #1179
+
 ## 2.4.2
 
 ### ES3 Support
