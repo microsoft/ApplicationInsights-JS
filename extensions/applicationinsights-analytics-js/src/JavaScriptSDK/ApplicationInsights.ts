@@ -27,10 +27,6 @@ import * as properties from "@microsoft/applicationinsights-properties-js";
 
 "use strict";
 
-declare global {
-    interface Window { onunhandledrejection: ((this: Window, ev: PromiseRejectionEvent) => any) | null; }
-}
-
 const durationProperty: string = "duration";
 
 function _dispatchEvent(target:EventTarget, evnt: Event) {
@@ -597,7 +593,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
             // We want to enable exception auto collection and it has not been done so yet
             const onunhandledrejection = "onunhandledrejection";
             const originalOnUnhandledRejection = _window[onunhandledrejection];
-            _window.onunhandledrejection = (error: PromiseRejectionEvent) => {
+            _window[onunhandledrejection] = (error: PromiseRejectionEvent) => {
                 const handled = originalOnUnhandledRejection && (originalOnUnhandledRejection.call(_window, error) as any);
                 if (handled !== true) { // handled could be typeof function
                     instance._onerror({
