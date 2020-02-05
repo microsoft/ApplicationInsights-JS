@@ -4,6 +4,7 @@
 
 ### Changelog
 
+- #1182 Fix error TS2430: Interface 'Window' incorrectly extends interface 'WindowEventHandlers'
 - #1185 Rollback namespace overwrite change
 
 ## 2.4.3
