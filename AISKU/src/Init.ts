@@ -48,12 +48,13 @@ try {
     // Hack: If legacy SDK exists, skip this step (Microsoft.ApplicationInsights exists).
     // else write what was there for v2 SDK prior to rollup bundle output name change.
     // e.g Microsoft.ApplicationInsights.ApplicationInsights, Microsoft.ApplicationInsights.Telemetry
-    if (typeof window !== Undefined && window && ((window as any).Microsoft && !(window as any).Microsoft.ApplicationInsights)) {
-        (window as any).Microsoft = (window as any).Microsoft || {};
-        (window as any).Microsoft.ApplicationInsights = {
-            ApplicationInsights, Telemetry
-        };
-    }
+    // @todo uncomment once integration tests for this can be added
+    // if (typeof window !== Undefined && window && ((window as any).Microsoft && !(window as any).Microsoft.ApplicationInsights)) {
+    //     (window as any).Microsoft = (window as any).Microsoft || {};
+    //     (window as any).Microsoft.ApplicationInsights = {
+    //         ApplicationInsights, Telemetry
+    //     };
+    // }
 } catch (e) {
     _logWarn(aiName, e.message);
 }
