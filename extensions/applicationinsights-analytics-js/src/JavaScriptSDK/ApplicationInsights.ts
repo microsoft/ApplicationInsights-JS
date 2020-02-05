@@ -36,7 +36,7 @@ function _dispatchEvent(target:EventTarget, evnt: Event) {
 }
 
 export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
-    public static Version = "2.4.3"; // Not currently used anywhere
+    public static Version = "2.4.4"; // Not currently used anywhere
 
     public static getDefaultConfig(config?: IConfig): IConfig {
         if (!config) {
@@ -50,7 +50,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
         config.autoTrackPageVisitTime = Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
         config.overridePageViewDuration = Util.stringToBoolOrDefault(config.overridePageViewDuration);
         config.enableUnhandledPromiseRejectionTracking = Util.stringToBoolOrDefault(config.enableUnhandledPromiseRejectionTracking);
-        
+
         if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
             config.samplingPercentage = 100;
         }
@@ -643,7 +643,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                 _window.addEventListener(_self.config.namePrefix + "popstate",()=>{
                     _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "locationchange"));
                 });
-    
+
                 _window.addEventListener(_self.config.namePrefix + "locationchange", () => {
                     if (_self._properties && _self._properties.context && _self._properties.context.telemetryTrace) {
                         _self._properties.context.telemetryTrace.traceID = Util.generateW3CId();
