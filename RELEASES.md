@@ -1,5 +1,12 @@
 # Releases
 
+## 2.4.4
+
+### Changelog
+
+- #1182 Fix error TS2430: Interface 'Window' incorrectly extends interface 'WindowEventHandlers'
+- #1185 Rollback namespace overwrite change
+
 ## 2.4.3
 
 ## Changelog
@@ -102,7 +109,7 @@ To assist with creating plugins we have also introduced a base class that you ca
 Patch release containing fixes to automatic Single Page Application route change tracking via `enableAutoRouteTracking`
 
 ### Changelog
-#970 - Fixes #967 #969 
+#970 - Fixes #967 #969
 
 ## v 2.1.0
 ### Highlights
@@ -141,13 +148,13 @@ appInsights.trackException({ error: new Error() });
 appInsights.trackException({ exception: new Error() });
 ```
 
-### Correlation Header Domain Whitelisting #869 
+### Correlation Header Domain Whitelisting #869
 
 Second, the ability to only send correlation headers to specific, whitelisted domains is now available as a configuration option , `correlationHeaderDomains`. It accepts an `array` of domain `strings`. Wildcards ("*") are okay. By populating this array, all other domains which your application makes requests to will **not** have correlation headers included. This setting makes it easy to avoid OPTIONS requests to services outside of your control.
 
 You can use the inclusion list and the exclusion list in conjunction with each other to add correlation headers to a particular domain, `example.com`, and at the same time exclude headers from a prefixed version of it, `no-headers.example.com`.
 
-###  Tag Override Change #903 
+###  Tag Override Change #903
 
 Performing custom tag overrides is now more consistent with all of the other Application Insights SDKs, in that it is modified via a simple key-value dictionary. There are no breaking changes with this update, and if you are setting any tags via the old way, they will still work as they do now. You are encouraged to update them since the old way will be deprecated in a future major version release.
 
