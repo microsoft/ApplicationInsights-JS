@@ -564,10 +564,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             if (_self._config.enableAjaxErrorStatusText && xhr.status >= 400) {
                 dependency.properties = dependency.properties || {};
                 const responseType = xhr.responseType;
-                if (responseType === '' || responseType === 'text') {
+                if (responseType === "" || responseType === "text") {
                     dependency.properties.responseText = xhr.responseText ? xhr.statusText + " - " + xhr.responseText : xhr.statusText;
                 }
-                if (responseType === 'json') {
+                if (responseType === "json") {
                     dependency.properties.responseText = xhr.response ? xhr.statusText + " - " + JSON.stringify(xhr.response) : xhr.statusText;
                 }
             }
