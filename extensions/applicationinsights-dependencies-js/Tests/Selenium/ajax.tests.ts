@@ -138,9 +138,25 @@ export class AjaxTests extends TestClass {
                 Assert.ok(trackStub.calledOnce, "trackDependencyDataInternal is called");
                 Assert.equal("Ajax", trackStub.args[0][0].type, "request is Ajax type");
                 Assert.notEqual(undefined, trackStub.args[0][0].properties.responseText, "xhr request's reponse error is stored in part C");
+                Assert.strictEqual("Forbidden - error data with status code 403", trackStub.args[0][0].properties.responseText, "xhr responseType is \"\"");
+
+                // act
+                var xhr2 = new XMLHttpRequest();
+                xhr2.open("GET", "http://microsoft.com");
+                xhr2.responseType = "json";
+                xhr2.send();
+
+                // Emulate response
+                let responseJSON = '{ "error":"error data with status code 403" }';
+                (<any>xhr2).respond(403, {}, responseJSON);
+
+                // assert
+                Assert.ok(trackStub.calledTwice, "trackDependencyDataInternal is called");
+                Assert.equal("Ajax", trackStub.args[1][0].type, "request is Ajax type");
+                Assert.notEqual(undefined, trackStub.args[1][0].properties.responseText, "xhr request's reponse error is stored in part C");
+                Assert.strictEqual("Forbidden - {\"error\":\"error data with status code 403\"}", trackStub.args[1][0].properties.responseText, "xhr responseType is JSON, response got parsed");
             }
         });
-
 
         this.testCase({
             name: "Fetch: fetch with disabled flag isn't tracked",
