@@ -196,7 +196,7 @@ export class Initialization implements IApplicationInsights {
     /**
      * Set the authenticated user id and the account id. Used for identifying a specific signed-in user. Parameters must not contain whitespace or ,;=|
      *
-     * The method will only set the `authenicatedUserId` and `accountId` in the curent page view. To set them for the whole sesion, you should set `storeInCookie = true`
+     * The method will only set the `authenticatedUserId` and `accountId` in the current page view. To set them for the whole session, you should set `storeInCookie = true`
      * @param {string} authenticatedUserId
      * @param {string} [accountId]
      * @param {boolean} [storeInCookie=false]
