@@ -557,7 +557,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                 measurements
             };
 
-            this.sendPageViewInternal(pageViewItem);
+            this.sendPageViewInternal(pageViewItem, properties);
         }
 
         let _window = getWindow();
