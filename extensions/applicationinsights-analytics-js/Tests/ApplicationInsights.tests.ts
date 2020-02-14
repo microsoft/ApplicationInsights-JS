@@ -531,7 +531,8 @@ export class ApplicationInsightsTests extends TestClass {
             duration: 200,
             properties: {
                 "property1": "5",
-                "property2": "10"
+                "property2": "10",
+                "refUri": "test.com"
             },
             measurements: {
                 "measurement": 300
@@ -556,7 +557,7 @@ export class ApplicationInsightsTests extends TestClass {
                 // act
                 appInsights.startTrackPage(testValues.name);
                 this.clock.tick(testValues.duration);
-                appInsights.stopTrackPage(testValues.name, testValues.url, testValues.properties);
+                appInsights.stopTrackPage(testValues.name, testValues.url, testValues.properties, testValues.measurements);
 
                 // verify
                 Assert.ok(spy.calledOnce, "stop track page view sent data");
@@ -565,9 +566,12 @@ export class ApplicationInsightsTests extends TestClass {
                 Assert.equal(testValues.url, actual.uri);
 
                 const actualProperties = actual.properties;
+                const actualMeasurements = actual.measurements;
                 Assert.equal(testValues.duration, actualProperties.duration, "duration is calculated and sent correctly");
                 Assert.equal(testValues.properties.property1, actualProperties.property1);
                 Assert.equal(testValues.properties.property2, actualProperties.property2);
+                Assert.equal(testValues.properties.refUri, actualProperties.refUri);
+                Assert.equal(testValues.measurements.measurement, actualMeasurements.measurement);
             }
         });
         this.testCase({
