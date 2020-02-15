@@ -29,6 +29,7 @@
         "rollup-plugin-uglify": "^6.0.0",
         "rollup": "^0.66.0",
         "react-native-device-info": "^5.2.1",
+        "react-native-exception-handler": "^2.10.8",
         "react-native": "0.59.8",
         "react": "16.8.3",
         "tslint": "^5.19.0",
