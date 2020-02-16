@@ -68,12 +68,7 @@ export class ReactNativePlugin implements ITelemetryPlugin {
             }
 
             if (!this._config.disableExceptionCollection) {
-                setJSExceptionHandler((error, isFatal) => {
-                    this._trackException({exception: error});
-                }, true);
-                setNativeExceptionHandler(exceptionString => {
-                    this._trackException({exception: new Error(exceptionString)});
-                }, true);
+                this._setExceptionHandlers();
             }
         }
         
@@ -144,6 +139,18 @@ export class ReactNativePlugin implements ITelemetryPlugin {
                 item.ext.device.deviceClass = this._device.deviceClass;
             }
         }
+    }
+
+    /**
+     * Automatically collects unhandled JS exceptions and native exceptions
+     */
+    private _setExceptionHandlers() {
+        setJSExceptionHandler((error, isFatal) => {
+            this._trackException({exception: error});
+        }, true);
+        setNativeExceptionHandler(exceptionString => {
+            this._trackException({exception: new Error(exceptionString)});
+        }, true);
     }
 
     private _getDefaultConfig(): IReactNativePluginConfig {

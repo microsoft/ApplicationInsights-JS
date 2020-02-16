@@ -37,13 +37,14 @@
         "qunit": "^2.9.3"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "^2.3.0",
-        "@microsoft/applicationinsights-common": "^2.3.0",
+        "@microsoft/applicationinsights-core-js": "^2.4.4",
+        "@microsoft/applicationinsights-common": "^2.4.4",
         "tslib": "^1.9.3"
     },
     "peerDependencies": {
         "react-native": "*",
-        "react-native-device-info": "^5.2.1"
+        "react-native-device-info": "^5.2.1",
+        "react-native-exception-handler": "^2.10.8"
     },
     "license": "MIT"
 }
