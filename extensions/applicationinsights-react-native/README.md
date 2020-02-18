@@ -41,7 +41,6 @@ By default, this plugin automatically collects
  - **Stack trace**
  - **Exception details and message accompanying the error**
  - **Line & column number of error**
- - **URL where error was raised**
 
 ## Contributing
 
