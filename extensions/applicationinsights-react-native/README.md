@@ -36,6 +36,13 @@ By default, this plugin automatically collects
  - **Device Model Name** (iPhone XS, etc.)
  - **Device Type** (Handset, Tablet, etc.)
 
+ ## Uncaught Exceptions Collected
+ By default, this plugin automatically collects
+ - **Stack trace**
+ - **Exception details and message accompanying the error**
+ - **Line & column number of error**
+ - **URL where error was raised**
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
