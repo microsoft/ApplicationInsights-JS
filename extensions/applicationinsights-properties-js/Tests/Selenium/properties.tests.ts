@@ -38,6 +38,16 @@ export class PropertiesTests extends TestClass {
                 Assert.ok(operation.name);
             }
         });
+
+        this.testCase({
+            name: 'Trace: operation.name is truncated to max size 1024 if too long',
+            test: () => {
+                const name = new Array(1234).join("a"); // exceeds max of 1024
+                const operation = new TelemetryTrace(undefined, undefined, name, this.core.logger);
+                Assert.ok(operation.name);
+                Assert.equal(operation.name.length, 1024);
+            }
+        });
     }
 
     private addConfigTests() {
