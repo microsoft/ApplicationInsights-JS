@@ -7,16 +7,10 @@ import {
     ITelemetryPlugin,
     ITelemetryItem,
     IPlugin,
-    IAppInsightsCore, 
-    CoreUtils,
-    IDiagnosticLogger,
-    DiagnosticLogger,
-    LoggingSeverity,
-    _InternalMessageId
+    IAppInsightsCore
 } from '@microsoft/applicationinsights-core-js';
-import { ConfigurationManager, IDevice, IAppInsights, IExceptionTelemetry } from '@microsoft/applicationinsights-common';
+import { ConfigurationManager, IDevice } from '@microsoft/applicationinsights-common';
 import DeviceInfo from 'react-native-device-info';
-import * as ExceptionHandler from 'react-native-exception-handler';
 import { INativeDevice, IReactNativePluginConfig } from './Interfaces';
 
 export class ReactNativePlugin implements ITelemetryPlugin {
@@ -27,15 +21,10 @@ export class ReactNativePlugin implements ITelemetryPlugin {
     private _initialized: boolean = false;
     private _device: INativeDevice;
     private _config: IReactNativePluginConfig;
-    private _analyticsPlugin: IAppInsights;
-    private _logger: IDiagnosticLogger;
-    private _setJSExceptionHandler: (handler: ExceptionHandler.JSExceptionHandler, allowInDevMode?: boolean) => void;
-    private _setNativeExceptionHandler: (handler: ExceptionHandler.NativeExceptionHandler, allowInDevMode?: boolean) => void;
 
     constructor(config?: IReactNativePluginConfig) {
         this._config = config || this._getDefaultConfig();
         this._device = {};
-        this._logger = new DiagnosticLogger();
 
     }
 
@@ -57,26 +46,6 @@ export class ReactNativePlugin implements ITelemetryPlugin {
             }
             if (!this._config.disableDeviceCollection) {
                 this._collectDeviceInfo();
-            }
-            
-            if (extensions) {
-                CoreUtils.arrForEach(extensions, ext => {
-                    const identifier = (ext as ITelemetryPlugin).identifier;
-                    if (identifier === 'ApplicationInsightsAnalytics') {
-                        this._analyticsPlugin = (ext as any) as IAppInsights;
-                    }
-                });
-            }
-
-            try{
-                import ('react-native-exception-handler').then((exceptionHandler) => {
-                    this._setJSExceptionHandler = exceptionHandler.setJSExceptionHandler;
-                    this._setNativeExceptionHandler = exceptionHandler.setNativeExceptionHandler;
-                    if (!this._config.disableExceptionCollection) {
-                        this._setExceptionHandlers();
-                    }
-                });
-            } catch(e) {
             }
         }
         
@@ -106,15 +75,6 @@ export class ReactNativePlugin implements ITelemetryPlugin {
         this._device.deviceClass = newType;
     }
 
-    private _trackException(exception: IExceptionTelemetry) {
-        if (this._analyticsPlugin) {
-            this._analyticsPlugin.trackException(exception);
-        } else {
-            this._logger.throwInternal(
-                LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, ReactNative plugin telemetry will not be sent: ");
-        }
-    }
-
     /**
      * Automatically collects native device info for this device
      */
@@ -140,23 +100,10 @@ export class ReactNativePlugin implements ITelemetryPlugin {
         }
     }
 
-    /**
-     * Automatically collects unhandled JS exceptions and native exceptions
-     */
-    private _setExceptionHandlers() {
-        this._setJSExceptionHandler((error) => {
-            this._trackException({ exception: error });
-        }, true);
-        this._setNativeExceptionHandler(exceptionString => {
-            this._trackException({ exception: new Error(exceptionString) });
-        }, true);
-    }
-
     private _getDefaultConfig(): IReactNativePluginConfig {
         return {
             // enable autocollection by default
-            disableDeviceCollection: false,
-            disableExceptionCollection: false
+            disableDeviceCollection: false
         };
     }
 }

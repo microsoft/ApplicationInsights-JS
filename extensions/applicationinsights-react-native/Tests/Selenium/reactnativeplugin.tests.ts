@@ -1,10 +1,11 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 
 import { AppInsightsCore, DiagnosticLogger, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
-import { ReactNativePlugin, INativeDevice, IReactNativePluginConfig } from '../../src';
+import { ReactNativePlugin, ReactNativeExceptionPlugin, INativeDevice, IReactNativePluginConfig } from '../../src';
 
 export class ReactNativePluginTests extends TestClass {
     private plugin: ReactNativePlugin;
+    private exceptionPlugin: ReactNativeExceptionPlugin;
     private core: AppInsightsCore;
     private config: IReactNativePluginConfig;
     private item: ITelemetryItem;
@@ -13,12 +14,14 @@ export class ReactNativePluginTests extends TestClass {
         this.core = new AppInsightsCore();
         this.core.logger = new DiagnosticLogger();
         this.plugin = new ReactNativePlugin();
+        this.exceptionPlugin = new ReactNativeExceptionPlugin();
         this.config = {};
     }
 
     public testCleanup() {
         this.core = null;
         this.plugin = null;
+        this.exceptionPlugin = null;
         this.config = null;
     }
 
@@ -92,15 +95,23 @@ export class ReactNativePluginTests extends TestClass {
 
     private addConfigTests() {
         this.testCase({
-            name: 'Autocollection is enabled by default',
+            name: 'Device Info Autocollection is enabled by default',
             test: () => {
                 const autoCollectStub = this.sandbox.stub(this.plugin, '_collectDeviceInfo');
-                const autuCollectExceptionStub = this.sandbox.stub(this.plugin, '_setExceptionHandlers');
 
                 this.plugin.initialize(this.config, this.core, []);
                 Assert.equal(false, this.plugin['_config'].disableDeviceCollection, 'disableDeviceCollection is false');
-                Assert.equal(false, this.plugin['_config'].disableExceptionCollection, 'disableExceptionCollection is false');
                 Assert.ok(autoCollectStub.calledOnce);
+            }
+        });
+
+        this.testCase({
+            name: 'Exception Autocollection is enabled by default',
+            test: () => {
+                const autuCollectExceptionStub = this.sandbox.stub(this.exceptionPlugin, '_setExceptionHandlers');
+
+                this.exceptionPlugin.initialize(this.config, this.core, []);
+                Assert.equal(false, this.exceptionPlugin['_config'].disableExceptionCollection, 'disableExceptionCollection is false');
                 Assert.ok(autuCollectExceptionStub.calledOnce);
             }
         });
@@ -109,14 +120,15 @@ export class ReactNativePluginTests extends TestClass {
             name: 'Autocollection does not run when disabled from root config',
             test: () => {
                 const autoCollectStub = this.sandbox.stub(this.plugin, '_collectDeviceInfo');
-                const autuCollectExceptionStub = this.sandbox.stub(this.plugin, '_setExceptionHandlers');
+                const autuCollectExceptionStub = this.sandbox.stub(this.exceptionPlugin, '_setExceptionHandlers');
 
                 this.config['disableDeviceCollection'] = true;
                 this.config['disableExceptionCollection'] = true;
                 this.plugin.initialize(this.config, this.core, []);
+                this.exceptionPlugin.initialize(this.config, this.core, []);
 
                 Assert.equal(true, this.plugin['_config'].disableDeviceCollection, 'disableDeviceCollection is true');
-                Assert.equal(true, this.plugin['_config'].disableExceptionCollection, 'disableExceptionCollection is true');
+                Assert.equal(true, this.exceptionPlugin['_config'].disableExceptionCollection, 'disableExceptionCollection is true');
                 Assert.ok(autoCollectStub.notCalled);
                 Assert.ok(autuCollectExceptionStub.notCalled);
             }
@@ -125,13 +137,15 @@ export class ReactNativePluginTests extends TestClass {
         this.testCase({
             name: 'Autocollection does not run when disabled from constructor config',
             test: () => {
-                this.plugin = new ReactNativePlugin({disableDeviceCollection: true, disableExceptionCollection: true});
+                this.plugin = new ReactNativePlugin({disableDeviceCollection: true});
+                this.exceptionPlugin = new ReactNativeExceptionPlugin({disableExceptionCollection: true});
                 const autoCollectStub = this.sandbox.stub(this.plugin, '_collectDeviceInfo');
-                const autuCollectExceptionStub = this.sandbox.stub(this.plugin, '_setExceptionHandlers');
+                const autuCollectExceptionStub = this.sandbox.stub(this.exceptionPlugin, '_setExceptionHandlers');
                 this.plugin.initialize(this.config, this.core, []);
-
+                this.exceptionPlugin.initialize(this.config, this.core, []);
+                
                 Assert.equal(true, this.plugin['_config'].disableDeviceCollection, 'disableDeviceCollection is true');
-                Assert.equal(true, this.plugin['_config'].disableExceptionCollection, 'disableExceptionCollection is true');
+                Assert.equal(true, this.exceptionPlugin['_config'].disableExceptionCollection, 'disableExceptionCollection is true');
                 Assert.ok(autoCollectStub.notCalled);
                 Assert.ok(autuCollectExceptionStub.notCalled);
             }
@@ -141,12 +155,14 @@ export class ReactNativePluginTests extends TestClass {
             name: 'Autocollection runs when empty config is passed',
             test: () => {
                 this.plugin = new ReactNativePlugin({} as any);
+                this.exceptionPlugin = new ReactNativeExceptionPlugin({} as any);
                 const autoCollectStub = this.sandbox.stub(this.plugin, '_collectDeviceInfo');
-                const autuCollectExceptionStub = this.sandbox.stub(this.plugin, '_setExceptionHandlers');
+                const autuCollectExceptionStub = this.sandbox.stub(this.exceptionPlugin, '_setExceptionHandlers');
                 this.plugin.initialize(this.config, this.core, []);
+                this.exceptionPlugin.initialize(this.config, this.core, []);
 
                 Assert.equal(false, this.plugin['_config'].disableDeviceCollection, 'disableDeviceCollection is false');
-                Assert.equal(false, this.plugin['_config'].disableExceptionCollection, 'disableExceptionCollection is false');
+                Assert.equal(false, this.exceptionPlugin['_config'].disableExceptionCollection, 'disableExceptionCollection is false');
                 Assert.ok(autoCollectStub.calledOnce);
                 Assert.ok(autuCollectExceptionStub.calledOnce);
             }
@@ -156,12 +172,14 @@ export class ReactNativePluginTests extends TestClass {
             name: 'Autocollection runs when random config is passed',
             test: () => {
                 this.plugin = new ReactNativePlugin({foo: 'bar'} as any);
+                this.exceptionPlugin = new ReactNativeExceptionPlugin({foo: 'bar'} as any);
                 const autoCollectStub = this.sandbox.stub(this.plugin, '_collectDeviceInfo');
-                const autuCollectExceptionStub = this.sandbox.stub(this.plugin, '_setExceptionHandlers');
+                const autuCollectExceptionStub = this.sandbox.stub(this.exceptionPlugin, '_setExceptionHandlers');
                 this.plugin.initialize(this.config, this.core, []);
+                this.exceptionPlugin.initialize(this.config, this.core, []);
 
                 Assert.deepEqual(false, this.plugin['_config'].disableDeviceCollection, 'disableDeviceCollection is false');
-                Assert.deepEqual(false, this.plugin['_config'].disableExceptionCollection, 'disableExceptionCollection is false');
+                Assert.deepEqual(false, this.exceptionPlugin['_config'].disableExceptionCollection, 'disableExceptionCollection is false');
                 Assert.ok(autoCollectStub.calledOnce);
                 Assert.ok(autuCollectExceptionStub.calledOnce);
             }
