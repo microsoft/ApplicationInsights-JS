@@ -98,15 +98,6 @@ export class ReactNativePlugin implements ITelemetryPlugin {
         this._device.deviceClass = newType;
     }
 
-    trackMetric(metric: IMetricTelemetry, customProperties: ICustomProperties) {
-        if (this._analyticsPlugin) {
-            this._analyticsPlugin.trackMetric(metric, customProperties);
-        } else {
-            this._logger.throwInternal(
-                LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, ReactNative plugin telemetry will not be sent: ");
-        }
-    }
-
     private _trackException(exception: IExceptionTelemetry) {
         if (this._analyticsPlugin) {
             this._analyticsPlugin.trackException(exception);
@@ -145,11 +136,11 @@ export class ReactNativePlugin implements ITelemetryPlugin {
      * Automatically collects unhandled JS exceptions and native exceptions
      */
     private _setExceptionHandlers() {
-        setJSExceptionHandler((error, isFatal) => {
-            this._trackException({exception: error});
+        setJSExceptionHandler((error) => {
+            this._trackException({ exception: error });
         }, true);
         setNativeExceptionHandler(exceptionString => {
-            this._trackException({exception: new Error(exceptionString)});
+            this._trackException({ exception: new Error(exceptionString) });
         }, true);
     }
 
