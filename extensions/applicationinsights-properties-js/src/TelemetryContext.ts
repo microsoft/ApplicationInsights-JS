@@ -36,7 +36,7 @@ export class TelemetryContext implements ITelemetryContext {
             this.internal = new Internal(defaultConfig);
             this.location = new Location();
             this.user = new User(defaultConfig, logger);
-            this.telemetryTrace = new TelemetryTrace();
+            this.telemetryTrace = new TelemetryTrace(undefined, undefined, undefined, logger);
             this.session = new Session();
         }
         this.appId = () => null;
