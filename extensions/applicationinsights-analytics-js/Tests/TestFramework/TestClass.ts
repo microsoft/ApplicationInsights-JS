@@ -1,5 +1,5 @@
-/// <reference path="../External/sinon.d.ts" />
-/// <reference path="../External/qunit.d.ts" />
+/// <reference path="../../../../common/Tests/External/sinon.d.ts" />
+/// <reference path="../../../../common/Tests/External/qunit.d.ts" />
 /// <reference path="Assert.ts" />
 /// <reference path="./TestCase.ts"/>
 
@@ -209,7 +209,11 @@ class TestClass {
 
         config.injectInto = config.injectIntoThis && this || config.injectInto;
         this.sandbox = sinon.sandbox.create(config);
-        this.server = this.sandbox.server;
+        if (config.useFakeServer) {
+            this.server = this.sandbox.server;
+        } else {
+            this.server = null;
+        }
 
         // Allow the derived class to perform test initialization.
         this.testInitialize();
@@ -217,6 +221,8 @@ class TestClass {
 
     /** Called when the test is completed. */
     private _testCompleted(failed?: boolean) {
+        this._cleanupAllHooks();
+
         if (failed) {
             // Just cleanup the sandbox since the test has already failed.
             this.sandbox.restore();
@@ -230,6 +236,31 @@ class TestClass {
 
         // Clear the instance of the currently running suite.
         TestClass.currentTestClass = null;
+    }
+
+    private _removeFuncHooks(fn:any) {
+        if (typeof fn === "function") {
+            let aiHook:any = fn["_aiHooks"];
+
+            if (aiHook && aiHook.h) {
+                aiHook.h = [];
+            }
+        }
+    }
+
+    private _removeHooks(target:any) {
+        Object.keys(target).forEach(name => {
+            try {
+                this._removeFuncHooks(target[name]);
+            } catch (e) {
+            }
+        });
+    }
+
+    private _cleanupAllHooks() {
+        this._removeHooks(XMLHttpRequest.prototype);
+        this._removeHooks(XMLHttpRequest);
+        this._removeFuncHooks(window.fetch);
     }
 }
 

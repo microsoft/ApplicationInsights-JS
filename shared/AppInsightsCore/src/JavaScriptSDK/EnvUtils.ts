@@ -11,6 +11,8 @@
 
 export const strUndefined = "undefined";
 export const strObject = "object";
+export const strPrototype = "prototype";
+export const strFunction = "function";
 
 const strWindow = "window";
 const strDocument = "document";

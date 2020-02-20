@@ -18,5 +18,16 @@ interface TestCaseAsync {
     stepDelay: number;
 
     /** async steps */
-    steps: Array<() => void>;
+    steps: Array<(done?:VoidFunction) => void>;
+
+    /**
+     * Terminate and fail the test if it runs longer than this
+     */
+    timeOut?: number
+
+    /** 
+     * Flag which specifies that once all of the steps are completed the test case is completed.
+     * True by default
+     */
+    autoComplete?: boolean;
 }

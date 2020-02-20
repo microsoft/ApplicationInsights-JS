@@ -1,4 +1,4 @@
-/// <reference path="../External/qunit.d.ts" />
+/// <reference path="../../../common/Tests/External/qunit.d.ts" />
 /// <reference path="TestClass.ts" />
 
 class PollingAssert {
