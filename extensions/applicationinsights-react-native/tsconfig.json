@@ -3,7 +3,7 @@
     "sourceMap": true,
     "inlineSources": true,
     "noImplicitAny": false,
-    "module": "es6",
+    "module": "esnext",
     "moduleResolution": "Node",
     "target": "es3",
     "alwaysStrict": true,
