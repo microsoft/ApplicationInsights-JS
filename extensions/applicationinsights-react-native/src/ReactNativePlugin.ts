@@ -7,13 +7,17 @@ import {
     ITelemetryPlugin,
     ITelemetryItem,
     IPlugin,
-    IConfiguration,
-    IAppInsightsCore
+    IAppInsightsCore, 
+    CoreUtils,
+    IDiagnosticLogger,
+    LoggingSeverity,
+    _InternalMessageId
 } from '@microsoft/applicationinsights-core-js';
-import { ConfigurationManager, IDevice } from '@microsoft/applicationinsights-common';
+import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights  } from '@microsoft/applicationinsights-common';
 import DeviceInfo from 'react-native-device-info';
 
 import { INativeDevice, IReactNativePluginConfig } from './Interfaces';
+import ErrorUtils from 'react-native/Libraries/vendor/core/ErrorUtils';
 
 export class ReactNativePlugin implements ITelemetryPlugin {
 
@@ -23,6 +27,8 @@ export class ReactNativePlugin implements ITelemetryPlugin {
     private _initialized: boolean = false;
     private _device: INativeDevice;
     private _config: IReactNativePluginConfig;
+    private _analyticsPlugin: IAppInsights;
+    private _logger: IDiagnosticLogger;
 
     constructor(config?: IReactNativePluginConfig) {
         this._config = config || this._getDefaultConfig();
@@ -45,8 +51,22 @@ export class ReactNativePlugin implements ITelemetryPlugin {
                     this._config[option]
                 );
             }
+
             if (!this._config.disableDeviceCollection) {
                 this._collectDeviceInfo();
+            }
+
+            if (extensions) {
+                CoreUtils.arrForEach(extensions, ext => {
+                    const identifier = (ext as ITelemetryPlugin).identifier;
+                    if (identifier === 'ApplicationInsightsAnalytics') {
+                        this._analyticsPlugin = (ext as any) as IAppInsights;
+                    }
+                });
+            }
+
+            if (!this._config.disableExceptionCollection) {
+                this._setExceptionHandler();
             }
         }
         this._initialized = true;
@@ -100,10 +120,26 @@ export class ReactNativePlugin implements ITelemetryPlugin {
         }
     }
 
+    private _setExceptionHandler() {
+        if (ErrorUtils) {
+            ErrorUtils.setGlobalHandler(this._trackException);
+        }
+    }
+
+    private _trackException(exception: IExceptionTelemetry) {
+        if (this._analyticsPlugin) {
+            this._analyticsPlugin.trackException(exception);
+        } else {
+            this._logger.throwInternal(
+                LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, ReactNative plugin telemetry will not be sent: ");
+        }
+    }
+
     private _getDefaultConfig(): IReactNativePluginConfig {
         return {
             // enable autocollection by default
-            disableDeviceCollection: false
+            disableDeviceCollection: false,
+            disableExceptionCollection: false
         };
     }
 }
