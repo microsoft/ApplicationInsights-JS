@@ -18,12 +18,15 @@ To use this plugin, you only need to construct the plugin and add it as an `exte
 ```ts
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import { ReactNativePlugin } from '@microsoft/applicationinsights-react-native';
+import { ReactNativeExceptionPlugin } from '@microsoft/applicationinsights-react-native/dist-esm/Exceptions/ReactNativeExceptionPlugin';
 
 var RNPlugin = new ReactNativePlugin();
+var RNEPlugin = new ReactNativeExceptionPlugin(); 
+
 var appInsights = new ApplicationInsights({
     config: {
         instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
-        extensions: [RNPlugin]
+        extensions: [RNPlugin, RNEPlugin]
     }
 });
 appInsights.loadAppInsights();
