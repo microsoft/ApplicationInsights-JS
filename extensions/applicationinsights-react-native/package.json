@@ -38,8 +38,7 @@
     "dependencies": {
         "@microsoft/applicationinsights-common": "^2.4.4",
         "@microsoft/applicationinsights-core-js": "^2.4.4",
-        "react-native-exception-handler": "^2.10.8",
-        "tslib": "^1.9.3"
+        "tslib": "1.10.0"
     },
     "peerDependencies": {
         "react-native": "*",
