@@ -29,6 +29,7 @@ export class ReactNativePlugin implements ITelemetryPlugin {
     private _config: IReactNativePluginConfig;
     private _analyticsPlugin: IAppInsights;
     private _logger: IDiagnosticLogger;
+    private _defaultHandler;
 
     constructor(config?: IReactNativePluginConfig) {
         this._config = config || this._getDefaultConfig();
@@ -124,18 +125,22 @@ export class ReactNativePlugin implements ITelemetryPlugin {
     private _setExceptionHandler() {
         const _global = global as any;
         if (_global && _global.ErrorUtils) {
-            var originalGlobalHandler = _global.ErrorUtils.getGlobalHandler();
-            // default global error handler syntax: handleError(e, isFatal)
-            _global.ErrorUtils.setGlobalHandler = function(e, isFatal) {
-                if (this._analyticsPlugin) {
-                    this._analyticsPlugin.trackException(e as IExceptionTelemetry);
-                } else {
-                    this._logger.throwInternal(
-                        LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, ReactNative plugin telemetry will not be sent: ");
-                }
-                originalGlobalHandler();
-            }
+            // intercept react-native error handling
+            this._defaultHandler = (_global.ErrorUtils.getGlobalHandler && _global.ErrorUtils.getGlobalHandler()) || _global.ErrorUtils._globalHandler;
+            _global.ErrorUtils.setGlobalHandler(this._trackException.bind(this));
         }
+    }
+
+    // default global error handler syntax: handleError(e, isFatal)
+    private _trackException(e, isFatal) {
+        if (this._analyticsPlugin) {
+            this._analyticsPlugin.trackException(e as IExceptionTelemetry);
+        } else {
+            this._logger.throwInternal(
+                LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, ReactNative plugin telemetry will not be sent: ");
+        }
+        // call the _defaultHandler - react native also gets the error
+        this._defaultHandler(e, isFatal);
     }
 
     private _getDefaultConfig(): IReactNativePluginConfig {
