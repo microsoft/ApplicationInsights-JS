@@ -44,7 +44,7 @@
     "dependencies": {
         "@microsoft/applicationinsights-core-js": "2.4.4",
         "@microsoft/applicationinsights-common": "2.4.4",
-        "tslib": "^1.9.3",
+        "tslib": "1.10.0",
         "react": "^16.8.6",
         "history": "^4.9.0"
     },
