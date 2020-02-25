@@ -11,13 +11,13 @@ import {
     CoreUtils,
     IDiagnosticLogger,
     LoggingSeverity,
-    _InternalMessageId
+    _InternalMessageId,
+    DiagnosticLogger
 } from '@microsoft/applicationinsights-core-js';
 import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights  } from '@microsoft/applicationinsights-common';
 import DeviceInfo from 'react-native-device-info';
 
 import { INativeDevice, IReactNativePluginConfig } from './Interfaces';
-import ErrorUtils from 'react-native/Libraries/vendor/core/ErrorUtils';
 
 export class ReactNativePlugin implements ITelemetryPlugin {
 
@@ -33,6 +33,7 @@ export class ReactNativePlugin implements ITelemetryPlugin {
     constructor(config?: IReactNativePluginConfig) {
         this._config = config || this._getDefaultConfig();
         this._device = {};
+        this._logger = new DiagnosticLogger();
     }
 
     public initialize(
@@ -121,17 +122,19 @@ export class ReactNativePlugin implements ITelemetryPlugin {
     }
 
     private _setExceptionHandler() {
-        if (ErrorUtils) {
-            ErrorUtils.setGlobalHandler(this._trackException);
-        }
-    }
-
-    private _trackException(exception: IExceptionTelemetry) {
-        if (this._analyticsPlugin) {
-            this._analyticsPlugin.trackException(exception);
-        } else {
-            this._logger.throwInternal(
-                LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, ReactNative plugin telemetry will not be sent: ");
+        const _global = global as any;
+        if (_global && _global.ErrorUtils) {
+            var originalGlobalHandler = _global.ErrorUtils.getGlobalHandler();
+            // default global error handler syntax: handleError(e, isFatal)
+            _global.ErrorUtils.setGlobalHandler = function(e, isFatal) {
+                if (this._analyticsPlugin) {
+                    this._analyticsPlugin.trackException(e as IExceptionTelemetry);
+                } else {
+                    this._logger.throwInternal(
+                        LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, ReactNative plugin telemetry will not be sent: ");
+                }
+                originalGlobalHandler();
+            }
         }
     }
 
