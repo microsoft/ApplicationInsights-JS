@@ -46,6 +46,6 @@
         "rollup": "^0.66.0"
     },
     "dependencies": {
-        "tslib": "^1.9.3"
+        "tslib": "1.10.0"
     }
 }
