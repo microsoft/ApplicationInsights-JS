@@ -14,7 +14,7 @@ import {
     _InternalMessageId,
     DiagnosticLogger
 } from '@microsoft/applicationinsights-core-js';
-import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights  } from '@microsoft/applicationinsights-common';
+import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, SeverityLevel  } from '@microsoft/applicationinsights-common';
 import DeviceInfo from 'react-native-device-info';
 
 import { INativeDevice, IReactNativePluginConfig } from './Interfaces';
@@ -133,8 +133,10 @@ export class ReactNativePlugin implements ITelemetryPlugin {
 
     // default global error handler syntax: handleError(e, isFatal)
     private _trackException(e, isFatal) {
+        const exception: IExceptionTelemetry = { exception: e, severityLevel: SeverityLevel.Error };
+
         if (this._analyticsPlugin) {
-            this._analyticsPlugin.trackException(e as IExceptionTelemetry);
+            this._analyticsPlugin.trackException(exception);
         } else {
             this._logger.throwInternal(
                 LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, ReactNative plugin telemetry will not be sent: ");
