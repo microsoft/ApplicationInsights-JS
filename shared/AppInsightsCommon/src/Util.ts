@@ -339,7 +339,7 @@ export class Util {
             };
         }
 
-        return CoreUtils._canUseCookies && Util.document && Util.document.cookie;
+        return CoreUtils._canUseCookies;
     }
 
     public static disallowsSameSiteNone(userAgent:string) {
