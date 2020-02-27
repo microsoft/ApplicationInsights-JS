@@ -14,7 +14,7 @@ import {
     _InternalMessageId,
     DiagnosticLogger
 } from '@microsoft/applicationinsights-core-js';
-import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, SeverityLevel  } from '@microsoft/applicationinsights-common';
+import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, SeverityLevel, AnalyticsPluginIdentifier  } from '@microsoft/applicationinsights-common';
 import DeviceInfo from 'react-native-device-info';
 
 import { INativeDevice, IReactNativePluginConfig } from './Interfaces';
@@ -61,7 +61,7 @@ export class ReactNativePlugin implements ITelemetryPlugin {
             if (extensions) {
                 CoreUtils.arrForEach(extensions, ext => {
                     const identifier = (ext as ITelemetryPlugin).identifier;
-                    if (identifier === 'ApplicationInsightsAnalytics') {
+                    if (identifier === AnalyticsPluginIdentifier) {
                         this._analyticsPlugin = (ext as any) as IAppInsights;
                     }
                 });

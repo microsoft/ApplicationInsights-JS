@@ -51,3 +51,4 @@ export { ITelemetryTrace, ITraceState } from './Interfaces/Context/ITelemetryTra
 export { DistributedTracingModes } from './Enums';
 export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
 export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";
+export const AnalyticsPluginIdentifier = "ApplicationInsightsAnalytics";
