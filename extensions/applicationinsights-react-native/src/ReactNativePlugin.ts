@@ -126,7 +126,7 @@ export class ReactNativePlugin implements ITelemetryPlugin {
         const _global = global as any;
         if (_global && _global.ErrorUtils) {
             // intercept react-native error handling
-            this._defaultHandler = (_global.ErrorUtils.getGlobalHandler && _global.ErrorUtils.getGlobalHandler()) || _global.ErrorUtils._globalHandler;
+            this._defaultHandler = (typeof _global.ErrorUtils.getGlobalHandler === 'function' && _global.ErrorUtils.getGlobalHandler()) || _global.ErrorUtils._globalHandler;
             _global.ErrorUtils.setGlobalHandler(this._trackException.bind(this));
         }
     }
@@ -142,7 +142,9 @@ export class ReactNativePlugin implements ITelemetryPlugin {
                 LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, ReactNative plugin telemetry will not be sent: ");
         }
         // call the _defaultHandler - react native also gets the error
-        this._defaultHandler(e, isFatal);
+        if (this._defaultHandler) {
+            this._defaultHandler.call(global, e, isFatal);
+        }
     }
 
     private _getDefaultConfig(): IReactNativePluginConfig {
