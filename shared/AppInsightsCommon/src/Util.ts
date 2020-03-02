@@ -4,14 +4,12 @@
 import { StorageType } from "./Enums";
 import { 
     CoreUtils, EventHelper, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin, 
-    getGlobal, getGlobalInst, getWindow, getDocument, getNavigator, getPerformance, getLocation, hasJSON, getJSON 
+    getGlobal, getGlobalInst, getWindow, getDocument, getNavigator, getPerformance, getLocation, hasJSON, getJSON,
+    strPrototype
 } from "@microsoft/applicationinsights-core-js";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
-
-// Adding common usage of prototype as a string to enable indexed lookup to assist with minification
-const prototype = "prototype";
 
 let _navigator = getNavigator();
 let _isString = CoreUtils.isString;
@@ -536,14 +534,14 @@ export class Util {
      * Check if an object is of type Array
      */
     public static isArray(obj: any): boolean {
-        return Object[prototype].toString.call(obj) === "[object Array]";
+        return Object[strPrototype].toString.call(obj) === "[object Array]";
     }
 
     /**
      * Check if an object is of type Error
      */
     public static isError(obj: any): boolean {
-        return Object[prototype].toString.call(obj) === "[object Error]";
+        return Object[strPrototype].toString.call(obj) === "[object Error]";
     }
 
     /**
@@ -598,7 +596,7 @@ export class Util {
      * Returns string representation of an object suitable for diagnostics logging.
      */
     public static dump(object: any): string {
-        const objectTypeDump: string = Object[prototype].toString.call(object);
+        const objectTypeDump: string = Object[strPrototype].toString.call(object);
         let propertyValueDump: string = "";
         if (objectTypeDump === "[object Error]") {
             propertyValueDump = "{ stack: '" + object.stack + "', message: '" + object.message + "', name: '" + object.name + "'";
@@ -613,7 +611,7 @@ export class Util {
      * Returns the name of object if it's an Error. Otherwise, returns empty string.
      */
     public static getExceptionName(object: any): string {
-        const objectTypeDump: string = Object[prototype].toString.call(object);
+        const objectTypeDump: string = Object[strPrototype].toString.call(object);
         if (objectTypeDump === "[object Error]") {
             return object.name;
         }

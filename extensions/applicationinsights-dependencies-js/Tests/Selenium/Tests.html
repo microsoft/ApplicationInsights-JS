@@ -8,41 +8,49 @@
     <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css">
     <script src="http://sinonjs.org/releases/sinon-2.3.8.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script>
+    <script src="../../../../common/Tests/Selenium/ModuleLoader.js"></script>
+    <script src="../../../../common/Tests/Selenium/SimpleSyncPromise.js"></script>
     <script src="dependencies.tests.js"></script>
 
     <script>
-        require.config({
+        var modules = new ModuleLoader({
             baseUrl: '../../',
             // Convenience paths to test reqs
             paths: {
-                qunit: "Tests/External/qunit-1.23.1"
+                qunit: "../../common/Tests/External/qunit-1.23.1",
+                "whatwg-fetch": "../../common/Tests/External/whatwg-fetch.3.0.0"
             }
         });
 
-        // Load core & common
-                require([
-            'qunit', // Load qunit here instead of with tests, otherwise will not work
-            './node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js',
-        ], function (QUnit, aicore) {
-            define('@microsoft/applicationinsights-core-js', function () { return aicore; });
-            require([  
-            './node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common'], function (aicommon) {
-                define('@microsoft/applicationinsights-common', function () { return aicommon; });
+        // Load qunit here instead of with tests, otherwise will not work
+        modules.add("qunit");
+        // Load whatwg-fetch
+        modules.add("whatwg-fetch").afterLoad = function (polyFetch) {
+            window.fetch = window.fetch || polyFetch.fetch;
+            window.Headers = window.Headers || polyFetch.Headers;
+            window.Response = window.Response || polyFetch.Response;
+            window.Request = window.Request || polyFetch.Request;
+            window.Promise = window.Promise || SimpleSyncPromise;
+        };
+        // Load dynamicProto
+        modules.add("@microsoft/dynamicproto-js", "./node_modules/@microsoft/dynamicproto-js/lib/dist/umd/dynamicproto-js", true);
+        // Load Core
+        modules.add("@microsoft/applicationinsights-core-js", "./node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js");
+        // Load Common
+        modules.add("@microsoft/applicationinsights-common", "./node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common");
 
-                require.config({
-                    baseUrl: './'
-                });
+        var testModule = modules.add("Tests/Selenium/dependencies.tests")
+        testModule.config = {
+            baseUrl: './'
+        };
 
-                require([
-                    "Tests/Selenium/dependencies.tests"
-                ], function (tests) {
-                    QUnit.start();
-                    tests.runTests();
-                }, function (err) {
-                    console.log('REQUIRE ERROR:', err.toString());
-                });
-            });
-        });
+        testModule.run = function (tests) {
+            console && console.log("Starting tests");
+            QUnit.start();
+            tests.runTests();
+        };
+
+        modules.run();
     </script>
 </head>
 

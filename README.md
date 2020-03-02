@@ -226,6 +226,9 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | enableRequestHeaderTracking | false | If true, AJAX & Fetch request headers is tracked, default is false.
 | enableResponseHeaderTracking | false | If true, AJAX & Fetch request's response headers is tracked, default is false.
 | enableAjaxErrorStatusText | false | Default false. If true, include response error data text in dependency event on failed AJAX requests.
+| enableAjaxPerfTracking | false | Default false. Flag to enable looking up and including additional browser window.performance timings in the reported ajax (XHR and fetch) reported metrics. 
+| maxAjaxPerfLookupAttempts | 3 | Defaults to 3. The maximum number of times to look for the window.performance timings (if available), this is required as not all browsers populate the window.performance before reporting the end of the XHR request and for fetch requests this is added after its complete.
+| ajaxPerfLookupDelay | 25 | Defaults to 25ms. The amount of time to wait before re-attempting to find the windows.performance timings for an ajax request, time is in milliseconds and is passed directly to setTimeout().
 | distributedTracingMode | `DistributedTracingModes.AI` | Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests. AI_AND_W3C is provided for back-compatibility with any legacy Application Insights instrumented services.
 | enableUnhandledPromiseRejectionTracking | false | If true, unhandled promise rejections will be autocollected and reported as a javascript error. When disableExceptionTracking is true (dont track exceptions) the config value will be ignored and unhandled promise rejections will not be reported.
 ## Single Page Applications

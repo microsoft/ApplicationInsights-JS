@@ -7,6 +7,7 @@ import { AppInsightsCore } from "../../JavaScriptSDK/AppInsightsCore";
 import { IChannelControls } from "../../JavaScriptSDK.Interfaces/IChannelControls";
 import { _InternalMessageId, LoggingSeverity } from "../../JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage, DiagnosticLogger } from "../../JavaScriptSDK/DiagnosticLogger";
+import { normalizeJsName } from "../../JavaScriptSDK/CoreUtils";
 
 export class ApplicationInsightsCoreTests extends TestClass {
 
@@ -541,6 +542,26 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 Assert.ok(channelSpy.args[0][0].name == "TestEvent1", "Incorrect event");
                 Assert.ok(channelSpy.args[1][0].name == "TestEvent2", "Incorrect event");
                 Assert.ok(appInsightsCore["_eventQueue"].length == 0, "Event queue wrong number of events");
+            }
+        });
+
+        this.testCase({
+            name: "ApplicationInsightsCore: Validate JS name normalization",
+            test: () => {
+                Assert.equal("Hello", normalizeJsName("Hello"));
+                Assert.equal("Hello_World", normalizeJsName("Hello.World"));
+                Assert.equal("_Hello_World", normalizeJsName("@Hello.World"));
+                Assert.equal("_Hello_World", normalizeJsName("#Hello.World"));
+                Assert.equal("_Hello_World", normalizeJsName(".Hello#World"));
+                Assert.equal("_Hello_World_", normalizeJsName(".Hello(World)"));
+                Assert.equal("_Hello_World_", normalizeJsName(".Hello&World%"));
+                Assert.equal("_Hello_World_", normalizeJsName("!Hello=World+"));
+                Assert.equal("_Hello_World_", normalizeJsName("~Hello[World]"));
+                Assert.equal("_Hello_World_", normalizeJsName(":Hello{World}"));
+                Assert.equal("_Hello_World_", normalizeJsName("\'Hello\'World;"));
+                Assert.equal("_Hello_World_", normalizeJsName("\"Hello\\World\""));
+                Assert.equal("_Hello_World_", normalizeJsName("|Hello<World>"));
+                Assert.equal("_Hello_World_", normalizeJsName("?Hello,World-"));
             }
         });
 

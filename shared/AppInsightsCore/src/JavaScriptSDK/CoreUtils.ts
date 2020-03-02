@@ -1,13 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 "use strict";
-import { getWindow, getDocument, strUndefined }  from './EnvUtils';
+import { getWindow, getDocument, strUndefined, strObject, strFunction, strPrototype }  from './EnvUtils';
 
 // Added to help with minfication
 export const Undefined = strUndefined;
-let prototype = "prototype";
-const strFunction = "function";
-const strObject = "object"
 const strOnPrefix = "on";
 const strAttachEvent = "attachEvent";
 const strAddEventHelper = "addEventListener";
@@ -21,7 +18,7 @@ function _isTypeof(value: any, theType: string): boolean
 
 function _isUndefined(value: any): boolean
 {
-    return value === undefined || _isTypeof(value, Undefined);
+    return value === undefined || _isTypeof(value, strUndefined);
 }
 
 function _isNullOrUndefined(value: any): boolean
@@ -30,7 +27,7 @@ function _isNullOrUndefined(value: any): boolean
 }
 
 function _hasOwnProperty(obj:any, prop:string): boolean {
-    return obj && Object[prototype].hasOwnProperty.call(obj, prop);
+    return obj && Object[strPrototype].hasOwnProperty.call(obj, prop);
 }
 
 function _isObject(value: any): boolean {
@@ -91,6 +88,23 @@ function _detachEvent(obj:any, eventNameWithoutOn:string, handlerRef:any, useCap
     }
 }
 
+/**
+ * Validates that the string name conforms to the JS IdentifierName specification and if not
+ * normalizes the name so that it would. This method does not identify or change any keywords
+ * meaning that if you pass in a known keyword the same value will be returned.
+ * This is a simplified version
+ * @param name The name to validate
+ */
+export function normalizeJsName(name:string):string {
+    let value = name;
+    let match = /([^\w\d_$])/g;
+    if (match.test(name)) {
+        value = name.replace(match, "_");
+    }    
+
+    return value;
+}
+
 export class CoreUtils {
     public static _canUseCookies: boolean;
 
@@ -120,7 +134,7 @@ export class CoreUtils {
      * Check if an object is of type Date
      */
     public static isDate(obj: any): boolean {
-        return Object[prototype].toString.call(obj) === "[object Date]";
+        return Object[strPrototype].toString.call(obj) === "[object Date]";
     }
 
     /**
@@ -300,7 +314,7 @@ export class CoreUtils {
         }
 
         function tmpFunc() {};
-        tmpFunc[prototype] = obj;
+        tmpFunc[strPrototype] = obj;
 
         return new tmpFunc();
     }
