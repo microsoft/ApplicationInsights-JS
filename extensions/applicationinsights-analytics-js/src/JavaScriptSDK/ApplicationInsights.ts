@@ -8,7 +8,7 @@ import {
     TelemetryItemCreator, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
-    DateTimeUtils, IExceptionInternal, PropertiesPluginIdentifier
+    DateTimeUtils, IExceptionInternal, PropertiesPluginIdentifier, AnalyticsPluginIdentifier
 } from "@microsoft/applicationinsights-common";
 
 import {
@@ -64,7 +64,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
         return config;
     }
 
-    public identifier: string = "ApplicationInsightsAnalytics"; // do not change name or priority
+    public identifier: string = AnalyticsPluginIdentifier; // do not change name or priority
     public priority: number = 180; // take from reserved priority range 100- 200
     public config: IConfig;
     public queue: Array<() => void>;
