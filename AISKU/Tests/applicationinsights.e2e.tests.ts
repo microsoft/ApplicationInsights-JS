@@ -390,7 +390,7 @@ export class ApplicationInsightsTests extends TestClass {
                         Assert.ok(true, "fetch monitoring is instrumented");
                     }
                 ]
-                    .concat(this.asserts(3))
+                    .concat(this.asserts(3, false, false))
                     .concat(() => {
                         let args = [];
                         this.trackSpy.args.forEach(call => {
@@ -693,14 +693,16 @@ export class ApplicationInsightsTests extends TestClass {
             }
         }
     }
-    private asserts: any = (expectedCount: number, includeInit:boolean = false) => [
+    private asserts: any = (expectedCount: number, includeInit:boolean = false, doBoilerPlate:boolean = true) => [
         () => {
             const message = "polling: " + new Date().toISOString();
             Assert.ok(true, message);
             console.log(message);
 
-            if (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called) {
-                this.boilerPlateAsserts();
+            if (doBoilerPlate) {
+                if (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called) {
+                    this.boilerPlateAsserts();
+                }
             }
         },
         (PollingAssert.createPollingAssert(() => {
