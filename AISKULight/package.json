@@ -16,6 +16,7 @@
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-es3" : "1.1.1",
         "grunt": "1.0.1",
+        "globby": "^11.0.0",
         "rollup-plugin-node-resolve": "^3.4.0",
         "rollup-plugin-replace": "^2.1.0",
         "rollup-plugin-uglify": "^6.0.0",
@@ -26,6 +27,7 @@
         "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
+        "@microsoft/dynamicproto-js": "^0.5.1",
         "@microsoft/applicationinsights-common": "2.4.4",
         "@microsoft/applicationinsights-channel-js": "2.4.4",
         "@microsoft/applicationinsights-core-js": "2.4.4"

@@ -1,5 +1,5 @@
 ﻿/// <reference path="../TestFramework/Common.ts" />
-/// <reference path="../External/jquery.d.ts" />
+/// <reference path="../../../../common/Tests/External/jquery.d.ts" />
 /// <reference path="../../JavaScriptSDK/AppInsights.ts" />
 /// <reference path="../../JavaScriptSDK/Telemetry/Common/Data.ts" />
 interface IJSLitmus {

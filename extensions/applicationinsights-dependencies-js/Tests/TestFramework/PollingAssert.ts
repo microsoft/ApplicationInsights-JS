@@ -1,4 +1,4 @@
-/// <reference path="../External/qunit.d.ts" />
+/// <reference path="../../../../common/Tests/External/qunit.d.ts" />
 /// <reference path="TestClass.ts" />
 
 class PollingAssert {
@@ -21,10 +21,10 @@ class PollingAssert {
                     Assert.ok(false, "assert didn't succeed for " + timeout + " seconds: " + assertDescription);
                     nextTestStep();
                 } else {
-                    setTimeout(polling, pollIntervalMs);
+                    TestClass.orgSetTimeout(polling, pollIntervalMs);
                 }
             }
-            setTimeout(polling, pollIntervalMs);
+            TestClass.orgSetTimeout(polling, pollIntervalMs);
         }
 
         pollingAssert[TestClass.isPollingStepFlag] = true;

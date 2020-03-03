@@ -52,6 +52,12 @@ export interface IPlugin {
     isInitialized?: () => boolean;
 
     /**
+     * Tear down the plugin and remove any hooked value, the plugin should remove that it is no longer initialized and
+     * therefore can be re-initialized after being torn down.
+     */
+    teardown?: () => void;
+
+    /**
      * Extension name
      */
     identifier: string;

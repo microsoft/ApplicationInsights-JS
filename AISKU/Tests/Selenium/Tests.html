@@ -9,55 +9,60 @@
     <script src="http://sinonjs.org/releases/sinon-1.17.2.js"></script>
     <title>Tests for Application Insights JavaScript API</title>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script>
+    <script src="../../../common/Tests/Selenium/ModuleLoader.js"></script>
+    <script src="../../../common/Tests/Selenium/SimpleSyncPromise.js"></script>
 </head>
 
 <body>
     <div id="qunit"></div>
     <div id="qunit-fixture"></div>
     <script>
-        require.config({
+        var modules = new ModuleLoader({
             baseUrl: '../../',
             paths: {
-                qunit: "Tests/External/qunit-1.23.1",
+                qunit: "../common/Tests/External/qunit-1.23.1",
+                "whatwg-fetch": "../common/Tests/External/whatwg-fetch.3.0.0",
                 tests: 'Tests/appinsights-sdk.tests'
             }
         });
-        require([
-            'qunit',
-            'node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js',
-        ], function(QUnit, core) {
-            define('@microsoft/applicationinsights-core-js', function(){return core;})
-            require([
-                'node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common'
-            ], function(common) {
-                define('@microsoft/applicationinsights-common', common);
-                require([
-                    'node_modules/@microsoft/applicationinsights-analytics-js/browser/applicationinsights-analytics-js',
-                    'node_modules/@microsoft/applicationinsights-channel-js/browser/applicationinsights-channel-js',
-                    'node_modules/@microsoft/applicationinsights-properties-js/browser/applicationinsights-properties-js',
-                    'node_modules/@microsoft/applicationinsights-dependencies-js/browser/applicationinsights-dependencies-js'
-                ], function(analytics, channel, properties, dependencies) {
-                    define('@microsoft/applicationinsights-analytics-js', function(){return analytics;});
-                    define('@microsoft/applicationinsights-channel-js', function() {return channel;});
-                    define('@microsoft/applicationinsights-properties-js', function() {return properties;});
-                    define('@microsoft/applicationinsights-dependencies-js', function() {return dependencies;});
-                    require([
-                        'Tests/Selenium/appinsights-sdk.tests'
-                    ], function(tests) {
-                        QUnit.start();
-                    },
-                    function(err) {
-                        console.log("Loading Test failed" + err);
-                    });
-                },
-                function(err1) {
-                    console.log("Loading analytics or channel or properties or dependencies failed" + err1);
-                })
-            },
-            function(err2) {
-                        console.log("Loading common failed" + err2);
-                });
-        });
+
+        // Load qunit here instead of with tests, otherwise will not work
+        modules.add("qunit");
+
+        // Load whatwg-fetch
+        modules.add("whatwg-fetch").afterLoad = function (polyFetch) {
+            window.fetch = window.fetch || polyFetch.fetch;
+            window.Headers = window.Headers || polyFetch.Headers;
+            window.Response = window.Response || polyFetch.Response;
+            window.Request = window.Request || polyFetch.Request;
+            window.Promise = window.Promise || SimpleSyncPromise;
+        };
+
+        // Load Core
+        modules.add("@microsoft/applicationinsights-core-js", "./node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js");
+
+        // Load Common
+        modules.add("@microsoft/applicationinsights-common", "./node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common");
+
+        // Load Analytics
+        modules.add("@microsoft/applicationinsights-analytics-js", "./node_modules/@microsoft/applicationinsights-analytics-js/browser/applicationinsights-analytics-js");
+
+        // Load Channel
+        modules.add("@microsoft/applicationinsights-channel-js", "./node_modules/@microsoft/applicationinsights-channel-js/browser/applicationinsights-channel-js");
+
+        // Load Properties
+        modules.add("@microsoft/applicationinsights-properties-js", "./node_modules/@microsoft/applicationinsights-properties-js/browser/applicationinsights-properties-js");
+
+        // Load Dependencies
+        modules.add("@microsoft/applicationinsights-dependencies-js", "./node_modules/@microsoft/applicationinsights-dependencies-js/browser/applicationinsights-dependencies-js");
+
+        var testModule = modules.add("Tests/Selenium/appinsights-sdk.tests")
+        testModule.run = function (tests) {
+            console && console.log("Starting tests");
+            QUnit.start();
+        };
+
+        modules.run();
     </script>
 </body>
 </html>

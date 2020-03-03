@@ -36,7 +36,7 @@
         "tslint": "^5.19.0",
         "tslint-microsoft-contrib": "^5.2.1",
         "tslint-config-prettier": "^1.18.0",
-        "typescript": "2.5.3"
-    },
-    "dependencies": {}
+        "typescript": "2.5.3",
+        "whatwg-fetch": "^3.0.0"
+    }
 }
