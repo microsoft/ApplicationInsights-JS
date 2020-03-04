@@ -464,16 +464,15 @@
         return reject(new exports.DOMException('Aborted', 'AbortError'))
       }
 
-      // -----------------------------------------------------------------------------
-      // TEST HOOK! -- NOT PART of the standard whatwg-fetch logic
-      // Adding so that we can test that only the fetch is getting logged!
       var xhr = new XHR();
 
       function abortXhr() {
         xhr.abort();
       }
 
-      xhr["Microsoft_ApplicationInsights_BypassAjaxInstrumentation"] = true;
+      // -----------------------------------------------------------------------------
+      // TEST HOOK! -- NOT PART of the standard whatwg-fetch logic
+      // Adding so that we can test that only the fetch is getting logged!
 
       // PhantomJS Doesn't support the main events, so linking in the readystate
       function _readyStateChange() {

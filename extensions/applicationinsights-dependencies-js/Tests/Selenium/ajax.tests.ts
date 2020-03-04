@@ -75,6 +75,38 @@ export class AjaxTests extends TestClass {
         });
 
         this.testCase({
+            name: "Dependencies Configuration: Make sure we don't fail for invalid arguments",
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "instrumentation_key",
+                    maxAjaxCallsPerView: 5,
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", null);
+                xhr.setRequestHeader("header name", "header value");
+                xhr.send();
+                // Emulate response
+                (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
+
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", undefined);
+                xhr.setRequestHeader("header name", "header value");
+                xhr.send();
+                // Emulate response
+                (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
+
+                Assert.equal(2, trackSpy.callCount, "Track has been called 2 times");
+                Assert.equal(false, throwSpy.called, "We should not have thrown an internal error -- yet");
+            }
+        });
+
+        this.testCase({
             name: "Ajax: xhr.open gets instrumented",
             test: () => {
                 this._ajax = new AjaxMonitor();
@@ -108,6 +140,36 @@ export class AjaxTests extends TestClass {
 
                 // assert
                 Assert.equal(undefined, (<any>xhr).ajaxData, "RequestUrl is collected correctly");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: xhr with disabled flag isn't tracked and any followup request to the same URL event without the disabled flag are also not tracked",
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr[DisabledPropertyName] = true;
+                xhr.open("GET", "http://microsoft.com");
+
+                // assert
+                Assert.equal(undefined, (<any>xhr).ajaxData, "RequestUrl is collected correctly");
+
+                xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+
+                // assert
+                Assert.equal(undefined, (<any>xhr).ajaxData, "Follow up GET Request was not instrumented");
+
+                xhr = new XMLHttpRequest();
+                xhr.open("POST", "http://microsoft.com");
+
+                // assert
+                Assert.equal(undefined, (<any>xhr).ajaxData, "Follow up POST Request was not instrumented");
             }
         });
 
@@ -210,12 +272,26 @@ export class AjaxTests extends TestClass {
             }
         });
 
-        this.testCase({
+        this.testCaseAsync({
             name: "Fetch: fetch with disabled flag isn't tracked",
-            test: () => {
+            stepDelay: 10,
+            autoComplete: false,
+            timeOut: 2500,
+            steps: [ (done) => {
                 hookFetch((resolve) => {
                     TestClass.orgSetTimeout(function() {
-                        resolve();
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
                     }, 0);
                 });
 
@@ -227,11 +303,66 @@ export class AjaxTests extends TestClass {
 
                 // Act
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
-                fetch("https://httpbin.org/status/200", {method: "post", body:"{ [DisabledPropertyName]: true}" });
+                fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: true}).then(() => {
+                    // Assert
+                    Assert.ok(fetchSpy.notCalled, "The request was not tracked");
+                    done();
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    done();
+                });
+            }]
+        });
 
-                // Assert
-                Assert.ok(fetchSpy.notCalled, "createFetchRecord called once after using fetch");
-            }
+
+        this.testCaseAsync({
+            name: "Fetch: fetch with disabled flag isn't tracked and any followup request to the same URL event without the disabled flag are also not tracked",
+            stepDelay: 10,
+            autoComplete: false,
+            timeOut: 2500,
+            steps: [ (done) => {
+                hookFetch((resolve) => {
+                    TestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+
+                // Act
+                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: true}).then(() => {
+                    // Assert
+                    Assert.ok(fetchSpy.notCalled, "The initial request was not tracked");
+
+                    fetch("https://httpbin.org/status/200", {method: "post" }).then(() => {
+                        // Assert
+                        Assert.ok(fetchSpy.notCalled, "The follow up request should also not have been tracked");
+                        done();
+                    }, () => {
+                        Assert.ok(false, "fetch failed!");
+                        done();
+                    });
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    done();
+                });
+            }]
         });
 
         this.testCaseAsync({
@@ -262,6 +393,7 @@ export class AjaxTests extends TestClass {
                 let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
 
                 // Act
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
@@ -270,7 +402,63 @@ export class AjaxTests extends TestClass {
                     Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
                     let data = fetchSpy.args[0][0].baseData;
                     Assert.equal("Fetch", data.type, "request is Fetch type");
+                    Assert.ok(throwSpy.notCalled, "Make sure we didn't fail internally");
                     done();
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    done();
+                });
+            }]
+        });
+
+        this.testCaseAsync({
+            name: "Fetch: instrumentation handles invalid / missing request or url",
+            stepDelay: 10,
+            autoComplete: false,
+            timeOut: 2500,
+            steps: [ (done) => {
+                hookFetch((resolve) => {
+                    TestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+                let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                // Act
+                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                fetch(null, {method: "post", [DisabledPropertyName]: false}).then(() => {
+                    // Assert
+                    Assert.ok(fetchSpy.calledOnce, "createFetchRecord called once after using fetch");
+                    let data = fetchSpy.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fetch type");
+                    Assert.equal(false, throwSpy.called, "We should not have failed internally");
+
+                    fetch(undefined, null).then(() => {
+                        // Assert
+                        Assert.ok(fetchSpy.calledTwice, "createFetchRecord called once after using fetch");
+                        Assert.equal(false, throwSpy.called, "We should still not have failed internally");
+                        done();
+                    }, () => {
+                        Assert.ok(false, "fetch failed!");
+                        done();
+                    });
                 }, () => {
                     Assert.ok(false, "fetch failed!");
                     done();
