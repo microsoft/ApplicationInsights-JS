@@ -1,5 +1,12 @@
 # Releases
 
+## 2.5.1
+
+### Changelog
+
+- #1210 [BUG] Typescript error when using @microsoft/applicationinsights-web 2.5.0 and "noImplicitAny"/"strict" option
+- #1207 [BUG] The latest version 2.4.4 cannot connect front-end with back-end on the Application Map on Application Insights
+
 ## 2.5.0
 
 ### Changelog
