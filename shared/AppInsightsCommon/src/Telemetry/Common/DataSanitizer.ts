@@ -40,7 +40,7 @@ export class DataSanitizer {
      */
     public static MAX_EXCEPTION_LENGTH = 32768;
 
-    public static sanitizeKeyAndAddUniqueness(logger: IDiagnosticLogger, key, map) {
+    public static sanitizeKeyAndAddUniqueness(logger: IDiagnosticLogger, key: any, map: any) {
         const origLength = key.length;
         let field = DataSanitizer.sanitizeKey(logger, key);
 
@@ -57,7 +57,7 @@ export class DataSanitizer {
         return field;
     }
 
-    public static sanitizeKey(logger: IDiagnosticLogger, name) {
+    public static sanitizeKey(logger: IDiagnosticLogger, name: any) {
         let nameTrunc: String;
         if (name) {
             // Remove any leading or trailing whitepace
@@ -95,11 +95,11 @@ export class DataSanitizer {
         return valueTrunc || value;
     }
 
-    public static sanitizeUrl(logger: IDiagnosticLogger, url) {
+    public static sanitizeUrl(logger: IDiagnosticLogger, url: any) {
         return DataSanitizer.sanitizeInput(logger, url, DataSanitizer.MAX_URL_LENGTH, _InternalMessageId.UrlTooLong);
     }
 
-    public static sanitizeMessage(logger: IDiagnosticLogger, message) {
+    public static sanitizeMessage(logger: IDiagnosticLogger, message: any) {
         let messageTrunc : String;
         if (message) {
             if (message.length > DataSanitizer.MAX_MESSAGE_LENGTH) {
@@ -115,7 +115,7 @@ export class DataSanitizer {
         return messageTrunc || message;
     }
 
-    public static sanitizeException(logger: IDiagnosticLogger, exception) {
+    public static sanitizeException(logger: IDiagnosticLogger, exception: any) {
         let exceptionTrunc : String;
         if (exception) {
             if (exception.length > DataSanitizer.MAX_EXCEPTION_LENGTH) {
@@ -129,7 +129,7 @@ export class DataSanitizer {
         return exceptionTrunc || exception;
     }
 
-    public static sanitizeProperties(logger: IDiagnosticLogger, properties) {
+    public static sanitizeProperties(logger: IDiagnosticLogger, properties: any) {
         if (properties) {
             const tempProps = {};
             for (let prop in properties) {
@@ -152,7 +152,7 @@ export class DataSanitizer {
         return properties;
     }
 
-    public static sanitizeMeasurements(logger: IDiagnosticLogger, measurements) {
+    public static sanitizeMeasurements(logger: IDiagnosticLogger, measurements: any) {
         if (measurements) {
             const tempMeasurements = {};
             for (let measure in measurements) {
@@ -188,7 +188,7 @@ export class DataSanitizer {
         return inputTrunc || input;
     }
 
-    public static padNumber(num) {
+    public static padNumber(num: number) {
         const s = "00" + num;
         return s.substr(s.length - 3);
     }

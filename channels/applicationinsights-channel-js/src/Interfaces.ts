@@ -77,8 +77,8 @@ export interface IBackendResponse {
 
 export interface XDomainRequest extends XMLHttpRequestEventTarget {
     responseText: string;
-    send(payload: string);
-    open(method: string, url: string);
+    send(payload: string): void;
+    open(method: string, url: string): void;
 }
 
 export interface IResponseError {

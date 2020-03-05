@@ -15,8 +15,8 @@ import dynamicProto from "@microsoft/dynamicproto-js";
  * Internal interface to pass appInsights object to subcomponents without coupling 
  */
 export interface IAppInsightsInternal {
-    sendPageViewInternal(pageViewItem: IPageViewTelemetryInternal, properties?: Object, systemProperties?: Object);
-    sendPageViewPerformanceInternal(pageViewPerformance: IPageViewPerformanceTelemetryInternal, properties?: Object, systemProperties?: Object);
+    sendPageViewInternal(pageViewItem: IPageViewTelemetryInternal, properties?: Object, systemProperties?: Object): void;
+    sendPageViewPerformanceInternal(pageViewPerformance: IPageViewPerformanceTelemetryInternal, properties?: Object, systemProperties?: Object): void;
 }
 
 /**
@@ -113,7 +113,7 @@ export class PageViewManager {
                 }
         
                 let pageViewSent = false;
-                let customDuration;
+                let customDuration: number;
         
                 // if the performance timing is supported by the browser, calculate the custom duration
                 const start = pageViewPerformanceManager.getPerformanceTiming().navigationStart;

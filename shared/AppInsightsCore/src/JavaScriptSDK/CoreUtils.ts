@@ -11,32 +11,29 @@ const strAddEventHelper = "addEventListener";
 const strDetachEvent = "detachEvent";
 const strRemoveEventListener = "removeEventListener";
 
-function _isTypeof(value: any, theType: string): boolean
-{
+function _isTypeof(value: any, theType: string): boolean {
     return typeof value === theType;
-}
+};
 
-function _isUndefined(value: any): boolean
-{
-    return value === undefined || _isTypeof(value, strUndefined);
-}
+function _isUndefined(value: any): boolean {
+    return _isTypeof(value, strUndefined) || value === undefined;
+};
 
-function _isNullOrUndefined(value: any): boolean
-{
+function _isNullOrUndefined(value: any): boolean {
     return (_isUndefined(value) || value === null);
 }
 
 function _hasOwnProperty(obj:any, prop:string): boolean {
     return obj && Object[strPrototype].hasOwnProperty.call(obj, prop);
-}
+};
 
 function _isObject(value: any): boolean {
     return _isTypeof(value, strObject);
-}
+};
 
 function _isFunction(value: any): boolean {
     return _isTypeof(value, strFunction);
-}
+};
 
 /**
  * Binds the specified function to an event, so that the function gets called whenever the event fires on the object
@@ -316,7 +313,7 @@ export class CoreUtils {
         function tmpFunc() {};
         tmpFunc[strPrototype] = obj;
 
-        return new tmpFunc();
+        return new (tmpFunc as any)();
     }
 
     /**

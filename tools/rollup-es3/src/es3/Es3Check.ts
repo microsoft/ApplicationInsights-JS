@@ -55,7 +55,7 @@ export function es3Check(options:IEs3CheckRollupOptions = {}) {
         }
     }
 
-    function doCheck(code:string, id:string, entry:string, isTransform:boolean) {
+    function doCheck(code:string, id:string, entry:string, isTransform:boolean): any {
         // Check that the raw input doesn't include the tag
         checkResult(tokens, code, id, entry, isTransform);
 

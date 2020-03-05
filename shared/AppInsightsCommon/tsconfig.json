@@ -2,7 +2,7 @@
   "compilerOptions": {
     "sourceMap": true,
     "inlineSources": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "module": "es6",
     "moduleResolution": "Node",
     "target": "es3",
