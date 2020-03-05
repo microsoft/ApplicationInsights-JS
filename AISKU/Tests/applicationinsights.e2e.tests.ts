@@ -413,7 +413,10 @@ export class ApplicationInsightsTests extends TestClass {
                         Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
                         Assert.ok(baseData.properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparent");
                         const id: string = baseData.id;
-                        Assert.equal(id, id.match(/\|.{32}\..{16}\./g)[0]);
+                        const regex = id.match(/\|.{32}\..{16}\./g);
+                        Assert.ok(id.length > 0);
+                        Assert.equal(1, regex.length)
+                        Assert.equal(id, regex[0]);
                     })
             });
         } else {
