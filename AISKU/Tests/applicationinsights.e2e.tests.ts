@@ -412,6 +412,8 @@ export class ApplicationInsightsTests extends TestClass {
                         Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
                         Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
                         Assert.ok(baseData.properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparent");
+                        const id: string = baseData.id;
+                        Assert.equal(id, id.match(/\|.{32}\..{16}\./g)[0]);
                     })
             });
         } else {
