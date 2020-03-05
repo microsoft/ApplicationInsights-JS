@@ -313,7 +313,7 @@ export class CoreUtils {
         function tmpFunc() {};
         tmpFunc[strPrototype] = obj;
 
-        return new (<any>tmpFunc)();
+        return new (tmpFunc as any)();
     }
 
     /**

@@ -60,7 +60,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     queue: Array<() => void>;
     private appInsightsNew: ApplicationInsights;
     private _hasLegacyInitializers = false;
-    private _queue: ((env: IEnvelope) => boolean | void)[] = [];
+    private _queue: Array<((env: IEnvelope) => boolean | void)> = [];
 
     constructor(snippet: Snippet, appInsightsNew: ApplicationInsights) {
         this.config = AppInsightsDeprecated.getDefaultConfig(snippet.config);
