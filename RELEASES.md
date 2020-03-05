@@ -1,5 +1,34 @@
 # Releases
 
+## 2.5.0
+
+### Changelog
+
+- #1204 When a fetch polyfill is installed there reporting endpoint is also causing events to be sent
+- #1202 ai_user and ai_session cookies not set #1203
+- #1201 add to auto track exceptions in react native plugin
+- #1199 Build is breaking when you do a "rush update --full --purge --recheck" due to tslib v1.11.0 update
+- #1194 XHR/Fetch enhancement - add additional telemetry from window.performance #1195
+- #1193 add sanitizer for operationName
+- #1189 Add the option to specify the refUri with stopTrackPage #1190
+- #1186 App Insights initialization setting 'enableAjaxErrorStatusText' is not working #1187
+
+#### XHR/Fetch enhancement
+
+Adds additional performance data derived from the window.performance.getEntries() for the fetch or XHR request.
+
+Configuration options
+| Name | Default | Description |
+|------|---------|-------------|
+| enableAjaxPerfTracking | false | Default false. Flag to enable looking up and including additional browser window.performance timings in the reported ajax (XHR and fetch) reported metrics. 
+| maxAjaxPerfLookupAttempts | 3 | Defaults to 3. The maximum number of times to look for the window.performance timings (if available), this is required as not all browsers populate the window.performance before reporting the end of the XHR request and for fetch requests this is added after its complete.
+| ajaxPerfLookupDelay | 25 | Defaults to 25ms. The amount of time to wait before re-attempting to find the windows.performance timings for an ajax request, time is in milliseconds and is passed directly to setTimeout().
+
+#### Auto track exception React Native Plugin
+
+This has been enabled by default in the updated version.
+It can be disabled by adding the ```disableExceptionCollection``` config value with a value of true.
+
 ## 2.4.4
 
 ### Changelog
