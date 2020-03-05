@@ -5,7 +5,7 @@
  * A callback function that will be called for the wrapped instrumentation function
  * before the original function is executed.
  */
-export type InstrumentorHooksCallback = (funcArgs:IInstrumentCallDetails, ...orgArgs) => void;
+export type InstrumentorHooksCallback = (funcArgs:IInstrumentCallDetails, ...orgArgs: any[]) => void;
 
 /**
  * The callbacks to call for the instrumented function, you must provide at least the request and/or response callbacks, both are not required.

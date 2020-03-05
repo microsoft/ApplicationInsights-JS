@@ -150,7 +150,7 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
         return exceptionDetailsInterface;
     }
 
-    public static CreateFromInterface(logger, exception: IExceptionDetailsInternal): _ExceptionDetails {
+    public static CreateFromInterface(logger:IDiagnosticLogger, exception: IExceptionDetailsInternal): _ExceptionDetails {
         const parsedStack = (exception.parsedStack instanceof Array
             &&CoreUtils.arrMap(exception.parsedStack, frame => _StackFrame.CreateFromInterface(frame)))
             || exception.parsedStack;
@@ -160,7 +160,7 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
         return exceptionDetails;
     }
 
-    private static parseStack(stack): _StackFrame[] {
+    private static parseStack(stack?:string): _StackFrame[] {
         let parsedStack: _StackFrame[];
         if (CoreUtils.isString(stack)) {
             const frames = stack.split('\n');

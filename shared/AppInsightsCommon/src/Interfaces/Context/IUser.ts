@@ -34,6 +34,6 @@ export interface IUser {
 }
 
 export interface IUserContext {
-    setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean);
-    clearAuthenticatedUserContext();
+    setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean): void;
+    clearAuthenticatedUserContext(): void;
 }

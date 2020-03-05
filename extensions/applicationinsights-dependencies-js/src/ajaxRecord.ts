@@ -182,7 +182,7 @@ export class XHRMonitoringState {
     public abortDone: boolean;
 
     // <summary>True, if onreadyStateChangeCallback function attached to xhr, otherwise false</summary>
-    public stateChangeAttached;
+    public stateChangeAttached: boolean;
 
     constructor() {
         let self = this;
@@ -217,24 +217,24 @@ export class ajaxRecord {
     public status:string|number;
 
     // <summary>The timestamp when open method was invoked</summary>
-    public requestSentTime;
+    public requestSentTime: number;
 
     // <summary>The timestamps when first byte was received</summary>
-    public responseStartedTime;
+    public responseStartedTime: number;
 
     // <summary>The timestamp when last byte was received</summary>
-    public responseFinishedTime;
+    public responseFinishedTime: number;
 
     // <summary>The timestamp when onreadystatechange callback in readyState 4 finished</summary>
-    public callbackFinishedTime;
+    public callbackFinishedTime: number;
 
     // <summary>The timestamp at which ajax was ended</summary>
-    public endTime;
+    public endTime: number;
 
     public xhrMonitoringState: XHRMonitoringState;
 
     // <summary>Determines whether or not JavaScript exception occured in xhr.onreadystatechange code. 1 if occured, otherwise 0.</summary>
-    public clientFailure;
+    public clientFailure: number;
 
     public traceID: string;
     public spanID: string;

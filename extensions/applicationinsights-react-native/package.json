@@ -10,7 +10,7 @@
         "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-react-native"
     },
     "scripts": {
-        "prepublishOnly": "npm run build",
+        "prepublishOnly": "npm install && npm run build",
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "tsc -p tsconfig.json",
         "build:test": "tsc -p Tests/tsconfig.json",
