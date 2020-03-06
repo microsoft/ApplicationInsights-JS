@@ -7,7 +7,7 @@ function _escapeRegEx(str:string) {
     return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
 
-function _replaceAll(str:string, value:string, newValue) {
+function _replaceAll(str:string, value:string, newValue: string) {
     return str.replace(new RegExp(_escapeRegEx(value), "g"), newValue);
 }
 

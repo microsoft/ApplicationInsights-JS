@@ -85,8 +85,8 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
             ctx: null
         };
     
-        let hookCtx = [];
-        let cbArgs:any[] = [funcArgs];
+        let hookCtx: any[] = [];
+        let cbArgs: any[] = [funcArgs];
         _arrLoop((orgArgs as any), (arg) => {
             cbArgs.push(arg);
         });
@@ -115,7 +115,7 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
 }
 
 /** @ignore */
-function _getOwner(target:any, name:string, checkPrototype:boolean) {
+function _getOwner(target:any, name:string, checkPrototype:boolean): any {
     let owner = null;
     if (target) {
         if (target.hasOwnProperty(name)) {

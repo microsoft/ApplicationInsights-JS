@@ -78,7 +78,7 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
      */
     pollInternalLogs(eventName?: string): number {
         let interval = this.config.diagnosticLogInterval;
-        if (!(interval > 0)) {
+        if (!interval || !(interval > 0)) {
             interval = 10000;
         }
 

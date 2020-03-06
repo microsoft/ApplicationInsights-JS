@@ -8,9 +8,9 @@
       "resolved": "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.8.3.tgz"
     },
     "@babel/core": {
-      "version": "7.8.6",
+      "version": "7.8.7",
       "from": "@babel/core@^7.1.0",
-      "resolved": "https://registry.npmjs.org/@babel/core/-/core-7.8.6.tgz",
+      "resolved": "https://registry.npmjs.org/@babel/core/-/core-7.8.7.tgz",
       "dependencies": {
         "debug": {
           "version": "4.1.1",
@@ -25,9 +25,9 @@
       }
     },
     "@babel/generator": {
-      "version": "7.8.6",
-      "from": "@babel/generator@^7.8.6",
-      "resolved": "https://registry.npmjs.org/@babel/generator/-/generator-7.8.6.tgz"
+      "version": "7.8.7",
+      "from": "@babel/generator@^7.8.7",
+      "resolved": "https://registry.npmjs.org/@babel/generator/-/generator-7.8.7.tgz"
     },
     "@babel/helper-function-name": {
       "version": "7.8.3",
@@ -77,9 +77,9 @@
       }
     },
     "@babel/parser": {
-      "version": "7.8.6",
-      "from": "@babel/parser@^7.8.6",
-      "resolved": "https://registry.npmjs.org/@babel/parser/-/parser-7.8.6.tgz"
+      "version": "7.8.7",
+      "from": "@babel/parser@^7.8.7",
+      "resolved": "https://registry.npmjs.org/@babel/parser/-/parser-7.8.7.tgz"
     },
     "@babel/plugin-syntax-object-rest-spread": {
       "version": "7.8.3",
@@ -87,9 +87,9 @@
       "resolved": "https://registry.npmjs.org/@babel/plugin-syntax-object-rest-spread/-/plugin-syntax-object-rest-spread-7.8.3.tgz"
     },
     "@babel/runtime": {
-      "version": "7.8.4",
+      "version": "7.8.7",
       "from": "@babel/runtime@^7.1.2",
-      "resolved": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.8.4.tgz"
+      "resolved": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.8.7.tgz"
     },
     "@babel/template": {
       "version": "7.8.6",
@@ -114,9 +114,9 @@
       }
     },
     "@babel/types": {
-      "version": "7.8.6",
-      "from": "@babel/types@^7.8.6",
-      "resolved": "https://registry.npmjs.org/@babel/types/-/types-7.8.6.tgz"
+      "version": "7.8.7",
+      "from": "@babel/types@^7.8.7",
+      "resolved": "https://registry.npmjs.org/@babel/types/-/types-7.8.7.tgz"
     },
     "@cnakazawa/watch": {
       "version": "1.0.4",
@@ -1973,9 +1973,9 @@
       "resolved": "https://registry.npmjs.org/hooker/-/hooker-0.2.3.tgz"
     },
     "hosted-git-info": {
-      "version": "2.8.7",
+      "version": "2.8.8",
       "from": "hosted-git-info@^2.1.4",
-      "resolved": "https://registry.npmjs.org/hosted-git-info/-/hosted-git-info-2.8.7.tgz"
+      "resolved": "https://registry.npmjs.org/hosted-git-info/-/hosted-git-info-2.8.8.tgz"
     },
     "html-element-map": {
       "version": "1.2.0",
@@ -3749,9 +3749,9 @@
       "resolved": "https://registry.npmjs.org/reflect.ownkeys/-/reflect.ownkeys-0.2.0.tgz"
     },
     "regenerator-runtime": {
-      "version": "0.13.3",
-      "from": "regenerator-runtime@^0.13.2",
-      "resolved": "https://registry.npmjs.org/regenerator-runtime/-/regenerator-runtime-0.13.3.tgz"
+      "version": "0.13.4",
+      "from": "regenerator-runtime@^0.13.4",
+      "resolved": "https://registry.npmjs.org/regenerator-runtime/-/regenerator-runtime-0.13.4.tgz"
     },
     "regex-not": {
       "version": "1.0.2",
