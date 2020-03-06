@@ -843,12 +843,12 @@ export class AjaxTests extends TestClass {
                 // Assert that both headers are sent
                 Assert.equal(true, stub.calledWith(RequestHeaders.requestIdHeader)); // AI
                 Assert.equal(true, stub.calledWith(RequestHeaders.traceParentHeader)); // W3C
-                var id = stub.args[0][0].baseData.id;
-                Assert.equal("|", id[0]);
-                Assert.equal(".", id[id.length - 1]);
 
                 // Emulate response so perf monitoring is cleaned up
                 (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
+                var id = trackStub.args[0][0].baseData.id;
+                Assert.equal("|", id[0]);
+                Assert.equal(".", id[id.length - 1]);
             }
         })
 
