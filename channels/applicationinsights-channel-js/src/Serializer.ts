@@ -136,7 +136,7 @@ export class Serializer {
         return output;
     }
 
-    private _serializeStringMap(map, expectedType, name) {
+    private _serializeStringMap(map: any, expectedType: string, name: string) {
         let output;
         if (map) {
             output = {};

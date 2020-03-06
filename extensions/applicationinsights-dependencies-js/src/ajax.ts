@@ -123,7 +123,7 @@ export interface IDependenciesPlugin {
      * Logs dependency call
      * @param dependencyData dependency data object
      */
-    trackDependencyData(dependency: IDependencyTelemetry);
+    trackDependencyData(dependency: IDependencyTelemetry): void;
 }
 
 export interface IInstrumentationRequirements extends IDependenciesPlugin {
@@ -225,7 +225,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _instrumentFetch();
         
                     if (extensions.length > 0 && extensions) {
-                        let propExt, extIx = 0;
+                        let propExt: any, extIx = 0;
                         while (!propExt && extIx < extensions.length) {
                             if (extensions[extIx] && extensions[extIx].identifier === PropertiesPluginIdentifier) {
                                 propExt = extensions[extIx]
@@ -373,7 +373,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             let fetchData = callDetails.ctx().data;
                             if (fetchData) {
                                 // Replace the result with the new promise from this code
-                                callDetails.rslt = callDetails.rslt.then(response => {
+                                callDetails.rslt = callDetails.rslt.then((response: any) => {
                                     _reportFetchMetrics(callDetails, (response||{}).status, response, fetchData, () => {
                                         let ajaxResponse:IAjaxRecordResponse = {
                                             statusText: response.statusText,
@@ -383,7 +383,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     
                                         if (_enableResponseHeaderTracking) {
                                             const responseHeaderMap = {};
-                                            response.headers.forEach((value, name) => {
+                                            response.headers.forEach((value: string, name: string) => {
                                                 responseHeaderMap[name] = value;
                                             });
                     
@@ -395,7 +395,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     
                                     return response;
                                 })
-                                .catch(reason => {
+                                .catch((reason: any) => {
                                     _reportFetchMetrics(callDetails, 0, input, fetchData, null, { error: reason.message });
                                     throw reason;
                                 });
@@ -544,7 +544,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     && ajaxValidation;
             }
 
-            function _openHandler(xhr: XMLHttpRequestInstrumented, method, url, async) {
+            function _openHandler(xhr: XMLHttpRequestInstrumented, method: string, url: string, async: boolean) {
                 const traceID = (_context && _context.telemetryTrace && _context.telemetryTrace.traceID) || Util.generateW3CId();
                 const spanID = Util.generateW3CId().substr(0, 16);
 
@@ -587,7 +587,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 ajaxData.responseFinishedTime = DateTimeUtils.Now();
                 ajaxData.status = xhr.status;
 
-                function _reportXhrError(e, failedProps?:Object) {
+                function _reportXhrError(e: any, failedProps?:Object) {
                     let errorProps = failedProps||{};
                     errorProps["ajaxDiagnosticsMessage"] = _getFailedAjaxDiagnosticsMessage(xhr);
                     if (e) {
@@ -807,7 +807,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     return;
                 }
 
-                function _reportFetchError(msgId: _InternalMessageId, e, failedProps?:Object) {
+                function _reportFetchError(msgId: _InternalMessageId, e: any, failedProps?:Object) {
                     let errorProps = failedProps||{};
                     errorProps["fetchDiagnosticsMessage"] = _getFailedFetchDiagnosticsMessage(input);
                     if (e) {

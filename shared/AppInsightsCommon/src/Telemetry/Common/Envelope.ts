@@ -14,7 +14,7 @@ export class Envelope extends AIEnvelope implements IEnvelope {
     /**
      * The data contract for serializing this object.
      */
-    public aiDataContract;
+    public aiDataContract: any;
 
     /**
      * Constructs a new instance of telemetry data.

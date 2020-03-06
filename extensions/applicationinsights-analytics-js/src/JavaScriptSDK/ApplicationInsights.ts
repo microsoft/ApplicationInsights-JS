@@ -734,7 +734,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
 class Timing {
 
     public action: (name?: string, url?: string, duration?: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => void;
-    private _name;
+    private _name: string;
     private _events: {
         [key: string]: number;
     };

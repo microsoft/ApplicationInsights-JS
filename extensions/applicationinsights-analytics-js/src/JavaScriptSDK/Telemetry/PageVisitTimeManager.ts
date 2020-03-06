@@ -126,7 +126,7 @@ export class PageVisitData {
     public pageVisitStartTime: number;
     public pageVisitTime: number;
 
-    constructor(pageName, pageUrl) {
+    constructor(pageName: string, pageUrl: string) {
         this.pageVisitStartTime = Date.now();
         this.pageName = pageName;
         this.pageUrl = pageUrl;

@@ -9,16 +9,18 @@ import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { CoreUtils } from "./CoreUtils";
 import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
+import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { ChannelController } from './ChannelController';
 import { IProcessTelemetryContext } from '../JavaScriptSDK.Interfaces/IProcessTelemetryContext';
 import { ProcessTelemetryContext } from './ProcessTelemetryContext';
 import { initializePlugins, sortPlugins } from './TelemetryHelpers';
+import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 
 const validationError = "Extensions must provide callback to initialize";
 
-let _arrForEach = CoreUtils.arrForEach;
-let _isNullOrUndefined = CoreUtils.isNullOrUndefined;
+const _arrForEach = CoreUtils.arrForEach;
+const _isNullOrUndefined = CoreUtils.isNullOrUndefined;
 
 export class BaseCore implements IAppInsightsCore {
     public static defaultConfig: IConfiguration;
@@ -60,14 +62,14 @@ export class BaseCore implements IAppInsightsCore {
         if (!notificationManager) {
             // Create Dummy notification manager
             notificationManager = CoreUtils.objCreate({
-                addNotificationListener: (listener) => { },
-                removeNotificationListener: (listener) => { },
-                eventsSent: (events) => { },
+                addNotificationListener: (listener: INotificationListener) => { },
+                removeNotificationListener: (listener: INotificationListener) => { },
+                eventsSent: (events: ITelemetryItem[]) => { },
                 eventsDiscarded: (events: ITelemetryItem[], reason: number) => { }
             })
         }
 
-        _this._notificationManager = notificationManager;
+        _this._notificationManager = notificationManager as INotificationManager;
         config.extensions = _isNullOrUndefined(config.extensions) ? [] : config.extensions;
 
         // add notification to the extensions in the config so other plugins can access it
@@ -76,7 +78,7 @@ export class BaseCore implements IAppInsightsCore {
 
         if (!logger) {
             logger = CoreUtils.objCreate({
-                throwInternal: (severity, msgId, msg: string, properties?: Object, isUserAct = false) => { },
+                throwInternal: (severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) => { },
                 warnToConsole: (message: string) => { },
                 resetInternalMessageCount: () => { }
             });
@@ -88,8 +90,8 @@ export class BaseCore implements IAppInsightsCore {
         allExtensions.push(...extensions, ...config.extensions);
         allExtensions = sortPlugins(allExtensions);
 
-        let coreExtensions = [];
-        let channelExtensions = [];
+        let coreExtensions:any[] = [];
+        let channelExtensions:any[] = [];
 
         // Check if any two extensions have the same priority, then warn to console
         // And extract the local extensions from the 

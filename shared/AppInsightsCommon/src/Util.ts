@@ -13,7 +13,7 @@ import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 
 let _navigator = getNavigator();
 let _isString = CoreUtils.isString;
-let _uaDisallowsSameSiteNone = null;
+let _uaDisallowsSameSiteNone:boolean = null;
 
 function _endsWith(value:string, search:string) {
     let len = value.length;
@@ -402,7 +402,7 @@ export class Util {
     /**
      * helper method to set userId and sessionId cookie
      */
-    public static setCookie(logger: IDiagnosticLogger, name, value, domain?) {
+    public static setCookie(logger: IDiagnosticLogger, name: string, value: string, domain?: string) {
         if (Util.canUseCookies(logger)) {
             let domainAttrib = "";
             let secureAttrib = "";
@@ -438,7 +438,7 @@ export class Util {
     /**
      * helper method to access userId and sessionId cookie
      */
-    public static getCookie(logger: IDiagnosticLogger, name) {
+    public static getCookie(logger: IDiagnosticLogger, name: string) {
         if (!Util.canUseCookies(logger)) {
             return;
         }
@@ -654,7 +654,7 @@ export class UrlHelper {
     private static document: any = getDocument()||{};
     private static htmlAnchorElement: HTMLAnchorElement;
 
-    public static parseUrl(url): HTMLAnchorElement {
+    public static parseUrl(url: string): HTMLAnchorElement {
         if (!UrlHelper.htmlAnchorElement) {
             UrlHelper.htmlAnchorElement = !!UrlHelper.document.createElement ? UrlHelper.document.createElement('a') : { host: UrlHelper.parseHost(url) }; // fill host field in the fallback case as that is the only externally required field from this fn
         }
@@ -664,7 +664,7 @@ export class UrlHelper {
         return UrlHelper.htmlAnchorElement;
     }
 
-    public static getAbsoluteUrl(url): string {
+    public static getAbsoluteUrl(url: string): string {
         let result: string;
         const a = UrlHelper.parseUrl(url);
         if (a) {
@@ -674,7 +674,7 @@ export class UrlHelper {
         return result;
     }
 
-    public static getPathName(url): string {
+    public static getPathName(url: string): string {
         let result: string;
         const a = UrlHelper.parseUrl(url);
         if (a) {
@@ -731,7 +731,7 @@ export class CorrelationIdHelper {
 
         const includedDomains = config && config.correlationHeaderDomains;
         if (includedDomains) {
-            let matchExists;
+            let matchExists: boolean;
             CoreUtils.arrForEach(includedDomains, (domain) => {
                 const regex = new RegExp(domain.toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
                 matchExists = matchExists || regex.test(requestHost);

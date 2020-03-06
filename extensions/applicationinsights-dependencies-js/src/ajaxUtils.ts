@@ -5,7 +5,7 @@ import { CoreUtils } from '@microsoft/applicationinsights-core-js';
 export { EventHelper }  from '@microsoft/applicationinsights-core-js';
 
 export class stringUtils {
-    public static GetLength(strObject) {
+    public static GetLength(strObject: any) {
         let res = 0;
         if (!CoreUtils.isNullOrUndefined(strObject)) {
             let stringified = "";
