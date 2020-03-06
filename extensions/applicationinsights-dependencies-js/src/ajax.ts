@@ -174,6 +174,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
     constructor() {
         super();
+        let strTrackDependencyDataInternal = "trackDependencyDataInternal"; // Using string to help with minification
         let location = getLocation();
         let _fetchInitialized:boolean = false;      // fetch monitoring initialized
         let _xhrInitialized:boolean = false;        // XHR monitoring initialized
@@ -251,7 +252,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             }
 
             _self.trackDependencyData = (dependency: IDependencyTelemetry, properties?: { [key: string]: any }) => {
-                _trackDependencyDataInternal(dependency, properties);
+                _self[strTrackDependencyDataInternal](dependency, properties);
             }
 
             _self.includeCorrelationHeaders = (ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any => {
@@ -320,7 +321,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 return undefined;
             }
        
-            function _trackDependencyDataInternal(dependency: IDependencyTelemetry, properties?: { [key: string]: any }) {
+            _self[strTrackDependencyDataInternal] = (dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) => {
                 if (_maxAjaxCallsPerView === -1 || _trackAjaxAttempts < _maxAjaxCallsPerView) {
                     // Hack since expected format in w3c mode is |abc.def.
                     // Non-w3c format is |abc.def
@@ -336,7 +337,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         RemoteDependencyData.dataType,
                         RemoteDependencyData.envelopeType,
                         _self[strDiagLog](),
-                        properties);
+                        properties,
+                        systemProperties);
 
                     _self.core.track(item);
                 } else if (_trackAjaxAttempts === _maxAjaxCallsPerView) {
@@ -635,7 +637,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         });
 
                         if (dependency) {
-                            _trackDependencyDataInternal(dependency);
+                            _self[strTrackDependencyDataInternal](dependency);
                         } else {
                             _reportXhrError(null, {
                                     requestSentTime: ajaxData.requestSentTime,
@@ -826,7 +828,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 _findPerfResourceEntry("fetch", ajaxData, () => {
                     const dependency = ajaxData.CreateTrackItem("Fetch", _enableRequestHeaderTracking, getResponse);
                     if (dependency) {
-                        _trackDependencyDataInternal(dependency);
+                        _self[strTrackDependencyDataInternal](dependency);
                     } else {
                         _reportFetchError(_InternalMessageId.FailedMonitorAjaxDur, null,
                             {
@@ -874,11 +876,21 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
      * Logs dependency call
      * @param dependencyData dependency data object
      */
-    trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any }) {
+    public trackDependencyData(dependency: IDependencyTelemetry, properties?: { [key: string]: any }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public includeCorrelationHeaders(ajaxData: ajaxRecord, input?: Request | string, init?: RequestInit, xhr?: XMLHttpRequestInstrumented): any {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Protected function to allow sub classes the chance to add additional properties to the delendency event
+     * before it's sent. This function calls track, so sub-classes must call this function after they have
+     * populated their properties.
+     * @param dependencyData dependency data object
+     */
+    protected trackDependencyDataInternal(dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }
