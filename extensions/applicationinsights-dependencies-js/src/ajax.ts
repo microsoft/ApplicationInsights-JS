@@ -323,6 +323,15 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
        
             _self[strTrackDependencyDataInternal] = (dependency: IDependencyTelemetry, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) => {
                 if (_maxAjaxCallsPerView === -1 || _trackAjaxAttempts < _maxAjaxCallsPerView) {
+                    // Hack since expected format in w3c mode is |abc.def.
+                    // Non-w3c format is |abc.def
+                    // @todo Remove if better solution is available, e.g. handle in portal 
+                    if ((_config.distributedTracingMode === DistributedTracingModes.W3C
+                        || _config.distributedTracingMode === DistributedTracingModes.AI_AND_W3C) 
+                        && typeof dependency.id === "string" && dependency.id[dependency.id.length - 1] !== "."
+                    ) {
+                        dependency.id += ".";
+                    }
                     const item = TelemetryItemCreator.create<IDependencyTelemetry>(
                         dependency,
                         RemoteDependencyData.dataType,

@@ -829,6 +829,8 @@ export class AjaxTests extends TestClass {
                     }
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                var trackStub = this.sandbox.stub(appInsightsCore, "track");
+
                 // Use test hook to simulate the correct url location
                 this._ajax["_currentWindowHost"] = "www.example.com";
 
@@ -844,6 +846,9 @@ export class AjaxTests extends TestClass {
 
                 // Emulate response so perf monitoring is cleaned up
                 (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
+                var id = trackStub.args[0][0].baseData.id;
+                Assert.equal("|", id[0]);
+                Assert.equal(".", id[id.length - 1]);
             }
         })
 
