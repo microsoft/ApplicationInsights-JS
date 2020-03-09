@@ -539,7 +539,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
      */
     private _xhrSender(payload: string[], isAsync: boolean) {
         const xhr = new XMLHttpRequest();
-        xhr[DisabledPropertyName] = true;
+        if (Object.isExtensible(xhr)) {
+            xhr[DisabledPropertyName] = true;
+        }
         xhr.open("POST", this._senderConfig.endpointUrl(), isAsync);
         xhr.setRequestHeader("Content-type", "application/json");
 
