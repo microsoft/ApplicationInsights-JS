@@ -1,5 +1,12 @@
 # Releases
 
+## 2.5.2
+
+### Changelog
+
+- #1217 [BUG] App Insights fails when the XHR object is not extensible (or frozen)
+- #1186 [BUG] App Insights initialization setting 'enableAjaxErrorStatusText is not working #1218
+
 ## 2.5.1
 
 ### Changelog
