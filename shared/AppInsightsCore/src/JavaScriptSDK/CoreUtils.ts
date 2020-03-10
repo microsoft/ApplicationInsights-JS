@@ -397,6 +397,26 @@ export class CoreUtils {
     }
 
     /**
+     * Try to determine if the object is extensible when run within an >= ES5 container.
+     * For < ES5 containers where the method does not exist, always return true.
+     * @param target The object on which to determine extensibility.
+     * @returns True if the object is extensible.
+     */
+    public static isExtensible<T>(obj:object) : boolean {
+        let extensibleProp = Object["isExtensible"];
+        if (extensibleProp) {
+            try {
+                return extensibleProp(obj);
+            } catch (e) {
+                // ES5 will throw a typeError if user passes a primitive
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    /**
      * Trys to add an event handler for the specified event to the window, body and document
      * @param eventName {string} - The name of the event
      * @param callback {any} - The callback function that needs to be executed for the given event
