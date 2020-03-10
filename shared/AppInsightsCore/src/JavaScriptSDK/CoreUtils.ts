@@ -402,7 +402,7 @@ export class CoreUtils {
      * @param target The object on which to determine extensibility.
      * @returns True if the object is extensible.
      */
-    public static isExtensible<T>(obj:object) : boolean {
+    public static isExtensible(obj:object) : boolean {
         let extensibleProp = Object["isExtensible"];
         if (extensibleProp) {
             try {
