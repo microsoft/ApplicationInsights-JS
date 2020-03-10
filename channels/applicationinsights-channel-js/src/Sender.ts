@@ -32,6 +32,16 @@ declare var XDomainRequest: {
 
 export type SenderFunction = (payload: string[], isAsync: boolean) => void;
 
+function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
+    try {
+        return xhr.responseText;
+    } catch (e) {
+        // Best effort, as XHR may throw while XDR wont so just ignore
+    }
+
+    return null;
+}
+
 export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
     public static constructEnvelope(orig: ITelemetryItem, iKey: string, logger: IDiagnosticLogger): IEnvelope {
@@ -335,7 +345,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         if (xhr.readyState === 4) {
             let response: IBackendResponse = null;
             if (!this._appId) {
-                response = this._parseResponse(xhr.responseText || xhr.response);
+                response = this._parseResponse(_getResponseText(xhr) || xhr.response);
                 if (response && response.appId) {
                     this._appId = response.appId;
                 }
@@ -365,7 +375,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             } else {
                 if (xhr.status === 206) {
                     if (!response) {
-                        response = this._parseResponse(xhr.responseText || xhr.response);
+                        response = this._parseResponse(_getResponseText(xhr) || xhr.response);
                     }
 
                     if (response && !this._senderConfig.isRetryDisabled()) {
@@ -485,11 +495,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
      * xdr state changes
      */
     public _xdrOnLoad(xdr: IXDomainRequest, payload: string[]) {
-        if (xdr && (xdr.responseText + "" === "200" || xdr.responseText === "")) {
+        const responseText = _getResponseText(xdr);
+        if (xdr && (responseText + "" === "200" || responseText === "")) {
             this._consecutiveErrors = 0;
             this._onSuccess(payload, 0);
         } else {
-            const results = this._parseResponse(xdr.responseText);
+            const results = this._parseResponse(responseText);
 
             if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
                 && !this._senderConfig.isRetryDisabled()) {
@@ -539,12 +550,18 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
      */
     private _xhrSender(payload: string[], isAsync: boolean) {
         const xhr = new XMLHttpRequest();
-        xhr[DisabledPropertyName] = true;
-        xhr.open("POST", this._senderConfig.endpointUrl(), isAsync);
+        const endPointUrl = this._senderConfig.endpointUrl();
+        try {
+            xhr[DisabledPropertyName] = true;
+        } catch(e) {
+            // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
+            // cause the request to fail and we no telemetry would be sent
+        }
+        xhr.open("POST", endPointUrl, isAsync);
         xhr.setRequestHeader("Content-type", "application/json");
 
         // append Sdk-Context request header only in case of breeze endpoint
-        if (Util.isInternalApplicationInsightsEndpoint(this._senderConfig.endpointUrl())) {
+        if (Util.isInternalApplicationInsightsEndpoint(endPointUrl)) {
             xhr.setRequestHeader(RequestHeaders.sdkContextHeader, RequestHeaders.sdkContextHeaderAppIdRequest);
         }
 
@@ -658,7 +675,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
     private _formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
         if (xhr) {
-            return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + xhr.responseText || xhr.response || "";
+            return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + _getResponseText(xhr) || xhr.response || "";
         }
 
         return message;
@@ -705,7 +722,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
     private _formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): string {
         if (xdr) {
-            return "XDomainRequest,Response:" + xdr.responseText || "";
+            return "XDomainRequest,Response:" + _getResponseText(xdr) || "";
         }
 
         return message;
