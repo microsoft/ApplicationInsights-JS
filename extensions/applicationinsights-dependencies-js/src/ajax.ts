@@ -19,6 +19,7 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 
 const AJAX_MONITOR_PREFIX = "ai.ajxmn.";
 const strDiagLog = "diagLog";
+const strAjaxData = "ajaxData";
 const strThrowInternal = "throwInternal";
 const strFetch = "fetch";
 
@@ -47,7 +48,7 @@ function _supportsFetch(): (input: RequestInfo, init?: RequestInit) => Promise<R
  * @returns True if Ajax monitoring is supported on this page, otherwise false
  * @ignore
  */
-function _supportsAjaxMonitoring(): boolean {
+function _supportsAjaxMonitoring(ajaxMonitorInstance:AjaxMonitor): boolean {
     let result = false;
 
     if (typeof XMLHttpRequest !== strUndefined && !_isNullOrUndefined(XMLHttpRequest)) {
@@ -65,6 +66,27 @@ function _supportsAjaxMonitoring(): boolean {
         result = false;
     }
 
+    if (result) {
+        // Disable if the XmlHttpRequest can't be extended or hooked
+        try {
+            let xhr = new XMLHttpRequest();
+            xhr[strAjaxData] = {};
+
+            // Check that we can update the prototype
+            let theOpen = XMLHttpRequest[strPrototype].open;
+            XMLHttpRequest[strPrototype].open = theOpen;
+        } catch (e) {
+            // We can't decorate the xhr object so disable monitoring
+            result = false;
+            _throwInternalCritical(ajaxMonitorInstance,
+                _InternalMessageId.FailedMonitorAjaxOpen,
+                "Failed to enable XMLHttpRequest monitoring, extension is not supported",
+                {
+                    exception: Util.dump(e)
+                });        
+        }
+    }
+
     return result;
 }
 
@@ -73,9 +95,9 @@ function _getFailedAjaxDiagnosticsMessage(xhr: XMLHttpRequestInstrumented): stri
     let result = "";
     try {
         if (!_isNullOrUndefined(xhr) &&
-            !_isNullOrUndefined(xhr.ajaxData) &&
-            !_isNullOrUndefined(xhr.ajaxData.requestUrl)) {
-            result += "(url: '" + xhr.ajaxData.requestUrl + "')";
+            !_isNullOrUndefined(xhr[strAjaxData]) &&
+            !_isNullOrUndefined(xhr[strAjaxData].requestUrl)) {
+            result += "(url: '" + xhr[strAjaxData].requestUrl + "')";
         }
     } catch (e) { }
 
@@ -359,12 +381,16 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 }
 
                 let global = getGlobal();
+                let isPolyfill = (fetch as any).polyfill;
                 if (_config.disableFetchTracking === false) {
                     _hooks.push(InstrumentFunc(global, strFetch, {
                         // Add request hook
                         req: (callDetails: IInstrumentCallDetails, input, init) => {
                             let fetchData: ajaxRecord;
-                            if (_fetchInitialized && !_isDisabledRequest(null, input, init)) {
+                            if (_fetchInitialized && 
+                                    !_isDisabledRequest(null, input, init) && 
+                                    // If we have a polyfil and XHR instrumented then let XHR report otherwise we get duplicates
+                                    !(isPolyfill && _xhrInitialized)) {
                                 let ctx = callDetails.ctx();
                                 fetchData = _createFetchRecord(input, init);
                                 init = _self.includeCorrelationHeaders(fetchData, input, init);
@@ -409,7 +435,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     }));
     
                     _fetchInitialized = true;
-                } else if ((fetch as any).polyfill) {
+                } else if (isPolyfill) {
                     // If fetch is a polyfill we need to capture the request to ensure that we correctly track
                     // disabled request URLS (i.e. internal urls) to ensure we don't end up in a constant loop
                     // of reporting ourselves, for example React Native uses a polyfill for fetch
@@ -423,6 +449,12 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         }
                     }));
                 }
+
+                if (isPolyfill) {
+                    // retag the instrumented fetch with the same polyfill settings this is mostly for testing
+                    // But also supports multiple App Insights usages
+                    (global[strFetch] as any).polyfill = isPolyfill;
+                }
             }
 
             function _hookProto(target: any, funcName: string, callbacks: IInstrumentHooksCallbacks) {
@@ -430,12 +462,12 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             }
 
             function _instrumentXhr():void {
-                if (_supportsAjaxMonitoring() && !_xhrInitialized) {
+                if (_supportsAjaxMonitoring(_self) && !_xhrInitialized) {
                     // Instrument open
                     _hookProto(XMLHttpRequest, "open", {
                         req: (args:IInstrumentCallDetails, method:string, url:string, async?:boolean) => {
                             let xhr = args.inst as XMLHttpRequestInstrumented;
-                            let ajaxData = xhr.ajaxData;
+                            let ajaxData = xhr[strAjaxData];
                             if (!_isDisabledRequest(xhr, url) && _isMonitoredXhrInstance(xhr, true) && 
                                     (!ajaxData || !ajaxData.xhrMonitoringState.openDone)) {
                                 _openHandler(xhr, method, url, async);
@@ -449,7 +481,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _hookProto(XMLHttpRequest, "send", {
                         req: (args:IInstrumentCallDetails, context?: Document | BodyInit | null) => {
                             let xhr = args.inst as XMLHttpRequestInstrumented;
-                            let ajaxData = xhr.ajaxData;
+                            let ajaxData = xhr[strAjaxData];
                             if (_isMonitoredXhrInstance(xhr) && !ajaxData.xhrMonitoringState.sendDone) {
                                 _createMarkId("xhr", ajaxData);
                                 ajaxData.requestSentTime = DateTimeUtils.Now();
@@ -465,7 +497,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _hookProto(XMLHttpRequest, "abort", {
                         req: (args:IInstrumentCallDetails) => {
                             let xhr = args.inst as XMLHttpRequestInstrumented;
-                            let ajaxData = xhr.ajaxData;
+                            let ajaxData = xhr[strAjaxData];
                             if (_isMonitoredXhrInstance(xhr) && !ajaxData.xhrMonitoringState.abortDone) {
                                 ajaxData.aborted = 1;
                                 ajaxData.xhrMonitoringState.abortDone = true;
@@ -481,7 +513,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             req: (args: IInstrumentCallDetails, header: string, value: string) => {
                                 let xhr = args.inst as XMLHttpRequestInstrumented;
                                 if (_isMonitoredXhrInstance(xhr)) {
-                                    xhr.ajaxData.requestHeaders[header] = value;
+                                    xhr[strAjaxData].requestHeaders[header] = value;
                                 }
                             },
                             hkErr: _createErrorCallbackFunc(_self, _InternalMessageId.FailedMonitorAjaxSetRequestHeader, 
@@ -508,7 +540,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                 // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
                 if (!_isNullOrUndefined(xhr)) {
-                    isDisabled = xhr[DisabledPropertyName] === true;
+                    // Look on the XMLHttpRequest of the URL string value
+                    isDisabled = xhr[DisabledPropertyName] === true || theUrl[DisabledPropertyName] === true;
                 } else if (!_isNullOrUndefined(request)) { // fetch
                     // Look for DisabledPropertyName in either Request or RequestInit
                     isDisabled = (typeof request === 'object' ? request[DisabledPropertyName] === true : false) ||
@@ -537,7 +570,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 let ajaxValidation = true;
                 let initialized = _xhrInitialized;
                 if (!_isNullOrUndefined(xhr)) {
-                    ajaxValidation = excludeAjaxDataValidation === true || !_isNullOrUndefined(xhr.ajaxData);
+                    ajaxValidation = excludeAjaxDataValidation === true || !_isNullOrUndefined(xhr[strAjaxData]);
                 }
 
                 // checking to see that all interested functions on xhr were instrumented
@@ -556,13 +589,13 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 ajaxData.xhrMonitoringState.openDone = true;
                 ajaxData.requestHeaders = {};
                 ajaxData.async = async;
-                xhr.ajaxData = ajaxData;
+                xhr[strAjaxData] = ajaxData;
 
                 _attachToOnReadyStateChange(xhr);
             }
 
             function _attachToOnReadyStateChange(xhr: XMLHttpRequestInstrumented) {
-                xhr.ajaxData.xhrMonitoringState.stateChangeAttached = EventHelper.Attach(xhr, "readystatechange", () => {
+                xhr[strAjaxData].xhrMonitoringState.stateChangeAttached = EventHelper.Attach(xhr, "readystatechange", () => {
                     try {
                         if (xhr && xhr.readyState === 4 && _isMonitoredXhrInstance(xhr)) {
                             _onAjaxComplete(xhr);
@@ -584,8 +617,22 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 });
             }
 
+            function _getResponseText(xhr: XMLHttpRequestInstrumented) {
+                try {
+                    const responseType = xhr.responseType;
+                    if (responseType === "" || responseType === "text") {
+                        // As per the specification responseText is only valid if the type is an empty string or "text"
+                        return xhr.responseText;
+                    }
+                } catch (e) {
+                    // This shouldn't happend because of the above check -- but just in case, so just ignore
+                }
+
+                return null;
+            }
+
             function _onAjaxComplete(xhr: XMLHttpRequestInstrumented) {
-                let ajaxData = xhr.ajaxData;
+                let ajaxData = xhr[strAjaxData];
                 ajaxData.responseFinishedTime = DateTimeUtils.Now();
                 ajaxData.status = xhr.status;
 
@@ -611,7 +658,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 headerMap: null,
                                 correlationContext: _getAjaxCorrelationContext(xhr),
                                 type: xhr.responseType,
-                                responseText: xhr.responseText,
+                                responseText: _getResponseText(xhr),
                                 response: xhr.response
                             };
     
@@ -646,7 +693,11 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         }
                     } finally {
                         // cleanup telemetry data
-                        xhr.ajaxData = null;
+                        try {
+                            xhr[strAjaxData] = null;
+                        } catch (e) {
+                            // May throw in environments that prevent extension or freeze xhr
+                        }
                     }
                 }, (e) => {
                     _reportXhrError(e, null);

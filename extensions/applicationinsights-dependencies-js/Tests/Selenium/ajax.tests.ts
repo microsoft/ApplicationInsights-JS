@@ -1447,6 +1447,166 @@ export class AjaxPerfTests extends TestClass {
     }
 }
 
+export class AjaxFrozenTests extends TestClass {
+
+    private _fetch:any;
+    private _xmlHttpRequest:XMLHttpRequest;
+    private _ajax:AjaxMonitor;
+    private _context:any;
+
+    constructor(name?: string) {
+        super(name);
+
+        this.useFakeTimers = false;
+        this.useFakeServer = false;
+        this._context = {};
+    }
+
+    public testInitialize() {
+        this._context = {};
+        this._fetch = getGlobalInst("fetch");
+        this._xmlHttpRequest = getGlobalInst("XMLHttpRquest)");
+    }
+
+    public testCleanup() {
+        this._context = {};
+        if (this._ajax) {
+            this._ajax.teardown();
+            this._ajax = null;
+        }
+
+        // Restore the real fetch
+        window.fetch = this._fetch;
+        window["XMLHttpRequest"] = this._xmlHttpRequest;
+    }
+
+    public registerTests() {
+
+        this.testCaseAsync({
+            name: "AjaxFrozenTests: check for prevent extensions",
+            stepDelay: 10,
+            steps: [ () => {
+                Object.preventExtensions(XMLHttpRequest);
+                Object.freeze(XMLHttpRequest);
+                let reflect:any = getGlobalInst("Reflect");
+                if (reflect) {
+                    reflect.preventExtensions(XMLHttpRequest);
+                }
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { 
+                    instrumentationKey: "instrumentationKey", 
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId"
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                this._ajax["_currentWindowHost"] = "httpbin.org";
+
+                // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
+                this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
+                this._context["throwSpy"] = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
+
+                // Act
+                var xhr = new XMLHttpRequest();
+
+                // Make sure the instance can't be changed
+                Object.preventExtensions(xhr);
+                Object.freeze(xhr);
+                if (reflect) {
+                    reflect["preventExtensions"](xhr);
+                }
+
+                // trigger the request that should cause a track event once the xhr request is complete
+                xhr.open("GET", "https://httpbin.org/status/200");
+                xhr.send();
+            }]
+            .concat(PollingAssert.createPollingAssert(() => {
+                let throwSpy = this._context["throwSpy"] as SinonStub;
+                if (throwSpy.called) {
+                    Assert.ok(throwSpy.calledOnce, "track is called");
+                    let message = throwSpy.args[0][2];
+                    Assert.notEqual(-1, message.indexOf("Failed to monitor XMLHttpRequest"));
+                    let data = throwSpy.args[0][3];
+                    Assert.notEqual(-1, data.exception.indexOf("Cannot add property ajaxData"));
+                    return true;
+                }
+
+                return false;
+            }, 'response received', 60, 1000) as any)
+        });
+
+        // This is currently a manual test as we don't have hooks / mocks defined to automated this today
+        // this.testCaseAsync({
+        //     name: "AjaxFrozenTests: check frozen prototype",
+        //     stepDelay: 10,
+        //     steps: [ () => {
+        //         Object.preventExtensions(XMLHttpRequest.prototype);
+        //         Object.freeze(XMLHttpRequest.prototype);
+        //         let reflect:any = getGlobalInst("Reflect");
+        //         if (reflect) {
+        //             reflect.preventExtensions(XMLHttpRequest.prototype);
+        //         }
+
+        //         this._ajax = new AjaxMonitor();
+        //         let appInsightsCore = new AppInsightsCore();
+        //         let coreConfig = { 
+        //             instrumentationKey: "instrumentationKey", 
+        //             extensionConfig: {
+        //                 "AjaxDependencyPlugin": {
+        //                     appId: "appId"
+        //                 }
+        //             }
+        //         };
+        //         let testThis = this;
+        //         appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+        //         appInsightsCore.addNotificationListener({
+        //             eventsSent: (events: ITelemetryItem[]) => {
+        //                 testThis._context["_eventsSent"] = events;
+        //             }
+        //         });
+        //         this._ajax["_currentWindowHost"] = "httpbin.org";
+
+        //         // Used to "wait" for App Insights to finish initializing which should complete after the XHR request
+        //         this._context["trackStub"] = this.sandbox.stub(appInsightsCore, "track");
+
+        //         // Act
+        //         var xhr = new XMLHttpRequest();
+
+        //         // Make sure the instance can't be changed
+        //         Object.preventExtensions(xhr);
+        //         Object.freeze(xhr);
+        //         if (reflect) {
+        //             reflect["preventExtensions"](xhr);
+        //         }
+
+        //         // trigger the request that should cause a track event once the xhr request is complete
+        //         xhr.open("GET", "https://httpbin.org/status/200");
+        //         xhr.send();
+        //         appInsightsCore.track({
+        //             name: "Hello World!"
+        //         });
+        //     }]
+        //     .concat(PollingAssert.createPollingAssert(() => {
+        //         let trackStub = this._context["trackStub"] as SinonStub;
+        //         if (trackStub.called) {
+        //             Assert.ok(trackStub.calledOnce, "track is called");
+        //             let data = trackStub.args[0][0].baseData;
+        //             Assert.equal("Ajax", data.type, "request is Ajax type");
+        //             let props = data.properties || {};
+        //             Assert.equal(undefined, props.ajaxPerf, "Should contain properties perf object");
+        //             return true;
+        //         }
+
+        //         return false;
+        //     }, 'response received', 600, 1000) as any)
+        // });
+    }
+}
+
 class TestChannelPlugin implements IChannelControls {
 
     public isFlushInvoked = false;

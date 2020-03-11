@@ -34,6 +34,7 @@ export class ApplicationInsightsTests extends TestClass {
 
     private _ai: ApplicationInsights;
     private _aiName: string = 'AppInsightsSDK';
+    private isFetchPolyfill:boolean = false;
 
     // Sinon
     private errorSpy: SinonSpy;
@@ -51,6 +52,7 @@ export class ApplicationInsightsTests extends TestClass {
 
     public testInitialize() {
         try {
+            this.isFetchPolyfill = fetch["polyfill"];
             this.useFakeServer = false;
             (sinon.fakeServer as any).restore();
             this.useFakeTimers = false;
@@ -374,7 +376,7 @@ export class ApplicationInsightsTests extends TestClass {
         let global = getGlobal();
         if (global && global.fetch) {
             this.testCaseAsync({
-                name: "DependenciesPlugin: auto collection of outgoing fetch requests",
+                name: "DependenciesPlugin: auto collection of outgoing fetch requests " + (this.isFetchPolyfill ? " using polyfill " : ""),
                 stepDelay: 5000,
                 steps: [
                     () => {
@@ -401,9 +403,15 @@ export class ApplicationInsightsTests extends TestClass {
                             }
                         });
                         
+                        let type = "Fetch";
+                        if (this.isFetchPolyfill) {
+                            type = "Ajax";
+                            Assert.ok(true, "Using fetch polyfill");
+                        }
+                        
                         Assert.equal(3, args.length, "track is called 3 times");
                         let baseData = args[0].baseData;
-                        Assert.equal("Fetch", baseData.type, "request is Fetch type");
+                        Assert.equal(type, baseData.type, "request is " + type + " type");
                         Assert.equal('value', baseData.properties.requestHeaders['header'], "fetch request's user defined request header is stored");
                         Assert.ok(baseData.properties.responseHeaders, "fetch request's reponse header is stored");
 
@@ -441,14 +449,14 @@ export class ApplicationInsightsTests extends TestClass {
                     this._ai.trackEvent({ name: "Custom event via addTelemetryInitializer" });
                 }
             ]
-            .concat(this.asserts(1))
+            .concat(this.asserts(1, false, false))
             .concat(PollingAssert.createPollingAssert(() => {
                 const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                 if (payloadStr.length) {
                     const payload = JSON.parse(payloadStr[0]);
-                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
-                    Assert.ok(payload);
-
+                        Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
+                        Assert.ok(payload);
+    
                     if (payload && payload.tags) {
                         const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
                         const tagExpect: string = 'my.custom.cloud.name';
