@@ -7,6 +7,7 @@ import {
 import {
     strFunction, strPrototype
 } from "./EnvUtils"
+import { CoreUtils } from './CoreUtils';
 
 const aiInstrumentHooks = "_aiHooks";
 
@@ -118,7 +119,7 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
 function _getOwner(target:any, name:string, checkPrototype:boolean): any {
     let owner = null;
     if (target) {
-        if (target.hasOwnProperty(name)) {
+        if (CoreUtils.hasOwnProperty(target, name)) {
             owner = target;
         } else if (checkPrototype) {
             owner = _getOwner(target[strPrototype], name, false);
