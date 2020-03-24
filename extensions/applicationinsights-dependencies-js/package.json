@@ -33,7 +33,7 @@
         "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
-        "@microsoft/dynamicproto-js": "^0.5.1",
+        "@microsoft/dynamicproto-js": "^0.5.2",
         "@microsoft/applicationinsights-core-js": "2.5.2",
         "@microsoft/applicationinsights-common": "2.5.2",
         "tslib": "1.10.0"
