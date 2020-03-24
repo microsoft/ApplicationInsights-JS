@@ -375,7 +375,7 @@ export class SenderTests extends TestClass {
                 Assert.ok(baseData.ver);
                 Assert.equal(2, baseData.ver);
 
-                Assert.equal("javascript:2.5.2", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
+                Assert.equal("javascript:2.5.3", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
             }
         })
 
