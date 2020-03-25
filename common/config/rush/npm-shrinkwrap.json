@@ -1620,9 +1620,9 @@
       }
     },
     "extract-zip": {
-      "version": "1.6.7",
-      "from": "extract-zip@>=1.6.5 <2.0.0",
-      "resolved": "https://registry.npmjs.org/extract-zip/-/extract-zip-1.6.7.tgz"
+      "version": "1.6.8",
+      "from": "extract-zip@^1.6.5",
+      "resolved": "https://registry.npmjs.org/extract-zip/-/extract-zip-1.6.8.tgz"
     },
     "extsprintf": {
       "version": "1.3.0",
@@ -3222,16 +3222,9 @@
       }
     },
     "mkdirp": {
-      "version": "0.5.1",
-      "from": "mkdirp@0.5.1",
-      "resolved": "https://registry.npmjs.org/mkdirp/-/mkdirp-0.5.1.tgz",
-      "dependencies": {
-        "minimist": {
-          "version": "0.0.8",
-          "from": "minimist@0.0.8",
-          "resolved": "https://registry.npmjs.org/minimist/-/minimist-0.0.8.tgz"
-        }
-      }
+      "version": "0.5.4",
+      "from": "mkdirp@0.5.4",
+      "resolved": "https://registry.npmjs.org/mkdirp/-/mkdirp-0.5.4.tgz"
     },
     "moo": {
       "version": "0.5.1",

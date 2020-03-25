@@ -1,5 +1,11 @@
 # Releases
 
+## 2.5.3
+
+### Changelog
+
+- #1224 [BUG] When running in IE7/8 the app insights doesn't initialize and gets stuck in a loop (long running script)
+
 ## 2.5.2
 
 ### Changelog
