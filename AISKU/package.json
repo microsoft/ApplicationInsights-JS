@@ -58,5 +58,6 @@
         "@microsoft/applicationinsights-dependencies-js": "2.5.3",
         "@microsoft/applicationinsights-properties-js": "2.5.3",
         "tslib": "1.10.0"
-    }
+    },
+    "license": "MIT"
 }
