@@ -31,6 +31,7 @@
         "jest": "^24.7.1",
         "grunt": "1.0.1",
         "ts-jest": "^24.0.2",
+        "react": "^16.8.6",
         "react-dom": "^16.8.6",
         "rollup": "^0.66.0",
         "rollup-plugin-node-resolve": "^3.4.0",
@@ -45,8 +46,10 @@
         "@microsoft/applicationinsights-core-js": "2.5.3",
         "@microsoft/applicationinsights-common": "2.5.3",
         "tslib": "1.10.0",
-        "react": "^16.8.6",
         "history": "^4.9.0"
+    },
+    "peerDependencies": {
+        "react": "^16.0.0"
     },
     "license": "MIT"
 }
