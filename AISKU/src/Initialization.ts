@@ -48,6 +48,7 @@ export class Initialization implements IApplicationInsights {
     private properties: PropertiesPlugin;
 
     constructor(snippet: Snippet) {
+        let _this = this;
         // initialize the queue and config in case they are undefined
         snippet.queue = snippet.queue || [];
         snippet.version = snippet.version || 2.0; // Default to new version
@@ -60,15 +61,15 @@ export class Initialization implements IApplicationInsights {
             config.instrumentationKey = cs.instrumentationkey || config.instrumentationKey;
         }
 
-        this.appInsights = new ApplicationInsights();
+        _this.appInsights = new ApplicationInsights();
 
-        this.properties = new PropertiesPlugin();
-        this.dependencies = new DependenciesPlugin();
-        this.core = new AppInsightsCore();
+        _this.properties = new PropertiesPlugin();
+        _this.dependencies = new DependenciesPlugin();
+        _this.core = new AppInsightsCore();
 
-        this.snippet = snippet;
-        this.config = config;
-        this.getSKUDefaults();
+        _this.snippet = snippet;
+        _this.config = config;
+        _this.getSKUDefaults();
     }
 
     // Analytics Plugin
@@ -266,6 +267,19 @@ export class Initialization implements IApplicationInsights {
     public loadAppInsights(legacyMode: boolean = false): IApplicationInsights {
         let _this = this;
 
+        function _updateSnippetProperties(snippet: Snippet) {
+            if (snippet) {
+                // apply updated properties to the global instance (snippet)
+                for (const field in _this) {
+                    if (CoreUtils.isString(field) && 
+                            !CoreUtils.isFunction(_this[field]) && 
+                            field.substring(0, 1) !== "_") {            // Don't copy "internal" values
+                        snippet[field as string] = _this[field];
+                    }
+                }
+            }
+        }
+        
         // dont allow additional channels/other extensions for legacy mode; legacy mode is only to allow users to switch with no code changes!
         if (legacyMode && _this.config.extensions && _this.config.extensions.length > 0) {
             throw new Error("Extensions not allowed in legacy mode");
@@ -281,12 +295,13 @@ export class Initialization implements IApplicationInsights {
 
         // initialize core
         _this.core.initialize(_this.config, extensions);
+        _this.context = _this.properties.context;
+        _updateSnippetProperties(_this.snippet);
 
         // Empty queue of all api calls logged prior to sdk download
         _this.emptyQueue();
         _this.pollInternalLogs();
         _this.addHousekeepingBeforeUnload(this);
-        _this.context = _this.properties.context;
 
         return _this;
     }
@@ -305,7 +320,6 @@ export class Initialization implements IApplicationInsights {
                 snippet[field as string] = this[field];
             }
         }
-
     }
 
     /**
@@ -314,6 +328,7 @@ export class Initialization implements IApplicationInsights {
      */
     public emptyQueue() {
         let _this = this;
+
         // call functions that were queued before the main script was loaded
         try {
             if (Common.Util.isArray(_this.snippet.queue)) {
