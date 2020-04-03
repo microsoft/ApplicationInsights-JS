@@ -33,7 +33,7 @@
         "@microsoft/applicationinsights-core-js": "2.5.3"
     },
     "peerDependencies": {
-        "tslib": "1.10.0"
+        "tslib": "^1.11.1"
     },
     "license": "MIT"
 }
