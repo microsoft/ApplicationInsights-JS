@@ -155,7 +155,7 @@ class TestClass {
         };
 
         // Register the test with QUnit
-        QUnit.test(testInfo.name, testMethod);
+        QUnit.test(testInfo.name + " (Async)", testMethod);
     }
 
     /** Register a Javascript unit testcase. */

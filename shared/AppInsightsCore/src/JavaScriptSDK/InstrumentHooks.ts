@@ -77,20 +77,32 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
     return function () {
         let funcThis = this;
         // Capture the original arguments passed to the method
-        let orgArgs = arguments;
+        let orgArgs = arguments as any;
         let hooks = aiHook.h;
 
         let funcArgs:IInstrumentCallDetails = {
             name: aiHook.n,
             inst: funcThis,
-            ctx: null
+            ctx: null,
+            set: _replaceArg
         };
-    
+
         let hookCtx: any[] = [];
-        let cbArgs: any[] = [funcArgs];
-        _arrLoop((orgArgs as any), (arg) => {
-            cbArgs.push(arg);
-        });
+        let cbArgs = _createArgs([funcArgs], orgArgs);
+
+        function _createArgs(target:any[], theArgs:any[]): any[] {
+            _arrLoop((theArgs as any), (arg) => {
+                target.push(arg);
+            });
+
+            return target;
+        }
+
+        function _replaceArg(idx:number, value:any) {
+            orgArgs = _createArgs([], orgArgs);
+            orgArgs[idx] = value;
+            cbArgs = _createArgs([funcArgs], orgArgs);
+        }
 
         // Call the pre-request hooks
         _doCallbacks(hooks, funcArgs, cbArgs, hookCtx, CallbackType.Request);
