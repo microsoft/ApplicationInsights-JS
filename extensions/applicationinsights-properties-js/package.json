@@ -34,7 +34,7 @@
     "dependencies": {
         "@microsoft/applicationinsights-core-js": "2.5.4",
         "@microsoft/applicationinsights-common": "2.5.4",
-        "tslib": "1.10.0"
+        "tslib": "^1.11.1"
     },
     "license": "MIT"
 }

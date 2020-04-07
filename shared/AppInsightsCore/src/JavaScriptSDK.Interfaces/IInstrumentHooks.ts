@@ -70,6 +70,13 @@ export interface IInstrumentCallDetails {
     ctx: () => any;
 
     /**
+     * Allows the hook functions to replace the original arguments
+     * @param idx - The argument index (0 based)
+     * @param value - The new value for the argument
+     */
+    set: (idx:number, value:any) => void;
+
+    /**
      * The result of the original method, only populated after the original method has returned
      */
     rslt?: any;
