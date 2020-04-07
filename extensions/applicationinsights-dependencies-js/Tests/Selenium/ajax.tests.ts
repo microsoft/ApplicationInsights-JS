@@ -7,11 +7,23 @@ import {
     getPerformance, getGlobalInst, getGlobal 
 } from "@microsoft/applicationinsights-core-js";
 
-function hookFetch<T>(executor: (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void) {
+interface IFetchArgs {
+    input: RequestInfo,
+    init: RequestInit
+}
+
+function hookFetch<T>(executor: (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void): IFetchArgs[] {
+    let calls:IFetchArgs[] = [];
     let global = getGlobal() as any;
     global.fetch = function(input: RequestInfo, init?: RequestInit) {
+        calls.push({
+            input,
+            init
+        });
         return new window["SimpleSyncPromise"](executor);
     }
+
+    return calls;
 }
 
 export class AjaxTests extends TestClass {
@@ -276,7 +288,7 @@ export class AjaxTests extends TestClass {
             name: "Fetch: fetch with disabled flag isn't tracked",
             stepDelay: 10,
             autoComplete: false,
-            timeOut: 2500,
+            timeOut: 10000,
             steps: [ (done) => {
                 hookFetch((resolve) => {
                     TestClass.orgSetTimeout(function() {
@@ -314,12 +326,11 @@ export class AjaxTests extends TestClass {
             }]
         });
 
-
         this.testCaseAsync({
             name: "Fetch: fetch with disabled flag isn't tracked and any followup request to the same URL event without the disabled flag are also not tracked",
             stepDelay: 10,
             autoComplete: false,
-            timeOut: 2500,
+            timeOut: 10000,
             steps: [ (done) => {
                 hookFetch((resolve) => {
                     TestClass.orgSetTimeout(function() {
@@ -369,7 +380,7 @@ export class AjaxTests extends TestClass {
             name: "Fetch: fetch gets instrumented",
             stepDelay: 10,
             autoComplete: false,
-            timeOut: 2500,
+            timeOut: 10000,
             steps: [ (done) => {
                 hookFetch((resolve) => {
                     TestClass.orgSetTimeout(function() {
@@ -415,7 +426,7 @@ export class AjaxTests extends TestClass {
             name: "Fetch: instrumentation handles invalid / missing request or url",
             stepDelay: 10,
             autoComplete: false,
-            timeOut: 2500,
+            timeOut: 10000,
             steps: [ (done) => {
                 hookFetch((resolve) => {
                     TestClass.orgSetTimeout(function() {
@@ -511,6 +522,603 @@ export class AjaxTests extends TestClass {
                 }
             }
         });
+
+        this.testCaseAsync({
+            name: "Fetch: should create and pass a traceparent header if ai and w3c is enabled with custom headers",
+            stepDelay: 10,
+            timeOut: 10000,
+            steps: [ (done) => {
+                let fetchCalls = hookFetch((resolve) => {
+                    TestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { 
+                    instrumentationKey: "instrumentationKey", 
+                    disableFetchTracking: false,
+                    disableAjaxTracking: false,
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                this._context["trackStub"] = trackSpy;
+
+                // Use test hook to simulate the correct url location
+                this._ajax["_currentWindowHost"] = "httpbin.org";
+
+                // Setup
+                let headers = new Headers();
+                headers.append('My-Header', 'Header field');
+                let init = {
+                    method: 'get',
+                    headers: headers
+                };
+                const url = 'https://httpbin.org/status/200';
+
+                // Act
+                Assert.ok(trackSpy.notCalled, "No fetch called yet");
+                fetch(url, init).then(() => {
+                    // Assert
+                    Assert.ok(trackSpy.called, "The request was not tracked");
+                    // Assert that both headers are sent
+                    Assert.equal(1, fetchCalls.length);
+                    Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
+                    let headers:Headers = fetchCalls[0].init.headers as Headers;
+                    Assert.notEqual(undefined, headers, "has headers");
+                    Assert.equal(true, headers.has("My-Header"), "My-Header should be present");
+                    Assert.equal(true, headers.has(RequestHeaders.requestIdHeader), "AI header shoud be present"); // AI
+                    Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    done();
+                });
+            }]
+            .concat(PollingAssert.createPollingAssert(() => {
+                let trackStub = this._context["trackStub"] as SinonStub;
+                if (trackStub.called) {
+                    Assert.ok(trackStub.calledOnce, "track is called");
+                    let data = trackStub.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fatch type");
+                    var id = data.id;
+                    Assert.equal("|", id[0]);
+                    Assert.equal(".", id[id.length - 1]);
+                    return true;
+                }
+
+                return false;
+            }, 'response received', 60, 1000) as any)
+        })
+
+        this.testCaseAsync({
+            name: "Fetch: should create and pass a traceparent header if ai and w3c is enabled with no init param",
+            stepDelay: 10,
+            timeOut: 10000,
+            steps: [ (done) => {
+                let fetchCalls = hookFetch((resolve) => {
+                    TestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { 
+                    instrumentationKey: "instrumentationKey", 
+                    disableFetchTracking: false,
+                    disableAjaxTracking: false,
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                this._context["trackStub"] = trackSpy;
+
+                // Use test hook to simulate the correct url location
+                this._ajax["_currentWindowHost"] = "httpbin.org";
+
+                // Setup
+                const url = 'https://httpbin.org/status/200';
+
+                // Act
+                Assert.ok(trackSpy.notCalled, "No fetch called yet");
+                fetch(url).then(() => {
+                    // Assert
+                    Assert.ok(trackSpy.called, "The request was not tracked");
+                    // Assert that both headers are sent
+                    Assert.equal(1, fetchCalls.length);
+                    Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
+                    let headers:Headers = fetchCalls[0].init.headers as Headers;
+                    Assert.notEqual(undefined, headers, "has headers");
+                    Assert.equal(true, headers.has(RequestHeaders.requestIdHeader), "AI header shoud be present"); // AI
+                    Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    done();
+                });
+            }]
+            .concat(PollingAssert.createPollingAssert(() => {
+                let trackStub = this._context["trackStub"] as SinonStub;
+                if (trackStub.called) {
+                    Assert.ok(trackStub.calledOnce, "track is called");
+                    let data = trackStub.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fatch type");
+                    var id = data.id;
+                    Assert.equal("|", id[0]);
+                    Assert.equal(".", id[id.length - 1]);
+                    return true;
+                }
+
+                return false;
+            }, 'response received', 60, 1000) as any)
+        })
+
+        this.testCaseAsync({
+            name: "Fetch: should create and pass a traceparent header if w3c only is enabled with custom headers",
+            stepDelay: 10,
+            timeOut: 10000,
+            steps: [ (done) => {
+                let fetchCalls = hookFetch((resolve) => {
+                    TestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { 
+                    instrumentationKey: "instrumentationKey", 
+                    disableFetchTracking: false,
+                    disableAjaxTracking: false,
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.W3C
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                this._context["trackStub"] = trackSpy;
+
+                // Use test hook to simulate the correct url location
+                this._ajax["_currentWindowHost"] = "httpbin.org";
+
+                // Setup
+                let headers = new Headers();
+                headers.append('My-Header', 'Header field');
+                let init = {
+                    method: 'get',
+                    headers: headers
+                };
+                const url = 'https://httpbin.org/status/200';
+
+                // Act
+                Assert.ok(trackSpy.notCalled, "No fetch called yet");
+                fetch(url, init).then(() => {
+                    // Assert
+                    Assert.ok(trackSpy.called, "The request was not tracked");
+                    // Assert that both headers are sent
+                    Assert.equal(1, fetchCalls.length);
+                    Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
+                    let headers:Headers = fetchCalls[0].init.headers as Headers;
+                    Assert.notEqual(undefined, headers, "has headers");
+                    Assert.equal(true, headers.has("My-Header"), "My-Header should be present");
+                    Assert.equal(false, headers.has(RequestHeaders.requestIdHeader), "AI header shoud be present"); // AI
+                    Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    done();
+                });
+            }]
+            .concat(PollingAssert.createPollingAssert(() => {
+                let trackStub = this._context["trackStub"] as SinonStub;
+                if (trackStub.called) {
+                    Assert.ok(trackStub.calledOnce, "track is called");
+                    let data = trackStub.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fatch type");
+                    var id = data.id;
+                    Assert.equal("|", id[0]);
+                    Assert.equal(".", id[id.length - 1]);
+                    return true;
+                }
+
+                return false;
+            }, 'response received', 60, 1000) as any)
+        })
+
+        this.testCaseAsync({
+            name: "Fetch: should create and pass a traceparent header if w3c only is enabled with no init param",
+            stepDelay: 10,
+            timeOut: 10000,
+            steps: [ (done) => {
+                let fetchCalls = hookFetch((resolve) => {
+                    TestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { 
+                    instrumentationKey: "instrumentationKey", 
+                    disableFetchTracking: false,
+                    disableAjaxTracking: false,
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.W3C
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                this._context["trackStub"] = trackSpy;
+
+                // Use test hook to simulate the correct url location
+                this._ajax["_currentWindowHost"] = "httpbin.org";
+
+                // Setup
+                const url = 'https://httpbin.org/status/200';
+
+                // Act
+                Assert.ok(trackSpy.notCalled, "No fetch called yet");
+                fetch(url).then(() => {
+                    // Assert
+                    Assert.ok(trackSpy.called, "The request was not tracked");
+                    // Assert that both headers are sent
+                    Assert.equal(1, fetchCalls.length);
+                    Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
+                    let headers:Headers = fetchCalls[0].init.headers as Headers;
+                    Assert.notEqual(undefined, headers, "has headers");
+                    Assert.equal(false, headers.has(RequestHeaders.requestIdHeader), "AI header shoud be present"); // AI
+                    Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    done();
+                });
+            }]
+            .concat(PollingAssert.createPollingAssert(() => {
+                let trackStub = this._context["trackStub"] as SinonStub;
+                if (trackStub.called) {
+                    Assert.ok(trackStub.calledOnce, "track is called");
+                    let data = trackStub.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fatch type");
+                    var id = data.id;
+                    Assert.equal("|", id[0]);
+                    Assert.equal(".", id[id.length - 1]);
+                    return true;
+                }
+
+                return false;
+            }, 'response received', 60, 1000) as any)
+        })
+
+        this.testCaseAsync({
+            name: "Fetch: should create and pass a request header if AI only is enabled with custom headers",
+            stepDelay: 10,
+            timeOut: 10000,
+            steps: [ (done) => {
+                let fetchCalls = hookFetch((resolve) => {
+                    TestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { 
+                    instrumentationKey: "instrumentationKey", 
+                    disableFetchTracking: false,
+                    disableAjaxTracking: false,
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.AI
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                this._context["trackStub"] = trackSpy;
+
+                // Use test hook to simulate the correct url location
+                this._ajax["_currentWindowHost"] = "httpbin.org";
+
+                // Setup
+                let headers = new Headers();
+                headers.append('My-Header', 'Header field');
+                let init = {
+                    method: 'get',
+                    headers: headers
+                };
+                const url = 'https://httpbin.org/status/200';
+
+                // Act
+                Assert.ok(trackSpy.notCalled, "No fetch called yet");
+                fetch(url, init).then(() => {
+                    // Assert
+                    Assert.ok(trackSpy.called, "The request was not tracked");
+                    // Assert that both headers are sent
+                    Assert.equal(1, fetchCalls.length);
+                    Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
+                    let headers:Headers = fetchCalls[0].init.headers as Headers;
+                    Assert.notEqual(undefined, headers, "has headers");
+                    Assert.equal(true, headers.has("My-Header"), "My-Header should be present");
+                    Assert.equal(true, headers.has(RequestHeaders.requestIdHeader), "AI header shoud be present"); // AI
+                    Assert.equal(false, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    done();
+                });
+            }]
+            .concat(PollingAssert.createPollingAssert(() => {
+                let trackStub = this._context["trackStub"] as SinonStub;
+                if (trackStub.called) {
+                    Assert.ok(trackStub.calledOnce, "track is called");
+                    let data = trackStub.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fatch type");
+                    var id = data.id;
+                    Assert.equal("|", id[0]);
+                    return true;
+                }
+
+                return false;
+            }, 'response received', 60, 1000) as any)
+        })
+
+        this.testCaseAsync({
+            name: "Fetch: should create and pass a request header if AI only is enabled with no init param",
+            stepDelay: 10,
+            timeOut: 10000,
+            steps: [ (done) => {
+                let fetchCalls = hookFetch((resolve) => {
+                    TestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { 
+                    instrumentationKey: "instrumentationKey", 
+                    disableFetchTracking: false,
+                    disableAjaxTracking: false,
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.AI
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                this._context["trackStub"] = trackSpy;
+
+                // Use test hook to simulate the correct url location
+                this._ajax["_currentWindowHost"] = "httpbin.org";
+
+                // Setup
+                const url = 'https://httpbin.org/status/200';
+
+                // Act
+                Assert.ok(trackSpy.notCalled, "No fetch called yet");
+                fetch(url).then(() => {
+                    // Assert
+                    Assert.ok(trackSpy.called, "The request was not tracked");
+                    // Assert that both headers are sent
+                    Assert.equal(1, fetchCalls.length);
+                    Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
+                    let headers:Headers = fetchCalls[0].init.headers as Headers;
+                    Assert.notEqual(undefined, headers, "has headers");
+                    Assert.equal(true, headers.has(RequestHeaders.requestIdHeader), "AI header shoud be present"); // AI
+                    Assert.equal(false, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    done();
+                });
+            }]
+            .concat(PollingAssert.createPollingAssert(() => {
+                let trackStub = this._context["trackStub"] as SinonStub;
+                if (trackStub.called) {
+                    Assert.ok(trackStub.calledOnce, "track is called");
+                    let data = trackStub.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fatch type");
+                    var id = data.id;
+                    Assert.equal("|", id[0]);
+                    return true;
+                }
+
+                return false;
+            }, 'response received', 60, 1000) as any)
+        })
+
+        this.testCaseAsync({
+            name: "Fetch: should add request headers to all valid argument variants",
+            stepDelay: 10,
+            timeOut: 10000,
+            steps: [ (done) => {
+                this._context["fetchCalls"] = hookFetch((resolve) => {
+                    TestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { 
+                    instrumentationKey: "instrumentationKey", 
+                    disableFetchTracking: false,
+                    disableAjaxTracking: false,
+                    enableRequestHeaderTracking: true,
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                this._context["trackStub"] = trackSpy;
+
+                // Use test hook to simulate the correct url location
+                this._ajax["_currentWindowHost"] = "httpbin.org";
+
+                // Setup
+                let headers = new Headers();
+                headers.append('My-Header', 'Header field');
+                let init = {
+                    method: 'get',
+                    headers: headers
+                };
+                const url = 'https://httpbin.org/status/200';
+
+                Assert.ok(trackSpy.notCalled, "No fetch called yet");
+                fetch(url);
+                fetch(url, {});
+                fetch(url, { headers: {} });
+                fetch(url, { headers: new Headers() });
+                fetch(url, { headers });
+                fetch(url, init);
+                fetch(new Request(url));
+                fetch(new Request(url, {}));
+                fetch(new Request(url, { headers: {} }));
+                fetch(new Request(url, { headers: new Headers() }));
+                fetch(new Request(url, { headers }));
+                fetch(new Request(url, init));
+            }]
+            .concat(PollingAssert.createPollingAssert(() => {
+                let trackStub = this._context["trackStub"] as SinonStub;
+                let fetchCalls = this._context["fetchCalls"] as IFetchArgs[];
+                Assert.ok(true, "Track: " + trackStub.args.length + " Fetch Calls: " + fetchCalls.length);
+                if (trackStub.called && trackStub.args.length === 12 && fetchCalls.length === 12) {
+                    for (let lp = 0; lp < trackStub.args.length; lp++) {
+                        let evtData = trackStub.args[lp][0];
+                        this._checkFetchTraceId(evtData, "Fetch " + lp);
+                        let properties = evtData.baseData.properties || {};
+                        let trackHeaders = properties.requestHeaders || {};
+
+                        Assert.notEqual(undefined, fetchCalls[lp].init, "Has init param");
+                        let headers:Headers = fetchCalls[lp].init.headers as Headers;
+                        Assert.notEqual(undefined, headers, "has headers");
+                        switch (lp) {
+                            case 4:
+                            case 5:
+                            case 10:
+                            case 11:
+                                // All headers should be added to the init (2nd param) as this overrides 
+                                // any headers on any request object
+                                Assert.equal(true, headers.has("My-Header"), "My-Header should be present");
+                                Assert.equal("Header field", trackHeaders["my-header"], "my-header present in outbound event");
+                                break;
+                        }
+
+                        Assert.equal(true, headers.has(RequestHeaders.requestContextHeader), "requestContext header shoud be present");
+                        Assert.equal(true, headers.has(RequestHeaders.requestIdHeader), "AI header shoud be present"); // AI
+                        Assert.equal(true, headers.has(RequestHeaders.traceParentHeader), "W3c header should be present"); // W3C
+
+                        Assert.notEqual(undefined, trackHeaders[RequestHeaders.requestIdHeader], "RequestId present in outbound event");
+                        Assert.notEqual(undefined, trackHeaders[RequestHeaders.requestContextHeader], "RequestContext present in outbound event");
+                        Assert.notEqual(undefined, trackHeaders[RequestHeaders.traceParentHeader], "traceParent present in outbound event");
+
+                    }
+
+                    return true;
+                }
+
+                this.clock.tick(1000);
+                return false;
+            }, 'response received', 60, 1000) as any)
+        })
 
         this.testCase({
             name: "Ajax: successful request, ajax monitor doesn't change payload",
@@ -938,6 +1546,17 @@ export class AjaxTests extends TestClass {
         let data = trackStub.args[0][0].baseData;
         Assert.equal("Ajax", data.type, "request is Ajax type");
         Assert.equal(success, data.success, "TrackAjax should receive " + success + " as a 'success' argument");
+    }
+
+    private _checkFetchTraceId(evtData:any, message:string) {
+        Assert.notEqual(undefined, evtData, message + " - Must have track data");
+        if (evtData) {
+            let data = evtData.baseData;
+            Assert.equal("Fetch", data.type, message + " - request is Fatch type");
+            var id = data.id;
+            Assert.equal("|", id[0], message + " - check id starts with |");
+            Assert.equal(".", id[id.length - 1], message + " - check id ends with .");
+        }
     }
 }
 
@@ -1604,6 +2223,7 @@ export class AjaxFrozenTests extends TestClass {
         //         return false;
         //     }, 'response received', 600, 1000) as any)
         // });
+
     }
 }
 
