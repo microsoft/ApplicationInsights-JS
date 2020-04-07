@@ -1,5 +1,19 @@
 # Releases
 
+## 2.5.4
+
+### Changelog
+
+- #1242 Upgrading the tslib dependency to 1.11.1
+- #1233 [BUG] Duplicate React dependency
+- #1232 [BUG] window.appInsights.properties is marked private
+  - Fix issue by always exposing window.appInsights.context
+- #1240 [BUG] Telemetry correlation headers are not included for all fetch requests
+- #1229 [BUG] Unable to include telemetry correlation headers
+- #1227 SPFX - undefinedundefined is not defined
+- #1221 npm @microsoft/applicationinsights-web: license information missing in package.json
+- #1191 [BUG] ICustomProperties does not support setting values
+
 ## 2.5.3
 
 ### Changelog
