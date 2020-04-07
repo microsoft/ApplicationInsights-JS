@@ -45,7 +45,7 @@
     "dependencies": {
         "@microsoft/applicationinsights-core-js": "2.5.3",
         "@microsoft/applicationinsights-common": "2.5.3",
-        "tslib": "1.10.0",
+        "tslib": "^1.11.1",
         "history": "^4.9.0"
     },
     "peerDependencies": {
