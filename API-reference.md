@@ -13,7 +13,6 @@ Parameter | Type | Description
 `refUri?` | string | **Optional**<br>The URL of the previous page that sent the user to the current page.
 `pageType?` | string | **Optional**<br>Page Type string. Describes how you classify this page, e.g. errorPage, formPage, etc.
 `isLoggedIn?` | boolean | **Optional**<br>Whether or not the user is logged in
-`pageTags?` | dictionary | **Optional**<br>Property bag to contain an extension to domain properties - extension to Part B
 `properties?` | dictionary | **Optional**<br>Map of string to any: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
 > *Note:* To send a custom duration (ms) of your pageview as an argument, it must be included in the `properties` named field. E.g `appInsights.trackPageView({ properties: { duration: 123.45 } });`.
