@@ -10,6 +10,8 @@ import * as Common from "@microsoft/applicationinsights-common"
 
 "use strict";
 
+let _internalSdkSrc: string;
+
 /**
  *
  * @export
@@ -18,6 +20,7 @@ import * as Common from "@microsoft/applicationinsights-common"
 export interface Snippet {
     config: IConfiguration & Common.IConfig;
     queue?: Array<() => void>;
+    sv?: string;
     version?: number;
 }
 
@@ -46,10 +49,12 @@ export class Initialization implements IApplicationInsights {
 
     private dependencies: DependenciesPlugin;
     private properties: PropertiesPlugin;
+    private _snippetVersion: string;
 
     constructor(snippet: Snippet) {
         let _this = this;
         // initialize the queue and config in case they are undefined
+        _this._snippetVersion = "" + (snippet.sv || snippet.version || "");
         snippet.queue = snippet.queue || [];
         snippet.version = snippet.version || 2.0; // Default to new version
         let config: IConfiguration & Common.IConfig = snippet.config || ({} as any);
@@ -269,6 +274,15 @@ export class Initialization implements IApplicationInsights {
 
         function _updateSnippetProperties(snippet: Snippet) {
             if (snippet) {
+                let snippetVer = "";
+                if (!CoreUtils.isNullOrUndefined(_this._snippetVersion)) {
+                    snippetVer += _this._snippetVersion;
+                }
+                if (legacyMode) {
+                    snippetVer += ".lg";
+                }
+                _this.properties.context.internal.snippetVer = snippetVer || "-";
+
                 // apply updated properties to the global instance (snippet)
                 for (const field in _this) {
                     if (CoreUtils.isString(field) && 
@@ -296,6 +310,9 @@ export class Initialization implements IApplicationInsights {
         // initialize core
         _this.core.initialize(_this.config, extensions);
         _this.context = _this.properties.context;
+        if (_internalSdkSrc) {
+            _this.context.internal.sdkSrc = _internalSdkSrc;
+        }
         _updateSnippetProperties(_this.snippet);
 
         // Empty queue of all api calls logged prior to sdk download
@@ -411,3 +428,49 @@ export class Initialization implements IApplicationInsights {
         _this.config.diagnosticLogInterval && _this.config.diagnosticLogInterval > 0 ? _this.config.diagnosticLogInterval : 10000;
     }
 }
+
+// tslint:disable-next-line
+(function () {
+    let sdkSrc = null;
+    let isModule = false;
+
+    try {
+        // Try and determine whether the sdk is being loaded from the CDN
+        // currentScript is only valid during initial processing
+        let scrpt = (document ||{} as any).currentScript;
+        if (scrpt) {
+            sdkSrc = scrpt.src;
+        // } else {
+        //     // We need to update to at least typescript 2.9 for this to work :-(
+        //     // Leaving as a stub for now so after we upgrade this breadcrumb is available
+        //     let meta = import.meta;
+        //     sdkSrc = (meta || {}).url;
+        //     isModule = true;
+        }
+    } catch (e) {
+    }
+
+    if (sdkSrc) {
+        try {
+            let url = sdkSrc.toLowerCase();
+            if (url) {
+                let src = "";
+                if (url.indexOf("://az416426.vo.msecnd.net/") !== -1) {
+                    src = "cdn1";
+                    if (url.indexOf("/scripts/") === -1) {
+                        if (url.indexOf("/next/") !== -1) {
+                            src += "-next";
+                        } else if (url.indexOf("/beta/") !== -1) {
+                            src += "-beta";
+                        }
+                    }
+                }
+
+                if (src) {
+                    _internalSdkSrc = src + (isModule ? ".mod" : "");
+                }
+            }
+        } catch (e) {
+        }
+    }
+})();
