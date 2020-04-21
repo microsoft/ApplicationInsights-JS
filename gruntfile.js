@@ -228,6 +228,17 @@ module.exports = function (grunt) {
             snippetvNext: {
                 files: {
                     'AISKU/snippet/snippet.min.js': ['AISKU/snippet/snippet.js']
+                },
+                options: {
+                    sourceMap: false,
+                    ie8: true,
+                    compress: {
+                      passes:3,
+                      unsafe: true,
+                    },
+                    output: {
+                      webkit:true
+                    }
                 }
             }
         },

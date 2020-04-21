@@ -433,6 +433,9 @@ export class Initialization implements IApplicationInsights {
 (function () {
     let sdkSrc = null;
     let isModule = false;
+    let cdns: string[] = [
+        "://az416426.vo.msecnd.net/"
+    ];
 
     try {
         // Try and determine whether the sdk is being loaded from the CDN
@@ -455,19 +458,20 @@ export class Initialization implements IApplicationInsights {
             let url = sdkSrc.toLowerCase();
             if (url) {
                 let src = "";
-                if (url.indexOf("://az416426.vo.msecnd.net/") !== -1) {
-                    src = "cdn1";
-                    if (url.indexOf("/scripts/") === -1) {
-                        if (url.indexOf("/next/") !== -1) {
-                            src += "-next";
-                        } else if (url.indexOf("/beta/") !== -1) {
-                            src += "-beta";
+                for (let idx = 0; idx < cdns.length; idx++) {
+                    if (url.indexof(cdns[idx]) !== -1) {
+                        src = "cdn" + (idx + 1);
+                        if (url.indexOf("/scripts/") === -1) {
+                            if (url.indexOf("/next/") !== -1) {
+                                src += "-next";
+                            } else if (url.indexOf("/beta/") !== -1) {
+                                src += "-beta";
+                            }
                         }
-                    }
-                }
 
-                if (src) {
-                    _internalSdkSrc = src + (isModule ? ".mod" : "");
+                        _internalSdkSrc = src + (isModule ? ".mod" : "");
+                        break;
+                    }
                 }
             }
         } catch (e) {
