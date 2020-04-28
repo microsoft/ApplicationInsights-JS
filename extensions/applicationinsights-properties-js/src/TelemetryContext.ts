@@ -3,9 +3,9 @@
  * @copyright Microsoft 2018
  */
 
-import { ITelemetryItem, IProcessTelemetryContext, IDiagnosticLogger, CoreUtils, hasWindow } from '@microsoft/applicationinsights-core-js';
+import { ITelemetryItem, IProcessTelemetryContext, IDiagnosticLogger, CoreUtils, hasWindow, _InternalLogMessage } from '@microsoft/applicationinsights-core-js';
 import { Session, _SessionManager } from './Context/Session';
-import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, IWeb, SampleRate, CtxTagKeys } from '@microsoft/applicationinsights-common';
+import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, IWeb, SampleRate, CtxTagKeys, PageView } from '@microsoft/applicationinsights-common';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
 import { Internal } from './Context/Internal';
@@ -29,108 +29,126 @@ export class TelemetryContext implements ITelemetryContext {
     public appId: () => string;
 
     constructor(logger: IDiagnosticLogger, defaultConfig: ITelemetryConfig) {
+        let _self = this;
         if (hasWindow()) {
-            this.sessionManager = new _SessionManager(defaultConfig, logger);
-            this.application = new Application();
-            this.device = new Device();
-            this.internal = new Internal(defaultConfig);
-            this.location = new Location();
-            this.user = new User(defaultConfig, logger);
-            this.telemetryTrace = new TelemetryTrace(undefined, undefined, undefined, logger);
-            this.session = new Session();
+            _self.sessionManager = new _SessionManager(defaultConfig, logger);
+            _self.application = new Application();
+            _self.device = new Device();
+            _self.internal = new Internal(defaultConfig);
+            _self.location = new Location();
+            _self.user = new User(defaultConfig, logger);
+            _self.telemetryTrace = new TelemetryTrace(undefined, undefined, undefined, logger);
+            _self.session = new Session();
         }
-        this.appId = () => null;
+        _self.appId = () => null;
     }
 
     public applySessionContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
-        const sessionContext = this.session || (this.sessionManager && this.sessionManager.automaticSession);
+        let session = this.session;
+        let sessionManager = this.sessionManager;
+        const sessionContext = session || (sessionManager && sessionManager.automaticSession);
         if (sessionContext) {
-            if (typeof sessionContext.id === "string") {
+            if (CoreUtils.isString(sessionContext.id)) {
                 event.ext.app.sesId = sessionContext.id;
             }
         }
 
-        if (this.session) {
+        if (session) {
             // If customer set session info, apply his context; otherwise apply context automatically generated
-            if (typeof this.session.id === "string") {
-                event.ext.app.sesId = this.session.id;
+            if (CoreUtils.isString(session.id)) {
+                event.ext.app.sesId = session.id;
             } else {
-                event.ext.app.sesId = this.sessionManager.automaticSession.id;
+                event.ext.app.sesId = sessionManager.automaticSession.id;
             }
         }
     }
 
     public applyOperatingSystemContxt(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
-        if (this.os && this.os.name) {
-            event.ext.os = this.os;
+        let os = this.os;
+        if (os && os.name) {
+            event.ext.os = os;
         }
     }
 
     public applyApplicationContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
-        if (this.application) {
+        let application = this.application;
+        if (application) {
 
-            if (typeof this.application.ver === "string") {
-                event.tags[CtxTagKeys.applicationVersion] = this.application.ver;
+            if (CoreUtils.isString(application.ver)) {
+                event.tags[CtxTagKeys.applicationVersion] = application.ver;
             }
-            if (typeof this.application.build === "string") {
-                event.tags[CtxTagKeys.applicationBuild] = this.application.build;
+            if (CoreUtils.isString(application.build)) {
+                event.tags[CtxTagKeys.applicationBuild] = application.build;
             }
         }
     }
 
     public applyDeviceContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
-
-        if (this.device) {
-            if (typeof this.device.id === "string") {
-                event.ext.device.localId = this.device.id;
+        let device = this.device;
+        if (device) {
+            if (CoreUtils.isString(device.id)) {
+                event.ext.device.localId = device.id;
             }
 
-            if (typeof this.device.ip === "string") {
-                event.ext.device.ip = this.device.ip;
+            if (CoreUtils.isString(device.ip)) {
+                event.ext.device.ip = device.ip;
             }
 
-            if (typeof this.device.model === "string") {
-                event.ext.device.model = this.device.model;
+            if (CoreUtils.isString(device.model)) {
+                event.ext.device.model = device.model;
             }
 
-            if (typeof this.device.deviceClass === "string") {
-                event.ext.device.deviceClass = this.device.deviceClass;
+            if (CoreUtils.isString(device.deviceClass)) {
+                event.ext.device.deviceClass = device.deviceClass;
             }
         }
     }
 
     public applyInternalContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
-        if (this.internal) {
-            if (typeof this.internal.agentVersion === "string") {
-                event.tags[CtxTagKeys.internalAgentVersion] = this.internal.agentVersion; // not mapped in CS 4.0
+        let internal = this.internal;
+        if (internal) {
+            if (CoreUtils.isString(internal.agentVersion)) {
+                event.tags[CtxTagKeys.internalAgentVersion] = internal.agentVersion; // not mapped in CS 4.0
             }
-            if (typeof this.internal.sdkVersion === "string") {
-                event.tags[CtxTagKeys.internalSdkVersion] = this.internal.sdkVersion;
+            if (CoreUtils.isString(internal.sdkVersion)) {
+                event.tags[CtxTagKeys.internalSdkVersion] = internal.sdkVersion;
+            }
+
+            if (event.baseType === _InternalLogMessage.dataType || event.baseType === PageView.dataType) {
+                if (CoreUtils.isString(internal.snippetVer)) {
+                    event.tags[CtxTagKeys.internalSnippet] = internal.snippetVer;
+                }
+
+                if (CoreUtils.isString(internal.sdkSrc)) {
+                    event.tags[CtxTagKeys.internalSdkSrc] = internal.sdkSrc;
+                }
             }
         }
     }
 
     public applyLocationContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
-        if (this.location) {
-            if (typeof this.location.ip === "string") {
-                event.tags[CtxTagKeys.locationIp] = this.location.ip;
+        let location = this.location;
+        if (location) {
+            if (CoreUtils.isString(location.ip)) {
+                event.tags[CtxTagKeys.locationIp] = location.ip;
             }
         }
     }
 
     public applyOperationContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
-        if (this.telemetryTrace) {
+        let telemetryTrace = this.telemetryTrace;
+        if (telemetryTrace) {
             const trace = event.ext.trace || ({traceID: undefined, parentID: undefined} as ITelemetryTrace);
-            if (typeof this.telemetryTrace.traceID === "string") {
-                trace.traceID = this.telemetryTrace.traceID;
+            if (CoreUtils.isString(telemetryTrace.traceID)) {
+                trace.traceID = telemetryTrace.traceID;
             }
 
-            if (typeof this.telemetryTrace.name === "string") {
-                trace.name = this.telemetryTrace.name;
+            if (CoreUtils.isString(telemetryTrace.name)) {
+                trace.name = telemetryTrace.name;
             }
 
-            if (typeof this.telemetryTrace.parentID === "string") {
-                trace.parentID = this.telemetryTrace.parentID;
+            if (CoreUtils.isString(telemetryTrace.parentID)) {
+                trace.parentID = telemetryTrace.parentID;
             }
 
             event.ext.trace = trace;
@@ -138,31 +156,32 @@ export class TelemetryContext implements ITelemetryContext {
     }
 
     public applyWebContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
-        if (this.web) {
+        let web = this.web;
+        if (web) {
             event.ext.web = event.ext.web || {};
-            event.ext.web = this.web;
+            event.ext.web = web;
         }
     }
 
     public applyUserContext(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
-        if (this.user) {
+        let user = this.user;
+        if (user) {
             if (!event.tags) {
                 event.tags = [];
             }
 
             // stays in tags
-            if (typeof this.user.accountId === "string") {
-                const item = {};
-                event.tags[CtxTagKeys.userAccountId] = this.user.accountId;
+            if (CoreUtils.isString(user.accountId)) {
+                event.tags[CtxTagKeys.userAccountId] = user.accountId;
             }
 
             // CS 4.0
-            if (typeof this.user.id === "string") {
-                event.ext.user.id = this.user.id;
+            if (CoreUtils.isString( user.id)) {
+                event.ext.user.id = user.id;
             }
 
-            if (typeof this.user.authenticatedId === "string") {
-                event.ext.user.authId = this.user.authenticatedId;
+            if (CoreUtils.isString(user.authenticatedId)) {
+                event.ext.user.authId = user.authenticatedId;
             }
         }
     }

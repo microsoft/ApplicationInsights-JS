@@ -19,6 +19,21 @@ export class Internal implements IInternal {
     public agentVersion: string;
 
     /**
+     * The Snippet version used to initialize the sdk instance, this will contain either
+     * undefined/null - Snippet not used
+     * '-' - Version and legacy mode not determined
+     * # - Version # of the snippet
+     * #.l - Version # in legacy mode
+     * .l - No defined version, but used legacy mode initialization
+     */
+    public snippetVer: string;
+
+    /**
+     * Identifies the source of the sdk script
+     */
+    public sdkSrc: string;
+
+    /**
      * Constructs a new instance of the internal telemetry data class.
      */
     constructor(config: ITelemetryConfig) {
