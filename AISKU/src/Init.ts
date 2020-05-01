@@ -34,8 +34,8 @@ try {
                 const snippet: Snippet = _window[aiName] || ({ version: 2.0 } as any);
 
                 // overwrite snippet with full appInsights
-                // for 2.0 initialize only if required
-                if ((snippet.version === 2.0 && (_window[aiName] as any).initialize) || snippet.version === undefined ) {
+                // only initiaize if required and detected snippet version is >= 2 or not defined
+                if ((snippet.version >= 2.0 && (_window[aiName] as any).initialize) || snippet.version === undefined ) {
                     ApplicationInsightsContainer.getAppInsights(snippet, snippet.version);
                 }
             }

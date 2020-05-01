@@ -92,6 +92,7 @@ export const _InternalMessageId = {
     InvalidEvent: 70,
     FailedMonitorAjaxSetRequestHeader: 71,
     SendBrowserInfoOnUserInit: 72,
-    PluginException: 73
+    PluginException: 73,
+    SnippetScriptLoadFailure: 99
 };
 export type _InternalMessageId = number | typeof _InternalMessageId;

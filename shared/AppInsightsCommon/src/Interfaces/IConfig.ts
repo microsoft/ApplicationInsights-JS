@@ -215,10 +215,9 @@ export interface IConfig {
 
     /**
      * @deprecated Used when initizialing from snippet only.
-     * @description  The url from where the JS SDK will be downloaded. Default 'https://az416426.vo.msecnd.net/scripts/beta/ai.1.js'
+     * @description  The url from where the JS SDK will be downloaded.
      * @type {string}
      * @memberof IConfig
-     * @defaultValue "https://az416426.vo.msecnd.net/scripts/beta/ai.1.js"
      */
     url?: string;
 
