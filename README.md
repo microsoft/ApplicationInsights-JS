@@ -71,15 +71,43 @@ cfg: { // Application Insights Configuration
 </script>
 ```
 
-The snippet supports reporting sdk script load failures as exceptions to the portal, this type of error would cause your application/website to either not report any telemetry or in some extreme cases become unstable due to excessive queuing of events which are never sent.
+> :bulb: **Note**
+>
+> For readability and to reduce possible JavaScript errors, all of the possible configuration options are listed on a new line in snippet code above, if you don't want to change the value of a commented line it can be removed.
 
-It also supports some additional snippet specific configuration.
- - src (string) [required] - The URL of the SDK version to load
- - name (string) [optional] - The global SDK instance name to use, defaults to appInsights
- - ld (number in ms) [optional] - Defines the load delay to wait before attempting to load the SDK. Default value is 0ms and any negative value will just add a script tag to the page head and will block the page load event.
- - useXhr (boolean) [optional] - This setting is specifically for the reporting of SDK load failures. Reporting will first use fetch() if available and then fallback to XHR, setting this value to true just bypasses the fetch check. Use of this value would only be required if you know your app/site is being used in an environment where fetch would fail to send the failure events.
- - crossOrigin (string) [optional] - By including this setting the script tag used to download the SDK will include the crossOrigin attribute with this string value. When not defined (the default) no crossOrigin attribute is added. Recommended values are not defined (the default); ""; or "anonymous" (For all valid values see https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin)
- - cfg (object) - This is the Application Insights configuration that is used to initialize your sdk.
+#### Reporting Script load exceptions
+
+This version of the snippet detects and reports an exception when loading the SDK from the CDN fails, this exception is reported to the Azure Monitor portal (under the failures &gt; exceptions &gt; browser), and provides visibility into failures of this type so that you are aware your application is not reporting telemetry (or other exceptions) as expected. This signal is an important measurement in understanding that you have lost telemetry because the SDK did not load or initialize, this provides clarity that you are missing the following telemetry:
+- Under-reporting of how users are using (or trying to use) your site;
+- Missing telemetry on how your end users are using your site;
+- Missing JavaScript errors that could potentially be blocking your end users from successfully using your site.
+
+For details on this exception see [SDK Load Failure](docs/SdkLoadFailure.md) page.
+
+Reporting of this failure as an exception to the portal does not use the configuration option ```disableExceptionTracking``` from the application insights configuration and therefore if this failure occurs it will always be reported by the snippet, even when the window.onerror support is disabled.
+
+Reporting of SDK load exceptions is specifically NOT supported on IE 8 (or less). This assists with reducing the minified size of the snippet by assuming that most environments are not exclusively IE 8 or less. If you have this requirement and you wish to receive these exceptions, you will need to either include a fetch poly fill or create you own snippet version that uses ```XDomainRequest``` instead of ```XMLHttpRequest```, it is recommended that you use the [provided snippet source code](https://github.com/microsoft/ApplicationInsights-JS/blob/master/AISKU/snippet/snippet.js) as a starting point.
+
+> :bulb: **Note**
+>
+> If you are using a previous version of the snippet, it is highly recommended that you update to the latest version so that you will receive these previously unreported issues.
+
+#### Snippet configuration options
+
+All configuration options have now been move towards the end of the script to help avoid accidentally introducing JavaScript errors that would not just cause the SDK to fail to load, but also it would disable the reporting of the failure.
+
+Each configuration option is shown above on a new line, if you don't wish to override the default value of an item listed as [optional] you can  remove that line to minimize the resulting size of your returned page.
+
+The available configuration options are 
+
+| Name | Type | Description
+|------|------|----------------
+| src | string **[required]** | The full URL for where to load the SDK from. This value is used for the "src" attribute of a dynamically added &lt;script /&gt; tag. You can use the public CDN location or your own privately hosted one.
+| name | string *[optional]* | The global name for the initialized SDK, defaults to appInsights. So ```window.appInsights``` will be a reference to the initialized instance. Note: if you provide a name value or a previous instance appears to be assigned (via the global name appInsightsSDK) then this name value will also be defined in the global namespace as ```window.appInsightsSDK=<name value>```, this is required by the SDK initialization code to ensure it's initializing and updating the correct snippet skeleton and proxy methods.
+| ld | number in ms *[optional]* | Defines the load delay to wait before attempting to load the SDK. Default value is 0ms and any negative value will immediately add a script tag to the &lt;head&gt; region of the page, which will then block the page load event until to script is loaded (or fails).
+| useXhr | boolean *[optional]* | This setting is used only for reporting SDK load failures. Reporting will first attempt to use fetch() if available and then fallback to XHR, setting this value to true just bypasses the fetch check. Use of this value is only be required if your application is being used in an environment where fetch would fail to send the failure events.
+| crossOrigin | string *[optional]* | By including this setting, the script tag added to download the SDK will include the crossOrigin attribute with this string value. When not defined (the default) no crossOrigin attribute is added. Recommended values are not defined (the default); ""; or "anonymous" (For all valid values see [HTML attribute: crossorigin](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin) documentation)
+| cfg | object **[required]** | THe configuration passed to the Application Insights SDK during initialization.
 
 ### Connection String Setup
 
@@ -126,9 +154,9 @@ appInsights.trackTrace({message: 'some trace'});
 appInsights.trackMetric({name: 'some metric', average: 42});
 appInsights.trackDependencyData({absoluteUrl: 'some url', responseCode: 200, method: 'GET', id: 'some id'});
 appInsights.startTrackPage("pageName");
-appInsights.stopTrackPage("pageName", {customProp1: "some value"});
+appInsights.stopTrackPage("pageName", null, {customProp1: "some value"});
 appInsights.startTrackEvent("event");
-appInsights.stopTrackEvent("event", {customProp1: "some value"});
+appInsights.stopTrackEvent("event", null, {customProp1: "some value"});
 appInsights.flush();
 ```
 
@@ -379,7 +407,8 @@ While the script downloads from the CDN, all tracking of your page is queued. On
 
 > Summary:
 >
-> - **~28 KB** gzipped
+> - ![current npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)
+> - ![gzip compressed size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?compression=gzip)
 > - **15 ms** overall initialization time
 > - **Zero** tracking missed during life cycle of page
 
