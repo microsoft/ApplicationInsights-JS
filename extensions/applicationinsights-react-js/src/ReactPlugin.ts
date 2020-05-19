@@ -4,7 +4,7 @@
  */
 
 import {
-    IConfig, IPageViewTelemetry, IMetricTelemetry, IAppInsights
+    IConfig, IPageViewTelemetry, IMetricTelemetry, IAppInsights, IEventTelemetry
 } from "@microsoft/applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
@@ -65,6 +65,15 @@ export default class ReactPlugin extends BaseTelemetryPlugin {
             this._analyticsPlugin.trackPageView(pageView);
         } else {
             this.diagLog().throwInternal(
+                LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, React plugin telemetry will not be sent: ");
+        }
+    }
+
+    trackEvent(event: IEventTelemetry, customProperties?: ICustomProperties) {
+        if (this._analyticsPlugin) {
+            this._analyticsPlugin.trackEvent(event, customProperties);
+        } else {
+            this._logger.throwInternal(
                 LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, React plugin telemetry will not be sent: ");
         }
     }
