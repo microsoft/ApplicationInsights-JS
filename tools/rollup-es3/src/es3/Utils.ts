@@ -57,12 +57,20 @@ export function isIgnore(id:string, keyword:IEs3CheckKeyword, isTransform:boolea
 
 export function isIgnoreFuncMatch(funcMatch:string, keyword:IEs3CheckKeyword) {
     let result = false;
-    if (keyword.ignoreFuncMatch) {
+    if (funcMatch && keyword.ignoreFuncMatch) {
         for (let ignoreIdx in keyword.ignoreFuncMatch) {
             let ignoreMatch = keyword.ignoreFuncMatch[ignoreIdx];
-            if (funcMatch && funcMatch.indexOf(ignoreMatch) !== -1) {
-                result = true;
-                break;
+            if (ignoreMatch) {
+                if (typeof ignoreMatch === "string" && funcMatch.indexOf(ignoreMatch) !== -1) {
+                    result = true;
+                    break;
+                } else if (ignoreMatch instanceof RegExp) {
+                    let match = ignoreMatch.exec(funcMatch);
+                    if (match && match.length > 0) {
+                        result = true;
+                        break;
+                    }
+                }
             }
         }
     }

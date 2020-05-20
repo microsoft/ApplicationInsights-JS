@@ -153,11 +153,11 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
         ]  
     },
     {
-        funcNames: [ /([\w0-9]*)\.toISOString[\s]*\(/g ],
+        funcNames: [ /([\w0-9\$]*)\.toISOString[\s]*\(/g ],
         errorMsg: "[%funcName%] is not supported in an ES3 environment, use CoreUtils.toISOString()",
         ignoreFuncMatch: [ 
-            "CoreUtils.toISOString",         // Make sure this isn't a reference to CoreUtils.isISOString()
-            "Utils.toISOString"              // or if it's a reference to Utils.isISOString()
+            /CoreUtils(\$[\d]+)+\.toISOString/,     // Make sure this isn't a reference to CoreUtils.isISOString(); CoreUtils$1.isISOString();
+            "Utils.toISOString"                     // or if it's a reference to Utils.isISOString()
         ]
     },
     {
@@ -190,6 +190,14 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
     {
         funcNames: [ /[\s\(,][gs]et[\s]+([\w]+)[\s]*\(\)[\s]*\{/g ],
         errorMsg: "[%funcName%] is not supported in an ES3 environment."
+    },
+    {
+        funcNames: [ /([\w0-9]*)\.(trim)[\s]*\(/g ],
+        errorMsg: "[%funcName%] is not a supported string method in an ES3 environment, use CoreUtils.strTrim().",
+        ignoreFuncMatch: [ 
+            "Util.trim",                            // Make sure this isn't a reference to Util.trim()
+            "DataSanitizer.trim"                    // Make sure this isn't a reference to Util.trim()
+        ]
     }
 ];
 

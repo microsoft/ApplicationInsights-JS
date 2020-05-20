@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 /**
- * Because of the test infrastructure (PhamtonJS) the RegEx can't use the "s" flag (gis vs gi) or named groups
+ * Because of the test infrastructure (PhantomJS) the RegEx can't use the "s" flag (gis vs gi) or named groups
  */
 export interface INamedGroups {
     name: string,
@@ -35,7 +35,7 @@ export interface IEs3CheckKeyword {
      *  A Set of strings to use for matching funcNames to ignore, this is required because of infra (build) issues
      * with negative lookbehind, internally this uses indexOf() to provide a partial existence check.
      */
-    ignoreFuncMatch?:string[],
+    ignoreFuncMatch?:Array<string|RegExp>,
 
     /**
      * The prefix added to any reported error, defaults to "Invalid ES3 function"

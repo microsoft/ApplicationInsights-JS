@@ -59,10 +59,8 @@ function _supportsAjaxMonitoring(ajaxMonitorInstance:AjaxMonitor): boolean {
             !_isNullOrUndefined(proto.abort);
     }
 
-    // disable in IE8 or older (https://www.w3schools.com/jsref/jsref_trim_string.asp)
-    try {
-        " a ".trim();
-    } catch (ex) {
+    let ieVer = Util.getIEVersion();
+    if (ieVer && ieVer < 9) {
         result = false;
     }
 
@@ -671,7 +669,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                 if (headers) {
                                     // xhr.getAllResponseHeaders() method returns all the response headers, separated by CRLF, as a string or null
                                     // the regex converts the header string into an array of individual headers
-                                    const arr = headers.trim().split(/[\r\n]+/);
+                                    const arr = CoreUtils.strTrim(headers).split(/[\r\n]+/);
                                     const responseHeaderMap = {};
                                     _arrForEach(arr, (line) => {
                                         const parts = line.split(': ');
