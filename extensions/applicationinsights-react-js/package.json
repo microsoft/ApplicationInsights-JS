@@ -1,55 +1,56 @@
 {
-  "name": "@microsoft/applicationinsights-react-js",
-  "version": "2.5.4",
-  "description": "Microsoft Application Insights React plugin",
-  "main": "dist/applicationinsights-react-js.js",
-  "module": "dist-esm/applicationinsights-react-js.js",
-  "types": "types/applicationinsights-react-js.d.ts",
-  "sideEffects": false,
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-react-js"
-  },
-  "scripts": {
-    "build": "npm run build:esm && npm run build:browser",
-    "build:esm": "tsc -p tsconfig.json",
-    "build:browser": "rollup -c",
-    "test": "jest --config test/jestconfig.json",
-    "test-watch": "jest --config test/jestconfig.json --watch",
-    "lint": "tslint -p tsconfig.json"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "@microsoft/applicationinsights-common": "2.5.4",
-    "@microsoft/applicationinsights-core-js": "2.5.4",
-    "history": "^4.9.0",
-    "tslib": "^1.9.3"
-  },
-  "devDependencies": {
-    "@types/enzyme": "3.1.8",
-    "@types/history": "4.7.2",
-    "@types/jest": "^24.0.11",
-    "@types/node": "11.13.2",
-    "@types/prop-types": "~15.7.3",
-    "@types/react": "~16.9.11",
-    "@types/react-dom": "~16.9.4",
-    "csstype": "~2.6.7",
-    "enzyme": "^3.9.0",
-    "enzyme-adapter-react-16": "^1.12.1",
-    "grunt": "1.0.1",
-    "jest": "^24.7.1",
-    "react-dom": "^16.8.6",
-    "rollup": "^0.66.0",
-    "rollup-plugin-commonjs": "^9.3.4",
-    "rollup-plugin-node-resolve": "^3.4.0",
-    "rollup-plugin-replace": "^2.1.0",
-    "rollup-plugin-uglify": "^6.0.0",
-    "ts-jest": "^24.0.2",
-    "tslint": "^5.19.0",
-    "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.9.3"
-  },
-  "peerDependencies": {
-    "react": "^16.0.0"
-  }
+    "name": "@microsoft/applicationinsights-react-js",
+    "version": "2.5.4",
+    "description": "Microsoft Application Insights React plugin",
+    "main": "dist/applicationinsights-react-js.js",
+    "module": "dist-esm/applicationinsights-react-js.js",
+    "types": "types/applicationinsights-react-js.d.ts",
+    "sideEffects": false,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-react-js"
+    },
+    "scripts": {
+        "build": "npm run build:esm && npm run build:browser",
+        "build:esm": "tsc -p tsconfig.json",
+        "build:browser": "rollup -c",
+        "test": "jest --config test/jestconfig.json",
+        "test-watch": "jest --config test/jestconfig.json --watch",
+        "lint": "tslint -p tsconfig.json"
+    },
+    "devDependencies": {
+        "@microsoft/applicationinsights-rollup-es3": "1.1.1",
+        "@types/enzyme": "3.1.8",
+        "@types/history": "4.7.2",
+        "@types/jest": "^24.0.11",
+        "@types/node": "11.13.2",
+        "@types/prop-types": "^15.7.3",
+        "@types/react": "^16.9.11",
+        "@types/react-dom": "^16.9.4",
+        "csstype": "~2.6.7",
+        "enzyme": "^3.9.0",
+        "enzyme-adapter-react-16": "^1.12.1",
+        "grunt": "1.0.1",
+        "jest": "^24.7.1",
+        "react-dom": "^16.8.6",
+        "rollup": "^0.66.0",
+        "rollup-plugin-commonjs": "^9.3.4",
+        "rollup-plugin-node-resolve": "^3.4.0",
+        "rollup-plugin-replace": "^2.1.0",
+        "rollup-plugin-uglify": "^6.0.0",
+        "ts-jest": "^24.0.2",
+        "tslint": "^5.19.0",
+        "tslint-config-prettier": "^1.18.0",
+        "typescript": "^3.9.2"
+    },
+    "dependencies": {
+        "@microsoft/applicationinsights-core-js": "2.5.4",
+        "@microsoft/applicationinsights-common": "2.5.4",
+        "tslib": "^1.11.1",
+        "history": "^4.10.1"
+    },
+    "peerDependencies": {
+        "react": "^16.0.0"
+    },
+    "license": "MIT"
 }
