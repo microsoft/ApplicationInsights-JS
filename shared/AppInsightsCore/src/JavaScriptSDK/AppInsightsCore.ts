@@ -16,7 +16,6 @@ import { _InternalLogMessage, DiagnosticLogger } from "./DiagnosticLogger";
 "use strict";
 
 export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
-    public baseCore: BaseCore;
     public config: IConfiguration;
     public logger: IDiagnosticLogger;
 
@@ -27,11 +26,12 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
     }
 
     initialize(config: IConfiguration, extensions: IPlugin[]): void {
-        this._notificationManager = new NotificationManager();
-        this.logger = new DiagnosticLogger(config);
-        this.config = config;
+        let _self = this;
+        _self._notificationManager = new NotificationManager();
+        _self.logger = new DiagnosticLogger(config);
+        _self.config = config;
         
-        super.initialize(config, extensions, this.logger, this._notificationManager);
+        super.initialize(config, extensions, _self.logger, _self._notificationManager);
     }
 
     getTransmissionControls(): IChannelControls[][] {
@@ -78,23 +78,24 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
      */
     pollInternalLogs(eventName?: string): number {
         let interval = this.config.diagnosticLogInterval;
-        if (!(interval > 0)) {
+        if (!interval || !(interval > 0)) {
             interval = 10000;
         }
 
         return setInterval(() => {
-            const queue: _InternalLogMessage[] = this.logger ? this.logger.queue : [];
+            let _self = this;
+            const queue: _InternalLogMessage[] = _self.logger ? _self.logger.queue : [];
 
             CoreUtils.arrForEach(queue, (logMessage: _InternalLogMessage) => {
                 const item: ITelemetryItem = {
                     name: eventName ? eventName : "InternalMessageId: " + logMessage.messageId,
-                    iKey: this.config.instrumentationKey,
+                    iKey: _self.config.instrumentationKey,
                     time: CoreUtils.toISOString(new Date()),
                     baseType: _InternalLogMessage.dataType,
                     baseData: { message: logMessage.message }
                 };
 
-                this.track(item);
+                _self.track(item);
             });
             queue.length = 0;
         }, interval) as any;

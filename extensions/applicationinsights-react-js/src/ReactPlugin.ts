@@ -8,27 +8,26 @@ import {
 } from "@microsoft/applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
-    ITelemetryPlugin, CoreUtils, ITelemetryItem,
-    IDiagnosticLogger, _InternalMessageId, LoggingSeverity, ICustomProperties
+    ITelemetryPlugin, BaseTelemetryPlugin, CoreUtils, ITelemetryItem, IProcessTelemetryContext,
+    ITelemetryPluginChain, _InternalMessageId, LoggingSeverity, ICustomProperties
 } from "@microsoft/applicationinsights-core-js";
 import { IReactExtensionConfig } from './Interfaces/IReactExtensionConfig';
 import { History, LocationListener, Location, Action } from "history";
 
-export default class ReactPlugin implements ITelemetryPlugin {
+export default class ReactPlugin extends BaseTelemetryPlugin {
     public priority = 185;
     public identifier = 'ReactPlugin';
-    private _logger: IDiagnosticLogger;
 
     private _analyticsPlugin: IAppInsights;
-    private _nextPlugin: ITelemetryPlugin;
     private _extensionConfig: IReactExtensionConfig;
 
-    initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) {
+    initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) {
+        super.initialize(config, core, extensions, pluginChain);
         this._extensionConfig =
             config.extensionConfig && config.extensionConfig[this.identifier]
                 ? (config.extensionConfig[this.identifier] as IReactExtensionConfig)
                 : { history: null };
-        this._logger = core.logger;
+
         CoreUtils.arrForEach(extensions, ext => {
             const identifier = (ext as ITelemetryPlugin).identifier;
             if (identifier === 'ApplicationInsightsAnalytics') {
@@ -48,26 +47,15 @@ export default class ReactPlugin implements ITelemetryPlugin {
      * Add Part A fields to the event
      * @param event The event that needs to be processed
      */
-    processTelemetry(event: ITelemetryItem) {
-        if (!CoreUtils.isNullOrUndefined(this._nextPlugin)) {
-            this._nextPlugin.processTelemetry(event);
-        }
+    processTelemetry(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
+        this.processNext(event, itemCtx);
     }
-
-    /**
-     * Sets the next plugin that comes after this plugin
-     * @param nextPlugin The next plugin
-     */
-    setNextPlugin(nextPlugin: ITelemetryPlugin) {
-        this._nextPlugin = nextPlugin;
-    }
-
 
     trackMetric(metric: IMetricTelemetry, customProperties: ICustomProperties) {
         if (this._analyticsPlugin) {
             this._analyticsPlugin.trackMetric(metric, customProperties);
         } else {
-            this._logger.throwInternal(
+            this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, React plugin telemetry will not be sent: ");
         }
     }
@@ -76,7 +64,7 @@ export default class ReactPlugin implements ITelemetryPlugin {
         if (this._analyticsPlugin) {
             this._analyticsPlugin.trackPageView(pageView);
         } else {
-            this._logger.throwInternal(
+            this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, React plugin telemetry will not be sent: ");
         }
     }

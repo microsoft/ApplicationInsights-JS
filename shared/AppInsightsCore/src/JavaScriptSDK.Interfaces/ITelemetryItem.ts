@@ -58,4 +58,5 @@ export interface Tags {
 }
 
 export interface ICustomProperties {
+    [key: string]: any;
 }

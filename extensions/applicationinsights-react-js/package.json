@@ -1,6 +1,6 @@
 {
   "name": "@microsoft/applicationinsights-react-js",
-  "version": "2.3.1",
+  "version": "2.5.4",
   "description": "Microsoft Application Insights React plugin",
   "main": "dist/applicationinsights-react-js.js",
   "module": "dist-esm/applicationinsights-react-js.js",
@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "npm run build:esm && npm run build:browser",
-    "build:esm": "grunt react",
+    "build:esm": "tsc -p tsconfig.json",
     "build:browser": "rollup -c",
     "test": "jest --config test/jestconfig.json",
     "test-watch": "jest --config test/jestconfig.json --watch",
@@ -20,10 +20,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@microsoft/applicationinsights-common": "2.3.1",
-    "@microsoft/applicationinsights-core-js": "2.3.1",
+    "@microsoft/applicationinsights-common": "2.5.4",
+    "@microsoft/applicationinsights-core-js": "2.5.4",
     "history": "^4.9.0",
-    "react": "^16.8.6",
     "tslib": "^1.9.3"
   },
   "devDependencies": {
@@ -48,6 +47,9 @@
     "ts-jest": "^24.0.2",
     "tslint": "^5.19.0",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "2.5.3"
+    "typescript": "^3.9.3"
+  },
+  "peerDependencies": {
+    "react": "^16.0.0"
   }
 }

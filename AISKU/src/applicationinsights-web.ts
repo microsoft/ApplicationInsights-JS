@@ -1,7 +1,8 @@
 export {
     IApplicationInsights,
     Snippet,
-    Initialization as ApplicationInsights
+    Initialization as ApplicationInsights,
+    Telemetry
 } from "./Initialization";
 
 export { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";

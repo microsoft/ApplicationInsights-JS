@@ -1,5 +1,5 @@
 ﻿import { Util, ISerializable, FieldType } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, CoreUtils, getJSON } from '@microsoft/applicationinsights-core-js';
 
 export class Serializer {
 
@@ -14,7 +14,12 @@ export class Serializer {
      */
     public serialize(input: ISerializable): string {
         const output = this._serializeObject(input, "root");
-        return JSON.stringify(output);
+        try {
+            return getJSON().stringify(output);
+        } catch (e) {
+            // if serialization fails return an empty string
+            this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSerializeObject, (e && CoreUtils.isFunction(e.toString)) ? e.toString() : "Error serializing object", null, true);
+        }
     }
 
     private _serializeObject(source: ISerializable, name: string): any {
@@ -46,11 +51,11 @@ export class Serializer {
 
                 try {
                     // verify that the object can be stringified
-                    JSON.stringify(source);
+                    getJSON().stringify(source);
                     output = source;
                 } catch (e) {
                     // if serialization fails return an empty string
-                    this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSerializeObject, (e && typeof e.toString === 'function') ? e.toString() : "Error serializing object", null, true);
+                    this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSerializeObject, (e && CoreUtils.isFunction(e.toString)) ? e.toString() : "Error serializing object", null, true);
                 }
             }
 
@@ -61,12 +66,12 @@ export class Serializer {
         for (const field in source.aiDataContract) {
 
             const contract = source.aiDataContract[field];
-            const isRequired = (typeof contract === "function") ? (contract() & FieldType.Required) : (contract & FieldType.Required);
-            const isHidden = (typeof contract === "function") ? (contract() & FieldType.Hidden) : (contract & FieldType.Hidden);
+            const isRequired = (CoreUtils.isFunction(contract)) ? (contract() & FieldType.Required) : (contract & FieldType.Required);
+            const isHidden = (CoreUtils.isFunction(contract)) ? (contract() & FieldType.Hidden) : (contract & FieldType.Hidden);
             const isArray = contract & FieldType.Array;
 
             const isPresent = source[field] !== undefined;
-            const isObject = typeof source[field] === "object" && source[field] !== null;
+            const isObject = CoreUtils.isObject(source[field]) && source[field] !== null;
 
             if (isRequired && !isPresent && !isArray) {
                 this._logger.throwInternal(
@@ -131,7 +136,7 @@ export class Serializer {
         return output;
     }
 
-    private _serializeStringMap(map, expectedType, name) {
+    private _serializeStringMap(map: any, expectedType: string, name: string) {
         let output;
         if (map) {
             output = {};

@@ -85,7 +85,7 @@ module Microsoft.ApplicationInsights {
         private instrumentOpen() {
             var originalOpen = XMLHttpRequest.prototype.open;
             var ajaxMonitorInstance = this;
-            XMLHttpRequest.prototype.open = function (method, url, async) {
+            XMLHttpRequest.prototype.open = function (method, url, async?) {
                 try {
                     if (ajaxMonitorInstance.isMonitoredInstance(this, true) &&
                         (

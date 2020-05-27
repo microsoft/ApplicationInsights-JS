@@ -95,10 +95,13 @@ export class ReactNativePluginTests extends TestClass {
             name: 'Autocollection is enabled by default',
             test: () => {
                 const autoCollectStub = this.sandbox.stub(this.plugin, '_collectDeviceInfo');
+                const autoCollectExceptionStub = this.sandbox.stub(this.plugin, '_setExceptionHandler', () => true);
 
                 this.plugin.initialize(this.config, this.core, []);
                 Assert.equal(false, this.plugin['_config'].disableDeviceCollection, 'disableDeviceCollection is false');
+                Assert.equal(false, this.plugin['_config'].disableExceptionCollection, 'disableExceptionCollection is false');
                 Assert.ok(autoCollectStub.calledOnce);
+                Assert.ok(autoCollectExceptionStub.calledOnce);
             }
         });
 
@@ -106,23 +109,30 @@ export class ReactNativePluginTests extends TestClass {
             name: 'Autocollection does not run when disabled from root config',
             test: () => {
                 const autoCollectStub = this.sandbox.stub(this.plugin, '_collectDeviceInfo');
+                const autoCollectExceptionStub = this.sandbox.stub(this.plugin, '_setExceptionHandler', () => true);
                 this.config['disableDeviceCollection'] = true;
+                this.config['disableExceptionCollection'] = true;
                 this.plugin.initialize(this.config, this.core, []);
 
                 Assert.equal(true, this.plugin['_config'].disableDeviceCollection, 'disableDeviceCollection is true');
+                Assert.equal(true, this.plugin['_config'].disableExceptionCollection, 'disableExceptionCollection is true');
                 Assert.ok(autoCollectStub.notCalled);
+                Assert.ok(autoCollectExceptionStub.notCalled);
             }
         });
 
         this.testCase({
             name: 'Autocollection does not run when disabled from constructor config',
             test: () => {
-                this.plugin = new ReactNativePlugin({disableDeviceCollection: true});
+                this.plugin = new ReactNativePlugin({disableDeviceCollection: true, disableExceptionCollection: true});
                 const autoCollectStub = this.sandbox.stub(this.plugin, '_collectDeviceInfo');
+                const autoCollectExceptionStub = this.sandbox.stub(this.plugin, '_setExceptionHandler', () => true);
                 this.plugin.initialize(this.config, this.core, []);
 
                 Assert.equal(true, this.plugin['_config'].disableDeviceCollection, 'disableDeviceCollection is true');
+                Assert.equal(true, this.plugin['_config'].disableExceptionCollection, 'disableExceptionCollection is true');
                 Assert.ok(autoCollectStub.notCalled);
+                Assert.ok(autoCollectExceptionStub.notCalled);
             }
         });
 
@@ -131,10 +141,13 @@ export class ReactNativePluginTests extends TestClass {
             test: () => {
                 this.plugin = new ReactNativePlugin({} as any);
                 const autoCollectStub = this.sandbox.stub(this.plugin, '_collectDeviceInfo');
+                const autoCollectExceptionStub = this.sandbox.stub(this.plugin, '_setExceptionHandler', () => true);
                 this.plugin.initialize(this.config, this.core, []);
 
                 Assert.equal(false, this.plugin['_config'].disableDeviceCollection, 'disableDeviceCollection is false');
+                Assert.equal(false, this.plugin['_config'].disableExceptionCollection, 'disableExceptionCollection is false');
                 Assert.ok(autoCollectStub.calledOnce);
+                Assert.ok(autoCollectExceptionStub.calledOnce);
             }
         });
 
@@ -143,10 +156,13 @@ export class ReactNativePluginTests extends TestClass {
             test: () => {
                 this.plugin = new ReactNativePlugin({foo: 'bar'} as any);
                 const autoCollectStub = this.sandbox.stub(this.plugin, '_collectDeviceInfo');
+                const autoCollectExceptionStub = this.sandbox.stub(this.plugin, '_setExceptionHandler', () => true);
                 this.plugin.initialize(this.config, this.core, []);
 
                 Assert.deepEqual(false, this.plugin['_config'].disableDeviceCollection, 'disableDeviceCollection is false');
+                Assert.deepEqual(false, this.plugin['_config'].disableExceptionCollection, 'disableExceptionCollection is false');
                 Assert.ok(autoCollectStub.calledOnce);
+                Assert.ok(autoCollectExceptionStub.calledOnce);
             }
         });
     }

@@ -2,6 +2,7 @@ import nodeResolve from "rollup-plugin-node-resolve";
 import {uglify} from "rollup-plugin-uglify";
 import replace from "rollup-plugin-replace";
 import commonjs from "rollup-plugin-commonjs";
+import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
 
 const version = require("./package.json").version;
 const outputName = "applicationinsights-react-js";
@@ -30,6 +31,7 @@ const browserRollupConfigFactory = isProduction => {
           "// Licensed under the MIT License.": ""
         }
       }),
+      importCheck({ exclude: [ "applicationinsights-react-js" ] }),
       nodeResolve({
         browser: false,
         preferBuiltins: false
@@ -39,7 +41,9 @@ const browserRollupConfigFactory = isProduction => {
           "node_modules/react/index.js": ["Children", "Component", "PropTypes", "createElement"],
           "node_modules/react-dom/index.js": ["render"]
         }
-      })
+      }),
+      es3Poly(),
+      es3Check()
     ]
   };
 
@@ -76,13 +80,16 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
           "// Licensed under the MIT License.": ""
         }
       }),
+      importCheck({ exclude: [ "applicationinsights-react-js" ] }),
       nodeResolve({ preferBuiltins: true }),
       commonjs({
         namedExports: {
           "node_modules/react/index.js": ["Children", "Component", "PropTypes", "createElement"],
           "node_modules/react-dom/index.js": ["render"]
         }
-      })
+      }),
+      es3Poly(),
+      es3Check()
     ]
   };
 

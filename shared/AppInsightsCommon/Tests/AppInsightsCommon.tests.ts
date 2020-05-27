@@ -38,7 +38,7 @@ export class ApplicationInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: 'DataSanitizerTests: throrwInternal function is called correctly in sanitizeMessage function',
+            name: 'DataSanitizerTests: throwInternal function is called correctly in sanitizeMessage function',
             test: () => {
                 // const define
                 const loggerStub = this.sandbox.stub(this.logger , "throwInternal");

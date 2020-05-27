@@ -1,6 +1,10 @@
+//import globby from "globby";
 import nodeResolve from "rollup-plugin-node-resolve";
 import {uglify} from "rollup-plugin-uglify";
 import replace from "rollup-plugin-replace";
+import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/node/removedynamic";
+import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
+import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
 const outputName = "applicationinsights-dependencies-js";
@@ -10,6 +14,11 @@ const banner = [
   " * Copyright (c) Microsoft and contributors. All rights reserved.",
   " */"
 ].join("\n");
+
+const replaceValues = {
+  "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
+  "// Licensed under the MIT License.": ""
+};
 
 const browserRollupConfigFactory = isProduction => {
   const browserRollupConfig = {
@@ -22,17 +31,18 @@ const browserRollupConfigFactory = isProduction => {
       sourcemap: true
     },
     plugins: [
+      dynamicRemove(),
       replace({
         delimiters: ["", ""],
-        values: {
-          "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
-          "// Licensed under the MIT License.": ""
-        }
+        values: replaceValues
       }),
+      importCheck({ exclude: [ "applicationinsights-dependencies-js" ] }),
       nodeResolve({
         browser: false,
         preferBuiltins: false
-      })
+      }),
+      es3Poly(),
+      es3Check()
     ]
   };
 
@@ -62,14 +72,15 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       sourcemap: true
     },
     plugins: [
+      dynamicRemove(),
       replace({
         delimiters: ["", ""],
-        values: {
-          "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
-          "// Licensed under the MIT License.": ""
-        }
+        values: replaceValues
       }),
-      nodeResolve()
+      importCheck({ exclude: [ "applicationinsights-dependencies-js" ] }),
+      nodeResolve(),
+      es3Poly(),
+      es3Check()
     ]
   };
 
@@ -87,6 +98,8 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
 
   return nodeRollupConfig;
 };
+
+updateDistEsmFiles(replaceValues, banner);
 
 export default [
   nodeUmdRollupConfigFactory(true),

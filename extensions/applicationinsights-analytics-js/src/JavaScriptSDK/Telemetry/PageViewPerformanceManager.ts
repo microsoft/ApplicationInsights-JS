@@ -6,7 +6,7 @@ import {
 } from '@microsoft/applicationinsights-common';
 import {
     IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
-    _InternalMessageId
+    _InternalMessageId, getNavigator, getPerformance
 } from '@microsoft/applicationinsights-core-js';
 
 /**
@@ -93,14 +93,14 @@ export class PageViewPerformanceManager {
 
     public getPerformanceTiming(): PerformanceTiming | null {
         if (this.isPerformanceTimingSupported()) {
-            return window.performance.timing;
+            return getPerformance().timing;
         }
 
         return null;
     }
     public getPerformanceNavigationTiming(): PerformanceNavigationTiming | null {
         if (this.isPerformanceNavigationTimingSupported()) {
-            return window.performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
+            return getPerformance().getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
         }
 
         return null;
@@ -110,14 +110,16 @@ export class PageViewPerformanceManager {
     * Returns true is window PerformanceNavigationTiming API is supported, false otherwise.
     */
    public isPerformanceNavigationTimingSupported() {
-    return typeof window !== "undefined" && window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType("navigation").length > 0;
+        let perf = getPerformance();
+        return perf && perf.getEntriesByType && perf.getEntriesByType("navigation").length > 0;
 }
 
    /**
     * Returns true is window performance timing API is supported, false otherwise.
     */
     public isPerformanceTimingSupported() {
-        return typeof window !== "undefined" && window.performance && window.performance.timing;
+        let perf = getPerformance();
+        return perf && perf.timing;
     }
 
    /**
@@ -125,9 +127,10 @@ export class PageViewPerformanceManager {
     * Returns true if ready, false otherwise.
     */
     public isPerformanceTimingDataReady() {
-        const timing = typeof window === "object" && window.performance.timing;
+        let perf = getPerformance();
+        const timing = perf ? perf.timing : 0;
 
-        return typeof window === "object"
+        return timing
             && timing.domainLookupStart > 0
             && timing.navigationStart > 0
             && timing.responseStart > 0
@@ -142,9 +145,10 @@ export class PageViewPerformanceManager {
     * This method tells if given durations should be excluded from collection.
     */
     public shouldCollectDuration(...durations: number[]): boolean {
+        var _navigator = getNavigator() || {} as any;
         // a full list of Google crawlers user agent strings - https://support.google.com/webmasters/answer/1061943?hl=en
         const botAgentNames = ['googlebot', 'adsbot-google', 'apis-google', 'mediapartners-google'];
-        const userAgent = navigator.userAgent;
+        const userAgent = _navigator.userAgent;
         let isGoogleBot = false;
 
         if (userAgent) {

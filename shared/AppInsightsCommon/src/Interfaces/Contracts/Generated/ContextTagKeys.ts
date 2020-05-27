@@ -199,6 +199,16 @@ export class ContextTagKeys {
      */
     public internalNodeName: string;
 
+    /**
+     * This identifies the version of the snippet that was used to initialize the SDK
+     */
+    public internalSnippet: string;
+
+    /**
+     * This identifies the source of the Sdk script (used to identify whether the SDK was loaded via the CDN)
+     */
+    public internalSdkSrc: string;
+
     constructor() {
         this.applicationVersion = "ai.application.ver";
         this.applicationBuild = "ai.application.build";
@@ -257,5 +267,7 @@ export class ContextTagKeys {
         this.internalNodeName = "ai.internal.nodeName";
         this.internalSdkVersion = "ai.internal.sdkVersion";
         this.internalAgentVersion = "ai.internal.agentVersion";
+        this.internalSnippet = "ai.internal.snippet";
+        this.internalSdkSrc = "ai.internal.sdkSrc";
     }
 }

@@ -29,7 +29,7 @@
 2. Grab the _Instrumentation Key_ (aka "ikey") from the resource you created in
    step 1. Later, you'll add it to the `instrumentationKey` setting of the Application Insights JavaScript SDK.
 3. Add Application Insights to your app. **There are 2 ways to do this.**
-    - Install via NPM. Then, [set up an instance of Application Insights in your app.](#npm-setup-(ignore-if-using-snippet-setup))
+    - Install via NPM. Then, [set up an instance of Application Insights in your app.](#npm-setup-ignore-if-using-snippet-setup)
         > *Note:* **Typings are included with this package**, so you do **not** need to install a separate typings package.
 
         ```sh
@@ -59,13 +59,55 @@ If your app does not use NPM, you can directly instrument your webpages with App
 
 ```html
 <script type="text/javascript">
-var sdkInstance="appInsightsSDK";window[sdkInstance]="appInsights";var aiName=window[sdkInstance],aisdk=window[aiName]||function(e){function n(e){t[e]=function(){var n=arguments;t.queue.push(function(){t[e].apply(t,n)})}}var t={config:e};t.initialize=!0;var i=document,a=window;setTimeout(function(){var n=i.createElement("script");n.src=e.url||"https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js",i.getElementsByTagName("script")[0].parentNode.appendChild(n)});try{t.cookie=i.cookie}catch(e){}t.queue=[],t.version=2;for(var r=["Event","PageView","Exception","Trace","DependencyData","Metric","PageViewPerformance"];r.length;)n("track"+r.pop());n("startTrackPage"),n("stopTrackPage");var s="Track"+r[0];if(n("start"+s),n("stop"+s),n("addTelemetryInitializer"),n("setAuthenticatedUserContext"),n("clearAuthenticatedUserContext"),n("flush"),t.SeverityLevel={Verbose:0,Information:1,Warning:2,Error:3,Critical:4},!(!0===e.disableExceptionTracking||e.extensionConfig&&e.extensionConfig.ApplicationInsightsAnalytics&&!0===e.extensionConfig.ApplicationInsightsAnalytics.disableExceptionTracking)){n("_"+(r="onerror"));var o=a[r];a[r]=function(e,n,i,a,s){var c=o&&o(e,n,i,a,s);return!0!==c&&t["_"+r]({message:e,url:n,lineNumber:i,columnNumber:a,error:s}),c},e.autoExceptionInstrumented=!0}return t}(
-{
-  instrumentationKey:"INSTRUMENTATION_KEY"
-}
-);window[aiName]=aisdk,aisdk.queue&&0===aisdk.queue.length&&aisdk.trackPageView({});
+!function(T,l,y){var S=T.location,u="script",k="instrumentationKey",D="ingestionendpoint",C="disableExceptionTracking",E="ai.device.",I="toLowerCase",b="crossOrigin",w="POST",e="appInsightsSDK",t=y.name||"appInsights";(y.name||T[e])&&(T[e]=t);var n=T[t]||function(d){var g=!1,f=!1,m={initialize:!0,queue:[],sv:"3",version:2,config:d};function v(e,t){var n={},a="Browser";return n[E+"id"]=a[I](),n[E+"type"]=a,n["ai.operation.name"]=S&&S.pathname||"_unknown_",n["ai.internal.sdkVersion"]="javascript:snippet_"+(m.sv||m.version),{time:function(){var e=new Date;function t(e){var t=""+e;return 1===t.length&&(t="0"+t),t}return e.getUTCFullYear()+"-"+t(1+e.getUTCMonth())+"-"+t(e.getUTCDate())+"T"+t(e.getUTCHours())+":"+t(e.getUTCMinutes())+":"+t(e.getUTCSeconds())+"."+((e.getUTCMilliseconds()/1e3).toFixed(3)+"").slice(2,5)+"Z"}(),iKey:e,name:"Microsoft.ApplicationInsights."+e.replace(/-/g,"")+"."+t,sampleRate:100,tags:n,data:{baseData:{ver:2}}}}var h=d.url||y.src;if(h){function a(e){var t,n,a,i,r,o,s,c,p,l,u;g=!0,m.queue=[],f||(f=!0,t=h,s=function(){var e={},t=d.connectionString;if(t)for(var n=t.split(";"),a=0;a<n.length;a++){var i=n[a].split("=");2===i.length&&(e[i[0][I]()]=i[1])}if(!e[D]){var r=e.endpointsuffix,o=r?e.location:null;e[D]="https://"+(o?o+".":"")+"dc."+(r||"services.visualstudio.com")}return e}(),c=s[k]||d[k]||"",p=s[D],l=p?p+"/v2/track":config.endpointUrl,(u=[]).push((n="SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)",a=t,i=l,(o=(r=v(c,"Exception")).data).baseType="ExceptionData",o.baseData.exceptions=[{typeName:"SDKLoadFailed",message:n.replace(/\./g,"-"),hasFullStack:!1,stack:n+"\nSnippet failed to load ["+a+"] -- Telemetry is disabled\nHelp Link: https://go.microsoft.com/fwlink/?linkid=2128109\nHost: "+(S&&S.pathname||"_unknown_")+"\nEndpoint: "+i,parsedStack:[]}],r)),u.push(function(e,t,n,a){var i=v(c,"Message"),r=i.data;r.baseType="MessageData";var o=r.baseData;return o.message='AI (Internal): 99 message:"'+("SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details) ("+n+")").replace(/\"/g,"")+'"',o.properties={endpoint:a},i}(0,0,t,l)),function(e,t){if(JSON){var n=T.fetch;if(n&&!y.useXhr)n(t,{method:w,body:JSON.stringify(e),mode:"cors"});else if(XMLHttpRequest){var a=new XMLHttpRequest;a.open(w,t),a.setRequestHeader("Content-type","application/json"),a.send(JSON.stringify(e))}}}(u,l))}function i(e,t){f||setTimeout(function(){!t&&m.core||a()},500)}var e=function(){var n=l.createElement(u);n.src=h;var e=y[b];return!e&&""!==e||"undefined"==n[b]||(n[b]=e),n.onload=i,n.onerror=a,n.onreadystatechange=function(e,t){"loaded"!==n.readyState&&"complete"!==n.readyState||i(0,t)},n}();y.ld<0?l.getElementsByTagName("head")[0].appendChild(e):setTimeout(function(){l.getElementsByTagName(u)[0].parentNode.appendChild(e)},y.ld||0)}try{m.cookie=l.cookie}catch(p){}function t(e){for(;e.length;){var t=e.pop();m[t]=function(){var e=arguments;g||m.queue.push(function(){m[t].apply(m,e)})}}}var n="track",r="TrackPage",o="TrackEvent";t([n+"Event",n+"PageView",n+"Exception",n+"Trace",n+"DependencyData",n+"Metric",n+"PageViewPerformance","start"+r,"stop"+r,"start"+o,"stop"+o,"addTelemetryInitializer","setAuthenticatedUserContext","clearAuthenticatedUserContext","flush"]),m.SeverityLevel={Verbose:0,Information:1,Warning:2,Error:3,Critical:4};var s=(d.extensionConfig||{}).ApplicationInsightsAnalytics||{};if(!0!==d[C]&&!0!==s[C]){method="onerror",t(["_"+method]);var c=T[method];T[method]=function(e,t,n,a,i){var r=c&&c(e,t,n,a,i);return!0!==r&&m["_"+method]({message:e,url:t,lineNumber:n,columnNumber:a,error:i}),r},d.autoExceptionInstrumented=!0}return m}(y.cfg);(T[t]=n).queue&&0===n.queue.length&&n.trackPageView({})}(window,document,{
+src: "https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js", // The SDK URL Source
+//name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied
+//ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,
+//useXhr: 1, // Use XHR instead of fetch to report failures (if available),
+//crossOrigin: "anonymous", // When supplied this will add the provided value as the cross origin attribute on the script tag 
+cfg: { // Application Insights Configuration
+    instrumentationKey: "INSTRUMENTATION_KEY"
+}});
 </script>
 ```
+
+> :bulb: **Note**
+>
+> For readability and to reduce possible JavaScript errors, all of the possible configuration options are listed on a new line in snippet code above, if you don't want to change the value of a commented line it can be removed.
+
+#### Reporting Script load exceptions
+
+This version of the snippet detects and reports an exception when loading the SDK from the CDN fails, this exception is reported to the Azure Monitor portal (under the failures &gt; exceptions &gt; browser), and provides visibility into failures of this type so that you are aware your application is not reporting telemetry (or other exceptions) as expected. This signal is an important measurement in understanding that you have lost telemetry because the SDK did not load or initialize, this provides clarity that you are missing the following telemetry:
+- Under-reporting of how users are using (or trying to use) your site;
+- Missing telemetry on how your end users are using your site;
+- Missing JavaScript errors that could potentially be blocking your end users from successfully using your site.
+
+For details on this exception see [SDK Load Failure](docs/SdkLoadFailure.md) page.
+
+Reporting of this failure as an exception to the portal does not use the configuration option ```disableExceptionTracking``` from the application insights configuration and therefore if this failure occurs it will always be reported by the snippet, even when the window.onerror support is disabled.
+
+Reporting of SDK load exceptions is specifically NOT supported on IE 8 (or less). This assists with reducing the minified size of the snippet by assuming that most environments are not exclusively IE 8 or less. If you have this requirement and you wish to receive these exceptions, you will need to either include a fetch poly fill or create you own snippet version that uses ```XDomainRequest``` instead of ```XMLHttpRequest```, it is recommended that you use the [provided snippet source code](https://github.com/microsoft/ApplicationInsights-JS/blob/master/AISKU/snippet/snippet.js) as a starting point.
+
+> :bulb: **Note**
+>
+> If you are using a previous version of the snippet, it is highly recommended that you update to the latest version so that you will receive these previously unreported issues.
+
+#### Snippet configuration options
+
+All configuration options have now been move towards the end of the script to help avoid accidentally introducing JavaScript errors that would not just cause the SDK to fail to load, but also it would disable the reporting of the failure.
+
+Each configuration option is shown above on a new line, if you don't wish to override the default value of an item listed as [optional] you can  remove that line to minimize the resulting size of your returned page.
+
+The available configuration options are 
+
+| Name | Type | Description
+|------|------|----------------
+| src | string **[required]** | The full URL for where to load the SDK from. This value is used for the "src" attribute of a dynamically added &lt;script /&gt; tag. You can use the public CDN location or your own privately hosted one.
+| name | string *[optional]* | The global name for the initialized SDK, defaults to appInsights. So ```window.appInsights``` will be a reference to the initialized instance. Note: if you provide a name value or a previous instance appears to be assigned (via the global name appInsightsSDK) then this name value will also be defined in the global namespace as ```window.appInsightsSDK=<name value>```, this is required by the SDK initialization code to ensure it's initializing and updating the correct snippet skeleton and proxy methods.
+| ld | number in ms *[optional]* | Defines the load delay to wait before attempting to load the SDK. Default value is 0ms and any negative value will immediately add a script tag to the &lt;head&gt; region of the page, which will then block the page load event until to script is loaded (or fails).
+| useXhr | boolean *[optional]* | This setting is used only for reporting SDK load failures. Reporting will first attempt to use fetch() if available and then fallback to XHR, setting this value to true just bypasses the fetch check. Use of this value is only be required if your application is being used in an environment where fetch would fail to send the failure events.
+| crossOrigin | string *[optional]* | By including this setting, the script tag added to download the SDK will include the crossOrigin attribute with this string value. When not defined (the default) no crossOrigin attribute is added. Recommended values are not defined (the default); ""; or "anonymous" (For all valid values see [HTML attribute: crossorigin](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin) documentation)
+| cfg | object **[required]** | THe configuration passed to the Application Insights SDK during initialization.
 
 ### Connection String Setup
 
@@ -81,6 +123,24 @@ appInsights.loadAppInsights();
 appInsights.trackPageView();
 ```
 
+#### (Alternative Setup Method) Include AI JS SDK script and initialize statically
+
+Use this approach if you would like to host AI JS SDK script on your endpoint or bundle it with other scripts. One popular example is Cordova applications (see [this blog post](http://www.teamfoundation.co.za/2016/02/application-insights-and-typescript/). After JS script has loaded, include the following snippet to initialize Application Insights:
+```html
+<!-- the snippet below assumes that JS SDK script has already loaded -->
+<script type="text/javascript" src="/pathToAIJSSDK.js"></script>
+<script type="text/javascript">
+    var snippet = {
+        config: {
+            instrumentationKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
+        }
+    };
+    var init = new Microsoft.ApplicationInsights.ApplicationInsights(snippet);
+    var appInsights = init.loadAppInsights();
+    appInsights.trackPageView();
+</script>
+```
+
 ### Sending Telemetry to the Azure Portal
 
 If initialized using the snippet, your Application Insights instance is located by default at `window.appInsights`
@@ -94,10 +154,23 @@ appInsights.trackTrace({message: 'some trace'});
 appInsights.trackMetric({name: 'some metric', average: 42});
 appInsights.trackDependencyData({absoluteUrl: 'some url', responseCode: 200, method: 'GET', id: 'some id'});
 appInsights.startTrackPage("pageName");
-appInsights.stopTrackPage("pageName", {customProp1: "some value"});
+appInsights.stopTrackPage("pageName", null, {customProp1: "some value"});
 appInsights.startTrackEvent("event");
-appInsights.stopTrackEvent("event", {customProp1: "some value"});
+appInsights.stopTrackEvent("event", null, {customProp1: "some value"});
 appInsights.flush();
+```
+
+Custom properties can be included in your telemetry through the `properties` named argument. This can be done with *any* of the Track APIs.
+
+```js
+appInsights.trackEvent({
+  name: 'some event',
+  properties: { // accepts any type
+    prop1: 'string',
+    prop2: 123.45,
+    prop3: { nested: 'objects are okay too' }
+  }
+});
 ```
 
 ### Setting Up Autocollection
@@ -126,7 +199,17 @@ Telemetry initializers are used to modify the contents of collected telemetry be
 
 The input argument to `addTelemetryInitializer` is a callback that takes a [`ITelemetryItem`](./API-reference.md#addTelemetryInitializer) as an argument and returns a `boolean` or `void`. If returning `false`, the telemetry item is not sent, else it proceeds to the next telemetry initializer, if any, or is sent to the telemetry collection endpoint.
 
-An example of using telemetry initializers:
+#### Example: [Setting Cloud Role Name](https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-map#set-cloud-role-name)
+
+```js
+var telemetryInitializer = (envelope) => {
+  envelope.tags["ai.cloud.role"] = "your role name";
+  envelope.tags["ai.cloud.roleInstance"] = "your role instance";
+}
+appInsights.addTelemetryInitializer(telemetryInitializer);
+```
+
+#### Example: Filtering
 
 ```js
 var telemetryInitializer = (envelope) => {
@@ -139,14 +222,6 @@ appInsights.addTelemetryInitializer(() => false); // Nothing is sent after this 
 appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
 ```
 
-#### Example: (Setting Cloud Role Name)[https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-map#set-cloud-role-name]
-```js
-var telemetryInitializer = (envelope) => {
-  envelope.tags["ai.cloud.role"] = "your role name";
-  envelope.tags["ai.cloud.roleInstance"] = "your role instance";
-}
-appInsights.addTelemetryInitializer(telemetryInitializer);
-```
 
 ## Configuration
 
@@ -160,7 +235,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | sessionExpirationMs | 86400000 | A session is logged if it has continued for this amount of time in milliseconds. Default is 24 hours |
 | maxBatchSizeInBytes | 10000 | Max size of telemetry batch. If a batch exceeds this limit, it is immediately sent and a new batch is started |
 | maxBatchInterval | 15000 | How long to batch telemetry for before sending (milliseconds) |
-| disableExceptionTracking | false | If true, exceptions are no autocollected. Default is false. |
+| disableExceptionTracking | false | If true, exceptions are not autocollected. Default is false. |
 | disableTelemetry | false | If true, telemetry is not collected or sent. Default is false. |
 | enableDebug | false | If true, **internal** debugging data is thrown as an exception **instead** of being logged, regardless of SDK logging settings. Default is false. <br>***Note:*** Enabling this setting will result in dropped telemetry whenever an internal error occurs. This can be useful for quickly identifying issues with your configuration or usage of the SDK. If you do not want to lose telemetry while debugging, consider using `consoleLoggingLevel` or `telemetryLoggingLevel` instead of `enableDebug`. |
 | loggingLevelConsole | 0 | Logs **internal** Application Insights errors to console. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
@@ -192,8 +267,12 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | enableAutoRouteTracking | false | Automatically track route changes in Single Page Applications (SPA). If true, each route change will send a new Pageview to Application Insights. Hash route changes changes (`example.com/foo#bar`) are also recorded as new page views.
 | enableRequestHeaderTracking | false | If true, AJAX & Fetch request headers is tracked, default is false.
 | enableResponseHeaderTracking | false | If true, AJAX & Fetch request's response headers is tracked, default is false.
+| enableAjaxErrorStatusText | false | Default false. If true, include response error data text in dependency event on failed AJAX requests.
+| enableAjaxPerfTracking | false | Default false. Flag to enable looking up and including additional browser window.performance timings in the reported ajax (XHR and fetch) reported metrics. 
+| maxAjaxPerfLookupAttempts | 3 | Defaults to 3. The maximum number of times to look for the window.performance timings (if available), this is required as not all browsers populate the window.performance before reporting the end of the XHR request and for fetch requests this is added after its complete.
+| ajaxPerfLookupDelay | 25 | Defaults to 25ms. The amount of time to wait before re-attempting to find the windows.performance timings for an ajax request, time is in milliseconds and is passed directly to setTimeout().
 | distributedTracingMode | `DistributedTracingModes.AI` | Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests. AI_AND_W3C is provided for back-compatibility with any legacy Application Insights instrumented services.
-
+| enableUnhandledPromiseRejectionTracking | false | If true, unhandled promise rejections will be autocollected and reported as a javascript error. When disableExceptionTracking is true (dont track exceptions) the config value will be ignored and unhandled promise rejections will not be reported.
 ## Single Page Applications
 
 By default, this SDK will **not** handle state based route changing that occurs in single page applications. To enable automatic route change tracking for your single page application, you can add `enableAutoRouteTracking: true` to your setup configuration.
@@ -235,7 +314,7 @@ Breaking changes in the SDK V2 version:
 - ES3 (IE8) compatibility, while running in IE8 or lower versions of the browser is not an officially supported scenario we are working to maintain ES3 level compatibility to ensure that the SDK will not cause any unexpected failures due to Javascript parsing error. See [ES3/IE8 Compatibility](#es3ie8-compatibility) below for further information.
 - Telemetry envelope has field name and structure changes due to data schema updates.
 - Moved `context.operation` to `context.telemetryTrace`. Some fields were also changed (`operation.id` --> `telemetryTrace.traceID`)
-  - If you want to maunally refresh the current pageview id (e.g. in SPA apps) this can be done with `appInsights.properties.context.telemetryTrace.traceID = Util.newId()`
+  - If you want to maunally refresh the current pageview id (e.g. in SPA apps) this can be done with `appInsights.context.telemetryTrace.traceID = Util.newId()`
 
 If you are using the current application insights PRODUCTION SDK (1.0.20) and want to see if the new SDK works in runtime, please update URL depending on your current SDK loading scenario:
 
@@ -272,6 +351,17 @@ Here is the priority ranges available:
 - Regular extension priority can be between 201 to 499.
 - Priorty range < 201 is reserved.
 - Priority range > 1000 is for channels (advanced scenario)
+
+[BaseTelemetryPlugin](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK/BaseTelemetryPlugin.ts)
+
+To help with the creation of new extensions there is now a supported base class which can be used, this not only provides the common (boilerplate) implementations of common functions it will enable future plugins to automatically receive functional updates with the need to recode the plugins. it provides implementations for :-
+* [ITelemetryPlugin.setNextPlugin()](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts) implementation to continuing supporting existing (non-shared) execution of plugins, however, new plugins should use the new [IProcessTelemetryContext.processNext()](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IProcessTelemetryContext.ts) moving forward as this support the creation of shared (singleton) plugins;
+* New [ITelemetryPlugin.isInitialized()](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts) implementation
+* And several helper methods.
+  * [processNext()](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK/BaseTelemetryPlugin.ts), - to call the next plugin using the context or the _nextPlugin value
+  * [diagLog()](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK/BaseTelemetryPlugin.ts): - to access the current [IDiagnosticLogger](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IDiagnosticLogger.ts) instance.
+
+  If you are creating new extensions it is recommended that you extend from this base class so that your extension will automatically inherit any future enhancements that are added to the ITelemetryPlugin interface without it requiring updates.
 
 Usage:
 
@@ -317,7 +407,8 @@ While the script downloads from the CDN, all tracking of your page is queued. On
 
 > Summary:
 >
-> - **~28 KB** gzipped
+> - ![current npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)
+> - ![gzip compressed size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?compression=gzip)
 > - **15 ms** overall initialization time
 > - **Zero** tracking missed during life cycle of page
 
@@ -361,12 +452,62 @@ As part of enabling ES3/IE8 support we have set the ```tsconfig.json``` to ES3 a
 Ensuring that the generated code is compatible with ES3 is only the first step, JS parsers will still parse the code when an unsupport core function is used, it will just fail or throw an exception at runtime. Therefore, we also need to require/use polyfil implementations or helper functions to handle those scenarios.
 
 It should also be noted that the overall goal of ES3/IE8 compatibility is the support at least the following 2 usage usage patterns. By supporting these two (2) basic use-cases, application/developers will be able to determine what browsers their users are using and whether they are experiencing any issues. As the SDK will report the data to the server, thus enabling the insights into whether they need to either fully support ES3/IE8 or provide some sort of browser upgrade notifications.
+
 - track()
 - trackException()
 
 Beyond terminating support for older browsers that only support ES3, (which we cannot do at this point in time) we will endeavour to maintain support for the above two (2) use-cases.
 
+### Browser must support JSON class
+
+If your users are using a browser that does not support the [JSON](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON) Api you will need to include your own JSON polyfil implementation and this will need to be loaded prior to the application insights code.
+
+This **includes** when running your application within an embedded browser, which on windows will default to using IE in IE7 doc mode -- which does NOT provide the JSON Api. 
+
+For this case either provide a JSON polyfil or add the ["X-UA-Compatible"](https://docs.microsoft.com/en-us/openspecs/ie_standards/ms-iedoco/380e2488-f5eb-4457-a07a-0cb1b6e4b4b5?redirectedfrom=MSDN) meta tag and/or a header to your hosting page so that IE will provide the expected runtime environment.
+
+```
+ <meta http-equiv="X-UA-Compatible" content="IE=edge">
+ 
+ <meta http-equiv="X-UA-Compatible" content="IE=11">
+```
+
+[More details on this are available here](https://docs.microsoft.com/en-us/archive/blogs/asiatech/ie11-migration-guide-understanding-browser-mode-document-mode-user-agent-and-x-ua-compatible)
+
+### ES3/IE8 Packaging helper (ES3 rollup-plugin)
+
+To ensure that the system conforms to the ES3 spec, by only using ES3 compatible code we have created a rollup plugin which has 2 functions
+
+- es3Poly() finds and rewrite several commonly incompatible functions (such as Object.defineProperty; Object.getOwnPropertyDescriptor; Object.create) with inline polyfill functions that either call the real implementation or provide a basic implementation so that the scripts can be loaded and executed.
+- es3Check() finds some of the known ES3 incompatible methods and will stop the packaging process if they are identified (and have not been polyfilled by es3Poly()), this provides a semi-automated validation of not just the application insights code, but also 3rd party libraries that it uses.
+- importCheck() checks that the source code does not include imports from specific files or packages, this has been added due to packaging issues while using es3Poly causing imported type values to be renamed as "name$$1", which causes uglify() to missing renaming in some cases where the original source is "name$1". So this is being used to ensure that each source file only imports the values from packages or the original source file and not the main module export like "index". The importCheck can be placed before the nodeResolve() or after the es3Check() the recommendation is to fail fast be having this before the resolve. It should also be noted that only if the import is used will it appear in the final output (packagin), so it may exist in the original source but the packaging will not fail in this case.
+
+To use these rollup plugins you simply need to add the following to your rollup.config.js
+
+To import the module
+```
+import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
+```
+
+And then include as part of the packaging plugin list, if you use es3Poly()you should always include it before es3Check() 
+
+```
+    plugins: [
+      replace({ ... }),
+      importCheck({ exclude: [ "Index" ] }),
+      nodeResolve({ browser: false, preferBuiltins: false }),
+      es3Poly(),
+      es3Check()
+    ]
+```
+
+All plugins take an options which allows you to add additional checks and polyfill replacements. See the [Interfaces.ts]() for the definitions and [ES3Tokens.ts]() for the default values, which should provide the examples, if we have missed some common values that you require please feel free to raise an issue or provide a PR to add as the defaults.
+
+It should be noted at this point that the both react and react-native extensions will NOT work in an ES3/IE8 environment out of the box, primarily because of the react code and their dependencies.
+You *may* be able to workaround this limitation by providing and your own polyfill implementations for the unsupported methods.
+
 ### ES3/IE8 Features, Solutions, Workarounds and Polyfil style helper functions
+
 As part of contributing to the project the following table highlights all of the currently known issues and the available solution/workaround. During PR and reviewing please ensure that you do not use the unsupported feature directly and instead use (or provide) the helper, soultion or workaround.
 
 This table does not attempt to include ALL of the ES3 unsuported features, just the currently known functions that where being used at the time or writing. You are welcome to contribute to provide additional helpers, workarounds or documentation of values that should not be used.

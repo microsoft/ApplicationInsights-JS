@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web",
-    "version": "2.3.1",
+    "version": "2.5.4",
     "description": "Microsoft Application Insights Javascript SDK API 1.0 beta",
     "main": "dist/applicationinsights-web.js",
     "module": "dist-esm/applicationinsights-web.js",
@@ -15,6 +15,7 @@
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "grunt aisku",
         "build:browser": "rollup -c",
+        "build:snippet": "grunt snippetvnext",
         "test": "grunt aiskutests",
         "lint": "tslint -p tsconfig.json",
         "nightwatch:chrome": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env chrome",
@@ -28,6 +29,7 @@
         "nightwatch:done": "curl http://localhost:8000/_done"
     },
     "devDependencies": {
+        "@microsoft/applicationinsights-rollup-es3" : "1.1.1",
         "chromedriver": "^2.45.0",
         "finalhandler": "^1.1.1",
         "grunt": "1.0.1",
@@ -35,26 +37,27 @@
         "grunt-contrib-uglify": "3.1.0",
         "grunt-ts": "^6.0.0-beta.15",
         "grunt-tslint": "^5.0.2",
+        "globby": "^11.0.0",
         "rollup": "^0.66.0",
         "rollup-plugin-node-resolve": "^3.4.0",
         "rollup-plugin-replace": "^2.1.0",
         "rollup-plugin-uglify": "^6.0.0",
         "selenium-server-standalone-jar": "^3.141.5",
         "serve-static": "^1.13.2",
-        "source-map-loader": "^0.2.3",
+        "source-map-loader": "^0.2.3", 
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
         "typescript": "2.5.3"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-analytics-js": "2.3.1",
-        "@microsoft/applicationinsights-channel-js": "2.3.1",
-        "@microsoft/applicationinsights-common": "2.3.1",
-        "@microsoft/applicationinsights-core-js": "2.3.1",
-        "@microsoft/applicationinsights-dependencies-js": "2.3.1",
-        "@microsoft/applicationinsights-properties-js": "2.3.1"
+        "@microsoft/dynamicproto-js": "^0.5.2",
+        "@microsoft/applicationinsights-analytics-js": "2.5.4",
+        "@microsoft/applicationinsights-channel-js": "2.5.4",
+        "@microsoft/applicationinsights-common": "2.5.4",
+        "@microsoft/applicationinsights-core-js": "2.5.4",
+        "@microsoft/applicationinsights-dependencies-js": "2.5.4",
+        "@microsoft/applicationinsights-properties-js": "2.5.4",
+        "tslib": "^1.11.1"
     },
-    "peerDependencies": {
-        "tslib": "^1.9.3"
-    }
+    "license": "MIT"
 }

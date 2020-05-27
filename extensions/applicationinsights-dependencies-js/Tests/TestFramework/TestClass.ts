@@ -1,5 +1,5 @@
-/// <reference path="../External/sinon.d.ts" />
-/// <reference path="../External/qunit.d.ts" />
+/// <reference path="../../../../common/Tests/External/sinon.d.ts" />
+/// <reference path="../../../../common/Tests/External/qunit.d.ts" />
 /// <reference path="Assert.ts" />
 /// <reference path="./TestCase.ts"/>
 
@@ -9,6 +9,9 @@ class TestClass {
 
     /** The instance of the currently running suite. */
     public static currentTestClass: TestClass;
+
+    public static orgSetTimeout: (handler: Function, timeout?: number) => number;
+    public static orgClearTimeout: (handle?: number) => void;
 
     /** Turns on/off sinon's syncronous implementation of setTimeout. On by default. */
     public useFakeTimers: boolean = true;
@@ -53,6 +56,9 @@ class TestClass {
         if (!testInfo.steps) {
             throw new Error("Must specify 'steps' to take asynchronously");
         }
+        if (testInfo.autoComplete === undefined) {
+            testInfo.autoComplete = true;
+        }
 
         // Create a wrapper around the test method so we can do test initilization and cleanup.
         const testMethod = (assert) => {
@@ -61,21 +67,57 @@ class TestClass {
             // Save off the instance of the currently running suite.
             TestClass.currentTestClass = this;
 
+            // Save the real clearTimeout (as _testStarting and enable sinon fake timers)
+            const orgClearTimeout = clearTimeout;
+            const orgSetTimeout = setTimeout;
+
+            TestClass.orgSetTimeout = (handler:Function, timeout?:number) => {
+                return orgSetTimeout(handler, timeout);
+            }
+
+            TestClass.orgClearTimeout = (handler:number) => {
+                orgClearTimeout(handler);
+            }
+
             // Run the test.
             try {
-                this._testStarting();
+                let self = this;
+
+                let testComplete = false;
+                let timeOutTimer = null;
+    
+                const testDone = () => {
+                    if (timeOutTimer) {
+                        orgClearTimeout(timeOutTimer);
+                    }
+    
+                    testComplete = true;
+                    // done is QUnit callback indicating the end of the test
+                    self._testCompleted();
+                    done();
+                }
+    
+                if (testInfo.timeOut !== undefined) {
+                    timeOutTimer = orgSetTimeout(() => {
+                        Assert.ok(false, "Test case timed out!");
+                        testComplete = true;
+                        done();
+                    }, testInfo.timeOut);
+                }
+
+                self._testStarting();
 
                 const steps = testInfo.steps;
                 const trigger = () => {
-                    if (steps.length) {
-                        const step = steps.shift();
+                    // The callback which activates the next test step. 
+                    const nextTestStepTrigger = () => {
+                        orgSetTimeout(() => {
+                            trigger();
+                        }, testInfo.stepDelay);
+                    };
 
-                        // The callback which activates the next test step. 
-                        const nextTestStepTrigger = () => {
-                            setTimeout(() => {
-                                trigger();
-                            }, testInfo.stepDelay);
-                        };
+                    if (steps.length && !testComplete) {
+                        const step = steps.shift();
 
                         // There 2 types of test steps - simple and polling.
                         // Upon completion of the simple test step the next test step will be called.
@@ -85,23 +127,20 @@ class TestClass {
                             if (step[TestClass.isPollingStepFlag]) {
                                 step.call(this, nextTestStepTrigger);
                             } else {
-                                step.call(this);
+                                step.call(this, testDone);
                                 nextTestStepTrigger.call(this);
                             }
                         } catch (e) {
-                            this._testCompleted();
                             Assert.ok(false, e.toString());
-
-                            // done is QUnit callback indicating the end of the test
-                            done();
-
+                            testDone();
                             return;
                         }
-                    } else {
-                        this._testCompleted();
-
-                        // done is QUnit callback indicating the end of the test
-                        done();
+                    } else if (!testComplete) {
+                        if (testInfo.autoComplete) {
+                            testDone();
+                        } else {
+                            nextTestStepTrigger();
+                        }
                     }
                 };
 
@@ -116,7 +155,7 @@ class TestClass {
         };
 
         // Register the test with QUnit
-        QUnit.test(testInfo.name, testMethod);
+        QUnit.test(testInfo.name + " (Async)", testMethod);
     }
 
     /** Register a Javascript unit testcase. */
@@ -133,6 +172,18 @@ class TestClass {
         const testMethod = () => {
             // Save off the instance of the currently running suite.
             TestClass.currentTestClass = this;
+
+            // Save the real clearTimeout (as _testStarting and enable sinon fake timers)
+            const orgClearTimeout = clearTimeout;
+            const orgSetTimeout = setTimeout;
+
+            TestClass.orgSetTimeout = (handler:Function, timeout?:number) => {
+                return orgSetTimeout(handler, timeout);
+            }
+
+            TestClass.orgClearTimeout = (handler:number) => {
+                orgClearTimeout(handler);
+            }
 
             // Run the test.
             try {
@@ -217,6 +268,8 @@ class TestClass {
 
     /** Called when the test is completed. */
     private _testCompleted(failed?: boolean) {
+        this._cleanupAllHooks();
+
         if (failed) {
             // Just cleanup the sandbox since the test has already failed.
             this.sandbox.restore();
@@ -230,6 +283,31 @@ class TestClass {
 
         // Clear the instance of the currently running suite.
         TestClass.currentTestClass = null;
+    }
+
+    private _removeFuncHooks(fn:any) {
+        if (typeof fn === "function") {
+            let aiHook:any = fn["_aiHooks"];
+
+            if (aiHook && aiHook.h) {
+                aiHook.h = [];
+            }
+        }
+    }
+
+    private _removeHooks(target:any) {
+        Object.keys(target).forEach(name => {
+            try {
+                this._removeFuncHooks(target[name]);
+            } catch (e) {
+            }
+        });
+    }
+
+    private _cleanupAllHooks() {
+        this._removeHooks(XMLHttpRequest.prototype);
+        this._removeHooks(XMLHttpRequest);
+        this._removeFuncHooks(window.fetch);
     }
 }
 
