@@ -7,7 +7,7 @@ import {
     IConfig, IPageViewTelemetry, IMetricTelemetry, IAppInsights, IEventTelemetry
 } from "@microsoft/applicationinsights-common";
 import {
-    IPlugin, IConfiguration, IAppInsightsCore,
+    IPlugin, IConfiguration, IAppInsightsCore, IDiagnosticLogger,
     ITelemetryPlugin, BaseTelemetryPlugin, CoreUtils, ITelemetryItem, IProcessTelemetryContext,
     ITelemetryPluginChain, _InternalMessageId, LoggingSeverity, ICustomProperties
 } from "@microsoft/applicationinsights-core-js";
@@ -20,6 +20,7 @@ export default class ReactPlugin extends BaseTelemetryPlugin {
 
     private _analyticsPlugin: IAppInsights;
     private _extensionConfig: IReactExtensionConfig;
+    private _logger: IDiagnosticLogger;
 
     initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) {
         super.initialize(config, core, extensions, pluginChain);
@@ -28,6 +29,7 @@ export default class ReactPlugin extends BaseTelemetryPlugin {
                 ? (config.extensionConfig[this.identifier] as IReactExtensionConfig)
                 : { history: null };
 
+        this._logger = core.logger;
         CoreUtils.arrForEach(extensions, ext => {
             const identifier = (ext as ITelemetryPlugin).identifier;
             if (identifier === 'ApplicationInsightsAnalytics') {

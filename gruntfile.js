@@ -96,9 +96,6 @@ module.exports = function (grunt) {
                 src: './extensions/applicationinsights-properties-js/Tests/**/*.ts',
                 out: './extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
             },
-            react: {
-                tsconfig: './extensions/applicationinsights-react-js/tsconfig.json'
-            },
             reactnative: {
                 tsconfig: './extensions/applicationinsights-react-native/tsconfig.json',
                 src: [
@@ -240,11 +237,6 @@ module.exports = function (grunt) {
                       webkit:true
                     }
                 }
-            }
-        },
-        run: {
-            reacttests: {
-                exec: 'cd extensions/applicationinsights-react-js && npm run test'
             }
         },
         qunit: {
@@ -393,8 +385,6 @@ module.exports = function (grunt) {
     grunt.registerTask("commontest", ["ts:common", "ts:commontest", "qunit:common"]);
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiestests", ["ts:properties", "ts:propertiestests", "qunit:properties"]);
-    grunt.registerTask("react", ["ts:react"]);
-    grunt.registerTask("reacttests", ["run:reacttests"]);
     grunt.registerTask("reactnative", ["ts:reactnative"]);
     grunt.registerTask("reactnativetests", ["qunit:reactnative"]);
     grunt.registerTask("deps", ["ts:deps"]);
