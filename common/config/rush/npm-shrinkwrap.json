@@ -1238,6 +1238,10 @@
       "from": "cssom@>= 0.3.2 < 0.4.0",
       "resolved": "https://registry.npmjs.org/cssom/-/cssom-0.3.8.tgz"
     },
+    "csstype": {
+      "version": "2.6.7",
+      "resolved": "https://registry.npmjs.org/csstype/-/csstype-2.6.7.tgz"
+    },
     "cssstyle": {
       "version": "1.4.0",
       "from": "cssstyle@^1.0.0",
