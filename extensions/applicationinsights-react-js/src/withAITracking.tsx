@@ -20,7 +20,7 @@ export default function withAITracking<P>(reactPlugin: ReactPlugin, Component: R
     componentName = Component.prototype && 
           Component.prototype.constructor && 
           Component.prototype.constructor.name || 
-          'Anonymous component';
+          'Unknown';
   }
 
   if (className === undefined || className === null || typeof className !== 'string') {
