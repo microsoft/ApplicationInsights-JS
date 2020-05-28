@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import '@microsoft/applicationinsights-shims';
 export { Util, CorrelationIdHelper, UrlHelper, DateTimeUtils } from './Util';
 export { ConnectionStringParser } from './ConnectionStringParser';
 export { FieldType } from './Enums';

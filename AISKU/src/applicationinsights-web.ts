@@ -1,3 +1,5 @@
+import '@microsoft/applicationinsights-shims';
+
 export {
     IApplicationInsights,
     Snippet,

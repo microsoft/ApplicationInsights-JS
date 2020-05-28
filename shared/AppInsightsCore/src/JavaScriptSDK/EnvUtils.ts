@@ -2,6 +2,10 @@
 // Licensed under the MIT License.
 "use strict";
 
+import { 
+    getGlobal as shimsGetGlobal, strShimUndefined, strShimObject, strShimPrototype, strShimFunction 
+} from "@microsoft/applicationinsights-shims";
+
 /**
  * This file exists to hold environment utilities that are requied to check and
  * validate the current operating environment. Unless otherwise required, please
@@ -9,10 +13,10 @@
  * functions/properties only need to include those that are used within their own modules.
  */
 
-export const strUndefined = "undefined";
-export const strObject = "object";
-export const strPrototype = "prototype";
-export const strFunction = "function";
+export const strUndefined = strShimUndefined;
+export const strObject = strShimObject;
+export const strPrototype = strShimPrototype;
+export const strFunction = strShimFunction;
 
 const strWindow = "window";
 const strDocument = "document";
@@ -22,10 +26,6 @@ const strLocation = "location";
 const strPerformance = "performance";
 const strJSON = "JSON";
 const strCrypto = "crypto";
-
-// To address compile time errors declaring these here
-declare var globalThis: Window;
-declare var global: Window;
 
 /**
  * Returns the current global scope object, for a normal web page this will be the current
@@ -39,25 +39,7 @@ declare var global: Window;
  * While the return type is a Window for the normal case, not all environments will support all
  * of the properties or functions.
  */
-export function getGlobal(): Window {
-    if (typeof globalThis !== strUndefined && globalThis) {
-        return globalThis;
-    }
-
-    if (typeof self !== strUndefined && self) {
-        return self;
-    }
-
-    if (typeof window !== strUndefined && window) {
-        return window;
-    }
-
-    if (typeof global !== strUndefined && global) {
-        return global;
-    }
-
-    return null;
-}
+export const getGlobal:() => Window = shimsGetGlobal;
 
 /**
  * Return the named global object if available, will return null if the object is not available.

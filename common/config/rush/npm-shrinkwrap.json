@@ -89,6 +89,11 @@
       "from": "projects/applicationinsights-rollup-es3.tgz",
       "resolved": "file:projects/applicationinsights-rollup-es3.tgz"
     },
+    "@rush-temp/applicationinsights-shims": {
+      "version": "0.0.0",
+      "from": "projects/applicationinsights-shims.tgz",
+      "resolved": "file:projects/applicationinsights-shims.tgz"
+    },
     "@rush-temp/applicationinsights-web": {
       "version": "0.0.0",
       "from": "projects/applicationinsights-web.tgz",
@@ -2247,9 +2252,9 @@
       "resolved": "https://registry.npmjs.org/trim-newlines/-/trim-newlines-1.0.0.tgz"
     },
     "tslib": {
-      "version": "1.11.2",
-      "from": "tslib@1.11.2",
-      "resolved": "https://registry.npmjs.org/tslib/-/tslib-1.11.2.tgz"
+      "version": "1.13.0",
+      "from": "tslib@^1.8.0",
+      "resolved": "https://registry.npmjs.org/tslib/-/tslib-1.13.0.tgz"
     },
     "tslint": {
       "version": "5.20.1",

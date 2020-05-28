@@ -46,9 +46,9 @@
         "typescript": "3.9.3"
     },
     "dependencies": {
+        "@microsoft/applicationinsights-shims" : "1.0.0",
         "@microsoft/applicationinsights-core-js": "2.5.4",
         "@microsoft/applicationinsights-common": "2.5.4",
-        "tslib": "1.11.2",
         "history": "^4.10.1"
     },
     "peerDependencies": {

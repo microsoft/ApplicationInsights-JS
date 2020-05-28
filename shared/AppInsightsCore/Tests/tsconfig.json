@@ -4,9 +4,13 @@
     "inlineSources": true,
     "noImplicitAny": false,
     "module": "amd",
+    "moduleResolution": "node",
     "target": "es5",
+    "importHelpers": false,
+    "noEmitHelpers": true,
     "alwaysStrict": true,
     "declaration": true
   },
   "files": []
 }
+
