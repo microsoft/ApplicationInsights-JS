@@ -21,5 +21,5 @@
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web)
 
 
-Application Insights AI SKU is a package that combines commonly used packages for Web scenarios.
+Application Insights SDK is a package that combines commonly used packages for Web scenarios.
 Refer to [our GitHub page](https://github.com/microsoft/applicationinsights-js) for more details on getting started.

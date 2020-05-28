@@ -423,7 +423,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             this._retryAt = null;
         } catch (e) {
             /* Ignore this error for IE under v10 */
-            if (!Util.getIEVersion() || Util.getIEVersion() > 9) {
+            let ieVer = Util.getIEVersion();
+            if (!ieVer || ieVer > 9) {
                 this.diagLog().throwInternal(
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.TransmissionFailed,

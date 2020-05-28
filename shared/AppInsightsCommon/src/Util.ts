@@ -474,10 +474,7 @@ export class Util {
     /**
      * helper method to trim strings (IE8 does not implement String.prototype.trim)
      */
-    public static trim(str: any): string {
-        if (!_isString(str)) { return str; }
-        return str.replace(/^\s+|\s+$/g, "");
-    }
+    public static trim = CoreUtils.strTrim;
 
     /**
      * generate random id string
@@ -553,11 +550,20 @@ export class Util {
     public static toISOStringForIE8 = CoreUtils.toISOString;
 
     /**
-     * Gets IE version if we are running on IE, or null otherwise
+     * Gets IE version returning the document emulation mode if we are running on IE, or null otherwise
      */
     public static getIEVersion(userAgentStr: string = null): number {
         const myNav = userAgentStr ? userAgentStr.toLowerCase() : (_navigator ? (_navigator.userAgent ||"").toLowerCase() : "");
-        return (myNav.indexOf('msie') !== -1) ? parseInt(myNav.split('msie')[1]) : null;
+        if (myNav.indexOf("msie") !== -1) {
+            return parseInt(myNav.split("msie")[1]);
+        } else if (myNav.indexOf("trident/")) {
+            let tridentVer = parseInt(myNav.split("trident/")[1]);
+            if (tridentVer) {
+                return tridentVer + 4;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -652,16 +658,35 @@ export class Util {
 
 export class UrlHelper {
     private static document: any = getDocument()||{};
-    private static htmlAnchorElement: HTMLAnchorElement;
+
+    private static _htmlAnchorIdx: number = 0;
+    // Use an array of temporary values as it's possible for multiple calls to parseUrl() will be called with different URLs
+    // Using a cache size of 5 for now as it current depth usage is at least 2, so adding a minor buffer to handle future updates
+    private static _htmlAnchorElement: HTMLAnchorElement[] = [null, null, null, null, null];
 
     public static parseUrl(url: string): HTMLAnchorElement {
-        if (!UrlHelper.htmlAnchorElement) {
-            UrlHelper.htmlAnchorElement = !!UrlHelper.document.createElement ? UrlHelper.document.createElement('a') : { host: UrlHelper.parseHost(url) }; // fill host field in the fallback case as that is the only externally required field from this fn
+        let anchorIdx = UrlHelper._htmlAnchorIdx;
+        let anchorCache = UrlHelper._htmlAnchorElement;
+        let tempAnchor = anchorCache[anchorIdx];
+        if (!UrlHelper.document.createElement) {
+            // Always create the temp instance if createElement is not available
+            tempAnchor = { host: UrlHelper.parseHost(url, true) } as HTMLAnchorElement;
+        } else if (!anchorCache[anchorIdx]) {
+            // Create and cache the unattached anchor instance 
+            tempAnchor = anchorCache[anchorIdx] = UrlHelper.document.createElement('a');
         }
 
-        UrlHelper.htmlAnchorElement.href = url;
+        tempAnchor.href = url;
 
-        return UrlHelper.htmlAnchorElement;
+        // Move the cache index forward
+        anchorIdx++;
+        if (anchorIdx >= anchorCache.length) {
+            anchorIdx = 0;
+        }
+
+        UrlHelper._htmlAnchorIdx = anchorIdx;
+
+        return tempAnchor;
     }
 
     public static getAbsoluteUrl(url: string): string {
@@ -693,15 +718,43 @@ export class UrlHelper {
     }
 
     // Fallback method to grab host from url if document.createElement method is not available
-    public static parseHost(url: string) {
-        if (url) {
-            const match = url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i);
-            if (match != null && match.length > 2 && _isString(match[2]) && match[2].length > 0) {
-                return match[2];
+    public static parseHost(url: string, inclPort?: boolean) {
+        let fullHost = UrlHelper.parseFullHost(url, inclPort);
+        if (fullHost ) {
+            const match = fullHost.match(/(www[0-9]?\.)?(.[^/:]+)(\:[\d]+)?/i);
+            if (match != null && match.length > 3 && _isString(match[2]) && match[2].length > 0) {
+                return match[2] + (match[3] ||"");
             }
         }
 
-        return null;
+        return fullHost;
+    }
+
+    /**
+     * Get the full host from the url, optionally including the port
+     */
+    public static parseFullHost(url: string, inclPort?: boolean) {
+        let result = null;
+        if (url) {
+            const match = url.match(/(\w*):\/\/(.[^/:]+)(\:[\d]+)?/i);
+            if (match != null && match.length > 2 && _isString(match[2]) && match[2].length > 0) {
+                result = match[2] || "";
+                if (inclPort && match.length > 2) {
+                    const protocol = (match[1] || "").toLowerCase();
+                    let port = match[3] || "";
+                    // IE includes the standard port so pass it off if it's the same as the protocol
+                    if (protocol === "http" && port === ":80") {
+                        port = "";
+                    } else if (protocol === "https" && port === ":443") {
+                        port = "";
+                    }
+
+                    result += port;
+                }
+            }
+        }
+
+        return result;
     }
 }
 
@@ -711,20 +764,22 @@ export class CorrelationIdHelper {
     /**
      * Checks if a request url is not on a excluded domain list and if it is safe to add correlation headers.
      * Headers are always included if the current domain matches the request domain. If they do not match (CORS),
-     * they are regexed across correlationHeaderDomains and correlationHeaderExcludedDomains to determine if headers are included.
+     * they are regex-ed across correlationHeaderDomains and correlationHeaderExcludedDomains to determine if headers are included.
      * Some environments don't give information on currentHost via window.location.host (e.g. Cordova). In these cases, the user must
      * manually supply domains to include correlation headers on. Else, no headers will be included at all.
      */
     public static canIncludeCorrelationHeader(config: ICorrelationConfig, requestUrl: string, currentHost?: string) {
-        if (config && config.disableCorrelationHeaders) {
+        if (!requestUrl || (config && config.disableCorrelationHeaders)) {
             return false;
         }
 
-        if (!requestUrl) {
-            return false;
+        let requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
+        if (requestHost && (requestHost.indexOf(":443") !== -1 || requestHost.indexOf(":80") !== -1)) {
+            // [Bug #1260] IE can include the port even for http and https URLs so if present 
+            // try and parse it to remove if it matches the default protocol port
+            requestHost = (UrlHelper.parseFullHost(requestUrl, true) || "").toLowerCase();
         }
 
-        const requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
         if ((!config || !config.enableCorsCorrelation) && requestHost !== currentHost) {
             return false;
         }
