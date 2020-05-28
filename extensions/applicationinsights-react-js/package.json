@@ -14,7 +14,7 @@
         "prepublishOnly": "npm install && npm run build",
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "./node_modules/typescript/bin/tsc -p tsconfig.json",
-        "build:browser": "rollup -c",
+        "build:browser": "./node_modules/rollup/bin/rollup -c",
         "test": "jest --config test/jestconfig.json",
         "test-watch": "jest --config test/jestconfig.json --watch",
         "lint": "tslint -p tsconfig.json"
