@@ -1,0 +1,5 @@
+package-lock.json
+node_modules
+browser
+dist
+dist-esm
