@@ -13,7 +13,7 @@
     "scripts": {
         "prepublishOnly": "npm install && npm run build",
         "build": "npm run build:esm && npm run build:browser",
-        "build:esm": "./node_modules/typescript/bin/tsc -p tsconfig.json",
+        "build:esm": "tsc -p tsconfig.json",
         "build:browser": "rollup -c",
         "test": "jest --config test/jestconfig.json",
         "test-watch": "jest --config test/jestconfig.json --watch",
