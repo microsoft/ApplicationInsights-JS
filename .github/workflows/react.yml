@@ -11,6 +11,10 @@ on:
 
 jobs:
   build:
+    defaults:
+      run:
+        shell: bash
+        working-directory: extensions/applicationinsights-react-js
 
     runs-on: ubuntu-latest
 
@@ -24,7 +28,6 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - run: cd extensions/applicationinsights-react-js
     - run: npm install
     - run: npm run build --if-present
     - run: npm test
