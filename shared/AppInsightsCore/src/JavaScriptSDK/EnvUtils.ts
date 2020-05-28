@@ -21,6 +21,7 @@ const strHistory = "history";
 const strLocation = "location";
 const strPerformance = "performance";
 const strJSON = "JSON";
+const strCrypto = "crypto";
 
 // To address compile time errors declaring these here
 declare var globalThis: Window;
@@ -219,4 +220,13 @@ export function getJSON(): JSON | null {
     }
 
     return null;
+}
+
+/**
+ * Returns the crypto object if it is present otherwise null.
+ * This helper is used to access the crypto object from the current
+ * global instance which could be window or globalThis for a web worker
+ */
+export function getCrypto(): Crypto | null {
+    return getGlobalInst(strCrypto);
 }
