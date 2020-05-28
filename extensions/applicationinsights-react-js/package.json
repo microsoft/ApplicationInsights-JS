@@ -11,6 +11,7 @@
         "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-react-js"
     },
     "scripts": {
+        "prepublishOnly": "npm install && npm run build",
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "tsc -p tsconfig.json",
         "build:browser": "rollup -c",
@@ -32,7 +33,8 @@
         "enzyme-adapter-react-16": "^1.12.1",
         "grunt": "1.0.1",
         "jest": "^24.7.1",
-        "react-dom": "^16.8.6",
+        "react-dom": "^16.13.1",
+        "react": "^16.13.1",
         "rollup": "^0.66.0",
         "rollup-plugin-commonjs": "^9.3.4",
         "rollup-plugin-node-resolve": "^3.4.0",
@@ -41,12 +43,12 @@
         "ts-jest": "^24.0.2",
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
-        "typescript": "^3.9.2"
+        "typescript": "3.9.3"
     },
     "dependencies": {
         "@microsoft/applicationinsights-core-js": "2.5.4",
         "@microsoft/applicationinsights-common": "2.5.4",
-        "tslib": "^1.11.1",
+        "tslib": "1.11.2",
         "history": "^4.10.1"
     },
     "peerDependencies": {

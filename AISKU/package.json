@@ -44,7 +44,7 @@
         "rollup-plugin-uglify": "^6.0.0",
         "selenium-server-standalone-jar": "^3.141.5",
         "serve-static": "^1.13.2",
-        "source-map-loader": "^0.2.3", 
+        "source-map-loader": "^0.2.3",
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
         "typescript": "2.5.3"
@@ -57,7 +57,7 @@
         "@microsoft/applicationinsights-core-js": "2.5.4",
         "@microsoft/applicationinsights-dependencies-js": "2.5.4",
         "@microsoft/applicationinsights-properties-js": "2.5.4",
-        "tslib": "^1.11.1"
+        "tslib": "1.11.2"
     },
     "license": "MIT"
 }

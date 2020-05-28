@@ -50,11 +50,6 @@
       "packageName": "@microsoft/applicationinsights-web-basic",
       "projectFolder": "AISKULight",
       "shouldPublish": true
-    },
-    {
-      "packageName": "@microsoft/applicationinsights-react-js",
-      "projectFolder": "extensions/applicationinsights-react-js",
-      "shouldPublish": true
     }
   ]
 }
