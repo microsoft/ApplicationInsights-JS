@@ -49,7 +49,7 @@ const browserRollupConfigFactory = isProduction => {
       }),
       commonjs({
         namedExports: {
-          "../../common/temp/node_modules/react/index.js": reactNamedExports,
+          "node_modules/react/index.js": reactNamedExports,
           "node_modules/react-dom/index.js": ["render"]
         }
       }),
@@ -95,7 +95,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       nodeResolve({ preferBuiltins: true }),
       commonjs({
         namedExports: {
-          "../../common/temp/node_modules/react/index.js": reactNamedExports,
+          "node_modules/react/index.js": reactNamedExports,
           "node_modules/react-dom/index.js": ["render"]
         }
       }),
