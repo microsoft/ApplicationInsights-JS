@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 "use strict";
-import { getWindow, getDocument, strUndefined, strObject, strFunction, strPrototype }  from './EnvUtils';
+import { getWindow, getDocument, strUndefined, strObject, strFunction, strPrototype, getCrypto } from './EnvUtils';
 
 // Added to help with minfication
 export const Undefined = strUndefined;
@@ -23,7 +23,7 @@ function _isNullOrUndefined(value: any): boolean {
     return (_isUndefined(value) || value === null);
 }
 
-function _hasOwnProperty(obj:any, prop:string): boolean {
+function _hasOwnProperty(obj: any, prop: string): boolean {
     return obj && Object[strPrototype].hasOwnProperty.call(obj, prop);
 };
 
@@ -43,7 +43,7 @@ function _isFunction(value: any): boolean {
  * @param useCapture [Optional] Defaults to false
  * @returns True if the function was bound successfully to the event, otherwise false
  */
-function _attachEvent(obj:any, eventNameWithoutOn:string, handlerRef:any, useCapture:boolean = false) {
+function _attachEvent(obj: any, eventNameWithoutOn: string, handlerRef: any, useCapture: boolean = false) {
     let result = false;
     if (!_isNullOrUndefined(obj)) {
         try {
@@ -71,7 +71,7 @@ function _attachEvent(obj:any, eventNameWithoutOn:string, handlerRef:any, useCap
  * @param handlerRef {any} - The callback function that needs to be executed for the given event
  * @param useCapture [Optional] Defaults to false
  */
-function _detachEvent(obj:any, eventNameWithoutOn:string, handlerRef:any, useCapture:boolean = false) {
+function _detachEvent(obj: any, eventNameWithoutOn: string, handlerRef: any, useCapture: boolean = false) {
     if (!_isNullOrUndefined(obj)) {
         try {
             if (!_isNullOrUndefined(obj[strRemoveEventListener])) {
@@ -92,12 +92,12 @@ function _detachEvent(obj:any, eventNameWithoutOn:string, handlerRef:any, useCap
  * This is a simplified version
  * @param name The name to validate
  */
-export function normalizeJsName(name:string):string {
+export function normalizeJsName(name: string): string {
     let value = name;
     let match = /([^\w\d_$])/g;
     if (match.test(name)) {
         value = name.replace(match, "_");
-    }    
+    }
 
     return value;
 }
@@ -105,27 +105,27 @@ export function normalizeJsName(name:string):string {
 export class CoreUtils {
     public static _canUseCookies: boolean;
 
-    public static isTypeof:(value: any, theType: string) => boolean = _isTypeof;
-    
-    public static isUndefined:(value: any) => boolean = _isUndefined;
-    
-    public static isNullOrUndefined:(value: any) => boolean = _isNullOrUndefined;
-    
-    public static hasOwnProperty:(obj:any, prop:string) => boolean = _hasOwnProperty;
-    
-    /**
-     * Checks if the passed of value is a function.
-     * @param {any} value - Value to be checked.
-     * @return {boolean} True if the value is a boolean, false otherwise.
-     */
-    public static isFunction:(value: any) => boolean = _isFunction;
+    public static isTypeof: (value: any, theType: string) => boolean = _isTypeof;
+
+    public static isUndefined: (value: any) => boolean = _isUndefined;
+
+    public static isNullOrUndefined: (value: any) => boolean = _isNullOrUndefined;
+
+    public static hasOwnProperty: (obj: any, prop: string) => boolean = _hasOwnProperty;
 
     /**
      * Checks if the passed of value is a function.
      * @param {any} value - Value to be checked.
      * @return {boolean} True if the value is a boolean, false otherwise.
      */
-    public static isObject:(value: any) =>  boolean = _isObject;
+    public static isFunction: (value: any) => boolean = _isFunction;
+
+    /**
+     * Checks if the passed of value is a function.
+     * @param {any} value - Value to be checked.
+     * @return {boolean} True if the value is a boolean, false otherwise.
+     */
+    public static isObject: (value: any) => boolean = _isObject;
 
     /**
      * Check if an object is of type Date
@@ -170,10 +170,18 @@ export class CoreUtils {
         CoreUtils._canUseCookies = false;
     }
 
-    public static newGuid():  string  {
-        return  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(GuidRegex,  (c) => {
-            const  r  =  (Math.random()  *  16  |  0),  v  =  (c  ===  'x'  ?  r  :  r  &  0x3  |  0x8);
-            return  v.toString(16);
+    public static newGuid(): string {
+        function randomHexDigit() {
+            let c = getCrypto();
+            if (c) {
+                return (c.getRandomValues(new Uint8Array(1))[0] % 16);
+            }
+            return Math.random() * 16;
+        }
+
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(GuidRegex, (c) => {
+            const r = (randomHexDigit() | 0), v = (c === 'x' ? r : r & 0x3 | 0x8);
+            return v.toString(16);
         });
     }
 
@@ -210,7 +218,7 @@ export class CoreUtils {
      * @param callbackfn  A function that accepts up to three arguments. forEach calls the callbackfn function one time for each element in the array.
      * @param thisArg  [Optional] An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
      */
-    public static arrForEach<T>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => void, thisArg?: any):void {
+    public static arrForEach<T>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => void, thisArg?: any): void {
         let len = arr.length;
         for (let idx = 0; idx < len; ++idx) {
             if (idx in arr) {
@@ -247,11 +255,11 @@ export class CoreUtils {
      * @param callbackfn A function that accepts up to three arguments. The map method calls the callbackfn function one time for each element in the array.
      * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
      */
-    public static arrMap<T,R>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => R, thisArg?: any): R[] {
+    public static arrMap<T, R>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => R, thisArg?: any): R[] {
         let len = arr.length;
         let _this = thisArg || arr;
         let results = new Array(len);
-        
+
         for (let lp = 0; lp < len; lp++) {
             if (lp in arr) {
                 results[lp] = callbackfn.call(_this, arr[lp], arr);
@@ -269,7 +277,7 @@ export class CoreUtils {
      * @param callbackfn A function that accepts up to four arguments. The reduce method calls the callbackfn function one time for each element in the array.
      * @param initialValue If initialValue is specified, it is used as the initial value to start the accumulation. The first call to the callbackfn function provides this value as an argument instead of an array value.
      */
-    public static arrReduce<T,R>(arr: T[], callbackfn: (previousValue: T|R, currentValue?: T, currentIndex?: number, array?: T[]) => R, initialValue?: R): R {
+    public static arrReduce<T, R>(arr: T[], callbackfn: (previousValue: T | R, currentValue?: T, currentIndex?: number, array?: T[]) => R, initialValue?: R): R {
         let len = arr.length;
         let lp = 0;
         let value;
@@ -300,7 +308,7 @@ export class CoreUtils {
      */
     public static strTrim(str: any): string {
         if (!CoreUtils.isString(str)) {
-            return str; 
+            return str;
         }
 
         return str.replace(/^\s+|\s+$/g, "");
@@ -312,7 +320,7 @@ export class CoreUtils {
      * Note: For consistency this will not use the Object.create implementation if it exists as this would cause a testing requirement to test with and without the implementations
      * @param obj Object to use as a prototype. May be null
      */
-    public static objCreate(obj:object):any {
+    public static objCreate(obj: object): any {
         if (obj == null) {
             return {};
         }
@@ -321,7 +329,7 @@ export class CoreUtils {
             throw new TypeError('Object prototype may only be an Object: ' + obj)
         }
 
-        function tmpFunc() {};
+        function tmpFunc() { };
         tmpFunc[strPrototype] = obj;
 
         return new (tmpFunc as any)();
@@ -333,15 +341,15 @@ export class CoreUtils {
      * Note: For consistency this will not use the Object.keys implementation if it exists as this would cause a testing requirement to test with and without the implementations
      * @param obj Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
      */
-     public static objKeys(obj: {}): string[] {
+    public static objKeys(obj: {}): string[] {
         var hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString');
 
         if (!_isFunction(obj) && (!_isObject(obj) || obj === null)) {
             throw new TypeError('objKeys called on non-object');
         }
 
-        let result:string[] = [];
-        
+        let result: string[] = [];
+
         for (let prop in obj) {
             if (_hasOwnProperty(obj, prop)) {
                 result.push(prop);
@@ -359,7 +367,7 @@ export class CoreUtils {
                 'constructor'
             ];
             let dontEnumsLength = dontEnums.length;
-            
+
             for (let lp = 0; lp < dontEnumsLength; lp++) {
                 if (_hasOwnProperty(obj, dontEnums[lp])) {
                     result.push(dontEnums[lp]);
@@ -380,11 +388,11 @@ export class CoreUtils {
      * @param setProp The setter function to wire against the setter.
      * @returns True if it was able to create the accessors otherwise false
      */
-    public static objDefineAccessors<T>(target:any, prop:string, getProp?:() => T, setProp?: (v:T) => void) : boolean {
+    public static objDefineAccessors<T>(target: any, prop: string, getProp?: () => T, setProp?: (v: T) => void): boolean {
         let defineProp = Object["defineProperty"];
         if (defineProp) {
             try {
-                let descriptor:PropertyDescriptor = {
+                let descriptor: PropertyDescriptor = {
                     enumerable: true,
                     configurable: true
                 }
@@ -440,7 +448,7 @@ export class EventHelper {
      * @param handlerRef Pointer that specifies the function to call when event fires
      * @returns True if the function was bound successfully to the event, otherwise false
      */
-    public static Attach:(obj:any, eventNameWithoutOn:string, handlerRef:any) => boolean = _attachEvent;
+    public static Attach: (obj: any, eventNameWithoutOn: string, handlerRef: any) => boolean = _attachEvent;
 
     /**
      * Binds the specified function to an event, so that the function gets called whenever the event fires on the object
@@ -450,7 +458,7 @@ export class EventHelper {
      * @param handlerRef Pointer that specifies the function to call when event fires
      * @returns True if the function was bound successfully to the event, otherwise false
      */
-    public static AttachEvent:(obj:any, eventNameWithoutOn:string, handlerRef:any) => boolean = _attachEvent;
+    public static AttachEvent: (obj: any, eventNameWithoutOn: string, handlerRef: any) => boolean = _attachEvent;
 
     /**
      * Removes an event handler for the specified event
@@ -458,7 +466,7 @@ export class EventHelper {
      * @param callback {any} - The callback function that needs to be executed for the given event
      * @return {boolean} - true if the handler was successfully added
      */
-    public static Detach:(obj:any, eventNameWithoutOn:string, handlerRef:any) => void = _detachEvent;
+    public static Detach: (obj: any, eventNameWithoutOn: string, handlerRef: any) => void = _detachEvent;
 
     /**
      * Removes an event handler for the specified event
@@ -467,5 +475,5 @@ export class EventHelper {
      * @param callback {any} - The callback function that needs to be executed for the given event
      * @return {boolean} - true if the handler was successfully added
      */
-    public static DetachEvent:(obj:any, eventNameWithoutOn:string, handlerRef:any) => void = _detachEvent;
+    public static DetachEvent: (obj: any, eventNameWithoutOn: string, handlerRef: any) => void = _detachEvent;
 }
