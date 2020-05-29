@@ -12,6 +12,17 @@ const banner = [
   " * Copyright (c) Microsoft and contributors. All rights reserved.",
   " */"
 ].join("\n");
+const reactNamedExports = [
+  "Children",
+  "Component",
+  "PropTypes",
+  "createElement",
+  "createContext",
+  "useContext",
+  "useState",
+  "useEffect",
+  "useRef",
+];
 
 const browserRollupConfigFactory = isProduction => {
   const browserRollupConfig = {
@@ -38,7 +49,7 @@ const browserRollupConfigFactory = isProduction => {
       }),
       commonjs({
         namedExports: {
-          "node_modules/react/index.js": ["Children", "Component", "PropTypes", "createElement"],
+          "node_modules/react/index.js": reactNamedExports,
           "node_modules/react-dom/index.js": ["render"]
         }
       }),
@@ -84,7 +95,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       nodeResolve({ preferBuiltins: true }),
       commonjs({
         namedExports: {
-          "node_modules/react/index.js": ["Children", "Component", "PropTypes", "createElement"],
+          "node_modules/react/index.js": reactNamedExports,
           "node_modules/react-dom/index.js": ["render"]
         }
       }),

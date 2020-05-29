@@ -4,10 +4,10 @@
  */
 
 import {
-    IConfig, IPageViewTelemetry, IMetricTelemetry, IAppInsights
+    IConfig, IPageViewTelemetry, IMetricTelemetry, IAppInsights, IEventTelemetry
 } from "@microsoft/applicationinsights-common";
 import {
-    IPlugin, IConfiguration, IAppInsightsCore,
+    IPlugin, IConfiguration, IAppInsightsCore, IDiagnosticLogger,
     ITelemetryPlugin, BaseTelemetryPlugin, CoreUtils, ITelemetryItem, IProcessTelemetryContext,
     ITelemetryPluginChain, _InternalMessageId, LoggingSeverity, ICustomProperties
 } from "@microsoft/applicationinsights-core-js";
@@ -63,6 +63,15 @@ export default class ReactPlugin extends BaseTelemetryPlugin {
     trackPageView(pageView: IPageViewTelemetry) {
         if (this._analyticsPlugin) {
             this._analyticsPlugin.trackPageView(pageView);
+        } else {
+            this.diagLog().throwInternal(
+                LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, React plugin telemetry will not be sent: ");
+        }
+    }
+
+    trackEvent(event: IEventTelemetry, customProperties?: ICustomProperties) {
+        if (this._analyticsPlugin) {
+            this._analyticsPlugin.trackEvent(event, customProperties);
         } else {
             this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, React plugin telemetry will not be sent: ");
