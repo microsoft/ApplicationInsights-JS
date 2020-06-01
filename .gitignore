@@ -22,6 +22,7 @@
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
+report.*.json
 
 *_i.c
 *_p.c

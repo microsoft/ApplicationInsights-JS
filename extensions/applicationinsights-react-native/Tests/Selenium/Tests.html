@@ -8,43 +8,40 @@
     <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css">
     <script src="http://sinonjs.org/releases/sinon-2.3.8.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.js"></script>
-    <script src="reactnativeplugin.tests.js"></script>
+    <script src="../../../../common/Tests/Selenium/ModuleLoader.js"></script>
+    <script src="../../../../common/Tests/Selenium/SimpleSyncPromise.js"></script>
 
     <script>
-        require.config({
+        var modules = new ModuleLoader({
             baseUrl: '../../',
-            // Convenience paths to test reqs
             paths: {
-                qunit: "Tests/External/qunit-1.23.1"
+                qunit: "../../common/Tests/External/qunit-1.23.1"
             }
         });
 
-        // Load core & common
-                require([
-            'qunit', // Load qunit here instead of with tests, otherwise will not work
-            './node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js',
-        ], function (QUnit, aicore) {
-            define('@microsoft/applicationinsights-core-js', function () { return aicore; });
-            require([
-            './node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common'], function (aicommon) {
-                define('@microsoft/applicationinsights-common', function () { return aicommon; });
-                require(['./node_modules/react-native-device-info/web/index'], function(rndi) {
-                    define('react-native-device-info', function() {return rndi});
-                    require.config({
-                        baseUrl: './'
-                    });
+        // Load qunit here instead of with tests, otherwise will not work
+        modules.add("qunit");
 
-                    require([
-                        "Tests/Selenium/reactnativeplugin.tests"
-                    ], function (tests) {
-                        QUnit.start();
-                        tests.runTests();
-                    }, function (err) {
-                        console.log('REQUIRE ERROR:', err.toString());
-                    });
-                });
-            });
-        });
+        // Load and define the app insights Shims module
+        modules.add("@microsoft/applicationinsights-shims", "./node_modules/@microsoft/applicationinsights-shims/browser/applicationinsights-shims");
+
+        // Load Core
+        modules.add("@microsoft/applicationinsights-core-js", "./node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js");
+
+        // Load Common
+        modules.add("@microsoft/applicationinsights-common", "./node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common");
+
+        // Load React native device info
+        modules.add("react-native-device-info", "./node_modules/react-native-device-info/web/index");
+
+        var testModule = modules.add("Tests/Selenium/reactnativeplugin.tests", "./reactnativeplugin.tests.js")
+        testModule.run = function (tests) {
+            console && console.log("Starting tests");
+            QUnit.start();
+            tests.runTests();
+        };
+
+        modules.run();
     </script>
 </head>
 

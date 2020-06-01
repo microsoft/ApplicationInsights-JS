@@ -49,6 +49,5 @@
         "magic-string": "^0.25.5"
     },
     "dependencies": {
-        "tslib": "1.11.2"
     }
 }

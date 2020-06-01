@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 "use strict";
-import { getWindow, getDocument, strUndefined, strObject, strFunction, strPrototype, getCrypto } from './EnvUtils';
+import { objCreateFn, strShimObject, strShimUndefined, strShimFunction, strShimPrototype } from "@microsoft/applicationinsights-shims";
+import { getWindow, getDocument, getGlobalInst, getCrypto }  from './EnvUtils';
 
 // Added to help with minfication
-export const Undefined = strUndefined;
+export const Undefined = strShimUndefined;
 const strOnPrefix = "on";
 const strAttachEvent = "attachEvent";
 const strAddEventHelper = "addEventListener";
@@ -16,7 +17,7 @@ function _isTypeof(value: any, theType: string): boolean {
 };
 
 function _isUndefined(value: any): boolean {
-    return _isTypeof(value, strUndefined) || value === undefined;
+    return _isTypeof(value, strShimUndefined) || value === undefined;
 };
 
 function _isNullOrUndefined(value: any): boolean {
@@ -24,15 +25,15 @@ function _isNullOrUndefined(value: any): boolean {
 }
 
 function _hasOwnProperty(obj: any, prop: string): boolean {
-    return obj && Object[strPrototype].hasOwnProperty.call(obj, prop);
+    return obj && Object[strShimPrototype].hasOwnProperty.call(obj, prop);
 };
 
 function _isObject(value: any): boolean {
-    return _isTypeof(value, strObject);
+    return _isTypeof(value, strShimObject);
 };
 
 function _isFunction(value: any): boolean {
-    return _isTypeof(value, strFunction);
+    return _isTypeof(value, strShimFunction);
 };
 
 /**
@@ -131,7 +132,7 @@ export class CoreUtils {
      * Check if an object is of type Date
      */
     public static isDate(obj: any): boolean {
-        return Object[strPrototype].toString.call(obj) === "[object Date]";
+        return Object[strShimPrototype].toString.call(obj) === "[object Date]";
     }
 
     /**
@@ -320,20 +321,8 @@ export class CoreUtils {
      * Note: For consistency this will not use the Object.create implementation if it exists as this would cause a testing requirement to test with and without the implementations
      * @param obj Object to use as a prototype. May be null
      */
-    public static objCreate(obj: object): any {
-        if (obj == null) {
-            return {};
-        }
-
-        if (!_isObject(obj) && !_isFunction(obj)) {
-            throw new TypeError('Object prototype may only be an Object: ' + obj)
-        }
-
-        function tmpFunc() { };
-        tmpFunc[strPrototype] = obj;
-
-        return new (tmpFunc as any)();
-    }
+    // tslint:disable-next-line: member-ordering
+    public static objCreate:(obj: object) => any = objCreateFn;
 
     /**
      * Returns the names of the enumerable string properties and methods of an object. This helper exists to avoid adding a polyfil for older browsers 

@@ -1,13 +1,13 @@
 /// <reference path="../TestFramework/Common.ts" />
-/// <reference path="../../JavaScriptSDK/AppInsightsCore.ts" />
-/// <reference path="../../applicationinsights-core-js.ts" />
+/// <reference path="../../src/JavaScriptSDK/AppInsightsCore.ts" />
+/// <reference path="../../src/applicationinsights-core-js.ts" />
 
-import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, CoreUtils, IAppInsightsCore } from "../../applicationinsights-core-js"
-import { AppInsightsCore } from "../../JavaScriptSDK/AppInsightsCore";
-import { IChannelControls } from "../../JavaScriptSDK.Interfaces/IChannelControls";
-import { _InternalMessageId, LoggingSeverity } from "../../JavaScriptSDK.Enums/LoggingEnums";
-import { _InternalLogMessage, DiagnosticLogger } from "../../JavaScriptSDK/DiagnosticLogger";
-import { normalizeJsName } from "../../JavaScriptSDK/CoreUtils";
+import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, CoreUtils, IAppInsightsCore } from "../../src/applicationinsights-core-js"
+import { AppInsightsCore } from "../../src/JavaScriptSDK/AppInsightsCore";
+import { IChannelControls } from "../../src/JavaScriptSDK.Interfaces/IChannelControls";
+import { _InternalMessageId, LoggingSeverity } from "../../src/JavaScriptSDK.Enums/LoggingEnums";
+import { _InternalLogMessage, DiagnosticLogger } from "../../src/JavaScriptSDK/DiagnosticLogger";
+import { normalizeJsName } from "../../src/JavaScriptSDK/CoreUtils";
 
 export class ApplicationInsightsCoreTests extends TestClass {
 

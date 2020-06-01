@@ -8,10 +8,10 @@
 !/tsconfig.json
 !/README.md
 !/LICENSE
+!/browser/**
 !/dist-esm/**
 !/dist/**
 !/types/**
-!/browser/**
 !/src/JavaScriptSDK.Enums/**
 !/src/JavaScriptSDK.Interfaces/**
 !/src/JavaScriptSDK/**

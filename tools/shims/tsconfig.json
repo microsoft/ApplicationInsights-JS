@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+      "sourceMap": true,
+      "inlineSources": true,
+      "noImplicitAny": true,
+      "module": "es6",
+      "moduleResolution": "node",
+      "target": "es3",
+      "forceConsistentCasingInFileNames": true,
+      "importHelpers": false,
+      "noEmitHelpers": true,
+      "alwaysStrict": true,
+      "declaration": true,
+      "declarationDir": "tools/shims/types",
+      "outDir": "./dist-esm",
+      "rootDir": "tools/shims/src",
+      "suppressImplicitAnyIndexErrors": true,
+      "allowSyntheticDefaultImports": true
+    },
+    "include": [
+      "./src/**/*.ts"
+    ],
+    "exclude": ["./node_modules/**"]
+  }

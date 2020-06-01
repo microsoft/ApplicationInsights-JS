@@ -12,6 +12,11 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@microsoft/applicationinsights-shims",
+      "projectFolder": "tools/shims",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@microsoft/applicationinsights-core-js",
       "projectFolder": "shared/AppInsightsCore",
       "shouldPublish": true
