@@ -21,4 +21,11 @@ export interface INotificationListener {
      * constant should be used to check the different values.
      */
     eventsDiscarded?: (events: ITelemetryItem[], reason: number) => void;
+
+    /**
+     * [Optional] A function called when the events have been requested to be sent to the sever.
+     * @param {number} sendReason - The reason why the event batch is being sent.
+     * @param {boolean} isAsync   - A flag which identifies whether the requests are being sent in an async or sync manner.
+     */
+    eventsSendRequest?: (sendReason: number, isAsync?: boolean) => void;
 }

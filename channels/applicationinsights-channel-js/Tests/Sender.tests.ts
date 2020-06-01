@@ -3,7 +3,7 @@ import { Sender } from "../src/Sender";
 import { Offline } from '../src/Offline';
 import { EnvelopeCreator } from '../src/EnvelopeCreator';
 import { Exception, CtxTagKeys, Util } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason } from "@microsoft/applicationinsights-core-js";
 
 export class SenderTests extends TestClass {
     private _sender: Sender;
@@ -837,5 +837,109 @@ export class SenderTests extends TestClass {
                 Assert.equal("Microsoft.ApplicationInsights.iKey.Pageview", appInsightsEnvelope.name);
             }
         });
+
+        this.testCase({
+            name: "Channel Config: is sent when requests are being sent when requests exceed max batch size",
+            test: () => {
+                let sendNotifications = [];
+                let notificationManager = new NotificationManager();
+                notificationManager.addNotificationListener({
+                    eventsSendRequest: (sendReason: number, isAsync?: boolean) => {
+                        sendNotifications.push({
+                            sendReason,
+                            isAsync
+                        });
+                    }
+                });
+
+                this._sender.initialize(
+                    {
+                        instrumentationKey: 'abc',
+                        maxBatchInterval: 123,
+                        endpointUrl: 'https://example.com',
+                        maxBatchSizeInBytes: 100,
+                        extensionConfig: {
+                            NotificationManager: notificationManager,
+                            [this._sender.identifier]: {
+                                maxBatchSizeInBytes: 100
+                            }
+                        }
+
+                    }, new AppInsightsCore(), []
+                );
+
+                const loggerSpy = this.sandbox.stub(this._sender, "_setupTimer");
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                try {
+                    this._sender.processTelemetry(telemetryItem, null);
+                } catch(e) {
+                    Assert.ok(false);
+                }
+
+
+                Assert.ok(loggerSpy.calledOnce);
+                this.clock.tick(1);
+                Assert.ok(sendNotifications.length === 1);
+                Assert.ok(sendNotifications[0].sendReason === SendRequestReason.MaxBatchSize);
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Notification is sent when requests are being sent with manual flush",
+            test: () => {
+                let sendNotifications = [];
+                let notificationManager = new NotificationManager();
+                notificationManager.addNotificationListener({
+                    eventsSendRequest: (sendReason: number, isAsync?: boolean) => {
+                        sendNotifications.push({
+                            sendReason,
+                            isAsync
+                        });
+                    }
+                });
+
+                this._sender.initialize(
+                    {
+                        instrumentationKey: 'abc',
+                        maxBatchInterval: 123,
+                        endpointUrl: 'https://example.com',
+                        extensionConfig: {
+                            NotificationManager: notificationManager
+                        }
+
+                    }, new AppInsightsCore(), []
+                );
+
+                const loggerSpy = this.sandbox.stub(this._sender, "_setupTimer");
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                try {
+                    this._sender.processTelemetry(telemetryItem, null);
+                } catch(e) {
+                    Assert.ok(false);
+                }
+
+                Assert.ok(loggerSpy.calledOnce);
+                Assert.equal(0, sendNotifications.length);
+                
+                this._sender.flush();
+                Assert.equal(0, sendNotifications.length);
+
+                this.clock.tick(1);
+
+                Assert.equal(1, sendNotifications.length);
+                Assert.equal(SendRequestReason.ManualFlush, sendNotifications[0].sendReason);
+            }
+        });
+
     }
 }
