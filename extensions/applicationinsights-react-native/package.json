@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-react-native",
-    "version": "2.2.3",
+    "version": "2.2.4",
     "description": "Microsoft Application Insights React Native Plugin",
     "main": "dist-esm/index.js",
     "types": "dist-esm/index.d.ts",
@@ -37,8 +37,8 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims" : "^1.0.0",
-        "@microsoft/applicationinsights-common": "^2.5.0",
-        "@microsoft/applicationinsights-core-js": "^2.5.0"
+        "@microsoft/applicationinsights-common": "^2.5.4",
+        "@microsoft/applicationinsights-core-js": "^2.5.4"
     },
     "peerDependencies": {
         "react-native": "*",

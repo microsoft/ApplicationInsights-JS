@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-angular-js",
-    "version": "2.5.4",
+    "version": "2.5.5",
     "description": "Microsoft Application Insights Angular plugin",
     "main": "dist/applicationinsights-angular-js.js",
     "module": "dist-esm/applicationinsights-angular-js.js",
@@ -39,8 +39,8 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims" : "1.0.0",
-        "@microsoft/applicationinsights-common": "2.5.4",
-        "@microsoft/applicationinsights-core-js": "2.5.4"
+        "@microsoft/applicationinsights-common": "2.5.5",
+        "@microsoft/applicationinsights-core-js": "2.5.5"
     },
     "license": "MIT"
 }
