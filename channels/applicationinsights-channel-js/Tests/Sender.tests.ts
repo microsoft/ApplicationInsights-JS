@@ -839,7 +839,7 @@ export class SenderTests extends TestClass {
         });
 
         this.testCase({
-            name: "Channel Config: is sent when requests are being sent when requests exceed max batch size",
+            name: "Channel Config: Notification is sent when requests are being sent when requests exceed max batch size",
             test: () => {
                 let sendNotifications = [];
                 let notificationManager = new NotificationManager();
