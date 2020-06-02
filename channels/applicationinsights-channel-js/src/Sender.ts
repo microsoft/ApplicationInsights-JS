@@ -20,7 +20,8 @@ import {
 import {
     ITelemetryItem, IProcessTelemetryContext, IConfiguration, CoreUtils,
     _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
-    getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain
+    getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain, INotificationManager,
+    SendRequestReason
 } from '@microsoft/applicationinsights-core-js';
 import { Offline } from './Offline';
 import { Sample } from './TelemetryProcessors/Sample'
@@ -162,6 +163,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
     private _serializer: Serializer;
 
+    private _notificationManager: INotificationManager | undefined;
+
     public pause(): void {
         throw new Error("Method not implemented.");
     }
@@ -172,7 +175,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
     public flush() {
         try {
-            this.triggerSend();
+            this.triggerSend(true, null, SendRequestReason.ManualFlush);
         } catch (e) {
             this.diagLog().throwInternal(LoggingSeverity.CRITICAL,
                 _InternalMessageId.FlushFailed,
@@ -184,7 +187,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
     public onunloadFlush() {
         if ((this._senderConfig.onunloadDisableBeacon() === false || this._senderConfig.isBeaconApiDisabled() === false) && Util.IsBeaconApiSupported()) {
             try {
-                this.triggerSend(true, this._beaconSender);
+                this.triggerSend(true, this._beaconSender, SendRequestReason.Unload);
             } catch (e) {
                 this.diagLog().throwInternal(LoggingSeverity.CRITICAL,
                     _InternalMessageId.FailedToSendQueuedTelemetry,
@@ -205,7 +208,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         let ctx = this._getTelCtx();
         let identifier = this.identifier;
         this._serializer = new Serializer(core.logger);
-
+        this._notificationManager = ((config||{}).extensionConfig||{}).NotificationManager
         this._consecutiveErrors = 0;
         this._retryAt = null;
         this._lastSend = 0;
@@ -317,7 +320,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             const batch = this._buffer.batchPayloads(bufferPayload);
 
             if (batch && (batch.length + payload.length > this._senderConfig.maxBatchSizeInBytes())) {
-                this.triggerSend();
+                this.triggerSend(true, null, SendRequestReason.MaxBatchSize);
             }
 
             // enqueue the payload
@@ -396,13 +399,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
      * @param async {boolean} - Indicates if the events should be sent asynchronously
      * @param forcedSender {SenderFunction} - Indicates the forcedSender, undefined if not passed
      */
-    public triggerSend(async = true, forcedSender?: SenderFunction) {
+    public triggerSend(async = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason) {
         try {
             // Send data only if disableTelemetry is false
             if (!this._senderConfig.disableTelemetry()) {
 
                 if (this._buffer.count() > 0) {
                     const payload = this._buffer.getItems();
+
+                    this._notifySendRequest(sendReason||SendRequestReason.Undefined, async);
 
                     // invoke send
                     if (forcedSender) {
@@ -658,7 +663,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             const timerValue = Math.max(this._senderConfig.maxBatchInterval(), retryInterval);
 
             this._timeoutHandle = setTimeout(() => {
-                this.triggerSend();
+                this.triggerSend(true, null, SendRequestReason.NormalSchedule);
             }, timerValue);
         }
     }
@@ -727,5 +732,19 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         }
 
         return message;
+    }
+
+    private _notifySendRequest(sendRequest: SendRequestReason, isAsync: boolean) {
+        let manager = this._notificationManager;
+        if (manager && manager.eventsSendRequest) {
+            try {
+                manager.eventsSendRequest(sendRequest, isAsync);
+            } catch (e) {
+                this.diagLog().throwInternal(LoggingSeverity.CRITICAL,
+                    _InternalMessageId.NotificationException,
+                    "send request notification failed: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) });
+            }
+        }
     }
 }

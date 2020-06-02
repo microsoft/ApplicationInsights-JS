@@ -93,6 +93,7 @@ export const _InternalMessageId = {
     FailedMonitorAjaxSetRequestHeader: 71,
     SendBrowserInfoOnUserInit: 72,
     PluginException: 73,
+    NotificationException: 74,
     SnippetScriptLoadFailure: 99
 };
 export type _InternalMessageId = number | typeof _InternalMessageId;
