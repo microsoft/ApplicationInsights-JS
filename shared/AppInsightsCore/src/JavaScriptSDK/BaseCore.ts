@@ -16,6 +16,7 @@ import { IProcessTelemetryContext } from '../JavaScriptSDK.Interfaces/IProcessTe
 import { ProcessTelemetryContext } from './ProcessTelemetryContext';
 import { initializePlugins, sortPlugins } from './TelemetryHelpers';
 import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
+import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
 
 const validationError = "Extensions must provide callback to initialize";
 
@@ -65,8 +66,9 @@ export class BaseCore implements IAppInsightsCore {
                 addNotificationListener: (listener: INotificationListener) => { },
                 removeNotificationListener: (listener: INotificationListener) => { },
                 eventsSent: (events: ITelemetryItem[]) => { },
-                eventsDiscarded: (events: ITelemetryItem[], reason: number) => { }
-            })
+                eventsDiscarded: (events: ITelemetryItem[], reason: number) => { },
+                eventsSendRequest: (sendReason: number, isAsync: boolean) => { }
+            });
         }
 
         _this._notificationManager = notificationManager as INotificationManager;

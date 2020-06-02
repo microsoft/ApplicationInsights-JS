@@ -3,6 +3,7 @@
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { INotificationManager } from './../JavaScriptSDK.Interfaces/INotificationManager';
+import { SendRequestReason } from '../JavaScriptSDK.Enums/SendRequestReason';
 import { CoreUtils } from "./CoreUtils";
 
 /**
@@ -53,6 +54,27 @@ export class NotificationManager implements INotificationManager {
         for (let i: number = 0; i < this.listeners.length; ++i) {
             if (this.listeners[i].eventsDiscarded) {
                 setTimeout(() => this.listeners[i].eventsDiscarded(events, reason), 0);
+            }
+        }
+    }
+
+    /**
+     * [Optional] A function called when the events have been requested to be sent to the sever.
+     * @param {number} sendReason - The reason why the event batch is being sent.
+     * @param {boolean} isAsync   - A flag which identifies whether the requests are being sent in an async or sync manner.
+     */
+    eventsSendRequest?(sendReason: number, isAsync: boolean): void {
+        for (let i: number = 0; i < this.listeners.length; ++i) {
+            if (this.listeners[i].eventsSendRequest) {
+                if (isAsync) {
+                    setTimeout(() => this.listeners[i].eventsSendRequest(sendReason, isAsync), 0);
+                } else {
+                    try {
+                        this.listeners[i].eventsSendRequest(sendReason, isAsync);
+                    } catch (e) {
+                        // Catch errors to ensure we don't block sending the requests
+                    }
+                }
             }
         }
     }

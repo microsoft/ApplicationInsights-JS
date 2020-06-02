@@ -56,53 +56,53 @@
     },
     "@rush-temp/applicationinsights-analytics-js": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-analytics-js.tgz",
-      "resolved": "file:projects/applicationinsights-analytics-js.tgz"
+      "from": "projects\\applicationinsights-analytics-js.tgz",
+      "resolved": "file:projects\\applicationinsights-analytics-js.tgz"
     },
     "@rush-temp/applicationinsights-channel-js": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-channel-js.tgz",
-      "resolved": "file:projects/applicationinsights-channel-js.tgz"
+      "from": "projects\\applicationinsights-channel-js.tgz",
+      "resolved": "file:projects\\applicationinsights-channel-js.tgz"
     },
     "@rush-temp/applicationinsights-common": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-common.tgz",
-      "resolved": "file:projects/applicationinsights-common.tgz"
+      "from": "projects\\applicationinsights-common.tgz",
+      "resolved": "file:projects\\applicationinsights-common.tgz"
     },
     "@rush-temp/applicationinsights-core-js": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-core-js.tgz",
-      "resolved": "file:projects/applicationinsights-core-js.tgz"
+      "from": "projects\\applicationinsights-core-js.tgz",
+      "resolved": "file:projects\\applicationinsights-core-js.tgz"
     },
     "@rush-temp/applicationinsights-dependencies-js": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-dependencies-js.tgz",
-      "resolved": "file:projects/applicationinsights-dependencies-js.tgz"
+      "from": "projects\\applicationinsights-dependencies-js.tgz",
+      "resolved": "file:projects\\applicationinsights-dependencies-js.tgz"
     },
     "@rush-temp/applicationinsights-properties-js": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-properties-js.tgz",
-      "resolved": "file:projects/applicationinsights-properties-js.tgz"
+      "from": "projects\\applicationinsights-properties-js.tgz",
+      "resolved": "file:projects\\applicationinsights-properties-js.tgz"
     },
     "@rush-temp/applicationinsights-rollup-es3": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-rollup-es3.tgz",
-      "resolved": "file:projects/applicationinsights-rollup-es3.tgz"
+      "from": "projects\\applicationinsights-rollup-es3.tgz",
+      "resolved": "file:projects\\applicationinsights-rollup-es3.tgz"
     },
     "@rush-temp/applicationinsights-shims": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-shims.tgz",
-      "resolved": "file:projects/applicationinsights-shims.tgz"
+      "from": "projects\\applicationinsights-shims.tgz",
+      "resolved": "file:projects\\applicationinsights-shims.tgz"
     },
     "@rush-temp/applicationinsights-web": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-web.tgz",
-      "resolved": "file:projects/applicationinsights-web.tgz"
+      "from": "projects\\applicationinsights-web.tgz",
+      "resolved": "file:projects\\applicationinsights-web.tgz"
     },
     "@rush-temp/applicationinsights-web-basic": {
       "version": "0.0.0",
-      "from": "projects/applicationinsights-web-basic.tgz",
-      "resolved": "file:projects/applicationinsights-web-basic.tgz"
+      "from": "projects\\applicationinsights-web-basic.tgz",
+      "resolved": "file:projects\\applicationinsights-web-basic.tgz"
     },
     "@types/estree": {
       "version": "0.0.39",
@@ -130,9 +130,9 @@
       "resolved": "https://registry.npmjs.org/@types/minimatch/-/minimatch-3.0.3.tgz"
     },
     "@types/node": {
-      "version": "14.0.5",
+      "version": "14.0.9",
       "from": "@types/node@*",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-14.0.5.tgz"
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-14.0.9.tgz"
     },
     "abbrev": {
       "version": "1.1.1",
@@ -1131,9 +1131,9 @@
       "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.24.tgz"
     },
     "ignore": {
-      "version": "5.1.6",
+      "version": "5.1.8",
       "from": "ignore@^5.1.4",
-      "resolved": "https://registry.npmjs.org/ignore/-/ignore-5.1.6.tgz"
+      "resolved": "https://registry.npmjs.org/ignore/-/ignore-5.1.8.tgz"
     },
     "indent-string": {
       "version": "2.1.0",
