@@ -1,5 +1,35 @@
 # Releases
 
+## 2.5.5
+
+### Updated React plugin to v3.0.0
+
+- Updated to TypeScript 3.x
+- Removed React plugin from main rush pipeline
+- #991 Don't work with React HOOKS
+  - #1120 Introducing React Hooks for AppInsights #1120
+
+### New Package applicationinsights-shims v1.0.0
+
+- Created to remove dependency on TSLib as v 1.13.0 has introduced build breaks
+  - provides internal implementation of __extends() and __assign() when no pre-existing version is present
+
+### Changelog
+
+- #1278 Add optional 'eventsSendRequest' notification to NotificationManager
+- #1269 TsLib v1.13.0 has breaking change (Remove dependency on TSLib)
+  - Added new package **'applicationinsights-shims@1.0.0'**
+- Removed React plugin from main rush pipeline
+- #991 Don't work with React HOOKS
+  - #1120 Introducing React Hooks for AppInsights #1120
+- #1274 Fix for withAITracking wrapping functional components.
+- Using crypto to generate GUIDs when available (Make GUID more random)
+- #1260 [BUG] Can't include Correlation Header on IE can fail
+- #1258 Update snippet to support reporting script load failures
+- #1251 [BUG] ajax.ts is using string trim() which is not supported on IE7/8
+- #1249 Identify whether the script is being consumed via the CDN or NPM package
+- Several minor documentation updates
+
 ## 2.5.4
 
 ### Changelog
