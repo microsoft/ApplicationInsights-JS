@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-common",
-    "version": "2.3.1",
+    "version": "2.5.5",
     "description": "Microsoft Application Insights Common JavaScript Library",
     "main": "./dist/applicationinsights-common.js",
     "module": "./dist-esm/applicationinsights-common.js",
@@ -18,6 +18,7 @@
         "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
+        "@microsoft/applicationinsights-rollup-es3" : "1.1.1",
         "grunt": "1.0.1",
         "grunt-contrib-qunit": "2.0.0",
         "grunt-contrib-uglify": "3.1.0",
@@ -32,8 +33,8 @@
         "rollup": "^0.66.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-core-js": "2.3.1",
-        "tslib": "^1.9.3"
+        "@microsoft/applicationinsights-shims" : "1.0.0",
+        "@microsoft/applicationinsights-core-js": "2.5.5"
     },
     "license": "MIT"
 }

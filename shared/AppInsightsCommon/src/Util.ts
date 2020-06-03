@@ -2,17 +2,27 @@
 // Licensed under the MIT License.
 
 import { StorageType } from "./Enums";
-import { CoreUtils, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin } from "@microsoft/applicationinsights-core-js";
-import { IConfig } from "./Interfaces/IConfig";
+import { 
+    CoreUtils, EventHelper, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin, 
+    getGlobal, getGlobalInst, getWindow, getDocument, getNavigator, getPerformance, getLocation, hasJSON, getJSON,
+    strPrototype
+} from "@microsoft/applicationinsights-core-js";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 
-// Adding common usage of prototype as a string to enable indexed lookup to assist with minification
-const prototype = "prototype";
+let _navigator = getNavigator();
+let _isString = CoreUtils.isString;
+let _uaDisallowsSameSiteNone:boolean = null;
+
+function _endsWith(value:string, search:string) {
+    let len = value.length;
+    let start = len - search.length;
+    return value.substring(start >= 0 ? start : 0, len) === search;
+}
 
 export class Util {
-    private static document: any = typeof document !== "undefined" ? document : {};
+    private static document: any = getDocument()||{};
     private static _canUseLocalStorage: boolean = undefined;
     private static _canUseSessionStorage: boolean = undefined;
     // listing only non-geo specific locations
@@ -26,11 +36,14 @@ export class Util {
     public static createDomEvent(eventName: string): Event {
         let event: Event = null;
 
-        if (typeof Event === "function") { // Use Event constructor when available
+        if (CoreUtils.isFunction(Event)) { // Use Event constructor when available
             event = new Event(eventName);
         } else { // Event has no constructor in IE
-            event = document.createEvent("Event");
-            event.initEvent(eventName, true, true);
+            let doc = getDocument();
+            if (doc && doc.createEvent) {
+                event = doc.createEvent("Event");
+                event.initEvent(eventName, true, true);
+            }
         }
 
         return event;
@@ -67,11 +80,11 @@ export class Util {
         let fail: boolean;
         let uid: Date;
         try {
-            if (typeof window === 'undefined') {
+            if (CoreUtils.isNullOrUndefined(getGlobal())) {
                 return null;
             }
             uid = new Date;
-            storage = storageType === StorageType.LocalStorage ? window.localStorage : window.sessionStorage;
+            storage = storageType === StorageType.LocalStorage ? getGlobalInst("localStorage") : getGlobalInst("sessionStorage");
             storage.setItem(uid.toString(), uid.toString());
             fail = storage.getItem(uid.toString()) !== uid.toString();
             storage.removeItem(uid.toString());
@@ -217,7 +230,7 @@ export class Util {
         const keys = [];
 
         if (Util.canUseSessionStorage()) {
-            for (const key in window.sessionStorage) {
+            for (const key in getGlobalInst<any>("sessionStorage")) {
                 keys.push(key);
             }
         }
@@ -327,23 +340,89 @@ export class Util {
         return CoreUtils._canUseCookies;
     }
 
+    public static disallowsSameSiteNone(userAgent:string) {
+        if (!_isString(userAgent)) {
+            return false;
+        }
+    
+        // Cover all iOS based browsers here. This includes:
+        // - Safari on iOS 12 for iPhone, iPod Touch, iPad
+        // - WkWebview on iOS 12 for iPhone, iPod Touch, iPad
+        // - Chrome on iOS 12 for iPhone, iPod Touch, iPad
+        // All of which are broken by SameSite=None, because they use the iOS networking stack
+        if (userAgent.indexOf("CPU iPhone OS 12") !== -1 || userAgent.indexOf("iPad; CPU OS 12") !== -1) {
+            return true;
+        }
+     
+        // Cover Mac OS X based browsers that use the Mac OS networking stack. This includes:
+        // - Safari on Mac OS X
+        // This does not include:
+        // - Internal browser on Mac OS X
+        // - Chrome on Mac OS X
+        // - Chromium on Mac OS X
+        // Because they do not use the Mac OS networking stack.
+        if (userAgent.indexOf("Macintosh; Intel Mac OS X 10_14") !== -1 && userAgent.indexOf("Version/") !== -1 && userAgent.indexOf("Safari") !== -1) {
+            return true;
+        }
+     
+        // Cover Mac OS X internal browsers that use the Mac OS networking stack. This includes:
+        // - Internal browser on Mac OS X
+        // This does not include:
+        // - Safari on Mac OS X
+        // - Chrome on Mac OS X
+        // - Chromium on Mac OS X
+        // Because they do not use the Mac OS networking stack.
+        if (userAgent.indexOf("Macintosh; Intel Mac OS X 10_14") !== -1 && _endsWith(userAgent, "AppleWebKit/605.1.15 (KHTML, like Gecko)")) {
+            return true;
+        }
+     
+        // Cover Chrome 50-69, because some versions are broken by SameSite=None, and none in this range require it.
+        // Note: this covers some pre-Chromium Edge versions, but pre-Chromim Edge does not require SameSite=None, so this is fine.
+        // Note: this regex applies to Windows, Mac OS X, and Linux, deliberately.
+        if (userAgent.indexOf("Chrome/5") !== -1 || userAgent.indexOf("Chrome/6") !== -1) {
+            return true;
+        }
+     
+        // Unreal Engine runs Chromium 59, but does not advertise as Chrome until 4.23. Treat versions of Unreal
+        // that don't specify their Chrome version as lacking support for SameSite=None.
+        if (userAgent.indexOf("UnrealEngine") !== -1 && userAgent.indexOf("Chrome") === -1) {
+            return true;
+        }
+     
+        // UCBrowser < 12.13.2 ignores Set-Cookie headers with SameSite=None
+        // NB: this rule isn't complete - you need regex to make a complete rule.
+        // See: https://www.chromium.org/updates/same-site/incompatible-clients
+        if (userAgent.indexOf("UCBrowser/12") !== -1 || userAgent.indexOf("UCBrowser/11") !== -1) {
+            return true;
+        }
+     
+        return false;
+    }
+    
     /**
      * helper method to set userId and sessionId cookie
      */
-    public static setCookie(logger: IDiagnosticLogger, name, value, domain?) {
-        value = value + ";SameSite=None";
-        let domainAttrib = "";
-        let secureAttrib = "";
-
-        if (domain) {
-            domainAttrib = ";domain=" + domain;
-        }
-
-        if (Util.document.location && Util.document.location.protocol === "https:") {
-            secureAttrib = ";secure";
-        }
-
+    public static setCookie(logger: IDiagnosticLogger, name: string, value: string, domain?: string) {
         if (Util.canUseCookies(logger)) {
+            let domainAttrib = "";
+            let secureAttrib = "";
+
+            if (domain) {
+                domainAttrib = ";domain=" + domain;
+            }
+
+            let location = getLocation();
+            if (location && location.protocol === "https:") {
+                secureAttrib = ";secure";
+                if (_uaDisallowsSameSiteNone === null) {
+                    _uaDisallowsSameSiteNone = Util.disallowsSameSiteNone((getNavigator()||{} as Navigator).userAgent);
+                }
+                
+                if (!_uaDisallowsSameSiteNone) {
+                    value = value + ";SameSite=None"; // SameSite can only be set on secure pages
+                }
+            }
+
             Util.document.cookie = name + "=" + value + domainAttrib + ";path=/" + secureAttrib;
         }
     }
@@ -359,7 +438,7 @@ export class Util {
     /**
      * helper method to access userId and sessionId cookie
      */
-    public static getCookie(logger: IDiagnosticLogger, name) {
+    public static getCookie(logger: IDiagnosticLogger, name: string) {
         if (!Util.canUseCookies(logger)) {
             return;
         }
@@ -395,10 +474,7 @@ export class Util {
     /**
      * helper method to trim strings (IE8 does not implement String.prototype.trim)
      */
-    public static trim(str: any): string {
-        if (typeof str !== "string") { return str; }
-        return str.replace(/^\s+|\s+$/g, "");
-    }
+    public static trim = CoreUtils.strTrim;
 
     /**
      * generate random id string
@@ -455,14 +531,14 @@ export class Util {
      * Check if an object is of type Array
      */
     public static isArray(obj: any): boolean {
-        return Object[prototype].toString.call(obj) === "[object Array]";
+        return Object[strPrototype].toString.call(obj) === "[object Array]";
     }
 
     /**
      * Check if an object is of type Error
      */
     public static isError(obj: any): boolean {
-        return Object[prototype].toString.call(obj) === "[object Error]";
+        return Object[strPrototype].toString.call(obj) === "[object Error]";
     }
 
     /**
@@ -474,11 +550,20 @@ export class Util {
     public static toISOStringForIE8 = CoreUtils.toISOString;
 
     /**
-     * Gets IE version if we are running on IE, or null otherwise
+     * Gets IE version returning the document emulation mode if we are running on IE, or null otherwise
      */
     public static getIEVersion(userAgentStr: string = null): number {
-        const myNav = userAgentStr ? userAgentStr.toLowerCase() : navigator.userAgent.toLowerCase();
-        return (myNav.indexOf('msie') !== -1) ? parseInt(myNav.split('msie')[1]) : null;
+        const myNav = userAgentStr ? userAgentStr.toLowerCase() : (_navigator ? (_navigator.userAgent ||"").toLowerCase() : "");
+        if (myNav.indexOf("msie") !== -1) {
+            return parseInt(myNav.split("msie")[1]);
+        } else if (myNav.indexOf("trident/")) {
+            let tridentVer = parseInt(myNav.split("trident/")[1]);
+            if (tridentVer) {
+                return tridentVer + 4;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -517,10 +602,12 @@ export class Util {
      * Returns string representation of an object suitable for diagnostics logging.
      */
     public static dump(object: any): string {
-        const objectTypeDump: string = Object[prototype].toString.call(object);
-        let propertyValueDump: string = JSON.stringify(object);
+        const objectTypeDump: string = Object[strPrototype].toString.call(object);
+        let propertyValueDump: string = "";
         if (objectTypeDump === "[object Error]") {
             propertyValueDump = "{ stack: '" + object.stack + "', message: '" + object.message + "', name: '" + object.name + "'";
+        } else if (hasJSON()) {
+            propertyValueDump = getJSON().stringify(object);
         }
 
         return objectTypeDump + propertyValueDump;
@@ -530,7 +617,7 @@ export class Util {
      * Returns the name of object if it's an Error. Otherwise, returns empty string.
      */
     public static getExceptionName(object: any): string {
-        const objectTypeDump: string = Object[prototype].toString.call(object);
+        const objectTypeDump: string = Object[strPrototype].toString.call(object);
         if (objectTypeDump === "[object Error]") {
             return object.name;
         }
@@ -538,36 +625,20 @@ export class Util {
     }
 
     /**
-     * Adds an event handler for the specified event
+     * Adds an event handler for the specified event to the window
      * @param eventName {string} - The name of the event
      * @param callback {any} - The callback function that needs to be executed for the given event
      * @return {boolean} - true if the handler was successfully added
      */
     public static addEventHandler(eventName: string, callback: any): boolean {
-        if (typeof window === 'undefined' || !window || typeof eventName !== 'string' || typeof callback !== 'function') {
-            return false;
-        }
-
-        // Create verb for the event
-        const verbEventName = 'on' + eventName;
-
-        // check if addEventListener is available
-        if (window.addEventListener) {
-            window.addEventListener(eventName, callback, false);
-        } else if (window["attachEvent"]) { // For older browsers
-            window["attachEvent"](verbEventName, callback);
-        } else { // if all else fails
-            return false;
-        }
-
-        return true;
+        return EventHelper.Attach(getWindow(), eventName, callback);
     }
 
     /**
      * Tells if a browser supports a Beacon API
      */
     public static IsBeaconApiSupported(): boolean {
-        return ('sendBeacon' in navigator && (navigator as any).sendBeacon);
+        return ('sendBeacon' in _navigator && (_navigator as any).sendBeacon);
     }
 
     public static getExtension(extensions: IPlugin[], identifier: string) {
@@ -586,20 +657,39 @@ export class Util {
 }
 
 export class UrlHelper {
-    private static document: any = typeof document !== "undefined" ? document : {};
-    private static htmlAnchorElement: HTMLAnchorElement;
+    private static document: any = getDocument()||{};
 
-    public static parseUrl(url): HTMLAnchorElement {
-        if (!UrlHelper.htmlAnchorElement) {
-            UrlHelper.htmlAnchorElement = !!UrlHelper.document.createElement ? UrlHelper.document.createElement('a') : { host: UrlHelper.parseHost(url) }; // fill host field in the fallback case as that is the only externally required field from this fn
+    private static _htmlAnchorIdx: number = 0;
+    // Use an array of temporary values as it's possible for multiple calls to parseUrl() will be called with different URLs
+    // Using a cache size of 5 for now as it current depth usage is at least 2, so adding a minor buffer to handle future updates
+    private static _htmlAnchorElement: HTMLAnchorElement[] = [null, null, null, null, null];
+
+    public static parseUrl(url: string): HTMLAnchorElement {
+        let anchorIdx = UrlHelper._htmlAnchorIdx;
+        let anchorCache = UrlHelper._htmlAnchorElement;
+        let tempAnchor = anchorCache[anchorIdx];
+        if (!UrlHelper.document.createElement) {
+            // Always create the temp instance if createElement is not available
+            tempAnchor = { host: UrlHelper.parseHost(url, true) } as HTMLAnchorElement;
+        } else if (!anchorCache[anchorIdx]) {
+            // Create and cache the unattached anchor instance 
+            tempAnchor = anchorCache[anchorIdx] = UrlHelper.document.createElement('a');
         }
 
-        UrlHelper.htmlAnchorElement.href = url;
+        tempAnchor.href = url;
 
-        return UrlHelper.htmlAnchorElement;
+        // Move the cache index forward
+        anchorIdx++;
+        if (anchorIdx >= anchorCache.length) {
+            anchorIdx = 0;
+        }
+
+        UrlHelper._htmlAnchorIdx = anchorIdx;
+
+        return tempAnchor;
     }
 
-    public static getAbsoluteUrl(url): string {
+    public static getAbsoluteUrl(url: string): string {
         let result: string;
         const a = UrlHelper.parseUrl(url);
         if (a) {
@@ -609,7 +699,7 @@ export class UrlHelper {
         return result;
     }
 
-    public static getPathName(url): string {
+    public static getPathName(url: string): string {
         let result: string;
         const a = UrlHelper.parseUrl(url);
         if (a) {
@@ -628,13 +718,43 @@ export class UrlHelper {
     }
 
     // Fallback method to grab host from url if document.createElement method is not available
-    public static parseHost(url: string) {
-        const match = url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i);
-        if (match != null && match.length > 2 && typeof match[2] === 'string' && match[2].length > 0) {
-            return match[2];
-        } else {
-            return null;
+    public static parseHost(url: string, inclPort?: boolean) {
+        let fullHost = UrlHelper.parseFullHost(url, inclPort);
+        if (fullHost ) {
+            const match = fullHost.match(/(www[0-9]?\.)?(.[^/:]+)(\:[\d]+)?/i);
+            if (match != null && match.length > 3 && _isString(match[2]) && match[2].length > 0) {
+                return match[2] + (match[3] ||"");
+            }
         }
+
+        return fullHost;
+    }
+
+    /**
+     * Get the full host from the url, optionally including the port
+     */
+    public static parseFullHost(url: string, inclPort?: boolean) {
+        let result = null;
+        if (url) {
+            const match = url.match(/(\w*):\/\/(.[^/:]+)(\:[\d]+)?/i);
+            if (match != null && match.length > 2 && _isString(match[2]) && match[2].length > 0) {
+                result = match[2] || "";
+                if (inclPort && match.length > 2) {
+                    const protocol = (match[1] || "").toLowerCase();
+                    let port = match[3] || "";
+                    // IE includes the standard port so pass it off if it's the same as the protocol
+                    if (protocol === "http" && port === ":80") {
+                        port = "";
+                    } else if (protocol === "https" && port === ":443") {
+                        port = "";
+                    }
+
+                    result += port;
+                }
+            }
+        }
+
+        return result;
     }
 }
 
@@ -642,25 +762,31 @@ export class CorrelationIdHelper {
     public static correlationIdPrefix = "cid-v1:";
 
     /**
-     * Checks if a request url is not on a excluded domain list and if it is safe to add correlation headers
+     * Checks if a request url is not on a excluded domain list and if it is safe to add correlation headers.
+     * Headers are always included if the current domain matches the request domain. If they do not match (CORS),
+     * they are regex-ed across correlationHeaderDomains and correlationHeaderExcludedDomains to determine if headers are included.
+     * Some environments don't give information on currentHost via window.location.host (e.g. Cordova). In these cases, the user must
+     * manually supply domains to include correlation headers on. Else, no headers will be included at all.
      */
-    public static canIncludeCorrelationHeader(config: ICorrelationConfig, requestUrl: string, currentHost: string) {
-        if (config && config.disableCorrelationHeaders) {
+    public static canIncludeCorrelationHeader(config: ICorrelationConfig, requestUrl: string, currentHost?: string) {
+        if (!requestUrl || (config && config.disableCorrelationHeaders)) {
             return false;
         }
 
-        if (!requestUrl) {
-            return false;
+        let requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
+        if (requestHost && (requestHost.indexOf(":443") !== -1 || requestHost.indexOf(":80") !== -1)) {
+            // [Bug #1260] IE can include the port even for http and https URLs so if present 
+            // try and parse it to remove if it matches the default protocol port
+            requestHost = (UrlHelper.parseFullHost(requestUrl, true) || "").toLowerCase();
         }
 
-        const requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
         if ((!config || !config.enableCorsCorrelation) && requestHost !== currentHost) {
             return false;
         }
 
         const includedDomains = config && config.correlationHeaderDomains;
         if (includedDomains) {
-            let matchExists;
+            let matchExists: boolean;
             CoreUtils.arrForEach(includedDomains, (domain) => {
                 const regex = new RegExp(domain.toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
                 matchExists = matchExists || regex.test(requestHost);
@@ -683,7 +809,9 @@ export class CorrelationIdHelper {
             }
         }
 
-        return true;
+        // if we don't know anything about the requestHost, require the user to use included/excludedDomains.
+        // Previously we always returned false for a falsy requestHost
+        return requestHost && requestHost.length > 0;
     }
 
     /**
@@ -753,15 +881,15 @@ export class DateTimeUtils {
     /**
      * Get the number of milliseconds since 1970/01/01 in local timezone
      */
-    public static Now = (typeof window === 'undefined') ? () => new Date().getTime() :
-        (window.performance && window.performance.now && window.performance.timing) ?
-            () => {
-                return window.performance.now() + window.performance.timing.navigationStart;
-            }
-            :
-            () => {
-                return new Date().getTime();
-            }
+    public static Now = () => {
+        // returns the window or webworker performance object
+        let perf = getPerformance();
+        if (perf && perf.now && perf.timing) {
+            return perf.now() + perf.timing.navigationStart
+        }
+    
+        return new Date().getTime()
+    };
 
     /**
      * Gets duration between two timestamps

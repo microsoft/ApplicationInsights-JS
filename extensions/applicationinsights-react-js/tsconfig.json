@@ -2,7 +2,7 @@
   "compilerOptions": {
     "sourceMap": true,
     "inlineSources": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "module": "es6",
     "moduleResolution": "Node",
     "target": "es3",
@@ -10,13 +10,13 @@
     "alwaysStrict": true,
     "suppressImplicitAnyIndexErrors": true,
     "allowSyntheticDefaultImports": true,
-    "importHelpers": true,
+    "importHelpers": false,
     "noEmitHelpers": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationDir": "extensions/applicationinsights-react-js/types",
+    "declarationDir": "types",
     "outDir": "dist-esm",
-    "rootDir": "extensions/applicationinsights-react-js/src"
+    "rootDir": "src"
   },
   "include": [
     "./src/**/*.ts"

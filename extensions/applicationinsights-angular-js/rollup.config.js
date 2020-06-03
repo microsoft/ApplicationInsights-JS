@@ -2,6 +2,7 @@ import nodeResolve from "rollup-plugin-node-resolve";
 import {uglify} from "rollup-plugin-uglify";
 import replace from "rollup-plugin-replace";
 import commonjs from "rollup-plugin-commonjs";
+import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
 
 const version = require("./package.json").version;
 const outputName = "applicationinsights-angular-js";
@@ -30,13 +31,16 @@ const browserRollupConfigFactory = isProduction => {
           "// Licensed under the MIT License.": ""
         }
       }),
+      importCheck({ exclude: [ "applicationinsights-angular-js" ] }),
       nodeResolve({
         browser: false,
         preferBuiltins: false
       }),
       commonjs({
         include: 'node_modules/**'
-      })
+      }),
+      es3Poly(),
+      es3Check()
     ]
   };
 
@@ -72,10 +76,13 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
           "// Licensed under the MIT License.": ""
         }
       }),
+      importCheck({ exclude: [ "applicationinsights-angular-js" ] }),
       nodeResolve({ preferBuiltins: true }),
       commonjs({
         include: 'node_modules/**'
-      })
+      }),
+      es3Poly(),
+      es3Check()
     ]
   };
 

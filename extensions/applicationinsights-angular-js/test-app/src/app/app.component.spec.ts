@@ -1,10 +1,12 @@
 import { TestBed, fakeAsync, tick  } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { AngularPlugin, IAngularExtensionConfig } from '@microsoft/applicationinsights-angular-js';
+import { AngularPlugin } from '@microsoft/applicationinsights-angular-js';
 import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, IPlugin } from '@microsoft/applicationinsights-core-js';
+import { IPageViewTelemetry } from '@microsoft/applicationinsights-common';
 
 let angularPlugin: AngularPlugin;
 let core: AppInsightsCore;
+let angularPluginTrackPageViewSpy;
 
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
@@ -20,6 +22,7 @@ describe('Router: App', () => {
     core = new AppInsightsCore();
     core.logger = new DiagnosticLogger();
     angularPlugin = new AngularPlugin();
+    angularPluginTrackPageViewSpy = spyOn(angularPlugin, 'trackPageView');
   }
 
   beforeEach(() => {
@@ -47,20 +50,6 @@ describe('Router: App', () => {
       tick(500);
       expect(location.path()).toBe('/search');
     });
-  }));
-
-  it('Angular Configuration: Config options can be passed from root config', fakeAsync(() => {
-    init();
-    angularPlugin.initialize({
-      instrumentationKey: 'instrumentation_key',
-      extensionConfig: {
-        [angularPlugin.identifier]: {
-          router
-        }
-      }
-    }, core, []);
-    const angularConfig: IAngularExtensionConfig = angularPlugin['_extensionConfig'];
-    expect(angularConfig.router).toEqual(router);
   }));
 
   it('Angular Plugin: router change triggers trackPageView event', fakeAsync(() => {
@@ -92,23 +81,30 @@ describe('Router: App', () => {
         },
         }
     };
+    
     core.initialize(config, [angularPlugin, analyticsExtension, channel]);
-    // spy on track
-    const spy = spyOn(angularPlugin, 'trackPageView');
+
+    // trackPageView is called on plugin intialize
+    // default route is '/'
+    expect(angularPluginTrackPageViewSpy).toHaveBeenCalled();
+    expect(angularPluginTrackPageViewSpy).toHaveBeenCalledWith({ uri: '/' } as IPageViewTelemetry);
 
     // Emulate navigation to different URL-addressed pages
-    // navigate to /home
-    router.navigate([''])
-    .then(() => {
-      tick(500);
-      expect(angularPlugin.trackPageView).toHaveBeenCalledTimes(1);
-    });
-
     // navigate to /search
     router.navigate(['search'])
     .then(() => {
       tick(500);
-      expect(angularPlugin.trackPageView).toHaveBeenCalledTimes(1);
+      expect(angularPluginTrackPageViewSpy).toHaveBeenCalledTimes(2);
+      expect(angularPluginTrackPageViewSpy).toHaveBeenCalledWith({ uri: '/search' } as IPageViewTelemetry);
+    })
+    // navigate to /home
+    .then(() => {
+      router.navigate(['home'])
+      .then(() => {
+        tick(500);
+        expect(angularPluginTrackPageViewSpy).toHaveBeenCalledTimes(3);
+        expect(angularPluginTrackPageViewSpy).toHaveBeenCalledWith({ uri: '/home' } as IPageViewTelemetry);
+      });
     });
   }));
 });

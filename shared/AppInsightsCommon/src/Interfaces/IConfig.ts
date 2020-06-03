@@ -89,7 +89,7 @@ export interface IConfig {
     samplingPercentage?: number;
 
     /**
-     * @description
+     * @description If true, on a pageview,the previous instrumented page's view time is tracked and sent as telemetry and a new timer is started for the current pageview. Default is false.
      * @type {boolean}
      * @memberof IConfig
      */
@@ -174,6 +174,13 @@ export interface IConfig {
     disableFlushOnBeforeUnload?: boolean;
 
     /**
+     * @description Default value of {@link #disableFlushOnBeforeUnload}. If true, flush method will not be called when onUnload event triggers.
+     * @type {boolean}
+     * @memberof IConfig
+     */
+    disableFlushOnUnload?: boolean;
+
+    /**
      * @description If true, the buffer with all unsent telemetry is stored in session storage. The buffer is restored on page load. Default is true.
      * @type {boolean}
      * @memberof IConfig
@@ -208,10 +215,9 @@ export interface IConfig {
 
     /**
      * @deprecated Used when initizialing from snippet only.
-     * @description  The url from where the JS SDK will be downloaded. Default 'https://az416426.vo.msecnd.net/scripts/beta/ai.1.js'
+     * @description  The url from where the JS SDK will be downloaded.
      * @type {string}
      * @memberof IConfig
-     * @defaultValue "https://az416426.vo.msecnd.net/scripts/beta/ai.1.js"
      */
     url?: string;
 
@@ -256,7 +262,7 @@ export interface IConfig {
     appId?: string;
 
     /**
-     * @description If true, the SDK will add two headers ('Request-Id' and 'Request-Context') to all CORS requests tocorrelate outgoing AJAX dependencies with corresponding requests on the server side. Default is false
+     * @description If true, the SDK will add two headers ('Request-Id' and 'Request-Context') to all CORS requests to correlate outgoing AJAX dependencies with corresponding requests on the server side. Default is false
      * @type {boolean}
      * @memberof IConfig
      * @defaultValue false
@@ -280,13 +286,43 @@ export interface IConfig {
     enableRequestHeaderTracking?: boolean;
 
     /**
-     * @description An optional value that will track Resonse Header through trackDependency function.
+     * @description An optional value that will track Response Header through trackDependency function.
      * @type {boolean}
      * @memberof IConfig
      * @defaultValue false
      */
     enableResponseHeaderTracking?: boolean;
 
+    /**
+     * @description An optional value that will track Response Error data through trackDependency function.
+     * @type {boolean}
+     * @memberof IConfig
+     * @defaultValue false
+     */
+    enableAjaxErrorStatusText?: boolean;
+
+    /**
+     * Flag to enable looking up and including additional browser window.performance timings
+     * in the reported ajax (XHR and fetch) reported metrics. 
+     * Defaults to false.
+     */
+    enableAjaxPerfTracking?:boolean;
+
+    /**
+     * The maximum number of times to look for the window.performance timings (if available), this 
+     * is required as not all browsers populate the window.performance before reporting the 
+     * end of the XHR request and for fetch requests this is added after its complete
+     * Defaults to 3
+     */
+    maxAjaxPerfLookupAttempts?: number;
+
+    /**
+     * The amount of time to wait before re-attempting to find the windows.performance timings
+     * for an ajax request, time is in milliseconds and is passed directly to setTimeout()
+     * Defaults to 25.
+     */
+    ajaxPerfLookupDelay?: number;
+        
     /**
      * @description Default false. when tab is closed, the SDK will send all remaining telemetry using the [Beacon API](https://www.w3.org/TR/beacon)
      * @type {boolean}
@@ -305,6 +341,23 @@ export interface IConfig {
      */
     autoExceptionInstrumented?: boolean;
     correlationHeaderDomains?: string[]
+
+    /**
+     * @ignore
+     * @description Internal only
+     * @type {boolean}
+     * @memberof IConfig
+     */
+    autoUnhandledPromiseInstrumented?: boolean;
+
+    /**
+     * @description Default false. Define whether to track unhandled promise rejections and report as JS errors. 
+     * When disableExceptionTracking is enabled (dont track exceptions) this value will be false.
+     * @type {boolean}
+     * @memberof IConfig
+     * @defaultValue false
+     */
+    enableUnhandledPromiseRejectionTracking?: boolean;
 }
 
 export class ConfigurationManager {

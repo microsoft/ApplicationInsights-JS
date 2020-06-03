@@ -2,7 +2,7 @@
 import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { IDependencyTelemetry, ContextTagKeys, Util, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders } from '@microsoft/applicationinsights-common';
-import { AppInsightsCore, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, ITelemetryItem, getGlobal } from "@microsoft/applicationinsights-core-js";
 import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
 import { AjaxPlugin } from '@microsoft/applicationinsights-dependencies-js';
 import { EventValidator } from './TelemetryValidation/EventValidator';
@@ -34,6 +34,7 @@ export class ApplicationInsightsTests extends TestClass {
 
     private _ai: ApplicationInsights;
     private _aiName: string = 'AppInsightsSDK';
+    private isFetchPolyfill:boolean = false;
 
     // Sinon
     private errorSpy: SinonSpy;
@@ -51,6 +52,7 @@ export class ApplicationInsightsTests extends TestClass {
 
     public testInitialize() {
         try {
+            this.isFetchPolyfill = fetch["polyfill"];
             this.useFakeServer = false;
             (sinon.fakeServer as any).restore();
             this.useFakeTimers = false;
@@ -84,17 +86,23 @@ export class ApplicationInsightsTests extends TestClass {
             this.errorSpy = this.sandbox.spy(sender, '_onError');
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
             this.loggingSpy = this.sandbox.stub(this._ai['core'].logger, 'throwInternal');
-            this.trackSpy = this.sandbox.spy(this._ai['dependencies'], 'trackDependencyDataInternal')
+            this.trackSpy = this.sandbox.spy(this._ai.appInsights.core, 'track')
             this.sandbox.stub(sender, '_isSampledIn', () => true);
             this.envelopeConstructorSpy = this.sandbox.spy(Sender, 'constructEnvelope');
+            console.log("* testInitialize()");
         } catch (e) {
             console.error('Failed to initialize', e);
         }
     }
 
     public testCleanup() {
+        if (this._ai && this._ai["dependencies"]) {
+            this._ai["dependencies"].teardown();
+        }
+
         this.useFakeServer = true;
         this.useFakeTimers = true;
+        console.log("* testCleanup(" + (TestClass.currentTestInfo ? TestClass.currentTestInfo.name : "<null>") + ")");
     }
 
     public registerTests() {
@@ -114,11 +122,11 @@ export class ApplicationInsightsTests extends TestClass {
                 // Assert.deepEqual(this._ai, window[this._aiName], `AI is available from window.${this._aiName}`);
 
                 Assert.ok(this._ai.appInsights, 'App Analytics exists');
-                Assert.equal(true, this._ai.appInsights['_isInitialized'], 'App Analytics is initialized');
+                Assert.equal(true, this._ai.appInsights.isInitialized(), 'App Analytics is initialized');
 
 
                 Assert.ok(this._ai.appInsights.core, 'Core exists');
-                Assert.equal(true, this._ai.appInsights.core['_isInitialized'],
+                Assert.equal(true, this._ai.appInsights.core.isInitialized(),
                     'Core is initialized');
             }
         });
@@ -144,8 +152,8 @@ export class ApplicationInsightsTests extends TestClass {
                 this._ai.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
             }].concat(this.asserts(1)).concat(() => {
 
-                if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                if (payloadStr.length > 0) {
                     const payload = JSON.parse(payloadStr[0]);
                     const data = payload.data;
                     Assert.ok(data && data.baseData && data.baseData.properties["prop1"]);
@@ -160,7 +168,7 @@ export class ApplicationInsightsTests extends TestClass {
             steps: [() => {
                 this._ai.trackTrace({ message: 'trace', properties: { "foo": "bar", "prop2": "value2" } });
             }].concat(this.asserts(1)).concat(() => {
-                const payloadStr: string[] = this.successSpy.args[0][0];
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                 const payload = JSON.parse(payloadStr[0]);
                 const data = payload.data;
                 Assert.ok(data && data.baseData &&
@@ -223,10 +231,12 @@ export class ApplicationInsightsTests extends TestClass {
                 () => {
                     this._ai.trackPageView(); // sends 2
                 }
-            ].concat(this.asserts(2)).concat(() => {
+            ]
+            .concat(this.asserts(2))
+            .concat(() => {
 
-                if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                if (payloadStr.length > 0) {
                     const payload = JSON.parse(payloadStr[0]);
                     const data = payload.data;
                     Assert.ok(data.baseData.id, "pageView id is defined");
@@ -293,7 +303,7 @@ export class ApplicationInsightsTests extends TestClass {
                         this._ai.trackPageView({ name: `${i}` }); // sends 2 1st time
                     }
                 }
-            ].concat(this.asserts(401))
+            ].concat(this.asserts(401, false))
         });
 
         this.testCaseAsync({
@@ -316,9 +326,10 @@ export class ApplicationInsightsTests extends TestClass {
             ]
                 .concat(this.asserts(1))
                 .concat(() => {
-                    if (this.successSpy.called) {
-                        const payloadStr: string[] = this.successSpy.args[0][0];
-                        Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        let payloadItems = payloadStr.length;
+                        Assert.equal(1, payloadItems, 'Only 1 track item is sent');
                         const payload = JSON.parse(payloadStr[0]);
                         Assert.ok(payload);
 
@@ -333,24 +344,6 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public addDependencyPluginTests(): void {
-
-        this.testCase({
-            name: "DependenciesPlugin: initialization yields a defined _context value",
-            test: () => {
-                const extensions = (this._ai.core as AppInsightsCore)._extensions;
-                let ajax: AjaxPlugin, extIx=0;
-                while (!ajax && extIx < extensions.length) {
-                    if (extensions[extIx].identifier === AjaxPlugin.identifier) {
-                        ajax = extensions[extIx] as AjaxPlugin;
-                    }
-                    extIx++;
-                }
-
-                Assert.ok(ajax);
-                Assert.equal(AjaxPlugin.identifier, ajax.identifier);
-                Assert.ok(ajax["_context"]);
-            }
-        })
 
         this.testCaseAsync({
             name: "TelemetryContext: trackDependencyData",
@@ -380,9 +373,10 @@ export class ApplicationInsightsTests extends TestClass {
                 }
             ].concat(this.asserts(1))
         });
-        if (window && window.fetch) {
+        let global = getGlobal();
+        if (global && global.fetch) {
             this.testCaseAsync({
-                name: "DependenciesPlugin: auto collection of outgoing fetch requests",
+                name: "DependenciesPlugin: auto collection of outgoing fetch requests " + (this.isFetchPolyfill ? " using polyfill " : ""),
                 stepDelay: 5000,
                 steps: [
                     () => {
@@ -398,16 +392,39 @@ export class ApplicationInsightsTests extends TestClass {
                         Assert.ok(true, "fetch monitoring is instrumented");
                     }
                 ]
-                    .concat(this.asserts(3))
+                    .concat(this.asserts(3, false, false))
                     .concat(() => {
-                        Assert.ok(this.trackSpy.calledThrice, "trackDependencyDataInternal is called");
-                        Assert.equal("Fetch", this.trackSpy.args[0][0].type, "request is Fetch type");
-                        Assert.equal('value', this.trackSpy.args[0][0].properties.requestHeaders['header'], "fetch request's user defined request header is stored");
-                        Assert.ok(this.trackSpy.args[0][0].properties.responseHeaders, "fetch request's reponse header is stored");
-                        Assert.equal(3, Object.keys(this.trackSpy.args[1][0].properties.requestHeaders).length, "two request headers set up when there's no user defined request header");
-                        Assert.ok(this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
-                        Assert.ok(this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
-                        Assert.ok(this.trackSpy.args[1][0].properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparent");
+                        let args = [];
+                        this.trackSpy.args.forEach(call => {
+                            let message = call[0].baseData.message||"";
+                            // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                            if (message.indexOf("AI (Internal): 72 ") == -1) {
+                                args.push(call[0]);
+                            }
+                        });
+                        
+                        let type = "Fetch";
+                        if (this.isFetchPolyfill) {
+                            type = "Ajax";
+                            Assert.ok(true, "Using fetch polyfill");
+                        }
+                        
+                        Assert.equal(3, args.length, "track is called 3 times");
+                        let baseData = args[0].baseData;
+                        Assert.equal(type, baseData.type, "request is " + type + " type");
+                        Assert.equal('value', baseData.properties.requestHeaders['header'], "fetch request's user defined request header is stored");
+                        Assert.ok(baseData.properties.responseHeaders, "fetch request's reponse header is stored");
+
+                        baseData = args[1].baseData;
+                        Assert.equal(3, Object.keys(baseData.properties.requestHeaders).length, "two request headers set up when there's no user defined request header");
+                        Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestIdHeader], "Request-Id header");
+                        Assert.ok(baseData.properties.requestHeaders[RequestHeaders.requestContextHeader], "Request-Context header");
+                        Assert.ok(baseData.properties.requestHeaders[RequestHeaders.traceParentHeader], "traceparent");
+                        const id: string = baseData.id;
+                        const regex = id.match(/\|.{32}\..{16}\./g);
+                        Assert.ok(id.length > 0);
+                        Assert.equal(1, regex.length)
+                        Assert.equal(id, regex[0]);
                     })
             });
         } else {
@@ -429,17 +446,17 @@ export class ApplicationInsightsTests extends TestClass {
                     this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
                         item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
                     });
-                    this._ai.trackEvent({ name: "Custom event" });
+                    this._ai.trackEvent({ name: "Custom event via addTelemetryInitializer" });
                 }
             ]
-            .concat(this.asserts(1))
+            .concat(this.asserts(1, false, false))
             .concat(PollingAssert.createPollingAssert(() => {
-                if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
-                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                if (payloadStr.length) {
                     const payload = JSON.parse(payloadStr[0]);
-                    Assert.ok(payload);
-
+                        Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
+                        Assert.ok(payload);
+    
                     if (payload && payload.tags) {
                         const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
                         const tagExpect: string = 'my.custom.cloud.name';
@@ -464,8 +481,8 @@ export class ApplicationInsightsTests extends TestClass {
             ]
             .concat(this.asserts(1))
             .concat(PollingAssert.createPollingAssert(() => {
-                if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                if (payloadStr.length > 0) {
                     Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
                     const payload = JSON.parse(payloadStr[0]);
                     Assert.ok(payload);
@@ -492,15 +509,18 @@ export class ApplicationInsightsTests extends TestClass {
                         item.tags.push({[this.tagKeys.locationCountry]: "my.custom.location.country"});
                         item.tags.push({[this.tagKeys.operationId]: "my.custom.operation.id"});
                     });
-                    this._ai.trackEvent({ name: "Custom event" });
+                    this._ai.trackEvent({ name: "Custom event via shimmed addTelemetryInitializer" });
                 }
             ]
             .concat(this.asserts(1))
             .concat(PollingAssert.createPollingAssert(() => {
-                if (this.successSpy.called) {
-                    const payloadStr: string[] = this.successSpy.args[0][0];
-                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent');
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                if (payloadStr.length > 0) {
                     const payload = JSON.parse(payloadStr[0]);
+                    Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
+                    if (payloadStr.length > 1) {
+                        this.dumpPayloadMessages(this.successSpy);
+                    }
                     Assert.ok(payload);
 
                     if (payload && payload.tags) {
@@ -535,13 +555,16 @@ export class ApplicationInsightsTests extends TestClass {
             ]
                 .concat(this.asserts(1))
                 .concat(PollingAssert.createPollingAssert(() => {
-                    if (this.successSpy.called) {
-                        const payloadStr: string[] = this.successSpy.args[0][0];
-                        if (payloadStr.length !== 1) {
+                    let payloadStr = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
+                        let payloadEvents = payloadStr.length;
+                        let thePayload:string = payloadStr[0];
+            
+                        if (payloadEvents !== 1) {
                             // Only 1 track should be sent
                             return false;
                         }
-                        const payload = JSON.parse(payloadStr[0]);
+                        const payload = JSON.parse(thePayload);
                         if (payload && payload.tags) {
                             const tagName: string = this.tagKeys.userAuthUserId;
                             return '10001' === payload.tags[tagName];
@@ -563,8 +586,8 @@ export class ApplicationInsightsTests extends TestClass {
             ]
                 .concat(this.asserts(1))
                 .concat(PollingAssert.createPollingAssert(() => {
-                    if (this.successSpy.called) {
-                        const payloadStr: string[] = this.successSpy.args[0][0];
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
                         if (payloadStr.length !== 1) {
                             // Only 1 track should be sent
                             return false;
@@ -593,8 +616,8 @@ export class ApplicationInsightsTests extends TestClass {
             ]
                 .concat(this.asserts(1))
                 .concat(PollingAssert.createPollingAssert(() => {
-                    if (this.successSpy.called) {
-                        const payloadStr: string[] = this.successSpy.args[0][0];
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
                         if (payloadStr.length !== 1) {
                             // Only 1 track should be sent
                             return false;
@@ -624,8 +647,8 @@ export class ApplicationInsightsTests extends TestClass {
             ]
                 .concat(this.asserts(1))
                 .concat(PollingAssert.createPollingAssert(() => {
-                    if (this.successSpy.called) {
-                        const payloadStr: string[] = this.successSpy.args[0][0];
+                    const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                    if (payloadStr.length > 0) {
                         if (payloadStr.length !== 1) {
                             // Only 1 track should be sent
                             return false;
@@ -683,55 +706,61 @@ export class ApplicationInsightsTests extends TestClass {
             }
         }
     }
-    private asserts: any = (expectedCount: number) => [() => {
-        const message = "polling: " + new Date().toISOString();
-        Assert.ok(true, message);
-        console.log(message);
+    private asserts: any = (expectedCount: number, includeInit:boolean = false, doBoilerPlate:boolean = true) => [
+        () => {
+            const message = "polling: " + new Date().toISOString();
+            Assert.ok(true, message);
+            console.log(message);
 
-        if (this.successSpy.called) {
-            this.boilerPlateAsserts();
-            this.testCleanup();
-        } else if (this.errorSpy.called || this.loggingSpy.called) {
-            this.boilerPlateAsserts();
-        }
-    },
-    (PollingAssert.createPollingAssert(() => {
-        Assert.ok(true, "* checking success spy " + new Date().toISOString());
-
-        if (this.successSpy.called) {
-            let currentCount: number = 0;
-            this.successSpy.args.forEach(call => {
-                currentCount += call[1];
-            });
-            console.log('curr: ' + currentCount + ' exp: ' + expectedCount, ' appId: ' + this._ai.context.appId());
-            if (currentCount === expectedCount && !!this._ai.context.appId()) {
-                const payloadStr: string[] = this.successSpy.args[0][0];
-                const payload = JSON.parse(payloadStr[0]);
-                const baseType = payload.data.baseType;
-                // call the appropriate Validate depending on the baseType
-                switch (baseType) {
-                    case Event.dataType:
-                        return EventValidator.EventValidator.Validate(payload, baseType);
-                    case Trace.dataType:
-                        return TraceValidator.TraceValidator.Validate(payload, baseType);
-                    case Exception.dataType:
-                        return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
-                    case Metric.dataType:
-                        return MetricValidator.MetricValidator.Validate(payload, baseType);
-                    case PageView.dataType:
-                        return PageViewValidator.PageViewValidator.Validate(payload, baseType);
-                    case PageViewPerformance.dataType:
-                        return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
-                    case RemoteDependencyData.dataType:
-                        return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
-
-                    default:
-                        return EventValidator.EventValidator.Validate(payload, baseType);
+            if (doBoilerPlate) {
+                if (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called) {
+                    this.boilerPlateAsserts();
                 }
             }
+        },
+        (PollingAssert.createPollingAssert(() => {
+            let argCount = 0;
+            if (this.successSpy.called && this.successSpy.args && this.successSpy.args.length > 0) {
+                this.successSpy.args.forEach(call => {
+                    argCount += call[0].length;
+                });
+            }
+    
+            Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking success spy " + new Date().toISOString());
+
+            if (argCount >= expectedCount) {
+                let payloadStr = this.getPayloadMessages(this.successSpy, includeInit);
+                if (payloadStr.length > 0) {
+                    let currentCount: number = payloadStr.length;
+                    console.log('curr: ' + currentCount + ' exp: ' + expectedCount, ' appId: ' + this._ai.context.appId());
+                    if (currentCount === expectedCount && !!this._ai.context.appId()) {
+                        const payload = JSON.parse(payloadStr[0]);
+                        const baseType = payload.data.baseType;
+                        // call the appropriate Validate depending on the baseType
+                        switch (baseType) {
+                            case Event.dataType:
+                                return EventValidator.EventValidator.Validate(payload, baseType);
+                            case Trace.dataType:
+                                return TraceValidator.TraceValidator.Validate(payload, baseType);
+                            case Exception.dataType:
+                                return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
+                            case Metric.dataType:
+                                return MetricValidator.MetricValidator.Validate(payload, baseType);
+                            case PageView.dataType:
+                                return PageViewValidator.PageViewValidator.Validate(payload, baseType);
+                            case PageViewPerformance.dataType:
+                                return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
+                            case RemoteDependencyData.dataType:
+                                return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
+
+                            default:
+                                return EventValidator.EventValidator.Validate(payload, baseType);
+                        }
+                    }
+                }
+            }
+            
             return false;
-        } else {
-            return false;
-        }
-    }, "sender succeeded", 60, 1000))];
+        }, "sender succeeded", 60, 1000))
+    ];
 }

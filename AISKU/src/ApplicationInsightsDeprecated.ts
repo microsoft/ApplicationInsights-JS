@@ -42,6 +42,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
             "*.blob.core.cloudapi.de",
             "*.blob.core.usgovcloudapi.net"];
         config.disableFlushOnBeforeUnload = Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
+        config.disableFlushOnUnload = Util.stringToBoolOrDefault(config.disableFlushOnUnload, config.disableFlushOnBeforeUnload);
         config.enableSessionStorageBuffer = Util.stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
         config.isRetryDisabled = Util.stringToBoolOrDefault(config.isRetryDisabled);
         config.isCookieUseDisabled = Util.stringToBoolOrDefault(config.isCookieUseDisabled);
@@ -59,7 +60,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     queue: Array<() => void>;
     private appInsightsNew: ApplicationInsights;
     private _hasLegacyInitializers = false;
-    private _queue = [];
+    private _queue: Array<((env: IEnvelope) => boolean | void)> = [];
 
     constructor(snippet: Snippet, appInsightsNew: ApplicationInsights) {
         this.config = AppInsightsDeprecated.getDefaultConfig(snippet.config);
@@ -236,7 +237,7 @@ export interface IAppInsightsDeprecated {
     * This method doesn't send any telemetry. Call `stopTrackPage` to log the page when it closes.
     * @param   name  A string that idenfities this item, unique within this HTML document. Defaults to the document title.
     */
-    startTrackPage(name?: string);
+    startTrackPage(name?: string): void;
 
    /**
     * Logs how long a page or other item was visible, after `startTrackPage`. Call this when the page closes.
@@ -246,7 +247,7 @@ export interface IAppInsightsDeprecated {
     * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
     * @deprecated API is deprecated; supported only if input configuration specifies deprecated=true
     */
-    stopTrackPage(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
+    stopTrackPage(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }): void;
 
     /**
      * Logs that a page or other item was viewed.
@@ -256,13 +257,13 @@ export interface IAppInsightsDeprecated {
      * @param   measurements    map[string, number] - metrics associated with this page, displayed in Metrics Explorer on the portal. Defaults to empty.
      * @param   duration    number - the number of milliseconds it took to load the page. Defaults to undefined. If set to default value, page load time is calculated internally.
      */
-    trackPageView(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, duration?: number);
+    trackPageView(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, duration?: number): void;
 
     /**
      * Start timing an extended event. Call `stopTrackEvent` to log the event when it ends.
      * @param   name    A string that identifies this event uniquely within the document.
      */
-    startTrackEvent(name: string);
+    startTrackEvent(name: string): void;
 
 
     /**
@@ -271,7 +272,7 @@ export interface IAppInsightsDeprecated {
      * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
      * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
      */
-    stopTrackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
+    stopTrackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }): void;
 
    /**
     * Log a user action or other occurrence.
@@ -279,7 +280,7 @@ export interface IAppInsightsDeprecated {
     * @param   properties  map[string, string] - additional data used to filter events and metrics in the portal. Defaults to empty.
     * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
     */
-    trackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; });
+    trackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }): void;
 
     /**
      * Log a dependency call
@@ -291,7 +292,7 @@ export interface IAppInsightsDeprecated {
      * @param success   indicates if the request was sessessful
      * @param resultCode    response code returned by the dependency request
      */
-    trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number);
+    trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number): void;
 
     /**
      * Log an exception you have caught.
@@ -301,7 +302,7 @@ export interface IAppInsightsDeprecated {
      * @param   measurements    map[string, number] - metrics associated with this event, displayed in Metrics Explorer on the portal. Defaults to empty.
      * @param   severityLevel   SeverityLevel - severity level
      */
-    trackException(exception: Error, handledAt?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, severityLevel?: SeverityLevel);
+    trackException(exception: Error, handledAt?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, severityLevel?: SeverityLevel): void;
 
     /**
      * Log a numeric value that is not associated with a specific event. Typically used to send regular reports of performance indicators.
@@ -313,7 +314,7 @@ export interface IAppInsightsDeprecated {
      * @param   min The smallest measurement in the sample. Defaults to the average.
      * @param   max The largest measurement in the sample. Defaults to the average.
      */
-    trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: { [name: string]: string; });
+    trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: { [name: string]: string; }): void;
 
    /**
     * Log a diagnostic message.
@@ -321,14 +322,14 @@ export interface IAppInsightsDeprecated {
     * @param   properties  map[string, string] - additional data used to filter traces in the portal. Defaults to empty.
     * @param   severityLevel   SeverityLevel - severity level
     */
-    trackTrace(message: string, properties?: { [name: string]: string; }, severityLevel?: SeverityLevel);
+    trackTrace(message: string, properties?: { [name: string]: string; }, severityLevel?: SeverityLevel): void;
 
 
     /**
      * Immediately send all queued telemetry.
      * @param {boolean} async - If flush should be call asynchronously
      */
-    flush(async?: boolean);
+    flush(async?: boolean): void;
 
 
    /**
@@ -338,13 +339,13 @@ export interface IAppInsightsDeprecated {
     * @param authenticatedUserId {string} - The authenticated user id. A unique and persistent string that represents each authenticated user in the service.
     * @param accountId {string} - An optional string to represent the account associated with the authenticated user.
     */
-    setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean);
+    setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean): void;
 
 
     /**
      * Clears the authenticated user id and the account id from the user context.
      */
-    clearAuthenticatedUserContext();
+    clearAuthenticatedUserContext(): void;
 
     /*
     * Downloads and initializes AppInsights. You can override default script download location by specifying url property of `config`.
@@ -359,7 +360,7 @@ export interface IAppInsightsDeprecated {
      * @param {number} columnNumber - The column number for the line where the error was raised
      * @param {Error}  error - The Error object
      */
-    _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error);
+    _onerror(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): void;
 }
 
 export interface ITelemetryContext {
@@ -369,5 +370,5 @@ export interface ITelemetryContext {
     * in the order they were added, before the telemetry item is pushed for sending.
     * If one of the telemetry initializers returns false or throws an error then the telemetry item will not be sent.
     */
-   addTelemetryInitializer(telemetryInitializer: (envelope: IEnvelope) => boolean | void);
+   addTelemetryInitializer(telemetryInitializer: (envelope: IEnvelope) => boolean | void): void;
 }

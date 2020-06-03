@@ -9,7 +9,8 @@
     "experimentalDecorators": true,
     "module": "esnext",
     "moduleResolution": "node",
-    "importHelpers": true,
+    "importHelpers": false,
+    "noEmitHelpers": false,
     "target": "es2015",
     "typeRoots": [
       "node_modules/@types"

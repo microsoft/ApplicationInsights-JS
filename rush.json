@@ -7,6 +7,16 @@
   "projectFolderMaxDepth": 4,
   "projects": [
     {
+      "packageName": "@microsoft/applicationinsights-rollup-es3",
+      "projectFolder": "tools/rollup-es3",
+      "shouldPublish": true
+    },
+    {
+      "packageName": "@microsoft/applicationinsights-shims",
+      "projectFolder": "tools/shims",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@microsoft/applicationinsights-core-js",
       "projectFolder": "shared/AppInsightsCore",
       "shouldPublish": true
@@ -44,11 +54,6 @@
     {
       "packageName": "@microsoft/applicationinsights-web-basic",
       "projectFolder": "AISKULight",
-      "shouldPublish": true
-    },
-    {
-      "packageName": "@microsoft/applicationinsights-react-js",
-      "projectFolder": "extensions/applicationinsights-react-js",
       "shouldPublish": true
     }
   ]

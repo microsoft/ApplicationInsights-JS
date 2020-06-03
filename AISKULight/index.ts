@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import '@microsoft/applicationinsights-shims';
 import {
     IConfiguration,
     AppInsightsCore,
     IAppInsightsCore,
     _InternalMessageId,
     CoreUtils,
-    ITelemetryItem
+    ITelemetryItem,
+    SendRequestReason
 } from "@microsoft/applicationinsights-core-js";
 import { IConfig } from "@microsoft/applicationinsights-common";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -82,7 +84,7 @@ export class ApplicationInsights {
             CoreUtils.arrForEach(controls, plugin => {
                 async
                     ? (plugin as Sender).flush()
-                    : (plugin as Sender).triggerSend(async);
+                    : (plugin as Sender).triggerSend(async, null, SendRequestReason.ManualFlush);
             });
         });
     }

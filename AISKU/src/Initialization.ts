@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CoreUtils, IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, IChannelControls } from "@microsoft/applicationinsights-core-js";
+import { CoreUtils, IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, IChannelControls, EventHelper, hasWindow, hasDocument } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
-import { Util, IConfig, IDependencyTelemetry, IPageViewPerformanceTelemetry,IPropertiesPlugin,
-        IPageViewTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry, ITraceTelemetry, ITelemetryContext,
-        IMetricTelemetry, IEventTelemetry, IAppInsights, PropertiesPluginIdentifier, ConnectionStringParser } from "@microsoft/applicationinsights-common";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { PropertiesPlugin, TelemetryContext } from "@microsoft/applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
+import * as Common from "@microsoft/applicationinsights-common"
 
 "use strict";
+
+let _internalSdkSrc: string;
 
 /**
  *
@@ -18,16 +18,22 @@ import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsof
  * @interface Snippet
  */
 export interface Snippet {
-    config: IConfiguration & IConfig;
+    config: IConfiguration & Common.IConfig;
     queue?: Array<() => void>;
+    sv?: string;
     version?: number;
 }
 
-export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
+export interface IApplicationInsights extends Common.IAppInsights, IDependenciesPlugin, Common.IPropertiesPlugin {
     appInsights: ApplicationInsights;
     flush: (async?: boolean) => void;
     onunloadFlush: (async?: boolean) => void;
 };
+
+/**
+ * Telemetry type classes, e.g. PageView, Exception, etc
+ */
+export const Telemetry = Common;
 
 /**
  * Application Insights API
@@ -36,36 +42,39 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
  */
 export class Initialization implements IApplicationInsights {
     public snippet: Snippet;
-    public config: IConfiguration & IConfig;
+    public config: IConfiguration & Common.IConfig;
     public appInsights: ApplicationInsights;
     public core: IAppInsightsCore;
     public context: TelemetryContext;
 
     private dependencies: DependenciesPlugin;
     private properties: PropertiesPlugin;
+    private _snippetVersion: string;
 
     constructor(snippet: Snippet) {
+        let _this = this;
         // initialize the queue and config in case they are undefined
+        _this._snippetVersion = "" + (snippet.sv || snippet.version || "");
         snippet.queue = snippet.queue || [];
         snippet.version = snippet.version || 2.0; // Default to new version
-        let config: IConfiguration & IConfig = snippet.config || ({} as any);
+        let config: IConfiguration & Common.IConfig = snippet.config || ({} as any);
 
         if (config.connectionString) {
-            const cs = ConnectionStringParser.parse(config.connectionString);
+            const cs = Common.ConnectionStringParser.parse(config.connectionString);
             const ingest = cs.ingestionendpoint;
             config.endpointUrl = ingest ? `${ingest}/v2/track` : config.endpointUrl; // only add /v2/track when from connectionstring
             config.instrumentationKey = cs.instrumentationkey || config.instrumentationKey;
         }
 
-        this.appInsights = new ApplicationInsights();
+        _this.appInsights = new ApplicationInsights();
 
-        this.properties = new PropertiesPlugin();
-        this.dependencies = new DependenciesPlugin();
-        this.core = new AppInsightsCore();
+        _this.properties = new PropertiesPlugin();
+        _this.dependencies = new DependenciesPlugin();
+        _this.core = new AppInsightsCore();
 
-        this.snippet = snippet;
-        this.config = config;
-        this.getSKUDefaults();
+        _this.snippet = snippet;
+        _this.config = config;
+        _this.getSKUDefaults();
     }
 
     // Analytics Plugin
@@ -75,7 +84,7 @@ export class Initialization implements IApplicationInsights {
      * @param {ICustomProperties} [customProperties]
      * @memberof Initialization
      */
-    public trackEvent(event: IEventTelemetry, customProperties?: ICustomProperties) {
+    public trackEvent(event: Common.IEventTelemetry, customProperties?: ICustomProperties) {
         this.appInsights.trackEvent(event, customProperties);
     }
 
@@ -84,7 +93,7 @@ export class Initialization implements IApplicationInsights {
      * @param {IPageViewTelemetry} pageView
      * @memberof Initialization
      */
-    public trackPageView(pageView?: IPageViewTelemetry) {
+    public trackPageView(pageView?: Common.IPageViewTelemetry) {
         const inPv = pageView || {};
         this.appInsights.trackPageView(inPv);
     }
@@ -94,7 +103,7 @@ export class Initialization implements IApplicationInsights {
      * @param {IPageViewPerformanceTelemetry} pageViewPerformance
      * @memberof Initialization
      */
-    public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry): void {
+    public trackPageViewPerformance(pageViewPerformance: Common.IPageViewPerformanceTelemetry): void {
         const inPvp = pageViewPerformance || {};
         this.appInsights.trackPageViewPerformance(inPvp);
     }
@@ -104,7 +113,7 @@ export class Initialization implements IApplicationInsights {
      * @param {IExceptionTelemetry} exception
      * @memberof Initialization
      */
-    public trackException(exception: IExceptionTelemetry): void {
+    public trackException(exception: Common.IExceptionTelemetry): void {
         if (!exception.exception && (exception as any).error) {
             exception.exception = (exception as any).error;
         }
@@ -117,7 +126,7 @@ export class Initialization implements IApplicationInsights {
      * @param {IAutoExceptionTelemetry} exception
      * @memberof Initialization
      */
-    public _onerror(exception: IAutoExceptionTelemetry): void {
+    public _onerror(exception: Common.IAutoExceptionTelemetry): void {
         this.appInsights._onerror(exception);
     }
 
@@ -127,7 +136,7 @@ export class Initialization implements IApplicationInsights {
      * @param {ICustomProperties} [customProperties]
      * @memberof Initialization
      */
-    public trackTrace(trace: ITraceTelemetry, customProperties?: ICustomProperties): void {
+    public trackTrace(trace: Common.ITraceTelemetry, customProperties?: ICustomProperties): void {
         this.appInsights.trackTrace(trace, customProperties);
     }
 
@@ -145,7 +154,7 @@ export class Initialization implements IApplicationInsights {
      * @param {ICustomProperties} [customProperties]
      * @memberof Initialization
      */
-    public trackMetric(metric: IMetricTelemetry, customProperties?: ICustomProperties): void {
+    public trackMetric(metric: Common.IMetricTelemetry, customProperties?: ICustomProperties): void {
         this.appInsights.trackMetric(metric, customProperties);
     }
     /**
@@ -193,7 +202,7 @@ export class Initialization implements IApplicationInsights {
     /**
      * Set the authenticated user id and the account id. Used for identifying a specific signed-in user. Parameters must not contain whitespace or ,;=|
      *
-     * The method will only set the `authenicatedUserId` and `accountId` in the curent page view. To set them for the whole sesion, you should set `storeInCookie = true`
+     * The method will only set the `authenticatedUserId` and `accountId` in the current page view. To set them for the whole session, you should set `storeInCookie = true`
      * @param {string} authenticatedUserId
      * @param {string} [accountId]
      * @param {boolean} [storeInCookie=false]
@@ -218,7 +227,7 @@ export class Initialization implements IApplicationInsights {
      * @param {IDependencyTelemetry} dependency
      * @memberof Initialization
      */
-    public trackDependencyData(dependency: IDependencyTelemetry): void {
+    public trackDependencyData(dependency: Common.IDependencyTelemetry): void {
         this.dependencies.trackDependencyData(dependency);
     }
 
@@ -261,9 +270,32 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public loadAppInsights(legacyMode: boolean = false): IApplicationInsights {
+        let _this = this;
 
+        function _updateSnippetProperties(snippet: Snippet) {
+            if (snippet) {
+                let snippetVer = "";
+                if (!CoreUtils.isNullOrUndefined(_this._snippetVersion)) {
+                    snippetVer += _this._snippetVersion;
+                }
+                if (legacyMode) {
+                    snippetVer += ".lg";
+                }
+                _this.properties.context.internal.snippetVer = snippetVer || "-";
+
+                // apply updated properties to the global instance (snippet)
+                for (const field in _this) {
+                    if (CoreUtils.isString(field) && 
+                            !CoreUtils.isFunction(_this[field]) && 
+                            field.substring(0, 1) !== "_") {            // Don't copy "internal" values
+                        snippet[field as string] = _this[field];
+                    }
+                }
+            }
+        }
+        
         // dont allow additional channels/other extensions for legacy mode; legacy mode is only to allow users to switch with no code changes!
-        if (legacyMode && this.config.extensions && this.config.extensions.length > 0) {
+        if (legacyMode && _this.config.extensions && _this.config.extensions.length > 0) {
             throw new Error("Extensions not allowed in legacy mode");
         }
 
@@ -271,20 +303,24 @@ export class Initialization implements IApplicationInsights {
         const appInsightsChannel: Sender = new Sender();
 
         extensions.push(appInsightsChannel);
-        extensions.push(this.properties);
-        extensions.push(this.dependencies);
-        extensions.push(this.appInsights);
+        extensions.push(_this.properties);
+        extensions.push(_this.dependencies);
+        extensions.push(_this.appInsights);
 
         // initialize core
-        this.core.initialize(this.config, extensions);
+        _this.core.initialize(_this.config, extensions);
+        _this.context = _this.properties.context;
+        if (_internalSdkSrc) {
+            _this.context.internal.sdkSrc = _internalSdkSrc;
+        }
+        _updateSnippetProperties(_this.snippet);
 
         // Empty queue of all api calls logged prior to sdk download
-        this.emptyQueue();
-        this.pollInternalLogs();
-        this.addHousekeepingBeforeUnload(this);
-        this.context = this.properties.context;
+        _this.emptyQueue();
+        _this.pollInternalLogs();
+        _this.addHousekeepingBeforeUnload(this);
 
-        return this;
+        return _this;
     }
 
     /**
@@ -297,11 +333,10 @@ export class Initialization implements IApplicationInsights {
         // apply full appInsights to the global instance
         // Note: This must be called before loadAppInsights is called
         for (const field in this) {
-            if (typeof field === 'string') {
+            if (CoreUtils.isString(field)) {
                 snippet[field as string] = this[field];
             }
         }
-
     }
 
     /**
@@ -309,23 +344,24 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public emptyQueue() {
+        let _this = this;
 
         // call functions that were queued before the main script was loaded
         try {
-            if (Util.isArray(this.snippet.queue)) {
+            if (Common.Util.isArray(_this.snippet.queue)) {
                 // note: do not check length in the for-loop conditional in case something goes wrong and the stub methods are not overridden.
-                const length = this.snippet.queue.length;
+                const length = _this.snippet.queue.length;
                 for (let i = 0; i < length; i++) {
-                    const call = this.snippet.queue[i];
+                    const call = _this.snippet.queue[i];
                     call();
                 }
 
-                this.snippet.queue = undefined;
-                delete this.snippet.queue;
+                _this.snippet.queue = undefined;
+                delete _this.snippet.queue;
             }
         } catch (exception) {
             const properties: any = {};
-            if (exception && typeof exception.toString === "function") {
+            if (exception && CoreUtils.isFunction(exception.toString)) {
                 properties.exception = exception.toString();
             }
 
@@ -345,10 +381,10 @@ export class Initialization implements IApplicationInsights {
     public addHousekeepingBeforeUnload(appInsightsInstance: IApplicationInsights): void {
         // Add callback to push events when the user navigates away
 
-        if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload && typeof window === "object" && ('onbeforeunload' in window)) {
+        if (hasWindow() || hasDocument()) {
             const performHousekeeping = () => {
                 // Adds the ability to flush all data before the page unloads.
-                // Note: This approach tries to push an async request with all the pending events onbeforeunload.
+                // Note: This approach tries to push a sync request with all the pending events onbeforeunload.
                 // Firefox does not respect this.Other browsers DO push out the call with < 100% hit rate.
                 // Telemetry here will help us analyze how effective this approach is.
                 // Another approach would be to make this call sync with a acceptable timeout to reduce the
@@ -359,23 +395,86 @@ export class Initialization implements IApplicationInsights {
 
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
-                const ext = appInsightsInstance.appInsights.core['_extensions'][PropertiesPluginIdentifier];
+                const ext = appInsightsInstance.appInsights.core['_extensions'][Common.PropertiesPluginIdentifier];
                 if (ext && ext.context && ext.context._sessionManager) {
                     ext.context._sessionManager.backup();
                 }
             };
 
-            if (!Util.addEventHandler('beforeunload', performHousekeeping)) {
-                appInsightsInstance.appInsights.core.logger.throwInternal(
-                    LoggingSeverity.CRITICAL,
-                    _InternalMessageId.FailedToAddHandlerForOnBeforeUnload,
-                    'Could not add handler for beforeunload');
+            if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload) {
+                // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
+                // As just hooking the window does not always fire (on chrome) for page navigations.
+                let added = CoreUtils.addEventHandler('beforeunload', performHousekeeping);
+                added = CoreUtils.addEventHandler('pagehide', performHousekeeping) || added;
+                if (!added) {
+                    appInsightsInstance.appInsights.core.logger.throwInternal(
+                        LoggingSeverity.CRITICAL,
+                        _InternalMessageId.FailedToAddHandlerForOnBeforeUnload,
+                        'Could not add handler for beforeunload and pagehide');
+                }
+            }
+
+            // We also need to hook the pagehide event as not all versions of Safari support load/unload events.
+            if (!appInsightsInstance.appInsights.config.disableFlushOnUnload) {
+                // Not adding any telemetry as pagehide as it's not supported on all browsers
+                CoreUtils.addEventHandler('pagehide', performHousekeeping);
             }
         }
     }
 
     private getSKUDefaults() {
-        this.config.diagnosticLogInterval =
-            this.config.diagnosticLogInterval && this.config.diagnosticLogInterval > 0 ? this.config.diagnosticLogInterval : 10000;
+        let _this = this;
+        _this.config.diagnosticLogInterval =
+        _this.config.diagnosticLogInterval && _this.config.diagnosticLogInterval > 0 ? _this.config.diagnosticLogInterval : 10000;
     }
 }
+
+// tslint:disable-next-line
+(function () {
+    let sdkSrc = null;
+    let isModule = false;
+    let cdns: string[] = [
+        "://az416426.vo.msecnd.net/"
+    ];
+
+    try {
+        // Try and determine whether the sdk is being loaded from the CDN
+        // currentScript is only valid during initial processing
+        let scrpt = (document ||{} as any).currentScript;
+        if (scrpt) {
+            sdkSrc = scrpt.src;
+        // } else {
+        //     // We need to update to at least typescript 2.9 for this to work :-(
+        //     // Leaving as a stub for now so after we upgrade this breadcrumb is available
+        //     let meta = import.meta;
+        //     sdkSrc = (meta || {}).url;
+        //     isModule = true;
+        }
+    } catch (e) {
+    }
+
+    if (sdkSrc) {
+        try {
+            let url = sdkSrc.toLowerCase();
+            if (url) {
+                let src = "";
+                for (let idx = 0; idx < cdns.length; idx++) {
+                    if (url.indexof(cdns[idx]) !== -1) {
+                        src = "cdn" + (idx + 1);
+                        if (url.indexOf("/scripts/") === -1) {
+                            if (url.indexOf("/next/") !== -1) {
+                                src += "-next";
+                            } else if (url.indexOf("/beta/") !== -1) {
+                                src += "-beta";
+                            }
+                        }
+
+                        _internalSdkSrc = src + (isModule ? ".mod" : "");
+                        break;
+                    }
+                }
+            }
+        } catch (e) {
+        }
+    }
+})();

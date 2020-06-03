@@ -3,7 +3,7 @@ import { Sender } from "../src/Sender";
 import { Offline } from '../src/Offline';
 import { EnvelopeCreator } from '../src/EnvelopeCreator';
 import { Exception, CtxTagKeys, Util } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason } from "@microsoft/applicationinsights-core-js";
 
 export class SenderTests extends TestClass {
     private _sender: Sender;
@@ -38,10 +38,10 @@ export class SenderTests extends TestClass {
                     }, new AppInsightsCore(), []
                 );
 
-                Assert.equal(123, this._sender._config.maxBatchInterval(), 'Channel config can be set from root config (maxBatchInterval)');
-                Assert.equal('https://example.com', this._sender._config.endpointUrl(), 'Channel config can be set from root config (endpointUrl)');
-                Assert.notEqual(654, this._sender._config.maxBatchSizeInBytes(), 'Channel config does not equal root config option if extensionConfig field is also set');
-                Assert.equal(456, this._sender._config.maxBatchSizeInBytes(), 'Channel config prioritizes extensionConfig over root config');
+                Assert.equal(123, this._sender._senderConfig.maxBatchInterval(), 'Channel config can be set from root config (maxBatchInterval)');
+                Assert.equal('https://example.com', this._sender._senderConfig.endpointUrl(), 'Channel config can be set from root config (endpointUrl)');
+                Assert.notEqual(654, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config does not equal root config option if extensionConfig field is also set');
+                Assert.equal(456, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config prioritizes extensionConfig over root config');
             }
         });
 
@@ -60,7 +60,7 @@ export class SenderTests extends TestClass {
                     baseData: {}
                 };
                 try {
-                    this._sender.processTelemetry(telemetryItem);
+                    this._sender.processTelemetry(telemetryItem, null);
                 } catch(e) {
                     Assert.ok(false);
                 }
@@ -86,7 +86,7 @@ export class SenderTests extends TestClass {
                 };
                 this._sender.setNextPlugin(nextPlugin);
 
-                const processTelemetrySpy = this.sandbox.stub((this._sender as any)._nextPlugin, "processTelemetry");
+                const processTelemetrySpy = this.sandbox.stub(nextPlugin, "processTelemetry");
                 const telemetryItem: ITelemetryItem = {
                     name: 'fake item',
                     iKey: 'iKey',
@@ -98,7 +98,7 @@ export class SenderTests extends TestClass {
 
                 telemetryItem.tags["ProcessLegacy"] = [e => true, e => false, f=> true];
                 try {
-                    this._sender.processTelemetry(telemetryItem);
+                    this._sender.processTelemetry(telemetryItem, null);
                 } catch(e) {
                     Assert.ok(false);
                 }
@@ -136,7 +136,7 @@ export class SenderTests extends TestClass {
                 Assert.ok(xhrSenderSpy.notCalled, "xhr sender was not called before");
 
                 try {
-                    sender.processTelemetry(telemetryItem);
+                    sender.processTelemetry(telemetryItem, null);
                     sender.flush();
                 } catch(e) {
                     Assert.ok(false);
@@ -177,7 +177,7 @@ export class SenderTests extends TestClass {
                 Assert.ok(xhrSenderSpy.notCalled, "xhr sender was not called before");
 
                 try {
-                    sender.processTelemetry(telemetryItem);
+                    sender.processTelemetry(telemetryItem, null);
                     sender.flush();
                 } catch(e) {
                     Assert.ok(false);
@@ -231,7 +231,7 @@ export class SenderTests extends TestClass {
 
                 try {
                     for (let i = 0; i < 8; i++) {
-                        sender.processTelemetry(telemetryItems[i]);
+                        sender.processTelemetry(telemetryItems[i], null);
                     }
                     sender.flush();
                 } catch(e) {
@@ -260,7 +260,7 @@ export class SenderTests extends TestClass {
                         }
 
                     },
-                    tags: [{"ai.internal.sdkVersion": "javascript:2.3.1"}],
+                    tags: [{"ai.internal.sdkVersion": "javascript:2.5.1"}],
                     data: {
                         "property1": "val1",
                         "measurement1": 50.0,
@@ -305,7 +305,7 @@ export class SenderTests extends TestClass {
                 Assert.equal("d041d2e5fa834b4f9eee41ac163bf402", appInsightsEnvelope.tags["ai.session.id"]);
                 Assert.equal("browser", appInsightsEnvelope.tags["ai.device.id"]);
                 Assert.equal("Browser", appInsightsEnvelope.tags["ai.device.type"]);
-                Assert.equal("javascript:2.3.1", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
+                Assert.equal("javascript:2.5.1", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
 
                 // Assert name
                 Assert.ok(appInsightsEnvelope.name);
@@ -375,8 +375,7 @@ export class SenderTests extends TestClass {
                 Assert.ok(baseData.ver);
                 Assert.equal(2, baseData.ver);
 
-                Assert.equal("javascript:2.3.1", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
-
+                Assert.equal("javascript:2.5.5", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
             }
         })
 
@@ -838,5 +837,109 @@ export class SenderTests extends TestClass {
                 Assert.equal("Microsoft.ApplicationInsights.iKey.Pageview", appInsightsEnvelope.name);
             }
         });
+
+        this.testCase({
+            name: "Channel Config: Notification is sent when requests are being sent when requests exceed max batch size",
+            test: () => {
+                let sendNotifications = [];
+                let notificationManager = new NotificationManager();
+                notificationManager.addNotificationListener({
+                    eventsSendRequest: (sendReason: number, isAsync?: boolean) => {
+                        sendNotifications.push({
+                            sendReason,
+                            isAsync
+                        });
+                    }
+                });
+
+                this._sender.initialize(
+                    {
+                        instrumentationKey: 'abc',
+                        maxBatchInterval: 123,
+                        endpointUrl: 'https://example.com',
+                        maxBatchSizeInBytes: 100,
+                        extensionConfig: {
+                            NotificationManager: notificationManager,
+                            [this._sender.identifier]: {
+                                maxBatchSizeInBytes: 100
+                            }
+                        }
+
+                    }, new AppInsightsCore(), []
+                );
+
+                const loggerSpy = this.sandbox.stub(this._sender, "_setupTimer");
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                try {
+                    this._sender.processTelemetry(telemetryItem, null);
+                } catch(e) {
+                    Assert.ok(false);
+                }
+
+
+                Assert.ok(loggerSpy.calledOnce);
+                this.clock.tick(1);
+                Assert.ok(sendNotifications.length === 1);
+                Assert.ok(sendNotifications[0].sendReason === SendRequestReason.MaxBatchSize);
+            }
+        });
+
+        this.testCase({
+            name: "Channel Config: Notification is sent when requests are being sent with manual flush",
+            test: () => {
+                let sendNotifications = [];
+                let notificationManager = new NotificationManager();
+                notificationManager.addNotificationListener({
+                    eventsSendRequest: (sendReason: number, isAsync?: boolean) => {
+                        sendNotifications.push({
+                            sendReason,
+                            isAsync
+                        });
+                    }
+                });
+
+                this._sender.initialize(
+                    {
+                        instrumentationKey: 'abc',
+                        maxBatchInterval: 123,
+                        endpointUrl: 'https://example.com',
+                        extensionConfig: {
+                            NotificationManager: notificationManager
+                        }
+
+                    }, new AppInsightsCore(), []
+                );
+
+                const loggerSpy = this.sandbox.stub(this._sender, "_setupTimer");
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                try {
+                    this._sender.processTelemetry(telemetryItem, null);
+                } catch(e) {
+                    Assert.ok(false);
+                }
+
+                Assert.ok(loggerSpy.calledOnce);
+                Assert.equal(0, sendNotifications.length);
+                
+                this._sender.flush();
+                Assert.equal(0, sendNotifications.length);
+
+                this.clock.tick(1);
+
+                Assert.equal(1, sendNotifications.length);
+                Assert.equal(SendRequestReason.ManualFlush, sendNotifications[0].sendReason);
+            }
+        });
+
     }
 }

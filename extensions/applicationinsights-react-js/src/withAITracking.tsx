@@ -17,7 +17,10 @@ import ReactPlugin from './ReactPlugin';
 export default function withAITracking<P>(reactPlugin: ReactPlugin, Component: React.ComponentType<P>, componentName?: string, className?: string): React.ComponentClass<P> {
 
   if (componentName === undefined || componentName === null || typeof componentName !== 'string') {
-    componentName = Component.prototype.constructor.name;
+    componentName = Component.prototype && 
+          Component.prototype.constructor && 
+          Component.prototype.constructor.name || 
+          'Unknown';
   }
 
   if (className === undefined || className === null || typeof className !== 'string') {

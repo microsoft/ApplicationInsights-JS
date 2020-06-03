@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "sourceMap": true,
+        "inlineSources": true,
+        "noImplicitAny": false,
+        "module": "amd",
+        "moduleResolution": "node",
+        "target": "es3",
+        "alwaysStrict": true,
+        "declaration": true,
+        "importHelpers": false,
+        "noEmitHelpers": true
+    },
+    "files": []
+}

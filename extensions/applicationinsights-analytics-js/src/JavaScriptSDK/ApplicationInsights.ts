@@ -8,15 +8,14 @@ import {
     TelemetryItemCreator, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
-    ConfigurationManager, DateTimeUtils,
-    IExceptionInternal,
-    PropertiesPluginIdentifier
+    DateTimeUtils, IExceptionInternal, PropertiesPluginIdentifier, AnalyticsPluginIdentifier
 } from "@microsoft/applicationinsights-common";
 
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
-    ITelemetryPlugin, CoreUtils, ITelemetryItem,
+    BaseTelemetryPlugin, CoreUtils, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
     IDiagnosticLogger, LoggingSeverity, _InternalMessageId, ICustomProperties,
+    getWindow, getDocument, getHistory, getLocation, EventHelper
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -30,8 +29,14 @@ import * as properties from "@microsoft/applicationinsights-properties-js";
 
 const durationProperty: string = "duration";
 
-export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IAppInsightsInternal {
-    public static Version = "2.3.1"; // Not currently used anywhere
+function _dispatchEvent(target:EventTarget, evnt: Event) {
+    if (target && target.dispatchEvent && evnt) {
+        target.dispatchEvent(evnt);
+    }
+}
+
+export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
+    public static Version = "2.5.5"; // Not currently used anywhere
 
     public static getDefaultConfig(config?: IConfig): IConfig {
         if (!config) {
@@ -44,6 +49,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         config.disableExceptionTracking = Util.stringToBoolOrDefault(config.disableExceptionTracking);
         config.autoTrackPageVisitTime = Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
         config.overridePageViewDuration = Util.stringToBoolOrDefault(config.overridePageViewDuration);
+        config.enableUnhandledPromiseRejectionTracking = Util.stringToBoolOrDefault(config.enableUnhandledPromiseRejectionTracking);
 
         if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
             config.samplingPercentage = 100;
@@ -57,21 +63,18 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
         return config;
     }
-    public initialize: (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[]) => void;
-    public identifier: string = "ApplicationInsightsAnalytics"; // do not change name or priority
+
+    public identifier: string = AnalyticsPluginIdentifier; // do not change name or priority
     public priority: number = 180; // take from reserved priority range 100- 200
     public config: IConfig;
-    public core: IAppInsightsCore;
     public queue: Array<() => void>;
     public autoRoutePVDelay = 500; // ms; Time to wait after a route change before triggering a pageview to allow DOM changes to take place
-    protected _nextPlugin: ITelemetryPlugin;
-    protected _logger: IDiagnosticLogger; // Initialized by Core
+
     protected _telemetryInitializers: Array<(envelope: ITelemetryItem) => boolean | void>; // Internal telemetry initializers.
     protected _pageViewManager: PageViewManager;
     protected _pageViewPerformanceManager: PageViewPerformanceManager;
     protected _pageVisitTimeManager: PageVisitTimeManager;
 
-    private _isInitialized: boolean = false;
     private _globalconfig: IConfiguration;
     private _eventTracking: Timing;
     private _pageTracking: Timing;
@@ -84,17 +87,19 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     private _trackAjaxAttempts: number = 0;
 
     // array with max length of 2 that store current url and previous url for SPA page route change trackPageview use.
-    private _prevUri: string = typeof window === "object" && window.location && window.location.href || "";
+    private _prevUri: string; // Assigned in the constructor
     private _currUri: string;
 
     constructor() {
-        this.initialize = this._initialize.bind(this);
+        super();
+        let location = getLocation();
+        this._prevUri = location && location.href || "";
     }
 
-
-    public processTelemetry(env: ITelemetryItem) {
+    public processTelemetry(env: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         let doNotSendItem = false;
         const telemetryInitializersCount = this._telemetryInitializers.length;
+        itemCtx = this._getTelCtx(itemCtx);
         for (let i = 0; i < telemetryInitializersCount; ++i) {
             const telemetryInitializer = this._telemetryInitializers[i];
             if (telemetryInitializer) {
@@ -106,20 +111,16 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 } catch (e) {
                     // log error but dont stop executing rest of the telemetry initializers
                     // doNotSendItem = true;
-                    this._logger.throwInternal(
+                    itemCtx.diagLog().throwInternal(
                         LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
                         { exception: Util.dump(e) }, true);
                 }
             }
         }
 
-        if (!doNotSendItem && !CoreUtils.isNullOrUndefined(this._nextPlugin)) {
-            this._nextPlugin.processTelemetry(env);
+        if (!doNotSendItem) {
+            this.processNext(env, itemCtx);
         }
-    }
-
-    public setNextPlugin(next: ITelemetryPlugin) {
-        this._nextPlugin = next;
     }
 
     public trackEvent(event: IEventTelemetry, customProperties?: ICustomProperties): void {
@@ -128,13 +129,13 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 event,
                 EventTelemetry.dataType,
                 EventTelemetry.envelopeType,
-                this._logger,
+                this.diagLog(),
                 customProperties
             );
 
             this.core.track(telemetryItem);
         } catch (e) {
-            this._logger.throwInternal(LoggingSeverity.WARNING,
+            this.diagLog().throwInternal(LoggingSeverity.WARNING,
                 _InternalMessageId.TrackTraceFailed,
                 "trackTrace failed, trace will not be collected: " + Util.getExceptionName(e),
                 { exception: Util.dump(e) });
@@ -149,7 +150,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         try {
             this._eventTracking.start(name);
         } catch (e) {
-            this._logger.throwInternal(LoggingSeverity.CRITICAL,
+            this.diagLog().throwInternal(LoggingSeverity.CRITICAL,
                 _InternalMessageId.StartTrackEventFailed,
                 "startTrackEvent failed, event will not be collected: " + Util.getExceptionName(e),
                 { exception: Util.dump(e) });
@@ -166,7 +167,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         try {
             this._eventTracking.stop(name, undefined, properties); // Todo: Fix to pass measurements once type is updated
         } catch (e) {
-            this._logger.throwInternal(LoggingSeverity.CRITICAL,
+            this.diagLog().throwInternal(LoggingSeverity.CRITICAL,
                 _InternalMessageId.StopTrackEventFailed,
                 "stopTrackEvent failed, event will not be collected: " + Util.getExceptionName(e),
                 { exception: Util.dump(e) });
@@ -185,12 +186,12 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 trace,
                 Trace.dataType,
                 Trace.envelopeType,
-                this._logger,
+                this.diagLog(),
                 customProperties);
 
             this.core.track(telemetryItem);
         } catch (e) {
-            this._logger.throwInternal(LoggingSeverity.WARNING,
+            this.diagLog().throwInternal(LoggingSeverity.WARNING,
                 _InternalMessageId.TrackTraceFailed,
                 "trackTrace failed, trace will not be collected: " + Util.getExceptionName(e),
                 { exception: Util.dump(e) });
@@ -214,13 +215,13 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 metric,
                 Metric.dataType,
                 Metric.envelopeType,
-                this._logger,
+                this.diagLog(),
                 customProperties
             );
 
             this.core.track(telemetryItem);
         } catch (e) {
-            this._logger.throwInternal(LoggingSeverity.CRITICAL,
+            this.diagLog().throwInternal(LoggingSeverity.CRITICAL,
                 _InternalMessageId.TrackMetricFailed,
                 "trackMetric failed, metric will not be collected: " + Util.getExceptionName(e),
                 { exception: Util.dump(e) });
@@ -242,7 +243,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 this._pageVisitTimeManager.trackPreviousPageVisit(inPv.name, inPv.uri);
             }
         } catch (e) {
-            this._logger.throwInternal(
+            this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.TrackPVFailed,
                 "trackPageView failed, page view will not be collected: " + Util.getExceptionName(e),
@@ -257,15 +258,16 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
      * @param systemProperties System level properties (Part A) that a user can add to the telemetry item
      */
     public sendPageViewInternal(pageView: IPageViewTelemetryInternal, properties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
-        if (typeof document !== "undefined") {
-            pageView.refUri = pageView.refUri === undefined ? document.referrer : pageView.refUri;
+        let doc = getDocument();
+        if (doc) {
+            pageView.refUri = pageView.refUri === undefined ? doc.referrer : pageView.refUri;
         }
 
         const telemetryItem = TelemetryItemCreator.create<IPageViewTelemetryInternal>(
             pageView,
             PageView.dataType,
             PageView.envelopeType,
-            this._logger,
+            this.diagLog(),
             properties,
             systemProperties);
 
@@ -285,7 +287,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             pageViewPerformance,
             PageViewPerformance.dataType,
             PageViewPerformance.envelopeType,
-            this._logger,
+            this.diagLog(),
             properties,
             systemProperties);
 
@@ -302,7 +304,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             this._pageViewPerformanceManager.populatePageViewPerformanceEvent(pageViewPerformance);
             this.sendPageViewPerformanceInternal(pageViewPerformance, customProperties);
         } catch (e) {
-            this._logger.throwInternal(
+            this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.TrackPVFailed,
                 "trackPageViewPerformance failed, page view will not be collected: " + Util.getExceptionName(e),
@@ -319,12 +321,13 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public startTrackPage(name?: string) {
         try {
             if (typeof name !== "string") {
-                name = typeof window === "object" && window.document && window.document.title || "";
+                let doc = getDocument();
+                name = doc && doc.title || "";
             }
 
             this._pageTracking.start(name);
         } catch (e) {
-            this._logger.throwInternal(
+            this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.StartTrackFailed,
                 "startTrackPage failed, page view may not be collected: " + Util.getExceptionName(e),
@@ -344,11 +347,13 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public stopTrackPage(name?: string, url?: string, properties?: { [key: string]: string }, measurement?: { [key: string]: number }) {
         try {
             if (typeof name !== "string") {
-                name = typeof window === "object" && window.document && window.document.title || "";
+                let doc = getDocument();
+                name = doc && doc.title || "";
             }
 
             if (typeof url !== "string") {
-                url = typeof window === "object" && window.location && window.location.href || "";
+                let loc = getLocation();
+                url = loc && loc.href || "";
             }
 
             this._pageTracking.stop(name, url, properties, measurement);
@@ -357,7 +362,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 this._pageVisitTimeManager.trackPreviousPageVisit(name, url);
             }
         } catch (e) {
-            this._logger.throwInternal(
+            this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.StopTrackFailed,
                 "stopTrackPage failed, page view will not be collected: " + Util.getExceptionName(e),
@@ -373,7 +378,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     */
     public sendExceptionInternal(exception: IExceptionTelemetry, customProperties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) {
         const exceptionPartB = new Exception(
-            this._logger,
+            this.diagLog(),
             exception.exception || new Error(Util.NotSpecified),
             exception.properties,
             exception.measurements,
@@ -385,7 +390,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             exceptionPartB,
             Exception.dataType,
             Exception.envelopeType,
-            this._logger,
+            this.diagLog(),
             customProperties,
             systemProperties
         );
@@ -405,7 +410,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         try {
             this.sendExceptionInternal(exception, customProperties);
         } catch (e) {
-            this._logger.throwInternal(
+            this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.TrackExceptionFailed,
                 "trackException failed, exception will not be collected: " + Util.getExceptionName(e),
@@ -421,7 +426,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
     public _onerror(exception: IAutoExceptionTelemetry): void {
         try {
             const properties = {
-                url: (exception && exception.url) || document.URL,
+                url: (exception && exception.url) || (getDocument()||{} as any).URL,
                 lineNumber: exception.lineNumber,
                 columnNumber: exception.columnNumber,
                 message: exception.message
@@ -442,7 +447,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 (exception.error.name + ", " + exception.error.message)
                 : "null";
 
-            this._logger.throwInternal(
+            this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.ExceptionWhileLoggingError,
                 "_onError threw exception while logging error, error will not be collected: "
@@ -456,9 +461,8 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
         this._telemetryInitializers.push(telemetryInitializer);
     }
 
-    private _initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]) {
-
-        if (this._isInitialized) {
+    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) {
+        if (this.isInitialized()) {
             return;
         }
 
@@ -466,21 +470,24 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             throw Error("Error initializing");
         }
 
-        this.core = core;
-        this._logger = core.logger;
+        super.initialize(config, core, extensions, pluginChain);
+        this.setInitialized(false); // resetting the initialized state, just in case the following fails
+        let ctx = this._getTelCtx();
+        let identifier = this.identifier;
+
         this._globalconfig = {
             instrumentationKey: config.instrumentationKey,
             endpointUrl: config.endpointUrl || "https://dc.services.visualstudio.com/v2/track"
         };
 
-        this.config = config.extensionConfig && config.extensionConfig[this.identifier] ? config.extensionConfig[this.identifier] : {} as IConfig;
+        this.config = ctx.getExtCfg<IConfig>(identifier);
 
         // load default values if specified
         const defaults: IConfig = ApplicationInsights.getDefaultConfig();
         if (defaults !== undefined) {
             for (const field in defaults) {
                 // for each unspecified field, set the default value
-                this.config[field] = ConfigurationManager.getConfig(config, field, this.identifier, defaults[field]);
+                this.config[field] = ctx.getConfig(identifier, field, defaults[field]);
             }
 
             if (this._globalconfig) {
@@ -516,13 +523,13 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 
         this._pageViewPerformanceManager = new PageViewPerformanceManager(this.core);
         this._pageViewManager = new PageViewManager(this, this.config.overridePageViewDuration, this.core, this._pageViewPerformanceManager);
-        this._pageVisitTimeManager = new PageVisitTimeManager(this._logger, (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime))
+        this._pageVisitTimeManager = new PageVisitTimeManager(this.diagLog(), (pageName, pageUrl, pageVisitTime) => this.trackPageVisitTime(pageName, pageUrl, pageVisitTime))
 
-        this._telemetryInitializers = [];
+        this._telemetryInitializers = this._telemetryInitializers || [];
         this._addDefaultTelemetryInitializers(configGetters);
 
 
-        this._eventTracking = new Timing(this._logger, "trackEvent");
+        this._eventTracking = new Timing(this.diagLog(), "trackEvent");
         this._eventTracking.action =
             (name?: string, url?: string, duration?: number, properties?: { [key: string]: string }) => {
                 if (!properties) {
@@ -534,7 +541,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             }
 
         // initialize page view timing
-        this._pageTracking = new Timing(this._logger, "trackPageView");
+        this._pageTracking = new Timing(this.diagLog(), "trackPageView");
         this._pageTracking.action = (name, url, duration, properties, measurements) => {
 
             // duration must be a custom property in order for the collector to extract it
@@ -550,16 +557,20 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 measurements
             };
 
-            this.sendPageViewInternal(pageViewItem);
+            this.sendPageViewInternal(pageViewItem, properties);
         }
+
+        let _window = getWindow();
+        let _history = getHistory();
+        let _location = getLocation();
 
         const instance: IAppInsights = this;
         if (this.config.disableExceptionTracking === false &&
-            !this.config.autoExceptionInstrumented && typeof window === "object") {
+            !this.config.autoExceptionInstrumented && _window) {
             // We want to enable exception auto collection and it has not been done so yet
             const onerror = "onerror";
-            const originalOnError = window[onerror];
-            window.onerror = (message, url, lineNumber, columnNumber, error) => {
+            const originalOnError = _window[onerror];
+            _window.onerror = (message, url, lineNumber, columnNumber, error) => {
                 const handled = originalOnError && (originalOnError(message, url, lineNumber, columnNumber, error) as any);
                 if (handled !== true) { // handled could be typeof function
                     instance._onerror({
@@ -576,12 +587,35 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             this.config.autoExceptionInstrumented = true;
         }
 
+        if (this.config.disableExceptionTracking === false &&
+            this.config.enableUnhandledPromiseRejectionTracking === true &&
+            !this.config.autoUnhandledPromiseInstrumented && _window) {
+            // We want to enable exception auto collection and it has not been done so yet
+            const onunhandledrejection = "onunhandledrejection";
+            const originalOnUnhandledRejection = _window[onunhandledrejection];
+            _window[onunhandledrejection] = (error: PromiseRejectionEvent) => {
+                const handled = originalOnUnhandledRejection && (originalOnUnhandledRejection.call(_window, error) as any);
+                if (handled !== true) { // handled could be typeof function
+                    instance._onerror({
+                        message: error.reason.toString(),
+                        error: error.reason instanceof Error ? error.reason : new Error(error.reason.toString()),
+                        url: _location ? _location.href : "",
+                        lineNumber: 0,
+                        columnNumber: 0
+                    });
+                }
+
+                return handled;
+            }
+            this.config.autoUnhandledPromiseInstrumented = true;
+        }
+
         /**
          * Create a custom "locationchange" event which is triggered each time the history object is changed
          */
         if (this.config.enableAutoRouteTracking === true
-            && typeof history === "object" && typeof history.pushState === "function" && typeof history.replaceState === "function"
-            && typeof window === "object"
+            && _history && CoreUtils.isFunction(_history.pushState) && CoreUtils.isFunction(_history.replaceState)
+            && _window
             && typeof Event !== "undefined") {
             const _self = this;
             // Find the properties plugin
@@ -591,43 +625,45 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
                 }
             });
 
-            history.pushState = ( f => function pushState() {
+            _history.pushState = ( f => function pushState() {
                 const ret = f.apply(this, arguments);
-                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "pushState"));
-                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
+                _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "pushState"));
+                _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "locationchange"));
                 return ret;
-            })(history.pushState);
+            })(_history.pushState);
 
-            history.replaceState = ( f => function replaceState(){
+            _history.replaceState = ( f => function replaceState(){
                 const ret = f.apply(this, arguments);
-                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "replaceState"));
-                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
+                _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "replaceState"));
+                _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "locationchange"));
                 return ret;
-            })(history.replaceState);
+            })(_history.replaceState);
 
-            window.addEventListener(_self.config.namePrefix + "popstate",()=>{
-                window.dispatchEvent(Util.createDomEvent(_self.config.namePrefix + "locationchange"));
-            });
+            if (_window.addEventListener) {
+                _window.addEventListener(_self.config.namePrefix + "popstate",()=>{
+                    _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "locationchange"));
+                });
 
-            window.addEventListener(_self.config.namePrefix + "locationchange", () => {
-                if (_self._properties && _self._properties.context && _self._properties.context.telemetryTrace) {
-                    _self._properties.context.telemetryTrace.traceID = Util.generateW3CId();
-                    _self._properties.context.telemetryTrace.name = window.location && window.location.pathname || "_unknown_";
-                }
-                if (this._currUri) {
-                    this._prevUri = this._currUri;
-                    this._currUri = window.location && window.location.href || "";
-                } else {
-                    this._currUri = window.location && window.location.href || "";
-                }
-                setTimeout(((uri: string) => {
-                    // todo: override start time so that it is not affected by autoRoutePVDelay
-                    _self.trackPageView({ refUri: uri, properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
-                }).bind(this, this._prevUri), _self.autoRoutePVDelay);
-            });
+                _window.addEventListener(_self.config.namePrefix + "locationchange", () => {
+                    if (_self._properties && _self._properties.context && _self._properties.context.telemetryTrace) {
+                        _self._properties.context.telemetryTrace.traceID = Util.generateW3CId();
+                        _self._properties.context.telemetryTrace.name = _location && _location.pathname || "_unknown_";
+                    }
+                    if (this._currUri) {
+                        this._prevUri = this._currUri;
+                        this._currUri = _location && _location.href || "";
+                    } else {
+                        this._currUri = _location && _location.href || "";
+                    }
+                    setTimeout(((uri: string) => {
+                        // todo: override start time so that it is not affected by autoRoutePVDelay
+                        _self.trackPageView({ refUri: uri, properties: { duration: 0 } }); // SPA route change loading durations are undefined, so send 0
+                    }).bind(this, this._prevUri), _self.autoRoutePVDelay);
+                });
+            }
         }
 
-        this._isInitialized = true;
+        this.setInitialized(true);
     }
 
     /**
@@ -684,7 +720,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
             exception,
             Exception.dataType,
             Exception.envelopeType,
-            this._logger,
+            this.diagLog(),
             { url }
         );
 
@@ -698,7 +734,7 @@ export class ApplicationInsights implements IAppInsights, ITelemetryPlugin, IApp
 class Timing {
 
     public action: (name?: string, url?: string, duration?: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }) => void;
-    private _name;
+    private _name: string;
     private _events: {
         [key: string]: number;
     };

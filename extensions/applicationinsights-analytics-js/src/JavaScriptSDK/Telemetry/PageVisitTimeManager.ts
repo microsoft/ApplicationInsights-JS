@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Util } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, hasJSON, getJSON } from '@microsoft/applicationinsights-core-js';
 
 /**
  * Used to track page visit durations
@@ -73,7 +73,7 @@ export class PageVisitTimeManager {
                 }
 
                 const currPageVisitData = new PageVisitData(pageName, pageUrl);
-                const currPageVisitDataStr = JSON.stringify(currPageVisitData);
+                const currPageVisitDataStr = getJSON().stringify(currPageVisitData);
                 Util.setSessionStorage(this._logger, this.prevPageVisitDataKeyName, currPageVisitDataStr);
             }
         } catch (e) {
@@ -95,10 +95,10 @@ export class PageVisitTimeManager {
 
                 // Try to retrieve  page name and start time from session storage
                 const pageVisitDataJsonStr = Util.getSessionStorage(this._logger, this.prevPageVisitDataKeyName);
-                if (pageVisitDataJsonStr) {
+                if (pageVisitDataJsonStr && hasJSON()) {
 
                     // if previous page data exists, set end time of visit
-                    const prevPageVisitData: PageVisitData = JSON.parse(pageVisitDataJsonStr);
+                    const prevPageVisitData: PageVisitData = getJSON().parse(pageVisitDataJsonStr);
                     prevPageVisitData.pageVisitTime = pageVisitEndTime - prevPageVisitData.pageVisitStartTime;
 
                     // Remove data from storage since we already used it
@@ -126,7 +126,7 @@ export class PageVisitData {
     public pageVisitStartTime: number;
     public pageVisitTime: number;
 
-    constructor(pageName, pageUrl) {
+    constructor(pageName: string, pageUrl: string) {
         this.pageVisitStartTime = Date.now();
         this.pageName = pageName;
         this.pageUrl = pageUrl;

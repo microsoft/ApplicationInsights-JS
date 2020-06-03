@@ -22,6 +22,7 @@
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
+report.*.json
 
 *_i.c
 *_p.c
@@ -177,9 +178,9 @@ dist/
 
 # Grunt
 .tscache
-**/Tests/Selenium/*.tests.js
-**/Tests/Selenium/*.tests.d.ts
-**/Tests/Selenium/*.tests.js.map
+**/Tests/Selenium/*tests.js
+**/Tests/Selenium/*tests.d.ts
+**/Tests/Selenium/*tests.js.map
 
 # Misc
 statistics.html

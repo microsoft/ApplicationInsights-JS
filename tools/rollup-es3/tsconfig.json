@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+    "noImplicitAny": true,
+    "module": "es6",
+    "moduleResolution": "node",
+    "target": "es3",
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": false,
+    "noEmitHelpers": false,
+    "alwaysStrict": true,
+    "declaration": true,
+    "declarationDir": "tools/rollup-es3/types",
+    "outDir": "./out",
+    "rootDir": "tools/rollup-es3/src",
+    "suppressImplicitAnyIndexErrors": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": [
+    "./src/**/*.ts"
+  ],
+  "exclude": ["./node_modules/**"]
+}

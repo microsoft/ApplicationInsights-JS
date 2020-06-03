@@ -2,7 +2,7 @@
   "compilerOptions": {
     "sourceMap": true,
     "inlineSources": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "module": "es6",
     "moduleResolution": "Node",
     "target": "es3",
@@ -10,8 +10,8 @@
     "suppressImplicitAnyIndexErrors": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
+    "importHelpers": false,
     "noEmitHelpers": true,
-    "importHelpers": true,
     "declaration": true,
     "declarationDir": "channels/applicationinsights-channel-js/types",
     "outDir": "dist-esm",

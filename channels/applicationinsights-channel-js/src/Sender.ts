@@ -12,14 +12,16 @@ import {
     Trace, Exception, Metric,
     PageViewPerformance, RemoteDependencyData,
     IChannelControlsAI,
-    ConfigurationManager, IConfig,
+    IConfig,
     ProcessLegacy,
     BreezeChannelIdentifier,
     SampleRate
 } from '@microsoft/applicationinsights-common';
 import {
-    ITelemetryPlugin, ITelemetryItem, IConfiguration, CoreUtils,
+    ITelemetryItem, IProcessTelemetryContext, IConfiguration, CoreUtils,
     _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
+    getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain, INotificationManager,
+    SendRequestReason
 } from '@microsoft/applicationinsights-core-js';
 import { Offline } from './Offline';
 import { Sample } from './TelemetryProcessors/Sample'
@@ -31,7 +33,17 @@ declare var XDomainRequest: {
 
 export type SenderFunction = (payload: string[], isAsync: boolean) => void;
 
-export class Sender implements IChannelControlsAI {
+function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
+    try {
+        return xhr.responseText;
+    } catch (e) {
+        // Best effort, as XHR may throw while XDR wont so just ignore
+    }
+
+    return null;
+}
+
+export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
     public static constructEnvelope(orig: ITelemetryItem, iKey: string, logger: IDiagnosticLogger): IEnvelope {
         let envelope: ITelemetryItem;
@@ -107,7 +119,7 @@ export class Sender implements IChannelControlsAI {
     /**
      * The configuration for this sender instance
      */
-    public _config: ISenderConfig;
+    public _senderConfig: ISenderConfig;
 
     /**
      * A method which will cause data to be send to the url
@@ -149,11 +161,9 @@ export class Sender implements IChannelControlsAI {
      */
     private _timeoutHandle: any;
 
-    private _nextPlugin: ITelemetryPlugin;
-
-    private _logger: IDiagnosticLogger;
     private _serializer: Serializer;
 
+    private _notificationManager: INotificationManager | undefined;
 
     public pause(): void {
         throw new Error("Method not implemented.");
@@ -165,9 +175,9 @@ export class Sender implements IChannelControlsAI {
 
     public flush() {
         try {
-            this.triggerSend();
+            this.triggerSend(true, null, SendRequestReason.ManualFlush);
         } catch (e) {
-            this._logger.throwInternal(LoggingSeverity.CRITICAL,
+            this.diagLog().throwInternal(LoggingSeverity.CRITICAL,
                 _InternalMessageId.FlushFailed,
                 "flush failed, telemetry will not be collected: " + Util.getExceptionName(e),
                 { exception: Util.dump(e) });
@@ -175,11 +185,11 @@ export class Sender implements IChannelControlsAI {
     }
 
     public onunloadFlush() {
-        if ((this._config.onunloadDisableBeacon() === false || this._config.isBeaconApiDisabled() === false) && Util.IsBeaconApiSupported()) {
+        if ((this._senderConfig.onunloadDisableBeacon() === false || this._senderConfig.isBeaconApiDisabled() === false) && Util.IsBeaconApiSupported()) {
             try {
-                this.triggerSend(true, this._beaconSender);
+                this.triggerSend(true, this._beaconSender, SendRequestReason.Unload);
             } catch (e) {
-                this._logger.throwInternal(LoggingSeverity.CRITICAL,
+                this.diagLog().throwInternal(LoggingSeverity.CRITICAL,
                     _InternalMessageId.FailedToSendQueuedTelemetry,
                     "failed to flush with beacon sender on page unload, telemetry will not be collected: " + Util.getExceptionName(e),
                     { exception: Util.dump(e) });
@@ -193,56 +203,60 @@ export class Sender implements IChannelControlsAI {
         throw new Error("Method not implemented.");
     }
 
-    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[]): void {
-        this._logger = core.logger;
+    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain): void {
+        super.initialize(config, core, extensions, pluginChain);
+        let ctx = this._getTelCtx();
+        let identifier = this.identifier;
         this._serializer = new Serializer(core.logger);
-
+        this._notificationManager = ((config||{}).extensionConfig||{}).NotificationManager
         this._consecutiveErrors = 0;
         this._retryAt = null;
         this._lastSend = 0;
         this._sender = null;
         const defaultConfig = Sender._getDefaultAppInsightsChannelConfig();
-        this._config = Sender._getEmptyAppInsightsChannelConfig();
+        this._senderConfig = Sender._getEmptyAppInsightsChannelConfig();
         for (const field in defaultConfig) {
-            this._config[field] = () => ConfigurationManager.getConfig(config, field, this.identifier, defaultConfig[field]());
+            this._senderConfig[field] = () => ctx.getConfig(identifier, field, defaultConfig[field]());
         }
 
-        this._buffer = (this._config.enableSessionStorageBuffer && Util.canUseSessionStorage())
-            ? new SessionStorageSendBuffer(this._logger, this._config) : new ArraySendBuffer(this._config);
-        this._sample = new Sample(this._config.samplingPercentage(), this._logger);
+        this._buffer = (this._senderConfig.enableSessionStorageBuffer && Util.canUseSessionStorage())
+            ? new SessionStorageSendBuffer(this.diagLog(), this._senderConfig) : new ArraySendBuffer(this._senderConfig);
+        this._sample = new Sample(this._senderConfig.samplingPercentage(), this.diagLog());
 
-        if (!this._config.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
+        if (!this._senderConfig.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
             this._sender = this._beaconSender;
         } else {
-            if (typeof XMLHttpRequest !== "undefined") {
+            if (!CoreUtils.isUndefined(XMLHttpRequest)) {
                 const testXhr = new XMLHttpRequest();
                 if ("withCredentials" in testXhr) {
                     this._sender = this._xhrSender;
                     this._XMLHttpRequestSupported = true;
-                } else if (typeof XDomainRequest !== "undefined") {
+                } else if (!CoreUtils.isUndefined(XDomainRequest)) {
                     this._sender = this._xdrSender; // IE 8 and 9
                 }
             }
         }
     }
 
-    public processTelemetry(telemetryItem: ITelemetryItem) {
+    public processTelemetry(telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
+        itemCtx = this._getTelCtx(itemCtx);
+        
         try {
             // if master off switch is set, don't send any data
-            if (this._config.disableTelemetry()) {
+            if (this._senderConfig.disableTelemetry()) {
                 // Do not send/save data
                 return;
             }
 
             // validate input
             if (!telemetryItem) {
-                this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
+                itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
                 return;
             }
 
             // validate event
             if (telemetryItem.baseData && !telemetryItem.baseType) {
-                this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
+                itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
                 return;
             }
 
@@ -253,14 +267,14 @@ export class Sender implements IChannelControlsAI {
 
             // ensure a sender was constructed
             if (!this._sender) {
-                this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.SenderNotInitialized, "Sender was not initialized");
+                itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.SenderNotInitialized, "Sender was not initialized");
                 return;
             }
           
             // check if this item should be sampled in, else add sampleRate tag
             if (!this._isSampledIn(telemetryItem)) {
                 // Item is sampled out, do not send it
-                this._logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TelemetrySampledAndNotSent,
+                itemCtx.diagLog().throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TelemetrySampledAndNotSent,
                     "Telemetry item was sampled out and not sent", { SampleRate: this._sample.sampleRate });
                 return;
             } else {
@@ -268,9 +282,9 @@ export class Sender implements IChannelControlsAI {
             }
 
             // construct an envelope that Application Insights endpoint can understand
-            const aiEnvelope = Sender.constructEnvelope(telemetryItem, this._config.instrumentationKey(), this._logger);
+            const aiEnvelope = Sender.constructEnvelope(telemetryItem, this._senderConfig.instrumentationKey(), itemCtx.diagLog());
             if (!aiEnvelope) {
-                this._logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
+                itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
                 return;
             }
 
@@ -281,12 +295,12 @@ export class Sender implements IChannelControlsAI {
                     try {
                         if (callBack && callBack(aiEnvelope) === false) {
                             doNotSendItem = true;
-                            this._logger.warnToConsole("Telemetry processor check returns false");
+                            itemCtx.diagLog().warnToConsole("Telemetry processor check returns false");
                         }
                     } catch (e) {
                         // log error but dont stop executing rest of the telemetry initializers
                         // doNotSendItem = true;
-                        this._logger.throwInternal(
+                        itemCtx.diagLog().throwInternal(
                             LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
                             { exception: Util.dump(e) }, true);
                     }
@@ -305,8 +319,8 @@ export class Sender implements IChannelControlsAI {
             const bufferPayload = this._buffer.getItems();
             const batch = this._buffer.batchPayloads(bufferPayload);
 
-            if (batch && (batch.length + payload.length > this._config.maxBatchSizeInBytes())) {
-                this.triggerSend();
+            if (batch && (batch.length + payload.length > this._senderConfig.maxBatchSizeInBytes())) {
+                this.triggerSend(true, null, SendRequestReason.MaxBatchSize);
             }
 
             // enqueue the payload
@@ -316,7 +330,7 @@ export class Sender implements IChannelControlsAI {
             this._setupTimer();
 
         } catch (e) {
-            this._logger.throwInternal(
+            itemCtx.diagLog().throwInternal(
                 LoggingSeverity.WARNING,
                 _InternalMessageId.FailedAddingTelemetryToBuffer,
                 "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.getExceptionName(e),
@@ -324,13 +338,7 @@ export class Sender implements IChannelControlsAI {
         }
 
         // hand off the telemetry item to the next plugin
-        if (!CoreUtils.isNullOrUndefined(this._nextPlugin)) {
-            this._nextPlugin.processTelemetry(telemetryItem);
-        }
-    }
-
-    public setNextPlugin(next: ITelemetryPlugin) {
-        this._nextPlugin = next;
+        this.processNext(telemetryItem, itemCtx);
     }
 
     /**
@@ -340,17 +348,17 @@ export class Sender implements IChannelControlsAI {
         if (xhr.readyState === 4) {
             let response: IBackendResponse = null;
             if (!this._appId) {
-                response = this._parseResponse(xhr.responseText || xhr.response);
+                response = this._parseResponse(_getResponseText(xhr) || xhr.response);
                 if (response && response.appId) {
                     this._appId = response.appId;
                 }
             }
 
             if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
-                if (!this._config.isRetryDisabled() && this._isRetriable(xhr.status)) {
+                if (!this._senderConfig.isRetryDisabled() && this._isRetriable(xhr.status)) {
                     this._resendPayload(payload);
 
-                    this._logger.throwInternal(
+                    this.diagLog().throwInternal(
                         LoggingSeverity.WARNING,
                         _InternalMessageId.TransmissionFailed, ". " +
                         "Response code " + xhr.status + ". Will retry to send " + payload.length + " items.");
@@ -359,21 +367,21 @@ export class Sender implements IChannelControlsAI {
                 }
             } else if (Offline.isOffline()) { // offline
                 // Note: Don't check for staus == 0, since adblock gives this code
-                if (!this._config.isRetryDisabled()) {
+                if (!this._senderConfig.isRetryDisabled()) {
                     const offlineBackOffMultiplier = 10; // arbritrary number
                     this._resendPayload(payload, offlineBackOffMultiplier);
 
-                    this._logger.throwInternal(
+                    this.diagLog().throwInternal(
                         LoggingSeverity.WARNING,
                         _InternalMessageId.TransmissionFailed, `. Offline - Response Code: ${xhr.status}. Offline status: ${Offline.isOffline()}. Will retry to send ${payload.length} items.`);
                 }
             } else {
                 if (xhr.status === 206) {
                     if (!response) {
-                        response = this._parseResponse(xhr.responseText || xhr.response);
+                        response = this._parseResponse(_getResponseText(xhr) || xhr.response);
                     }
 
-                    if (response && !this._config.isRetryDisabled()) {
+                    if (response && !this._senderConfig.isRetryDisabled()) {
                         this._onPartialSuccess(payload, response);
                     } else {
                         this._onError(payload, this._formatErrorMessageXhr(xhr));
@@ -391,13 +399,15 @@ export class Sender implements IChannelControlsAI {
      * @param async {boolean} - Indicates if the events should be sent asynchronously
      * @param forcedSender {SenderFunction} - Indicates the forcedSender, undefined if not passed
      */
-    public triggerSend(async = true, forcedSender?: SenderFunction) {
+    public triggerSend(async = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason) {
         try {
             // Send data only if disableTelemetry is false
-            if (!this._config.disableTelemetry()) {
+            if (!this._senderConfig.disableTelemetry()) {
 
                 if (this._buffer.count() > 0) {
                     const payload = this._buffer.getItems();
+
+                    this._notifySendRequest(sendReason||SendRequestReason.Undefined, async);
 
                     // invoke send
                     if (forcedSender) {
@@ -418,8 +428,9 @@ export class Sender implements IChannelControlsAI {
             this._retryAt = null;
         } catch (e) {
             /* Ignore this error for IE under v10 */
-            if (!Util.getIEVersion() || Util.getIEVersion() > 9) {
-                this._logger.throwInternal(
+            let ieVer = Util.getIEVersion();
+            if (!ieVer || ieVer > 9) {
+                this.diagLog().throwInternal(
                     LoggingSeverity.CRITICAL,
                     _InternalMessageId.TransmissionFailed,
                     "Telemetry transmission failed, some telemetry will be lost: " + Util.getExceptionName(e),
@@ -432,7 +443,7 @@ export class Sender implements IChannelControlsAI {
      * error handler
      */
     public _onError(payload: string[], message: string, event?: ErrorEvent) {
-        this._logger.throwInternal(
+        this.diagLog().throwInternal(
             LoggingSeverity.WARNING,
             _InternalMessageId.OnError,
             "Failed to send telemetry.",
@@ -471,7 +482,7 @@ export class Sender implements IChannelControlsAI {
         if (retry.length > 0) {
             this._resendPayload(retry);
 
-            this._logger.throwInternal(
+            this.diagLog().throwInternal(
                 LoggingSeverity.WARNING,
                 _InternalMessageId.TransmissionFailed, "Partial success. " +
                 "Delivered: " + payload.length + ", Failed: " + failed.length +
@@ -490,14 +501,15 @@ export class Sender implements IChannelControlsAI {
      * xdr state changes
      */
     public _xdrOnLoad(xdr: IXDomainRequest, payload: string[]) {
-        if (xdr && (xdr.responseText + "" === "200" || xdr.responseText === "")) {
+        const responseText = _getResponseText(xdr);
+        if (xdr && (responseText + "" === "200" || responseText === "")) {
             this._consecutiveErrors = 0;
             this._onSuccess(payload, 0);
         } else {
-            const results = this._parseResponse(xdr.responseText);
+            const results = this._parseResponse(responseText);
 
             if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
-                && !this._config.isRetryDisabled()) {
+                && !this._senderConfig.isRetryDisabled()) {
                 this._onPartialSuccess(payload, results);
             } else {
                 this._onError(payload, this._formatErrorMessageXdr(xdr));
@@ -517,7 +529,7 @@ export class Sender implements IChannelControlsAI {
      * appId from the backend for the correct correlation.
      */
     private _beaconSender(payload: string[], isAsync: boolean) {
-        const url = this._config.endpointUrl();
+        const url = this._senderConfig.endpointUrl();
         const batch = this._buffer.batchPayloads(payload);
 
         // Chrome only allows CORS-safelisted values for the sendBeacon data argument
@@ -525,7 +537,7 @@ export class Sender implements IChannelControlsAI {
         const plainTextBatch = new Blob([batch], { type: 'text/plain;charset=UTF-8' });
 
         // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
-        const queued = navigator.sendBeacon(url, plainTextBatch);
+        const queued = getNavigator().sendBeacon(url, plainTextBatch);
 
         if (queued) {
             this._buffer.markAsSent(payload);
@@ -533,7 +545,7 @@ export class Sender implements IChannelControlsAI {
             this._onSuccess(payload, payload.length);
         } else {
             this._xhrSender(payload, true);
-            this._logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
+            this.diagLog().throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
         }
     }
 
@@ -544,12 +556,18 @@ export class Sender implements IChannelControlsAI {
      */
     private _xhrSender(payload: string[], isAsync: boolean) {
         const xhr = new XMLHttpRequest();
-        xhr[DisabledPropertyName] = true;
-        xhr.open("POST", this._config.endpointUrl(), isAsync);
+        const endPointUrl = this._senderConfig.endpointUrl();
+        try {
+            xhr[DisabledPropertyName] = true;
+        } catch(e) {
+            // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
+            // cause the request to fail and we no telemetry would be sent
+        }
+        xhr.open("POST", endPointUrl, isAsync);
         xhr.setRequestHeader("Content-type", "application/json");
 
         // append Sdk-Context request header only in case of breeze endpoint
-        if (Util.isInternalApplicationInsightsEndpoint(this._config.endpointUrl())) {
+        if (Util.isInternalApplicationInsightsEndpoint(endPointUrl)) {
             xhr.setRequestHeader(RequestHeaders.sdkContextHeader, RequestHeaders.sdkContextHeaderAppIdRequest);
         }
 
@@ -570,7 +588,7 @@ export class Sender implements IChannelControlsAI {
     private _parseResponse(response: any): IBackendResponse {
         try {
             if (response && response !== "") {
-                const result = JSON.parse(response);
+                const result = getJSON().parse(response);
 
                 if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
                     result.itemsReceived - result.itemsAccepted === result.errors.length) {
@@ -578,7 +596,7 @@ export class Sender implements IChannelControlsAI {
                 }
             }
         } catch (e) {
-            this._logger.throwInternal(
+            this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.InvalidBackendResponse,
                 "Cannot parse the response. " + Util.getExceptionName(e),
@@ -642,10 +660,10 @@ export class Sender implements IChannelControlsAI {
     private _setupTimer() {
         if (!this._timeoutHandle) {
             const retryInterval = this._retryAt ? Math.max(0, this._retryAt - Date.now()) : 0;
-            const timerValue = Math.max(this._config.maxBatchInterval(), retryInterval);
+            const timerValue = Math.max(this._senderConfig.maxBatchInterval(), retryInterval);
 
             this._timeoutHandle = setTimeout(() => {
-                this.triggerSend();
+                this.triggerSend(true, null, SendRequestReason.NormalSchedule);
             }, timerValue);
         }
     }
@@ -663,7 +681,7 @@ export class Sender implements IChannelControlsAI {
 
     private _formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
         if (xhr) {
-            return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + xhr.responseText || xhr.response || "";
+            return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + _getResponseText(xhr) || xhr.response || "";
         }
 
         return message;
@@ -680,15 +698,16 @@ export class Sender implements IChannelControlsAI {
      * appId from the backend for the correct correlation.
      */
     private _xdrSender(payload: string[], isAsync: boolean) {
+        let _window = getWindow();
         const xdr = new XDomainRequest();
         xdr.onload = () => this._xdrOnLoad(xdr, payload);
         xdr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessageXdr(xdr), event);
 
         // XDomainRequest requires the same protocol as the hosting page.
         // If the protocol doesn't match, we can't send the telemetry :(.
-        const hostingProtocol = typeof window === "object" && window.location && window.location.protocol || "";
-        if (this._config.endpointUrl().lastIndexOf(hostingProtocol, 0) !== 0) {
-            this._logger.throwInternal(
+        const hostingProtocol = _window && _window.location && _window.location.protocol || "";
+        if (this._senderConfig.endpointUrl().lastIndexOf(hostingProtocol, 0) !== 0) {
+            this.diagLog().throwInternal(
                 LoggingSeverity.WARNING,
                 _InternalMessageId.TransmissionFailed, ". " +
                 "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol.");
@@ -697,7 +716,7 @@ export class Sender implements IChannelControlsAI {
             return;
         }
 
-        const endpointUrl = this._config.endpointUrl().replace(/^(https?:)/, "");
+        const endpointUrl = this._senderConfig.endpointUrl().replace(/^(https?:)/, "");
         xdr.open('POST', endpointUrl);
 
         // compose an array of payloads
@@ -709,9 +728,23 @@ export class Sender implements IChannelControlsAI {
 
     private _formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): string {
         if (xdr) {
-            return "XDomainRequest,Response:" + xdr.responseText || "";
+            return "XDomainRequest,Response:" + _getResponseText(xdr) || "";
         }
 
         return message;
+    }
+
+    private _notifySendRequest(sendRequest: SendRequestReason, isAsync: boolean) {
+        let manager = this._notificationManager;
+        if (manager && manager.eventsSendRequest) {
+            try {
+                manager.eventsSendRequest(sendRequest, isAsync);
+            } catch (e) {
+                this.diagLog().throwInternal(LoggingSeverity.CRITICAL,
+                    _InternalMessageId.NotificationException,
+                    "send request notification failed: " + Util.getExceptionName(e),
+                    { exception: Util.dump(e) });
+            }
+        }
     }
 }

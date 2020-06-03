@@ -150,7 +150,7 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
         return exceptionDetailsInterface;
     }
 
-    public static CreateFromInterface(logger, exception: IExceptionDetailsInternal): _ExceptionDetails {
+    public static CreateFromInterface(logger:IDiagnosticLogger, exception: IExceptionDetailsInternal): _ExceptionDetails {
         const parsedStack = (exception.parsedStack instanceof Array
             &&CoreUtils.arrMap(exception.parsedStack, frame => _StackFrame.CreateFromInterface(frame)))
             || exception.parsedStack;
@@ -160,9 +160,9 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
         return exceptionDetails;
     }
 
-    private static parseStack(stack): _StackFrame[] {
+    private static parseStack(stack?:string): _StackFrame[] {
         let parsedStack: _StackFrame[];
-        if (typeof stack === "string") {
+        if (CoreUtils.isString(stack)) {
             const frames = stack.split('\n');
             parsedStack = [];
             let level = 0;
@@ -234,6 +234,8 @@ export class _StackFrame extends StackFrame implements ISerializable {
     constructor(sourceFrame: string | IExceptionStackFrameInternal, level: number) {
         super();
 
+        // Not converting this to CoreUtils.isString() as typescript uses this logic to "understand" the different
+        // types for the 2 different code paths
         if (typeof sourceFrame === "string") {
             const frame: string = sourceFrame;
             this.level = level;
