@@ -2,7 +2,7 @@ import React from "react";
 import ReactPlugin from "../src/ReactPlugin";
 import AppInsightsErrorBoundary from "../src/AppInsightsErrorBoundary";
 import * as Enzyme from "enzyme";
-import * as Adapter from "enzyme-adapter-react-16";
+import Adapter from "enzyme-adapter-react-16";
 import { TestComponent, ErrorTestComponent } from "./TestComponent";
 
 Enzyme.configure({
@@ -26,7 +26,7 @@ describe("<AppInsightsErrorBoundary />", () => {
         <TestComponent />
       </AppInsightsErrorBoundary>
     );
-    expect(component.html()).toEqual(Enzyme.shallow(<TestComponent />));
+    expect(component.html()).toEqual(Enzyme.shallow(<TestComponent />).html());
   });
 
   it("should catch the error and render the alternative component", () => {
@@ -40,7 +40,7 @@ describe("<AppInsightsErrorBoundary />", () => {
         <ErrorTestComponent />
       </AppInsightsErrorBoundary>
     );
-    expect(component.html()).toEqual(Enzyme.shallow(<ErrorDisplay />));
+    expect(component.html()).toEqual(Enzyme.shallow(<ErrorDisplay />).html());
   });
 
   it("should catch the error and track exception", () => {

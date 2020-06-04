@@ -84,7 +84,7 @@ export default class ReactPlugin extends BaseTelemetryPlugin {
         if (this._analyticsPlugin) {
             this._analyticsPlugin.trackException(exception, customProperties);
         } else {
-            this._logger.throwInternal(
+            this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, React plugin telemetry will not be sent: ");
         }
     };

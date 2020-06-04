@@ -9,6 +9,7 @@
         "alwaysStrict": true,
         "declaration": true,
         "jsx": "react",
+        "esModuleInterop": true,
         "allowJs": true
     },
     "files": []
