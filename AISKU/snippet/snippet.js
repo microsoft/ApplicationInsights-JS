@@ -26,7 +26,7 @@
         var appInsights = {
             initialize: true,   // initialize sdk on download
             queue: [],
-            sv: "3",            // Track the actual snippet version for reporting.
+            sv: "4",            // Track the actual snippet version for reporting.
             version: 2.0,       // initialization version, if this is not 2.0 the previous scripts fail to initialize
             config: aiConfig
         };
@@ -224,19 +224,20 @@
     
         function _createMethods(methods) {
             while (methods.length) {
-                var name = methods.pop();
-                // Define a temporary method that queues-up a the real method call
-                appInsights[name] = function () {
-                    // Capture the original arguments passed to the method
-                    var originalArguments = arguments;
-                    if (!loadFailed) { // If we have detected that the main script failed to load then stop queuing events that will never be processed
-                        // Queue-up a call to the real method
-                        appInsights.queue.push(function () {
-                            // Invoke the real method with the captured original arguments
-                            appInsights[name].apply(appInsights, originalArguments);
-                        });
-                    }
-                };
+                (function (name) {
+                    // Define a temporary method that queues-up a the real method call
+                    appInsights[name] = function () {
+                        // Capture the original arguments passed to the method
+                        var originalArguments = arguments;
+                        if (!loadFailed) { // If we have detected that the main script failed to load then stop queuing events that will never be processed
+                            // Queue-up a call to the real method
+                            appInsights.queue.push(function () {
+                                // Invoke the real method with the captured original arguments
+                                appInsights[name].apply(appInsights, originalArguments);
+                            });
+                        }
+                    };
+                })(methods.pop());
             }
         }
 
