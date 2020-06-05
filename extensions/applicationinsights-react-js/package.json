@@ -43,10 +43,10 @@
         "ts-jest": "^24.0.2",
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
-        "typescript": "3.9.3"
+        "typescript": "^3.9.3"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-shims" : "^1.0.0",
+        "@microsoft/applicationinsights-shims": "^1.0.0",
         "@microsoft/applicationinsights-core-js": "^2.5.4",
         "@microsoft/applicationinsights-common": "^2.5.4",
         "history": "^4.10.1"

@@ -4,7 +4,7 @@
  */
 
 import {
-    IConfig, IPageViewTelemetry, IMetricTelemetry, IAppInsights, IEventTelemetry
+    IConfig, IPageViewTelemetry, IMetricTelemetry, IAppInsights, IEventTelemetry, IExceptionTelemetry
 } from "@microsoft/applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore, IDiagnosticLogger,
@@ -77,6 +77,18 @@ export default class ReactPlugin extends BaseTelemetryPlugin {
                 LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, React plugin telemetry will not be sent: ");
         }
     }
+
+    trackException(exception: IExceptionTelemetry, customProperties?: {
+        [key: string]: any;
+    }) {
+        if (this._analyticsPlugin) {
+            this._analyticsPlugin.trackException(exception, customProperties);
+        } else {
+            this.diagLog().throwInternal(
+                LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, React plugin telemetry will not be sent: ");
+        }
+    };
+
 
     private addHistoryListener(history: History): void {
         const locationListener: LocationListener = (location: Location, action: Action): void => {

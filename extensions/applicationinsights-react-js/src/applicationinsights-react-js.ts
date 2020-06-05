@@ -5,6 +5,7 @@ import '@microsoft/applicationinsights-shims';
 import { IReactExtensionConfig } from "./Interfaces/IReactExtensionConfig";
 import ReactPlugin from "./ReactPlugin";
 import withAITracking from "./withAITracking";
+import AppInsightsErrorBoundary from "./AppInsightsErrorBoundary"
 import {
   AppInsightsContext,
   useAppInsightsContext
@@ -16,6 +17,7 @@ export {
   ReactPlugin,
   IReactExtensionConfig,
   withAITracking,
+  AppInsightsErrorBoundary,
   AppInsightsContext,
   useAppInsightsContext,
   useTrackEvent,

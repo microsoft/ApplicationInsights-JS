@@ -20,3 +20,11 @@ export class TestComponent extends React.Component<ITestComponentProps> {
 }
 
 export default TestComponent;
+
+export class ErrorTestComponent extends React.Component {
+  public render(): React.ReactNode {
+    if (true) {
+      throw new Error("Error");
+    }
+  }
+}
