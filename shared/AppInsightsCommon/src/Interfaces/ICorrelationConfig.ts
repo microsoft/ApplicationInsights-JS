@@ -6,7 +6,7 @@ import { DistributedTracingModes } from '../Enums';
 export interface ICorrelationConfig {
     enableCorsCorrelation: boolean;
     correlationHeaderExcludedDomains: string[];
-    correlationHeaderExludePatterns: RegExp[];
+    correlationHeaderExludePatterns?: RegExp[];
     disableCorrelationHeaders: boolean;
     distributedTracingMode: DistributedTracingModes;
     maxAjaxCallsPerView: number;
