@@ -17,10 +17,10 @@ module Microsoft.ApplicationInsights.Context {
         public syntheticSource: string;
 
         constructor() {
-            this.id = Util.newId();
+            this.id = Util.generateW3CId();
             if (window && window.location && window.location.pathname) {
                 this.name = window.location.pathname;
             }
         }
     }
-} 
+}

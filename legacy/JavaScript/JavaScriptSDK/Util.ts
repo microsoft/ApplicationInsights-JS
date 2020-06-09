@@ -329,7 +329,7 @@ module Microsoft.ApplicationInsights {
             if (typeof userAgent !== "string") {
                 return false;
             }
-        
+
             // Cover all iOS based browsers here. This includes:
             // - Safari on iOS 12 for iPhone, iPod Touch, iPad
             // - WkWebview on iOS 12 for iPhone, iPod Touch, iPad
@@ -338,7 +338,7 @@ module Microsoft.ApplicationInsights {
             if (userAgent.indexOf("CPU iPhone OS 12") !== -1 || userAgent.indexOf("iPad; CPU OS 12") !== -1) {
                 return true;
             }
-         
+
             // Cover Mac OS X based browsers that use the Mac OS networking stack. This includes:
             // - Safari on Mac OS X
             // This does not include:
@@ -349,7 +349,7 @@ module Microsoft.ApplicationInsights {
             if (userAgent.indexOf("Macintosh; Intel Mac OS X 10_14") !== -1 && userAgent.indexOf("Version/") !== -1 && userAgent.indexOf("Safari") !== -1) {
                 return true;
             }
-         
+
             // Cover Mac OS X internal browsers that use the Mac OS networking stack. This includes:
             // - Internal browser on Mac OS X
             // This does not include:
@@ -360,30 +360,30 @@ module Microsoft.ApplicationInsights {
             if (userAgent.indexOf("Macintosh; Intel Mac OS X 10_14") !== -1 && _endsWith(userAgent, "AppleWebKit/605.1.15 (KHTML, like Gecko)")) {
                 return true;
             }
-         
+
             // Cover Chrome 50-69, because some versions are broken by SameSite=None, and none in this range require it.
             // Note: this covers some pre-Chromium Edge versions, but pre-Chromim Edge does not require SameSite=None, so this is fine.
             // Note: this regex applies to Windows, Mac OS X, and Linux, deliberately.
             if (userAgent.indexOf("Chrome/5") !== -1 || userAgent.indexOf("Chrome/6") !== -1) {
                 return true;
             }
-         
+
             // Unreal Engine runs Chromium 59, but does not advertise as Chrome until 4.23. Treat versions of Unreal
             // that don't specify their Chrome version as lacking support for SameSite=None.
             if (userAgent.indexOf("UnrealEngine") !== -1 && userAgent.indexOf("Chrome") === -1) {
                 return true;
             }
-         
+
             // UCBrowser < 12.13.2 ignores Set-Cookie headers with SameSite=None
             // NB: this rule isn't complete - you need regex to make a complete rule.
             // See: https://www.chromium.org/updates/same-site/incompatible-clients
             if (userAgent.indexOf("UCBrowser/12") !== -1 || userAgent.indexOf("UCBrowser/11") !== -1) {
                 return true;
             }
-         
+
             return false;
         }
-    
+
         /**
          * helper method to set userId and sessionId cookie
          */
@@ -402,7 +402,7 @@ module Microsoft.ApplicationInsights {
                         Util._uaDisallowsSameSiteNone = Util.disallowsSameSiteNone(navigator.userAgent);
                     }
                 }
-                
+
                 if (!Util._uaDisallowsSameSiteNone) {
                     value = value + ";SameSite=None"; // SameSite can only be changed on secure pages and browsers that support samesite=None setting
                 }
@@ -470,6 +470,39 @@ module Microsoft.ApplicationInsights {
          */
         public static newId(): string {
             return UtilHelpers.newId();
+        }
+
+        /**
+         * generate a random 32bit number (-0x80000000..0x7FFFFFFF).
+         */
+        public static random32() {
+            return (0x100000000 * Math.random()) | 0;
+        }
+
+        /**
+         * generate W3C trace id
+         */
+        public static generateW3CId() {
+            const hexValues = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
+
+            // rfc4122 version 4 UUID without dashes and with lowercase letters
+            let oct = "", tmp;
+            for (let a = 0; a < 4; a++) {
+                tmp = Util.random32();
+                oct +=
+                    hexValues[tmp & 0xF] +
+                    hexValues[tmp >> 4 & 0xF] +
+                    hexValues[tmp >> 8 & 0xF] +
+                    hexValues[tmp >> 12 & 0xF] +
+                    hexValues[tmp >> 16 & 0xF] +
+                    hexValues[tmp >> 20 & 0xF] +
+                    hexValues[tmp >> 24 & 0xF] +
+                    hexValues[tmp >> 28 & 0xF];
+            }
+
+            // "Set the two most significant bits (bits 6 and 7) of the clock_seq_hi_and_reserved to zero and one, respectively"
+            const clockSequenceHi = hexValues[8 + (Math.random() * 4) | 0];
+            return oct.substr(0, 8) + oct.substr(9, 4) + "4" + oct.substr(13, 3) + clockSequenceHi + oct.substr(16, 3) + oct.substr(19, 12);
         }
 
         /**
