@@ -3,7 +3,6 @@ import { Log } from '@microsoft/sp-core-library';
 import {
   BaseApplicationCustomizer
 } from '@microsoft/sp-application-base';
-import { Dialog } from '@microsoft/sp-dialog';
 
 import * as strings from 'AppInsightsApplicationCustomizerStrings';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web'
@@ -45,13 +44,6 @@ export default class AppInsightsApplicationCustomizer
     }
     appInsights.addTelemetryInitializer(telemetryInitializer);
     appInsights.trackPageView();
-
-    let message: string = this.properties.instrumentationKey;
-    if (!message) {
-      message = '(No properties were provided.)';
-    }
-
-    Dialog.alert(`Hello from ${strings.Title} - 1:\n\n${message}`);
 
     return Promise.resolve();
   }
