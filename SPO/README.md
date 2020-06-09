@@ -38,6 +38,7 @@
 ### Deploy Extension solution Tenant wide (All sites share same iKey)
 1. Under your Extension solution config folder, set the skipFeatureDeployment attribute to true in the package-solution.json file. And add "ClientSideInstance.xml" file under "features"/"assets"/"elementManifests".
 <p><img src="./img/image3.png"/></p>
+
 2. Export properties you defined from ClientSideInstance.xml file. 
     ```js
     <?xml version="1.0" encoding="utf-8"?>
