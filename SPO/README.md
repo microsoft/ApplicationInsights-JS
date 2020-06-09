@@ -37,7 +37,7 @@
 ## Set up deployment configuration
 ### Deploy Extension solution Tenant wide (All sites share same iKey)
 1. Under your Extension solution config folder, set the skipFeatureDeployment attribute to true in the package-solution.json file. And add "ClientSideInstance.xml" file under "features"/"assets"/"elementManifests".
-[img3]
+<p><img src="./img/image3.png"/></p>
 2. Export properties you defined from ClientSideInstance.xml file. 
     ```js
     <?xml version="1.0" encoding="utf-8"?>
@@ -59,16 +59,16 @@
 5. Click on Apps for SharePoint.
 6. Upload the solution to the catalog.
 7. Check the option Make this solution available to all sites in the organization .
-[img4]
+<p><img src="./img/image4.png"/></p>
 
 > Now Application Insights web JS SDK is installed tenant wide on your SPO. If you need to edit configurations, you could do it through SharePoint UI: 
 
 1. On your tenant app catalog page, go to Site Contents.
 9. Open the list Tenant Wide Extensions.
 10. Edit the ApplicationInsightsExtension item. For example, you can use a different instrumentationKey or set other configuration properties you set up in Set up Application Insights section.
-[img5]
+<p><img src="./img/image5.png"/></p>
 11. Save the item and all your modern SharePoint site on Office 365 are ready to be monitored. If this was the first solution globally deployed on your tenant, it may take up to 20 minutes get available.
-[img6]
+<p><img src="./img/image6.png"/></p>
 
 ### Deploy Extension solution on a single site
 1. Remove skipFeatureDeployment attribute from package-solution file.
@@ -93,9 +93,9 @@
 5. Click on Apps for SharePoint.
 6. Upload the solution to the catalog.
 7. Click Deploy.
-[img1]
+<p><img src="./img/image1.png"/></p>
 8. On the site you want to install Application Insights, click "+New" -> App , to add appinsights extension to your site.
 > Wait until the extension is added to your site, AppInsights Web JS SDK is installed on your site. With this route, you can not edit properties on SharePoint UI. If you change the AI configuration, you'll need to repeate step 3-8.
-[img2]
+<p><img src="./img/image2.png"/></p>
 
 Check AppInsightsExtensionSolutionSample. 
