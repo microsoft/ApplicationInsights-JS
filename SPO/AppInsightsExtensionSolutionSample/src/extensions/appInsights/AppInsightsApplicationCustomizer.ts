@@ -5,7 +5,7 @@ import {
 } from '@microsoft/sp-application-base';
 
 import * as strings from 'AppInsightsApplicationCustomizerStrings';
-import { ApplicationInsights } from '@microsoft/applicationinsights-web'
+import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 
 const LOG_SOURCE: string = 'AppInsightsApplicationCustomizer';
 
@@ -41,7 +41,7 @@ export default class AppInsightsApplicationCustomizer
     var telemetryInitializer = (envelope) => {
       envelope.baseData.properties = envelope.baseData.properties || {};
       envelope.baseData.properties["email"] = "test1@email.com";
-    }
+    };
     appInsights.addTelemetryInitializer(telemetryInitializer);
     appInsights.trackPageView();
 

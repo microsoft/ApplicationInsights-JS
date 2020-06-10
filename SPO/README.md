@@ -39,7 +39,7 @@
 1. Under your Extension solution config folder, set the skipFeatureDeployment attribute to true in the package-solution.json file. And add "ClientSideInstance.xml" file under "features"/"assets"/"elementManifests".
 <p><img src="./img/image3.png"/></p>
 
-2. Export properties you defined from ClientSideInstance.xml file. 
+2. Export properties you defined from ClientSideInstance.xml file.
     ```js
     <?xml version="1.0" encoding="utf-8"?>
     <Elements xmlns="http://schemas.microsoft.com/sharepoint/">
@@ -51,6 +51,7 @@
         </ClientSideComponentInstance>
     </Elements>
     ```
+    
 3. Run following command to create .sppkg file. Check [Host extension from CDN](https://docs.microsoft.com/en-us/sharepoint/dev/spfx/extensions/get-started/hosting-extension-from-office365-cdn) for reference.
     ```sh
     gulp bundle --ship
@@ -99,4 +100,4 @@
 > Wait until the extension is added to your site, AppInsights Web JS SDK is installed on your site. With this route, you can not edit properties on SharePoint UI. If you change the AI configuration, you'll need to repeate step 3-8.
 <p><img src="./img/image2.png"/></p>
 
-Check AppInsightsExtensionSolutionSample. 
+Check [AppInsightsExtensionSolutionSample](https://github.com/microsoft/ApplicationInsights-JS/tree/master/SPO/AppInsightsExtensionSolutionSample). 
