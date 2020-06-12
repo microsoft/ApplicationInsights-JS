@@ -1,6 +1,6 @@
 ## appinsights-extension-solution-sample
 
-This is a sample SharePoint Framework Extension solution that will set up Application Insights on a SharePoint Online modern site.
+This is a sample SharePoint Framework Extension solution that will set up Application Insights on a [SharePoint Online modern site](https://support.microsoft.com/en-ie/office/sharepoint-classic-and-modern-experiences-5725c103-505d-4a6e-9350-300d3ec7d73f?ui=en-us&rs=en-ie&ad=ie).
 
 ### Building the code
 
