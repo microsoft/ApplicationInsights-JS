@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Elements xmlns="http://schemas.microsoft.com/sharepoint/">
+    <ClientSideComponentInstance
+        Title="AppInsights"
+        Location="ClientSideExtension.ApplicationCustomizer"
+        ComponentId="53048b36-d45c-4706-b6ae-00afa52b2b3d"
+        Properties="{&quot;instrumentationKey&quot;:&quot;YOUR_INSTRUMENTATION_KEY_GOES_HERE&quot;}">
+    </ClientSideComponentInstance>
+</Elements>
