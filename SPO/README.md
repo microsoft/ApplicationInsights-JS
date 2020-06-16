@@ -42,12 +42,12 @@ Please find the instructions [here](https://docs.microsoft.com/en-us/azure/azure
 ### Select Option A or Option B for deployment based on your needs: 
 The custom properties (eg. instrumentationKey in this example) is stored in several locations: 
 1. When running a gulp serve and running the page in debug mode, the key that is stored in `config\serve.json` -> `properties` is passed to the page as querystring.
-2. When the extension is installed on a site, the key in `sharepoint\assets\elements.xml` -> `ClientSideComponentProperties` is used (Option B).
-3. When deployed tenant wide, the key in `sharepoint\assets\ClientSideInstance.xml` -> `Properties` is used (Option A).
+2. When deployed tenant wide, the key in `sharepoint\assets\ClientSideInstance.xml` -> `Properties` is used (Option A).
+3. When the extension is installed on a site, the key in `sharepoint\assets\elements.xml` -> `ClientSideComponentProperties` is used (Option B).
 
 The [AppInsightsExtensionSolutionSample](https://github.com/microsoft/ApplicationInsights-JS/tree/master/SPO/AppInsightsExtensionSolutionSample) is using Option A. We highly recommend you to create your own SPFx Extension solution, in order to get the full support of Application Insights and configure the SDK based on your needs.
 
-### Option A - Deploy Extension solution Tenant wide (All sites share same iKey)
+### Option A - Deploy Extension solution Tenant wide (All sites share same configurations, including iKey)
 4. Under your Extension solution config folder, set the skipFeatureDeployment attribute to true in the `package-solution.json` file. And add `ClientSideInstance.xml` file under `features\assets\elementManifests`.
 <p><img src="./img/image3.png"/></p>
 
@@ -84,7 +84,7 @@ The [AppInsightsExtensionSolutionSample](https://github.com/microsoft/Applicatio
 14. Save the item and all your modern SharePoint site on Office 365 are ready to be monitored. If this was the first solution globally deployed on your tenant, it may take up to 20 minutes get available.
 <p><img src="./img/image6.png"/></p>
 
-### Option B - Deploy Extension solution on a single site
+### Option B - Deploy Extension solution on a single site (Individual sites may use different configurations, including iKeys)
 4. Remove skipFeatureDeployment attribute from `package-solution.json` file.
 5. Export properties you defined from `elements.xml` file.
     ```js
