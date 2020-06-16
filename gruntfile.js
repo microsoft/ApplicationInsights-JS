@@ -118,6 +118,13 @@ module.exports = function (grunt) {
                 ],
                 out: './extensions/applicationinsights-dependencies-js/Tests/Selenium/dependencies.tests.js'
             },
+            debugplugin: {
+                tsconfig: './extensions/applicationinsights-debugplugin-js/tsconfig.json',
+                src: [
+                    './extensions/applicationinsights-debugplugin-js/*.ts',
+                    './extensions/applicationinsights-debugplugin-js/components/*.ts',
+                ]
+            },
             aichannel: {
                 tsconfig: './channels/applicationinsights-channel-js/tsconfig.json'
             },
@@ -414,6 +421,7 @@ module.exports = function (grunt) {
     grunt.registerTask("reactnativetests", ["qunit:reactnative"]);
     grunt.registerTask("deps", ["ts:deps"]);
     grunt.registerTask("depstest", ["ts:deps", "ts:depstest", "qunit:deps"]);
+    grunt.registerTask("debugplugin", ["ts:debugplugin"]);
     grunt.registerTask("aichannel", ["ts:aichannel"]);
     grunt.registerTask("aichanneltest", ["ts:aichannel", "ts:aichanneltest", "qunit:aichannel"]);
     grunt.registerTask("rollupes3", ["ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3"]);

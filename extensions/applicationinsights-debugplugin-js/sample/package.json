@@ -1,0 +1,16 @@
+{
+  "name": "test-site",
+  "version": "1.0.0",
+  "description": "",
+  "main": "jsfile.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "polka": "^0.5.2",
+    "sirv": "^0.4.2"
+  }
+}
