@@ -6,7 +6,7 @@ Please find the instructions [here](https://docs.microsoft.com/en-us/azure/azure
 ## Set up Application Insights 
 1. Follow [SPFx Extensions instruction](https://docs.microsoft.com/en-us/sharepoint/dev/spfx/extensions/get-started/build-a-hello-world-extension) to create a SharePoint Framework Extension.
 2. Install Application Insights via [NPM setup](https://github.com/microsoft/ApplicationInsights-JS#getting-started). 
-3. Under your Extension solution src folder, update ApplicationCustomizer.ts file:
+3. Under your Extension solution src folder, update `ApplicationCustomizer.ts` file:
 
     a. [Set up Application Insights](https://github.com/microsoft/ApplicationInsights-JS#npm-setup-ignore-if-using-snippet-setup)
     ```js
@@ -39,11 +39,19 @@ Please find the instructions [here](https://docs.microsoft.com/en-us/azure/azure
     appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
     ```
 ## Set up deployment configuration
+### Select Option A or Option B for deployment based on your needs: 
+The custom properties (eg. instrumentationKey in this example) is stored in several locations: 
+1. When running a gulp serve and running the page in debug mode, the key that is stored in `config\serve.json` -> `properties` is passed to the page as querystring.
+2. When the extension is installed on a site, the key in `sharepoint\assets\elements.xml` -> `ClientSideComponentProperties` is used (Option B).
+3. When deployed tenant wide, the key in `sharepoint\assets\ClientSideInstance.xml` -> `Properties` is used (Option A).
+
+The [AppInsightsExtensionSolutionSample](https://github.com/microsoft/ApplicationInsights-JS/tree/master/SPO/AppInsightsExtensionSolutionSample) is using Option A. We highly recommend you to create your own SPFx Extension solution, in order to get the full support of Application Insights and configure the SDK based on your needs.
+
 ### Option A - Deploy Extension solution Tenant wide (All sites share same iKey)
-4. Under your Extension solution config folder, set the skipFeatureDeployment attribute to true in the package-solution.json file. And add "ClientSideInstance.xml" file under "features"/"assets"/"elementManifests".
+4. Under your Extension solution config folder, set the skipFeatureDeployment attribute to true in the `package-solution.json` file. And add `ClientSideInstance.xml` file under `features\assets\elementManifests`.
 <p><img src="./img/image3.png"/></p>
 
-5. Export properties you defined from ClientSideInstance.xml file.
+5. Export properties you defined from `ClientSideInstance.xml` file.
     ```js
     <?xml version="1.0" encoding="utf-8"?>
     <Elements xmlns="http://schemas.microsoft.com/sharepoint/">
@@ -77,8 +85,8 @@ Please find the instructions [here](https://docs.microsoft.com/en-us/azure/azure
 <p><img src="./img/image6.png"/></p>
 
 ### Option B - Deploy Extension solution on a single site
-4. Remove skipFeatureDeployment attribute from package-solution file.
-5. Export properties you defined from elements.xml file.
+4. Remove skipFeatureDeployment attribute from `package-solution.json` file.
+5. Export properties you defined from `elements.xml` file.
     ```js
     <?xml version="1.0" encoding="utf-8"?>
     <Elements xmlns="http://schemas.microsoft.com/sharepoint/">
