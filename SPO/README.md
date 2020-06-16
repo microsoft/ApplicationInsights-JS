@@ -20,7 +20,7 @@ Please find the instructions [here](https://docs.microsoft.com/en-us/azure/azure
     appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
     ```
 
-    b. Expose all configuration options you need in the ApplicationCustomizerProperties interface.
+    b. Expose all [configuration options](https://github.com/microsoft/ApplicationInsights-JS#configuration) you need in the ApplicationCustomizerProperties interface.
     ```js
     export interface IAppInsightsApplicationCustomizerProperties {
         /* ...Other Configuration Options... */
