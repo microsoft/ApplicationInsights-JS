@@ -149,13 +149,7 @@ export class BaseCore implements IAppInsightsCore {
         }
 
         _this._setInit(true);
-        // Release the queue
-        if (_this._eventQueue.length > 0) {
-            _arrForEach(_this._eventQueue, (event: ITelemetryItem) => {
-                _this.getProcessTelContext().processNext(event);
-            });
-            _this._eventQueue = [];
-        }
+        _this.releaseQueue();
     }
 
     getTransmissionControls(): IChannelControls[][] {
@@ -198,5 +192,15 @@ export class BaseCore implements IAppInsightsCore {
         }
 
         return new ProcessTelemetryContext(thePlugins, _this.config, _this);
+    }
+
+    protected releaseQueue() {
+        let _this = this;
+        if (_this._eventQueue.length > 0) {
+            _arrForEach(_this._eventQueue, (event: ITelemetryItem) => {
+                _this.getProcessTelContext().processNext(event);
+            });
+            _this._eventQueue = [];
+        }
     }
 }
