@@ -535,12 +535,8 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 appInsightsCore.initialize(
                     { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" },
                     [trackPlugin, channelPlugin]);
-
-                Assert.ok(appInsightsCore["_eventQueue"].length == 1, "Event queue wrong number of events");
-                appInsightsCore.track({name:"TestEvent2"});
-                Assert.ok(channelSpy.calledTwice, "Channel process incorrect number of times");
+                Assert.ok(channelSpy.calledOnce, "Channel process incorrect number of times");
                 Assert.ok(channelSpy.args[0][0].name == "TestEvent1", "Incorrect event");
-                Assert.ok(channelSpy.args[1][0].name == "TestEvent2", "Incorrect event");
                 Assert.ok(appInsightsCore["_eventQueue"].length == 0, "Event queue wrong number of events");
             }
         });
