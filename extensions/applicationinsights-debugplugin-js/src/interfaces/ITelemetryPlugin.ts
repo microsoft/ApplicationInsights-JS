@@ -14,5 +14,5 @@ type trackers = 'trackEvent'
   | '_sender';
 
 export interface ITelemetryConfig {
-  trackers: trackers[]
+  trackers: string[]
 }
