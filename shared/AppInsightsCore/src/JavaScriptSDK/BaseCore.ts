@@ -92,8 +92,8 @@ export class BaseCore implements IAppInsightsCore {
         allExtensions.push(...extensions, ...config.extensions);
         allExtensions = sortPlugins(allExtensions);
 
-        let coreExtensions:any[] = [];
-        let channelExtensions:any[] = [];
+        let coreExtensions: any[] = [];
+        let channelExtensions: any[] = [];
 
         // Check if any two extensions have the same priority, then warn to console
         // And extract the local extensions from the 
@@ -149,6 +149,7 @@ export class BaseCore implements IAppInsightsCore {
         }
 
         _this._setInit(true);
+        _this.releaseQueue();
     }
 
     getTransmissionControls(): IChannelControls[][] {
@@ -171,13 +172,6 @@ export class BaseCore implements IAppInsightsCore {
         }
 
         if (_this.isInitialized()) {
-            // Release queue
-            if (_this._eventQueue.length > 0) {
-                _arrForEach(_this._eventQueue, (event: ITelemetryItem) => {
-                    _this.getProcessTelContext().processNext(event);
-                });
-                _this._eventQueue = [];
-            }
             // Process the telemetry plugin chain
             _this.getProcessTelContext().processNext(telemetryItem);
         } else {
@@ -198,5 +192,15 @@ export class BaseCore implements IAppInsightsCore {
         }
 
         return new ProcessTelemetryContext(thePlugins, _this.config, _this);
+    }
+
+    protected releaseQueue() {
+        let _this = this;
+        if (_this._eventQueue.length > 0) {
+            _arrForEach(_this._eventQueue, (event: ITelemetryItem) => {
+                _this.getProcessTelContext().processNext(event);
+            });
+            _this._eventQueue = [];
+        }
     }
 }
