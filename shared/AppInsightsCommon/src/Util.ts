@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { StorageType } from "./Enums";
-import { 
-    CoreUtils, EventHelper, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin, 
+import {
+    CoreUtils, EventHelper, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin,
     getGlobal, getGlobalInst, getWindow, getDocument, getNavigator, getPerformance, getLocation, hasJSON, getJSON,
     strPrototype
 } from "@microsoft/applicationinsights-core-js";
@@ -13,16 +13,16 @@ import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 
 let _navigator = getNavigator();
 let _isString = CoreUtils.isString;
-let _uaDisallowsSameSiteNone:boolean = null;
+let _uaDisallowsSameSiteNone: boolean = null;
 
-function _endsWith(value:string, search:string) {
+function _endsWith(value: string, search: string) {
     let len = value.length;
     let start = len - search.length;
     return value.substring(start >= 0 ? start : 0, len) === search;
 }
 
 export class Util {
-    private static document: any = getDocument()||{};
+    private static document: any = getDocument() || {};
     private static _canUseLocalStorage: boolean = undefined;
     private static _canUseSessionStorage: boolean = undefined;
     // listing only non-geo specific locations
@@ -340,11 +340,11 @@ export class Util {
         return CoreUtils._canUseCookies;
     }
 
-    public static disallowsSameSiteNone(userAgent:string) {
+    public static disallowsSameSiteNone(userAgent: string) {
         if (!_isString(userAgent)) {
             return false;
         }
-    
+
         // Cover all iOS based browsers here. This includes:
         // - Safari on iOS 12 for iPhone, iPod Touch, iPad
         // - WkWebview on iOS 12 for iPhone, iPod Touch, iPad
@@ -353,7 +353,7 @@ export class Util {
         if (userAgent.indexOf("CPU iPhone OS 12") !== -1 || userAgent.indexOf("iPad; CPU OS 12") !== -1) {
             return true;
         }
-     
+
         // Cover Mac OS X based browsers that use the Mac OS networking stack. This includes:
         // - Safari on Mac OS X
         // This does not include:
@@ -364,7 +364,7 @@ export class Util {
         if (userAgent.indexOf("Macintosh; Intel Mac OS X 10_14") !== -1 && userAgent.indexOf("Version/") !== -1 && userAgent.indexOf("Safari") !== -1) {
             return true;
         }
-     
+
         // Cover Mac OS X internal browsers that use the Mac OS networking stack. This includes:
         // - Internal browser on Mac OS X
         // This does not include:
@@ -375,30 +375,30 @@ export class Util {
         if (userAgent.indexOf("Macintosh; Intel Mac OS X 10_14") !== -1 && _endsWith(userAgent, "AppleWebKit/605.1.15 (KHTML, like Gecko)")) {
             return true;
         }
-     
+
         // Cover Chrome 50-69, because some versions are broken by SameSite=None, and none in this range require it.
         // Note: this covers some pre-Chromium Edge versions, but pre-Chromim Edge does not require SameSite=None, so this is fine.
         // Note: this regex applies to Windows, Mac OS X, and Linux, deliberately.
         if (userAgent.indexOf("Chrome/5") !== -1 || userAgent.indexOf("Chrome/6") !== -1) {
             return true;
         }
-     
+
         // Unreal Engine runs Chromium 59, but does not advertise as Chrome until 4.23. Treat versions of Unreal
         // that don't specify their Chrome version as lacking support for SameSite=None.
         if (userAgent.indexOf("UnrealEngine") !== -1 && userAgent.indexOf("Chrome") === -1) {
             return true;
         }
-     
+
         // UCBrowser < 12.13.2 ignores Set-Cookie headers with SameSite=None
         // NB: this rule isn't complete - you need regex to make a complete rule.
         // See: https://www.chromium.org/updates/same-site/incompatible-clients
         if (userAgent.indexOf("UCBrowser/12") !== -1 || userAgent.indexOf("UCBrowser/11") !== -1) {
             return true;
         }
-     
+
         return false;
     }
-    
+
     /**
      * helper method to set userId and sessionId cookie
      */
@@ -415,9 +415,9 @@ export class Util {
             if (location && location.protocol === "https:") {
                 secureAttrib = ";secure";
                 if (_uaDisallowsSameSiteNone === null) {
-                    _uaDisallowsSameSiteNone = Util.disallowsSameSiteNone((getNavigator()||{} as Navigator).userAgent);
+                    _uaDisallowsSameSiteNone = Util.disallowsSameSiteNone((getNavigator() || {} as Navigator).userAgent);
                 }
-                
+
                 if (!_uaDisallowsSameSiteNone) {
                     value = value + ";SameSite=None"; // SameSite can only be set on secure pages
                 }
@@ -553,7 +553,7 @@ export class Util {
      * Gets IE version returning the document emulation mode if we are running on IE, or null otherwise
      */
     public static getIEVersion(userAgentStr: string = null): number {
-        const myNav = userAgentStr ? userAgentStr.toLowerCase() : (_navigator ? (_navigator.userAgent ||"").toLowerCase() : "");
+        const myNav = userAgentStr ? userAgentStr.toLowerCase() : (_navigator ? (_navigator.userAgent || "").toLowerCase() : "");
         if (myNav.indexOf("msie") !== -1) {
             return parseInt(myNav.split("msie")[1]);
         } else if (myNav.indexOf("trident/")) {
@@ -657,7 +657,7 @@ export class Util {
 }
 
 export class UrlHelper {
-    private static document: any = getDocument()||{};
+    private static document: any = getDocument() || {};
 
     private static _htmlAnchorIdx: number = 0;
     // Use an array of temporary values as it's possible for multiple calls to parseUrl() will be called with different URLs
@@ -720,10 +720,10 @@ export class UrlHelper {
     // Fallback method to grab host from url if document.createElement method is not available
     public static parseHost(url: string, inclPort?: boolean) {
         let fullHost = UrlHelper.parseFullHost(url, inclPort);
-        if (fullHost ) {
+        if (fullHost) {
             const match = fullHost.match(/(www[0-9]?\.)?(.[^/:]+)(\:[\d]+)?/i);
             if (match != null && match.length > 3 && _isString(match[2]) && match[2].length > 0) {
-                return match[2] + (match[3] ||"");
+                return match[2] + (match[3] || "");
             }
         }
 
@@ -771,6 +771,14 @@ export class CorrelationIdHelper {
     public static canIncludeCorrelationHeader(config: ICorrelationConfig, requestUrl: string, currentHost?: string) {
         if (!requestUrl || (config && config.disableCorrelationHeaders)) {
             return false;
+        }
+
+        if (config && config.correlationHeaderExludePatterns) {
+            for (let i = 0; i < config.correlationHeaderExludePatterns.length; i++) {
+                if (config.correlationHeaderExludePatterns[i].test(requestUrl)) {
+                    return false;
+                }
+            }
         }
 
         let requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
@@ -887,7 +895,7 @@ export class DateTimeUtils {
         if (perf && perf.now && perf.timing) {
             return perf.now() + perf.timing.navigationStart
         }
-    
+
         return new Date().getTime()
     };
 
