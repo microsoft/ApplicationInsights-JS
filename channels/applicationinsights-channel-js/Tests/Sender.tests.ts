@@ -770,7 +770,6 @@ export class SenderTests extends TestClass {
                 // setup
                 const inputEnvelope: ITelemetryItem = {
                     name: "test",
-                    time: new Date("2018-06-12").toISOString(),
                     iKey: "iKey",
                     ext: {
                         "web": {
@@ -787,6 +786,7 @@ export class SenderTests extends TestClass {
                     baseData: {
                         "name": "Page View Name",
                         "uri": "https://fakeUri.com",
+                        "startTime": new Date(123),
                         properties: {
                             "property1": "val1",
                             "property2": "val2"
@@ -800,6 +800,9 @@ export class SenderTests extends TestClass {
                 // Act
                 const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
                 const baseData = appInsightsEnvelope.data.baseData;
+
+                // Assert envelope
+                Assert.deepEqual(appInsightsEnvelope.time, new Date(123).toISOString());
 
                 // Assert measurements
                 const resultMeasurements = baseData.measurements;
@@ -930,7 +933,7 @@ export class SenderTests extends TestClass {
 
                 Assert.ok(loggerSpy.calledOnce);
                 Assert.equal(0, sendNotifications.length);
-                
+
                 this._sender.flush();
                 Assert.equal(0, sendNotifications.length);
 

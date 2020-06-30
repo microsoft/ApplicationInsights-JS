@@ -2,9 +2,9 @@
 /// <reference path="../TestFramework/PollingAssert.ts" />
 import { AjaxMonitor } from "../../src/ajax";
 import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders } from "@microsoft/applicationinsights-common";
-import { 
-    AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls, _InternalMessageId, 
-    getPerformance, getGlobalInst, getGlobal 
+import {
+    AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls, _InternalMessageId,
+    getPerformance, getGlobalInst, getGlobal
 } from "@microsoft/applicationinsights-core-js";
 
 interface IFetchArgs {
@@ -496,7 +496,7 @@ export class AjaxTests extends TestClass {
                     };
                     appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                     let fetchSpy = this.sandbox.spy(window, "fetch");
-    
+
                     // Setup
                     let headers = new Headers();
                     headers.append('My-Header', 'Header field');
@@ -505,13 +505,13 @@ export class AjaxTests extends TestClass {
                         headers: headers
                     };
                     const url = 'https://httpbin.org/status/200';
-    
+
                     let headerSpy = this.sandbox.spy(this._ajax, "includeCorrelationHeaders");
-    
+
                     // Act
                     Assert.ok(fetchSpy.notCalled);
                     fetch(url, init);
-    
+
                     // Assert
                     Assert.ok(fetchSpy.calledOnce);
                     Assert.ok(headerSpy.calledOnce);
@@ -547,8 +547,8 @@ export class AjaxTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     disableFetchTracking: false,
                     disableAjaxTracking: false,
                     extensionConfig: {
@@ -632,8 +632,8 @@ export class AjaxTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     disableFetchTracking: false,
                     disableAjaxTracking: false,
                     extensionConfig: {
@@ -710,8 +710,8 @@ export class AjaxTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     disableFetchTracking: false,
                     disableAjaxTracking: false,
                     extensionConfig: {
@@ -795,8 +795,8 @@ export class AjaxTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     disableFetchTracking: false,
                     disableAjaxTracking: false,
                     extensionConfig: {
@@ -873,8 +873,8 @@ export class AjaxTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     disableFetchTracking: false,
                     disableAjaxTracking: false,
                     extensionConfig: {
@@ -957,8 +957,8 @@ export class AjaxTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     disableFetchTracking: false,
                     disableAjaxTracking: false,
                     extensionConfig: {
@@ -1034,8 +1034,8 @@ export class AjaxTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     disableFetchTracking: false,
                     disableAjaxTracking: false,
                     enableRequestHeaderTracking: true,
@@ -1095,7 +1095,7 @@ export class AjaxTests extends TestClass {
                             case 5:
                             case 10:
                             case 11:
-                                // All headers should be added to the init (2nd param) as this overrides 
+                                // All headers should be added to the init (2nd param) as this overrides
                                 // any headers on any request object
                                 Assert.equal(true, headers.has("My-Header"), "My-Header should be present");
                                 Assert.equal("Header field", trackHeaders["my-header"], "my-header present in outbound event");
@@ -1334,6 +1334,7 @@ export class AjaxTests extends TestClass {
                     Assert.ok(trackStub.calledOnce, "TrackAjax should be called");
                     let data = trackStub.args[0][0].baseData;
                     Assert.equal("Ajax", data.type, "It should be an XHR request");
+                    Assert.ok(data.startTime);
                     Assert.equal(expectedResponseDuration, data.duration, "Ajax duration should match expected duration");
                 } finally {
                     (<any>window.performance) = initialPerformance;
@@ -1427,8 +1428,8 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -1465,8 +1466,8 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -1498,8 +1499,8 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -1655,8 +1656,8 @@ export class AjaxPerfTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId"
@@ -1702,8 +1703,8 @@ export class AjaxPerfTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -1760,8 +1761,8 @@ export class AjaxPerfTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -1828,8 +1829,8 @@ export class AjaxPerfTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -1886,8 +1887,8 @@ export class AjaxPerfTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId"
@@ -1945,8 +1946,8 @@ export class AjaxPerfTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -2017,8 +2018,8 @@ export class AjaxPerfTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -2114,8 +2115,8 @@ export class AjaxFrozenTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { 
-                    instrumentationKey: "instrumentationKey", 
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId"
@@ -2172,8 +2173,8 @@ export class AjaxFrozenTests extends TestClass {
 
         //         this._ajax = new AjaxMonitor();
         //         let appInsightsCore = new AppInsightsCore();
-        //         let coreConfig = { 
-        //             instrumentationKey: "instrumentationKey", 
+        //         let coreConfig = {
+        //             instrumentationKey: "instrumentationKey",
         //             extensionConfig: {
         //                 "AjaxDependencyPlugin": {
         //                     appId: "appId"

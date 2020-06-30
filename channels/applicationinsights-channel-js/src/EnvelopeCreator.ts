@@ -45,6 +45,9 @@ export abstract class EnvelopeCreator {
         if (telemetryItem[SampleRate]) {
             envelope.sampleRate = telemetryItem[SampleRate];
         }
+        if (telemetryItem.baseData && telemetryItem.baseData.startTime) {
+            envelope.time = CoreUtils.toISOString(telemetryItem.baseData.startTime);
+        }
         envelope.iKey = telemetryItem.iKey;
         const iKeyNoDashes = telemetryItem.iKey.replace(/-/g, "");
         envelope.name = envelope.name.replace("{0}", iKeyNoDashes);
