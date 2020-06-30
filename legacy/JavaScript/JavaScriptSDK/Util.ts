@@ -5,7 +5,7 @@
 /// <reference path="./UtilHelpers.ts" />
 
 
-function _endsWith(value:string, search:string) {
+function _endsWith(value: string, search: string) {
     let len = value.length;
     let start = len - search.length;
     return value.substring(start >= 0 ? start : 0, len) === search;
@@ -325,7 +325,7 @@ module Microsoft.ApplicationInsights {
             return Util._canUseCookies;
         }
 
-        public static disallowsSameSiteNone(userAgent:string) {
+        public static disallowsSameSiteNone(userAgent: string) {
             if (typeof userAgent !== "string") {
                 return false;
             }
@@ -719,6 +719,14 @@ module Microsoft.ApplicationInsights {
 
             if (!requestUrl) {
                 return false;
+            }
+
+            if (config && config.correlationHeaderExludePatterns) {
+                for (let i = 0; i < config.correlationHeaderExludePatterns.length; i++) {
+                    if (config.correlationHeaderExludePatterns[i].test(requestUrl)) {
+                        return false;
+                    }
+                }
             }
 
             let requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
