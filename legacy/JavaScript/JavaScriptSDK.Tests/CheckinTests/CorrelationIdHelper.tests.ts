@@ -29,7 +29,7 @@ class CorrelationIdHelperTests extends TestClass {
                     enableCorsCorrelation: true,
                     correlationHeaderExcludedDomains: []
                 }, null, null));
-                
+
                 Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(null, "url1", "url2"));
             }
         });
@@ -40,7 +40,7 @@ class CorrelationIdHelperTests extends TestClass {
                 var config: Microsoft.ApplicationInsights.IConfig = {
                     disableCorrelationHeaders: true
                 };
-               Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "some", "some"));            
+                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, "some", "some"));
             }
         });
 
@@ -52,7 +52,7 @@ class CorrelationIdHelperTests extends TestClass {
                     enableCorsCorrelation: false
                 };
                 let url = "http://bing.com/search?q=example.com";
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "diffHost"));            
+                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "diffHost"));
             }
         });
 
@@ -64,7 +64,7 @@ class CorrelationIdHelperTests extends TestClass {
                     enableCorsCorrelation: false
                 };
                 let url = "http://bing.com/search?q=example.com";
-                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "bing.com:8080"));            
+                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "bing.com:8080"));
             }
         });
 
@@ -77,7 +77,7 @@ class CorrelationIdHelperTests extends TestClass {
                     enableCorsCorrelation: false
                 };
                 let url = "http://bing.com/search?q=example.com";
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "bing.com"));            
+                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "bing.com"));
             }
         });
 
@@ -89,7 +89,7 @@ class CorrelationIdHelperTests extends TestClass {
                     enableCorsCorrelation: false
                 };
                 let url = "http://Bing.com/search?q=example.com";
-                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "bing.com"));            
+                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "bing.com"));
             }
         });
 
@@ -102,7 +102,7 @@ class CorrelationIdHelperTests extends TestClass {
                     enableCorsCorrelation: true
                 };
                 let url = "http://bing.com/search?q=example.com";
-    
+
                 Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "diffHost"));
             }
         });
@@ -116,15 +116,15 @@ class CorrelationIdHelperTests extends TestClass {
                     enableCorsCorrelation: true
                 };
                 let url = "http://bing.com/search?q=node";
-    
+
                 Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "diffHost"));
-    
+
                 let urlSecure = "https://bing.com/search?q=node";
-    
+
                 Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, urlSecure, "diffHost"));
-    
+
                 let secondDomainUrl = "http://bing.net/search?q=node";
-    
+
                 Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, secondDomainUrl, "diffHost"));
             }
         });
@@ -138,8 +138,36 @@ class CorrelationIdHelperTests extends TestClass {
                     enableCorsCorrelation: true
                 };
                 let url = "https://abc.bing.com";
-    
+
                 Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "diffHost"));
+            }
+        });
+
+        this.testCase({
+            name: "CorrelationIdHelper: should return false if url is on the excluded pattern match list",
+            test: () => {
+                var config: Microsoft.ApplicationInsights.IConfig = {
+                    correlationHeaderExludePatterns: [/.*locales.*\.json/i],
+                    disableCorrelationHeaders: false,
+                    enableCorsCorrelation: true
+                };
+                let url = "https://abc.bing.com/locales/test/test2.json";
+
+                Assert.equal(false, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "diffHost"));
+            }
+        });
+
+        this.testCase({
+            name: "CorrelationIdHelper: should return true if url is not on the excluded pattern match list",
+            test: () => {
+                var config: Microsoft.ApplicationInsights.IConfig = {
+                    correlationHeaderExludePatterns: [/.*locales.*\.json/i],
+                    disableCorrelationHeaders: false,
+                    enableCorsCorrelation: true
+                };
+                let url = "https://abc.bing.com/locales/test/test2.jsoan";
+
+                Assert.equal(true, CorrelationIdHelper.canIncludeCorrelationHeader(config, url, "diffHost"));
             }
         });
     }

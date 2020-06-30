@@ -6,6 +6,7 @@ import { DistributedTracingModes } from '../Enums';
 export interface ICorrelationConfig {
     enableCorsCorrelation: boolean;
     correlationHeaderExcludedDomains: string[];
+    correlationHeaderExludePatterns?: RegExp[];
     disableCorrelationHeaders: boolean;
     distributedTracingMode: DistributedTracingModes;
     maxAjaxCallsPerView: number;
@@ -21,7 +22,7 @@ export interface ICorrelationConfig {
      * in the reported ajax (XHR and fetch) reported metrics. 
      * Defaults to false.
      */
-    enableAjaxPerfTracking?:boolean;
+    enableAjaxPerfTracking?: boolean;
 
     /**
      * The maximum number of times to look for the window.performance timings (if available), this 
