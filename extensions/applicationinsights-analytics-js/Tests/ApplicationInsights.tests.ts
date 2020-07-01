@@ -865,6 +865,75 @@ export class ApplicationInsightsTests extends TestClass {
         });
 
         this.testCase({
+            name: "TelemetryContext: all added telemetry initializers get invoked for trackException",
+            test: () => {
+                // Setup
+                const plugin = new ChannelPlugin();
+                const core = new AppInsightsCore();
+                const appInsights = new ApplicationInsights();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin, appInsights]
+                );
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                const initializer1 = { init: (item: ITelemetryItem) => { 
+                    if (item.data !== undefined) {
+                        item.data.init1 = true;
+                    }
+                } };
+                const initializer2 = { init: (item: ITelemetryItem) => { 
+                    if (item.data !== undefined) {
+                        item.data.init2 = true;
+                    }
+                } };
+                const spy1 = this.sandbox.spy(initializer1, "init");
+                const spy2 = this.sandbox.spy(initializer2, "init");
+
+                // act
+                appInsights.addTelemetryInitializer(initializer1.init);
+                appInsights.addTelemetryInitializer(initializer2.init);
+
+                // Act
+                appInsights._onerror({message: "msg", url: "some://url", lineNumber: 123, columnNumber: 456, error: new Error()});
+
+                // verify
+                Assert.ok(spy1.calledOnce);
+                Assert.ok(spy2.calledOnce);
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryContext: all added telemetry initializers get invoked for _onError calls",
+            test: () => {
+                // Setup
+                const plugin = new ChannelPlugin();
+                const core = new AppInsightsCore();
+                const appInsights = new ApplicationInsights();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin, appInsights]
+                );
+                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                const initializer1 = { init: () => { } };
+                const initializer2 = { init: () => { } };
+                const spy1 = this.sandbox.spy(initializer1, "init");
+                const spy2 = this.sandbox.spy(initializer2, "init");
+
+                // act
+                appInsights.addTelemetryInitializer(initializer1.init);
+                appInsights.addTelemetryInitializer(initializer2.init);
+
+                appInsights.trackException({exception: new Error(), severityLevel: SeverityLevel.Critical});
+
+                // verify
+                Assert.ok(spy1.calledOnce);
+                Assert.ok(spy2.calledOnce);
+            }
+        });
+
+        this.testCase({
             name: "TelemetryContext: telemetry initializer - returning false means don't send an item",
             test: () => {
                 // Setup
