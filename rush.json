@@ -37,6 +37,11 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@microsoft/applicationinsights-debugplugin-js",
+      "projectFolder": "extensions/applicationinsights-debugplugin-js",
+      "shouldPublish": false
+    },
+    {
       "packageName": "@microsoft/applicationinsights-analytics-js",
       "projectFolder": "extensions/applicationinsights-analytics-js",
       "shouldPublish": true
