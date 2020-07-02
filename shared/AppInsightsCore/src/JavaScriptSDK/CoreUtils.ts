@@ -221,7 +221,7 @@ export class CoreUtils {
      */
     public static arrForEach<T>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => void, thisArg?: any): void {
         let len = arr.length;
-        for (let idx = 0; idx < len; ++idx) {
+        for (let idx = 0; idx < len; idx++) {
             if (idx in arr) {
                 callbackfn.call(thisArg || arr, arr[idx], idx, arr);
             }

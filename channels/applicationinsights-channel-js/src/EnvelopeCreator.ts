@@ -300,8 +300,14 @@ export class ExceptionEnvelopeCreator extends EnvelopeCreator {
                 LoggingSeverity.CRITICAL,
                 _InternalMessageId.TelemetryEnvelopeInvalid, "telemetryItem.baseData cannot be null.");
         }
+
+        // Extract root level properties from part C telemetryItem.data
+        const customMeasurements = telemetryItem.baseData.measurements || {};
+        const customProperties = telemetryItem.baseData.properties || {};
+        EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
+
         const bd = telemetryItem.baseData as IExceptionInternal;
-        const baseData = Exception.CreateFromInterface(logger, bd);
+        const baseData = Exception.CreateFromInterface(logger, bd, customProperties, customMeasurements);
         const data = new Data<Exception>(Exception.dataType, baseData);
         return EnvelopeCreator.createEnvelope<Exception>(logger, Exception.envelopeType, telemetryItem, data);
     }

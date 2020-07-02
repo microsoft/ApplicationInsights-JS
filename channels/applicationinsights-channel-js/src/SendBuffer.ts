@@ -1,5 +1,5 @@
 ﻿import { Util } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, CoreUtils } from '@microsoft/applicationinsights-core-js';
 import { ISenderConfig } from './Interfaces';
 
 export interface ISendBuffer {
@@ -210,19 +210,11 @@ export class SessionStorageSendBuffer implements ISendBuffer {
     private removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
         const remaining: string[] = [];
 
-        for (const i in buffer) {
-            let contains = false;
-            for (const j in payloads) {
-                if (payloads[j] === buffer[i]) {
-                    contains = true;
-                    break;
-                }
+        CoreUtils.arrForEach(buffer, (value) => {
+            if (!CoreUtils.isFunction(value) && CoreUtils.arrIndexOf(payloads, value) === -1) {
+                remaining.push(value);
             }
-
-            if (!contains) {
-                remaining.push(buffer[i]);
-            }
-        };
+        });
 
         return remaining;
     }
@@ -233,8 +225,13 @@ export class SessionStorageSendBuffer implements ISendBuffer {
             prefixedKey = this._config.namePrefix && this._config.namePrefix() ? this._config.namePrefix() + "_" + prefixedKey : prefixedKey;
             const bufferJson = Util.getSessionStorage(this._logger, prefixedKey);
             if (bufferJson) {
-                const buffer: string[] = getJSON().parse(bufferJson);
-                if (buffer) {
+                let buffer: string[] = getJSON().parse(bufferJson);
+                if (CoreUtils.isString(buffer)) {
+                    // When using some version prototype.js the stringify / parse cycle does not decode array's correctly
+                    buffer = getJSON().parse(buffer as any);
+                }
+
+                if (buffer && Util.isArray(buffer)) {
                     return buffer;
                 }
             }

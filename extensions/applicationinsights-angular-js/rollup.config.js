@@ -21,6 +21,8 @@ const browserRollupConfigFactory = isProduction => {
       banner: banner,
       format: "umd",
       name: "Microsoft.ApplicationInsights",
+      extend: true,
+      freeze: false,
       sourcemap: true
     },
     plugins: [
@@ -48,8 +50,15 @@ const browserRollupConfigFactory = isProduction => {
     browserRollupConfig.output.file = `browser/${outputName}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
+        ie8: true,
+        toplevel: true,
+        compress: {
+          passes:3,
+          unsafe: true
+        },
         output: {
-          preamble: banner
+          preamble: banner,
+          webkit:true
         }
       })
     );
@@ -66,6 +75,8 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       banner: banner,
       format: "umd",
       name: "Microsoft.ApplicationInsights",
+      extend: true,
+      freeze: false,
       sourcemap: true
     },
     plugins: [
@@ -90,8 +101,15 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
     nodeRollupConfig.output.file = `dist/${outputName}.min.js`;
     nodeRollupConfig.plugins.push(
       uglify({
+        ie8: true,
+        toplevel: true,
+        compress: {
+          passes:3,
+          unsafe: true
+        },
         output: {
-          preamble: banner
+          preamble: banner,
+          webkit:true
         }
       })
     );

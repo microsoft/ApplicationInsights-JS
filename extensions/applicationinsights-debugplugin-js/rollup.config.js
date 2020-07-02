@@ -1,23 +1,16 @@
 import nodeResolve from "rollup-plugin-node-resolve";
 import {uglify} from "rollup-plugin-uglify";
 import replace from "rollup-plugin-replace";
-import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/node/removedynamic";
 import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
-import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
-const outputName = "applicationinsights-analytics-js";
+const outputName = "applicationinsights-debugplugin-js";
 const banner = [
   "/*!",
-  ` * Application Insights JavaScript SDK - Web Analytics, ${version}`,
+  ` * Application Insights JavaScript SDK - Debug Plugin, ${version}`,
   " * Copyright (c) Microsoft and contributors. All rights reserved.",
   " */"
 ].join("\n");
-
-const replaceValues = {
-  "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
-  "// Licensed under the MIT License.": ""
-};
 
 const browserRollupConfigFactory = isProduction => {
   const browserRollupConfig = {
@@ -26,18 +19,18 @@ const browserRollupConfigFactory = isProduction => {
       file: `browser/${outputName}.js`,
       banner: banner,
       format: "umd",
-      name: "Microsoft.ApplicationInsights",
-      extend: true,
-      freeze: false,
+      name: "Microsoft.ApplicationInsights.DebugPlugin",
       sourcemap: true
     },
     plugins: [
-      dynamicRemove(),
       replace({
         delimiters: ["", ""],
-        values: replaceValues
+        values: {
+          "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
+          "// Licensed under the MIT License.": ""
+        }
       }),
-      importCheck({ exclude: [ "applicationinsights-analytics-js" ] }),
+      importCheck({ exclude: [ "applicationinsights-debugplugin-js" ] }),
       nodeResolve({
         browser: false,
         preferBuiltins: false
@@ -52,14 +45,8 @@ const browserRollupConfigFactory = isProduction => {
     browserRollupConfig.plugins.push(
       uglify({
         ie8: true,
-        toplevel: true,
-        compress: {
-          passes:3,
-          unsafe: true
-        },
         output: {
-          preamble: banner,
-          webkit:true
+          preamble: banner
         }
       })
     );
@@ -75,18 +62,18 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       file: `dist/${outputName}.js`,
       banner: banner,
       format: "umd",
-      name: "Microsoft.ApplicationInsights",
-      extend: true,
-      freeze: false,
+      name: "Microsoft.ApplicationInsights.DebugPlugin",
       sourcemap: true
     },
     plugins: [
-      dynamicRemove(),
       replace({
         delimiters: ["", ""],
-        values: replaceValues
+        values: {
+          "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
+          "// Licensed under the MIT License.": ""
+        }
       }),
-      importCheck({ exclude: [ "applicationinsights-analytics-js" ] }),
+      importCheck({ exclude: [ "applicationinsights-debugplugin-js" ] }),
       nodeResolve(),
       es3Poly(),
       es3Check()
@@ -98,14 +85,8 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
     nodeRollupConfig.plugins.push(
       uglify({
         ie8: true,
-        toplevel: true,
-        compress: {
-          passes:3,
-          unsafe: true
-        },
         output: {
-          preamble: banner,
-          webkit:true
+          preamble: banner
         }
       })
     );
@@ -114,11 +95,9 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
   return nodeRollupConfig;
 };
 
-updateDistEsmFiles(replaceValues, banner);
-
 export default [
-  nodeUmdRollupConfigFactory(true),
-  nodeUmdRollupConfigFactory(false),
   browserRollupConfigFactory(true),
-  browserRollupConfigFactory(false)
+  browserRollupConfigFactory(false),
+  nodeUmdRollupConfigFactory(true),
+  nodeUmdRollupConfigFactory(false)
 ];
