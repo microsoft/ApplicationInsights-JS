@@ -29,7 +29,7 @@ switch ($input)
 }
 
 # Add "b/" blob prefix for scripts container only
-$blobPrefix = If ($containerName.equals("scripts")) {"b/"} Else {""}
+$blobPrefix = If ($containerName.equals("scripts")) {"b/ext/"} Else {"ext/"}
 
 
 # get js sdk directory
@@ -65,14 +65,14 @@ if (Test-Path $releaseFromDir) {
 }
 
 New-Item -Force -ItemType directory -Path $releaseFromDir | Out-Null
-Copy-Item ($jssdkMinDir + "ai.2.js") (Join-Path $releaseFromDir -ChildPath "ai.2.js")
-Copy-Item ($jssdkMinDir + "ai.2.js") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".js"))
-Copy-Item ($jssdkMinDir + "ai.2.js.map") (Join-Path $releaseFromDir -ChildPath "ai.2.js.map")
-Copy-Item ($jssdkMinDir + "ai.2.js.map") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".js.map"))
-Copy-Item ($jssdkMinDir + "ai.2.min.js") (Join-Path $releaseFromDir -ChildPath "ai.2.min.js")
-Copy-Item ($jssdkMinDir + "ai.2.min.js") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".min.js"))
-Copy-Item ($jssdkMinDir + "ai.2.min.js.map") (Join-Path $releaseFromDir -ChildPath "ai.2.min.js.map")
-Copy-Item ($jssdkMinDir + "ai.2.min.js.map") (Join-Path $releaseFromDir -ChildPath ("ai." + $version + ".min.js.map"))
+Copy-Item ($jssdkMinDir + "ai.dbg.2.js") (Join-Path $releaseFromDir -ChildPath "ai.dbg.2.js")
+Copy-Item ($jssdkMinDir + "ai.dbg.2.js") (Join-Path $releaseFromDir -ChildPath ("ai.dbg." + $version + ".js"))
+Copy-Item ($jssdkMinDir + "ai.dbg.2.js.map") (Join-Path $releaseFromDir -ChildPath "ai.dbg.2.js.map")
+Copy-Item ($jssdkMinDir + "ai.dbg.2.js.map") (Join-Path $releaseFromDir -ChildPath ("ai.dbg." + $version + ".js.map"))
+Copy-Item ($jssdkMinDir + "ai.dbg.2.min.js") (Join-Path $releaseFromDir -ChildPath "ai.dbg.2.min.js")
+Copy-Item ($jssdkMinDir + "ai.dbg.2.min.js") (Join-Path $releaseFromDir -ChildPath ("ai.dbg." + $version + ".min.js"))
+Copy-Item ($jssdkMinDir + "ai.dbg.2.min.js.map") (Join-Path $releaseFromDir -ChildPath "ai.dbg.2.min.js.map")
+Copy-Item ($jssdkMinDir + "ai.dbg.2.min.js.map") (Join-Path $releaseFromDir -ChildPath ("ai.dbg." + $version + ".min.js.map"))
 
 Write-Host "Please review files in $releaseFromDir"
 Write-Host "Files will be uploaded to Azure storage! Press any key to continue..."

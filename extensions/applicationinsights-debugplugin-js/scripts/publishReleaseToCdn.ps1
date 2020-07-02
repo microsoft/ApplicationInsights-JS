@@ -252,10 +252,10 @@ Function GetReleaseFiles
     $files = New-Object 'system.collections.generic.dictionary[string,string]'
 
     Log "Adding files";
-    AddReleaseFile $files $jsSdkSrcDir "ai.$version.js"
-    AddReleaseFile $files $jsSdkSrcDir "ai.$version.js.map"
-    AddReleaseFile $files $jsSdkSrcDir "ai.$version.min.js"
-    AddReleaseFile $files $jsSdkSrcDir "ai.$version.min.js.map"
+    AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.js"
+    AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.js.map"
+    AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.min.js"
+    AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.min.js.map"
 
     return $files
 }
@@ -530,7 +530,7 @@ Log "Release Files : $($releaseFiles.Count)"
 
 Log "----------------------------------------------------------------------"
 # Publish the full versioned files to all release folders
-PublishFiles $releaseFiles "beta" $cacheControl1Year $overwrite
-PublishFiles $releaseFiles "next" $cacheControl1Year $overwrite
-PublishFiles $releaseFiles "scripts/b" $cacheControl1Year $overwrite
+PublishFiles $releaseFiles "beta/ext" $cacheControl1Year $overwrite
+PublishFiles $releaseFiles "next/ext" $cacheControl1Year $overwrite
+PublishFiles $releaseFiles "scripts/b/ext" $cacheControl1Year $overwrite
 Log "======================================================================"
