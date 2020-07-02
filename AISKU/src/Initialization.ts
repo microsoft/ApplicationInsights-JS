@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CoreUtils, IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, IChannelControls, EventHelper, hasWindow, hasDocument } from "@microsoft/applicationinsights-core-js";
+import { CoreUtils, IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, IChannelControls, hasWindow, hasDocument, isReactNative } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { PropertiesPlugin, TelemetryContext } from "@microsoft/applicationinsights-properties-js";
@@ -406,7 +406,10 @@ export class Initialization implements IApplicationInsights {
                 // As just hooking the window does not always fire (on chrome) for page navigations.
                 let added = CoreUtils.addEventHandler('beforeunload', performHousekeeping);
                 added = CoreUtils.addEventHandler('pagehide', performHousekeeping) || added;
-                if (!added) {
+
+                // A reactNative app may not have a window and therefore the beforeunload/pagehide events -- so don't
+                // log the failure in this case
+                if (!added && !isReactNative()) {
                     appInsightsInstance.appInsights.core.logger.throwInternal(
                         LoggingSeverity.CRITICAL,
                         _InternalMessageId.FailedToAddHandlerForOnBeforeUnload,

@@ -12,6 +12,35 @@ import { Util } from '../Util';
 import { IDiagnosticLogger, CoreUtils } from '@microsoft/applicationinsights-core-js';
 import { IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal } from '../Interfaces/IExceptionTelemetry';
 
+const strError = "error";
+
+function _isExceptionDetailsInternal(value:any): value is IExceptionDetailsInternal {
+    return "hasFullStack" in value && "typeName" in value;
+}
+
+function _isExceptionInternal(value:any): value is IExceptionInternal {
+    return ("ver" in value && "exceptions" in value && "properties" in value);
+}
+
+function _getErrorType(errorType: any) {
+    // Gets the Error Type by passing the constructor (used to get the true type of native error object).
+    let typeName = "";
+    if (errorType) {
+        typeName = errorType.typeName || errorType.name || "";
+        if (!typeName) {
+            try {
+                var funcNameRegex = /function (.{1,})\(/;
+                var results = (funcNameRegex).exec((errorType).constructor.toString());
+                typeName = (results && results.length > 1) ? results[1] : "";
+            } catch (e) {
+                // Ignore
+            }
+        }
+    }
+
+    return typeName;
+}
+
 export class Exception extends ExceptionData implements ISerializable {
 
     public static envelopeType = "Microsoft.ApplicationInsights.{0}.Exception";
@@ -20,7 +49,6 @@ export class Exception extends ExceptionData implements ISerializable {
     public id?: string;
     public problemGroup?: string;
     public isManual?: boolean;
-
 
     public aiDataContract = {
         ver: FieldType.Required,
@@ -36,9 +64,9 @@ export class Exception extends ExceptionData implements ISerializable {
     constructor(logger: IDiagnosticLogger, exception: Error | IExceptionInternal, properties?: {[key: string]: any}, measurements?: {[key: string]: number}, severityLevel?: SeverityLevel, id?: string) {
         super();
 
-        if (exception instanceof Error) {
+        if (!_isExceptionInternal(exception)) {
             this.exceptions = [new _ExceptionDetails(logger, exception)];
-            this.properties = DataSanitizer.sanitizeProperties(logger, properties);
+            this.properties = DataSanitizer.sanitizeProperties(logger, properties) || {};
             this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
             if (severityLevel) { this.severityLevel = severityLevel; }
             if (id) { this.id = id; }
@@ -54,13 +82,12 @@ export class Exception extends ExceptionData implements ISerializable {
             this.ver = 2; // TODO: handle the CS"4.0" ==> breeze 2 conversion in a better way
             if (!CoreUtils.isNullOrUndefined(exception.isManual)) { this.isManual = exception.isManual; }
         }
-
     }
 
-    public static CreateFromInterface(logger: IDiagnosticLogger, exception: IExceptionInternal): Exception {
+    public static CreateFromInterface(logger: IDiagnosticLogger, exception: IExceptionInternal, properties?: any, measurements?: { [key: string]: number }): Exception {
         const exceptions: _ExceptionDetails[] = exception.exceptions
             && CoreUtils.arrMap(exception.exceptions, (ex: IExceptionDetailsInternal) => _ExceptionDetails.CreateFromInterface(logger, ex));
-        const exceptionData = new Exception(logger, {...exception, exceptions});
+        const exceptionData = new Exception(logger, {...exception, exceptions}, properties, measurements);
         return exceptionData;
     }
 
@@ -117,8 +144,13 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
     constructor(logger: IDiagnosticLogger, exception: Error | IExceptionDetailsInternal) {
         super();
 
-        if (exception instanceof Error) {
-            this.typeName = DataSanitizer.sanitizeString(logger, exception.name) || Util.NotSpecified;
+        if (!_isExceptionDetailsInternal(exception)) {
+            let error = exception as any;
+            if (!Util.isError(error)) {
+                error = error[strError] || error.evt || error;
+            }
+
+            this.typeName = DataSanitizer.sanitizeString(logger, _getErrorType(error)) || Util.NotSpecified;
             this.message = DataSanitizer.sanitizeMessage(logger, exception.message) || Util.NotSpecified;
             const stack = exception.stack;
             this.parsedStack = _ExceptionDetails.parseStack(stack);

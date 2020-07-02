@@ -26,6 +26,7 @@ const strLocation = "location";
 const strPerformance = "performance";
 const strJSON = "JSON";
 const strCrypto = "crypto";
+const strReactNative = "ReactNative";
 
 /**
  * Returns the current global scope object, for a normal web page this will be the current
@@ -211,4 +212,17 @@ export function getJSON(): JSON | null {
  */
 export function getCrypto(): Crypto | null {
     return getGlobalInst(strCrypto);
+}
+
+/**
+ * Returns whether the environment is reporting that we are running in a React Native Environment
+ */
+export function isReactNative(): boolean {
+    // If running in React Native, navigator.product will be populated
+    var nav = getNavigator();
+    if (nav && nav.product) {
+        return nav.product === strReactNative;
+    }
+
+    return false;
 }
