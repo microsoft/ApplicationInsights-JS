@@ -21,6 +21,8 @@ const browserRollupConfigFactory = isProduction => {
       banner: banner,
       format: "umd",
       name: "Microsoft.ApplicationInsights",
+      extend: true,
+      freeze: false,
       sourcemap: true
     },
     plugins: [
@@ -71,6 +73,8 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       banner: banner,
       format: "umd",
       name: "Microsoft.ApplicationInsights",
+      extend: true,
+      freeze: false,
       sourcemap: true
     },
     plugins: [

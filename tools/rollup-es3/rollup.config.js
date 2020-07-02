@@ -21,8 +21,9 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       file: `${distPath}node/${outputName}.js`,
       banner: banner,
       format: "umd",
-        name: "Microsoft.ApplicationInsights-Rollup-ES3",
+      name: "Microsoft.ApplicationInsights-Rollup-ES3",
       extend: true,
+      freeze: false,
       sourcemap: false
     },
     plugins: [
@@ -66,6 +67,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
       format: format,
       name: "Microsoft.ApplicationInsights-Rollup-ES3",
       extend: true,
+      freeze: false,
       sourcemap: false
     },
     plugins: [
