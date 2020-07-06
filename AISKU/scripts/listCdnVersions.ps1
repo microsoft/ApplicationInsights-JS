@@ -4,6 +4,8 @@ param (
     [string] $sasToken = $null,                         # The SAS Token to use rather than using or attempting to login
     [string] $logPath = $null,                          # The location where logs should be written
     [switch] $showFiles = $false,                       # Show the individual files with details as well
+    [switch] $inclExt = $false,                         # Include the extensions
+    [switch] $activeOnly = $false,                      # Only show the active (deployed) versions
     [switch] $testOnly = $false                         # Uploads to a "tst" test container on the storage account
 )
 
@@ -324,7 +326,7 @@ Function GenerateUserSasToken
 Function GetVersion(
     [string] $name
 ) {
-    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*)(\.(?:js|min\.js)(?:\.map)?)$'
+    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[^\.]+)?)(\.(?:js|min\.js)(?:\.map)?)$'
     $match = ($name | select-string $regMatch -AllMatches).matches
 
     if ($null -eq $match) {
@@ -335,7 +337,8 @@ Function GetVersion(
     $return.path = $match.groups[1].value
     $return.prefix = $match.groups[2].value
     $return.ver = $match.groups[3].value
-    $return.ext = $match.groups[4].value
+    $return.verType = $match.groups[5].value
+    $return.ext = $match.groups[6].value
 
     return $return
 }
@@ -429,28 +432,59 @@ Function ListVersions(
 ) {
 
     $sortedKeys = $files.Keys | Sort-Object
+    $orderedKeys = New-Object 'system.collections.generic.list[string]'
     foreach ($key in $sortedKeys) {
+        $verParts = $key.split(".");
+        if ($verParts.Length -eq 3) {
+            continue
+        }
+        $orderedKeys.Add($key)
+    }
+
+    if ($activeOnly -ne $true) {
+        foreach ($key in $sortedKeys) {
+            $verParts = $key.split(".");
+            if ($verParts.Length -ne 3) {
+                continue
+            }
+            $orderedKeys.Add($key)
+        }
+    }
+
+    foreach ($key in $orderedKeys) {
+        $verParts = $key.split(".");
+        if ($activeOnly -eq $true -and $verParts.Length -gt 2) {
+            continue
+        }
+
         $fileList = $files[$key]
         $paths = [hashtable]@{}
         if ($showFiles -ne $true) {
+            Log $("v{0,-12} ({1,2})" -f $key,$($fileList.Count))
             $pathList = ""
             foreach ($theBlob in $fileList) {
                 $thePath = $theBlob.path
+                if ($theBlob.blob.ICloudBlob.Metadata.ContainsKey($metaSdkSrc)) {
+                    $version = GetVersion $theBlob.blob.ICloudBlob.Metadata[$metaSdkSrc]
+                    $thePath = "$($version.path)$($version.prefix)$($version.ver)"
+                }
+
                 if ($paths.ContainsKey($thePath) -ne $true) {
-                    $paths[$thePath]  = $true
-                    if ($theBlob.blob.ICloudBlob.Metadata.ContainsKey($metaSdkSrc)) {
-                        $value = "{0,-20}" -f $theBlob.blob.ICloudBlob.Metadata[$metaSdkSrc]
-                        $pathList = "$pathList$value  "
-                    } else {
-                        $value = "{0,-20}" -f $thePath
-                        $pathList = "$pathList$value  "
-                    }
+                    $paths[$thePath] = 1
+                    $value = "{0,-20}" -f $thePath
+                    $pathList = "$pathList$value  "
+                } else {
+                    $paths[$thePath] = ($paths[$thePath] + 1)
                 }
             }
 
-            Log $("v{0,-8} ({1,2})  -  {2}" -f $key,$($fileList.Count),$pathList.Trim())
+            foreach ($thePath in $paths.Keys | Sort-Object) {
+                Log $("  - {1,-40} ({0})" -f $paths[$thePath],$thePath)
+            }
+
+            #Log $("v{0,-8} ({1,2})  -  {2}" -f $key,$($fileList.Count),$pathList.Trim())
         } else {
-            Log $("v{0,-8} ({1,2})" -f $key,$($fileList.Count))
+            Log $("v{0,-12} ({1,2})" -f $key,$($fileList.Count))
             foreach ($theBlob in $fileList) {
                 $blob = $theBlob.blob
                 $blob.ICloudBlob.FetchAttributes()
@@ -477,7 +511,7 @@ Function ListVersions(
                 $cacheControl = $cacheControl -replace "immutable","im"
                 $cacheControl = $cacheControl -replace ", "," "
     
-                Log $("  - {0,-40} {3,7}  {1,6:N1} Kb  {2:yyyy-MM-dd HH:mm:ss}  {4,10}  {5}" -f $($blob.ICloudBlob.Container.Name + "/" + $blob.Name),($blob.Length/1kb),$blob.LastModified,$sdkVersion,$cacheControl,$metaTags)
+                Log $("  - {0,-44}{3,-13}{1,6:N1} Kb  {2:yyyy-MM-dd HH:mm:ss}  {4,10}  {5}" -f $($blob.ICloudBlob.Container.Name + "/" + $blob.Name),($blob.Length/1kb),$blob.LastModified,$sdkVersion,$cacheControl,$metaTags)
             }
         }
     }
@@ -534,16 +568,25 @@ $files = New-Object 'system.collections.generic.dictionary[string, system.collec
 # Get the beta files
 if ([string]::IsNullOrWhiteSpace($container) -eq $true -or $container -eq "beta") {
     GetVersionFiles $files "beta" "ai."
+    if ($inclExt -eq $true) {
+        GetVersionFiles $files "beta/ext" "ai."
+    }
 }
 
 # Get the next files
 if ([string]::IsNullOrWhiteSpace($container) -eq $true -or $container -eq "next") {
     GetVersionFiles $files "next" "ai."
+    if ($inclExt -eq $true) {
+        GetVersionFiles $files "next/ext" "ai."
+    }
 }
 
 # Get the public files (scripts/b)
 if ([string]::IsNullOrWhiteSpace($container) -eq $true -or $container -eq "public") {
     GetVersionFiles $files "scripts/b" "ai."
+    if ($inclExt -eq $true) {
+        GetVersionFiles $files "scripts/b/ext" "ai."
+    }
 }
 
 ListVersions $files

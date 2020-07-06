@@ -57,8 +57,7 @@ function myFunc() {
     '_sender',              // called when data is sent to the server
   ];
 
-  // NOTE [1]: this (DebugPlugin.DebugPlugin) is subject to change later on
-  var debugPlugin = Microsoft.ApplicationInsights.DebugPlugin.DebugPlugin;
+  var debugPlugin = Microsoft.ApplicationInsights.DebugPlugin;
   var debugPluginInstance = new debugPlugin();
   // Application Insights Configuration
   var configObj = {

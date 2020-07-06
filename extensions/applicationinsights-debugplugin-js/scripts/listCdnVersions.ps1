@@ -1,28 +1,29 @@
 param (
-    [string] $releaseFrom = $null,                      # The root path for where to find the files to be released
+    [string] $container = $null,                        # Identify the container that you want to check blank == all
     [string] $cdnStorePath = "daprodcdn",               # Identifies the target Azure Storage account (by name)
     [string] $sasToken = $null,                         # The SAS Token to use rather than using or attempting to login
     [string] $logPath = $null,                          # The location where logs should be written
-    [switch] $overwrite = $false,                       # Overwrite any existing files   
+    [switch] $showFiles = $false,                       # Show the individual files with details as well
+    [switch] $activeOnly = $false,                      # Only show the active (deployed) versions
     [switch] $testOnly = $false                         # Uploads to a "tst" test container on the storage account
 )
 
 $metaSdkVer = "aijssdkver"
+$metaSdkSrc = "aijssdksrc"
 
 $global:hasErrors = $false
-$global:cacheValue = $null
 $global:sasToken = $sasToken
 $global:resourceGroup = $null
-$global:storeName = $null                               # The endpoint needs to the base name of the endpoint, not the full URL (eg. “my-cdn” rather than “my-cdn.azureedge.net”)
+$global:storeName = $null                              # The endpoint needs to the base name of the endpoint, not the full URL (eg. “my-cdn” rather than “my-cdn.azureedge.net”)
 $global:subscriptionId = $null
 
 Function Log-Params 
 {
+    Log "Container : $container"
     Log "Store Path: $cdnStorePath"
-    Log "Overwrite : $overwrite"
-    Log "Test Mode : $testOnly"
-    Log "SourcePath: $jsSdkDir"
     Log "Log Path  : $logDir"
+    Log "Show Files: $showFiles"
+    Log "Test Mode : $testOnly"
     
     if ([string]::IsNullOrWhiteSpace($global:sasToken) -eq $true) {
         Log "Mode      : Manual"
@@ -204,169 +205,6 @@ Function CheckLogin
     $Error.Clear()
 }
 
-Function AddReleaseFile(
-    $files,
-    [string] $releaseDir,
-    [string] $name
-) {
-    $sourcePath = (Join-Path $releaseDir -ChildPath ($name))
-
-    if (-Not (Test-Path $sourcePath)) {
-        Log-Warning "Missing expected source file '$sourcePath'";
-        exit         
-    }
-
-    Log " - $sourcePath"
-    $files.Add($name, $sourcePath)
-}
-
-Function GetReleaseFiles
-{
-    if ([string]::IsNullOrWhiteSpace($jsSdkDir) -eq $true) {
-        Log-Warning "Invalid JS Sdk Path"
-        exit
-    }
-
-    Log "Releasing from : $jsSdkDir"
-
-    # find version number
-    $packageJsonPath =  Join-Path $jsSdkDir -ChildPath "package.json"
-    if (-Not (Test-Path $packageJsonPath)) {
-        Log-Warning "'$packageJsonPath' file not found, please enter the top JSSDK directory.";
-        exit
-    }
-
-    $packagesJson = (Get-Content $packageJsonPath -Raw) | ConvertFrom-Json
-    $version = $packagesJson.version;
-
-    Log "Version        : $version"
-
-    # check if the minified dir exists
-    $jsSdkSrcDir = Join-Path $jssdkDir -ChildPath "browser\";
-
-    if (-Not (Test-Path $jsSdkSrcDir)) {
-        Log-Warning "'$jsSdkSrcDir' directory doesn't exist. Compile JSSDK first.";
-        exit
-    }
-
-    $files = New-Object 'system.collections.generic.dictionary[string,string]'
-
-    Log "Adding files";
-    AddReleaseFile $files $jsSdkSrcDir "ai.$version.js"
-    AddReleaseFile $files $jsSdkSrcDir "ai.$version.js.map"
-    AddReleaseFile $files $jsSdkSrcDir "ai.$version.min.js"
-    AddReleaseFile $files $jsSdkSrcDir "ai.$version.min.js.map"
-
-    return $files
-}
-
-Function GetVersion(
-    [string] $name
-) {
-    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[^\.]+)?)(\.(?:js|min\.js)(?:\.map)?)$'
-    $match = ($name | select-string $regMatch -AllMatches).matches
-
-    if ($null -eq $match) {
-        return $null
-    }
-    
-    [hashtable]$return = @{}
-    $return.path = $match.groups[1].value
-    $return.prefix = $match.groups[2].value
-    $return.ver = $match.groups[3].value
-    $return.verType = $match.groups[5].value
-    $return.ext = $match.groups[6].value
-
-    return $return
-}
-
-Function PublishFiles(
-    $files,
-    [string] $storagePath,
-    [string] $cacheControlValue,
-    [bool] $overwrite
-) {
-
-    # Don't try and publish anything if any errors have been logged
-    if ($global:hasErrors -eq $true) {
-        exit 2
-    }
-
-    while($storagePath.endsWith("/") -eq $true) {
-        $storagePath = $storagePath.Substring(0, $storagePath.Length-1)
-    }
-
-    $blobPrefix = ""
-    $storageContainer = ""
-
-    $tokens = $storagePath.split("/", 2)
-    if ($tokens.length -eq 0) {
-        Log-Warning "Invalid storage path - $storagePath"
-        exit
-    }
-
-    $storageContainer = $tokens[0]
-    if ($tokens.Length -eq 2) {
-        $blobPrefix = $tokens[1] + "/"
-    }
-
-    if ($testOnly -eq $true) {
-        $blobPrefix = $storageContainer + "/" + $blobPrefix
-        $storageContainer = "tst"
-    }
-
-    Log "Container  : $storageContainer Prefix: $blobPrefix"
-    Log "    Using Cache Control: $cacheControlValue"
-
-    $azureContext = New-AzureStorageContext -StorageAccountName $global:storeName -Sastoken $global:sasToken
-    $container = Get-AzureStorageContainer -Name $storageContainer -Context $azureContext -ErrorAction SilentlyContinue
-    if ($null -eq $container) {
-        $Error.Clear()
-        New-AzureStorageContainer -Name $storageContainer -Context $azureContext -Permission Blob -ErrorAction SilentlyContinue | Out-Null
-        Log-Errors
-    }
-
-    if ($global:hasErrors -eq $true) {
-        exit 3
-    }
-
-    # upload files to Azure Storage
-    foreach($name in $files.Keys) {
-        $path = $files[$name]
-
-        $metadata = [hashtable]@{}
-        $version = GetVersion $name
-        if ($null -ne $version) {
-            $metadata[$metaSdkVer] = $version.ver
-        }
-
-        $newBlob = $null
-        $blob = Get-AzureStorageBlob -Container $storageContainer -Blob ($blobPrefix + $name) -Context $azureContext -ErrorAction SilentlyContinue
-        if ($null -ne $blob -and $blob.Count -ne 0) {
-            if ($overwrite -eq $true) {
-                Log "    Overwriting $($blobPrefix + $name)"
-                $newBlob = Set-AzureStorageBlobContent -Force -Container $storageContainer -File $path -Blob ($blobPrefix + $name) -Context $azureContext -Properties @{CacheControl = $cacheControlValue; ContentType = $contentType} -Metadata $metadata
-                if ($null -eq $newBlob) {
-                    Log-Failure "    Failed to overwrite/upload $($blobPrefix + $name)"
-                }
-            } else {
-                Log-Warning "    $($blobPrefix + $name) is already present"
-            }
-        } else {
-            Log "    Uploading $($blobPrefix + $name)"
-            $newBlob = Set-AzureStorageBlobContent -Container $storageContainer -File $path -Blob ($blobPrefix + $name) -Context $azureContext -Properties @{CacheControl = $cacheControlValue; ContentType = $contentType} -Metadata $metadata
-            if ($null -eq $newBlob) {
-                Log-Failure "    Failed to upload $($blobPrefix + $name)"
-            }
-        }
-
-        # Stop publishing if any errors have been logged
-        if ($global:hasErrors -eq $true) {
-            exit 5
-        }
-    }
-}
-
 Function ParseCdnStorePath
 {
     if ([string]::IsNullOrWhiteSpace($cdnStorePath) -eq $true) {
@@ -474,7 +312,7 @@ Function GenerateUserSasToken
 
     Log "  StoreName   : $global:storeName"    
     $storageContext = $store.context
-    $sasToken = New-AzureStorageAccountSASToken -Context $storageContext -Service Blob -ResourceType Service,Container,Object -Permission racwdlup -Protocol HttpsOnly
+    $sasToken = New-AzureStorageAccountSASToken -Context $storageContext -Service Blob -ResourceType Service,Container,Object -Permission lr  -Protocol HttpsOnly
 
     if ([string]::IsNullOrWhiteSpace($sasToken) -eq $true) {
         Log-Failure "  - Unable to access or locate a storage account $cdnStorePath"
@@ -483,6 +321,204 @@ Function GenerateUserSasToken
 
     $global:sasToken = $sasToken
 }
+
+Function GetVersion(
+    [string] $name
+) {
+    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[^\.]+)?)(\.(?:js|min\.js)(?:\.map)?)$'
+    $match = ($name | select-string $regMatch -AllMatches).matches
+
+    if ($null -eq $match) {
+        return $null
+    }
+    
+    [hashtable]$return = @{}
+    $return.path = $match.groups[1].value
+    $return.prefix = $match.groups[2].value
+    $return.ver = $match.groups[3].value
+    $return.verType = $match.groups[5].value
+    $return.ext = $match.groups[6].value
+
+    return $return
+}
+
+Function GetContainerContext(
+    [string] $storagePath
+) {
+    # Don't try and publish anything if any errors have been logged
+    if ($global:hasErrors -eq $true) {
+        exit 2
+    }
+
+    while($storagePath.endsWith("/") -eq $true) {
+        $storagePath = $storagePath.Substring(0, $storagePath.Length-1)
+    }
+
+    $blobPrefix = ""
+    $storageContainer = ""
+
+    $tokens = $storagePath.split("/", 2)
+    if ($tokens.length -eq 0) {
+        Log-Warning "Invalid storage path - $storagePath"
+        exit
+    }
+
+    $storageContainer = $tokens[0]
+    if ($tokens.Length -eq 2) {
+        $blobPrefix = $tokens[1] + "/"
+    }
+
+    if ($testOnly -eq $true) {
+        $blobPrefix = $storageContainer + "/" + $blobPrefix
+        $storageContainer = "tst"
+    }
+
+    Log "Container  : $storageContainer Prefix: $blobPrefix"
+
+    $azureContext = New-AzureStorageContext -StorageAccountName $global:storeName -Sastoken $global:sasToken -ErrorAction SilentlyContinue
+    $azContainer = Get-AzureStorageContainer -Name $storageContainer -Context $azureContext -ErrorAction SilentlyContinue
+    if ($null -eq $azContainer) {
+        Log "Container [$storageContainer] does not exist"
+        return
+    }
+
+    if ($global:hasErrors -eq $true) {
+        exit 3
+    }
+
+    [hashtable]$return = @{}
+    $return.azureContext = $azureContext
+    $return.container = $azContainer
+    $return.storageContainer = $storageContainer
+    $return.blobPrefix = $blobPrefix
+
+    return $return
+}
+
+Function GetVersionFiles(
+    [system.collections.generic.dictionary[string, system.collections.generic.list[hashtable]]] $files,
+    [string] $storagePath,
+    [string] $filePrefix
+) {
+
+    $context = GetContainerContext $storagePath
+    if ($null -eq $context) {
+        return
+    }
+
+    $blobs = Get-AzureStorageBlob -Container $context.storageContainer -Context $context.azureContext -Prefix "$($context.blobPrefix)$filePrefix" -ErrorAction SilentlyContinue
+    foreach ($blob in $blobs) {
+        $version = GetVersion $blob.Name
+
+        if ($null -ne $version -and [string]::IsNullOrWhiteSpace($version.ver) -ne $true -and $version.prefix -eq $filePrefix) {
+            $fileList = $null
+            if ($files.ContainsKey($version.ver) -ne $true) {
+                $fileList = New-Object 'system.collections.generic.list[hashtable]'
+                $files.Add($version.ver, $fileList)
+            } else {
+                $fileList = $files[$version.ver]
+            }
+
+            $theBlob = [hashtable]@{}
+            $theBlob.path = "$($context.storageContainer)/$($version.path)"
+            $theBlob.blob = $blob
+            $fileList.Add($theBlob)
+        }
+    }
+}
+
+Function ListVersions(
+   [system.collections.generic.dictionary[string, system.collections.generic.list[hashtable]]] $files
+) {
+
+    $sortedKeys = $files.Keys | Sort-Object
+    $orderedKeys = New-Object 'system.collections.generic.list[string]'
+    foreach ($key in $sortedKeys) {
+        $verParts = $key.split(".");
+        if ($verParts.Length -eq 3) {
+            continue
+        }
+        $orderedKeys.Add($key)
+    }
+
+    if ($activeOnly -ne $true) {
+        foreach ($key in $sortedKeys) {
+            $verParts = $key.split(".");
+            if ($verParts.Length -ne 3) {
+                continue
+            }
+            $orderedKeys.Add($key)
+        }
+    }
+
+    foreach ($key in $orderedKeys) {
+        $verParts = $key.split(".");
+        if ($activeOnly -eq $true -and $verParts.Length -gt 2) {
+            continue
+        }
+
+        $fileList = $files[$key]
+        $paths = [hashtable]@{}
+        if ($showFiles -ne $true) {
+            $pathList = ""
+            foreach ($theBlob in $fileList) {
+                $thePath = $theBlob.path
+                if ($paths.ContainsKey($thePath) -ne $true) {
+                    $paths[$thePath]  = $true
+                    if ($theBlob.blob.ICloudBlob.Metadata.ContainsKey($metaSdkSrc)) {
+                        $value = "{0,-20}" -f $theBlob.blob.ICloudBlob.Metadata[$metaSdkSrc]
+                        $pathList = "$pathList$value  "
+                    } else {
+                        $value = "{0,-20}" -f $thePath
+                        $pathList = "$pathList$value  "
+                    }
+                }
+            }
+
+            Log $("v{0,-12} ({1,2})  -  {2}" -f $key,$($fileList.Count),$pathList.Trim())
+        } else {
+            Log $("v{0,-12} ({1,2})" -f $key,$($fileList.Count))
+            foreach ($theBlob in $fileList) {
+                $blob = $theBlob.blob
+                $blob.ICloudBlob.FetchAttributes()
+                $sdkVersion = $blob.ICloudBlob.Metadata[$metaSdkVer]
+                if ([string]::IsNullOrWhiteSpace($sdkVersion) -ne $true) {
+                    $sdkVersion = "v$sdkVersion"
+                } else {
+                    $sdkVersion = "---"
+                }
+    
+                $metaTags = ""
+                foreach ($dataKey in $blob.ICloudBlob.Metadata.Keys) {
+                    if ($dataKey -ne $metaSdkVer) {
+                        $metaTags = "$metaTags$dataKey=$($blob.ICloudBlob.Metadata[$dataKey]); "
+                    }
+                }
+    
+                $cacheControl = $blob.ICloudBlob.Properties.CacheControl
+                $cacheControl = $cacheControl -replace "public","pub"
+                $cacheControl = $cacheControl -replace "max-age=31536000","1yr"
+                $cacheControl = $cacheControl -replace "max-age=1800","30m"
+                $cacheControl = $cacheControl -replace "max-age=900","15m"
+                $cacheControl = $cacheControl -replace "max-age=300"," 5m"
+                $cacheControl = $cacheControl -replace "immutable","im"
+                $cacheControl = $cacheControl -replace ", "," "
+    
+                Log $("  - {0,-44}{3,-13}{1,6:N1} Kb  {2:yyyy-MM-dd HH:mm:ss}  {4,10}  {5}" -f $($blob.ICloudBlob.Container.Name + "/" + $blob.Name),($blob.Length/1kb),$blob.LastModified,$sdkVersion,$cacheControl,$metaTags)
+            }
+        }
+    }
+}
+
+Function Validate-Params
+{
+    # Validate parameters
+    if ([string]::IsNullOrWhiteSpace($container) -ne $true -and "beta","next","public" -NotContains $container) {
+        Log-Failure "[$($container)] is not a valid value, must be beta, next or public"
+    }
+}
+
+$Error.Clear()
 
 #-----------------------------------------------------------------------------
 # Start of Script
@@ -496,18 +532,16 @@ if (!(Test-Path -Path $logDir)) {
     New-Item -ItemType directory -Path $logDir
 }
 
-$jsSdkDir = $releaseFrom
-if ([string]::IsNullOrWhiteSpace($jsSdkDir) -eq $true) {
-    $jsSdkDir = Split-Path (Split-Path $MyInvocation.MyCommand.Path) -Parent
-}
-
 $fileTimeStamp = ((get-date).ToUniversalTime()).ToString("yyyyMMddThhmmss")
-$logFile = "$logDir\publishReleaseCdnLog_$fileTimeStamp.txt"
-
-$cacheControl1Year = "public, max-age=31536000, immutable";
-$contentType = "text/javascript; charset=utf-8";
+$logFile = "$logDir\listCdnVersionsLog_$fileTimeStamp.txt"
 
 Log-Params
+Validate-Params
+
+# Don't try and list anything if any errors have been logged
+if ($global:hasErrors -eq $true) {
+    exit 2
+}
 
 # You will need to at least have the AzureRM module installed
 InstallRequiredModules
@@ -521,16 +555,23 @@ if ([string]::IsNullOrWhiteSpace($global:sasToken) -eq $true) {
 }
 
 Log "======================================================================"
-$releaseFiles = GetReleaseFiles $false      # Get the versioned files only
-if ($null -eq $releaseFiles -or $releaseFiles.Count -eq 0) {
-    Log-Failure "Unable to find any release files"
+# List the files for each container
+$files = New-Object 'system.collections.generic.dictionary[string, system.collections.generic.list[hashtable]]'
+
+# Get the beta files
+if ([string]::IsNullOrWhiteSpace($container) -eq $true -or $container -eq "beta") {
+    GetVersionFiles $files "beta/ext" "ai.dbg."
 }
 
-Log "Release Files : $($releaseFiles.Count)"
+# Get the next files
+if ([string]::IsNullOrWhiteSpace($container) -eq $true -or $container -eq "next") {
+    GetVersionFiles $files "next/ext" "ai.dbg."
+}
 
-Log "----------------------------------------------------------------------"
-# Publish the full versioned files to all release folders
-PublishFiles $releaseFiles "beta" $cacheControl1Year $overwrite
-PublishFiles $releaseFiles "next" $cacheControl1Year $overwrite
-PublishFiles $releaseFiles "scripts/b" $cacheControl1Year $overwrite
+# Get the public files (scripts/b)
+if ([string]::IsNullOrWhiteSpace($container) -eq $true -or $container -eq "public") {
+    GetVersionFiles $files "scripts/b/ext" "ai.dbg."
+}
+
+ListVersions $files
 Log "======================================================================"

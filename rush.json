@@ -39,7 +39,7 @@
     {
       "packageName": "@microsoft/applicationinsights-debugplugin-js",
       "projectFolder": "extensions/applicationinsights-debugplugin-js",
-      "shouldPublish": false
+      "shouldPublish": true
     },
     {
       "packageName": "@microsoft/applicationinsights-analytics-js",

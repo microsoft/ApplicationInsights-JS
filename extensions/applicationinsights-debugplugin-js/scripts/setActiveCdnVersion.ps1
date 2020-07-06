@@ -655,10 +655,11 @@ $files = New-Object 'system.collections.generic.dictionary[string, system.collec
 
 $storePath = $container
 if ($container -eq "beta" -or $container -eq "next") {
-    GetVersionFiles $files $container "ai."
+    $storePath = "$container/ext"
+    GetVersionFiles $files $storePath "ai.dbg."
 } elseif ($container -eq "public") {
-    GetVersionFiles $files "scripts/b" "ai."
-    $storePath = "scripts/b"
+    $storePath = "scripts/b/ext"
+    GetVersionFiles $files $storePath "ai.dbg."
 }
 
 if ($files.ContainsKey($activeVersion) -ne $true) {

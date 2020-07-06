@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-debugplugin-js",
-    "version": "2.5.4",
+    "version": "2.5.5-beta",
     "description": "Microsoft Application Insights Javascript SDK apis",
     "main": "dist/applicationinsights-debugplugin-js.js",
     "module": "dist-esm/applicationinsights-debugplugin-js.js",
