@@ -721,9 +721,9 @@ module Microsoft.ApplicationInsights {
                 return false;
             }
 
-            if (config && config.correlationHeaderExludePatterns) {
-                for (let i = 0; i < config.correlationHeaderExludePatterns.length; i++) {
-                    if (config.correlationHeaderExludePatterns[i].test(requestUrl)) {
+            if (config && config.correlationHeaderExcludePatterns) {
+                for (let i = 0; i < config.correlationHeaderExcludePatterns.length; i++) {
+                    if (config.correlationHeaderExcludePatterns[i].test(requestUrl)) {
                         return false;
                     }
                 }

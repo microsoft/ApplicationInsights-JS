@@ -147,7 +147,7 @@ class CorrelationIdHelperTests extends TestClass {
             name: "CorrelationIdHelper: should return false if url is on the excluded pattern match list",
             test: () => {
                 var config: Microsoft.ApplicationInsights.IConfig = {
-                    correlationHeaderExludePatterns: [/.*locales.*\.json/i],
+                    correlationHeaderExcludePatterns: [/.*locales.*\.json/i],
                     disableCorrelationHeaders: false,
                     enableCorsCorrelation: true
                 };
@@ -161,7 +161,7 @@ class CorrelationIdHelperTests extends TestClass {
             name: "CorrelationIdHelper: should return true if url is not on the excluded pattern match list",
             test: () => {
                 var config: Microsoft.ApplicationInsights.IConfig = {
-                    correlationHeaderExludePatterns: [/.*locales.*\.json/i],
+                    correlationHeaderExcludePatterns: [/.*locales.*\.json/i],
                     disableCorrelationHeaders: false,
                     enableCorsCorrelation: true
                 };

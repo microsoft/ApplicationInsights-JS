@@ -250,6 +250,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | disableDataLossAnalysis | true | If false, internal telemetry sender buffers will be checked at startup for items not yet sent. |
 | disableCorrelationHeaders | false | If false, the SDK will add two headers ('Request-Id' and 'Request-Context') to all dependency requests to correlate them with corresponding requests on the server side. Default is false. |
 | correlationHeaderExcludedDomains |  | Disable correlation headers for specific domains |
+| correlationHeaderExcludePatterns | | Disable correlation headers using regular expressions |
 | correlationHeaderDomains |  | Enable correlation headers for specific domains |
 | disableFlushOnBeforeUnload | false | Default false. If true, flush method will not be called when onBeforeUnload event triggers |
 | enableSessionStorageBuffer | true | Default true. If true, the buffer with all unsent telemetry is stored in session storage. The buffer is restored on page load |
