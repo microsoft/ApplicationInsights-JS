@@ -28,8 +28,6 @@ const browserUmdRollupConfigFactory = (isProduction) => {
       banner: banner,
       format: "umd",
       name: "Microsoft.ApplicationInsights.Shims",
-      extend: true,
-      freeze: false,
       sourcemap: false
     },
     plugins: [
@@ -70,9 +68,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
       file: `${distPath}${format}/${outputName}.js`,
       banner: banner,
       format: format,
-      name: "Microsoft.ApplicationInsights",
-      extend: true,
-      freeze: false,
+      name: "Microsoft.ApplicationInsights.Shims",
       sourcemap: false
     },
     plugins: [

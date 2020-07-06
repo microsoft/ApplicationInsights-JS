@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-properties-js",
-    "version": "2.5.5",
+    "version": "2.5.6",
     "description": "Microsoft Application Insights properties (Part A) plugin",
     "main": "dist/applicationinsights-properties-js.js",
     "module": "dist-esm/applicationinsights-properties-js.js",
@@ -18,7 +18,7 @@
         "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
-        "@microsoft/applicationinsights-rollup-es3" : "1.1.1",
+        "@microsoft/applicationinsights-rollup-es3" : "1.1.2",
         "typescript": "2.5.3",
         "grunt": "1.0.1",
         "grunt-contrib-qunit": "2.0.0",
@@ -32,9 +32,9 @@
         "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-shims" : "1.0.0",
-        "@microsoft/applicationinsights-core-js": "2.5.5",
-        "@microsoft/applicationinsights-common": "2.5.5"
+        "@microsoft/applicationinsights-shims" : "1.0.1",
+        "@microsoft/applicationinsights-core-js": "2.5.6",
+        "@microsoft/applicationinsights-common": "2.5.6"
     },
     "license": "MIT"
 }

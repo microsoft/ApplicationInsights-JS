@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-core-js",
     "author": "Microsoft Corporation",
-    "version": "2.5.5",
+    "version": "2.5.6",
     "description": "Microsoft Application Insights Core Javascript SDK",
     "keywords": [
         "azure",
@@ -30,7 +30,7 @@
     "license": "MIT",
     "sideEffects": false,
     "devDependencies": {
-        "@microsoft/applicationinsights-rollup-es3" : "1.1.1",
+        "@microsoft/applicationinsights-rollup-es3" : "1.1.2",
         "grunt": "1.0.1",
         "grunt-contrib-clean": "^1.1.0",
         "grunt-contrib-qunit": "2.0.0",
@@ -46,7 +46,7 @@
         "rollup": "^0.66.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-shims" : "1.0.0",
+        "@microsoft/applicationinsights-shims" : "1.0.1",
         "@microsoft/dynamicproto-js": "^0.5.2"
     }
 }
