@@ -27,7 +27,7 @@ module Microsoft.ApplicationInsights {
         disableDataLossAnalysis?: boolean;
         disableCorrelationHeaders?: boolean;
         correlationHeaderExcludedDomains?: string[];
-        correlationHeaderExludePatterns?: RegExp[];
+        correlationHeaderExcludePatterns?: RegExp[];
         disableFlushOnBeforeUnload?: boolean;
         enableSessionStorageBuffer?: boolean;
         isCookieUseDisabled?: boolean;

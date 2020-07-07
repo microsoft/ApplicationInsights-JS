@@ -1,6 +1,42 @@
 # Releases
 
-## 2.5.5
+## 2.5.6 (Jul 6th, 2020)
+
+### New (Beta) extension applicationinsights-debugplugin-js
+
+- Created the initial extension to help developers understand, track, visualize and fix issues with events
+- This extension injects a UI onto your page details for the component is available at https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-debugplugin-js
+- This is a beta release so the UI, config etc are not yet complete, feedback for features, suggestions or changes are welcome -- please create an Issue
+- The detailed view is still under construction and contains known bugs, these will be address in the next few months (releases) as we build out the module. We had not originally planed to have any detailed view as part of this initial beta release.
+
+### Changelog
+
+- #1311 Allow the generated modules to extend the namespace defined by "name" in rollup config -- rather than always replace.
+  - Changes the way the "Microsoft.ApplicationInsights" is defined for each module to all modules to be added to the same namespace
+- #1309 When using prototype js the SessionStorage become corrupted causing requests internal exceptions
+- #1303 Task 7027291: Investigate CDN Configuration to support custom domain (automate CDN deployment scripts)
+- #1299 Releasing core queue as soon as possible (fixes lost events from page load immediate unload with no additional events)
+- #1297 Created initial applicationinsights-debugplugin-js
+- #1289 [Documentation] doc: SPO set up instruction
+- #1286 [Documentation] Update JS SDK Snippet documentation with bug fixes (new v4 snippet)
+- #1283 [BUG] (Snippet v3) AppInsights stub methods captured incorrect method names in the closure
+- #1262 [BUG] Custom properties added with addTelemetryInitializer are ignored for exceptions
+- #1245 React Native - AI (Internal): 19 message: "Could not add handler for beforeunload and pagehide"
+  - Add isReactNative() function for detecting the runtime environment
+- #1095 Add an Error Boundary to the React plugin
+- #1089 Blocking certain URIs/Patterns from fetch tracking (patch included)
+  - Added new config 'correlationHeaderExcludePatterns' to allow disabling correlation headers using regular expressions
+
+### Updated React plugin to v3.0.1
+
+- #1311 Allow the generated modules to extend the namespace defined by "name" in rollup config -- rather than always replace.
+  - Changes the way the "Microsoft.ApplicationInsights" is defined for each module to all modules to be added to the same namespace
+
+### Update applicationinsights-rollup-es3 to v1.1.2
+
+- #1311 Allow the generated modules to extend the namespace defined by "name" in rollup config -- rather than always replace.
+
+## 2.5.5 (Jun 2nd, 2020)
 
 ### Updated React plugin to v3.0.0
 
@@ -30,7 +66,7 @@
 - #1249 Identify whether the script is being consumed via the CDN or NPM package
 - Several minor documentation updates
 
-## 2.5.4
+## 2.5.4 (Apr 7th, 2020)
 
 ### Changelog
 
@@ -44,27 +80,27 @@
 - #1221 npm @microsoft/applicationinsights-web: license information missing in package.json
 - #1191 [BUG] ICustomProperties does not support setting values
 
-## 2.5.3
+## 2.5.3 (Mar 25th, 2020)
 
 ### Changelog
 
 - #1224 [BUG] When running in IE7/8 the app insights doesn't initialize and gets stuck in a loop (long running script)
 
-## 2.5.2
+## 2.5.2 (Mar 11th, 2020)
 
 ### Changelog
 
 - #1217 [BUG] App Insights fails when the XHR object is not extensible (or frozen)
 - #1186 [BUG] App Insights initialization setting 'enableAjaxErrorStatusText is not working #1218
 
-## 2.5.1
+## 2.5.1 (Mar 9th, 2020)
 
 ### Changelog
 
 - #1210 [BUG] Typescript error when using @microsoft/applicationinsights-web 2.5.0 and "noImplicitAny"/"strict" option
 - #1207 [BUG] The latest version 2.4.4 cannot connect front-end with back-end on the Application Map on Application Insights
 
-## 2.5.0
+## 2.5.0 (Mar 9th, 2020)
 
 ### Changelog
 
@@ -93,7 +129,7 @@ Configuration options
 This has been enabled by default in the updated version.
 It can be disabled by adding the ```disableExceptionCollection``` config value with a value of true.
 
-## 2.4.4
+## 2.4.4 (Feb 5th, 2020)
 
 ### Changelog
 

@@ -12,14 +12,21 @@ const banner = [
   " */"
 ].join("\n");
 
-const browserRollupConfigFactory = isProduction => {
+const verParts = version.split(".")
+if (verParts.length != 3) {
+  throw "Invalid Version! [" + version + "]"
+}
+
+const browserRollupConfigFactory = (isProduction, libVersion) => {
   const browserRollupConfig = {
     input: `dist-esm/${outputName}.js`,
     output: {
-      file: `browser/${outputName}.js`,
+      file: `browser/ai.dbg.${libVersion}.js`,
       banner: banner,
       format: "umd",
-      name: "Microsoft.ApplicationInsights.DebugPlugin",
+      name: "Microsoft.ApplicationInsights",
+      extend: true,
+      freeze: false,
       sourcemap: true
     },
     plugins: [
@@ -41,12 +48,18 @@ const browserRollupConfigFactory = isProduction => {
   };
 
   if (isProduction) {
-    browserRollupConfig.output.file = `browser/${outputName}.min.js`;
+    browserRollupConfig.output.file = `browser/ai.dbg.${libVersion}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
         ie8: true,
+        toplevel: true,
+        compress: {
+          passes:3,
+          unsafe: true
+        },
         output: {
-          preamble: banner
+          preamble: banner,
+          webkit:true
         }
       })
     );
@@ -62,7 +75,9 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       file: `dist/${outputName}.js`,
       banner: banner,
       format: "umd",
-      name: "Microsoft.ApplicationInsights.DebugPlugin",
+      name: "Microsoft.ApplicationInsights",
+      extend: true,
+      freeze: false,
       sourcemap: true
     },
     plugins: [
@@ -85,8 +100,14 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
     nodeRollupConfig.plugins.push(
       uglify({
         ie8: true,
+        toplevel: true,
+        compress: {
+          passes:3,
+          unsafe: true
+        },
         output: {
-          preamble: banner
+          preamble: banner,
+          webkit:true
         }
       })
     );
@@ -96,8 +117,10 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
 };
 
 export default [
-  browserRollupConfigFactory(true),
-  browserRollupConfigFactory(false),
+  browserRollupConfigFactory(true, version),
+  browserRollupConfigFactory(false, version),
+  browserRollupConfigFactory(true, verParts[0]),
+  browserRollupConfigFactory(false, verParts[0]),
   nodeUmdRollupConfigFactory(true),
   nodeUmdRollupConfigFactory(false)
 ];

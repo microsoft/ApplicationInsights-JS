@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web",
-    "version": "2.5.5",
+    "version": "2.5.6",
     "description": "Microsoft Application Insights Javascript SDK API 1.0 beta",
     "main": "dist/applicationinsights-web.js",
     "module": "dist-esm/applicationinsights-web.js",
@@ -29,7 +29,7 @@
         "nightwatch:done": "curl http://localhost:8000/_done"
     },
     "devDependencies": {
-        "@microsoft/applicationinsights-rollup-es3" : "1.1.1",
+        "@microsoft/applicationinsights-rollup-es3" : "1.1.2",
         "chromedriver": "^2.45.0",
         "finalhandler": "^1.1.1",
         "grunt": "1.0.1",
@@ -51,13 +51,13 @@
     },
     "dependencies": {
         "@microsoft/dynamicproto-js": "^0.5.2",
-        "@microsoft/applicationinsights-shims" : "1.0.0",
-        "@microsoft/applicationinsights-analytics-js": "2.5.5",
-        "@microsoft/applicationinsights-channel-js": "2.5.5",
-        "@microsoft/applicationinsights-common": "2.5.5",
-        "@microsoft/applicationinsights-core-js": "2.5.5",
-        "@microsoft/applicationinsights-dependencies-js": "2.5.5",
-        "@microsoft/applicationinsights-properties-js": "2.5.5"
+        "@microsoft/applicationinsights-shims" : "1.0.1",
+        "@microsoft/applicationinsights-analytics-js": "2.5.6",
+        "@microsoft/applicationinsights-channel-js": "2.5.6",
+        "@microsoft/applicationinsights-common": "2.5.6",
+        "@microsoft/applicationinsights-core-js": "2.5.6",
+        "@microsoft/applicationinsights-dependencies-js": "2.5.6",
+        "@microsoft/applicationinsights-properties-js": "2.5.6"
     },
     "license": "MIT"
 }

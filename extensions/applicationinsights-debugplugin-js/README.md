@@ -1,9 +1,12 @@
 # Microsoft Application Insights JavaScript SDK - Debug Plugin
 
+## [BETA]
+
+
 [![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-debugplugin-js.svg)](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-debugplugin-js)
-<!-- [![gzip size](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000)](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js.svg?compression=gzip&softmax=30000&max=35000) -->
-<!-- [![minified size size](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js.svg?label=minified%20size) -->
+[![gzip size](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ext/ai.dbg.2.min.js.svg?compression=gzip&softmax=30000&max=35000)](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ext/ai.dbg.2.min.js.svg?compression=gzip&softmax=20000&max=25000)
+[![minified size size](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ext/ai.dbg.2.min.js.svg?label=minified%20size)](https://img.badgesize.io/https://az416426.vo.msecnd.net/scripts/b/ext/ai.dbg.2.min.js.svg?label=minified%20size)
 
 
 This README is broken down into several parts:
@@ -116,10 +119,12 @@ thanks to this new layer of transparency.
 run the following console command to install appInsights and the debug plugin:
 
 ```zsh
-npm install --save @microsoft/applicationinsights-debugplugin-native @microsoft/applicationinsights-web
+npm install --save @microsoft/applicationinsights-debugplugin @microsoft/applicationinsights-web
 ```
 
-## Initializing the Plugin
+## Basic Usage
+
+### NPM Setup (ignore if using Snippet Setup)
 
 ```js
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
@@ -152,7 +157,48 @@ const appInsights = new ApplicationInsights({
     }
 });
 appInsights.loadAppInsights();
+appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
 ```
+
+### Consuming via the CDN using the Snippet Setup (Ignore if using NPM Setup)
+
+```html
+<script type="text/javascript" src="https://az416426.vo.msecnd.net/scripts/b/ext/ai.dbg.2.min.js"></script>
+
+<script type="text/javascript">
+<!-- Snippet code removed for brevity -- copy from main readme --!> {
+src: "https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js", // The SDK URL Source
+cfg: { // Application Insights Configuration
+    instrumentationKey: "INSTRUMENTATION_KEY",
+    extensions: [new Microsoft.ApplicationInsights.DebugPlugin()],
+        extensionConfig: {
+            ["DebugPlugin"]: {
+                trackers: [
+                    'trackEvent',
+                    'trackPageView',
+                    'trackPageViewPerformance',
+                    'trackException',
+                    'trackTrace',
+                    'trackMetric',
+                    'trackDependencyData',
+                    'throwInternal',        // called when a message is logged internally
+                    'logInternalMessage',   // called when a message is logged internally
+                    'triggerSend',          // called when data is queued to be sent to the server
+                    '_sender',              // called when data is sent to the server
+                ]
+            }
+        }
+}});
+</script>
+```
+
+## Configuration
+
+TBD.
+
+| Name | Default | Description |
+|------|---------|-------------|
+| trackers | string[] | TBD.
 
 ## Supported Browsers
 
@@ -172,10 +218,9 @@ This can be expected to work in:
 - Edge (new and old)
 - Internet Explorer 11 (under construction)
 
-## Potential Breaking Changes
+## Known Potential Breaking Changes
 
-- `Microsoft.ApplicationInsights.DebugPlugin.DebugPlugin` will likely change to
-  `Microsoft.ApplicationInsights.DebugPlugin` at some point in the future
+- Configuration options
 
 ## Contributing
 
