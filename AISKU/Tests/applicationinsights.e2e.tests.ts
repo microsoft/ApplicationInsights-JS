@@ -402,13 +402,13 @@ export class ApplicationInsightsTests extends TestClass {
                                 args.push(call[0]);
                             }
                         });
-                        
+
                         let type = "Fetch";
                         if (this.isFetchPolyfill) {
                             type = "Ajax";
                             Assert.ok(true, "Using fetch polyfill");
                         }
-                        
+
                         Assert.equal(3, args.length, "track is called 3 times");
                         let baseData = args[0].baseData;
                         Assert.equal(type, baseData.type, "request is " + type + " type");
@@ -456,7 +456,7 @@ export class ApplicationInsightsTests extends TestClass {
                     const payload = JSON.parse(payloadStr[0]);
                         Assert.equal(1, payloadStr.length, 'Only 1 track item is sent - ' + payload.name);
                         Assert.ok(payload);
-    
+
                     if (payload && payload.tags) {
                         const tagResult: string = payload.tags && payload.tags[this.tagKeys.cloudName];
                         const tagExpect: string = 'my.custom.cloud.name';
@@ -559,7 +559,7 @@ export class ApplicationInsightsTests extends TestClass {
                     if (payloadStr.length > 0) {
                         let payloadEvents = payloadStr.length;
                         let thePayload:string = payloadStr[0];
-            
+
                         if (payloadEvents !== 1) {
                             // Only 1 track should be sent
                             return false;
@@ -725,7 +725,7 @@ export class ApplicationInsightsTests extends TestClass {
                     argCount += call[0].length;
                 });
             }
-    
+
             Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking success spy " + new Date().toISOString());
 
             if (argCount >= expectedCount) {
@@ -759,7 +759,7 @@ export class ApplicationInsightsTests extends TestClass {
                     }
                 }
             }
-            
+
             return false;
         }, "sender succeeded", 60, 1000))
     ];
