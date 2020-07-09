@@ -35,9 +35,9 @@
       }
     },
     "@microsoft/dynamicproto-js": {
-      "version": "0.5.2",
-      "from": "@microsoft/dynamicproto-js@^0.5.2",
-      "resolved": "https://registry.npmjs.org/@microsoft/dynamicproto-js/-/dynamicproto-js-0.5.2.tgz"
+      "version": "1.0.0",
+      "from": "@microsoft/dynamicproto-js@^1.0.0",
+      "resolved": "https://registry.npmjs.org/@microsoft/dynamicproto-js/-/dynamicproto-js-1.0.0.tgz"
     },
     "@nodelib/fs.scandir": {
       "version": "2.1.3",
