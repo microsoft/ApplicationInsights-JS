@@ -30,11 +30,11 @@ export class TelemetryContext implements ITelemetryContext {
 
     constructor(logger: IDiagnosticLogger, defaultConfig: ITelemetryConfig) {
         let _self = this;
+        _self.application = new Application();
+        _self.internal = new Internal(defaultConfig);
         if (hasWindow()) {
             _self.sessionManager = new _SessionManager(defaultConfig, logger);
-            _self.application = new Application();
             _self.device = new Device();
-            _self.internal = new Internal(defaultConfig);
             _self.location = new Location();
             _self.user = new User(defaultConfig, logger);
             _self.telemetryTrace = new TelemetryTrace(undefined, undefined, undefined, logger);
