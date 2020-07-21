@@ -36,6 +36,7 @@
         "qunit": "^2.9.3"
     },
     "dependencies": {
+        "@microsoft/dynamicproto-js": "^1.0.0",
         "@microsoft/applicationinsights-shims" : "^1.0.1",
         "@microsoft/applicationinsights-common": "^2.5.4",
         "@microsoft/applicationinsights-core-js": "^2.5.4"
