@@ -35,6 +35,11 @@ export const enum SendRequestReason {
     Resumed = 4,
 
     /**
+     * The event(s) being sent as a retry
+     */
+    Retry = 5,
+    
+    /**
      * Maximum batch size would be exceeded
      */
     MaxBatchSize = 10,
