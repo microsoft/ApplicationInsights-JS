@@ -281,7 +281,10 @@ export class Initialization implements IApplicationInsights {
                 if (legacyMode) {
                     snippetVer += ".lg";
                 }
-                _this.properties.context.internal.snippetVer = snippetVer || "-";
+
+                if (_this.context) {
+                    _this.context.internal.snippetVer = snippetVer || "-";
+                }
 
                 // apply updated properties to the global instance (snippet)
                 for (const field in _this) {
@@ -310,7 +313,7 @@ export class Initialization implements IApplicationInsights {
         // initialize core
         _this.core.initialize(_this.config, extensions);
         _this.context = _this.properties.context;
-        if (_internalSdkSrc) {
+        if (_internalSdkSrc && _this.context) {
             _this.context.internal.sdkSrc = _internalSdkSrc;
         }
         _updateSnippetProperties(_this.snippet);

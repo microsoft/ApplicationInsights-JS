@@ -9,149 +9,170 @@ import {
     IPlugin,
     IAppInsightsCore, 
     CoreUtils,
-    IDiagnosticLogger,
     LoggingSeverity,
     _InternalMessageId,
-    DiagnosticLogger
+    BaseTelemetryPlugin,
+    IProcessTelemetryContext
 } from '@microsoft/applicationinsights-core-js';
 import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, SeverityLevel, AnalyticsPluginIdentifier  } from '@microsoft/applicationinsights-common';
 import DeviceInfo from 'react-native-device-info';
 
 import { INativeDevice, IReactNativePluginConfig } from './Interfaces';
+import dynamicProto from '@microsoft/dynamicproto-js';
 
-export class ReactNativePlugin implements ITelemetryPlugin {
+export class ReactNativePlugin extends BaseTelemetryPlugin {
 
     identifier: string = 'AppInsightsReactNativePlugin';
     priority: number = 140;
     _nextPlugin?: ITelemetryPlugin;
-    private _initialized: boolean = false;
-    private _device: INativeDevice;
-    private _config: IReactNativePluginConfig;
-    private _analyticsPlugin: IAppInsights;
-    private _logger: IDiagnosticLogger;
-    private _defaultHandler;
 
     constructor(config?: IReactNativePluginConfig) {
-        this._config = config || this._getDefaultConfig();
-        this._device = {};
-        this._logger = new DiagnosticLogger();
+        super();
+
+        let _device: INativeDevice = {};
+        let _config: IReactNativePluginConfig = config || _getDefaultConfig();
+        let _analyticsPlugin: IAppInsights;
+        let _defaultHandler;
+    
+        dynamicProto(ReactNativePlugin, this, (_self, _base) => {
+            _self.initialize = (
+                config?: IReactNativePluginConfig | object, // need `| object` to coerce to interface
+                core?: IAppInsightsCore,
+                extensions?: IPlugin[]
+            ) => {
+                if (!_self.isInitialized()) {
+                    _base.initialize(config, core, extensions);
+
+                    const inConfig = config || {};
+                    const defaultConfig = _getDefaultConfig();
+                    for (const option in defaultConfig) {
+                        _config[option] = ConfigurationManager.getConfig(
+                            inConfig as any,
+                            option,
+                            _self.identifier,
+                            _config[option]
+                        );
+                    }
+        
+                    if (!_config.disableDeviceCollection) {
+                        _collectDeviceInfo();
+                    }
+        
+                    if (extensions) {
+                        CoreUtils.arrForEach(extensions, ext => {
+                            const identifier = (ext as ITelemetryPlugin).identifier;
+                            if (identifier === AnalyticsPluginIdentifier) {
+                                _analyticsPlugin = (ext as any) as IAppInsights;
+                            }
+                        });
+                    }
+        
+                    if (!_config.disableExceptionCollection) {
+                        _setExceptionHandler();
+                    }
+                }
+            };
+
+            _self.processTelemetry = (item: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
+                _applyDeviceContext(item);
+                _self.processNext(item, itemCtx);
+            };
+        
+            _self.setDeviceId = (newId: string) => {
+                _device.id = newId;
+            };
+        
+            _self.setDeviceModel = (newModel: string) => {
+                _device.model = newModel;
+            };
+        
+            _self.setDeviceType = (newType: string) => {
+                _device.deviceClass = newType;
+            };
+        
+            
+            /**
+             * Automatically collects native device info for this device
+             */
+            function _collectDeviceInfo() {
+                _device.deviceClass = DeviceInfo.getDeviceType();
+                _device.id = DeviceInfo.getUniqueId(); // Installation ID
+                _device.model = DeviceInfo.getModel();
+            }
+
+            function _applyDeviceContext(item: ITelemetryItem) {
+                if (_device) {
+                    item.ext = item.ext || {};
+                    item.ext.device = item.ext.device || ({} as IDevice);
+                    if (typeof _device.id === 'string') {
+                        item.ext.device.localId = _device.id;
+                    }
+                    if (typeof _device.model === 'string') {
+                        item.ext.device.model = _device.model;
+                    }
+                    if (typeof _device.deviceClass === 'string') {
+                        item.ext.device.deviceClass = _device.deviceClass;
+                    }
+                }
+            }
+
+            function _setExceptionHandler() {
+                const _global = global as any;
+                if (_global && _global.ErrorUtils) {
+                    // intercept react-native error handling
+                    _defaultHandler = (typeof _global.ErrorUtils.getGlobalHandler === 'function' && _global.ErrorUtils.getGlobalHandler()) || _global.ErrorUtils._globalHandler;
+                    _global.ErrorUtils.setGlobalHandler(_trackException.bind(this));
+                }
+            }
+
+            // default global error handler syntax: handleError(e, isFatal)
+            function _trackException(e, isFatal) {
+                const exception: IExceptionTelemetry = { exception: e, severityLevel: SeverityLevel.Error };
+
+                if (_analyticsPlugin) {
+                    _analyticsPlugin.trackException(exception);
+                } else {
+                    _self.diagLog().throwInternal(
+                        LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, ReactNative plugin telemetry will not be sent: ");
+                }
+
+                // call the _defaultHandler - react native also gets the error
+                if (_defaultHandler) {
+                    _defaultHandler.call(global, e, isFatal);
+                }
+            }
+        });
+
+        function _getDefaultConfig(): IReactNativePluginConfig {
+            return {
+                // enable auto collection by default
+                disableDeviceCollection: false,
+                disableExceptionCollection: false
+            };
+        }
     }
 
     public initialize(
         config?: IReactNativePluginConfig | object, // need `| object` to coerce to interface
         core?: IAppInsightsCore,
-        extensions?: IPlugin[]
-    ) {
-        if (!this._initialized) {
-            const inConfig = config || {};
-            const defaultConfig = this._getDefaultConfig();
-            for (const option in defaultConfig) {
-                this._config[option] = ConfigurationManager.getConfig(
-                    inConfig as any,
-                    option,
-                    this.identifier,
-                    this._config[option]
-                );
-            }
+        extensions?: IPlugin[]) {
 
-            if (!this._config.disableDeviceCollection) {
-                this._collectDeviceInfo();
-            }
-
-            if (extensions) {
-                CoreUtils.arrForEach(extensions, ext => {
-                    const identifier = (ext as ITelemetryPlugin).identifier;
-                    if (identifier === AnalyticsPluginIdentifier) {
-                        this._analyticsPlugin = (ext as any) as IAppInsights;
-                    }
-                });
-            }
-
-            if (!this._config.disableExceptionCollection) {
-                this._setExceptionHandler();
-            }
-        }
-        this._initialized = true;
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public processTelemetry(item: ITelemetryItem) {
-        this._applyDeviceContext(item);
-        if (this._nextPlugin) {
-            this._nextPlugin.processTelemetry(item);
-        }
-    }
-
-    public setNextPlugin(next: ITelemetryPlugin) {
-        this._nextPlugin = next;
+    public processTelemetry(env: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public setDeviceId(newId: string) {
-        this._device.id = newId;
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public setDeviceModel(newModel: string) {
-        this._device.model = newModel;
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public setDeviceType(newType: string) {
-        this._device.deviceClass = newType;
-    }
-
-    /**
-     * Automatically collects native device info for this device
-     */
-    private _collectDeviceInfo() {
-        this._device.deviceClass = DeviceInfo.getDeviceType();
-        this._device.id = DeviceInfo.getUniqueId(); // Installation ID
-        this._device.model = DeviceInfo.getModel();
-    }
-
-    private _applyDeviceContext(item: ITelemetryItem) {
-        if (this._device) {
-            item.ext = item.ext || {};
-            item.ext.device = item.ext.device || ({} as IDevice);
-            if (typeof this._device.id === 'string') {
-                item.ext.device.localId = this._device.id;
-            }
-            if (typeof this._device.model === 'string') {
-                item.ext.device.model = this._device.model;
-            }
-            if (typeof this._device.deviceClass === 'string') {
-                item.ext.device.deviceClass = this._device.deviceClass;
-            }
-        }
-    }
-
-    private _setExceptionHandler() {
-        const _global = global as any;
-        if (_global && _global.ErrorUtils) {
-            // intercept react-native error handling
-            this._defaultHandler = (typeof _global.ErrorUtils.getGlobalHandler === 'function' && _global.ErrorUtils.getGlobalHandler()) || _global.ErrorUtils._globalHandler;
-            _global.ErrorUtils.setGlobalHandler(this._trackException.bind(this));
-        }
-    }
-
-    // default global error handler syntax: handleError(e, isFatal)
-    private _trackException(e, isFatal) {
-        const exception: IExceptionTelemetry = { exception: e, severityLevel: SeverityLevel.Error };
-
-        if (this._analyticsPlugin) {
-            this._analyticsPlugin.trackException(exception);
-        } else {
-            this._logger.throwInternal(
-                LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "Analytics plugin is not available, ReactNative plugin telemetry will not be sent: ");
-        }
-        // call the _defaultHandler - react native also gets the error
-        if (this._defaultHandler) {
-            this._defaultHandler.call(global, e, isFatal);
-        }
-    }
-
-    private _getDefaultConfig(): IReactNativePluginConfig {
-        return {
-            // enable autocollection by default
-            disableDeviceCollection: false,
-            disableExceptionCollection: false
-        };
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }
