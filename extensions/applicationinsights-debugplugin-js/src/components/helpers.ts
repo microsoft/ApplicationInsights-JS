@@ -3,11 +3,21 @@
 
 import { CoreUtils } from '@microsoft/applicationinsights-core-js';
 import { Util } from '@microsoft/applicationinsights-common';
+import { FilterList } from './filterList';
 
 const MAX_DEPTH = 8;
 
 export const isArray = (obj: any): obj is any[] => {
   return Object.prototype.toString.call(obj) === '[object Array]';
+}
+
+const toggleClassName = (el: HTMLElement, className:string) => {
+  const idx = el.className.indexOf(className);
+  if (idx === -1) {
+    el.className += className;
+  } else {
+    el.className = el.className.substring(0, idx) + el.className.substring(idx + className.length);
+  }
 }
 
 const traverseAndReplace = (target: Object, maxDepth: number, currentDepth: number, thingsReferenced?: string[]): Object => {
@@ -44,23 +54,51 @@ export class LoggingElement {
   public lastSelectedObject: Object;
 
   public el: HTMLElement;
+  private filter: FilterList;
+  private textFilter: string = '';
+  private trackers: string[];
+  private msgTracker: Array<[string, HTMLElement, string]> = [];
 
-  constructor(parent: HTMLElement, prefix: string) {
+  constructor(parent: HTMLElement, prefix: string, trackers: string[]) {
     const _self = this;
     _self.el = document.createElement("div");
     _self.el.className = `${prefix}-my-logger`;
+    _self.trackers = trackers.slice(0);
+
+    const controlDiv = document.createElement("div");
+    controlDiv.className = 'controls';
 
     const copyButton = document.createElement("button");
     copyButton.innerText = "copy current node";
+    copyButton.className = "copy-btn";
     copyButton.onclick = _self.copySelectedTree;
+    copyButton.ontouchend = _self.copySelectedTree;
 
-    _self.el.appendChild(copyButton);
+    controlDiv.appendChild(copyButton);
+
+    _self.filter = new FilterList(controlDiv, _self.trackers, _self.render);
+
+    const textFilterInput = document.createElement("input");
+    textFilterInput.className = 'text-filter-input';
+    textFilterInput.setAttribute("placeholder", "filter text");
+    textFilterInput.onchange = (evt: Event) => {
+      _self.textFilter = (evt.target as HTMLInputElement).value;
+      _self.render();
+    }
+
+    controlDiv.appendChild(textFilterInput);
+
+    _self.el.appendChild(controlDiv);
 
     parent.appendChild(_self.el);
   }
 
-  public newLogEntry = (target: Object, key?: string, level?: number) => {
-    this.el.appendChild(this.ObjectToElements(target, key, level));
+  public newLogEntry = (target: Object, key?: string, level?: number, kind?: string) => {
+    const _self = this;
+    const el = _self.ObjectToElements(target, key, level);
+    toggleClassName(el, ' tree-root');
+    _self.msgTracker.push([kind, el, JSON.stringify(traverseAndReplace(target, MAX_DEPTH, level)).replace(/"/g, '')]);
+    _self.render();
   }
 
   // git push -f origin MSDAReba/debugplugin
@@ -70,6 +108,7 @@ export class LoggingElement {
 
     if (!level) { level = 0; }
     let isObj = CoreUtils.isObject(target);
+    const isErr = target['baseType'] === 'ExceptionData';
 
     const currentLine = document.createElement('span');
     if (isObj) {
@@ -113,6 +152,9 @@ export class LoggingElement {
         builder.onclick = (evt: MouseEvent) => {
           evt.stopPropagation();
         }
+        builder.ontouchend = (evt: TouchEvent) => {
+          evt.stopPropagation();
+        }
         builder.onkeydown = (evt: KeyboardEvent) => {
           evt.stopPropagation();
           this.navHandler(evt);
@@ -147,6 +189,7 @@ export class LoggingElement {
     rootDiv.appendChild(currentLine);
     rootDiv.setAttribute("tabindex", "0");
     if (isObj) {
+      if (isErr) { rootDiv.className = 'exception' }
       const openHandler = (evt: Event, forceState?: boolean) => {
         evt.stopPropagation();
         if (Util.getIEVersion()) {
@@ -181,6 +224,9 @@ export class LoggingElement {
       rootDiv.onclick = (evt: MouseEvent) => {
         openHandler(evt);
       }
+      rootDiv.ontouchend = (evt: TouchEvent) => {
+        openHandler(evt);
+      }
       rootDiv.onfocus = (evt: Event) => {
         this.focusHandler(evt, target, level);
       }
@@ -203,12 +249,30 @@ export class LoggingElement {
     textArea.parentElement.removeChild(textArea);
   }
 
+  private render = () => {
+    const _self = this;
+    const filter = _self.filter.getCurrentFilter();
+    const textFilter = _self.textFilter;
+    for (const [type, el, objStr] of _self.msgTracker) {
+      if (el.parentElement) { el.parentElement.removeChild(el); }
+      if (textFilter.length && objStr.indexOf(textFilter) === -1) {
+        continue;
+      }
+      // TODO: make this if statement better if possible
+      if (_self.trackers.indexOf(type) !== -1) {
+        if (filter.indexOf(type) === -1) {
+          _self.el.appendChild(el);
+        }
+      } else if (filter.indexOf('other') === -1) {
+        _self.el.appendChild(el);
+      }
+    }
+  }
+
   private focusHandler = (evt: Event, target: Object, level: number) => {
     const _self = this;
     if (_self.lastSelectedElement) {
-      const cn = _self.lastSelectedElement.className;
-      const i = _self.lastSelectedElement.className.indexOf(' last-selected-element');
-      _self.lastSelectedElement.className = cn.substring(0, i) + cn.substring(i + 22);
+      toggleClassName(_self.lastSelectedElement, ' last-selected-element');
     }
     _self.lastSelectedElement = (evt.target as HTMLElement);
     for (let i = 0; i < 10; i++) {

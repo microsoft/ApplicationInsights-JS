@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { 
-    IInstrumentHooksCallbacks, IInstrumentHooks, IInstrumentHook, IInstrumentCallDetails, InstrumentorHooksCallback 
+import {
+    IInstrumentHooksCallbacks, IInstrumentHooks, IInstrumentHook, IInstrumentCallDetails, InstrumentorHooksCallback
 } from "../JavaScriptSDK.Interfaces/IInstrumentHooks";
 import {
     strFunction, strPrototype
@@ -22,6 +22,19 @@ const cbNames = [
     "req", "rsp", "hkErr", "fnErr"
 ];
 
+
+/**
+ * Constant string defined to support minimization
+ * @ignore
+ */
+const str__Proto = "__proto__";
+
+/**
+ * Constant string defined to support minimization
+ * @ignore
+ */
+const strConstructor = "constructor";
+
 /** @ignore */
 function _arrLoop<T>(arr:T[], fn:(value:T, idx:number) => boolean|number|void) {
     if (arr) {
@@ -29,7 +42,7 @@ function _arrLoop<T>(arr:T[], fn:(value:T, idx:number) => boolean|number|void) {
             if (fn(arr[lp], lp)) {
                 break;
             }
-        }    
+        }
     }
 }
 
@@ -40,7 +53,7 @@ function _doCallbacks(hooks:IInstrumentHook[], callDetails: IInstrumentCallDetai
             let cbks = hook.cbks;
             let cb:InstrumentorHooksCallback = cbks[cbNames[type]];
             if (cb) {
-        
+
                 // Set the specific hook context implementation using a lazy creation pattern
                 callDetails.ctx = () => {
                     let ctx = hookCtx[idx] = (hookCtx[idx] || {});
@@ -72,7 +85,7 @@ function _doCallbacks(hooks:IInstrumentHook[], callDetails: IInstrumentCallDetai
 
 /** @ignore */
 function _createFunctionHook(aiHook:IInstrumentHooks) {
-    
+
     // Define a temporary method that queues-up a the real method call
     return function () {
         let funcThis = this;
@@ -127,6 +140,34 @@ function _createFunctionHook(aiHook:IInstrumentHooks) {
     };
 }
 
+
+/**
+ * Pre-lookup to check if we are running on a modern browser (i.e. not IE8)
+ * @ignore
+ */
+let _objGetPrototypeOf = Object["getPrototypeOf"];
+
+/**
+ * Helper used to get the prototype of the target object as getPrototypeOf is not available in an ES3 environment.
+ * @ignore
+ */
+function _getObjProto(target:any) {
+    if (target) {
+        // This method doesn't existing in older browsers (e.g. IE8)
+        if (_objGetPrototypeOf) {
+            return _objGetPrototypeOf(target);
+        }
+
+        // target[Constructor] May break if the constructor has been changed or removed
+        let newProto = target[str__Proto] || target[strPrototype] || target[strConstructor];
+        if(newProto) {
+            return newProto;
+        }
+    }
+
+    return null;
+}
+
 /** @ignore */
 function _getOwner(target:any, name:string, checkPrototype:boolean): any {
     let owner = null;
@@ -134,7 +175,7 @@ function _getOwner(target:any, name:string, checkPrototype:boolean): any {
         if (CoreUtils.hasOwnProperty(target, name)) {
             owner = target;
         } else if (checkPrototype) {
-            owner = _getOwner(target[strPrototype], name, false);
+            owner = _getOwner(_getObjProto(target), name, false);
         }
     }
 
@@ -179,46 +220,48 @@ export function InstrumentProtos(target:any, funcNames:string[], callbacks: IIns
 export function InstrumentFunc(target:any, funcName:string, callbacks: IInstrumentHooksCallbacks, checkPrototype:boolean = true): IInstrumentHook {
     if (target && funcName && callbacks) {
         let owner = _getOwner(target, funcName, checkPrototype);
-        let fn = owner[funcName]
-        if (typeof fn === strFunction) {
-            let aiHook:IInstrumentHooks = fn[aiInstrumentHooks];
-            if (!aiHook) {
-                // Only hook the function once
-                aiHook = {
-                    i: 0,
-                    n: funcName,
-                    f: fn,
-                    h: []
-                };
+        if (owner) {
+            let fn = owner[funcName]
+            if (typeof fn === strFunction) {
+                let aiHook:IInstrumentHooks = fn[aiInstrumentHooks];
+                if (!aiHook) {
+                    // Only hook the function once
+                    aiHook = {
+                        i: 0,
+                        n: funcName,
+                        f: fn,
+                        h: []
+                    };
 
-                // Override (hook) the original function
-                let newFunc = _createFunctionHook(aiHook);
-                newFunc[aiInstrumentHooks] = aiHook;        // Tag and store the function hooks
-                owner[funcName] = newFunc;
-            }
-
-            const theHook: IInstrumentHook = {
-                // tslint:disable:object-literal-shorthand
-                id: aiHook.i,
-                cbks: callbacks,
-                rm: function() {
-                    // DO NOT Use () => { shorthand for the function as the this gets replaced
-                    // with the outer this and not the this for theHook instance.
-                    let id = this.id;
-                    _arrLoop(aiHook.h, (hook, idx) => {
-                        if (hook.id === id) {
-                            aiHook.h.splice(idx, 1);
-                            return 1;
-                        }
-                    });
+                    // Override (hook) the original function
+                    let newFunc = _createFunctionHook(aiHook);
+                    newFunc[aiInstrumentHooks] = aiHook;        // Tag and store the function hooks
+                    owner[funcName] = newFunc;
                 }
-                // tslint:enable:object-literal-shorthand
+
+                const theHook: IInstrumentHook = {
+                    // tslint:disable:object-literal-shorthand
+                    id: aiHook.i,
+                    cbks: callbacks,
+                    rm: function() {
+                        // DO NOT Use () => { shorthand for the function as the this gets replaced
+                        // with the outer this and not the this for theHook instance.
+                        let id = this.id;
+                        _arrLoop(aiHook.h, (hook, idx) => {
+                            if (hook.id === id) {
+                                aiHook.h.splice(idx, 1);
+                                return 1;
+                            }
+                        });
+                    }
+                    // tslint:enable:object-literal-shorthand
+                }
+
+                aiHook.i ++;
+                aiHook.h.push(theHook);
+
+                return theHook;
             }
-
-            aiHook.i ++;
-            aiHook.h.push(theHook);
-
-            return theHook;
         }
     }
 

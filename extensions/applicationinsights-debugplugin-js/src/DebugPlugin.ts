@@ -4,7 +4,7 @@
 import {
   BaseTelemetryPlugin, IConfiguration, CoreUtils,
   IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, LoggingSeverity, _InternalMessageId, getNavigator,
-  ITelemetryPluginChain, InstrumentFunc, IInstrumentHooksCallbacks, IInstrumentCallDetails, InstrumentFuncs, InstrumentorHooksCallback
+  ITelemetryPluginChain, InstrumentFunc, IInstrumentHooksCallbacks, IInstrumentCallDetails, InstrumentFuncs, InstrumentorHooksCallback, InstrumentProto, strPrototype
 } from '@microsoft/applicationinsights-core-js';
 import { LoggingElement } from './components/helpers';
 import { tempStyle, permStyle } from './components/styleNodeSrc';
@@ -152,52 +152,23 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
           debugBinContainer.className = `${prefix}-debug-bin-container`;
           debugBinParent = new DebugBinParent(debugBinContainer, [], 0, prefix);
 
-          // 4. grab all relevant functions that need to be instrumented and store them in arrays
-          const diagLog = _self.diagLog();
 
+          // 5. instrument functions
+          const diagLog = _self.diagLog();
           debugBins = {};
-          const propertiesProtoFns: string[] = [];
-          const analyticsProtoFns: string[] = [];
-          const ajaxProtoFns: string[] = [];
-          const channelProtoFns: string[] = [];
-          const diagLogProtoFns: string[] = [];
-          for (const [ext, protoFns] of [
-            [analyticsExt, analyticsProtoFns],
-            [propertiesExt, propertiesProtoFns],
-            [ajaxDependencyExt, ajaxProtoFns],
-            [channelPluginExt, channelProtoFns],
-            [diagLog, diagLogProtoFns]
-          ] as any[]) {
-            for (const key of CoreUtils.objKeys(ext['__proto__'])) {
-              if (key.substring(0, 1) === '_') { continue; }
-              if (CoreUtils.isFunction(ext[key])) {
-                protoFns.push(key);
+          for (let i = 0; i < trackers.length; i++) {
+            let tracker = trackers[i];
+            for (const target of [propertiesExt, analyticsExt, ajaxDependencyExt, channelPluginExt, diagLog]) {
+              let val = InstrumentFunc(target, tracker, {
+                req: _self.preProcessItem(tracker) as any as () => InstrumentorHooksCallback,
+                rsp: _self.postProcessItem(tracker) as any as () => InstrumentorHooksCallback
+              }, true);
+
+              if (val) {
+                debugBins[tracker] = new DebugBin(tracker, 0, debugBinParent, (i + 1) * 50);
+                break;
               }
             }
-            // special case for sender
-            if (ext.identifier === 'AppInsightsChannelPlugin' && CoreUtils.arrIndexOf(trackers, '_sender') !== -1) {
-              protoFns.push('_sender');
-            }
-          }
-
-          // 5. actually instrument all the functions
-          for (let i = 0; i < trackers.length; i++) {
-            const tracker = trackers[i];
-            let target;
-            if (CoreUtils.arrIndexOf(propertiesProtoFns, tracker) !== -1) { target = propertiesExt['__proto__'] }
-            else if (CoreUtils.arrIndexOf(analyticsProtoFns, tracker) !== -1) { target = analyticsExt['__proto__'] }
-            else if (CoreUtils.arrIndexOf(ajaxProtoFns, tracker) !== -1) { target = ajaxDependencyExt['__proto__'] }
-            else if (CoreUtils.arrIndexOf(diagLogProtoFns, tracker) !== -1) { target = diagLog['__proto__'] }
-            // special case for sender
-            else if (tracker === '_sender') { target = channelPluginExt }
-            else if (CoreUtils.arrIndexOf(channelProtoFns, tracker) !== -1) { target = channelPluginExt['__proto__'] }
-            else { continue; }
-            InstrumentFunc(target, tracker, {
-              req: _self.preProcessItem(tracker) as any as () => InstrumentorHooksCallback,
-              rsp: _self.postProcessItem(tracker) as any as () => InstrumentorHooksCallback
-            });
-
-            debugBins[tracker] = new DebugBin(tracker, 0, debugBinParent, (i + 1) * 50);
           }
 
           // 6. append permanent style
@@ -215,7 +186,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
           rootEl.style.height = '100vh';
           rootEl.style.backgroundColor = '#ffffff';
           rootEl.style.opacity = '0';
-          rootEl.style.pointerEvents = 'none';
+          rootEl.style.pointerEvents = 'auto';
           rootEl.style.top = '-100%';
           rootEl.style.transition = '.2s top cubic-bezier(0.87, 0, 0.13, 1)';
 
@@ -232,15 +203,16 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
             }
 
             rootEl.style.opacity = (rootEl.style.opacity === '0') ? '1' : '0';
-          }, 'toggle detailed view');
+          }, 'toggle dashboard');
 
           // 9. setup logger and log config
           const logHeading = document.createElement("h1");
-          logHeading.textContent = 'detailed log';
+          logHeading.textContent = 'dashboard';
+          logHeading.style.fontFamily = "monospace";
           logHeading.style.textAlign = 'center';
           rootEl.appendChild(logHeading);
 
-          logger = new LoggingElement(rootEl, prefix);
+          logger = new LoggingElement(rootEl, prefix, trackers);
 
           document.body.appendChild(
             rootEl
@@ -250,7 +222,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
             debugBinContainer
           );
 
-          logger.newLogEntry(config, `[0s] config`, 0);
+          logger.newLogEntry(config, `[0s] config`, 0, 'config');
         }
       }
 
@@ -260,7 +232,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
           if (itemType === 'trackException' && !debugBinParent.showChildren) {
             debugBinParent.addClassToEl('notify');
           }
-          logger.newLogEntry(funcArgs, `[${(+new Date() - startTime) / 1000}s] ${itemType}`, 0);
+          logger.newLogEntry(orgArgs, `[${(+new Date() - startTime) / 1000}s] ${itemType}`, 0, itemType);
           if (console && console.log) {
             console.log(`[${itemType}] preProcess - funcArgs: `, funcArgs);
             console.log(`[${itemType}] preProcess - orgArgs: `, orgArgs);
@@ -280,7 +252,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
       _self.processTelemetry = (event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
         if (console && console.log) { console.log(event); }
         _self.processNext(event, itemCtx);
-        logger.newLogEntry(event, `[${(+new Date() - startTime) / 1000}s] ${event.baseType}`, 0);
+        logger.newLogEntry(event, `[${(+new Date() - startTime) / 1000}s] ${event.baseType}`, 0, event.baseType);
       }
     });
   }
