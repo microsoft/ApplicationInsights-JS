@@ -54,7 +54,7 @@ export class AjaxTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentation_key",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     maxAjaxCallsPerView: 5,
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
@@ -92,7 +92,7 @@ export class AjaxTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentation_key",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     maxAjaxCallsPerView: 5,
                 };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
@@ -123,7 +123,7 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
+                let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", extensionConfig: {"AjaxPlugin": {}}};
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
 
                 // act
@@ -142,7 +142,7 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: false };
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", disableAjaxTracking: false };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
 
                 // act
@@ -160,7 +160,7 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: false };
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", disableAjaxTracking: false };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
 
                 // act
@@ -190,7 +190,7 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "abc", disableAjaxTracking: false, enableRequestHeaderTracking: true };
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", disableAjaxTracking: false, enableRequestHeaderTracking: true };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
 
                 var trackStub = this.sandbox.stub(appInsightsCore, "track");
@@ -218,7 +218,7 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "abc", disableAjaxTracking: false, enableResponseHeaderTracking: true };
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", disableAjaxTracking: false, enableResponseHeaderTracking: true };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
 
                 var trackStub = this.sandbox.stub(appInsightsCore, "track");
@@ -245,7 +245,7 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "abc", disableAjaxTracking: false, enableAjaxErrorStatusText: true };
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", disableAjaxTracking: false, enableAjaxErrorStatusText: true };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
 
                 var trackStub = this.sandbox.stub(appInsightsCore, "track");
@@ -309,7 +309,7 @@ export class AjaxTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", disableFetchTracking: false };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
 
@@ -351,7 +351,7 @@ export class AjaxTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", disableFetchTracking: false };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
 
@@ -401,7 +401,7 @@ export class AjaxTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", disableFetchTracking: false };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
                 let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
@@ -447,7 +447,7 @@ export class AjaxTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
+                let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", disableFetchTracking: false };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
                 let throwSpy = this.sandbox.spy(appInsightsCore.logger, "throwInternal");
@@ -490,7 +490,7 @@ export class AjaxTests extends TestClass {
                     this._ajax = new AjaxMonitor();
                     let appInsightsCore = new AppInsightsCore();
                     let coreConfig = {
-                        instrumentationKey: "",
+                        instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                         disableFetchTracking: false,
                         disableAjaxTracking: true
                     };
@@ -548,7 +548,7 @@ export class AjaxTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     disableFetchTracking: false,
                     disableAjaxTracking: false,
                     extensionConfig: {
@@ -633,7 +633,7 @@ export class AjaxTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     disableFetchTracking: false,
                     disableAjaxTracking: false,
                     extensionConfig: {
@@ -711,7 +711,7 @@ export class AjaxTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     disableFetchTracking: false,
                     disableAjaxTracking: false,
                     extensionConfig: {
@@ -796,7 +796,7 @@ export class AjaxTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     disableFetchTracking: false,
                     disableAjaxTracking: false,
                     extensionConfig: {
@@ -874,7 +874,7 @@ export class AjaxTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     disableFetchTracking: false,
                     disableAjaxTracking: false,
                     extensionConfig: {
@@ -958,7 +958,7 @@ export class AjaxTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     disableFetchTracking: false,
                     disableAjaxTracking: false,
                     extensionConfig: {
@@ -1035,7 +1035,7 @@ export class AjaxTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     disableFetchTracking: false,
                     disableAjaxTracking: false,
                     enableRequestHeaderTracking: true,
@@ -1126,7 +1126,7 @@ export class AjaxTests extends TestClass {
                 var callback = this.sandbox.spy();
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
+                let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", extensionConfig: {"AjaxPlugin": {}}};
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
 
                 // Act
@@ -1155,7 +1155,7 @@ export class AjaxTests extends TestClass {
                 var onreadystatechangeSpy = this.sandbox.spy();
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
+                let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", extensionConfig: {"AjaxPlugin": {}}};
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 var trackStub = this.sandbox.stub(appInsightsCore, "track");
 
@@ -1181,7 +1181,7 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
+                let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", extensionConfig: {"AjaxPlugin": {}}};
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 var trackStub = this.sandbox.stub(appInsightsCore, "track");
 
@@ -1205,7 +1205,7 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
+                let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", extensionConfig: {"AjaxPlugin": {}}};
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 var trackStub = this.sandbox.stub(appInsightsCore, "track");
 
@@ -1247,7 +1247,7 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
+                let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", extensionConfig: {"AjaxPlugin": {}}};
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 var trackStub = this.sandbox.stub(appInsightsCore, "track");
                 var cb1 = this.sandbox.spy();
@@ -1310,7 +1310,7 @@ export class AjaxTests extends TestClass {
                     };
 
                     let appInsightsCore = new AppInsightsCore();
-                    let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
+                    let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", extensionConfig: {"AjaxPlugin": {}}};
                     appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                     var trackStub = this.sandbox.stub(appInsightsCore, "track");
                 // tick to set the initial time be non zero
@@ -1347,7 +1347,7 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
+                let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", extensionConfig: {"AjaxPlugin": {}}};
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 var spy = this.sandbox.spy(this._ajax, "includeCorrelationHeaders");
                 let trackSpy = this.sandbox.spy(appInsightsCore, "track")
@@ -1375,7 +1375,7 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
+                let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", extensionConfig: {"AjaxPlugin": {}}};
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 var spy = this.sandbox.spy(this._ajax, "includeCorrelationHeaders");
                 let trackSpy = this.sandbox.spy(appInsightsCore, "track")
@@ -1403,7 +1403,7 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
+                let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", extensionConfig: {"AjaxPlugin": {}}};
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
 
                 // Act
@@ -1429,7 +1429,7 @@ export class AjaxTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -1467,7 +1467,7 @@ export class AjaxTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -1500,7 +1500,7 @@ export class AjaxTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -1531,7 +1531,7 @@ export class AjaxTests extends TestClass {
     private testAjaxSuccess(responseCode: number, success: boolean) {
         this._ajax = new AjaxMonitor();
         let appInsightsCore = new AppInsightsCore();
-        let coreConfig = { instrumentationKey: "instrumentationKey", extensionConfig: {"AjaxPlugin": {}}};
+        let coreConfig = { instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333", extensionConfig: {"AjaxPlugin": {}}};
         appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
         var trackStub = this.sandbox.stub(appInsightsCore, "track");
 
@@ -1657,7 +1657,7 @@ export class AjaxPerfTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId"
@@ -1704,7 +1704,7 @@ export class AjaxPerfTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -1762,7 +1762,7 @@ export class AjaxPerfTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -1830,7 +1830,7 @@ export class AjaxPerfTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -1888,7 +1888,7 @@ export class AjaxPerfTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId"
@@ -1947,7 +1947,7 @@ export class AjaxPerfTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -2019,7 +2019,7 @@ export class AjaxPerfTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId",
@@ -2116,7 +2116,7 @@ export class AjaxFrozenTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
-                    instrumentationKey: "instrumentationKey",
+                    instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333",
                     extensionConfig: {
                         "AjaxDependencyPlugin": {
                             appId: "appId"

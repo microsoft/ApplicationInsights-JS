@@ -57,6 +57,10 @@ export class BaseCore implements IAppInsightsCore {
             throw Error("Please provide instrumentation key");
         }
 
+        if(!_this.validateInstrumentationKey(config.instrumentationKey)) {
+            throw Error("invalid instrumentation key");
+        }
+
         _this.config = config;
         let channelController = _this._channelController;
 
@@ -192,6 +196,19 @@ export class BaseCore implements IAppInsightsCore {
         }
 
         return new ProcessTelemetryContext(thePlugins, _this.config, _this);
+    }
+
+    /**
+     * Validate UUID Format
+     * Specs taken from https://tools.ietf.org/html/rfc4122
+     */
+    validateInstrumentationKey(iKey:string) :boolean {
+        const regexp = new RegExp('^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$');
+        if (regexp.test(iKey)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     protected releaseQueue() {

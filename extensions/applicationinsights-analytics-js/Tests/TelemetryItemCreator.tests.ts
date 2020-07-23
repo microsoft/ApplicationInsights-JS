@@ -22,11 +22,11 @@ export class TelemetryItemCreatorTests extends TestClass {
         const plugin: IPlugin = new ChannelPlugin();
         this._core = new AppInsightsCore();
         this._core.initialize(
-            {instrumentationKey: "key"},
+            {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
             [plugin]
         );
         this._appInsights = new ApplicationInsights();
-        this._appInsights.initialize({ "instrumentationKey": "ikey" }, this._core, []);
+        this._appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, this._core, []);
     }
 
     public registerTests() {

@@ -93,6 +93,182 @@ export class ApplicationInsightsCoreTests extends TestClass {
         });
 
         this.testCase({
+            name: "ApplicationInsightsCore: Instrumentation Key Validation",
+            test: () => {
+
+                const samplingPlugin = new TestSamplingPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                const config1: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey:"40ed4f602a2f4f94a61722b20a520864",
+                    extensionConfig: {}
+                };
+
+                try {
+                    appInsightsCore.initialize(config1, [samplingPlugin]);
+                } catch (error) {
+                    Assert.equal( error.message, "invalid instrumentation key", "no dashes test" );
+                }
+
+                const config2: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey:"40ed4f60-2a2f-4f94-a617-22b20a520864344567645766",
+                    extensionConfig: {}
+                };
+
+                try {
+                    appInsightsCore.initialize(config1, [samplingPlugin]);
+                } catch (error) {
+                    Assert.equal( error.message, "invalid instrumentation key", "more than 32 characters test" );
+                }
+
+                const config3: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey:"40ed4f60a-2a2f-4f94-a617-22b20a520864",
+                    extensionConfig: {}
+                };
+
+                try {
+                    appInsightsCore.initialize(config1, [samplingPlugin]);
+                } catch (error) {
+                    Assert.equal( error.message, "invalid instrumentation key", "first section test-more than 8 characters" );
+                }
+
+                const config4: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey:"40ed4f6x-2a2f-4f94-a617-22b20a520864",
+                    extensionConfig: {}
+                };
+
+                try {
+                    appInsightsCore.initialize(config1, [samplingPlugin]);
+                } catch (error) {
+                    Assert.equal( error.message, "invalid instrumentation key", "first section test-non hex character present" );
+                }
+
+                const config5: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey:"40ed4f60-2a2fa-4f94-a617-22b20a520864",
+                    extensionConfig: {}
+                };
+
+                try {
+                    appInsightsCore.initialize(config1, [samplingPlugin]);
+                } catch (error) {
+                    Assert.equal( error.message, "invalid instrumentation key", "second section test-more than 4 characters" );
+                }
+
+                const config6: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey:"40ed4f60-xa2f-4f94-a617-22b20a520864",
+                    extensionConfig: {}
+                };
+
+                try {
+                    appInsightsCore.initialize(config1, [samplingPlugin]);
+                } catch (error) {
+                    Assert.equal( error.message, "invalid instrumentation key", "second section test-non hex character present" );
+                }
+
+                const config7: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey:"40ed4f60-2a2f-4f94a-a617-22b20a520864",
+                    extensionConfig: {}
+                };
+
+                try {
+                    appInsightsCore.initialize(config1, [samplingPlugin]);
+                } catch (error) {
+                    Assert.equal( error.message, "invalid instrumentation key", "third section test-more than 4 characters" );
+                }
+
+                const config8: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey:"40ed4f60-2a2f-4f9x-a617-22b20a520864",
+                    extensionConfig: {}
+                };
+
+                try {
+                    appInsightsCore.initialize(config1, [samplingPlugin]);
+                } catch (error) {
+                    Assert.equal( error.message, "invalid instrumentation key", "third section test-non hex character present" );
+                }
+
+                const config9: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey:"40ed4f60-2a2f-8f94-a617-22b20a520864",
+                    extensionConfig: {}
+                };
+
+                try {
+                    appInsightsCore.initialize(config1, [samplingPlugin]);
+                } catch (error) {
+                    Assert.equal( error.message, "invalid instrumentation key", "third section test-first character not belong to [1-5] test" );
+                }
+
+                const config10: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey:"40ed4f60-2a2f-4f94-a617a-22b20a520864",
+                    extensionConfig: {}
+                };
+
+                try {
+                    appInsightsCore.initialize(config1, [samplingPlugin]);
+                } catch (error) {
+                    Assert.equal( error.message, "invalid instrumentation key", "fourth section test-more than 4 characters" );
+                }
+
+                const config11: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey:"40ed4f60-2a2f-4f94-a61x-22b20a520864",
+                    extensionConfig: {}
+                };
+
+                try {
+                    appInsightsCore.initialize(config1, [samplingPlugin]);
+                } catch (error) {
+                    Assert.equal( error.message, "invalid instrumentation key", "fourth section test-non hex character present" );
+                }
+
+                const config12: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey:"40ed4f60-2a2f-4f94-1617-22b20a520864",
+                    extensionConfig: {}
+                };
+
+                try {
+                    appInsightsCore.initialize(config1, [samplingPlugin]);
+                } catch (error) {
+                    Assert.equal( error.message, "invalid instrumentation key", "fourth section test-first character not belong to [89ab]" );
+                }
+
+                const config13: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey:"40ed4f60-2a2f-4f94-a617-22b20a520864a",
+                    extensionConfig: {}
+                };
+
+                try {
+                    appInsightsCore.initialize(config1, [samplingPlugin]);
+                } catch (error) {
+                    Assert.equal( error.message, "invalid instrumentation key", "fifth section test-more than 12 characters test" );
+                }
+
+                const config14: IConfiguration = {
+                    endpointUrl: "https://dc.services.visualstudio.com/v2/track",
+                    instrumentationKey:"40ed4f60-2a2f-4f94-a617-22b20a52086x",
+                    extensionConfig: {}
+                };
+
+                try {
+                    appInsightsCore.initialize(config1, [samplingPlugin]);
+                } catch (error) {
+                    Assert.equal( error.message, "invalid instrumentation key", "fifth section test-non hex character present test" );
+                }
+            }
+        });
+
+        this.testCase({
             name: "ApplicationInsightsCore: Initialization initializes setNextPlugin",
             test: () => {
                 const samplingPlugin = new TestSamplingPlugin();
@@ -105,7 +281,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
 
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize(
-                    { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" },
+                    { instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864" },
                     [samplingPlugin, channelPlugin]);
                 Assert.ok(!!samplingPlugin.nexttPlugin, "setup prior to pipeline initialization");
             }
@@ -127,7 +303,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const appInsightsCore = new AppInsightsCore();
                 try {
                     appInsightsCore.initialize(
-                        { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" },
+                        { instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864" },
                         [samplingPlugin, samplingPlugin1, channelPlugin]);
 
                     Assert.ok("No error on duplicate priority");
@@ -143,7 +319,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const channelPlugin = new ChannelPlugin();
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize(
-                    { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" },
+                    { instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864" },
                     [channelPlugin]);
 
                 Assert.ok(!channelPlugin.isUnloadInvoked, "Unload not called on initialize");
@@ -170,7 +346,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
 
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize(
-                    { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", channels: [[channelPlugin1]] },
+                    { instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864", channels: [[channelPlugin1]] },
                     [channelPlugin]);
 
 
@@ -184,7 +360,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
         this.testCase({
             name: 'ApplicationInsightsCore: track adds required default fields if missing',
             test: () => {
-                const expectedIKey: string = "09465199-12AA-4124-817F-544738CC7C41";
+                const expectedIKey: string = "40ed4f60-2a2f-4f94-a617-22b20a520864";
                 const expectedTimestamp = new Date().toISOString();
                 const expectedBaseType = "EventData";
 
@@ -212,7 +388,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 // Setup
                 const channelPlugin = new ChannelPlugin();
                 const appInsightsCore = new AppInsightsCore();
-                appInsightsCore.initialize({ instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", loggingLevelTelemetry: 999 }, [channelPlugin]);
+                appInsightsCore.initialize({ instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864", loggingLevelTelemetry: 999 }, [channelPlugin]);
 
                 const messageId: _InternalMessageId = _InternalMessageId.CannotAccessCookie; // can be any id
                 const messageKey = appInsightsCore.logger['AIInternalMessagePrefix'] + messageId;
@@ -259,7 +435,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 // Setup
                 const channelPlugin = new ChannelPlugin();
                 const appInsightsCore = new AppInsightsCore();
-                const initFunction = () => appInsightsCore.initialize({ instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" }, [channelPlugin]);
+                const initFunction = () => appInsightsCore.initialize({ instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864" }, [channelPlugin]);
 
                 // Assert precondition
                 Assert.ok(!appInsightsCore.isInitialized(), "PRE: core constructed but not initialized");
@@ -283,7 +459,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize(
                     {
-                        instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41",
+                        instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864",
                         diagnosticLogInterval: 1
                     }, [channelPlugin]);
                 const trackTraceSpy = this.sandbox.stub(appInsightsCore, "track");
@@ -325,14 +501,14 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize(
                     {
-                        instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41",
+                        instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864",
                         loggingLevelTelemetry: 999
                     }, [channelPlugin]
                 );
                 const dummyCore = new AppInsightsCore();
                 dummyCore.initialize(
                     {
-                        instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41",
+                        instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864",
                         loggingLevelTelemetry: 999
                     }, [channelPlugin]
                 );
@@ -369,7 +545,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const appInsightsCore = new AppInsightsCore();
                 try {
                     appInsightsCore.initialize(
-                        { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", extensions: [samplingPlugin] },
+                        { instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864", extensions: [samplingPlugin] },
                         [channelPlugin]);
                 } catch (error) {
                     Assert.ok(false, "No error expected");
@@ -400,7 +576,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const appInsightsCore = new AppInsightsCore();
                 try {
                     appInsightsCore.initialize(
-                        { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" },
+                        { instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864" },
                         [testPlugin, samplingPlugin, channelPlugin]);
                 } catch (error) {
                     Assert.ok(false, "Exception not expected");
@@ -426,7 +602,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize(
                     {
-                        instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41",
+                        instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864",
                         channels: [[channelPlugin1, channelPlugin2], [channelPlugin3]]
                     },
                     []);
@@ -459,7 +635,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize(
                     {
-                        instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41"
+                        instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864"
                     },
                     [channelPlugin1, channelPlugin2, channelPlugin3]);
 
@@ -478,7 +654,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
         this.testCase({
             name: 'ApplicationInsightsCore: Validates root level properties in telemetry item',
             test: () => {
-                const expectedIKey: string = "09465199-12AA-4124-817F-544738CC7C41";
+                const expectedIKey: string = "40ed4f60-2a2f-4f94-a617-22b20a520864";
 
                 const channelPlugin = new ChannelPlugin();
                 channelPlugin.priority = 1001;
@@ -515,7 +691,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const channelSpy = this.sandbox.stub(channelPlugin, "processTelemetry");
                 appInsightsCore.initialize(
                     {
-                        instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", channels: [[channelPlugin]]
+                        instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864", channels: [[channelPlugin]]
                     }, []);
                 const event: ITelemetryItem = { name: 'test' };
                 appInsightsCore.track(event);
@@ -533,7 +709,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const appInsightsCore = new AppInsightsCore();
                 const channelSpy = this.sandbox.stub(channelPlugin, "processTelemetry");
                 appInsightsCore.initialize(
-                    { instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41" },
+                    { instrumentationKey: "40ed4f60-2a2f-4f94-a617-22b20a520864" },
                     [trackPlugin, channelPlugin]);
                 Assert.ok(channelSpy.calledOnce, "Channel process incorrect number of times");
                 Assert.ok(channelSpy.args[0][0].name == "TestEvent1", "Incorrect event");

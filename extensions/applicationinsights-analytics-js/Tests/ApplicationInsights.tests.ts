@@ -38,7 +38,7 @@ export class ApplicationInsightsTests extends TestClass {
 
                 // Act
                 core.initialize({
-                    instrumentationKey: '',
+                    instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333',
                     enableAutoRouteTracking: true
                 } as IConfig & IConfiguration, [appInsights, channel]);
 
@@ -66,7 +66,7 @@ export class ApplicationInsightsTests extends TestClass {
 
                 // Act
                 core.initialize({
-                    instrumentationKey: '',
+                    instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333',
                     enableAutoRouteTracking: true
                 } as IConfig & IConfiguration, [appInsights, channel]);
                 window.dispatchEvent(Util.createDomEvent('locationchange'));
@@ -100,7 +100,7 @@ export class ApplicationInsightsTests extends TestClass {
 
                 // Act
                 core.initialize({
-                    instrumentationKey: '',
+                    instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333',
                     enableAutoRouteTracking: true
                 } as IConfig & IConfiguration, [appInsights, channel]);
                 window.dispatchEvent(Util.createDomEvent('locationchange'));
@@ -143,7 +143,7 @@ export class ApplicationInsightsTests extends TestClass {
 
                 // Act
                 core.initialize({
-                    instrumentationKey: '',
+                    instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333',
                     enableAutoRouteTracking: true
                 } as IConfig & IConfiguration, [appInsights, channel]);
                 window.dispatchEvent(Util.createDomEvent('locationchange'));
@@ -167,7 +167,7 @@ export class ApplicationInsightsTests extends TestClass {
 
                 // Act
                 const config = {
-                    instrumentationKey: 'ikey'
+                    instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333'
                 };
 
                 core.initialize(
@@ -192,7 +192,7 @@ export class ApplicationInsightsTests extends TestClass {
                 const appInsights: ApplicationInsights = new ApplicationInsights();
 
                 const config = {
-                    instrumentationKey: 'ikey',
+                    instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333',
                     autoTrackPageVisitTime: true
                 };
                 core.initialize(
@@ -221,7 +221,7 @@ export class ApplicationInsightsTests extends TestClass {
 
                 // Act
                 const config = {
-                    instrumentationKey: 'instrumentation_key',
+                    instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333',
                     samplingPercentage: 12,
                     accountId: 'aaa',
                     extensionConfig: {
@@ -236,7 +236,7 @@ export class ApplicationInsightsTests extends TestClass {
                 Assert.equal(12, appInsights.config.samplingPercentage);
                 Assert.notEqual('aaa', appInsights.config.accountId);
                 Assert.equal('def', appInsights.config.accountId);
-                Assert.equal('instrumentation_key', appInsights['_globalconfig'].instrumentationKey);
+                Assert.equal('1aa11111-bbbb-1ccc-8ddd-eeeeffff3333', appInsights['_globalconfig'].instrumentationKey);
             }
         });
 
@@ -284,7 +284,7 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'AppInsightsGenericTests: envelope type, data type, and ikey are correct',
             test: () => {
                 // setup
-                const iKey: string = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                const iKey: string = "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333";
                 const iKeyNoDash: string = "BDC8736DD8E84B69B19BB0CE6B66A456";
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
@@ -324,11 +324,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin]
                 );
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, []);
                 const senderStub = this.sandbox.stub(appInsights.core, "track");
 
                 // Act
@@ -350,11 +350,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin]
                 );
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, []);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
 
                 // Test
@@ -375,11 +375,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin]
                 );
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, []);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
 
                 // Test
@@ -404,11 +404,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin]
                 );
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, []);
 
                 const unexpectedError = new Error();
                 const dumpSpy = this.sandbox.stub(Util, "dump");
@@ -429,11 +429,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin]
                 );
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ instrumentationKey: "ikey"}, core, []);
+                appInsights.initialize({ instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"}, core, []);
                 const dumpSpy = this.sandbox.spy(Util, "dump")
                 const unexpectedError = new Error("some message");
                 const stub = this.sandbox.stub(appInsights, "trackException").throws(unexpectedError);
@@ -455,11 +455,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin]
                 );
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ instrumentationKey: "key" }, core, []);
+                appInsights.initialize({ instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, []);
 
                 const throwInternal = this.sandbox.spy(appInsights.core.logger, "throwInternal");
                 const nameStub = this.sandbox.stub(Util, "getExceptionName");
@@ -484,11 +484,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin]
                 );
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, []);
                 const trackSpy = this.sandbox.spy(appInsights.core, "track");
 
                 // Act
@@ -506,11 +506,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin]
                 );
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, []);
                 const trackExceptionSpy = this.sandbox.spy(appInsights, "trackException");
 
                 // Act
@@ -546,11 +546,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin]
                 );
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, []);
                 const spy = this.sandbox.spy(appInsights, "sendPageViewInternal");
                 this.clock.tick(1);
 
@@ -581,7 +581,7 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 this.sandbox.stub(core, "getTransmissionControl");
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, []);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
 
@@ -605,7 +605,7 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 this.sandbox.stub(core, "getTransmissionControl");
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, []);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
                 this.clock.tick(10);        // Needed to ensure the duration calculation works
 
@@ -644,11 +644,11 @@ export class ApplicationInsightsTests extends TestClass {
                     const plugin = new ChannelPlugin();
                     const core = new AppInsightsCore();
                     core.initialize(
-                        {instrumentationKey: "key"},
+                        {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                         [plugin]
                     );
                     const appInsights = new ApplicationInsights();
-                    appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                    appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, []);
                     const logStub = this.sandbox.stub(core.logger, "throwInternal");
                     core.logger.consoleLoggingLevel = () => 999;
 
@@ -669,11 +669,11 @@ export class ApplicationInsightsTests extends TestClass {
                     const plugin = new ChannelPlugin();
                     const core = new AppInsightsCore();
                     core.initialize(
-                        {instrumentationKey: "key"},
+                        {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                         [plugin]
                     );
                     const appInsights = new ApplicationInsights();
-                    appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                    appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, []);
                     const logStub = this.sandbox.stub(core.logger, "throwInternal");
                     core.logger.consoleLoggingLevel = () => 999;
 
@@ -694,11 +694,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const plugin = new ChannelPlugin();
                 const core = new AppInsightsCore();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin]
                 );
                 const appInsights = new ApplicationInsights();
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, []);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
 
                 // Act
@@ -731,10 +731,10 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 const appInsights = new ApplicationInsights();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, [plugin, appInsights]);
                 plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
 
                 const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
@@ -762,11 +762,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 const appInsights = new ApplicationInsights();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333'}, core, [plugin, appInsights]);
                 const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
                 const nameOverride = "my unique name";
                 const telemetryInitializer = {
@@ -796,11 +796,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 const appInsights = new ApplicationInsights();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333'}, core, [plugin, appInsights]);
                 const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
 
                 const messageOverride = "my unique name";
@@ -842,11 +842,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 const appInsights = new ApplicationInsights();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333'}, core, [plugin, appInsights]);
                 const initializer1 = { init: () => { } };
                 const initializer2 = { init: () => { } };
                 const spy1 = this.sandbox.spy(initializer1, "init");
@@ -872,11 +872,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 const appInsights = new ApplicationInsights();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333'}, core, [plugin, appInsights]);
                 const initializer1 = { init: (item: ITelemetryItem) => { 
                     if (item.data !== undefined) {
                         item.data.init1 = true;
@@ -911,11 +911,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 const appInsights = new ApplicationInsights();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333'}, core, [plugin, appInsights]);
                 const initializer1 = { init: () => { } };
                 const initializer2 = { init: () => { } };
                 const spy1 = this.sandbox.spy(initializer1, "init");
@@ -941,11 +941,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 const appInsights = new ApplicationInsights();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333'}, core, [plugin, appInsights]);
                 const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
 
                 // act
@@ -965,11 +965,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 const appInsights = new ApplicationInsights();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333'}, core, [plugin, appInsights]);
                 const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
 
                 // act
@@ -989,11 +989,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 const appInsights = new ApplicationInsights();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                appInsights.initialize({ "instrumentationKey": "i1aa11111-bbbb-1ccc-8ddd-eeeeffff3333key" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333'}, core, [plugin, appInsights]);
                 const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
 
                 // act
@@ -1013,11 +1013,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 const appInsights = new ApplicationInsights();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333'}, core, [plugin, appInsights]);
                 const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
 
                 // act
@@ -1039,11 +1039,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 const appInsights = new ApplicationInsights();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333'}, core, [plugin, appInsights]);
                 const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
 
                 // act
@@ -1065,11 +1065,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 const appInsights = new ApplicationInsights();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333'}, core, [plugin, appInsights]);
                 const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
 
                 // act
@@ -1091,11 +1091,11 @@ export class ApplicationInsightsTests extends TestClass {
                 const core = new AppInsightsCore();
                 const appInsights = new ApplicationInsights();
                 core.initialize(
-                    {instrumentationKey: "key"},
+                    {instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333"},
                     [plugin, appInsights]
                 );
-                appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
-                plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
+                appInsights.initialize({ "instrumentationKey": "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, core, [plugin, appInsights]);
+                plugin.initialize({instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333'}, core, [plugin, appInsights]);
                 const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
                 const logStub = this.sandbox.spy(appInsights.core.logger, "throwInternal")
                 // act
