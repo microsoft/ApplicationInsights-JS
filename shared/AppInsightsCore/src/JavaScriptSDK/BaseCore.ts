@@ -31,6 +31,7 @@ export class BaseCore implements IAppInsightsCore {
     public _extensions: IPlugin[];
     public isInitialized: () => boolean;
     protected _notificationManager: INotificationManager;
+    protected _UUID_Regex:string;
     private _eventQueue: ITelemetryItem[];
     private _channelController: ChannelController;
     private _setInit: (value: boolean) => void;
@@ -43,6 +44,7 @@ export class BaseCore implements IAppInsightsCore {
         _this.isInitialized = () => _isInitialized;
         _this._setInit = (value: boolean) => { _isInitialized = value; }
         _this._eventQueue = [];
+        _this._UUID_Regex='^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$';
     }
 
     initialize(config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void {
@@ -203,7 +205,8 @@ export class BaseCore implements IAppInsightsCore {
      * Specs taken from https://tools.ietf.org/html/rfc4122
      */
     validateInstrumentationKey(iKey:string) :boolean {
-        const regexp = new RegExp('^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$');
+        let _this = this;
+        const regexp = new RegExp(_this._UUID_Regex);
         if (regexp.test(iKey)) {
             return true;
         } else {

@@ -130,9 +130,9 @@
       "resolved": "https://registry.npmjs.org/@types/minimatch/-/minimatch-3.0.3.tgz"
     },
     "@types/node": {
-      "version": "14.0.24",
+      "version": "14.0.25",
       "from": "@types/node@*",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-14.0.24.tgz"
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-14.0.25.tgz"
     },
     "abbrev": {
       "version": "1.1.1",
