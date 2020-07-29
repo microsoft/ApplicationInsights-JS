@@ -4,6 +4,7 @@ import { ITelemetryItem } from "./ITelemetryItem";
 import { IChannelControls } from "./IChannelControls";
 import { IPlugin } from "./ITelemetryPlugin";
 import { IConfiguration } from "./IConfiguration";
+import { INotificationManager } from "./INotificationManager";
 import { INotificationListener } from "./INotificationListener";
 import { IDiagnosticLogger } from './IDiagnosticLogger';
 import { IProcessTelemetryContext } from './IProcessTelemetryContext';
@@ -38,6 +39,11 @@ export interface IAppInsightsCore {
     * Core track API
     */
     track(telemetryItem: ITelemetryItem): void;
+
+    /**
+     * Get the current notification manager
+     */
+    getNotifyMgr(): INotificationManager;
 
     /**
      * Adds a notification listener. The SDK calls methods on the listener when an appropriate notification is raised.

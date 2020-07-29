@@ -33,7 +33,7 @@
         "grunt": "1.0.1",
         "grunt-contrib-clean": "^1.1.0",
         "grunt-contrib-uglify": "3.1.0",
-        "grunt-contrib-qunit": "2.0.0",
+        "grunt-contrib-qunit": "^3.1.0",
         "grunt-ts": "^6.0.0-beta.15",
         "grunt-tslint": "^5.0.2",
         "rollup-plugin-copy": "^3.1.0",

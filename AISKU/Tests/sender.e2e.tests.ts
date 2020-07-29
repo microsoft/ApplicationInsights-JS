@@ -2,6 +2,8 @@
 "use strict"
 import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
+import { Util } from '@microsoft/applicationinsights-common';
+import { getJSON } from '@microsoft/applicationinsights-core-js';
 
 export class SenderE2ETests extends TestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -43,7 +45,7 @@ export class SenderE2ETests extends TestClass {
             this._ai = init.loadAppInsights();
 
             // Setup Sinon stuff
-            this._sender = this._ai.appInsights.core['_channelController'].channelQueue[0][0];
+            this._sender = this._ai.appInsights.core.getTransmissionControls()[0][0] as Sender;
             this._sender._buffer.clear();
             this.errorSpy = this.sandbox.spy(this._sender, '_onError');
             this.successSpy = this.sandbox.spy(this._sender, '_onSuccess');
@@ -175,12 +177,28 @@ export class SenderE2ETests extends TestClass {
     }
 
     private isSessionEmpty(): boolean {
-        const buffer: string = (this._sender as any)._buffer.getBuffer(this._bufferName);
+        const buffer = this._getBuffer(this._bufferName);
         return buffer.length === 0;
     }
 
     private isSessionSentEmpty(): boolean {
-        const buffer: string = (this._sender as any)._buffer.getBuffer(this._sentBufferName);
+        const buffer = this._getBuffer(this._sentBufferName);
         return buffer.length === 0;
+    }
+
+    private _getBuffer(key: string): string[] {
+        let prefixedKey = key;
+        try {
+            const bufferJson = Util.getSessionStorage(null, key);
+            if (bufferJson) {
+                let buffer: string[] = getJSON().parse(bufferJson);
+                if (buffer && Util.isArray(buffer)) {
+                    return buffer;
+                }
+            }
+        } catch (e) {
+        }
+
+        return [];
     }
 }

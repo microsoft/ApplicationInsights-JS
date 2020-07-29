@@ -9,5 +9,10 @@
     "alwaysStrict": true,
     "declaration": true
   },
-  "files": []
+  "include": [
+    "./**/*.ts"
+  ],
+  "exclude": [
+      "node_modules/"
+  ]
 }

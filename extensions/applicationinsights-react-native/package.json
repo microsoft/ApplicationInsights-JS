@@ -21,7 +21,7 @@
     "devDependencies": {
         "typescript": "^3.6.4",
         "grunt": "1.0.1",
-        "grunt-contrib-qunit": "2.0.0",
+        "grunt-contrib-qunit": "^3.1.0",
         "grunt-contrib-uglify": "3.1.0",
         "grunt-ts": "^6.0.0-beta.15",
         "rollup-plugin-node-resolve": "^3.4.0",
@@ -37,9 +37,9 @@
     },
     "dependencies": {
         "@microsoft/dynamicproto-js": "^1.0.0",
-        "@microsoft/applicationinsights-shims" : "^1.0.1",
-        "@microsoft/applicationinsights-common": "^2.5.4",
-        "@microsoft/applicationinsights-core-js": "^2.5.4"
+        "@microsoft/applicationinsights-shims": "^1.0.1",
+        "@microsoft/applicationinsights-common": "^2.5.6",
+        "@microsoft/applicationinsights-core-js": "^2.5.6"
     },
     "peerDependencies": {
         "react-native": "*",

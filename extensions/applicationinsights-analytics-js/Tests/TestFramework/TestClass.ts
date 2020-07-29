@@ -3,6 +3,13 @@
 /// <reference path="Assert.ts" />
 /// <reference path="./TestCase.ts"/>
 
+// export interface FakeXMLHttpRequest extends XMLHttpRequest {
+//     url?: string;
+//     method?: string;
+//     requestHeaders?: any;
+//     respond: (status: number, headers: any, body: string) => void;
+// }
+
 class TestClass {
 
     public static isPollingStepFlag = "isPollingStep";
@@ -21,8 +28,12 @@ class TestClass {
     // These methods and properties are injected by Sinon and will override the implementation here.
     // These are here purely to make typescript happy.
     public clock: SinonFakeTimers;
-    public server: SinonFakeServer;
+    public server: SinonFakeXMLHttpRequest;
     public sandbox: SinonSandbox;
+
+    private _xhrRequests: SinonFakeXMLHttpRequest[] = [];
+    private _orgNavigator: any;
+    private _beaconHooks = [];
 
     constructor(name?: string) {
         QUnit.module(name);
@@ -191,6 +202,9 @@ class TestClass {
     }
 
     protected setUserAgent(userAgent: string) {
+        // Hook Send beacon which also mocks navigator
+        this.hookSendBeacon(null);
+
         Object.defineProperty(window.navigator, 'userAgent',
             {
                 configurable: true,
@@ -200,17 +214,90 @@ class TestClass {
             });
     }
 
+    protected hookSendBeacon(cb: (url: string, data?: BodyInit | null) => undefined|boolean) {
+        if (!this._orgNavigator) {
+            let newNavigator = <any>{};
+            this._orgNavigator = window.navigator;
+
+            newNavigator.sendBeacon = (url, body) => {
+                let handled;
+                this._beaconHooks.forEach(element => {
+                    let result = element(url, body);
+                    if (result !== undefined) {
+                        handled |= result;
+                    }
+                });
+
+                if (handled !== undefined) {
+                    return handled;
+                }
+
+                return this._orgNavigator.sendBeacon(url, body);
+            };
+
+            // Just Blindly copy the properties over
+            // tslint:disable-next-line: forin
+            for (let name in navigator) {
+                if (!newNavigator.hasOwnProperty(name)) {
+                    newNavigator[name] = navigator[name];
+                    if (!newNavigator.hasOwnProperty(name)) {
+                        // if it couldn't be set directly try and pretend
+                        Object.defineProperty(newNavigator, name,
+                        {
+                            configurable: true,
+                            get: function () {
+                                return navigator[name];
+                            }
+                        });
+                    }
+                }
+            }
+
+            this.setNavigator(newNavigator);
+        }
+
+        this._beaconHooks.push(cb);
+    }
+
+    protected setNavigator(newNavigator: any) {
+        Object.defineProperty(window, 'navigator',
+        {
+            configurable: true,
+            get: function () {
+                return newNavigator;
+            }
+        });
+    }
+
+    
+    protected _getXhrRequests(url?: string): SinonFakeXMLHttpRequest[] {
+        let requests: SinonFakeXMLHttpRequest[] = [];
+
+        for (let lp = 0; lp < this._xhrRequests.length; lp++) {
+            let value = this._xhrRequests[lp];
+            if (value && value.url && (!url || value.url.indexOf(url) !== -1)) {
+                requests.push(value);
+            }
+        }
+
+        return requests;
+    }
+
     /** Called when the test is starting. */
     private _testStarting() {
         // Initialize the sandbox similar to what is done in sinon.js "test()" override. See note on class.
         const config = (sinon as any).getConfig(sinon.config);
         config.useFakeTimers = this.useFakeTimers;
-        config.useFakeServer = this.useFakeServer;
+        //config.useFakeServer = this.useFakeServer;
 
         config.injectInto = config.injectIntoThis && this || config.injectInto;
         this.sandbox = sinon.sandbox.create(config);
-        if (config.useFakeServer) {
-            this.server = this.sandbox.server;
+        if (this.useFakeServer) {
+            this.server = sinon.useFakeXMLHttpRequest();
+            this._xhrRequests = [];
+            this.server.onCreate = (xhr: SinonFakeXMLHttpRequest) => {
+                this._xhrRequests.push(xhr);
+            };
         } else {
             this.server = null;
         }
@@ -221,6 +308,12 @@ class TestClass {
 
     /** Called when the test is completed. */
     private _testCompleted(failed?: boolean) {
+        if (this._orgNavigator) {
+            this.setNavigator(this._orgNavigator);
+            this._orgNavigator = null;
+        }
+
+        this._beaconHooks = [];
         this._cleanupAllHooks();
 
         if (failed) {

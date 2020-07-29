@@ -36,7 +36,7 @@ export class SanitizerE2ETests extends TestClass {
             this._ai = init.loadAppInsights();
 
             // Setup Sinon stuff
-            const sender: Sender = this._ai.appInsights.core['_channelController'].channelQueue[0][0];
+            const sender: Sender = this._ai.appInsights.core.getTransmissionControls()[0][0] as Sender;
             this.errorSpy = this.sandbox.spy(sender, '_onError');
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
             this.loggingSpy = this.sandbox.stub(this._ai.appInsights.core.logger, 'throwInternal');
@@ -179,7 +179,7 @@ export class SanitizerE2ETests extends TestClass {
         });
 
         this.testCaseAsync({
-            name: "Sanitizer2ETests: Data platform accepts up to 2048 charaters for url",
+            name: "Sanitizer2ETests: Data platform accepts up to 2048 characters for url",
             stepDelay: this.delay,
             steps: [
                 () => {
@@ -199,7 +199,7 @@ export class SanitizerE2ETests extends TestClass {
         });
 
         this.testCaseAsync({
-            name: "Sanitizer2ETests: Data platform accepts up to 32768 charaters for messages",
+            name: "Sanitizer2ETests: Data platform accepts up to 32768 characters for messages",
             stepDelay: this.delay,
             steps: [
                 () => {

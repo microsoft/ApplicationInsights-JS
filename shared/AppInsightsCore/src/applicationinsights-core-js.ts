@@ -20,7 +20,7 @@ export { CoreUtils, EventHelper, Undefined, normalizeJsName } from "./JavaScript
 export { 
     getGlobal, getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, 
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
-    isReactNative, strUndefined, strObject, strPrototype, strFunction
+    isReactNative, getConsole, strUndefined, strObject, strPrototype, strFunction
 } from "./JavaScriptSDK/EnvUtils";
 export { NotificationManager } from "./JavaScriptSDK/NotificationManager";
 export { INotificationManager } from "./JavaScriptSDK.Interfaces/INotificationManager";

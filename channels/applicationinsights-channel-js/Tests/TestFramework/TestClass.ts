@@ -1,9 +1,17 @@
-/// <reference path="../External/sinon.d.ts" />
-/// <reference path="../External/qunit.d.ts" />
-/// <reference path="Assert.ts" />
-/// <reference path="./TestCase.ts"/>
+import { SinonSandbox, SinonSpy, SinonStub, SinonMock, SinonSandboxConfig, SinonFakeTimers, SinonFakeXMLHttpRequest } from 'sinon';
+import * as sinon from 'sinon';
+import { TestCase, TestCaseAsync } from './TestCase';
+import { getNavigator } from '@microsoft/applicationinsights-core-js';
+/// <reference path="../external/qunit.d.ts" />
 
-class TestClass {
+// export interface FakeXMLHttpRequest extends XMLHttpRequest {
+//     url?: string;
+//     method?: string;
+//     requestHeaders?: any;
+//     respond: (status: number, headers: any, body: string) => void;
+// }
+
+export class TestClass {
 
     public static isPollingStepFlag = "isPollingStep";
 
@@ -21,8 +29,12 @@ class TestClass {
     // These methods and properties are injected by Sinon and will override the implementation here.
     // These are here purely to make typescript happy.
     public clock: SinonFakeTimers;
-    public server: SinonFakeServer;
+    public server: SinonFakeXMLHttpRequest;
     public sandbox: SinonSandbox;
+
+    private _xhrRequests: SinonFakeXMLHttpRequest[] = [];
+    private _orgNavigator: any;
+    private _beaconHooks = [];
 
     constructor(name?: string) {
         QUnit.module(name);
@@ -36,7 +48,7 @@ class TestClass {
     public testCleanup() {
     }
 
-    /** Method in which test class intances should call this.testCase(...) to register each of this suite's tests. */
+    /** Method in which test class instances should call this.testCase(...) to register each of this suite's tests. */
     public registerTests() {
     }
 
@@ -90,7 +102,7 @@ class TestClass {
                             }
                         } catch (e) {
                             this._testCompleted();
-                            Assert.ok(false, e.toString());
+                            QUnit.assert.ok(false, e.toString());
 
                             // done is QUnit callback indicating the end of the test
                             done();
@@ -107,7 +119,7 @@ class TestClass {
 
                 trigger();
             } catch (ex) {
-                Assert.ok(false, "Unexpected Exception: " + ex);
+                QUnit.assert.ok(false, "Unexpected Exception: " + ex);
                 this._testCompleted(true);
 
                 // done is QUnit callback indicating the end of the test
@@ -143,13 +155,13 @@ class TestClass {
                 this._testCompleted();
             }
             catch (ex) {
-                Assert.ok(false, "Unexpected Exception: " + ex);
+                QUnit.assert.ok(false, "Unexpected Exception: " + ex);
                 this._testCompleted(true);
             }
         };
 
         // Register the test with QUnit
-        test(testInfo.name, testMethod);
+        QUnit.test(testInfo.name, testMethod);
     }
 
     /** Creates an anonymous function that records arguments, this value, exceptions and return values for all calls. */
@@ -191,25 +203,126 @@ class TestClass {
     }
 
     protected setUserAgent(userAgent: string) {
-        Object.defineProperty(window.navigator, 'userAgent',
+        // Hook Send beacon which also mocks navigator
+        this.hookSendBeacon(null);
+
+        try {
+            Object.defineProperty(window.navigator, 'userAgent',
             {
                 configurable: true,
                 get () {
                     return userAgent;
                 }
             });
+        } catch (e) {
+            QUnit.assert.ok(false, "Failed to set the userAgent - " + e);
+            throw e;
+        }
+    }
+
+    protected hookSendBeacon(cb: (url: string, data?: BodyInit | null) => undefined|boolean) {
+        if (!this._orgNavigator) {
+            let newNavigator = <any>{};
+            this._orgNavigator = window.navigator;
+
+            newNavigator.sendBeacon = (url, body) => {
+                let handled;
+                this._beaconHooks.forEach(element => {
+                    let result = element(url, body);
+                    if (result !== undefined) {
+                        handled |= result;
+                    }
+                });
+
+                if (handled !== undefined) {
+                    return handled;
+                }
+
+                return this._orgNavigator.sendBeacon(url, body);
+            };
+
+            try {
+                // Just Blindly copy the properties over
+                // tslint:disable-next-line: forin
+                for (let name in navigator) {
+                    if (!newNavigator.hasOwnProperty(name)) {
+                        newNavigator[name] = navigator[name];
+                        if (!newNavigator.hasOwnProperty(name)) {
+                            // if it couldn't be set directly try and pretend
+                            Object.defineProperty(newNavigator, name,
+                            {
+                                configurable: true,
+                                get: function () {
+                                    return navigator[name];
+                                }
+                            });
+                        }
+                    }
+                }
+            } catch (e) {
+                QUnit.assert.ok(false, "Creating navigator copy failed - " + e);
+                throw e;
+            }
+
+            this.setNavigator(newNavigator);
+        }
+
+        this._beaconHooks.push(cb);
+    }
+
+    protected setNavigator(newNavigator: any) {
+        try {
+            Object.defineProperty(window, 'navigator',
+            {
+                configurable: true,
+                get: function () {
+                    return newNavigator;
+                }
+            });
+        } catch (e) {
+            QUnit.assert.ok(true, "Set Navigator failed - " + e);
+            sinon.stub(window, "navigator").returns(newNavigator);
+        }
+    }
+
+    
+    protected _getXhrRequests(url?: string): SinonFakeXMLHttpRequest[] {
+        let requests: SinonFakeXMLHttpRequest[] = [];
+
+        for (let lp = 0; lp < this._xhrRequests.length; lp++) {
+            let value = this._xhrRequests[lp];
+            if (value && value.url && (!url || value.url.indexOf(url) !== -1)) {
+                requests.push(value);
+            }
+        }
+
+        return requests;
     }
 
     /** Called when the test is starting. */
     private _testStarting() {
+        
         // Initialize the sandbox similar to what is done in sinon.js "test()" override. See note on class.
-        const config = (sinon as any).getConfig(sinon.config);
-        config.useFakeTimers = this.useFakeTimers;
-        config.useFakeServer = this.useFakeServer;
+        //const config = (sinon as any).getConfig(sinon.config);
+        //config.useFakeTimers = this.useFakeTimers;
+        //config.useFakeServer = this.useFakeServer;
+        let sandboxConfig: SinonSandboxConfig = {};
+        sandboxConfig.injectInto = null;
+        sandboxConfig.properties = ["spy", "stub", "mock", "sandbox", "clock", "server"];
 
-        config.injectInto = config.injectIntoThis && this || config.injectInto;
-        this.sandbox = sinon.sandbox.create(config);
-        this.server = this.sandbox.server;
+        this.sandbox = sinon.createSandbox(sandboxConfig);
+        if (this.useFakeTimers) {
+            this.clock = sinon.useFakeTimers();
+        }
+        if (this.useFakeServer) {
+            this.server = sinon.useFakeXMLHttpRequest();
+            this._xhrRequests = [];
+            this.server.onCreate = (xhr: SinonFakeXMLHttpRequest) => {
+                this._xhrRequests.push(xhr);
+            };
+        } else {
+            this.server = null;
+        }
 
         // Allow the derived class to perform test initialization.
         this.testInitialize();
@@ -217,6 +330,19 @@ class TestClass {
 
     /** Called when the test is completed. */
     private _testCompleted(failed?: boolean) {
+        if (this._orgNavigator) {
+            this.setNavigator(this._orgNavigator);
+            this._orgNavigator = null;
+        }
+
+        this._beaconHooks = [];
+        this._cleanupAllHooks();
+
+        if (this.clock) {
+            this.clock.restore();
+            this.clock = null;
+        }
+
         if (failed) {
             // Just cleanup the sandbox since the test has already failed.
             this.sandbox.restore();
@@ -231,21 +357,46 @@ class TestClass {
         // Clear the instance of the currently running suite.
         TestClass.currentTestClass = null;
     }
+
+    private _removeFuncHooks(fn:any) {
+        if (typeof fn === "function") {
+            let aiHook:any = fn["_aiHooks"];
+
+            if (aiHook && aiHook.h) {
+                aiHook.h = [];
+            }
+        }
+    }
+
+    private _removeHooks(target:any) {
+        Object.keys(target).forEach(name => {
+            try {
+                this._removeFuncHooks(target[name]);
+            } catch (e) {
+            }
+        });
+    }
+
+    private _cleanupAllHooks() {
+        this._removeHooks(XMLHttpRequest.prototype);
+        this._removeHooks(XMLHttpRequest);
+        this._removeFuncHooks(window.fetch);
+    }
 }
 
 // Configure Sinon
 sinon.assert.fail = (msg?) => {
-    Assert.ok(false, msg);
+    QUnit.assert.ok(false, msg);
 };
 
 sinon.assert.pass = (assertion) => {
-    Assert.ok(assertion, "sinon assert");
+    QUnit.assert.ok(assertion, "sinon assert");
 };
 
-sinon.config = {
-    injectIntoThis: true,
-    injectInto: null,
-    properties: ["spy", "stub", "mock", "clock", "sandbox"],
-    useFakeTimers: true,
-    useFakeServer: true
-};
+// sinon.config = {
+//     injectIntoThis: true,
+//     injectInto: null,
+//     properties: ["spy", "stub", "mock", "clock", "sandbox"],
+//     useFakeTimers: true,
+//     useFakeServer: true
+// };
