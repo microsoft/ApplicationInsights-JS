@@ -43,21 +43,30 @@ if (!Object.keys) {
 
 function myFunc() {
 
+  // all trackers
+  // var toTrack = [
+  //   'trackEvent',
+  //   'trackPageView',
+  //   'trackPageViewPerformance',
+  //   'trackException',
+  //   'trackTrace',
+  //   'trackMetric',
+  //   'trackDependencyData',
+  //   'throwInternal',        // called when a message is logged internally
+  //   'logInternalMessage',   // called when a message is logged internally
+  //   'triggerSend',          // called when data is queued to be sent to the server
+  //   '_sender',              // called when data is sent to the server
+  // ];
+
+  // error handling functions
   var toTrack = [
-    'trackEvent',
-    'trackPageView',
-    'trackPageViewPerformance',
     'trackException',
     'trackTrace',
-    'trackMetric',
-    'trackDependencyData',
-    'throwInternal',        // called when a message is logged internally
-    'logInternalMessage',   // called when a message is logged internally
-    'triggerSend',          // called when data is queued to be sent to the server
-    '_sender',              // called when data is sent to the server
-  ];
+    'throwInternal',
+    'logInternalMessage'
+  ]
 
-  var debugPlugin = Microsoft.ApplicationInsights.DebugPlugin;
+  var debugPlugin = Microsoft.ApplicationInsights.DebugPlugin.DebugPlugin;
   var debugPluginInstance = new debugPlugin();
   // Application Insights Configuration
   var configObj = {
@@ -104,6 +113,16 @@ function myFunc() {
     }
   }
 
+  var container = document.createElement('div');
+  container.style.position = 'absolute';
+  container.style.margin = 'auto';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.bottom = '0';
+  container.style.right = '0';
+  container.style.width = "300px";
+  container.style.height = 24 * 11 + 'px';
+  container.style.zIndex = '-1';
   var keys = Object.keys(testBtnFns);
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i];
@@ -112,11 +131,18 @@ function myFunc() {
     var btn = document.createElement('button');
     btn.style.display = 'block';
     btn.style.width = '300px';
-    btn.style.height = '30px';
+    btn.style.height = '24px';
+    btn.style.background = '#0078D4';
+    btn.style.color = "#FFFFFF";
+    btn.style.borderRadius = '2px';
+    btn.style.border = 'none';
+    btn.style.margin = '5px 0';
+
     btn.textContent = "trigger " + key;
     btn.onclick = fn;
-    document.body.appendChild(btn);
+    container.appendChild(btn);
   }
+  document.body.appendChild(container);
 }
 
 myFunc();

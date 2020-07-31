@@ -41,37 +41,36 @@ In short:
 
 ## What This Plugin Does
 
-### The Bubble
+### The AppInsight Box
 
 This plugin dynamically injects dynamic components into the webpage to provice a rich debugging
-experience for Application Insights JS. Upon initialization, there will be a semi-transparent
-bubble with a number in the bottom-right corner of the screen:
+experience for Application Insights JS. Upon initialization, there will be a blue
+box with a number in the bottom-right corner of the screen:
 
-![closed bubble](./readme-res/bubble_closed.png)
+![closed box](./readme-res/bubble_closed.png)
 
-this will reach full opacity upon hover, at which point it will also append "AppInsights"
-to before the number:
+Upon hover, it will prepend "AppInsights" to the number:
 
-![bubble on hover](readme-res/bubble_hover.png)
+![box on hover](readme-res/bubble_hover.png)
 
 This number is here to indicate the total number of calls to tracked functions, such as
 `trackEvent` or `trackPageView`. By default, every useful function is tracked.
 
 When there's an error (`trackException`), a `(!)` will be appended to the number within the
-bubble like so:
+box like so:
 
-![bubble on exception](readme-res/bubble_error.png)
+![box on exception](readme-res/bubble_error.png)
 
-When this bubble is clicked, it will expand to a more detailed view, showing the frequency
+When this bbox is clicked, it will expand to a more detailed view, showing the frequency
 of each tracked function call. It will also get rid of the error indicator:
 
-![expanded bubble](readme-res/bubble_expanded.png)
+![expanded box](readme-res/bubble_expanded.png)
 
-This bubble can be clicked once more to minimize it.
+This box can be clicked once more to minimize it.
 
 ### The Detailed View
 
-When the bubble is open, clicking the "toggle detailed view" button will bring down a view
+When the box is open, clicking the "toggle detailed view" button will bring down a view
 that shows a list of event objects. By clicking on one of these objects, you can open it up
 in tree-view fasion:
 
@@ -87,6 +86,26 @@ This number shows the number of entries within that object or array.
 There a button above these entries that says "copy current node." This button will, if a node is
 selected, copy the node and its children up to a certain depth to the clipboard as a JSON string.
 This will also handle circular references.
+
+It's possible to traverse this tree view using a keyboard:
+
+- `Left` will close a currently-open node / go to the previous level
+- `Right` will open a node and go to the next level
+- `Up/Down` will move through the current level
+- `Ctrl+C` will copy the current node to the clipboard as a JSON object
+
+there are also two ways of filtering the data. This is useful if there are a lot of nodes on the screen
+when only one is important.
+
+![filter nodes](readme-res/filter_nodes.png)
+
+The "filter nodes" box will filter the individual node types based on their
+telemetry call.
+
+![filter text](readme-res/text_filter.png)
+
+The other, "filter text," enables the user to search and display only the nodes that have
+whatever was typed in the box somewhere within their tree.
 
 ## When Should This Plugin Be Used
 

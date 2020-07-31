@@ -16,6 +16,7 @@ export class DebugBinParent {
     const _self = this;
 
     _self.el = document.createElement('div');
+    _self.el.setAttribute('tabindex', '0');
     _self.el.className = `${prefix}-debug-bin-parent`;
     _self.el.style.bottom = `${20 + bottomDistance}px`;
 
@@ -26,8 +27,15 @@ export class DebugBinParent {
 
     _self.el.onclick = () => {
       _self.showChildren = !_self.showChildren;
-      _self.el.className = `${prefix}-debug-bin-parent`;
+      _self.el.className = (_self.showChildren) ? `${prefix}-debug-bin-parent active` : `${prefix}-debug-bin-parent`;
       _self.render();
+    }
+
+    _self.el.onkeydown = (evt: KeyboardEvent) => {
+      if (evt.which === 13 || evt.which === 32) {
+        evt.preventDefault();
+        (evt.target as HTMLElement).click();
+      }
     }
 
     _self.render();
