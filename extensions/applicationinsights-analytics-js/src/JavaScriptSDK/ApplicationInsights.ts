@@ -15,7 +15,7 @@ import {
     IPlugin, IConfiguration, IAppInsightsCore,
     BaseTelemetryPlugin, CoreUtils, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
     IDiagnosticLogger, LoggingSeverity, _InternalMessageId, ICustomProperties,
-    getWindow, getDocument, getHistory, getLocation, EventHelper
+    getWindow, getDocument, getHistory, getLocation, doPerf
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -97,30 +97,32 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
     }
 
     public processTelemetry(env: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
-        let doNotSendItem = false;
-        const telemetryInitializersCount = this._telemetryInitializers.length;
-        itemCtx = this._getTelCtx(itemCtx);
-        for (let i = 0; i < telemetryInitializersCount; ++i) {
-            const telemetryInitializer = this._telemetryInitializers[i];
-            if (telemetryInitializer) {
-                try {
-                    if (telemetryInitializer.apply(null, [env]) === false) {
-                        doNotSendItem = true;
-                        break;
+        doPerf(this.core, () => this.identifier + ":processTelemetry", () => {
+            let doNotSendItem = false;
+            const telemetryInitializersCount = this._telemetryInitializers.length;
+            itemCtx = this._getTelCtx(itemCtx);
+            for (let i = 0; i < telemetryInitializersCount; ++i) {
+                const telemetryInitializer = this._telemetryInitializers[i];
+                if (telemetryInitializer) {
+                    try {
+                        if (telemetryInitializer.apply(null, [env]) === false) {
+                            doNotSendItem = true;
+                            break;
+                        }
+                    } catch (e) {
+                        // log error but dont stop executing rest of the telemetry initializers
+                        // doNotSendItem = true;
+                        itemCtx.diagLog().throwInternal(
+                            LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
+                            { exception: Util.dump(e) }, true);
                     }
-                } catch (e) {
-                    // log error but dont stop executing rest of the telemetry initializers
-                    // doNotSendItem = true;
-                    itemCtx.diagLog().throwInternal(
-                        LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) }, true);
                 }
             }
-        }
-
-        if (!doNotSendItem) {
-            this.processNext(env, itemCtx);
-        }
+    
+            if (!doNotSendItem) {
+                this.processNext(env, itemCtx);
+            }
+        }, () => ({ item: env }), !((env as any).sync));
     }
 
     public trackEvent(event: IEventTelemetry, customProperties?: ICustomProperties): void {

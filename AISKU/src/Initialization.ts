@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CoreUtils, IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, IChannelControls, hasWindow, hasDocument, isReactNative } from "@microsoft/applicationinsights-core-js";
+import { 
+    CoreUtils, IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, 
+    IChannelControls, hasWindow, hasDocument, isReactNative, doPerf
+ } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { PropertiesPlugin, TelemetryContext } from "@microsoft/applicationinsights-properties-js";
@@ -52,9 +55,9 @@ export class Initialization implements IApplicationInsights {
     private _snippetVersion: string;
 
     constructor(snippet: Snippet) {
-        let _this = this;
+        let _self = this;
         // initialize the queue and config in case they are undefined
-        _this._snippetVersion = "" + (snippet.sv || snippet.version || "");
+        _self._snippetVersion = "" + (snippet.sv || snippet.version || "");
         snippet.queue = snippet.queue || [];
         snippet.version = snippet.version || 2.0; // Default to new version
         let config: IConfiguration & Common.IConfig = snippet.config || ({} as any);
@@ -66,15 +69,15 @@ export class Initialization implements IApplicationInsights {
             config.instrumentationKey = cs.instrumentationkey || config.instrumentationKey;
         }
 
-        _this.appInsights = new ApplicationInsights();
+        _self.appInsights = new ApplicationInsights();
 
-        _this.properties = new PropertiesPlugin();
-        _this.dependencies = new DependenciesPlugin();
-        _this.core = new AppInsightsCore();
+        _self.properties = new PropertiesPlugin();
+        _self.dependencies = new DependenciesPlugin();
+        _self.core = new AppInsightsCore();
 
-        _this.snippet = snippet;
-        _this.config = config;
-        _this.getSKUDefaults();
+        _self.snippet = snippet;
+        _self.config = config;
+        _self.getSKUDefaults();
     }
 
     // Analytics Plugin
@@ -239,11 +242,13 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public flush(async: boolean = true) {
-        CoreUtils.arrForEach(this.core.getTransmissionControls(), channels => {
-            CoreUtils.arrForEach(channels, channel => {
-                channel.flush(async);
+        doPerf(this.core, () => "AISKU.flush", () => {
+            CoreUtils.arrForEach(this.core.getTransmissionControls(), channels => {
+                CoreUtils.arrForEach(channels, channel => {
+                    channel.flush(async);
+                })
             })
-        })
+        }, null, async);
     }
 
     /**
@@ -270,60 +275,62 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public loadAppInsights(legacyMode: boolean = false): IApplicationInsights {
-        let _this = this;
+        let _self = this;
 
         function _updateSnippetProperties(snippet: Snippet) {
             if (snippet) {
                 let snippetVer = "";
-                if (!CoreUtils.isNullOrUndefined(_this._snippetVersion)) {
-                    snippetVer += _this._snippetVersion;
+                if (!CoreUtils.isNullOrUndefined(_self._snippetVersion)) {
+                    snippetVer += _self._snippetVersion;
                 }
                 if (legacyMode) {
                     snippetVer += ".lg";
                 }
 
-                if (_this.context) {
-                    _this.context.internal.snippetVer = snippetVer || "-";
+                if (_self.context && _self.context.internal) {
+                    _self.context.internal.snippetVer = snippetVer || "-";
                 }
 
                 // apply updated properties to the global instance (snippet)
-                for (const field in _this) {
+                for (const field in _self) {
                     if (CoreUtils.isString(field) && 
-                            !CoreUtils.isFunction(_this[field]) && 
+                            !CoreUtils.isFunction(_self[field]) && 
                             field.substring(0, 1) !== "_") {            // Don't copy "internal" values
-                        snippet[field as string] = _this[field];
+                        snippet[field as string] = _self[field];
                     }
                 }
             }
         }
-        
+
         // dont allow additional channels/other extensions for legacy mode; legacy mode is only to allow users to switch with no code changes!
-        if (legacyMode && _this.config.extensions && _this.config.extensions.length > 0) {
+        if (legacyMode && _self.config.extensions && _self.config.extensions.length > 0) {
             throw new Error("Extensions not allowed in legacy mode");
         }
 
-        const extensions = [];
-        const appInsightsChannel: Sender = new Sender();
+        doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
+            const extensions = [];
+            const appInsightsChannel: Sender = new Sender();
+    
+            extensions.push(appInsightsChannel);
+            extensions.push(_self.properties);
+            extensions.push(_self.dependencies);
+            extensions.push(_self.appInsights);
+    
+            // initialize core
+            _self.core.initialize(_self.config, extensions);
+            _self.context = _self.properties.context;
+            if (_internalSdkSrc && _self.context) {
+                _self.context.internal.sdkSrc = _internalSdkSrc;
+            }
+            _updateSnippetProperties(_self.snippet);
+    
+            // Empty queue of all api calls logged prior to sdk download
+            _self.emptyQueue();
+            _self.pollInternalLogs();
+            _self.addHousekeepingBeforeUnload(this);
+        });
 
-        extensions.push(appInsightsChannel);
-        extensions.push(_this.properties);
-        extensions.push(_this.dependencies);
-        extensions.push(_this.appInsights);
-
-        // initialize core
-        _this.core.initialize(_this.config, extensions);
-        _this.context = _this.properties.context;
-        if (_internalSdkSrc && _this.context) {
-            _this.context.internal.sdkSrc = _internalSdkSrc;
-        }
-        _updateSnippetProperties(_this.snippet);
-
-        // Empty queue of all api calls logged prior to sdk download
-        _this.emptyQueue();
-        _this.pollInternalLogs();
-        _this.addHousekeepingBeforeUnload(this);
-
-        return _this;
+        return _self;
     }
 
     /**
@@ -347,20 +354,20 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public emptyQueue() {
-        let _this = this;
+        let _self = this;
 
         // call functions that were queued before the main script was loaded
         try {
-            if (Common.Util.isArray(_this.snippet.queue)) {
+            if (Common.Util.isArray(_self.snippet.queue)) {
                 // note: do not check length in the for-loop conditional in case something goes wrong and the stub methods are not overridden.
-                const length = _this.snippet.queue.length;
+                const length = _self.snippet.queue.length;
                 for (let i = 0; i < length; i++) {
-                    const call = _this.snippet.queue[i];
+                    const call = _self.snippet.queue[i];
                     call();
                 }
 
-                _this.snippet.queue = undefined;
-                delete _this.snippet.queue;
+                _self.snippet.queue = undefined;
+                delete _self.snippet.queue;
             }
         } catch (exception) {
             const properties: any = {};
@@ -429,9 +436,9 @@ export class Initialization implements IApplicationInsights {
     }
 
     private getSKUDefaults() {
-        let _this = this;
-        _this.config.diagnosticLogInterval =
-        _this.config.diagnosticLogInterval && _this.config.diagnosticLogInterval > 0 ? _this.config.diagnosticLogInterval : 10000;
+        let _self = this;
+        _self.config.diagnosticLogInterval =
+        _self.config.diagnosticLogInterval && _self.config.diagnosticLogInterval > 0 ? _self.config.diagnosticLogInterval : 10000;
     }
 }
 

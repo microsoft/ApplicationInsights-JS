@@ -66,7 +66,7 @@ function myFunc() {
     'logInternalMessage'
   ]
 
-  var debugPlugin = Microsoft.ApplicationInsights.DebugPlugin.DebugPlugin;
+  var debugPlugin = Microsoft.ApplicationInsights.DebugPlugin;
   var debugPluginInstance = new debugPlugin();
   // Application Insights Configuration
   var configObj = {
@@ -80,11 +80,13 @@ function myFunc() {
       debugPluginInstance
     ],
     extensionConfig: { },
-    correlationHeaderDomains: ["oskarsvc", "localhost"]
+    correlationHeaderDomains: ["oskarsvc", "localhost"],
+    enablePerfMgr: true
   };
 
   configObj.extensionConfig[debugPlugin.identifier] = {
-    trackers: toTrack
+    //trackers: toTrack
+    maxMessages: 50
   };
 
   var appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({ config: configObj });

@@ -80,4 +80,14 @@ export interface IConfiguration {
      * If channels are provided here, core will ignore any channels that are already setup, example if there is a SKU with an initialized channel
      */
     channels?: IChannelControls[][];
+
+    /**
+     * [Optional] Send performance timing events to the notification manager
+     */
+    enablePerfMgr?: boolean;
+
+    /**
+     * [Optional] Fire every single performance event not just the top level root performance event. Defaults to
+     */
+    perfEvtsSendAll?: boolean;
 }

@@ -8,10 +8,11 @@ import { INotificationManager } from "./INotificationManager";
 import { INotificationListener } from "./INotificationListener";
 import { IDiagnosticLogger } from './IDiagnosticLogger';
 import { IProcessTelemetryContext } from './IProcessTelemetryContext';
+import { IPerfManagerProvider } from "./IPerfManager";
 
 "use strict";
 
-export interface IAppInsightsCore {
+export interface IAppInsightsCore extends IPerfManagerProvider {
 
     /*
     * Config object used to initialize AppInsights
