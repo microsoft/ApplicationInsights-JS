@@ -1,6 +1,7 @@
 ﻿import { Util } from '@microsoft/applicationinsights-common';
 import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, CoreUtils } from '@microsoft/applicationinsights-core-js';
 import { ISenderConfig } from './Interfaces';
+import dynamicProto from '@microsoft/dynamicproto-js';
 
 export interface ISendBuffer {
     /**
@@ -44,54 +45,83 @@ export interface ISendBuffer {
  * An array based send buffer.
  */
 export class ArraySendBuffer implements ISendBuffer {
-    private _config: ISenderConfig;
-    private _buffer: string[];
 
     constructor(config: ISenderConfig) {
-        this._config = config;
+        let _buffer: string[] = [];
 
-        this._buffer = [];
+        dynamicProto(ArraySendBuffer, this, (_self) => {
+            _self.enqueue = (payload: string) => {
+                _buffer.push(payload);
+            };
+        
+            _self.count = (): number => {
+                return _buffer.length;
+            };
+        
+            _self.clear = () => {
+                _buffer.length = 0;
+            };
+        
+            _self.getItems = (): string[] => {
+                return _buffer.slice(0);
+            };
+        
+            _self.batchPayloads = (payload: string[]): string => {
+                if (payload && payload.length > 0) {
+                    const batch = config.emitLineDelimitedJson() ?
+                        payload.join("\n") :
+                        "[" + payload.join(",") + "]";
+        
+                    return batch;
+                }
+        
+                return null;
+            };
+        
+            _self.markAsSent = (payload: string[]) => {
+                _self.clear();
+            };
+        
+            _self.clearSent = (payload: string[]) => {
+                // not supported
+            };
+        });
     }
 
     public enqueue(payload: string) {
-        this._buffer.push(payload);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public count(): number {
-        return this._buffer.length;
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return 0;
     }
 
     public clear() {
-        this._buffer.length = 0;
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public getItems(): string[] {
-        return this._buffer.slice(0);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     public batchPayloads(payload: string[]): string {
-        if (payload && payload.length > 0) {
-            const batch = this._config.emitLineDelimitedJson() ?
-                payload.join("\n") :
-                "[" + payload.join(",") + "]";
-
-            return batch;
-        }
-
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
 
     public markAsSent(payload: string[]) {
-        this.clear();
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public clearSent(payload: string[]) {
-        // not supported
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }
 
 /*
- * Session storege buffer holds a copy of all unsent items in the browser session storage.
+ * Session storage buffer holds a copy of all unsent items in the browser session storage.
  */
 export class SessionStorageSendBuffer implements ISendBuffer {
     static BUFFER_KEY = "AI_buffer";
@@ -99,167 +129,192 @@ export class SessionStorageSendBuffer implements ISendBuffer {
 
     // Maximum number of payloads stored in the buffer. If the buffer is full, new elements will be dropped.
     static MAX_BUFFER_SIZE = 2000;
-    private _bufferFullMessageSent = false;
-
-    // An in-memory copy of the buffer. A copy is saved to the session storage on enqueue() and clear().
-    // The buffer is restored in a constructor and contains unsent events from a previous page.
-    private _buffer: string[];
-    private _config: ISenderConfig;
-
-    private _logger: IDiagnosticLogger;
 
     constructor(logger: IDiagnosticLogger, config: ISenderConfig) {
-        this._logger = logger;
-        this._config = config;
+        let _bufferFullMessageSent = false;
 
-        const bufferItems = this.getBuffer(SessionStorageSendBuffer.BUFFER_KEY);
-        const notDeliveredItems = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+        // An in-memory copy of the buffer. A copy is saved to the session storage on enqueue() and clear().
+        // The buffer is restored in a constructor and contains unsent events from a previous page.
+        let _buffer: string[];
 
-        this._buffer = bufferItems.concat(notDeliveredItems);
+        dynamicProto(SessionStorageSendBuffer, this, (_self) => {
+            const bufferItems = _getBuffer(SessionStorageSendBuffer.BUFFER_KEY);
+            const notDeliveredItems = _getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+    
+            _buffer = bufferItems.concat(notDeliveredItems);
+    
+            // If the buffer has too many items, drop items from the end.
+            if (_buffer.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
+                _buffer.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
+            }
+    
+            _setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
+            _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, _buffer);
+    
+            _self.enqueue = (payload: string) => {
+                if (_buffer.length >= SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
+                    // sent internal log only once per page view
+                    if (!_bufferFullMessageSent) {
+                        logger.throwInternal(
+                            LoggingSeverity.WARNING,
+                            _InternalMessageId.SessionStorageBufferFull,
+                            "Maximum buffer size reached: " + _buffer.length,
+                            true);
+                        _bufferFullMessageSent = true;
+                    }
 
-        // If the buffer has too many items, drop items from the end.
-        if (this._buffer.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
-            this._buffer.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
-        }
-
-        // update DataLossAnalyzer with the number of recovered items
-        // Uncomment if you want to use DataLossanalyzer
-        // DataLossAnalyzer.itemsRestoredFromSessionBuffer = this._buffer.length;
-
-        this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
-        this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
+                    return;
+                }
+        
+                _buffer.push(payload);
+                _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, _buffer);
+            };
+        
+            _self.count = (): number => {
+                return _buffer.length;
+            };
+        
+            _self.clear = () => {
+                _buffer = [];
+                _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, []);
+                _setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
+        
+                _bufferFullMessageSent = false;
+            };
+        
+            _self.getItems = (): string[] => {
+                return _buffer.slice(0)
+            };
+        
+            _self.batchPayloads = (payload: string[]): string => {
+                if (payload && payload.length > 0) {
+                    const batch = config.emitLineDelimitedJson() ?
+                        payload.join("\n") :
+                        "[" + payload.join(",") + "]";
+        
+                    return batch;
+                }
+        
+                return null;
+            };
+        
+            _self.markAsSent = (payload: string[]) => {
+                _buffer = _removePayloadsFromBuffer(payload, _buffer);
+                _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, _buffer);
+        
+                let sentElements = _getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+                if (sentElements instanceof Array && payload instanceof Array) {
+                    sentElements = sentElements.concat(payload);
+        
+                    if (sentElements.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
+                        // We send telemetry normally. If the SENT_BUFFER is too big we don't add new elements
+                        // until we receive a response from the backend and the buffer has free space again (see clearSent method)
+                        logger.throwInternal(
+                            LoggingSeverity.CRITICAL,
+                            _InternalMessageId.SessionStorageBufferFull,
+                            "Sent buffer reached its maximum size: " + sentElements.length,
+                            true);
+        
+                        sentElements.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
+                    }
+        
+                    _setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
+                }
+            };
+        
+            _self.clearSent = (payload: string[]) => {
+                let sentElements = _getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
+                sentElements = _removePayloadsFromBuffer(payload, sentElements);
+        
+                _setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
+            }
+        
+            function _removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
+                const remaining: string[] = [];
+        
+                CoreUtils.arrForEach(buffer, (value) => {
+                    if (!CoreUtils.isFunction(value) && CoreUtils.arrIndexOf(payloads, value) === -1) {
+                        remaining.push(value);
+                    }
+                });
+        
+                return remaining;
+            }
+        
+            function _getBuffer(key: string): string[] {
+                let prefixedKey = key;
+                try {
+                    prefixedKey = config.namePrefix && config.namePrefix() ? config.namePrefix() + "_" + prefixedKey : prefixedKey;
+                    const bufferJson = Util.getSessionStorage(logger, prefixedKey);
+                    if (bufferJson) {
+                        let buffer: string[] = getJSON().parse(bufferJson);
+                        if (CoreUtils.isString(buffer)) {
+                            // When using some version prototype.js the stringify / parse cycle does not decode array's correctly
+                            buffer = getJSON().parse(buffer as any);
+                        }
+        
+                        if (buffer && Util.isArray(buffer)) {
+                            return buffer;
+                        }
+                    }
+                } catch (e) {
+                    logger.throwInternal(LoggingSeverity.CRITICAL,
+                        _InternalMessageId.FailedToRestoreStorageBuffer,
+                        " storage key: " + prefixedKey + ", " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) });
+                }
+        
+                return [];
+            }
+        
+            function _setBuffer(key: string, buffer: string[]) {
+                let prefixedKey = key;
+                try {
+                    prefixedKey = config.namePrefix && config.namePrefix() ? config.namePrefix() + "_" + prefixedKey : prefixedKey;
+                    const bufferJson = JSON.stringify(buffer);
+                    Util.setSessionStorage(logger, prefixedKey, bufferJson);
+                } catch (e) {
+                    // if there was an error, clear the buffer
+                    // telemetry is stored in the _buffer array so we won't loose any items
+                    Util.setSessionStorage(logger, prefixedKey, JSON.stringify([]));
+        
+                    logger.throwInternal(LoggingSeverity.WARNING,
+                        _InternalMessageId.FailedToSetStorageBuffer,
+                        " storage key: " + prefixedKey + ", " + Util.getExceptionName(e) + ". Buffer cleared",
+                        { exception: Util.dump(e) });
+                }
+            }
+        });
     }
 
     public enqueue(payload: string) {
-        if (this._buffer.length >= SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
-            // sent internal log only once per page view
-            if (!this._bufferFullMessageSent) {
-                this._logger.throwInternal(
-                    LoggingSeverity.WARNING,
-                    _InternalMessageId.SessionStorageBufferFull,
-                    "Maximum buffer size reached: " + this._buffer.length,
-                    true);
-                this._bufferFullMessageSent = true;
-            }
-            return;
-        }
-
-        this._buffer.push(payload);
-        this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public count(): number {
-        return this._buffer.length;
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return 0;
     }
 
     public clear() {
-        this._buffer.length = 0;
-        this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, []);
-        this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
-
-        this._bufferFullMessageSent = false;
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public getItems(): string[] {
-        return this._buffer.slice(0)
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
     public batchPayloads(payload: string[]): string {
-        if (payload && payload.length > 0) {
-            const batch = this._config.emitLineDelimitedJson() ?
-                payload.join("\n") :
-                "[" + payload.join(",") + "]";
-
-            return batch;
-        }
-
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
 
     public markAsSent(payload: string[]) {
-        this._buffer = this.removePayloadsFromBuffer(payload, this._buffer);
-        this.setBuffer(SessionStorageSendBuffer.BUFFER_KEY, this._buffer);
-
-        let sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
-        if (sentElements instanceof Array && payload instanceof Array) {
-            sentElements = sentElements.concat(payload);
-
-            if (sentElements.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
-                // We send telemetry normally. If the SENT_BUFFER is too big we don't add new elements
-                // until we receive a response from the backend and the buffer has free space again (see clearSent method)
-                this._logger.throwInternal(
-                    LoggingSeverity.CRITICAL,
-                    _InternalMessageId.SessionStorageBufferFull,
-                    "Sent buffer reached its maximum size: " + sentElements.length,
-                    true);
-
-                sentElements.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
-            }
-
-            this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
-        }
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public clearSent(payload: string[]) {
-        let sentElements = this.getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
-        sentElements = this.removePayloadsFromBuffer(payload, sentElements);
-
-        this.setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, sentElements);
-    }
-
-    private removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
-        const remaining: string[] = [];
-
-        CoreUtils.arrForEach(buffer, (value) => {
-            if (!CoreUtils.isFunction(value) && CoreUtils.arrIndexOf(payloads, value) === -1) {
-                remaining.push(value);
-            }
-        });
-
-        return remaining;
-    }
-
-    private getBuffer(key: string): string[] {
-        let prefixedKey = key;
-        try {
-            prefixedKey = this._config.namePrefix && this._config.namePrefix() ? this._config.namePrefix() + "_" + prefixedKey : prefixedKey;
-            const bufferJson = Util.getSessionStorage(this._logger, prefixedKey);
-            if (bufferJson) {
-                let buffer: string[] = getJSON().parse(bufferJson);
-                if (CoreUtils.isString(buffer)) {
-                    // When using some version prototype.js the stringify / parse cycle does not decode array's correctly
-                    buffer = getJSON().parse(buffer as any);
-                }
-
-                if (buffer && Util.isArray(buffer)) {
-                    return buffer;
-                }
-            }
-        } catch (e) {
-            this._logger.throwInternal(LoggingSeverity.CRITICAL,
-                _InternalMessageId.FailedToRestoreStorageBuffer,
-                " storage key: " + prefixedKey + ", " + Util.getExceptionName(e),
-                { exception: Util.dump(e) });
-        }
-
-        return [];
-    }
-
-    private setBuffer(key: string, buffer: string[]) {
-        let prefixedKey = key;
-        try {
-            prefixedKey = this._config.namePrefix && this._config.namePrefix() ? this._config.namePrefix() + "_" + prefixedKey : prefixedKey;
-            const bufferJson = JSON.stringify(buffer);
-            Util.setSessionStorage(this._logger, prefixedKey, bufferJson);
-        } catch (e) {
-            // if there was an error, clear the buffer
-            // telemetry is stored in the _buffer array so we won't loose any items
-            Util.setSessionStorage(this._logger, prefixedKey, JSON.stringify([]));
-
-            this._logger.throwInternal(LoggingSeverity.WARNING,
-                _InternalMessageId.FailedToSetStorageBuffer,
-                " storage key: " + prefixedKey + ", " + Util.getExceptionName(e) + ". Buffer cleared",
-                { exception: Util.dump(e) });
-        }
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }

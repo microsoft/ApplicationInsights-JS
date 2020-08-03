@@ -25,6 +25,7 @@ import {
 } from '@microsoft/applicationinsights-core-js';
 import { Offline } from './Offline';
 import { Sample } from './TelemetryProcessors/Sample'
+import dynamicProto from '@microsoft/dynamicproto-js';
 
 declare var XDomainRequest: {
     prototype: IXDomainRequest;
@@ -141,257 +142,660 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
     public _XMLHttpRequestSupported: boolean = false;
 
     protected _sample: Sample;
-    /**
-     * How many times in a row a retryable error condition has occurred.
-     */
-    private _consecutiveErrors: number;
 
-    /**
-     * The time to retry at in milliseconds from 1970/01/01 (this makes the timer calculation easy).
-     */
-    private _retryAt: number;
+    constructor() {
+        super();
 
-    /**
-     * The time of the last send operation.
-     */
-    private _lastSend: number;
+        /**
+         * How many times in a row a retryable error condition has occurred.
+         */
+        let _consecutiveErrors: number;
 
-    /**
-     * Handle to the timer for delayed sending of batches of data.
-     */
-    private _timeoutHandle: any;
+        /**
+         * The time to retry at in milliseconds from 1970/01/01 (this makes the timer calculation easy).
+         */
+        let _retryAt: number;
 
-    private _serializer: Serializer;
+        /**
+         * The time of the last send operation.
+         */
+        let _lastSend: number;
 
-    private _notificationManager: INotificationManager | undefined;
+        /**
+         * Handle to the timer for delayed sending of batches of data.
+         */
+        let _timeoutHandle: any;
+
+        let _serializer: Serializer;
+
+        dynamicProto(Sender, this, (_self, _base) => {
+            function _notImplemented() {
+                throw new Error("Method not implemented.");
+            }
+
+            _self.pause = _notImplemented;
+        
+            _self.resume = _notImplemented;
+        
+            _self.flush = () => {
+                try {
+                    _self.triggerSend(true, null, SendRequestReason.ManualFlush);
+                } catch (e) {
+                    _self.diagLog().throwInternal(LoggingSeverity.CRITICAL,
+                        _InternalMessageId.FlushFailed,
+                        "flush failed, telemetry will not be collected: " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) });
+                }
+            };
+        
+            _self.onunloadFlush = () => {
+                if ((_self._senderConfig.onunloadDisableBeacon() === false || _self._senderConfig.isBeaconApiDisabled() === false) && Util.IsBeaconApiSupported()) {
+                    try {
+                        _self.triggerSend(true, _beaconSender, SendRequestReason.Unload);
+                    } catch (e) {
+                        _self.diagLog().throwInternal(LoggingSeverity.CRITICAL,
+                            _InternalMessageId.FailedToSendQueuedTelemetry,
+                            "failed to flush with beacon sender on page unload, telemetry will not be collected: " + Util.getExceptionName(e),
+                            { exception: Util.dump(e) });
+                    }
+                } else {
+                    _self.flush();
+                }
+            };
+        
+            _self.teardown = _notImplemented;
+        
+            _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain): void => {
+                _base.initialize(config, core, extensions, pluginChain);
+                let ctx = _self._getTelCtx();
+                let identifier = _self.identifier;
+                _serializer = new Serializer(core.logger);
+                _consecutiveErrors = 0;
+                _retryAt = null;
+                _lastSend = 0;
+                _self._sender = null;
+                const defaultConfig = Sender._getDefaultAppInsightsChannelConfig();
+                _self._senderConfig = Sender._getEmptyAppInsightsChannelConfig();
+                for (const field in defaultConfig) {
+                    _self._senderConfig[field] = () => ctx.getConfig(identifier, field, defaultConfig[field]());
+                }
+        
+                _self._buffer = (_self._senderConfig.enableSessionStorageBuffer && Util.canUseSessionStorage())
+                    ? new SessionStorageSendBuffer(_self.diagLog(), _self._senderConfig) : new ArraySendBuffer(_self._senderConfig);
+                    _self._sample = new Sample(_self._senderConfig.samplingPercentage(), _self.diagLog());
+        
+                if (!_self._senderConfig.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
+                    _self._sender = _beaconSender;
+                } else {
+                    if (!CoreUtils.isUndefined(XMLHttpRequest)) {
+                        const testXhr = new XMLHttpRequest();
+                        if ("withCredentials" in testXhr) {
+                            _self._sender = _xhrSender;
+                            _self._XMLHttpRequestSupported = true;
+                        } else if (!CoreUtils.isUndefined(XDomainRequest)) {
+                            _self._sender = _xdrSender; // IE 8 and 9
+                        }
+                    }
+                }
+            };
+        
+            _self.processTelemetry = (telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
+                itemCtx = _self._getTelCtx(itemCtx);
+                
+                try {
+                    // if master off switch is set, don't send any data
+                    if (_self._senderConfig.disableTelemetry()) {
+                        // Do not send/save data
+                        return;
+                    }
+        
+                    // validate input
+                    if (!telemetryItem) {
+                        itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
+                        return;
+                    }
+        
+                    // validate event
+                    if (telemetryItem.baseData && !telemetryItem.baseType) {
+                        itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
+                        return;
+                    }
+        
+                    if (!telemetryItem.baseType) {
+                        // Default
+                        telemetryItem.baseType = "EventData";
+                    }
+        
+                    // ensure a sender was constructed
+                    if (!_self._sender) {
+                        itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.SenderNotInitialized, "Sender was not initialized");
+                        return;
+                    }
+                  
+                    // check if this item should be sampled in, else add sampleRate tag
+                    if (!_isSampledIn(telemetryItem)) {
+                        // Item is sampled out, do not send it
+                        itemCtx.diagLog().throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TelemetrySampledAndNotSent,
+                            "Telemetry item was sampled out and not sent", { SampleRate: _self._sample.sampleRate });
+                        return;
+                    } else {
+                        telemetryItem[SampleRate] = _self._sample.sampleRate;
+                    }
+        
+                    // construct an envelope that Application Insights endpoint can understand
+                    const aiEnvelope = Sender.constructEnvelope(telemetryItem, _self._senderConfig.instrumentationKey(), itemCtx.diagLog());
+                    if (!aiEnvelope) {
+                        itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
+                        return;
+                    }
+        
+                    let doNotSendItem = false;
+                    // this is for running in legacy mode, where customer may already have a custom initializer present
+                    if (telemetryItem.tags && telemetryItem.tags[ProcessLegacy]) {
+                        CoreUtils.arrForEach(telemetryItem.tags[ProcessLegacy], (callBack: (env: IEnvelope) => boolean | void) => {
+                            try {
+                                if (callBack && callBack(aiEnvelope) === false) {
+                                    doNotSendItem = true;
+                                    itemCtx.diagLog().warnToConsole("Telemetry processor check returns false");
+                                }
+                            } catch (e) {
+                                // log error but dont stop executing rest of the telemetry initializers
+                                // doNotSendItem = true;
+                                itemCtx.diagLog().throwInternal(
+                                    LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
+                                    { exception: Util.dump(e) }, true);
+                            }
+                        });
+        
+                        delete telemetryItem.tags[ProcessLegacy];
+                    }
+                    if (doNotSendItem) {
+                        return; // do not send, no need to execute next plugin
+                    }
+        
+                    // check if the incoming payload is too large, truncate if necessary
+                    const payload: string = _serializer.serialize(aiEnvelope);
+        
+                    // flush if we would exceed the max-size limit by adding this item
+                    const bufferPayload = _self._buffer.getItems();
+                    const batch = _self._buffer.batchPayloads(bufferPayload);
+        
+                    if (batch && (batch.length + payload.length > _self._senderConfig.maxBatchSizeInBytes())) {
+                        _self.triggerSend(true, null, SendRequestReason.MaxBatchSize);
+                    }
+        
+                    // enqueue the payload
+                    _self._buffer.enqueue(payload);
+        
+                    // ensure an invocation timeout is set
+                    _setupTimer();
+        
+                } catch (e) {
+                    itemCtx.diagLog().throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.FailedAddingTelemetryToBuffer,
+                        "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.getExceptionName(e),
+                        { exception: Util.dump(e) });
+                }
+        
+                // hand off the telemetry item to the next plugin
+                _self.processNext(telemetryItem, itemCtx);
+            };
+        
+            /**
+             * xhr state changes
+             */
+            _self._xhrReadyStateChange = (xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) => {
+                if (xhr.readyState === 4) {
+                    let response: IBackendResponse = null;
+                    if (!_self._appId) {
+                        response = _parseResponse(_getResponseText(xhr) || xhr.response);
+                        if (response && response.appId) {
+                            _self._appId = response.appId;
+                        }
+                    }
+        
+                    if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
+                        if (!_self._senderConfig.isRetryDisabled() && _isRetriable(xhr.status)) {
+                            _resendPayload(payload);
+        
+                            _self.diagLog().throwInternal(
+                                LoggingSeverity.WARNING,
+                                _InternalMessageId.TransmissionFailed, ". " +
+                                "Response code " + xhr.status + ". Will retry to send " + payload.length + " items.");
+                        } else {
+                            _self._onError(payload, _formatErrorMessageXhr(xhr));
+                        }
+                    } else if (Offline.isOffline()) { // offline
+                        // Note: Don't check for status == 0, since adblock gives this code
+                        if (!_self._senderConfig.isRetryDisabled()) {
+                            const offlineBackOffMultiplier = 10; // arbritrary number
+                            _resendPayload(payload, offlineBackOffMultiplier);
+        
+                            _self.diagLog().throwInternal(
+                                LoggingSeverity.WARNING,
+                                _InternalMessageId.TransmissionFailed, `. Offline - Response Code: ${xhr.status}. Offline status: ${Offline.isOffline()}. Will retry to send ${payload.length} items.`);
+                        }
+                    } else {
+                        if (xhr.status === 206) {
+                            if (!response) {
+                                response = _parseResponse(_getResponseText(xhr) || xhr.response);
+                            }
+        
+                            if (response && !_self._senderConfig.isRetryDisabled()) {
+                                _self._onPartialSuccess(payload, response);
+                            } else {
+                                _self._onError(payload, _formatErrorMessageXhr(xhr));
+                            }
+                        } else {
+                            _consecutiveErrors = 0;
+                            _self._onSuccess(payload, countOfItemsInPayload);
+                        }
+                    }
+                }
+            };
+        
+            /**
+             * Immediately send buffered data
+             * @param async {boolean} - Indicates if the events should be sent asynchronously
+             * @param forcedSender {SenderFunction} - Indicates the forcedSender, undefined if not passed
+             */
+            _self.triggerSend = (async = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason) => {
+                try {
+                    // Send data only if disableTelemetry is false
+                    if (!_self._senderConfig.disableTelemetry()) {
+        
+                        if (_self._buffer.count() > 0) {
+                            const payload = _self._buffer.getItems();
+        
+                            _notifySendRequest(sendReason||SendRequestReason.Undefined, async);
+        
+                            // invoke send
+                            if (forcedSender) {
+                                forcedSender.call(this, payload, async);
+                            } else {
+                                _self._sender(payload, async);
+                            }
+                        }
+        
+                        // update lastSend time to enable throttling
+                        _lastSend = +new Date;
+                    } else {
+                        _self._buffer.clear();
+                    }
+        
+                    clearTimeout(_timeoutHandle);
+                    _timeoutHandle = null;
+                    _retryAt = null;
+                } catch (e) {
+                    /* Ignore this error for IE under v10 */
+                    let ieVer = Util.getIEVersion();
+                    if (!ieVer || ieVer > 9) {
+                        _self.diagLog().throwInternal(
+                            LoggingSeverity.CRITICAL,
+                            _InternalMessageId.TransmissionFailed,
+                            "Telemetry transmission failed, some telemetry will be lost: " + Util.getExceptionName(e),
+                            { exception: Util.dump(e) });
+                    }
+                }
+            };
+        
+            /**
+             * error handler
+             */
+            _self._onError = (payload: string[], message: string, event?: ErrorEvent) => {
+                _self.diagLog().throwInternal(
+                    LoggingSeverity.WARNING,
+                    _InternalMessageId.OnError,
+                    "Failed to send telemetry.",
+                    { message });
+        
+                _self._buffer.clearSent(payload);
+            };
+        
+            /**
+             * partial success handler
+             */
+            _self._onPartialSuccess = (payload: string[], results: IBackendResponse) => {
+                const failed = [];
+                const retry = [];
+        
+                // Iterate through the reversed array of errors so that splicing doesn't have invalid indexes after the first item.
+                const errors = results.errors.reverse();
+                for (const error of errors) {
+                    const extracted = payload.splice(error.index, 1)[0];
+                    if (_isRetriable(error.statusCode)) {
+                        retry.push(extracted);
+                    } else {
+                        // All other errors, including: 402 (Monthly quota exceeded) and 439 (Too many requests and refresh cache).
+                        failed.push(extracted);
+                    }
+                }
+        
+                if (payload.length > 0) {
+                    _self._onSuccess(payload, results.itemsAccepted);
+                }
+        
+                if (failed.length > 0) {
+                    _self._onError(failed, _formatErrorMessageXhr(null, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' ')));
+                }
+        
+                if (retry.length > 0) {
+                    _resendPayload(retry);
+        
+                    _self.diagLog().throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.TransmissionFailed, "Partial success. " +
+                        "Delivered: " + payload.length + ", Failed: " + failed.length +
+                        ". Will retry to send " + retry.length + " our of " + results.itemsReceived + " items");
+                }
+            };
+        
+            /**
+             * success handler
+             */
+            _self._onSuccess = (payload: string[], countOfItemsInPayload: number) => {
+                _self._buffer.clearSent(payload);
+            };
+        
+            /**
+             * xdr state changes
+             */
+            _self._xdrOnLoad = (xdr: IXDomainRequest, payload: string[]) => {
+                const responseText = _getResponseText(xdr);
+                if (xdr && (responseText + "" === "200" || responseText === "")) {
+                    _consecutiveErrors = 0;
+                    _self._onSuccess(payload, 0);
+                } else {
+                    const results = _parseResponse(responseText);
+        
+                    if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
+                        && !_self._senderConfig.isRetryDisabled()) {
+                        _self._onPartialSuccess(payload, results);
+                    } else {
+                        _self._onError(payload, _formatErrorMessageXdr(xdr));
+                    }
+                }
+            };
+        
+            function _isSampledIn(envelope: ITelemetryItem): boolean {
+                return _self._sample.isSampledIn(envelope);
+            }
+        
+            /**
+             * Send Beacon API request
+             * @param payload {string} - The data payload to be sent.
+             * @param isAsync {boolean} - not used
+             * Note: Beacon API does not support custom headers and we are not able to get
+             * appId from the backend for the correct correlation.
+             */
+            function _beaconSender(payload: string[], isAsync: boolean) {
+                const url = _self._senderConfig.endpointUrl();
+                const batch = _self._buffer.batchPayloads(payload);
+        
+                // Chrome only allows CORS-safelisted values for the sendBeacon data argument
+                // see: https://bugs.chromium.org/p/chromium/issues/detail?id=720283
+                const plainTextBatch = new Blob([batch], { type: 'text/plain;charset=UTF-8' });
+        
+                // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
+                const queued = getNavigator().sendBeacon(url, plainTextBatch);
+        
+                if (queued) {
+                    _self._buffer.markAsSent(payload);
+                    // no response from beaconSender, clear buffer
+                    _self._onSuccess(payload, payload.length);
+                } else {
+                    _xhrSender(payload, true);
+                    _self.diagLog().throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
+                }
+            }
+        
+            /**
+             * Send XMLHttpRequest
+             * @param payload {string} - The data payload to be sent.
+             * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
+             */
+            function _xhrSender(payload: string[], isAsync: boolean) {
+                const xhr = new XMLHttpRequest();
+                const endPointUrl = _self._senderConfig.endpointUrl();
+                try {
+                    xhr[DisabledPropertyName] = true;
+                } catch(e) {
+                    // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
+                    // cause the request to fail and we no telemetry would be sent
+                }
+                xhr.open("POST", endPointUrl, isAsync);
+                xhr.setRequestHeader("Content-type", "application/json");
+        
+                // append Sdk-Context request header only in case of breeze endpoint
+                if (Util.isInternalApplicationInsightsEndpoint(endPointUrl)) {
+                    xhr.setRequestHeader(RequestHeaders.sdkContextHeader, RequestHeaders.sdkContextHeaderAppIdRequest);
+                }
+        
+                xhr.onreadystatechange = () => _self._xhrReadyStateChange(xhr, payload, payload.length);
+                xhr.onerror = (event: ErrorEvent) => _self._onError(payload, _formatErrorMessageXhr(xhr), event);
+        
+                // compose an array of payloads
+                const batch = _self._buffer.batchPayloads(payload);
+                xhr.send(batch);
+        
+                _self._buffer.markAsSent(payload);
+            }
+        
+            /**
+             * Parses the response from the backend.
+             * @param response - XMLHttpRequest or XDomainRequest response
+             */
+            function _parseResponse(response: any): IBackendResponse {
+                try {
+                    if (response && response !== "") {
+                        const result = getJSON().parse(response);
+        
+                        if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
+                            result.itemsReceived - result.itemsAccepted === result.errors.length) {
+                            return result;
+                        }
+                    }
+                } catch (e) {
+                    _self.diagLog().throwInternal(
+                        LoggingSeverity.CRITICAL,
+                        _InternalMessageId.InvalidBackendResponse,
+                        "Cannot parse the response. " + Util.getExceptionName(e),
+                        {
+                            response
+                        });
+                }
+        
+                return null;
+            }
+        
+            /**
+             * Resend payload. Adds payload back to the send buffer and setup a send timer (with exponential backoff).
+             * @param payload
+             */
+            function _resendPayload(payload: string[], linearFactor: number = 1) {
+                if (!payload || payload.length === 0) {
+                    return;
+                }
+        
+                _self._buffer.clearSent(payload);
+                _consecutiveErrors++;
+        
+                for (const item of payload) {
+                    _self._buffer.enqueue(item);
+                }
+        
+                // setup timer
+                _setRetryTime(linearFactor);
+                _setupTimer();
+            }
+        
+            /** 
+             * Calculates the time to wait before retrying in case of an error based on
+             * http://en.wikipedia.org/wiki/Exponential_backoff
+             */
+            function _setRetryTime(linearFactor: number) {
+                const SlotDelayInSeconds = 10;
+                let delayInSeconds: number;
+        
+                if (_consecutiveErrors <= 1) {
+                    delayInSeconds = SlotDelayInSeconds;
+                } else {
+                    const backOffSlot = (Math.pow(2, _consecutiveErrors) - 1) / 2;
+                    // tslint:disable-next-line:insecure-random
+                    let backOffDelay = Math.floor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
+                    backOffDelay = linearFactor * backOffDelay;
+                    delayInSeconds = Math.max(Math.min(backOffDelay, 3600), SlotDelayInSeconds);
+                }
+        
+                // TODO: Log the backoff time like the C# version does.
+                const retryAfterTimeSpan = Date.now() + (delayInSeconds * 1000);
+        
+                // TODO: Log the retry at time like the C# version does.
+                _retryAt = retryAfterTimeSpan;
+            }
+        
+            /**
+             * Sets up the timer which triggers actually sending the data.
+             */
+            function _setupTimer() {
+                if (!_timeoutHandle) {
+                    const retryInterval = _retryAt ? Math.max(0, _retryAt - Date.now()) : 0;
+                    const timerValue = Math.max(_self._senderConfig.maxBatchInterval(), retryInterval);
+        
+                    _timeoutHandle = setTimeout(() => {
+                        _self.triggerSend(true, null, SendRequestReason.NormalSchedule);
+                    }, timerValue);
+                }
+            }
+        
+            /**
+             * Checks if the SDK should resend the payload after receiving this status code from the backend.
+             * @param statusCode
+             */
+            function _isRetriable(statusCode: number): boolean {
+                return statusCode === 408 // Timeout
+                    || statusCode === 429 // Too many requests.
+                    || statusCode === 500 // Internal server error.
+                    || statusCode === 503; // Service unavailable.
+            }
+        
+            function _formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
+                if (xhr) {
+                    return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + _getResponseText(xhr) || xhr.response || "";
+                }
+        
+                return message;
+            }
+        
+            /**
+             * Send XDomainRequest
+             * @param payload {string} - The data payload to be sent.
+             * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
+             *
+             * Note: XDomainRequest does not support sync requests. This 'isAsync' parameter is added
+             * to maintain consistency with the xhrSender's contract
+             * Note: XDomainRequest does not support custom headers and we are not able to get
+             * appId from the backend for the correct correlation.
+             */
+            function _xdrSender(payload: string[], isAsync: boolean) {
+                let _window = getWindow();
+                const xdr = new XDomainRequest();
+                xdr.onload = () => _self._xdrOnLoad(xdr, payload);
+                xdr.onerror = (event: ErrorEvent) => _self._onError(payload, _formatErrorMessageXdr(xdr), event);
+        
+                // XDomainRequest requires the same protocol as the hosting page.
+                // If the protocol doesn't match, we can't send the telemetry :(.
+                const hostingProtocol = _window && _window.location && _window.location.protocol || "";
+                if (_self._senderConfig.endpointUrl().lastIndexOf(hostingProtocol, 0) !== 0) {
+                    _self.diagLog().throwInternal(
+                        LoggingSeverity.WARNING,
+                        _InternalMessageId.TransmissionFailed, ". " +
+                        "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol.");
+        
+                        _self._buffer.clear();
+                    return;
+                }
+        
+                const endpointUrl = _self._senderConfig.endpointUrl().replace(/^(https?:)/, "");
+                xdr.open('POST', endpointUrl);
+        
+                // compose an array of payloads
+                const batch = _self._buffer.batchPayloads(payload);
+                xdr.send(batch);
+        
+                _self._buffer.markAsSent(payload);
+            }
+        
+            function _formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): string {
+                if (xdr) {
+                    return "XDomainRequest,Response:" + _getResponseText(xdr) || "";
+                }
+        
+                return message;
+            }
+        
+            // Using function lookups for backward compatibility as the getNotifyMgr() did not exist until after v2.5.6
+            function _getNotifyMgr() : INotificationManager {
+                const func = 'getNotifyMgr';
+                if (_self.core[func]) {
+                    return _self.core[func]();
+                }
+
+                // using _self.core['_notificationManager'] for backward compatibility
+                return _self.core['_notificationManager'];
+            }
+
+            function _notifySendRequest(sendRequest: SendRequestReason, isAsync: boolean) {
+                let manager = _getNotifyMgr();
+                if (manager && manager.eventsSendRequest) {
+                    try {
+                        manager.eventsSendRequest(sendRequest, isAsync);
+                    } catch (e) {
+                        _self.diagLog().throwInternal(LoggingSeverity.CRITICAL,
+                            _InternalMessageId.NotificationException,
+                            "send request notification failed: " + Util.getExceptionName(e),
+                            { exception: Util.dump(e) });
+                    }
+                }
+            }
+        
+        });
+    }
 
     public pause(): void {
-        throw new Error("Method not implemented.");
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public resume(): void {
-        throw new Error("Method not implemented.");
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public flush() {
-        try {
-            this.triggerSend(true, null, SendRequestReason.ManualFlush);
-        } catch (e) {
-            this.diagLog().throwInternal(LoggingSeverity.CRITICAL,
-                _InternalMessageId.FlushFailed,
-                "flush failed, telemetry will not be collected: " + Util.getExceptionName(e),
-                { exception: Util.dump(e) });
-        }
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public onunloadFlush() {
-        if ((this._senderConfig.onunloadDisableBeacon() === false || this._senderConfig.isBeaconApiDisabled() === false) && Util.IsBeaconApiSupported()) {
-            try {
-                this.triggerSend(true, this._beaconSender, SendRequestReason.Unload);
-            } catch (e) {
-                this.diagLog().throwInternal(LoggingSeverity.CRITICAL,
-                    _InternalMessageId.FailedToSendQueuedTelemetry,
-                    "failed to flush with beacon sender on page unload, telemetry will not be collected: " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) });
-            }
-        } else {
-            this.flush();
-        }
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public teardown(): void {
-        throw new Error("Method not implemented.");
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain): void {
-        super.initialize(config, core, extensions, pluginChain);
-        let ctx = this._getTelCtx();
-        let identifier = this.identifier;
-        this._serializer = new Serializer(core.logger);
-        this._notificationManager = ((config||{}).extensionConfig||{}).NotificationManager
-        this._consecutiveErrors = 0;
-        this._retryAt = null;
-        this._lastSend = 0;
-        this._sender = null;
-        const defaultConfig = Sender._getDefaultAppInsightsChannelConfig();
-        this._senderConfig = Sender._getEmptyAppInsightsChannelConfig();
-        for (const field in defaultConfig) {
-            this._senderConfig[field] = () => ctx.getConfig(identifier, field, defaultConfig[field]());
-        }
-
-        this._buffer = (this._senderConfig.enableSessionStorageBuffer && Util.canUseSessionStorage())
-            ? new SessionStorageSendBuffer(this.diagLog(), this._senderConfig) : new ArraySendBuffer(this._senderConfig);
-        this._sample = new Sample(this._senderConfig.samplingPercentage(), this.diagLog());
-
-        if (!this._senderConfig.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
-            this._sender = this._beaconSender;
-        } else {
-            if (!CoreUtils.isUndefined(XMLHttpRequest)) {
-                const testXhr = new XMLHttpRequest();
-                if ("withCredentials" in testXhr) {
-                    this._sender = this._xhrSender;
-                    this._XMLHttpRequestSupported = true;
-                } else if (!CoreUtils.isUndefined(XDomainRequest)) {
-                    this._sender = this._xdrSender; // IE 8 and 9
-                }
-            }
-        }
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public processTelemetry(telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
-        itemCtx = this._getTelCtx(itemCtx);
-        
-        try {
-            // if master off switch is set, don't send any data
-            if (this._senderConfig.disableTelemetry()) {
-                // Do not send/save data
-                return;
-            }
-
-            // validate input
-            if (!telemetryItem) {
-                itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSendEmptyTelemetry, "Cannot send empty telemetry");
-                return;
-            }
-
-            // validate event
-            if (telemetryItem.baseData && !telemetryItem.baseType) {
-                itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.InvalidEvent, "Cannot send telemetry without baseData and baseType");
-                return;
-            }
-
-            if (!telemetryItem.baseType) {
-                // Default
-                telemetryItem.baseType = "EventData";
-            }
-
-            // ensure a sender was constructed
-            if (!this._sender) {
-                itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.SenderNotInitialized, "Sender was not initialized");
-                return;
-            }
-          
-            // check if this item should be sampled in, else add sampleRate tag
-            if (!this._isSampledIn(telemetryItem)) {
-                // Item is sampled out, do not send it
-                itemCtx.diagLog().throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TelemetrySampledAndNotSent,
-                    "Telemetry item was sampled out and not sent", { SampleRate: this._sample.sampleRate });
-                return;
-            } else {
-                telemetryItem[SampleRate] = this._sample.sampleRate;
-            }
-
-            // construct an envelope that Application Insights endpoint can understand
-            const aiEnvelope = Sender.constructEnvelope(telemetryItem, this._senderConfig.instrumentationKey(), itemCtx.diagLog());
-            if (!aiEnvelope) {
-                itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
-                return;
-            }
-
-            let doNotSendItem = false;
-            // this is for running in legacy mode, where customer may already have a custom initializer present
-            if (telemetryItem.tags && telemetryItem.tags[ProcessLegacy]) {
-                CoreUtils.arrForEach(telemetryItem.tags[ProcessLegacy], (callBack: (env: IEnvelope) => boolean | void) => {
-                    try {
-                        if (callBack && callBack(aiEnvelope) === false) {
-                            doNotSendItem = true;
-                            itemCtx.diagLog().warnToConsole("Telemetry processor check returns false");
-                        }
-                    } catch (e) {
-                        // log error but dont stop executing rest of the telemetry initializers
-                        // doNotSendItem = true;
-                        itemCtx.diagLog().throwInternal(
-                            LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
-                            { exception: Util.dump(e) }, true);
-                    }
-                });
-
-                delete telemetryItem.tags[ProcessLegacy];
-            }
-            if (doNotSendItem) {
-                return; // do not send, no need to execute next plugin
-            }
-
-            // check if the incoming payload is too large, truncate if necessary
-            const payload: string = this._serializer.serialize(aiEnvelope);
-
-            // flush if we would exceed the max-size limit by adding this item
-            const bufferPayload = this._buffer.getItems();
-            const batch = this._buffer.batchPayloads(bufferPayload);
-
-            if (batch && (batch.length + payload.length > this._senderConfig.maxBatchSizeInBytes())) {
-                this.triggerSend(true, null, SendRequestReason.MaxBatchSize);
-            }
-
-            // enqueue the payload
-            this._buffer.enqueue(payload);
-
-            // ensure an invocation timeout is set
-            this._setupTimer();
-
-        } catch (e) {
-            itemCtx.diagLog().throwInternal(
-                LoggingSeverity.WARNING,
-                _InternalMessageId.FailedAddingTelemetryToBuffer,
-                "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.getExceptionName(e),
-                { exception: Util.dump(e) });
-        }
-
-        // hand off the telemetry item to the next plugin
-        this.processNext(telemetryItem, itemCtx);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
      * xhr state changes
      */
     public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) {
-        if (xhr.readyState === 4) {
-            let response: IBackendResponse = null;
-            if (!this._appId) {
-                response = this._parseResponse(_getResponseText(xhr) || xhr.response);
-                if (response && response.appId) {
-                    this._appId = response.appId;
-                }
-            }
-
-            if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
-                if (!this._senderConfig.isRetryDisabled() && this._isRetriable(xhr.status)) {
-                    this._resendPayload(payload);
-
-                    this.diagLog().throwInternal(
-                        LoggingSeverity.WARNING,
-                        _InternalMessageId.TransmissionFailed, ". " +
-                        "Response code " + xhr.status + ". Will retry to send " + payload.length + " items.");
-                } else {
-                    this._onError(payload, this._formatErrorMessageXhr(xhr));
-                }
-            } else if (Offline.isOffline()) { // offline
-                // Note: Don't check for staus == 0, since adblock gives this code
-                if (!this._senderConfig.isRetryDisabled()) {
-                    const offlineBackOffMultiplier = 10; // arbritrary number
-                    this._resendPayload(payload, offlineBackOffMultiplier);
-
-                    this.diagLog().throwInternal(
-                        LoggingSeverity.WARNING,
-                        _InternalMessageId.TransmissionFailed, `. Offline - Response Code: ${xhr.status}. Offline status: ${Offline.isOffline()}. Will retry to send ${payload.length} items.`);
-                }
-            } else {
-                if (xhr.status === 206) {
-                    if (!response) {
-                        response = this._parseResponse(_getResponseText(xhr) || xhr.response);
-                    }
-
-                    if (response && !this._senderConfig.isRetryDisabled()) {
-                        this._onPartialSuccess(payload, response);
-                    } else {
-                        this._onError(payload, this._formatErrorMessageXhr(xhr));
-                    }
-                } else {
-                    this._consecutiveErrors = 0;
-                    this._onSuccess(payload, countOfItemsInPayload);
-                }
-            }
-        }
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
@@ -400,351 +804,34 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
      * @param forcedSender {SenderFunction} - Indicates the forcedSender, undefined if not passed
      */
     public triggerSend(async = true, forcedSender?: SenderFunction, sendReason?: SendRequestReason) {
-        try {
-            // Send data only if disableTelemetry is false
-            if (!this._senderConfig.disableTelemetry()) {
-
-                if (this._buffer.count() > 0) {
-                    const payload = this._buffer.getItems();
-
-                    this._notifySendRequest(sendReason||SendRequestReason.Undefined, async);
-
-                    // invoke send
-                    if (forcedSender) {
-                        forcedSender.call(this, payload, async);
-                    } else {
-                        this._sender(payload, async);
-                    }
-                }
-
-                // update lastSend time to enable throttling
-                this._lastSend = +new Date;
-            } else {
-                this._buffer.clear();
-            }
-
-            clearTimeout(this._timeoutHandle);
-            this._timeoutHandle = null;
-            this._retryAt = null;
-        } catch (e) {
-            /* Ignore this error for IE under v10 */
-            let ieVer = Util.getIEVersion();
-            if (!ieVer || ieVer > 9) {
-                this.diagLog().throwInternal(
-                    LoggingSeverity.CRITICAL,
-                    _InternalMessageId.TransmissionFailed,
-                    "Telemetry transmission failed, some telemetry will be lost: " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) });
-            }
-        }
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
      * error handler
      */
     public _onError(payload: string[], message: string, event?: ErrorEvent) {
-        this.diagLog().throwInternal(
-            LoggingSeverity.WARNING,
-            _InternalMessageId.OnError,
-            "Failed to send telemetry.",
-            { message });
-
-        this._buffer.clearSent(payload);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
      * partial success handler
      */
     public _onPartialSuccess(payload: string[], results: IBackendResponse) {
-        const failed = [];
-        const retry = [];
-
-        // Iterate through the reversed array of errors so that splicing doesn't have invalid indexes after the first item.
-        const errors = results.errors.reverse();
-        for (const error of errors) {
-            const extracted = payload.splice(error.index, 1)[0];
-            if (this._isRetriable(error.statusCode)) {
-                retry.push(extracted);
-            } else {
-                // All other errors, including: 402 (Monthly quota exceeded) and 439 (Too many requests and refresh cache).
-                failed.push(extracted);
-            }
-        }
-
-        if (payload.length > 0) {
-            this._onSuccess(payload, results.itemsAccepted);
-        }
-
-        if (failed.length > 0) {
-            this._onError(failed, this._formatErrorMessageXhr(null, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' ')));
-        }
-
-        if (retry.length > 0) {
-            this._resendPayload(retry);
-
-            this.diagLog().throwInternal(
-                LoggingSeverity.WARNING,
-                _InternalMessageId.TransmissionFailed, "Partial success. " +
-                "Delivered: " + payload.length + ", Failed: " + failed.length +
-                ". Will retry to send " + retry.length + " our of " + results.itemsReceived + " items");
-        }
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
      * success handler
      */
     public _onSuccess(payload: string[], countOfItemsInPayload: number) {
-        this._buffer.clearSent(payload);
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
      * xdr state changes
      */
     public _xdrOnLoad(xdr: IXDomainRequest, payload: string[]) {
-        const responseText = _getResponseText(xdr);
-        if (xdr && (responseText + "" === "200" || responseText === "")) {
-            this._consecutiveErrors = 0;
-            this._onSuccess(payload, 0);
-        } else {
-            const results = this._parseResponse(responseText);
-
-            if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
-                && !this._senderConfig.isRetryDisabled()) {
-                this._onPartialSuccess(payload, results);
-            } else {
-                this._onError(payload, this._formatErrorMessageXdr(xdr));
-            }
-        }
-    }
-
-    private _isSampledIn(envelope: ITelemetryItem): boolean {
-        return this._sample.isSampledIn(envelope);
-    }
-
-    /**
-     * Send Beacon API request
-     * @param payload {string} - The data payload to be sent.
-     * @param isAsync {boolean} - not used
-     * Note: Beacon API does not support custom headers and we are not able to get
-     * appId from the backend for the correct correlation.
-     */
-    private _beaconSender(payload: string[], isAsync: boolean) {
-        const url = this._senderConfig.endpointUrl();
-        const batch = this._buffer.batchPayloads(payload);
-
-        // Chrome only allows CORS-safelisted values for the sendBeacon data argument
-        // see: https://bugs.chromium.org/p/chromium/issues/detail?id=720283
-        const plainTextBatch = new Blob([batch], { type: 'text/plain;charset=UTF-8' });
-
-        // The sendBeacon method returns true if the user agent is able to successfully queue the data for transfer. Otherwise it returns false.
-        const queued = getNavigator().sendBeacon(url, plainTextBatch);
-
-        if (queued) {
-            this._buffer.markAsSent(payload);
-            // no response from beaconSender, clear buffer
-            this._onSuccess(payload, payload.length);
-        } else {
-            this._xhrSender(payload, true);
-            this.diagLog().throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
-        }
-    }
-
-    /**
-     * Send XMLHttpRequest
-     * @param payload {string} - The data payload to be sent.
-     * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
-     */
-    private _xhrSender(payload: string[], isAsync: boolean) {
-        const xhr = new XMLHttpRequest();
-        const endPointUrl = this._senderConfig.endpointUrl();
-        try {
-            xhr[DisabledPropertyName] = true;
-        } catch(e) {
-            // If the environment has locked down the XMLHttpRequest (preventExtensions and/or freeze), this would
-            // cause the request to fail and we no telemetry would be sent
-        }
-        xhr.open("POST", endPointUrl, isAsync);
-        xhr.setRequestHeader("Content-type", "application/json");
-
-        // append Sdk-Context request header only in case of breeze endpoint
-        if (Util.isInternalApplicationInsightsEndpoint(endPointUrl)) {
-            xhr.setRequestHeader(RequestHeaders.sdkContextHeader, RequestHeaders.sdkContextHeaderAppIdRequest);
-        }
-
-        xhr.onreadystatechange = () => this._xhrReadyStateChange(xhr, payload, payload.length);
-        xhr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessageXhr(xhr), event);
-
-        // compose an array of payloads
-        const batch = this._buffer.batchPayloads(payload);
-        xhr.send(batch);
-
-        this._buffer.markAsSent(payload);
-    }
-
-    /**
-     * Parses the response from the backend.
-     * @param response - XMLHttpRequest or XDomainRequest response
-     */
-    private _parseResponse(response: any): IBackendResponse {
-        try {
-            if (response && response !== "") {
-                const result = getJSON().parse(response);
-
-                if (result && result.itemsReceived && result.itemsReceived >= result.itemsAccepted &&
-                    result.itemsReceived - result.itemsAccepted === result.errors.length) {
-                    return result;
-                }
-            }
-        } catch (e) {
-            this.diagLog().throwInternal(
-                LoggingSeverity.CRITICAL,
-                _InternalMessageId.InvalidBackendResponse,
-                "Cannot parse the response. " + Util.getExceptionName(e),
-                {
-                    response
-                });
-        }
-
-        return null;
-    }
-
-    /**
-     * Resend payload. Adds payload back to the send buffer and setup a send timer (with exponential backoff).
-     * @param payload
-     */
-    private _resendPayload(payload: string[], linearFactor: number = 1) {
-        if (!payload || payload.length === 0) {
-            return;
-        }
-
-        this._buffer.clearSent(payload);
-        this._consecutiveErrors++;
-
-        for (const item of payload) {
-            this._buffer.enqueue(item);
-        }
-
-        // setup timer
-        this._setRetryTime(linearFactor);
-        this._setupTimer();
-    }
-
-    /** 
-     * Calculates the time to wait before retrying in case of an error based on
-     * http://en.wikipedia.org/wiki/Exponential_backoff
-     */
-    private _setRetryTime(linearFactor: number) {
-        const SlotDelayInSeconds = 10;
-        let delayInSeconds: number;
-
-        if (this._consecutiveErrors <= 1) {
-            delayInSeconds = SlotDelayInSeconds;
-        } else {
-            const backOffSlot = (Math.pow(2, this._consecutiveErrors) - 1) / 2;
-            // tslint:disable-next-line:insecure-random
-            let backOffDelay = Math.floor(Math.random() * backOffSlot * SlotDelayInSeconds) + 1;
-            backOffDelay = linearFactor * backOffDelay;
-            delayInSeconds = Math.max(Math.min(backOffDelay, 3600), SlotDelayInSeconds);
-        }
-
-        // TODO: Log the backoff time like the C# version does.
-        const retryAfterTimeSpan = Date.now() + (delayInSeconds * 1000);
-
-        // TODO: Log the retry at time like the C# version does.
-        this._retryAt = retryAfterTimeSpan;
-    }
-
-    /**
-     * Sets up the timer which triggers actually sending the data.
-     */
-    private _setupTimer() {
-        if (!this._timeoutHandle) {
-            const retryInterval = this._retryAt ? Math.max(0, this._retryAt - Date.now()) : 0;
-            const timerValue = Math.max(this._senderConfig.maxBatchInterval(), retryInterval);
-
-            this._timeoutHandle = setTimeout(() => {
-                this.triggerSend(true, null, SendRequestReason.NormalSchedule);
-            }, timerValue);
-        }
-    }
-
-    /**
-     * Checks if the SDK should resend the payload after receiving this status code from the backend.
-     * @param statusCode
-     */
-    private _isRetriable(statusCode: number): boolean {
-        return statusCode === 408 // Timeout
-            || statusCode === 429 // Too many requests.
-            || statusCode === 500 // Internal server error.
-            || statusCode === 503; // Service unavailable.
-    }
-
-    private _formatErrorMessageXhr(xhr: XMLHttpRequest, message?: string): string {
-        if (xhr) {
-            return "XMLHttpRequest,Status:" + xhr.status + ",Response:" + _getResponseText(xhr) || xhr.response || "";
-        }
-
-        return message;
-    }
-
-    /**
-     * Send XDomainRequest
-     * @param payload {string} - The data payload to be sent.
-     * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
-     *
-     * Note: XDomainRequest does not support sync requests. This 'isAsync' parameter is added
-     * to maintain consistency with the xhrSender's contract
-     * Note: XDomainRequest does not support custom headers and we are not able to get
-     * appId from the backend for the correct correlation.
-     */
-    private _xdrSender(payload: string[], isAsync: boolean) {
-        let _window = getWindow();
-        const xdr = new XDomainRequest();
-        xdr.onload = () => this._xdrOnLoad(xdr, payload);
-        xdr.onerror = (event: ErrorEvent) => this._onError(payload, this._formatErrorMessageXdr(xdr), event);
-
-        // XDomainRequest requires the same protocol as the hosting page.
-        // If the protocol doesn't match, we can't send the telemetry :(.
-        const hostingProtocol = _window && _window.location && _window.location.protocol || "";
-        if (this._senderConfig.endpointUrl().lastIndexOf(hostingProtocol, 0) !== 0) {
-            this.diagLog().throwInternal(
-                LoggingSeverity.WARNING,
-                _InternalMessageId.TransmissionFailed, ". " +
-                "Cannot send XDomain request. The endpoint URL protocol doesn't match the hosting page protocol.");
-
-            this._buffer.clear();
-            return;
-        }
-
-        const endpointUrl = this._senderConfig.endpointUrl().replace(/^(https?:)/, "");
-        xdr.open('POST', endpointUrl);
-
-        // compose an array of payloads
-        const batch = this._buffer.batchPayloads(payload);
-        xdr.send(batch);
-
-        this._buffer.markAsSent(payload);
-    }
-
-    private _formatErrorMessageXdr(xdr: IXDomainRequest, message?: string): string {
-        if (xdr) {
-            return "XDomainRequest,Response:" + _getResponseText(xdr) || "";
-        }
-
-        return message;
-    }
-
-    private _notifySendRequest(sendRequest: SendRequestReason, isAsync: boolean) {
-        let manager = this._notificationManager;
-        if (manager && manager.eventsSendRequest) {
-            try {
-                manager.eventsSendRequest(sendRequest, isAsync);
-            } catch (e) {
-                this.diagLog().throwInternal(LoggingSeverity.CRITICAL,
-                    _InternalMessageId.NotificationException,
-                    "send request notification failed: " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) });
-            }
-        }
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }

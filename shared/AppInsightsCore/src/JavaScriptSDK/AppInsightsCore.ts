@@ -4,51 +4,114 @@ import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
 import { BaseCore } from './BaseCore';
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
-import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { EventsDiscardedReason } from "../JavaScriptSDK.Enums/EventsDiscardedReason";
 import { NotificationManager } from "./NotificationManager";
 import { CoreUtils } from "./CoreUtils";
+import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { _InternalLogMessage, DiagnosticLogger } from "./DiagnosticLogger";
+import dynamicProto from '@microsoft/dynamicproto-js';
 
 "use strict";
 
 export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
-    public config: IConfiguration;
-    public logger: IDiagnosticLogger;
-
-    protected _notificationManager: NotificationManager;
-
     constructor() {
         super();
-    }
 
-    initialize(config: IConfiguration, extensions: IPlugin[]): void {
-        let _self = this;
-        _self._notificationManager = new NotificationManager();
-        _self.logger = new DiagnosticLogger(config);
-        _self.config = config;
+        dynamicProto(AppInsightsCore, this, (_self, _base) => {
+
+            _self.initialize = (config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void => {
+                _base.initialize(config, extensions, logger || new DiagnosticLogger(config), notificationManager || new NotificationManager());
+            };
         
-        super.initialize(config, extensions, _self.logger, _self._notificationManager);
-    }
-
-    getTransmissionControls(): IChannelControls[][] {
-        return super.getTransmissionControls();
-    }
-
-    track(telemetryItem: ITelemetryItem) {
-        if (telemetryItem === null) {
-            this._notifyInvalidEvent(telemetryItem);
-            // throw error
-            throw Error("Invalid telemetry item");
-        }
+            _self.track = (telemetryItem: ITelemetryItem) => {
+                if (telemetryItem === null) {
+                    _notifyInvalidEvent(telemetryItem);
+                    // throw error
+                    throw Error("Invalid telemetry item");
+                }
+                
+                // do basic validation before sending it through the pipeline
+                _validateTelemetryItem(telemetryItem);
         
-        // do basic validation before sending it through the pipeline
-        this._validateTelemetryItem(telemetryItem);
+                _base.track(telemetryItem);
+            };
+        
+            /**
+             * Adds a notification listener. The SDK calls methods on the listener when an appropriate notification is raised.
+             * The added plugins must raise notifications. If the plugins do not implement the notifications, then no methods will be
+             * called.
+             * @param {INotificationListener} listener - An INotificationListener object.
+             */
+            _self.addNotificationListener = (listener: INotificationListener): void => {
+                let manager = _self.getNotifyMgr();
+                if (manager) {
+                    manager.addNotificationListener(listener);
+                }
+            };
+        
+            /**
+             * Removes all instances of the listener.
+             * @param {INotificationListener} listener - INotificationListener to remove.
+             */
+            _self.removeNotificationListener = (listener: INotificationListener): void => {
+                let manager = _self.getNotifyMgr();
+                if (manager) {
+                    manager.removeNotificationListener(listener);
+                }
+            }
+        
+            /**
+             * Periodically check logger.queue for
+             */
+            _self.pollInternalLogs = (eventName?: string): number => {
+                let interval = _self.config.diagnosticLogInterval;
+                if (!interval || !(interval > 0)) {
+                    interval = 10000;
+                }
+        
+                return setInterval(() => {
+                    const queue: _InternalLogMessage[] = _self.logger ? _self.logger.queue : [];
+        
+                    CoreUtils.arrForEach(queue, (logMessage: _InternalLogMessage) => {
+                        const item: ITelemetryItem = {
+                            name: eventName ? eventName : "InternalMessageId: " + logMessage.messageId,
+                            iKey: _self.config.instrumentationKey,
+                            time: CoreUtils.toISOString(new Date()),
+                            baseType: _InternalLogMessage.dataType,
+                            baseData: { message: logMessage.message }
+                        };
+        
+                        _self.track(item);
+                    });
+                    queue.length = 0;
+                }, interval) as any;
+            }
+        
+            function _validateTelemetryItem(telemetryItem: ITelemetryItem) {
+                if (CoreUtils.isNullOrUndefined(telemetryItem.name)) {
+                    _notifyInvalidEvent(telemetryItem);
+                    throw Error("telemetry name required");
+                }
+            }
+        
+            function _notifyInvalidEvent(telemetryItem: ITelemetryItem): void {
+                let manager = _self.getNotifyMgr();
+                if (manager) {
+                    manager.eventsDiscarded([telemetryItem], EventsDiscardedReason.InvalidEvent);
+                }
+            }
+        });
+    }
 
-        super.track(telemetryItem);
+    public initialize(config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    public track(telemetryItem: ITelemetryItem) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
@@ -57,61 +120,23 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
      * called.
      * @param {INotificationListener} listener - An INotificationListener object.
      */
-    addNotificationListener(listener: INotificationListener): void {
-        if (this._notificationManager) {
-            this._notificationManager.addNotificationListener(listener);
-        }
+    public addNotificationListener(listener: INotificationListener): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
      * Removes all instances of the listener.
      * @param {INotificationListener} listener - INotificationListener to remove.
      */
-    removeNotificationListener(listener: INotificationListener): void {
-        if (this._notificationManager) {
-            this._notificationManager.removeNotificationListener(listener);
-        }
+    public removeNotificationListener(listener: INotificationListener): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
      * Periodically check logger.queue for
      */
-    pollInternalLogs(eventName?: string): number {
-        let interval = this.config.diagnosticLogInterval;
-        if (!interval || !(interval > 0)) {
-            interval = 10000;
-        }
-
-        return setInterval(() => {
-            let _self = this;
-            const queue: _InternalLogMessage[] = _self.logger ? _self.logger.queue : [];
-
-            CoreUtils.arrForEach(queue, (logMessage: _InternalLogMessage) => {
-                const item: ITelemetryItem = {
-                    name: eventName ? eventName : "InternalMessageId: " + logMessage.messageId,
-                    iKey: _self.config.instrumentationKey,
-                    time: CoreUtils.toISOString(new Date()),
-                    baseType: _InternalLogMessage.dataType,
-                    baseData: { message: logMessage.message }
-                };
-
-                _self.track(item);
-            });
-            queue.length = 0;
-        }, interval) as any;
-    }
-
-    private _validateTelemetryItem(telemetryItem: ITelemetryItem) {
-
-        if (CoreUtils.isNullOrUndefined(telemetryItem.name)) {
-            this._notifyInvalidEvent(telemetryItem);
-            throw Error("telemetry name required");
-        }
-    }
-
-    private _notifyInvalidEvent(telemetryItem: ITelemetryItem): void {
-        if (this._notificationManager) {
-            this._notificationManager.eventsDiscarded([telemetryItem], EventsDiscardedReason.InvalidEvent);
-        }
+    public pollInternalLogs(eventName?: string): number {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return 0;
     }
 }

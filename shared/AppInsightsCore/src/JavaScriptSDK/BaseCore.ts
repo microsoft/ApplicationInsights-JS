@@ -16,12 +16,13 @@ import { IProcessTelemetryContext } from '../JavaScriptSDK.Interfaces/IProcessTe
 import { ProcessTelemetryContext } from './ProcessTelemetryContext';
 import { initializePlugins, sortPlugins } from './TelemetryHelpers';
 import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
+import dynamicProto from '@microsoft/dynamicproto-js';
 
 const validationError = "Extensions must provide callback to initialize";
 
 const _arrForEach = CoreUtils.arrForEach;
 const _isNullOrUndefined = CoreUtils.isNullOrUndefined;
+const strNotificationManager = "_notificationManager";
 
 export class BaseCore implements IAppInsightsCore {
     public static defaultConfig: IConfiguration;
@@ -30,177 +31,222 @@ export class BaseCore implements IAppInsightsCore {
 
     public _extensions: IPlugin[];
     public isInitialized: () => boolean;
-    protected _notificationManager: INotificationManager;
-    private _eventQueue: ITelemetryItem[];
-    private _channelController: ChannelController;
-    private _setInit: (value: boolean) => void;
 
     constructor() {
         let _isInitialized = false;
-        let _this = this;
-        _this._extensions = new Array<IPlugin>();
-        _this._channelController = new ChannelController();
-        _this.isInitialized = () => _isInitialized;
-        _this._setInit = (value: boolean) => { _isInitialized = value; }
-        _this._eventQueue = [];
-    }
+        let _eventQueue: ITelemetryItem[];
+        let _channelController: ChannelController;
+        let _notificationManager: INotificationManager;
+    
+        dynamicProto(BaseCore, this, (_self) => {
+            _self._extensions = new Array<IPlugin>();
+            _channelController = new ChannelController();
+            
+            _eventQueue = [];
+            _self.isInitialized = () => _isInitialized;
 
-    initialize(config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void {
-        let _this = this;
+            _self.initialize = (config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void => {
+                // Make sure core is only initialized once
+                if (_self.isInitialized()) {
+                    throw Error("Core should not be initialized more than once");
+                }
+        
+                if (!config || _isNullOrUndefined(config.instrumentationKey)) {
+                    throw Error("Please provide instrumentation key");
+                }
+        
+                _notificationManager = notificationManager;
 
-        // Make sure core is only initialized once
-        if (_this.isInitialized()) {
-            throw Error("Core should not be initialized more than once");
-        }
+                // For backward compatibility only
+                _self[strNotificationManager] = notificationManager;
+               
+                _self.config = config;
+        
+                config.extensions = _isNullOrUndefined(config.extensions) ? [] : config.extensions;
+        
+                // add notification to the extensions in the config so other plugins can access it
+                let extConfig = config.extensionConfig = _isNullOrUndefined(config.extensionConfig) ? {} : config.extensionConfig;
+                extConfig.NotificationManager = notificationManager;
 
-        if (!config || _isNullOrUndefined(config.instrumentationKey)) {
-            throw Error("Please provide instrumentation key");
-        }
+                if (!logger) {
+                    logger = CoreUtils.objCreate({
+                        throwInternal: (severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) => { },
+                        warnToConsole: (message: string) => { },
+                        resetInternalMessageCount: () => { }
+                    });
+                }
 
-        _this.config = config;
-        let channelController = _this._channelController;
-
-        if (!notificationManager) {
-            // Create Dummy notification manager
-            notificationManager = CoreUtils.objCreate({
-                addNotificationListener: (listener: INotificationListener) => { },
-                removeNotificationListener: (listener: INotificationListener) => { },
-                eventsSent: (events: ITelemetryItem[]) => { },
-                eventsDiscarded: (events: ITelemetryItem[], reason: number) => { },
-                eventsSendRequest: (sendReason: number, isAsync: boolean) => { }
-            });
-        }
-
-        _this._notificationManager = notificationManager as INotificationManager;
-        config.extensions = _isNullOrUndefined(config.extensions) ? [] : config.extensions;
-
-        // add notification to the extensions in the config so other plugins can access it
-        let extConfig = config.extensionConfig = _isNullOrUndefined(config.extensionConfig) ? {} : config.extensionConfig;
-        extConfig.NotificationManager = notificationManager;
-
-        if (!logger) {
-            logger = CoreUtils.objCreate({
-                throwInternal: (severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) => { },
-                warnToConsole: (message: string) => { },
-                resetInternalMessageCount: () => { }
-            });
-        }
-        _this.logger = logger;
-
-        // Concat all available extensions
-        let allExtensions = [];
-        allExtensions.push(...extensions, ...config.extensions);
-        allExtensions = sortPlugins(allExtensions);
-
-        let coreExtensions: any[] = [];
-        let channelExtensions: any[] = [];
-
-        // Check if any two extensions have the same priority, then warn to console
-        // And extract the local extensions from the 
-        const extPriorities = {};
-
-        // Extension validation
-        _arrForEach(allExtensions, (ext: ITelemetryPlugin) => {
-            if (_isNullOrUndefined(ext) || _isNullOrUndefined(ext.initialize)) {
-                throw Error(validationError);
+                _self.logger = logger;
+        
+                // Concat all available extensions
+                let allExtensions = [];
+                allExtensions.push(...extensions, ...config.extensions);
+                allExtensions = sortPlugins(allExtensions);
+        
+                let coreExtensions: any[] = [];
+                let channelExtensions: any[] = [];
+        
+                // Check if any two extensions have the same priority, then warn to console
+                // And extract the local extensions from the 
+                const extPriorities = {};
+        
+                // Extension validation
+                _arrForEach(allExtensions, (ext: ITelemetryPlugin) => {
+                    if (_isNullOrUndefined(ext) || _isNullOrUndefined(ext.initialize)) {
+                        throw Error(validationError);
+                    }
+        
+                    const extPriority = ext.priority;
+                    const identifier = ext.identifier;
+        
+                    if (ext && extPriority) {
+                        if (!_isNullOrUndefined(extPriorities[extPriority])) {
+                            logger.warnToConsole("Two extensions have same priority #" + extPriority + " - " + extPriorities[extPriority] + ", " + identifier);
+                        } else {
+                            // set a value
+                            extPriorities[extPriority] = identifier;
+                        }
+                    }
+        
+                    // Split extensions to core and channelController
+                    if (!extPriority || extPriority < _channelController.priority) {
+                        // Add to core extension that will be managed by BaseCore
+                        coreExtensions.push(ext);
+                    } else {
+                        // Add all other extensions to be managed by the channel controller
+                        channelExtensions.push(ext);
+                    }
+                });
+                // Validation complete
+        
+                // Add the channelController to the complete extension collection and
+                // to the end of the core extensions
+                allExtensions.push(_channelController);
+                coreExtensions.push(_channelController);
+        
+                // Sort the complete set of extensions by priority
+                allExtensions = sortPlugins(allExtensions);
+                _self._extensions = allExtensions;
+        
+                // initialize channel controller first, this will initialize all channel plugins
+                initializePlugins(new ProcessTelemetryContext([_channelController], config, _self), allExtensions);
+                initializePlugins(new ProcessTelemetryContext(coreExtensions, config, _self), allExtensions);
+        
+                // Now reset the extensions to just those being managed by Basecore
+                _self._extensions = coreExtensions;
+        
+                if (_self.getTransmissionControls().length === 0) {
+                    throw new Error("No channels available");
+                }
+        
+                _isInitialized = true;
+                _self.releaseQueue();
             }
-
-            const extPriority = ext.priority;
-            const identifier = ext.identifier;
-
-            if (ext && extPriority) {
-                if (!_isNullOrUndefined(extPriorities[extPriority])) {
-                    logger.warnToConsole("Two extensions have same priority #" + extPriority + " - " + extPriorities[extPriority] + ", " + identifier);
+        
+            _self.getTransmissionControls = (): IChannelControls[][] => {
+                return _channelController.getChannelControls();
+            }
+        
+            _self.track = (telemetryItem: ITelemetryItem) => {
+                if (!telemetryItem.iKey) {
+                    // setup default iKey if not passed in
+                    telemetryItem.iKey = _self.config.instrumentationKey;
+                }
+                if (!telemetryItem.time) {
+                    // add default timestamp if not passed in
+                    telemetryItem.time = CoreUtils.toISOString(new Date());
+                }
+                if (_isNullOrUndefined(telemetryItem.ver)) {
+                    // CommonSchema 4.0
+                    telemetryItem.ver = "4.0";
+                }
+        
+                if (_self.isInitialized()) {
+                    // Process the telemetry plugin chain
+                    _self.getProcessTelContext().processNext(telemetryItem);
                 } else {
-                    // set a value
-                    extPriorities[extPriority] = identifier;
+                    // Queue events until all extensions are initialized
+                    _eventQueue.push(telemetryItem);
                 }
             }
+        
+            _self.getProcessTelContext = (): IProcessTelemetryContext => {
+                let extensions = _self._extensions;
+                let thePlugins: IPlugin[] = extensions;
+        
+                // invoke any common telemetry processors before sending through pipeline
+                if (!extensions || extensions.length === 0) {
+                    // Pass to Channel controller so data is sent to correct channel queues
+                    thePlugins = [_channelController];
+                }
+        
+                return new ProcessTelemetryContext(thePlugins, _self.config, _self);
+            }
 
-            // Split extensions to core and channelController
-            if (!extPriority || extPriority < channelController.priority) {
-                // Add to core extension that will be managed by BaseCore
-                coreExtensions.push(ext);
-            } else {
-                // Add all other extensions to be managed by the channel controller
-                channelExtensions.push(ext);
+            _self.getNotifyMgr = (): INotificationManager => {
+                if (!_notificationManager) {
+                    // Create Dummy notification manager
+                    _notificationManager = CoreUtils.objCreate({
+                        addNotificationListener: (listener: INotificationListener) => { },
+                        removeNotificationListener: (listener: INotificationListener) => { },
+                        eventsSent: (events: ITelemetryItem[]) => { },
+                        eventsDiscarded: (events: ITelemetryItem[], reason: number) => { },
+                        eventsSendRequest: (sendReason: number, isAsync: boolean) => { }
+                    });
+
+                    // For backward compatibility only
+                    _self[strNotificationManager] = _notificationManager;
+                }
+
+                return _notificationManager;
+            }
+        
+            _self.eventCnt = (): number => {
+                return _eventQueue.length;
+            }
+
+            _self.releaseQueue = () => {
+                if (_eventQueue.length > 0) {
+                    _arrForEach(_eventQueue, (event: ITelemetryItem) => {
+                        _self.getProcessTelContext().processNext(event);
+                    });
+
+                    _eventQueue = [];
+                }
             }
         });
-        // Validation complete
-
-        // Add the channelController to the complete extension collection and
-        // to the end of the core extensions
-        allExtensions.push(channelController);
-        coreExtensions.push(channelController);
-
-        // Sort the complete set of extensions by priority
-        allExtensions = sortPlugins(allExtensions);
-        _this._extensions = allExtensions;
-
-        // initialize channel controller first, this will initialize all channel plugins
-        initializePlugins(new ProcessTelemetryContext([channelController], config, _this), allExtensions);
-        initializePlugins(new ProcessTelemetryContext(coreExtensions, config, _this), allExtensions);
-
-        // Now reset the extensions to just those being managed by Basecore
-        _this._extensions = coreExtensions;
-
-        if (_this.getTransmissionControls().length === 0) {
-            throw new Error("No channels available");
-        }
-
-        _this._setInit(true);
-        _this.releaseQueue();
     }
 
-    getTransmissionControls(): IChannelControls[][] {
-        return this._channelController.getChannelControls();
+    public initialize(config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    track(telemetryItem: ITelemetryItem) {
-        let _this = this;
-        if (!telemetryItem.iKey) {
-            // setup default iKey if not passed in
-            telemetryItem.iKey = _this.config.instrumentationKey;
-        }
-        if (!telemetryItem.time) {
-            // add default timestamp if not passed in
-            telemetryItem.time = CoreUtils.toISOString(new Date());
-        }
-        if (_isNullOrUndefined(telemetryItem.ver)) {
-            // CommonSchema 4.0
-            telemetryItem.ver = "4.0";
-        }
-
-        if (_this.isInitialized()) {
-            // Process the telemetry plugin chain
-            _this.getProcessTelContext().processNext(telemetryItem);
-        } else {
-            // Queue events until all extensions are initialized
-            _this._eventQueue.push(telemetryItem);
-        }
+    public getTransmissionControls(): IChannelControls[][] {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
     }
 
-    getProcessTelContext(): IProcessTelemetryContext {
-        let _this = this;
-        let extensions = _this._extensions;
-        let thePlugins: IPlugin[] = extensions;
+    public track(telemetryItem: ITelemetryItem) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
 
-        // invoke any common telemetry processors before sending through pipeline
-        if (!extensions || extensions.length === 0) {
-            // Pass to Channel controller so data is sent to correct channel queues
-            thePlugins = [_this._channelController];
-        }
+    public getProcessTelContext(): IProcessTelemetryContext {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
 
-        return new ProcessTelemetryContext(thePlugins, _this.config, _this);
+    public getNotifyMgr(): INotificationManager {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    public eventCnt(): number {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return 0;
     }
 
     protected releaseQueue() {
-        let _this = this;
-        if (_this._eventQueue.length > 0) {
-            _arrForEach(_this._eventQueue, (event: ITelemetryItem) => {
-                _this.getProcessTelContext().processNext(event);
-            });
-            _this._eventQueue = [];
-        }
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
+
 }

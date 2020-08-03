@@ -737,7 +737,7 @@ export class ApplicationInsightsTests extends TestClass {
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
                 plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
 
-                const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
                 const telemetryInitializer = {
                     initializer: (envelope) => { }
                 }
@@ -767,7 +767,7 @@ export class ApplicationInsightsTests extends TestClass {
                 );
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
                 plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
-                const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
                 const nameOverride = "my unique name";
                 const telemetryInitializer = {
                     initializer: (envelope) => {
@@ -801,7 +801,7 @@ export class ApplicationInsightsTests extends TestClass {
                 );
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
                 plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
-                const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
 
                 const messageOverride = "my unique name";
                 const propOverride = "val1";
@@ -946,7 +946,7 @@ export class ApplicationInsightsTests extends TestClass {
                 );
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
                 plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
-                const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
 
                 // act
                 appInsights.addTelemetryInitializer(() => false);
@@ -970,7 +970,7 @@ export class ApplicationInsightsTests extends TestClass {
                 );
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
                 plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
-                const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
 
                 // act
                 appInsights.addTelemetryInitializer(() => { return; });
@@ -994,7 +994,7 @@ export class ApplicationInsightsTests extends TestClass {
                 );
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
                 plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
-                const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
 
                 // act
                 appInsights.addTelemetryInitializer(() => true);
@@ -1018,7 +1018,7 @@ export class ApplicationInsightsTests extends TestClass {
                 );
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
                 plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
-                const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
 
                 // act
                 appInsights.addTelemetryInitializer(() => true);
@@ -1044,7 +1044,7 @@ export class ApplicationInsightsTests extends TestClass {
                 );
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
                 plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
-                const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
 
                 // act
                 appInsights.addTelemetryInitializer(() => false);
@@ -1070,7 +1070,7 @@ export class ApplicationInsightsTests extends TestClass {
                 );
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
                 plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
-                const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
 
                 // act
                 appInsights.addTelemetryInitializer((() => "asdf") as any);
@@ -1096,7 +1096,7 @@ export class ApplicationInsightsTests extends TestClass {
                 );
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, [plugin, appInsights]);
                 plugin.initialize({instrumentationKey: 'ikey'}, core, [plugin, appInsights]);
-                const trackStub = this.sandbox.spy(appInsights.core['_channelController'].channelQueue[0][0], 'processTelemetry');
+                const trackStub = this.sandbox.spy(appInsights.core.getTransmissionControls()[0][0], 'processTelemetry');
                 const logStub = this.sandbox.spy(appInsights.core.logger, "throwInternal")
                 // act
                 appInsights.addTelemetryInitializer(() => { throw new Error("Test error IGNORE"); });

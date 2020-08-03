@@ -82,12 +82,12 @@ export class ApplicationInsightsTests extends TestClass {
 
 
             // Setup Sinon stuff
-            const sender: Sender = this._ai.appInsights.core['_channelController'].channelQueue[0][0];
+            const sender: Sender = this._ai.appInsights.core.getTransmissionControls()[0][0] as Sender;
             this.errorSpy = this.sandbox.spy(sender, '_onError');
             this.successSpy = this.sandbox.spy(sender, '_onSuccess');
             this.loggingSpy = this.sandbox.stub(this._ai['core'].logger, 'throwInternal');
             this.trackSpy = this.sandbox.spy(this._ai.appInsights.core, 'track')
-            this.sandbox.stub(sender, '_isSampledIn', () => true);
+            this.sandbox.stub((sender as any)._sample, 'isSampledIn', () => true);
             this.envelopeConstructorSpy = this.sandbox.spy(Sender, 'constructEnvelope');
             console.log("* testInitialize()");
         } catch (e) {

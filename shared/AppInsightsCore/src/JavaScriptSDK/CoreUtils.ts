@@ -32,7 +32,7 @@ function _isObject(value: any): boolean {
     return _isTypeof(value, strShimObject);
 };
 
-function _isFunction(value: any): boolean {
+function _isFunction(value: any): value is Function {
     return _isTypeof(value, strShimFunction);
 };
 
@@ -119,7 +119,7 @@ export class CoreUtils {
      * @param {any} value - Value to be checked.
      * @return {boolean} True if the value is a boolean, false otherwise.
      */
-    public static isFunction: (value: any) => boolean = _isFunction;
+    public static isFunction: (value: any) => value is Function = _isFunction;
 
     /**
      * Checks if the passed of value is a function.
@@ -131,7 +131,7 @@ export class CoreUtils {
     /**
      * Check if an object is of type Date
      */
-    public static isDate(obj: any): boolean {
+    public static isDate(obj: any): obj is Date {
         return Object[strShimPrototype].toString.call(obj) === "[object Date]";
     }
 
@@ -140,7 +140,7 @@ export class CoreUtils {
      * @param {any} value - Value to be checked.
      * @return {boolean} True if the value is a string, false otherwise.
      */
-    public static isString(value: any): boolean {
+    public static isString(value: any): value is string {
         return _isTypeof(value, "string");
     }
 
@@ -149,7 +149,7 @@ export class CoreUtils {
      * @param {any} value - Value to be checked.
      * @return {boolean} True if the value is a number, false otherwise.
      */
-    public static isNumber(value: any): boolean {
+    public static isNumber(value: any): value is number {
         return _isTypeof(value, "number");
     }
 
@@ -158,7 +158,7 @@ export class CoreUtils {
      * @param {any} value - Value to be checked.
      * @return {boolean} True if the value is a boolean, false otherwise.
      */
-    public static isBoolean(value: any): boolean {
+    public static isBoolean(value: any): value is boolean {
         return _isTypeof(value, "boolean");
     }
 

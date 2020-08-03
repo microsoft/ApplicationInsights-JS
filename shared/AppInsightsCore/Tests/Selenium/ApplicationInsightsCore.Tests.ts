@@ -9,6 +9,8 @@ import { _InternalMessageId, LoggingSeverity } from "../../src/JavaScriptSDK.Enu
 import { _InternalLogMessage, DiagnosticLogger } from "../../src/JavaScriptSDK/DiagnosticLogger";
 import { normalizeJsName } from "../../src/JavaScriptSDK/CoreUtils";
 
+const AIInternalMessagePrefix = "AITR_";
+
 export class ApplicationInsightsCoreTests extends TestClass {
 
     public testInitialize() {
@@ -191,7 +193,6 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 const channelPlugin = new ChannelPlugin();
                 const appInsightsCore = new AppInsightsCore();
                 appInsightsCore.initialize({ instrumentationKey: expectedIKey }, [channelPlugin]);
-                const validateStub = this.sandbox.stub(appInsightsCore, "_validateTelemetryItem");
 
                 // Act
                 const bareItem: ITelemetryItem = { name: 'test item' };
@@ -199,10 +200,8 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 this.clock.tick(1);
 
                 // Test
-                Assert.ok(validateStub.calledOnce, "validateTelemetryItem called");
-                const newItem: ITelemetryItem = validateStub.args[0][0];
-                Assert.equal(expectedIKey, newItem.iKey, "Instrumentation key is added");
-                Assert.deepEqual(expectedTimestamp, newItem.time, "Timestamp is added");
+                Assert.equal(expectedIKey, bareItem.iKey, "Instrumentation key is added");
+                Assert.deepEqual(expectedTimestamp, bareItem.time, "Timestamp is added");
             }
         });
 
@@ -215,18 +214,23 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 appInsightsCore.initialize({ instrumentationKey: "09465199-12AA-4124-817F-544738CC7C41", loggingLevelTelemetry: 999 }, [channelPlugin]);
 
                 const messageId: _InternalMessageId = _InternalMessageId.CannotAccessCookie; // can be any id
-                const messageKey = appInsightsCore.logger['AIInternalMessagePrefix'] + messageId;
+
+                const logInternalSpy = this.sandbox.spy(appInsightsCore.logger, 'logInternalMessage');
 
                 // Test precondition
-                Assert.ok(appInsightsCore.logger['_messageCount'] === 0, 'PRE: No internal logging performed yet');
-                Assert.ok(!appInsightsCore.logger['_messageLogged'][messageKey], "PRE: messageId not yet logged");
+                Assert.ok(logInternalSpy.notCalled, 'PRE: No internal logging performed yet');
+                Assert.equal(0, appInsightsCore.logger.queue.length, 'PRE: No logging recorded');
 
                 // Act
                 appInsightsCore.logger.throwInternal(LoggingSeverity.CRITICAL, messageId, "Test Error");
 
                 // Test postcondition
-                Assert.ok(appInsightsCore.logger['_messageCount'] === 1, 'POST: Logging success');
-                Assert.ok(appInsightsCore.logger['_messageLogged'][messageKey], "POST: Correct messageId logged");
+                Assert.ok(logInternalSpy.calledOnce, 'POST: Logging success');
+                Assert.equal(messageId, logInternalSpy.args[0][1].messageId, "Correct message logged");
+                Assert.ok(logInternalSpy.args[0][1].message.indexOf('Test Error') !== -1, "Correct message logged");
+                Assert.equal(1, appInsightsCore.logger.queue.length, "POST: Correct messageId logged");
+                Assert.ok(appInsightsCore.logger.queue[0].message.indexOf('Test Error') !== -1, "Correct message logged");
+                Assert.equal(messageId, appInsightsCore.logger.queue[0].messageId, "Correct message logged");
             }
         });
 
@@ -239,16 +243,24 @@ export class ApplicationInsightsCoreTests extends TestClass {
                 appInsightsCore.logger = new DiagnosticLogger();
 
                 const messageId: _InternalMessageId = _InternalMessageId.CannotAccessCookie; // can be any id
-                const messageKey = appInsightsCore.logger['AIInternalMessagePrefix'] + messageId;
+                const logInternalSpy = this.sandbox.spy(appInsightsCore.logger, 'logInternalMessage');
 
                 // Verify precondition
-                Assert.ok(appInsightsCore.logger['_messageCount'] === 0, 'PRE: No internal logging performed yet');
+                Assert.ok(logInternalSpy.notCalled, 'PRE: No internal logging performed yet');
+                Assert.equal(0, appInsightsCore.logger.queue.length, 'PRE: No internal logging performed yet');
 
                 // Act
                 appInsightsCore.logger.throwInternal(LoggingSeverity.CRITICAL, messageId, "Some message");
 
                 // Test postcondition
-                Assert.ok(appInsightsCore.logger['_messageLogged'][messageKey], "POST: Correct messageId logged");
+                Assert.ok(logInternalSpy.calledOnce, 'POST: Logging success');
+                Assert.equal(messageId, logInternalSpy.args[0][1].messageId, "Correct message logged");
+                Assert.equal(messageId, appInsightsCore.logger.queue[0].messageId, "POST: Correct messageId logged");
+
+                // Logging same error doesn't duplicate
+                Assert.equal(1, appInsightsCore.logger.queue.length, "Pre: Only 1 logged message");
+                appInsightsCore.logger.throwInternal(LoggingSeverity.CRITICAL, messageId, "Some message");
+                Assert.equal(1, appInsightsCore.logger.queue.length, "Pre: Still only 1 logged message");
             }
         });
 
@@ -337,23 +349,25 @@ export class ApplicationInsightsCoreTests extends TestClass {
                     }, [channelPlugin]
                 );
 
+                const aiSpy = this.sandbox.spy(appInsightsCore.logger, 'logInternalMessage');
+                const dummySpy = this.sandbox.spy(dummyCore.logger, 'logInternalMessage');
+
                 const messageId: _InternalMessageId = _InternalMessageId.CannotAccessCookie; // can be any id
-                const messageKey = appInsightsCore.logger['AIInternalMessagePrefix'] + messageId;
 
                 // Test precondition
-                Assert.equal(0, appInsightsCore.logger['_messageCount'], 'PRE: No internal logging performed yet');
-                Assert.ok(!appInsightsCore.logger['_messageLogged'][messageKey], "PRE: messageId not yet logged");
-                Assert.equal(0, dummyCore.logger['_messageCount'], 'PRE: No dummy logging');
-                Assert.ok(!dummyCore.logger['_messageLogged'][messageKey], "PRE: No dummy messageId logged");
+                Assert.equal(0, appInsightsCore.logger.queue.length, 'PRE: No internal logging performed yet');
+                Assert.ok(aiSpy.notCalled, "PRE: messageId not yet logged");
+                Assert.equal(0, dummyCore.logger.queue.length, 'PRE: No dummy logging');
+                Assert.ok(dummySpy.notCalled, "PRE: No dummy messageId logged");
 
                 // Act
                 appInsightsCore.logger.throwInternal(LoggingSeverity.CRITICAL, messageId, "Test Error");
 
                 // Test postcondition
-                Assert.equal(1, appInsightsCore.logger['_messageCount'], 'POST: Logging success');
-                Assert.ok(appInsightsCore.logger['_messageLogged'][messageKey], "POST: Correct messageId logged");
-                Assert.equal(0, dummyCore.logger['_messageCount'], 'POST: No dummy logging');
-                Assert.ok(!dummyCore.logger['_messageLogged'][messageKey], "POST: No dummy messageId logged");
+                Assert.equal(1, appInsightsCore.logger.queue.length, 'POST: Logging success');
+                Assert.ok(aiSpy.called, "POST: Correct messageId logged");
+                Assert.equal(0, dummyCore.logger.queue.length, 'POST: No dummy logging');
+                Assert.ok(dummySpy.notCalled, "POST: No dummy messageId logged");
             }
         });
 
@@ -537,7 +551,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
                     [trackPlugin, channelPlugin]);
                 Assert.ok(channelSpy.calledOnce, "Channel process incorrect number of times");
                 Assert.ok(channelSpy.args[0][0].name == "TestEvent1", "Incorrect event");
-                Assert.ok(appInsightsCore["_eventQueue"].length == 0, "Event queue wrong number of events");
+                Assert.ok(appInsightsCore.eventCnt() == 0, "Event queue wrong number of events");
             }
         });
 

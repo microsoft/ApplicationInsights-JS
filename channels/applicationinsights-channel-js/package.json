@@ -17,20 +17,26 @@
     },
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-es3" : "1.1.2",
+        "@types/qunit": "^2.5.3",
+        "@types/sinon": "4.3.3",
         "grunt": "1.0.1",
-        "grunt-contrib-qunit": "2.0.0",
+        "grunt-contrib-qunit": "^3.1.0",
         "grunt-contrib-uglify": "3.1.0",
         "grunt-ts": "^6.0.0-beta.15",
         "grunt-tslint": "^5.0.2",
+        "globby": "^11.0.0",
         "rollup-plugin-node-resolve": "^3.4.0",
         "rollup-plugin-replace": "^2.1.0",
         "rollup-plugin-uglify": "^6.0.0",
         "typescript": "2.5.3",
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
-        "rollup": "^0.66.0"
+        "rollup": "^0.66.0",
+        "qunit": "^2.9.1",
+        "sinon": "^7.3.1"
     },
     "dependencies": {
+        "@microsoft/dynamicproto-js": "^1.0.0",
         "@microsoft/applicationinsights-shims" : "1.0.1",
         "@microsoft/applicationinsights-core-js": "2.5.6",
         "@microsoft/applicationinsights-common": "2.5.6"

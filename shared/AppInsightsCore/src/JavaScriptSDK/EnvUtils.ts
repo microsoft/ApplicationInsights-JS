@@ -23,6 +23,7 @@ const strDocument = "document";
 const strNavigator = "navigator";
 const strHistory = "history";
 const strLocation = "location";
+const strConsole = "console";
 const strPerformance = "performance";
 const strJSON = "JSON";
 const strCrypto = "crypto";
@@ -170,6 +171,17 @@ export function getLocation(): Location | null {
     }
 
     return getGlobalInst(strLocation);
+}
+
+/**
+ * Returns the global console object
+ */
+export function getConsole(): Console | null {
+    if (typeof console !== strUndefined) {
+        return console;
+    }
+
+    return getGlobalInst(strConsole);
 }
 
 /**

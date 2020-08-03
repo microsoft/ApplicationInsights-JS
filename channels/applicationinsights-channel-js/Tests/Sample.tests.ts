@@ -1,5 +1,4 @@
-/// <reference path="./TestFramework/TestClass.ts" />
-
+import { TestClass } from './TestFramework/TestClass';
 import { Sample } from "../src/TelemetryProcessors/Sample";
 import { ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import { PageView, TelemetryItemCreator, IPageViewTelemetry, Util } from "@microsoft/applicationinsights-common";
@@ -29,8 +28,8 @@ export class SampleTests extends TestClass {
                 this.item = this.getTelemetryItem();
                 const scoreStub = this.sandbox.stub(this.sample["samplingScoreGenerator"], "getSamplingScore");
 
-                Assert.ok(this.sample.isSampledIn(this.item));
-                Assert.ok(scoreStub.notCalled);
+                QUnit.assert.ok(this.sample.isSampledIn(this.item));
+                QUnit.assert.ok(scoreStub.notCalled);
             }
         });
 
@@ -52,7 +51,7 @@ export class SampleTests extends TestClass {
                 const isSampledIn1 = this.sample.isSampledIn(item1);
                 const isSampledIn2 = this.sample.isSampledIn(item2);
 
-                Assert.equal(isSampledIn1, isSampledIn2);
+                QUnit.assert.equal(isSampledIn1, isSampledIn2);
             }
         });
 
@@ -84,9 +83,9 @@ export class SampleTests extends TestClass {
                 const isSampledIn3 = this.sample.isSampledIn(item3);
                 const isSampledIn4 = this.sample.isSampledIn(item4);
 
-                Assert.equal(isSampledIn1, isSampledIn2);
-                Assert.equal(isSampledIn1, isSampledIn3);
-                Assert.equal(isSampledIn1, isSampledIn4);
+                QUnit.assert.equal(isSampledIn1, isSampledIn2);
+                QUnit.assert.equal(isSampledIn1, isSampledIn3);
+                QUnit.assert.equal(isSampledIn1, isSampledIn4);
             }
         });
 
@@ -106,7 +105,7 @@ export class SampleTests extends TestClass {
                 this.sample.isSampledIn(envelope1);
 
                 // assert
-                Assert.ok(mathRandomSpy.calledOnce);
+                QUnit.assert.ok(mathRandomSpy.calledOnce);
             }
         });
 
@@ -135,7 +134,7 @@ export class SampleTests extends TestClass {
 
                     // Assert
                     const actualSampleRate = 100 * countOfSampledItems / totalItems;
-                    Assert.ok(Math.abs(actualSampleRate - sampleRate) < errorRange,
+                    QUnit.assert.ok(Math.abs(actualSampleRate - sampleRate) < errorRange,
                         "Actual sampling (" + actualSampleRate + ") does not fall into +-2% range from expected rate (" + sampleRate + ")");
                 });
             }

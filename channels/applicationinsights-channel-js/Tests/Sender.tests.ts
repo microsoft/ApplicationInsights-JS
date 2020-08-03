@@ -1,4 +1,4 @@
-/// <reference path="./TestFramework/Common.ts" />
+import { TestClass } from './TestFramework/TestClass';
 import { Sender } from "../src/Sender";
 import { Offline } from '../src/Offline';
 import { EnvelopeCreator } from '../src/EnvelopeCreator';
@@ -38,10 +38,10 @@ export class SenderTests extends TestClass {
                     }, new AppInsightsCore(), []
                 );
 
-                Assert.equal(123, this._sender._senderConfig.maxBatchInterval(), 'Channel config can be set from root config (maxBatchInterval)');
-                Assert.equal('https://example.com', this._sender._senderConfig.endpointUrl(), 'Channel config can be set from root config (endpointUrl)');
-                Assert.notEqual(654, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config does not equal root config option if extensionConfig field is also set');
-                Assert.equal(456, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config prioritizes extensionConfig over root config');
+                QUnit.assert.equal(123, this._sender._senderConfig.maxBatchInterval(), 'Channel config can be set from root config (maxBatchInterval)');
+                QUnit.assert.equal('https://example.com', this._sender._senderConfig.endpointUrl(), 'Channel config can be set from root config (endpointUrl)');
+                QUnit.assert.notEqual(654, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config does not equal root config option if extensionConfig field is also set');
+                QUnit.assert.equal(456, this._sender._senderConfig.maxBatchSizeInBytes(), 'Channel config prioritizes extensionConfig over root config');
             }
         });
 
@@ -52,7 +52,7 @@ export class SenderTests extends TestClass {
                     instrumentationKey: 'abc'
                 }, new AppInsightsCore(), []);
 
-                const loggerSpy = this.sandbox.stub(this._sender, "_setupTimer");
+                const loggerSpy = this.sandbox.stub(this._sender, "triggerSend");
                 const telemetryItem: ITelemetryItem = {
                     name: 'fake item',
                     iKey: 'iKey',
@@ -62,10 +62,12 @@ export class SenderTests extends TestClass {
                 try {
                     this._sender.processTelemetry(telemetryItem, null);
                 } catch(e) {
-                    Assert.ok(false);
+                    QUnit.assert.ok(false, "Exception - " + e);
                 }
 
-                Assert.ok(loggerSpy.calledOnce);
+                QUnit.assert.equal(false, loggerSpy.calledOnce, "The send has not yet been triggered");
+                this.clock.tick(15000);
+                QUnit.assert.equal(true, loggerSpy.calledOnce, "The send has been triggered");
             }
         })
 
@@ -100,24 +102,24 @@ export class SenderTests extends TestClass {
                 try {
                     this._sender.processTelemetry(telemetryItem, null);
                 } catch(e) {
-                    Assert.ok(false);
+                    QUnit.assert.ok(false);
                 }
 
-                Assert.ok(!processTelemetrySpy.calledOnce);
+                QUnit.assert.ok(!processTelemetrySpy.calledOnce);
             }
         });
 
         this.testCase({
             name: 'BeaconAPI is not used when isBeaconApiDisabled flag is true',
             test: () => {
-                if (!navigator.sendBeacon) {
-                    navigator['sendBeacon'] = (url: string, data?: any) => true;
-                }
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return true;
+                });
+
                 const sender = new Sender();
                 const cr = new AppInsightsCore();
-
-                const xhrSenderSpy = this.sandbox.stub(sender, "_xhrSender");
-                const beaconSenderSpy = this.sandbox.stub(navigator, "sendBeacon");
 
                 sender.initialize({
                     instrumentationKey: 'abc',
@@ -131,34 +133,33 @@ export class SenderTests extends TestClass {
                     baseData: {}
                 };
 
-                Assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
-                Assert.ok(beaconSenderSpy.notCalled, "Beacon API was not called before");
-                Assert.ok(xhrSenderSpy.notCalled, "xhr sender was not called before");
+                QUnit.assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
                 try {
                     sender.processTelemetry(telemetryItem, null);
                     sender.flush();
                 } catch(e) {
-                    Assert.ok(false);
+                    QUnit.assert.ok(false);
                 }
 
-                Assert.ok(beaconSenderSpy.notCalled, "Beacon API is disabled, Beacon API is not called");
-                Assert.ok(xhrSenderSpy.called, "xhr sender is called when Beacon API is disabled");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API is disabled, Beacon API is not called");
+                QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called when Beacon API is disabled");
             }
         });
 
         this.testCase({
             name: 'beaconSender is called when isBeaconApiDisabled flag is false',
             test: () => {
-                if (!navigator.sendBeacon) {
-                    navigator['sendBeacon'] = (url: string, data?: any) => true;
-                }
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return true;
+                });
 
                 const cr = new AppInsightsCore();
                 const sender = new Sender();
-
-                const beaconSenderSpy = this.sandbox.stub(navigator, "sendBeacon", (a, b) => true);
-                const xhrSenderSpy = this.sandbox.spy(sender, "_xhrSender");
 
                 sender.initialize({
                     instrumentationKey: 'abc',
@@ -172,36 +173,38 @@ export class SenderTests extends TestClass {
                     baseData: {}
                 };
 
-                Assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
-                Assert.ok(beaconSenderSpy.notCalled, "Beacon API was not called before");
-                Assert.ok(xhrSenderSpy.notCalled, "xhr sender was not called before");
+                QUnit.assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
                 try {
                     sender.processTelemetry(telemetryItem, null);
                     sender.flush();
                 } catch(e) {
-                    Assert.ok(false);
+                    QUnit.assert.ok(false);
                 }
 
-                Assert.ok(xhrSenderSpy.notCalled, "xhr sender is not called when Beacon API is enabled");
-                Assert.ok(beaconSenderSpy.called, "Beacon API is enabled, Beacon API is called");
+                this.clock.tick(15000);
+
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender is not called when Beacon API is enabled");
+                QUnit.assert.equal(true, sendBeaconCalled, "Beacon API is enabled, Beacon API is called");
             }
         });
 
         this.testCase({
             name: 'BeaconAPI is not used when isBeaconApiDisabled flag is false but payload size is over 64k, fall off to xhr sender',
             test: () => {
-                if (!navigator.sendBeacon) {
-                    navigator['sendBeacon'] = (url: string, data?: any) => true;
-                }
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return false;
+                });
+
                 const sender = new Sender();
                 const cr = new AppInsightsCore();
                 cr["logger"] = new DiagnosticLogger();
                 const MAX_PROPERTIES_SIZE = 8000;
                 const payload = new Array(MAX_PROPERTIES_SIZE).join('a');
-
-                const beaconSenderSpy = this.sandbox.stub(navigator, "sendBeacon", (a, b) => false);
-                const xhrSenderSpy = this.sandbox.spy(sender, "_xhrSender");
 
                 sender.initialize({
                     instrumentationKey: 'abc',
@@ -224,10 +227,9 @@ export class SenderTests extends TestClass {
                     telemetryItems[i] = telemetryItem;
                 }
 
-
-                Assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
-                Assert.ok(beaconSenderSpy.notCalled, "Beacon API was not called before");
-                Assert.ok(xhrSenderSpy.notCalled, "xhr sender was not called before");
+                QUnit.assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
 
                 try {
                     for (let i = 0; i < 8; i++) {
@@ -235,11 +237,13 @@ export class SenderTests extends TestClass {
                     }
                     sender.flush();
                 } catch(e) {
-                    Assert.ok(false);
+                    QUnit.assert.ok(false);
                 }
 
-                Assert.ok(beaconSenderSpy.called, "Beacon API is enabled but payload is over size, Beacon API is called");
-                Assert.ok(xhrSenderSpy.called, "xhr sender is called when payload is over size");
+                this.clock.tick(15000);
+
+                QUnit.assert.equal(true, sendBeaconCalled, "Beacon API is enabled but payload is over size, Beacon API is called");
+                QUnit.assert.ok(this._getXhrRequests().length > 0, "xhr sender is called when payload is over size");
             }
         });
 
@@ -277,46 +281,46 @@ export class SenderTests extends TestClass {
 
                 // Assert measurements
                 const resultMeasurements = baseData.measurements;
-                Assert.ok(resultMeasurements);
-                Assert.ok(resultMeasurements["measurement1"]);
-                Assert.equal(50.0, resultMeasurements["measurement1"]);
-                Assert.ok(resultMeasurements["measurement2"]);
-                Assert.equal(1.3, resultMeasurements["measurement2"]);
+                QUnit.assert.ok(resultMeasurements);
+                QUnit.assert.ok(resultMeasurements["measurement1"]);
+                QUnit.assert.equal(50.0, resultMeasurements["measurement1"]);
+                QUnit.assert.ok(resultMeasurements["measurement2"]);
+                QUnit.assert.equal(1.3, resultMeasurements["measurement2"]);
 
                 // Assert custom properties
-                Assert.ok(baseData.properties);
-                Assert.equal("val1", baseData.properties["property1"]);
-                Assert.equal("val2", baseData.properties["property2"]);
+                QUnit.assert.ok(baseData.properties);
+                QUnit.assert.equal("val1", baseData.properties["property1"]);
+                QUnit.assert.equal("val2", baseData.properties["property2"]);
 
                 // Assert Event name
-                Assert.ok(baseData.name);
-                Assert.equal("Event Name", baseData.name);
+                QUnit.assert.ok(baseData.name);
+                QUnit.assert.equal("Event Name", baseData.name);
 
                 // Assert ver
-                Assert.ok(baseData.ver);
-                Assert.equal(2, baseData.ver);
+                QUnit.assert.ok(baseData.ver);
+                QUnit.assert.equal(2, baseData.ver);
 
                 // Assert baseType added by default
-                Assert.ok(appInsightsEnvelope.data.baseType);
-                Assert.equal("EventData", appInsightsEnvelope.data.baseType);
+                QUnit.assert.ok(appInsightsEnvelope.data.baseType);
+                QUnit.assert.equal("EventData", appInsightsEnvelope.data.baseType);
 
                 // Assert tags
-                Assert.ok(appInsightsEnvelope.tags);
-                Assert.equal("d041d2e5fa834b4f9eee41ac163bf402", appInsightsEnvelope.tags["ai.session.id"]);
-                Assert.equal("browser", appInsightsEnvelope.tags["ai.device.id"]);
-                Assert.equal("Browser", appInsightsEnvelope.tags["ai.device.type"]);
-                Assert.equal("javascript:2.5.1", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
+                QUnit.assert.ok(appInsightsEnvelope.tags);
+                QUnit.assert.equal("d041d2e5fa834b4f9eee41ac163bf402", appInsightsEnvelope.tags["ai.session.id"]);
+                QUnit.assert.equal("browser", appInsightsEnvelope.tags["ai.device.id"]);
+                QUnit.assert.equal("Browser", appInsightsEnvelope.tags["ai.device.type"]);
+                QUnit.assert.equal("javascript:2.5.1", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
 
                 // Assert name
-                Assert.ok(appInsightsEnvelope.name);
-                Assert.equal("Microsoft.ApplicationInsights.iKey.Event", appInsightsEnvelope.name);
+                QUnit.assert.ok(appInsightsEnvelope.name);
+                QUnit.assert.equal("Microsoft.ApplicationInsights.iKey.Event", appInsightsEnvelope.name);
 
                 // Assert iKey
-                Assert.ok(appInsightsEnvelope.iKey);
-                Assert.equal("iKey", appInsightsEnvelope.iKey);
+                QUnit.assert.ok(appInsightsEnvelope.iKey);
+                QUnit.assert.equal("iKey", appInsightsEnvelope.iKey);
 
                 // Assert timestamp
-                Assert.ok(appInsightsEnvelope.time);
+                QUnit.assert.ok(appInsightsEnvelope.time);
             }
         });
 
@@ -351,31 +355,31 @@ export class SenderTests extends TestClass {
 
                 // Assert measurements
                 const resultMeasurements = baseData.measurements;
-                Assert.ok(resultMeasurements);
-                Assert.ok(resultMeasurements["measurement1"]);
-                Assert.equal(50.0, resultMeasurements["measurement1"]);
-                Assert.ok(resultMeasurements["measurement2"]);
-                Assert.equal(1.3, resultMeasurements["measurement2"]);
-                Assert.ok(resultMeasurements["vpHeight"]);
-                Assert.equal(1002, resultMeasurements["vpHeight"]);
-                Assert.ok(resultMeasurements["vScrollOffset"]);
-                Assert.equal(292, resultMeasurements["vScrollOffset"]);
+                QUnit.assert.ok(resultMeasurements);
+                QUnit.assert.ok(resultMeasurements["measurement1"]);
+                QUnit.assert.equal(50.0, resultMeasurements["measurement1"]);
+                QUnit.assert.ok(resultMeasurements["measurement2"]);
+                QUnit.assert.equal(1.3, resultMeasurements["measurement2"]);
+                QUnit.assert.ok(resultMeasurements["vpHeight"]);
+                QUnit.assert.equal(1002, resultMeasurements["vpHeight"]);
+                QUnit.assert.ok(resultMeasurements["vScrollOffset"]);
+                QUnit.assert.equal(292, resultMeasurements["vScrollOffset"]);
 
                 // Assert custom properties
-                Assert.ok(baseData.properties);
-                Assert.equal("val1", baseData.properties["property1"]);
-                Assert.equal("val2", baseData.properties["property2"]);
-                Assert.equal("EADE2F09-DEBA-4B60-A222-E1D80BB8AA7F", baseData.properties["id"]);
+                QUnit.assert.ok(baseData.properties);
+                QUnit.assert.equal("val1", baseData.properties["property1"]);
+                QUnit.assert.equal("val2", baseData.properties["property2"]);
+                QUnit.assert.equal("EADE2F09-DEBA-4B60-A222-E1D80BB8AA7F", baseData.properties["id"]);
 
                 // Assert Event name
-                Assert.ok(baseData.name);
-                Assert.equal("PageUnloadData", baseData.properties['baseTypeSource']);
+                QUnit.assert.ok(baseData.name);
+                QUnit.assert.equal("PageUnloadData", baseData.properties['baseTypeSource']);
 
                 // Assert ver
-                Assert.ok(baseData.ver);
-                Assert.equal(2, baseData.ver);
+                QUnit.assert.ok(baseData.ver);
+                QUnit.assert.equal(2, baseData.ver);
 
-                Assert.equal("javascript:2.5.6", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
+                QUnit.assert.equal("javascript:2.5.6", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
             }
         })
 
@@ -423,57 +427,57 @@ export class SenderTests extends TestClass {
 
                 // assert
                 const resultDuration = baseData.duration;
-                Assert.equal("00:00:00.123", resultDuration);
+                QUnit.assert.equal("00:00:00.123", resultDuration);
 
                 // Assert measurements
                 const resultMeasurements = baseData.measurements;
-                Assert.ok(resultMeasurements);
-                Assert.ok(resultMeasurements["measurement1"]);
-                Assert.equal(50.0, resultMeasurements["measurement1"]);
-                Assert.ok(resultMeasurements["measurement2"]);
-                Assert.equal(1.3, resultMeasurements["measurement2"]);
-                Assert.ok(!resultMeasurements.duration, "duration is not supposed to be treated as measurement");
+                QUnit.assert.ok(resultMeasurements);
+                QUnit.assert.ok(resultMeasurements["measurement1"]);
+                QUnit.assert.equal(50.0, resultMeasurements["measurement1"]);
+                QUnit.assert.ok(resultMeasurements["measurement2"]);
+                QUnit.assert.equal(1.3, resultMeasurements["measurement2"]);
+                QUnit.assert.ok(!resultMeasurements.duration, "duration is not supposed to be treated as measurement");
 
                 // Assert custom properties
-                Assert.ok(baseData.properties);
-                Assert.equal("val1", baseData.properties["property1"]);
-                Assert.equal("val2", baseData.properties["property2"]);
+                QUnit.assert.ok(baseData.properties);
+                QUnit.assert.equal("val1", baseData.properties["property1"]);
+                QUnit.assert.equal("val2", baseData.properties["property2"]);
 
                 // Assert baseData
-                Assert.ok(baseData.name);
-                Assert.equal("Some name given", baseData.data);
-                Assert.equal("some id", baseData.id);
-                Assert.equal(true, baseData.success);
-                Assert.equal(200, baseData.resultCode);
-                Assert.equal("Some name given", baseData.name);
-                Assert.equal("example.com | cid-v1:foo", baseData.target);
+                QUnit.assert.ok(baseData.name);
+                QUnit.assert.equal("Some name given", baseData.data);
+                QUnit.assert.equal("some id", baseData.id);
+                QUnit.assert.equal(true, baseData.success);
+                QUnit.assert.equal(200, baseData.resultCode);
+                QUnit.assert.equal("Some name given", baseData.name);
+                QUnit.assert.equal("example.com | cid-v1:foo", baseData.target);
 
                 // Assert ver
-                Assert.ok(baseData.ver);
-                Assert.equal(2, baseData.ver);
+                QUnit.assert.ok(baseData.ver);
+                QUnit.assert.equal(2, baseData.ver);
 
                 // Assert baseType
-                Assert.ok(appInsightsEnvelope.data.baseType);
-                Assert.equal("RemoteDependencyData", appInsightsEnvelope.data.baseType);
+                QUnit.assert.ok(appInsightsEnvelope.data.baseType);
+                QUnit.assert.equal("RemoteDependencyData", appInsightsEnvelope.data.baseType);
 
                 // Assert tags
-                Assert.ok(appInsightsEnvelope.tags);
-                Assert.equal("TestAccountId", appInsightsEnvelope.tags["ai.user.accountId"]);
-                Assert.equal("10.22.8.2", appInsightsEnvelope.tags["ai.location.ip"]);
+                QUnit.assert.ok(appInsightsEnvelope.tags);
+                QUnit.assert.equal("TestAccountId", appInsightsEnvelope.tags["ai.user.accountId"]);
+                QUnit.assert.equal("10.22.8.2", appInsightsEnvelope.tags["ai.location.ip"]);
 
-                Assert.equal("AuthenticatedId", appInsightsEnvelope.tags["ai.user.authUserId"]);
-                Assert.equal("TestId", appInsightsEnvelope.tags["ai.user.id"]);
+                QUnit.assert.equal("AuthenticatedId", appInsightsEnvelope.tags["ai.user.authUserId"]);
+                QUnit.assert.equal("TestId", appInsightsEnvelope.tags["ai.user.id"]);
 
                 // Assert name
-                Assert.ok(appInsightsEnvelope.name);
-                Assert.equal("Microsoft.ApplicationInsights.iKey.RemoteDependency", appInsightsEnvelope.name);
+                QUnit.assert.ok(appInsightsEnvelope.name);
+                QUnit.assert.equal("Microsoft.ApplicationInsights.iKey.RemoteDependency", appInsightsEnvelope.name);
 
                 // Assert iKey
-                Assert.ok(appInsightsEnvelope.iKey);
-                Assert.equal("iKey", appInsightsEnvelope.iKey);
+                QUnit.assert.ok(appInsightsEnvelope.iKey);
+                QUnit.assert.equal("iKey", appInsightsEnvelope.iKey);
 
                 // Assert timestamp
-                Assert.ok(appInsightsEnvelope.time);
+                QUnit.assert.ok(appInsightsEnvelope.time);
             }
         });
 
@@ -518,12 +522,12 @@ export class SenderTests extends TestClass {
                 const { baseData } = appInsightsEnvelope.data;
 
                 // Assert baseData
-                Assert.ok(baseData.name);
-                Assert.equal("GET /test/name", baseData.name); // retrieved from target
-                Assert.equal("/test/name", baseData.data);
+                QUnit.assert.ok(baseData.name);
+                QUnit.assert.equal("GET /test/name", baseData.name); // retrieved from target
+                QUnit.assert.equal("/test/name", baseData.data);
 
                 // Assert sdkVersion
-                Assert.equal("1234", appInsightsEnvelope.tags["ai.internal.sdkVersion"])
+                QUnit.assert.equal("1234", appInsightsEnvelope.tags["ai.internal.sdkVersion"])
             }
         });
 
@@ -573,70 +577,70 @@ export class SenderTests extends TestClass {
 
                 // Assert duration
                 const resultDuration = baseData.duration;
-                Assert.equal("00:05:00.000", resultDuration);
+                QUnit.assert.equal("00:05:00.000", resultDuration);
 
                 // Assert measurements
                 const resultMeasurements = baseData.measurements;
                 const  props = baseData.properties;
-                Assert.ok(resultMeasurements);
-                Assert.ok(resultMeasurements["measurement1"]);
-                Assert.equal(50.0, resultMeasurements["measurement1"]);
-                Assert.ok(resultMeasurements["measurement2"]);
-                Assert.equal(1.3, resultMeasurements["measurement2"]);
-                Assert.ok(!resultMeasurements.duration, "duration is not supposed to be treated as property in envelope");
+                QUnit.assert.ok(resultMeasurements);
+                QUnit.assert.ok(resultMeasurements["measurement1"]);
+                QUnit.assert.equal(50.0, resultMeasurements["measurement1"]);
+                QUnit.assert.ok(resultMeasurements["measurement2"]);
+                QUnit.assert.equal(1.3, resultMeasurements["measurement2"]);
+                QUnit.assert.ok(!resultMeasurements.duration, "duration is not supposed to be treated as property in envelope");
 
                 // Assert custom properties
-                Assert.ok(baseData.properties);
-                Assert.equal("val1", baseData.properties["property1"]);
-                Assert.equal("val2", baseData.properties["property2"]);
+                QUnit.assert.ok(baseData.properties);
+                QUnit.assert.equal("val1", baseData.properties["property1"]);
+                QUnit.assert.equal("val2", baseData.properties["property2"]);
 
                 // Assert deprecated data custom properties/measurements
-                Assert.equal("val3", baseData.properties["property3"])
-                Assert.equal(1000, baseData.measurements["measurement3"]);
+                QUnit.assert.equal("val3", baseData.properties["property3"])
+                QUnit.assert.equal(1000, baseData.measurements["measurement3"]);
 
                 // Assert Page View name
-                Assert.ok(baseData.name);
-                Assert.equal("Page View Name", baseData.name);
+                QUnit.assert.ok(baseData.name);
+                QUnit.assert.equal("Page View Name", baseData.name);
 
 
                 // Assert ver
-                Assert.ok(baseData.ver);
-                Assert.equal(2, baseData.ver);
+                QUnit.assert.ok(baseData.ver);
+                QUnit.assert.equal(2, baseData.ver);
 
                 // Assert baseType
-                Assert.ok(appInsightsEnvelope.data.baseType);
-                Assert.equal("PageviewData", appInsightsEnvelope.data.baseType);
+                QUnit.assert.ok(appInsightsEnvelope.data.baseType);
+                QUnit.assert.equal("PageviewData", appInsightsEnvelope.data.baseType);
 
                 // Assert tags
-                Assert.ok(appInsightsEnvelope.tags);
-                Assert.equal("TestAccountId", appInsightsEnvelope.tags["ai.user.accountId"]);
-                Assert.equal("AuthenticatedId", appInsightsEnvelope.tags["ai.user.authUserId"]);
-                Assert.equal("TestId", appInsightsEnvelope.tags["ai.user.id"]);
+                QUnit.assert.ok(appInsightsEnvelope.tags);
+                QUnit.assert.equal("TestAccountId", appInsightsEnvelope.tags["ai.user.accountId"]);
+                QUnit.assert.equal("AuthenticatedId", appInsightsEnvelope.tags["ai.user.authUserId"]);
+                QUnit.assert.equal("TestId", appInsightsEnvelope.tags["ai.user.id"]);
 
                 // Assert sdkVersion
-                Assert.ok(EnvelopeCreator.Version)
-                Assert.ok(EnvelopeCreator.Version.length > 0)
-                Assert.equal(`javascript:${EnvelopeCreator.Version}`, appInsightsEnvelope.tags["ai.internal.sdkVersion"])
+                QUnit.assert.ok(EnvelopeCreator.Version)
+                QUnit.assert.ok(EnvelopeCreator.Version.length > 0)
+                QUnit.assert.equal(`javascript:${EnvelopeCreator.Version}`, appInsightsEnvelope.tags["ai.internal.sdkVersion"])
 
-                // Assert.equal("d041d2e5fa834b4f9eee41ac163bf402", appInsightsEnvelope.tags["ai.session.id"]);
-                // Assert.equal("browser", appInsightsEnvelope.tags["ai.device.id"]);
-                // Assert.equal("Browser", appInsightsEnvelope.tags["ai.device.type"]);
-                // Assert.equal("javascript:1.0.18", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
+                // QUnit.assert.equal("d041d2e5fa834b4f9eee41ac163bf402", appInsightsEnvelope.tags["ai.session.id"]);
+                // QUnit.assert.equal("browser", appInsightsEnvelope.tags["ai.device.id"]);
+                // QUnit.assert.equal("Browser", appInsightsEnvelope.tags["ai.device.type"]);
+                // QUnit.assert.equal("javascript:1.0.18", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
 
                 // Assert name
-                Assert.ok(appInsightsEnvelope.name);
-                Assert.equal("Microsoft.ApplicationInsights.iKey.Pageview", appInsightsEnvelope.name);
+                QUnit.assert.ok(appInsightsEnvelope.name);
+                QUnit.assert.equal("Microsoft.ApplicationInsights.iKey.Pageview", appInsightsEnvelope.name);
 
                 // Assert iKey
-                Assert.ok(appInsightsEnvelope.iKey);
-                Assert.equal("iKey", appInsightsEnvelope.iKey);
+                QUnit.assert.ok(appInsightsEnvelope.iKey);
+                QUnit.assert.equal("iKey", appInsightsEnvelope.iKey);
 
                 // Assert timestamp
-                Assert.ok(appInsightsEnvelope.time);
+                QUnit.assert.ok(appInsightsEnvelope.time);
 
 
-                Assert.equal("1528B5FF-6455-4657-BE77-E6664CAC72DC", appInsightsEnvelope.tags["ai.operation.id"]);
-                Assert.equal("1528B5FF-6455-4657-BE77-E6664CACEEEE", appInsightsEnvelope.tags["ai.operation.parentId"])
+                QUnit.assert.equal("1528B5FF-6455-4657-BE77-E6664CAC72DC", appInsightsEnvelope.tags["ai.operation.id"]);
+                QUnit.assert.equal("1528B5FF-6455-4657-BE77-E6664CACEEEE", appInsightsEnvelope.tags["ai.operation.parentId"])
             }
         });
 
@@ -684,7 +688,7 @@ export class SenderTests extends TestClass {
 
                 // Assert duration
                 const resultDuration = baseData.duration;
-                Assert.equal("00:05:00.000", resultDuration);
+                QUnit.assert.equal("00:05:00.000", resultDuration);
             }
         });
 
@@ -721,9 +725,9 @@ export class SenderTests extends TestClass {
                 const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
                 const baseData = appInsightsEnvelope.data.baseData; 
 
-                Assert.equal("val3", baseData.properties["property3"], "ExceptionData: customProperties (item.data) are added to the properties of the envelope and not included in the item.data")
-                Assert.equal("val1", baseData.properties["property1"], "ExceptionData: properties (item.baseData.properties) are added to telemetry envelope");
-                Assert.equal(50.0, baseData.measurements["measurement1"], "ExceptionData: measurements (item.baseData.measurements) are added to telemetry envelope");
+                QUnit.assert.equal("val3", baseData.properties["property3"], "ExceptionData: customProperties (item.data) are added to the properties of the envelope and not included in the item.data")
+                QUnit.assert.equal("val1", baseData.properties["property1"], "ExceptionData: properties (item.baseData.properties) are added to telemetry envelope");
+                QUnit.assert.equal(50.0, baseData.measurements["measurement1"], "ExceptionData: measurements (item.baseData.measurements) are added to telemetry envelope");
 
             }
         });
@@ -731,9 +735,9 @@ export class SenderTests extends TestClass {
         this.testCase({
             name: 'Offline watcher is listening to events',
             test: () => {
-                Assert.ok(Offline.isListening, 'Offline is listening');
-                Assert.equal(true, Offline.isOnline(), 'Offline reports online status');
-                Assert.equal(false, Offline.isOffline(), 'Offline reports offline status');
+                QUnit.assert.ok(Offline.isListening, 'Offline is listening');
+                QUnit.assert.equal(true, Offline.isOnline(), 'Offline reports online status');
+                QUnit.assert.equal(false, Offline.isOffline(), 'Offline reports offline status');
             }
         });
 
@@ -745,22 +749,22 @@ export class SenderTests extends TestClass {
                 const onlineEvent = new Event('online');
 
                 // Verify precondition
-                Assert.ok(Offline.isListening);
-                Assert.ok(Offline.isOnline());
+                QUnit.assert.ok(Offline.isListening);
+                QUnit.assert.ok(Offline.isOnline());
 
                 // Act - Go offline
                 window.dispatchEvent(offlineEvent);
                 this.clock.tick(1);
 
                 // Verify offline
-                Assert.ok(Offline.isOffline());
+                QUnit.assert.ok(Offline.isOffline());
 
                 // Act - Go online
                 window.dispatchEvent(onlineEvent);
                 this.clock.tick(1);
 
                 // Verify online
-                Assert.ok(Offline.isOnline());
+                QUnit.assert.ok(Offline.isOnline());
             }
         });
 
@@ -802,42 +806,42 @@ export class SenderTests extends TestClass {
                 const baseData = appInsightsEnvelope.data.baseData;
 
                 // Assert envelope
-                Assert.deepEqual(appInsightsEnvelope.time, new Date(123).toISOString());
+                QUnit.assert.deepEqual(appInsightsEnvelope.time, new Date(123).toISOString());
 
                 // Assert measurements
                 const resultMeasurements = baseData.measurements;
-                Assert.ok(resultMeasurements);
-                Assert.ok(resultMeasurements["measurement1"]);
-                Assert.equal(50.0, resultMeasurements["measurement1"]);
+                QUnit.assert.ok(resultMeasurements);
+                QUnit.assert.ok(resultMeasurements["measurement1"]);
+                QUnit.assert.equal(50.0, resultMeasurements["measurement1"]);
 
                 // Assert custom properties
-                Assert.ok(baseData.properties);
-                Assert.equal("val1", baseData.properties["property1"]);
-                Assert.equal("val2", baseData.properties["property2"]);
-                Assert.equal("true", baseData.properties["isManual"]);
-                Assert.equal("1024x768", baseData.properties["screenRes"]);
-                Assert.equal("true", baseData.properties["userConsent"]);
-                Assert.equal("www.bing.com", baseData.properties["domain"]);
+                QUnit.assert.ok(baseData.properties);
+                QUnit.assert.equal("val1", baseData.properties["property1"]);
+                QUnit.assert.equal("val2", baseData.properties["property2"]);
+                QUnit.assert.equal("true", baseData.properties["isManual"]);
+                QUnit.assert.equal("1024x768", baseData.properties["screenRes"]);
+                QUnit.assert.equal("true", baseData.properties["userConsent"]);
+                QUnit.assert.equal("www.bing.com", baseData.properties["domain"]);
 
-                Assert.equal("internet explorer", appInsightsEnvelope.tags[CtxTagKeys.deviceBrowser]);
-                Assert.equal("48.0", appInsightsEnvelope.tags[CtxTagKeys.deviceBrowserVersion]);
-                Assert.equal("EN", appInsightsEnvelope.tags[CtxTagKeys.deviceLanguage]);
+                QUnit.assert.equal("internet explorer", appInsightsEnvelope.tags[CtxTagKeys.deviceBrowser]);
+                QUnit.assert.equal("48.0", appInsightsEnvelope.tags[CtxTagKeys.deviceBrowserVersion]);
+                QUnit.assert.equal("EN", appInsightsEnvelope.tags[CtxTagKeys.deviceLanguage]);
 
                 // Assert Page View name
-                Assert.ok(baseData.name);
-                Assert.equal("Page View Name", baseData.name);
+                QUnit.assert.ok(baseData.name);
+                QUnit.assert.equal("Page View Name", baseData.name);
 
                 // Assert ver
-                Assert.ok(baseData.ver);
-                Assert.equal(2, baseData.ver);
+                QUnit.assert.ok(baseData.ver);
+                QUnit.assert.equal(2, baseData.ver);
 
                 // Assert baseType
-                Assert.ok(appInsightsEnvelope.data.baseType);
-                Assert.equal("PageviewData", appInsightsEnvelope.data.baseType);
+                QUnit.assert.ok(appInsightsEnvelope.data.baseType);
+                QUnit.assert.equal("PageviewData", appInsightsEnvelope.data.baseType);
 
                 // Assert name
-                Assert.ok(appInsightsEnvelope.name);
-                Assert.equal("Microsoft.ApplicationInsights.iKey.Pageview", appInsightsEnvelope.name);
+                QUnit.assert.ok(appInsightsEnvelope.name);
+                QUnit.assert.equal("Microsoft.ApplicationInsights.iKey.Pageview", appInsightsEnvelope.name);
             }
         });
 
@@ -855,6 +859,9 @@ export class SenderTests extends TestClass {
                     }
                 });
 
+                let core = new AppInsightsCore();
+                this.sandbox.stub(core, "getNotifyMgr").returns(notificationManager);
+
                 this._sender.initialize(
                     {
                         instrumentationKey: 'abc',
@@ -862,16 +869,15 @@ export class SenderTests extends TestClass {
                         endpointUrl: 'https://example.com',
                         maxBatchSizeInBytes: 100,
                         extensionConfig: {
-                            NotificationManager: notificationManager,
                             [this._sender.identifier]: {
                                 maxBatchSizeInBytes: 100
                             }
                         }
 
-                    }, new AppInsightsCore(), []
+                    }, core, []
                 );
 
-                const loggerSpy = this.sandbox.stub(this._sender, "_setupTimer");
+                const loggerSpy = this.sandbox.spy(this._sender, "triggerSend");
                 const telemetryItem: ITelemetryItem = {
                     name: 'fake item',
                     iKey: 'iKey',
@@ -881,14 +887,13 @@ export class SenderTests extends TestClass {
                 try {
                     this._sender.processTelemetry(telemetryItem, null);
                 } catch(e) {
-                    Assert.ok(false);
+                    QUnit.assert.ok(false);
                 }
 
-
-                Assert.ok(loggerSpy.calledOnce);
+                QUnit.assert.equal(true, loggerSpy.calledOnce);
                 this.clock.tick(1);
-                Assert.ok(sendNotifications.length === 1);
-                Assert.ok(sendNotifications[0].sendReason === SendRequestReason.MaxBatchSize);
+                QUnit.assert.ok(sendNotifications.length === 1);
+                QUnit.assert.ok(sendNotifications[0].sendReason === SendRequestReason.MaxBatchSize);
             }
         });
 
@@ -906,19 +911,21 @@ export class SenderTests extends TestClass {
                     }
                 });
 
+                let core = new AppInsightsCore();
+                this.sandbox.stub(core, "getNotifyMgr").returns(notificationManager);
+
                 this._sender.initialize(
                     {
                         instrumentationKey: 'abc',
                         maxBatchInterval: 123,
                         endpointUrl: 'https://example.com',
                         extensionConfig: {
-                            NotificationManager: notificationManager
                         }
 
-                    }, new AppInsightsCore(), []
+                    }, core, []
                 );
 
-                const loggerSpy = this.sandbox.stub(this._sender, "_setupTimer");
+                const loggerSpy = this.sandbox.spy(this._sender, "triggerSend");
                 const telemetryItem: ITelemetryItem = {
                     name: 'fake item',
                     iKey: 'iKey',
@@ -928,19 +935,20 @@ export class SenderTests extends TestClass {
                 try {
                     this._sender.processTelemetry(telemetryItem, null);
                 } catch(e) {
-                    Assert.ok(false);
+                    QUnit.assert.ok(false);
                 }
 
-                Assert.ok(loggerSpy.calledOnce);
-                Assert.equal(0, sendNotifications.length);
+                QUnit.assert.equal(false, loggerSpy.calledOnce);
+                QUnit.assert.equal(0, sendNotifications.length);
 
                 this._sender.flush();
-                Assert.equal(0, sendNotifications.length);
+                QUnit.assert.equal(true, loggerSpy.calledOnce);
+                QUnit.assert.equal(0, sendNotifications.length);
 
                 this.clock.tick(1);
 
-                Assert.equal(1, sendNotifications.length);
-                Assert.equal(SendRequestReason.ManualFlush, sendNotifications[0].sendReason);
+                QUnit.assert.equal(1, sendNotifications.length);
+                QUnit.assert.equal(SendRequestReason.ManualFlush, sendNotifications[0].sendReason);
             }
         });
 

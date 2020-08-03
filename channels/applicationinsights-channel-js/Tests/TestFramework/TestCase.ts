@@ -1,6 +1,6 @@
 ﻿
 /** Defines a test case */
-class TestCase {
+export class TestCase {
     /** Name to use for the test case */
     public name: string;
 
@@ -10,7 +10,7 @@ class TestCase {
 
 
 /** Defines a test case */
-interface TestCaseAsync {
+export interface TestCaseAsync {
     /** Name to use for the test case */
     name: string;
 
