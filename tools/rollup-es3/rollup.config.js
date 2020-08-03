@@ -4,12 +4,13 @@ import replace from "@rollup/plugin-replace";
 import minify from 'rollup-plugin-minify-es';
 
 const version = require("./package.json").version;
-const inputName = "./out/applicationinsignts-rollup-es3";
+const desc = require("./package.json").description;
+const inputName = "./out/applicationinsights-rollup-es3";
 const outputName = "applicationinsights-rollup-es3";
 const distPath = "./dist/";
 const banner = [
   "/*!",
-  ` * Application Insights JavaScript SDK - Rollup ES3 Plugin, ${version}`,
+  ` * ${desc}, ${version}`,
   " * Copyright (c) Microsoft and contributors. All rights reserved.",
   " */"
 ].join("\n");

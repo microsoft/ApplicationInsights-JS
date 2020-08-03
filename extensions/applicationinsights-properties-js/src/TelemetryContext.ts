@@ -5,7 +5,7 @@
 
 import { ITelemetryItem, IProcessTelemetryContext, IDiagnosticLogger, CoreUtils, hasWindow, _InternalLogMessage } from '@microsoft/applicationinsights-core-js';
 import { Session, _SessionManager } from './Context/Session';
-import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, IWeb, SampleRate, CtxTagKeys, PageView } from '@microsoft/applicationinsights-common';
+import { Extensions, ITelemetryContext, IOperatingSystem, ITelemetryTrace, IWeb, SampleRate, CtxTagKeys, PageView, IUserContext, IInternal } from '@microsoft/applicationinsights-common';
 import { Application } from './Context/Application';
 import { Device } from './Context/Device';
 import { Internal } from './Context/Internal';
@@ -20,8 +20,8 @@ export class TelemetryContext implements ITelemetryContext {
     public device: Device; // The object describing a device tracked by this object.
     public location: Location; // The object describing a location tracked by this object -legacy
     public telemetryTrace: TelemetryTrace; // The object describing a operation tracked by this object.
-    public user: User; // The object describing a user tracked by this object.
-    public internal: Internal; // legacy
+    public user: IUserContext; // The object describing a user tracked by this object.
+    public internal: IInternal; // legacy
     public session: Session; // The object describing a session tracked by this object.
     public sessionManager: _SessionManager; // The session manager that manages session on the base of cookies.
     public os: IOperatingSystem;

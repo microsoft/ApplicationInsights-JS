@@ -7,9 +7,18 @@ import {
  } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
-import { PropertiesPlugin, TelemetryContext } from "@microsoft/applicationinsights-properties-js";
+import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
-import * as Common from "@microsoft/applicationinsights-common"
+import { 
+    Util, CorrelationIdHelper, UrlHelper, DateTimeUtils, ConnectionStringParser, FieldType, RequestHeaders,
+    DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, AIData, AIBase,
+    Envelope, Event, Exception, Metric, PageView, PageViewData, RemoteDependencyData, IEventTelemetry,
+    ITraceTelemetry, IMetricTelemetry, IDependencyTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry,
+    IPageViewTelemetry, IPageViewPerformanceTelemetry, Trace, PageViewPerformance, Data, SeverityLevel,
+    IConfig, ConfigurationManager, ContextTagKeys, DataSanitizer, TelemetryItemCreator, IAppInsights, CtxTagKeys, Extensions,
+    IPropertiesPlugin, DistributedTracingModes, PropertiesPluginIdentifier, BreezeChannelIdentifier, AnalyticsPluginIdentifier, 
+    ITelemetryContext as Common_ITelemetryContext
+} from "@microsoft/applicationinsights-common"
 
 "use strict";
 
@@ -30,22 +39,64 @@ const _ignoreUpdateSnippetProperties = [
  * @interface Snippet
  */
 export interface Snippet {
-    config: IConfiguration & Common.IConfig;
+    config: IConfiguration & IConfig;
     queue?: Array<() => void>;
     sv?: string;
     version?: number;
 }
 
-export interface IApplicationInsights extends Common.IAppInsights, IDependenciesPlugin, Common.IPropertiesPlugin {
+export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin, IPropertiesPlugin {
     appInsights: ApplicationInsights;
     flush: (async?: boolean) => void;
     onunloadFlush: (async?: boolean) => void;
 };
 
+// Re-exposing the Common classes as Telemetry, the list was taken by reviewing the generated code for the build while using
+// the previous configuration :-
+// import * as Common from "@microsoft/applicationinsights-common"
+// export const Telemetry = Common;
+
 /**
  * Telemetry type classes, e.g. PageView, Exception, etc
  */
-export const Telemetry = Common;
+export const Telemetry = {
+    __proto__: null as any,
+    PropertiesPluginIdentifier,
+    BreezeChannelIdentifier,
+    AnalyticsPluginIdentifier,
+    Util,
+    CorrelationIdHelper,
+    UrlHelper,
+    DateTimeUtils,
+    ConnectionStringParser,
+    FieldType,
+    RequestHeaders,
+    DisabledPropertyName,
+    ProcessLegacy,
+    SampleRate,
+    HttpMethod,
+    DEFAULT_BREEZE_ENDPOINT,
+    AIData,
+    AIBase,
+    Envelope,
+    Event,
+    Exception,
+    Metric,
+    PageView,
+    PageViewData,
+    RemoteDependencyData,
+    Trace,
+    PageViewPerformance,
+    Data,
+    SeverityLevel,
+    ConfigurationManager,
+    ContextTagKeys,
+    DataSanitizer,
+    TelemetryItemCreator,
+    CtxTagKeys,
+    Extensions,
+    DistributedTracingModes
+};
 
 /**
  * Application Insights API
@@ -54,10 +105,10 @@ export const Telemetry = Common;
  */
 export class Initialization implements IApplicationInsights {
     public snippet: Snippet;
-    public config: IConfiguration & Common.IConfig;
+    public config: IConfiguration & IConfig;
     public appInsights: ApplicationInsights;
     public core: IAppInsightsCore;
-    public context: TelemetryContext;
+    public context: Common_ITelemetryContext;
 
     private dependencies: DependenciesPlugin;
     private properties: PropertiesPlugin;
@@ -69,10 +120,10 @@ export class Initialization implements IApplicationInsights {
         _self._snippetVersion = "" + (snippet.sv || snippet.version || "");
         snippet.queue = snippet.queue || [];
         snippet.version = snippet.version || 2.0; // Default to new version
-        let config: IConfiguration & Common.IConfig = snippet.config || ({} as any);
+        let config: IConfiguration & IConfig = snippet.config || ({} as any);
 
         if (config.connectionString) {
-            const cs = Common.ConnectionStringParser.parse(config.connectionString);
+            const cs = ConnectionStringParser.parse(config.connectionString);
             const ingest = cs.ingestionendpoint;
             config.endpointUrl = ingest ? `${ingest}/v2/track` : config.endpointUrl; // only add /v2/track when from connectionstring
             config.instrumentationKey = cs.instrumentationkey || config.instrumentationKey;
@@ -96,7 +147,7 @@ export class Initialization implements IApplicationInsights {
      * @param {ICustomProperties} [customProperties]
      * @memberof Initialization
      */
-    public trackEvent(event: Common.IEventTelemetry, customProperties?: ICustomProperties) {
+    public trackEvent(event: IEventTelemetry, customProperties?: ICustomProperties) {
         this.appInsights.trackEvent(event, customProperties);
     }
 
@@ -105,7 +156,7 @@ export class Initialization implements IApplicationInsights {
      * @param {IPageViewTelemetry} pageView
      * @memberof Initialization
      */
-    public trackPageView(pageView?: Common.IPageViewTelemetry) {
+    public trackPageView(pageView?: IPageViewTelemetry) {
         const inPv = pageView || {};
         this.appInsights.trackPageView(inPv);
     }
@@ -115,7 +166,7 @@ export class Initialization implements IApplicationInsights {
      * @param {IPageViewPerformanceTelemetry} pageViewPerformance
      * @memberof Initialization
      */
-    public trackPageViewPerformance(pageViewPerformance: Common.IPageViewPerformanceTelemetry): void {
+    public trackPageViewPerformance(pageViewPerformance: IPageViewPerformanceTelemetry): void {
         const inPvp = pageViewPerformance || {};
         this.appInsights.trackPageViewPerformance(inPvp);
     }
@@ -125,7 +176,7 @@ export class Initialization implements IApplicationInsights {
      * @param {IExceptionTelemetry} exception
      * @memberof Initialization
      */
-    public trackException(exception: Common.IExceptionTelemetry): void {
+    public trackException(exception: IExceptionTelemetry): void {
         if (exception && !exception.exception && (exception as any).error) {
             exception.exception = (exception as any).error;
         }
@@ -138,7 +189,7 @@ export class Initialization implements IApplicationInsights {
      * @param {IAutoExceptionTelemetry} exception
      * @memberof Initialization
      */
-    public _onerror(exception: Common.IAutoExceptionTelemetry): void {
+    public _onerror(exception: IAutoExceptionTelemetry): void {
         this.appInsights._onerror(exception);
     }
 
@@ -148,7 +199,7 @@ export class Initialization implements IApplicationInsights {
      * @param {ICustomProperties} [customProperties]
      * @memberof Initialization
      */
-    public trackTrace(trace: Common.ITraceTelemetry, customProperties?: ICustomProperties): void {
+    public trackTrace(trace: ITraceTelemetry, customProperties?: ICustomProperties): void {
         this.appInsights.trackTrace(trace, customProperties);
     }
 
@@ -166,7 +217,7 @@ export class Initialization implements IApplicationInsights {
      * @param {ICustomProperties} [customProperties]
      * @memberof Initialization
      */
-    public trackMetric(metric: Common.IMetricTelemetry, customProperties?: ICustomProperties): void {
+    public trackMetric(metric: IMetricTelemetry, customProperties?: ICustomProperties): void {
         this.appInsights.trackMetric(metric, customProperties);
     }
     /**
@@ -239,7 +290,7 @@ export class Initialization implements IApplicationInsights {
      * @param {IDependencyTelemetry} dependency
      * @memberof Initialization
      */
-    public trackDependencyData(dependency: Common.IDependencyTelemetry): void {
+    public trackDependencyData(dependency: IDependencyTelemetry): void {
         this.dependencies.trackDependencyData(dependency);
     }
 
@@ -367,7 +418,7 @@ export class Initialization implements IApplicationInsights {
 
         // call functions that were queued before the main script was loaded
         try {
-            if (Common.Util.isArray(_self.snippet.queue)) {
+            if (Util.isArray(_self.snippet.queue)) {
                 // note: do not check length in the for-loop conditional in case something goes wrong and the stub methods are not overridden.
                 const length = _self.snippet.queue.length;
                 for (let i = 0; i < length; i++) {
@@ -414,7 +465,7 @@ export class Initialization implements IApplicationInsights {
 
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
-                const ext = appInsightsInstance.appInsights.core['_extensions'][Common.PropertiesPluginIdentifier];
+                const ext = appInsightsInstance.appInsights.core['_extensions'][PropertiesPluginIdentifier];
                 if (ext && ext.context && ext.context._sessionManager) {
                     ext.context._sessionManager.backup();
                 }

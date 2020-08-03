@@ -31,9 +31,14 @@ export interface IUser {
      * The localId
      */
     localId: string;
+
+    /**
+     * A flag indicating whether this represents a new user
+     */
+    isNewUser?: boolean;
 }
 
-export interface IUserContext {
+export interface IUserContext extends IUser {
     setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean): void;
     clearAuthenticatedUserContext(): void;
 }
