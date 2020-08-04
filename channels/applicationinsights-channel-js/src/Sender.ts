@@ -21,7 +21,7 @@ import {
     ITelemetryItem, IProcessTelemetryContext, IConfiguration, CoreUtils,
     _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
     getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain, INotificationManager,
-    SendRequestReason
+    SendRequestReason, getGlobalInst
 } from '@microsoft/applicationinsights-core-js';
 import { Offline } from './Offline';
 import { Sample } from './TelemetryProcessors/Sample'
@@ -227,13 +227,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 if (!_self._senderConfig.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
                     _self._sender = _beaconSender;
                 } else {
-                    if (!CoreUtils.isUndefined(XMLHttpRequest)) {
-                        const testXhr = new XMLHttpRequest();
-                        if ("withCredentials" in testXhr) {
-                            _self._sender = _xhrSender;
-                            _self._XMLHttpRequestSupported = true;
-                        } else if (!CoreUtils.isUndefined(XDomainRequest)) {
-                            _self._sender = _xdrSender; // IE 8 and 9
+                    if (typeof XMLHttpRequest !== undefined) {
+                        const xhr:any = getGlobalInst("XMLHttpRequest");
+                        if(xhr) {
+                            const testXhr = new xhr();
+                            if ("withCredentials" in testXhr) {
+                                _self._sender = _xhrSender;
+                                _self._XMLHttpRequestSupported = true;
+                            } else if (typeof XDomainRequest !== undefined) {
+                                _self._sender = _xdrSender; // IE 8 and 9
+                            }
                         }
                     }
                 }
