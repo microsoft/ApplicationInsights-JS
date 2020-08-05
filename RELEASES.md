@@ -21,6 +21,23 @@
   - Move all private properties and methods into constructor closure
   - #1316 Update dependency version of DynamicProto
 
+### Updated React plugin to v3.0.2
+
+- Update Core dependency to ^2.5.7 Core changes
+- #1335 Add Performance / Testing support
+  - Added IPerfManager and IPerfEvent interfaces to allow performance review / monitoring of the internal operations 
+
+### Updated React Native plugin to v2.2.6
+
+- Update Core dependency to ^2.5.7 Core changes
+- #1335 Add Performance / Testing support
+  - Added IPerfManager and IPerfEvent interfaces to allow performance review / monitoring of the internal operations 
+- #1324 [BUG] Type 'ReactNativePlugin' is not assignable to type 'ITelemetryPlugin'
+  - Refactored the Plugin to extend BaseTelemetryPlugin (part of the #1076 work)
+- #1076 Refactor code to provide better tree shaking and minification of generated code
+  - Move all private properties and methods into constructor closure
+  - #1316 Update dependency version of DynamicProto
+
 ## 2.5.6 (Jul 6th, 2020)
 
 ### New (Beta) extension applicationinsights-debugplugin-js
