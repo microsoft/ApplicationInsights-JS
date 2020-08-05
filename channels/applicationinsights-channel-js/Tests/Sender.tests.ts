@@ -379,7 +379,7 @@ export class SenderTests extends TestClass {
                 QUnit.assert.ok(baseData.ver);
                 QUnit.assert.equal(2, baseData.ver);
 
-                QUnit.assert.equal("javascript:2.5.6", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
+                QUnit.assert.equal("javascript:2.5.7", appInsightsEnvelope.tags["ai.internal.sdkVersion"]);
             }
         })
 
