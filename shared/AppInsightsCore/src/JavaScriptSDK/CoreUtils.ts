@@ -507,8 +507,7 @@ export function doPerf<T>(mgrSource: IPerfManagerProvider | IPerfManager, getSou
             let perfEvt: IPerfEvent;
             let currentActive: IPerfEvent = perfMgr.getCtx(doPerfActiveKey);
             try {
-                let payload = CoreUtils.isFunction(details) ? details() : null;
-                perfEvt = perfMgr.create(getSource(), payload, isAsync);
+                perfEvt = perfMgr.create(getSource(), details, isAsync);
                 if (perfEvt) {
                     if (currentActive && perfEvt.setCtx) {
                         perfEvt.setCtx(PerfEvent.ParentContextKey, currentActive);

@@ -24,19 +24,25 @@ export class PerfEvent implements IPerfEvent {
     start: number;
 
     /**
-     * The included payload of the event
+     * The payload (contents) of the perfEvent, may be null or only set after the event has completed depending on
+     * the runtime environment.
      */
     payload: any;
 
+    /**
+     * Is this occurring from an asynchronous event
+     */
     isAsync: boolean;
     
     /**
-     * Identifies the total time spent for this event, including the time spent for child events
+     * Identifies the total inclusive time spent for this event, including the time spent for child events, 
+     * this will be undefined until the event is completed
      */
     time?: number;
 
     /**
-     * Identifies the exclusive time spent in for this event (not including child events)
+     * Identifies the exclusive time spent in for this event (not including child events),
+     * this will be undefined until the event is completed.
      */
     exTime?: number;
 
@@ -51,14 +57,28 @@ export class PerfEvent implements IPerfEvent {
 
     complete: () => void;    
 
-    constructor(name: string, payload: any, isAsync: boolean) {
+    constructor(name: string, payloadDetails: () => any, isAsync: boolean) {
         let _self = this;
+        let accessorDefined = false;
         _self.start = Date.now();
         _self.name = name;
         _self.isAsync = isAsync;
-        _self.payload = payload;
-
         _self.isChildEvt = (): boolean => false;
+
+        if (CoreUtils.isFunction(payloadDetails)) {
+            // Create an accessor to minimize the potential performance impact of executing the payloadDetails callback
+            let theDetails:any;
+            accessorDefined = CoreUtils.objDefineAccessors(_self, 'payload', () => {
+                // Delay the execution of the payloadDetails until needed
+                if (!theDetails && CoreUtils.isFunction(payloadDetails)) {
+                    theDetails = payloadDetails();
+                    // clear it out now so the referenced objects can be garbage collected
+                    payloadDetails = null;
+                }
+
+                return theDetails;
+            });
+        }
 
         _self.getCtx = (key: string): any | null | undefined => {
             if (key) {
@@ -109,6 +129,10 @@ export class PerfEvent implements IPerfEvent {
             _self.time = Date.now() - _self.start;
             _self.exTime = _self.time - childTime;
             _self.complete = () => {};
+            if (!accessorDefined && CoreUtils.isFunction(payloadDetails)) {
+                // If we couldn't define the property set during complete -- to minimize the perf impact until after the time
+                _self.payload = payloadDetails();
+            }
         }
     }
 }
@@ -124,10 +148,10 @@ export class PerfManager implements IPerfManager  {
 
         dynamicProto(PerfManager, this, (_self) => {
 
-            _self.create = (src: string, payload?: any, isAsync?: boolean): IPerfEvent => {
-                let evt: IPerfEvent = new PerfEvent(src, payload, isAsync);
-
-                return evt;
+            _self.create = (src: string, payloadDetails?: () => any, isAsync?: boolean): IPerfEvent => {
+                // TODO (newylie): at some point we will want to add additional configuration to "select" which events to instrument
+                // for now this is just a simple do everything.
+                return new PerfEvent(src, payloadDetails, isAsync);
             };
 
             _self.fire = (perfEvent: IPerfEvent) => {

@@ -82,7 +82,12 @@ export interface IConfiguration {
     channels?: IChannelControls[][];
 
     /**
-     * [Optional] Send performance timing events to the notification manager
+     * [Optional] When enabled this will create local perfEvents based on sections of the code that have been instrumented
+     * to emit perfEvents (via the doPerf()) when this is enabled. This can be used to identify performance issues within
+     * the SDK, the way you are using it or optionally your own instrumented code.
+     * The provided IPerfManager implementation does NOT send any additional telemetry events to the server it will only fire
+     * the new perfEvent() on the INotificationManager which you can listen to.
+     * This also does not use the window.performance API, so it will work in environments where this API is not supported.
      */
     enablePerfMgr?: boolean;
 

@@ -17,9 +17,10 @@ export interface IPerfEvent {
     start: number;
 
     /**
-     * The payload (contents) of the performance event
+     * The payload (contents) of the perfEvent, may be null or only set after the event has completed depending on
+     * the runtime environment.
      */
-    payload: ITelemetryItem | ITelemetryItem[] | any;
+    payload: any;
 
     /**
      * Is this occurring from an asynchronous event
@@ -27,12 +28,14 @@ export interface IPerfEvent {
     isAsync: boolean;
     
     /**
-     * The total inclusive time of the event, this will be undefined until the event is completed
+     * Identifies the total inclusive time spent for this event, including the time spent for child events, 
+     * this will be undefined until the event is completed
      */
     time?: number;
 
     /**
-     * The exclusive time spent processing the code within this event, this will be undefined until the event is completed
+     * Identifies the exclusive time spent in for this event (not including child events),
+     * this will be undefined until the event is completed.
      */
     exTime?: number;
     /**

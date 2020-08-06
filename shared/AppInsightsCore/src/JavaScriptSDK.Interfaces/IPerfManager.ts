@@ -27,10 +27,10 @@ export interface IPerfManager {
     /**
      * Create a new event and start timing
      * @param src The source name of the event 
-     * @param payload - The payload of the event 
-     * @param isAsync - Is the event occuring from a async event
+     * @param payloadDetails - An optional callback function to fetch the payload details for the event.
+     * @param isAsync - Is the event occurring from a async event
      */
-    create(src: string, payload?: any, isAsync?: boolean): IPerfEvent;
+    create(src: string, payloadDetails?: () => any, isAsync?: boolean): IPerfEvent;
 
     /**
      * 
