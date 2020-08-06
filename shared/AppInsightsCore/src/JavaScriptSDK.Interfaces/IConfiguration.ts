@@ -80,4 +80,11 @@ export interface IConfiguration {
      * If channels are provided here, core will ignore any channels that are already setup, example if there is a SKU with an initialized channel
      */
     channels?: IChannelControls[][];
+    
+    /**
+     * @type {boolean}
+     * @memberof IConfiguration
+     * Flag that disables the Instrumentation Key validation.
+     */
+    disableInstrumentaionKeyValidation?: boolean;
 }
