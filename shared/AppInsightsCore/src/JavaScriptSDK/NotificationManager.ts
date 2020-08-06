@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { IConfiguration } from '../JavaScriptSDK.Interfaces/IConfiguration';
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
-import { INotificationManager } from './../JavaScriptSDK.Interfaces/INotificationManager';
+import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
+import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
 import { CoreUtils, } from "./CoreUtils";
 import dynamicProto from "@microsoft/dynamicproto-js";
 
@@ -12,8 +14,9 @@ import dynamicProto from "@microsoft/dynamicproto-js";
 export class NotificationManager implements INotificationManager {
     listeners: INotificationListener[] = [];
 
-    constructor() {
+    constructor(config?: IConfiguration) {
         let arrForEach = CoreUtils.arrForEach;
+        let perfEvtsSendAll = !!(config ||{}).perfEvtsSendAll;
 
         dynamicProto(NotificationManager, this, (_self) => {
             _self.addNotificationListener = (listener: INotificationListener): void => {
@@ -38,7 +41,7 @@ export class NotificationManager implements INotificationManager {
              */
             _self.eventsSent = (events: ITelemetryItem[]): void => {
                 arrForEach(_self.listeners, (listener) => {
-                    if (listener.eventsSent) {
+                    if (listener && listener.eventsSent) {
                         setTimeout(() => listener.eventsSent(events), 0);
                     }
                 });
@@ -52,7 +55,7 @@ export class NotificationManager implements INotificationManager {
              */
             _self.eventsDiscarded = (events: ITelemetryItem[], reason: number): void => {
                 arrForEach(_self.listeners, (listener) => {
-                    if (listener.eventsDiscarded) {
+                    if (listener && listener.eventsDiscarded) {
                         setTimeout(() => listener.eventsDiscarded(events, reason), 0);
                     }
                 });
@@ -65,7 +68,7 @@ export class NotificationManager implements INotificationManager {
              */
             _self.eventsSendRequest = (sendReason: number, isAsync: boolean): void => {
                 arrForEach(_self.listeners, (listener) => {
-                    if (listener.eventsSendRequest) {
+                    if (listener && listener.eventsSendRequest) {
                         if (isAsync) {
                             setTimeout(() => listener.eventsSendRequest(sendReason, isAsync), 0);
                         } else {
@@ -77,6 +80,28 @@ export class NotificationManager implements INotificationManager {
                         }
                     }
                 });
+            };
+
+            _self.perfEvent = (perfEvent?: IPerfEvent): void => {
+                if (perfEvent) {
+
+                    // Send all events or only parent events
+                    if (perfEvtsSendAll || !perfEvent.isChildEvt()) {
+                        arrForEach(_self.listeners, (listener) => {
+                            if (listener && listener.perfEvent) {
+                                if (perfEvent.isAsync) {
+                                    setTimeout(() => listener.perfEvent(perfEvent), 0);
+                                } else {
+                                    try {
+                                        listener.perfEvent(perfEvent);
+                                    } catch (e) {
+                                        // Catch errors to ensure we don't block sending the requests
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
             }
         });
     }
@@ -123,4 +148,11 @@ export class NotificationManager implements INotificationManager {
     eventsSendRequest?(sendReason: number, isAsync: boolean): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
+
+    /**
+     * [Optional] This event is sent if you have enabled perf events, they are primarily used to track internal performance testing and debugging
+     * the event can be displayed via the debug plugin extension.
+     * @param perfEvent 
+     */
+    perfEvent?(perfEvent: IPerfEvent): void;
 }

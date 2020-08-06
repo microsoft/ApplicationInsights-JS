@@ -60,7 +60,8 @@ export class _InternalLogMessage{
 }
 
 export class DiagnosticLogger implements IDiagnosticLogger {
-
+    public identifier = 'DiagnosticLogger';
+    
     /**
      * The internal logging queue
      */
