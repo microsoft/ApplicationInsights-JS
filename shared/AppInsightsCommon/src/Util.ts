@@ -530,16 +530,12 @@ export class Util {
     /**
      * Check if an object is of type Array
      */
-    public static isArray(obj: any): boolean {
-        return Object[strPrototype].toString.call(obj) === "[object Array]";
-    }
+    public static isArray = CoreUtils.isArray;
 
     /**
      * Check if an object is of type Error
      */
-    public static isError(obj: any): boolean {
-        return Object[strPrototype].toString.call(obj) === "[object Error]";
-    }
+    public static isError = CoreUtils.isError;
 
     /**
      * Check if an object is of type Date

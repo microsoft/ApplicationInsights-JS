@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
-import { SendRequestReason } from "../JavaScriptSDK.Enums/SendRequestReason";
+import { IPerfEvent } from "./IPerfEvent";
 
 /**
  * Class to manage sending notifications to all the listeners.
@@ -42,4 +42,11 @@ export interface INotificationManager {
      * @param {boolean} isAsync   - A flag which identifies whether the requests are being sent in an async or sync manner.
      */
     eventsSendRequest?(sendReason: number, isAsync: boolean): void;
+
+    /**
+     * [Optional] This event is sent if you have enabled perf events, they are primarily used to track internal performance testing and debugging
+     * the event can be displayed via the debug plugin extension.
+     * @param perfEvent 
+     */
+    perfEvent?(perfEvent: IPerfEvent): void;
 }

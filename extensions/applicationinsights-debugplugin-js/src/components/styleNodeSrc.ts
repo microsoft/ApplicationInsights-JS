@@ -10,17 +10,45 @@ const BG_INFO = '#F0F6FF',
       BTN_HOVER = '#106EBE',
       BTN_ACTIVE = '#005A9E',
       TEXT_PRIMARY = '#323130',
+      TEXT_MATCHED = 'yellow',
       BORDER_GREY_160 = '1px solid #605E5C',
       BORDER_GREY_60 = '1px solid #B3B0AD';
 
 console.log(Util.getIEVersion());
 
 export const tempStyle = (prefix: string) => `
-  .${prefix}-my-logger {
-    width: 80%;
+  .${prefix}-dbg-lgr-dashboard {
+  }
+
+  .${prefix}-dbg-lgr-dashboard .controls {
+    width: 90%;
+    min-width: 600px;
+    position: relative;
+    margin: auto;
+    left: 0;
+    right: 0;
+    font-family: monospace;
+    font-size: 16px;
+    border-color: ${BG_INFO};
+    border: 1px solid;
+    background-color: transparent;
+    display: block;
+    padding-top: 3px;
+    padding-bottom: 3px;
+  }
+
+  .${prefix}-dbg-lgr-dashboard .controls > div {
+    display: inline-block;
+    position: relative;
+    padding: 3px 20px;
+    z-index: 1;
+  }
+
+  .${prefix}-dbg-lgr {
+    width: 90%;
     min-width: 600px;
     height: 80%;
-    position: absolute;
+    position: relative;
     margin: auto;
     left: 0;
     right: 0;
@@ -32,13 +60,13 @@ export const tempStyle = (prefix: string) => `
     border-radius: 2px;
   }
 
-  .${prefix}-my-logger div:focus {
+  .${prefix}-dbg-lgr div:focus {
     outline: 2px solid black;
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
     ? ''
-    : `.${prefix}-my-logger .tree-root div::before {
+    : `.${prefix}-dbg-lgr .tree-root div::before {
       content: '';
       position: absolute;
       left: -1.25em;
@@ -47,65 +75,75 @@ export const tempStyle = (prefix: string) => `
     }`
   }
 
-  .${prefix}-my-logger .tree-root div:hover::before {
+  .${prefix}-dbg-lgr .tree-root div:hover::before {
     border-right: 2px solid #000;
   }
 
-  .${prefix}-my-logger > div {
+  .${prefix}-dbg-lgr > div {
     display: block;
     position: relative;
   }
 
-  .${prefix}-my-logger > div:not(.controls) div {
+  .${prefix}-dbg-lgr > div:not(.controls) div {
     display: block;
     position: relative;
     margin-left: 2em;
     width: 100%;
   }
 
-  .${prefix}-my-logger .expandable {
+  .${prefix}-dbg-lgr .expandable {
     cursor: pointer;
   }
 
-  .${prefix}-my-logger > .tree-root div > span {
+  .${prefix}-dbg-lgr > .tree-root div > span {
     width: 100%;
     display: block;
   }
 
-  .${prefix}-my-logger .exception {
+  .${prefix}-dbg-lgr .exception {
     background-color: ${BG_ERROR};
     color: ${TEXT_PRIMARY};
   }
 
+  .${prefix}-dbg-lgr .matched-text-filter {
+    background-color: ${TEXT_MATCHED};
+  }
+
   ${Util.getIEVersion() && Util.getIEVersion() < 9
     ? ''
-    : `.${prefix}-my-logger .expandable.open::before {
+    : `.${prefix}-dbg-lgr .expandable.open::before {
       content: '[-] ';
       font-weight: bold;
     }
 
-    .${prefix}-my-logger .expandable.closed::before {
+    .${prefix}-dbg-lgr .expandable.closed::before {
       content: '[+] ';
       font-weight: bold;
     }`
   }
 
-  .${prefix}-my-logger div:hover > .obj-key {
+  .${prefix}-dbg-lgr div:hover > .obj-key {
     text-decoration: underline;
   }
 
-  .${prefix}-my-logger :not(div span.obj-key) {
+  .${prefix}-dbg-lgr :not(div span.obj-key) {
     font-weight: bold;
     pointer-events: none;
   }
-  .${prefix}-my-logger .object {pointer-events: auto;}
-  .${prefix}-my-logger .function {color: #881391;}
-  .${prefix}-my-logger .string {color: #CB3632;}
-  .${prefix}-my-logger .number {color: #1C00CF;}
-  .${prefix}-my-logger .key {color: #881391; font-weight: bold;}
-  .${prefix}-my-logger .empty {color: #AAAAAA; font-style: italic;}
 
-  .${prefix}-last-selected-element > span {
+  .${prefix}-dbg-lgr .obj-time {
+    padding-right: 15px;
+    color: #605E5C;
+  }
+  
+  .${prefix}-dbg-lgr .object {pointer-events: auto;}
+  .${prefix}-dbg-lgr .function {color: #881391;}
+  .${prefix}-dbg-lgr .string {color: #CB3632;}
+  .${prefix}-dbg-lgr .number {color: #1C00CF;}
+  .${prefix}-dbg-lgr .key {color: #881391; font-weight: bold;}
+  .${prefix}-dbg-lgr .empty {color: #AAAAAA; font-style: italic;}
+
+  .${prefix}-dbg-lgr-dashboard ${prefix}-last-selected-element > span {
     display: block;
     background-color: black;
     border-radius: 2px;
@@ -116,41 +154,67 @@ export const tempStyle = (prefix: string) => `
     color: white;
   }
 
-  .${prefix}-my-logger .controls {
-    padding: 3px 20px;
-    z-index: 1;
+  .${prefix}-dbg-lgr-dashboard #close-dashboard {
+    float: right;
+    margin-right: 2em;
   }
 
-  .${prefix}-my-logger .copy-btn {
+  .${prefix}-dbg-lgr-dashboard .btn-primary {
     display: inline-block;
     background-color: ${BTN_PRIMARY};
     color: #FFFFFF;
     border-radius: 2px;
     cursor: pointer;
-    border: none;
+    border: 1px solid;
     padding: 3px 20px;
+    margin-left: 2em;
     height: 24px;
+    min-width: 80px;
   }
 
-  .${prefix}-my-logger .copy-btn:hover {
+  .${prefix}-dbg-lgr-dashboard .btn-primary:hover {
     background-color: ${BTN_HOVER};
   }
 
-  .${prefix}-my-logger .copy-btn:active {
+  .${prefix}-dbg-lgr-dashboard .btn-primary:active {
     background-color: ${BTN_ACTIVE};
   }
 
-  .${prefix}-my-logger .filterlist {
+  .${prefix}-dbg-lgr-dashboard .btn-secondary {
+    display: inline-block;
+    border: 1px solid;
+    bolder-color: ${BTN_PRIMARY};
+    color: ${BTN_PRIMARY};
+    background-color: transparent;
+    border-radius: 2px;
+    cursor: pointer;
+    border: 1px solid;
+    padding: 3px 20px;
+    margin-left: 2em;
+    height: 24px;
+  }
+
+  .${prefix}-dbg-lgr-dashboard .btn-secondary:hover {
+    background-color: ${BTN_HOVER};
+    color: #FFFFFF;
+  }
+
+  .${prefix}-dbg-lgr-dashboard .btn-secondary:active {
+    background-color: ${BTN_ACTIVE};
+    color: #FFFFFF;
+  }
+  
+  .${prefix}-dbg-lgr-dashboard .filterlist {
     position: relative;
     display: inline-block;
     vertical-align: middle;
     width: 180px;
     min-height: 24px;
-    margin-left: 10px;
+    margin-left: 2em;
     user-select: none;
     cursor: pointer;
   }
-  .${prefix}-my-logger .filterlist-input {
+  .${prefix}-dbg-lgr-dashboard .filterlist-input {
     position: relative;
     padding: 3px 8px;
     border: ${BORDER_GREY_60};
@@ -159,7 +223,7 @@ export const tempStyle = (prefix: string) => `
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
     ? ''
-    : `.${prefix}-my-logger .filterlist-input::after {
+    : `.${prefix}-dbg-lgr-dashboard .filterlist-input::after {
       content: '';
       width: 8px;
       height: 8px;
@@ -174,11 +238,11 @@ export const tempStyle = (prefix: string) => `
     }`
   }
 
-  .${prefix}-my-logger .filterlist-input:focus {
+  .${prefix}-dbg-lgr-dashboard .filterlist-input:focus {
     border: ${BORDER_GREY_60}
   }
 
-  .${prefix}-my-logger .filterlist-dropdown {
+  .${prefix}-dbg-lgr-dashboard .filterlist-dropdown {
     position: absolute;
     top: 100%;
     margin: auto;
@@ -188,7 +252,7 @@ export const tempStyle = (prefix: string) => `
     box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.16);
   }
 
-  .${prefix}-my-logger .filterlist-toggle {
+  .${prefix}-dbg-lgr-dashboard .filterlist-toggle {
     position: relative;
     padding: 3px 8px;
     height: 32px;
@@ -196,14 +260,14 @@ export const tempStyle = (prefix: string) => `
     ${(Util.getIEVersion()) ? '' : 'box-sizing: border-box;'}
   }
 
-  .${prefix}-my-logger .filterlist-toggle:focus {
+  .${prefix}-dbg-lgr-dashboard .filterlist-toggle:focus {
     outline: none;
     border: ${BORDER_GREY_60};
   }
 
-  .${prefix}-my-logger .text-filter-input {
+  .${prefix}-dbg-lgr-dashboard .text-filter-input {
     font-family: monospace;
-    margin-left: 10px;
+    margin-left: 2em;
     padding: 3px 8px;
     width: 180px;
     height: 24px;
@@ -211,17 +275,17 @@ export const tempStyle = (prefix: string) => `
     border: ${BORDER_GREY_160};
   }
 
-  .${prefix}-my-logger .text-filter-input:focus {
+  .${prefix}-dbg-lgr-dashboard .text-filter-input:focus {
     border: ${BORDER_GREY_60};
   }
 
-  .${prefix}-my-logger .label {
+  .${prefix}-dbg-lgr-dashboard .label {
     vertical-align: middle;
     width: 80%;
     display: inline-block;
   }
 
-  .${prefix}-my-logger .checkbox {
+  .${prefix}-dbg-lgr-dashboard .checkbox {
     display: inline-block;
     width: 18px;
     height: 18px;
@@ -231,13 +295,13 @@ export const tempStyle = (prefix: string) => `
     ${(Util.getIEVersion()) ? '' : 'box-sizing: border-box;'}
   }
 
-  .${prefix}-my-logger .checkbox.on {
+  .${prefix}-dbg-lgr-dashboard .checkbox.on {
     background-color: #0078D4;
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
     ? ''
-    : `.${prefix}-my-logger .checkbox.on::after {
+    : `.${prefix}-dbg-lgr-dashboard .checkbox.on::after {
       content: '';
       width: 5px;
       height: 10px;
@@ -252,14 +316,14 @@ export const tempStyle = (prefix: string) => `
   }
 
 
-  .${prefix}-my-logger .checkbox.off {
+  .${prefix}-dbg-lgr-dashboard .checkbox.off {
     border: ${BORDER_GREY_160};
   }
 
   ${Util.getIEVersion() && Util.getIEVersion() < 9
     ? ''
     : `@media only screen and (max-width: 600px) {
-      .${prefix}-my-logger {
+      .${prefix}-dbg-lgr {
         width: 100%;
         min-width: 200px;
       }

@@ -17,6 +17,8 @@ import { ProcessTelemetryContext } from './ProcessTelemetryContext';
 import { initializePlugins, sortPlugins } from './TelemetryHelpers';
 import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import dynamicProto from '@microsoft/dynamicproto-js';
+import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
+import { PerfManager } from "./PerfManager";
 
 const validationError = "Extensions must provide callback to initialize";
 
@@ -37,6 +39,7 @@ export class BaseCore implements IAppInsightsCore {
         let _eventQueue: ITelemetryItem[];
         let _channelController: ChannelController;
         let _notificationManager: INotificationManager;
+        let _perfManager: IPerfManager;
     
         dynamicProto(BaseCore, this, (_self) => {
             _self._extensions = new Array<IPlugin>();
@@ -60,7 +63,7 @@ export class BaseCore implements IAppInsightsCore {
                 // For backward compatibility only
                 _self[strNotificationManager] = notificationManager;
                
-                _self.config = config;
+                _self.config = config || {};
         
                 config.extensions = _isNullOrUndefined(config.extensions) ? [] : config.extensions;
         
@@ -141,11 +144,11 @@ export class BaseCore implements IAppInsightsCore {
         
                 _isInitialized = true;
                 _self.releaseQueue();
-            }
+            };
         
             _self.getTransmissionControls = (): IChannelControls[][] => {
                 return _channelController.getChannelControls();
-            }
+            };
         
             _self.track = (telemetryItem: ITelemetryItem) => {
                 if (!telemetryItem.iKey) {
@@ -168,7 +171,7 @@ export class BaseCore implements IAppInsightsCore {
                     // Queue events until all extensions are initialized
                     _eventQueue.push(telemetryItem);
                 }
-            }
+            };
         
             _self.getProcessTelContext = (): IProcessTelemetryContext => {
                 let extensions = _self._extensions;
@@ -181,7 +184,7 @@ export class BaseCore implements IAppInsightsCore {
                 }
         
                 return new ProcessTelemetryContext(thePlugins, _self.config, _self);
-            }
+            };
 
             _self.getNotifyMgr = (): INotificationManager => {
                 if (!_notificationManager) {
@@ -199,11 +202,25 @@ export class BaseCore implements IAppInsightsCore {
                 }
 
                 return _notificationManager;
-            }
+            };
         
+            _self.getPerfMgr = (): IPerfManager => {
+                if (!_perfManager) {
+                    if (_self.config &&  _self.config.enablePerfMgr) {
+                        _perfManager = new PerfManager(_self.getNotifyMgr());
+                    }
+                }
+
+                return _perfManager;
+            };
+
+            _self.setPerfMgr = (perfMgr: IPerfManager) => {
+                _perfManager = perfMgr;
+            };
+
             _self.eventCnt = (): number => {
                 return _eventQueue.length;
-            }
+            };
 
             _self.releaseQueue = () => {
                 if (_eventQueue.length > 0) {
@@ -213,7 +230,7 @@ export class BaseCore implements IAppInsightsCore {
 
                     _eventQueue = [];
                 }
-            }
+            };
         });
     }
 
@@ -238,6 +255,15 @@ export class BaseCore implements IAppInsightsCore {
     public getNotifyMgr(): INotificationManager {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
+    }
+
+    public getPerfMgr(): IPerfManager {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    public setPerfMgr(perfMgr: IPerfManager) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public eventCnt(): number {

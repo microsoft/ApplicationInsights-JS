@@ -3,242 +3,109 @@
 
 import { CoreUtils } from '@microsoft/applicationinsights-core-js';
 import { Util } from '@microsoft/applicationinsights-common';
-import { FilterList } from './filterList';
+import { strShimPrototype } from '@microsoft/applicationinsights-shims';
 
-const MAX_DEPTH = 8;
+const strConstructor = "constructor";
+const strGetOwnPropertyNames = "getOwnPropertyNames";
 
-export const isArray = (obj: any): obj is any[] => {
-  return Object.prototype.toString.call(obj) === '[object Array]';
-}
+export const MAX_DEPTH = 16;
 
-const toggleClassName = (el: HTMLElement, className:string) => {
-  const idx = el.className.indexOf(className);
-  if (idx === -1) {
-    el.className += className;
-  } else {
-    el.className = el.className.substring(0, idx) + el.className.substring(idx + className.length);
-  }
-}
-
-const traverseAndReplace = (target: Object, maxDepth: number, currentDepth: number, thingsReferenced?: string[]): Object => {
-  const out = {};
-
-  if (!thingsReferenced) { thingsReferenced = []; }
-  if (CoreUtils.isObject(target)) {
-    for (const key of CoreUtils.objKeys(target)) {
-      if (CoreUtils.arrIndexOf(thingsReferenced, target[key]) !== -1) {
-        out[key] = `<circular (${key})>`;
-      }
-      else if (target[key] !== null && CoreUtils.isObject(target[key])) {
-        if (currentDepth >= maxDepth) {
-          out[key] = '<max allowed depth reached>';
-        } else {
-          thingsReferenced.push(target[key]);
-          out[key] = traverseAndReplace(target[key], maxDepth, currentDepth + 1, thingsReferenced);
-          thingsReferenced.pop();
-        }
-      }
-      else {
-        out[key] = target[key];
-      }
-    }
-  }
-
-  return out;
-}
-
-
-
-export class LoggingElement {
-  public lastSelectedElement: HTMLElement;
-  public lastSelectedObject: Object;
-
-  public el: HTMLElement;
-  private filter: FilterList;
-  private textFilter: string = '';
-  private trackers: string[];
-  private msgTracker: Array<[string, HTMLElement, string]> = [];
-
-  constructor(parent: HTMLElement, prefix: string, trackers: string[]) {
-    const _self = this;
-    _self.el = document.createElement("div");
-    _self.el.className = `${prefix}-my-logger`;
-    _self.trackers = trackers.slice(0);
-
-    const controlDiv = document.createElement("div");
-    controlDiv.className = 'controls';
-
-    const copyButton = document.createElement("button");
-    copyButton.innerText = "copy current node";
-    copyButton.className = "copy-btn";
-    copyButton.onclick = _self.copySelectedTree;
-    copyButton.ontouchend = _self.copySelectedTree;
-
-    controlDiv.appendChild(copyButton);
-
-    _self.filter = new FilterList(controlDiv, _self.trackers, _self.render);
-
-    const textFilterInput = document.createElement("input");
-    textFilterInput.className = 'text-filter-input';
-    textFilterInput.setAttribute("placeholder", "filter text");
-    textFilterInput.onchange = (evt: Event) => {
-      _self.textFilter = (evt.target as HTMLInputElement).value;
-      _self.render();
+export function makeRegex(value: string) {
+    if (value && value.length > 0) {
+        value = value.replace(/\\/g, '\\\\');
+        value = value.replace(/([\+\?\|\{\[\(\)\^\$\#\.]}])/g, '\\$1');
+        value = value.replace(/\*/g, '.*');
+        return new RegExp('(' + value + ')');
     }
 
-    controlDiv.appendChild(textFilterInput);
+    return null;
+}
 
-    _self.el.appendChild(controlDiv);
-
-    parent.appendChild(_self.el);
-  }
-
-  public newLogEntry = (target: Object, key?: string, level?: number, kind?: string) => {
-    const _self = this;
-    const el = _self.ObjectToElements(target, key, level);
-    toggleClassName(el, ' tree-root');
-    _self.msgTracker.push([kind, el, JSON.stringify(traverseAndReplace(target, MAX_DEPTH, level)).replace(/"/g, '')]);
-    _self.render();
-  }
-
-  // git push -f origin MSDAReba/debugplugin
-
-  public ObjectToElements = (target: Object, key?: string, level?: number): HTMLElement => {
-    const _self = this;
-
-    if (!level) { level = 0; }
-    let isObj = CoreUtils.isObject(target);
-    const isErr = target['baseType'] === 'ExceptionData';
-
-    const currentLine = document.createElement('span');
-    if (isObj) {
-      currentLine.className = 'obj-key expandable closed';
-      currentLine.innerText = `${key ? key : 'obj'}: `;
-      if (isArray(target)) {
-        currentLine.innerText += `[${CoreUtils.objKeys(target).length}]`;
-      } else {
-        currentLine.innerText += `{${CoreUtils.objKeys(target).length}}`;
-      }
+export function toggleClassName(el: HTMLElement, className: string) {
+    const idx = el.className.indexOf(className);
+    if (idx === -1) {
+        el.className += className;
     } else {
-      currentLine.className = 'obj-key';
-      currentLine.innerText = `${key ? key : 'obj'}: ${target.toString()}`;
+        el.className = el.className.substring(0, idx) + el.className.substring(idx + className.length);
     }
+}
 
-    const children: HTMLElement[] = [];
-    let openState = false;
+export function traverseAndReplace(target: Object, maxDepth: number, currentDepth: number, thingsReferenced: any[], excludedKeys: string[], includeFunctions: boolean): Object {
+    const out = {};
 
-    const keys = CoreUtils.objKeys(target);
-    if (keys.length === 0) { keys.push('<empty>'); }
-    if (level >= MAX_DEPTH) { keys.unshift('<maxdepth>'); }
-    for (const key of keys) {
-      if (key === '<maxdepth>') {
-        const builder = document.createElement("div");
-        builder.className = 'empty';
-        builder.innerText = '<max allowed depth reached>';
-        children.push(builder);
-        break;
-      }
-      else if (key === '<empty>') {
-        const builder = document.createElement("div");
-        builder.className = 'empty';
-        builder.innerText = '<empty>';
-        children.push(builder);
-      }
-      else if (target[key] !== null && CoreUtils.isObject(target[key])) {
-        children.push(_self.ObjectToElements(target[key], key, level + 1))
-      } else {
-        const builder = document.createElement("div");
-        builder.setAttribute("tabindex", "0");
-        builder.onclick = (evt: MouseEvent) => {
-          evt.stopPropagation();
-        }
-        builder.ontouchend = (evt: TouchEvent) => {
-          evt.stopPropagation();
-        }
-        builder.onkeydown = (evt: KeyboardEvent) => {
-          evt.stopPropagation();
-          this.navHandler(evt);
-        }
-        builder.onfocus = (evt: Event) => {
-          this.focusHandler(evt, target, level);
-        }
-
-        const outerSpan = document.createElement("span");
-        const keySpan = document.createElement("span");
-        keySpan.className = 'key';
-        keySpan.textContent = `${key}: `;
-        outerSpan.appendChild(keySpan);
-
-        const valueSpan = document.createElement("span");
-        if (CoreUtils.isFunction(target[key])) {
-          const fnStr = target[key].toString();
-          const fnHead = fnStr.match(/^([^{]+)/)[1];
-          valueSpan.textContent = `${fnHead}{...}`;
-        } else {
-          valueSpan.textContent = `${target[key]}`;
-        }
-        valueSpan.className = `${typeof target[key]}`;
-        outerSpan.appendChild(valueSpan);
-        builder.appendChild(outerSpan);
-        children.push(builder);
-      }
+    if (!thingsReferenced) {
+        thingsReferenced = [];
     }
-
-    const rootDiv = document.createElement("div");
-
-    rootDiv.appendChild(currentLine);
-    rootDiv.setAttribute("tabindex", "0");
-    if (isObj) {
-      if (isErr) { rootDiv.className = 'exception' }
-      const openHandler = (evt: Event, forceState?: boolean) => {
-        evt.stopPropagation();
-        if (Util.getIEVersion()) {
-          this.focusHandler(evt, target, level);
-        }
-        if (forceState !== undefined && openState === forceState) {
-          return;
-        }
-        if (this.lastSelectedElement === rootDiv) {
-          if (openState) {
-            // rootDiv.innerHTML = '';
-            for (const child of children) {
-              rootDiv.removeChild(child);
+    if (CoreUtils.isObject(target)) {
+        for (const key of getTargetKeys(target, excludedKeys, includeFunctions)) {
+            if (target[key] !== null && CoreUtils.arrIndexOf(thingsReferenced, target[key]) !== -1) {
+                out[key] = `<circular (${key} - "${getTargetName(target[key])}")>`;
             }
-            // rootDiv.appendChild(currentLine);
-            openState = false;
-            currentLine.className = 'obj-key expandable closed'
-          }
-          else {
-            openState = true;
-            for (const child of children) {
-              rootDiv.appendChild(child);
+            else if (target[key] !== null && CoreUtils.isObject(target[key])) {
+                if (currentDepth >= maxDepth) {
+                    out[key] = '<max allowed depth reached>';
+                } else {
+                    thingsReferenced.push(target);
+                    out[key] = traverseAndReplace(target[key], maxDepth, currentDepth + 1, thingsReferenced, excludedKeys, includeFunctions);
+                    thingsReferenced.pop();
+                }
             }
-            currentLine.className = 'obj-key expandable open'
-          }
+            else {
+                out[key] = target[key];
+            }
         }
-      }
-
-      rootDiv.onkeydown = (evt: KeyboardEvent) => {
-        this.navHandler(evt, openHandler, openState);
-      }
-      rootDiv.onclick = (evt: MouseEvent) => {
-        openHandler(evt);
-      }
-      rootDiv.ontouchend = (evt: TouchEvent) => {
-        openHandler(evt);
-      }
-      rootDiv.onfocus = (evt: Event) => {
-        this.focusHandler(evt, target, level);
-      }
     }
 
-    return rootDiv;
-  }
+    return out;
+}
 
-  public copySelectedTree = () => {
-    const _self = this;
-    const toCopy: Object = _self.lastSelectedObject;
-    if (!toCopy) { return; }
+function _sanitizeText(value: string) {
+    if (value) {
+        value = value.replace('&', '&amp;');
+        value = value.replace('>', '&gt;');
+        value = value.replace('<', '&lt;');
+    }
+
+    return value;
+}
+
+function _setInnerText(elm: HTMLElement, theText: string, textFilter: string): boolean {
+    let innerText = theText;
+    let matchPos = -1;
+    let matchLen = 0;
+    let rg = makeRegex(textFilter);
+    if (rg) {
+        let matchTxt = rg.exec(innerText);
+        if (matchTxt && matchTxt[1]) {
+            matchPos = theText.indexOf(matchTxt[1]);
+            matchLen = matchTxt[1].length;
+        }
+    }
+
+    if (matchPos !== -1) {
+        let innerHtml =
+            _sanitizeText(theText.substring(0, matchPos)) +
+            '<span class="matched-text-filter">' +
+            _sanitizeText(theText.substring(matchPos, matchPos + matchLen)) +
+            '</span>' +
+            theText.substring(matchPos + matchLen);
+
+        elm.innerHTML = innerHtml;
+        return true;
+    }
+
+    elm.innerText = theText;
+    return false;
+}
+
+let lastSelectedElement: HTMLElement;
+let selectedObject: object;
+
+export function copySelectedTree() {
+    const toCopy: Object = selectedObject;
+    if (!toCopy) { 
+        return;
+    }
 
     const textArea = document.createElement("textarea");
     textArea.innerText = JSON.stringify(toCopy);
@@ -247,80 +114,317 @@ export class LoggingElement {
     textArea.select();
     document.execCommand("copy");
     textArea.parentElement.removeChild(textArea);
-  }
+};
 
-  private render = () => {
-    const _self = this;
-    const filter = _self.filter.getCurrentFilter();
-    const textFilter = _self.textFilter;
-    for (const [type, el, objStr] of _self.msgTracker) {
-      if (el.parentElement) { el.parentElement.removeChild(el); }
-      if (textFilter.length && objStr.indexOf(textFilter) === -1) {
-        continue;
-      }
-      // TODO: make this if statement better if possible
-      if (_self.trackers.indexOf(type) !== -1) {
-        if (filter.indexOf(type) === -1) {
-          _self.el.appendChild(el);
-        }
-      } else if (filter.indexOf('other') === -1) {
-        _self.el.appendChild(el);
-      }
+export function focusHandler(evt: Event, target: Object, level: number, excludeKeys: string[], includeFunctions: boolean) {
+    if (lastSelectedElement) {
+        toggleClassName(lastSelectedElement, ' last-selected-element');
     }
-  }
-
-  private focusHandler = (evt: Event, target: Object, level: number) => {
-    const _self = this;
-    if (_self.lastSelectedElement) {
-      toggleClassName(_self.lastSelectedElement, ' last-selected-element');
-    }
-    _self.lastSelectedElement = (evt.target as HTMLElement);
+    lastSelectedElement = (evt.target as HTMLElement);
     for (let i = 0; i < 10; i++) {
-      if (_self.lastSelectedElement.tagName === "DIV") { break; }
-      _self.lastSelectedElement = _self.lastSelectedElement.parentElement;
+        if (lastSelectedElement.tagName === "DIV") { break; }
+        lastSelectedElement = lastSelectedElement.parentElement;
     }
-    _self.lastSelectedElement.className += ' last-selected-element';
-    _self.lastSelectedObject = traverseAndReplace(target, MAX_DEPTH, level);
-  }
+    lastSelectedElement.className += ' last-selected-element';
+    selectedObject = traverseAndReplace(target, MAX_DEPTH, level, null, excludeKeys, includeFunctions);
+}
 
-  private navHandler = (evt: KeyboardEvent, openHandler?: (evt: Event, forceState?: boolean) => void, currentState?: boolean) => {
+function _navHandler(evt: KeyboardEvent, openHandler?: (evt: Event, forceState?: boolean) => void, currentState?: boolean) {
     const el = evt.target as HTMLElement;
-    switch(evt.which) {
-      // Enter
-      case 13: (openHandler) ? openHandler(evt) : void 0; break;
-      // ArrowUp
-      case 38:
-        evt.preventDefault();
-        const prev = el.previousElementSibling as HTMLElement;
-        if (prev && prev.tagName !== 'BUTTON') { prev.focus(); }
-        break;
-      // ArrowDown
-      case 40:
-        evt.preventDefault();
-        const next = el.nextElementSibling as HTMLElement;
-        if (next) { next.focus(); }
-        break;
-      // ArrowRight
-      case 39:
-        if (openHandler) {
-          openHandler(evt, true);
-          if (currentState) {
-            (el.firstElementChild.nextSibling as HTMLElement).focus();
-          }
-        }
-        break;
-      // ArrowLeft
-      case 37:
-        if (openHandler) { openHandler(evt, false); }
-        if (!currentState) { (el.parentElement as HTMLElement).focus(); }
-        break;
-      // c
-      case 67:
-        if (evt.ctrlKey) {
-          this.copySelectedTree();
-          (evt.target as HTMLElement).focus();
-        }
-        break;
+    switch (evt.which) {
+        // Enter
+        case 13: (openHandler) ? openHandler(evt) : void 0; break;
+        // ArrowUp
+        case 38:
+            evt.preventDefault();
+            const prev = el.previousElementSibling as HTMLElement;
+            if (prev && prev.tagName !== 'BUTTON') { prev.focus(); }
+            break;
+        // ArrowDown
+        case 40:
+            evt.preventDefault();
+            const next = el.nextElementSibling as HTMLElement;
+            if (next) { next.focus(); }
+            break;
+        // ArrowRight
+        case 39:
+            if (openHandler) {
+                openHandler(evt, true);
+                if (currentState) {
+                    (el.firstElementChild.nextSibling as HTMLElement).focus();
+                }
+            }
+            break;
+        // ArrowLeft
+        case 37:
+            if (openHandler) { openHandler(evt, false); }
+            if (!currentState) { (el.parentElement as HTMLElement).focus(); }
+            break;
+        // c
+        case 67:
+            if (evt.ctrlKey) {
+                copySelectedTree();
+                (evt.target as HTMLElement).focus();
+            }
+            break;
     }
-  }
+}
+
+export function getTargetName(target: any) {
+    if (target) {
+        if (CoreUtils.isString(target.identifier)) {
+            return target.identifier;
+        }
+
+        if (CoreUtils.isString(target.name)) {
+            return target.name;
+        }
+
+        if (CoreUtils.hasOwnProperty(target, strShimPrototype)) {
+            // Look like a prototype
+            return target.name || "";
+        }
+        
+        return ((target[strConstructor]) || {}).name || "";
+    }
+
+    return "";
+}
+
+export function getTargetKeys(target: any, excludedKeys: string[], includeFunctions: boolean) {
+    let keys: string[] = CoreUtils.objKeys(target);
+
+    if (!Util.isArray(target)) {
+        try {
+            if (Object[strGetOwnPropertyNames]) {
+                // We need to use this for built in objects such as Error which don't return their values via objKeys because they are not enumerable for example
+                let propKeys = Object[strGetOwnPropertyNames](target);
+                if (propKeys) {
+                    CoreUtils.arrForEach(propKeys, (key) => {
+                        if (keys.indexOf(key) === -1) {
+                            keys.push(key);
+                        }
+                    })
+                }
+            }
+        } catch (ex) {
+            // getOwnPropertyNames can fail in ES5, if the argument to this method is not an object (a primitive), 
+            // then it will cause a TypeError. In ES2015, a non-object argument will be coerced to an object.
+        }
+    }
+
+    let theKeys: string[] = [];
+    CoreUtils.arrForEach(keys, (key) => {
+        if (!includeFunctions && CoreUtils.isFunction(target[key])) {
+            return;
+        }
+
+        if (excludedKeys.indexOf(key) === -1) {
+            theKeys.push(key);
+        }
+    });
+
+    return theKeys;
+}
+
+export function formatLogElements(target: Object, tmLabel: string, key: string, level: number, textFilter: string, excludeKeys: string[], thingsReferenced?: any[], includeFunctions?:boolean): any {
+    let openState = false;
+    if (!level) {
+        level = 0; 
+    }
+
+    if (!thingsReferenced) {
+        thingsReferenced = [];
+    }
+
+    let isObj = CoreUtils.isObject(target) || Util.isError(target);
+    let isErr = target['baseType'] === 'ExceptionData' || Util.isError(target);
+
+    const children: HTMLElement[] = [];
+
+    function _openNode(currentLine: HTMLElement) {
+        openState = true;
+        CoreUtils.arrForEach(children, (child) => {
+            rootDiv.appendChild(child);
+        });
+
+        currentLine.className = 'obj-key expandable open'
+    }
+
+    function _collapseNode(currentLine: HTMLElement) {
+        // rootDiv.innerHTML = '';
+        CoreUtils.arrForEach(children, (child) => {
+            rootDiv.removeChild(child);
+        });
+        // rootDiv.appendChild(currentLine);
+        openState = false;
+        currentLine.className = 'obj-key expandable closed'
+    }
+
+    let matched = false;
+    let childOpened = false;
+    const keys = getTargetKeys(target, excludeKeys, includeFunctions);
+    if (keys.length === 0) { keys.push('<empty>'); }
+    if (level >= MAX_DEPTH) { keys.unshift('<maxdepth>'); }
+    for (const key of keys) {
+        if (excludeKeys.indexOf(key) !== -1) {
+            continue;
+        }
+        if (key === '<maxdepth>') {
+            const builder = document.createElement("div");
+            builder.className = 'empty';
+            builder.innerText = '<max allowed depth reached>';
+            children.push(builder);
+            break;
+        }
+        else if (key === '<empty>') {
+            const builder = document.createElement("div");
+            builder.className = 'empty';
+            builder.innerText = '<empty>';
+            children.push(builder);
+        }
+        else if (target[key] !== null && CoreUtils.arrIndexOf(thingsReferenced, target[key]) !== -1) {
+            const builder = document.createElement("div");
+            builder.className = 'empty';
+            builder.innerText = `<circular (${key}) - "${getTargetName(target[key])}">`;
+            children.push(builder);
+        }
+        else if (target[key] !== null && (CoreUtils.isObject(target[key]) || Util.isError(target[key]))) {
+            thingsReferenced.push(target);
+            let formatted = formatLogElements(target[key], null, key, level + 1, textFilter, excludeKeys, thingsReferenced, includeFunctions);
+            thingsReferenced.pop();
+            if (formatted.matched) {
+                childOpened = true;
+            }
+            if (formatted.isErr) {
+                isErr = true;
+            }
+
+            children.push(formatted.root);
+        } else {
+            const builder = document.createElement("div");
+            builder.setAttribute("tabindex", "0");
+            builder.onclick = (evt: MouseEvent) => {
+                evt.stopPropagation();
+            }
+            builder.ontouchend = (evt: TouchEvent) => {
+                evt.stopPropagation();
+            }
+            builder.onkeydown = (evt: KeyboardEvent) => {
+                evt.stopPropagation();
+                _navHandler(evt);
+            }
+            builder.onfocus = (evt: Event) => {
+                focusHandler(evt, target, level, excludeKeys, includeFunctions);
+            }
+
+            const outerSpan = document.createElement("span");
+            const keySpan = document.createElement("span");
+            keySpan.className = 'key';
+            if (_setInnerText(keySpan, `${key}: `, textFilter)) {
+                childOpened = true;
+            }
+
+            outerSpan.appendChild(keySpan);
+
+            const valueSpan = document.createElement("span");
+            if (CoreUtils.isFunction(target[key])) {
+                const fnStr = target[key].toString();
+                const fnHead = fnStr.match(/^([^{]+)/)[1];
+                valueSpan.textContent = `${fnHead}{...}`;
+            } else {
+                if (_setInnerText(valueSpan, `${target[key]}`, textFilter)) {
+                    childOpened = true;
+                }
+            }
+            valueSpan.className = `${typeof target[key]}`;
+            outerSpan.appendChild(valueSpan);
+            builder.appendChild(outerSpan);
+            children.push(builder);
+        }
+    }
+
+    const rootDiv = document.createElement("div");
+
+    let innerText = '';
+    let currentLine = document.createElement('span');
+    if (isObj || children.length) {
+        innerText = `${key ? key : 'obj'}: `;
+        if (Util.isArray(target)) {
+            innerText += `[${getTargetKeys(target, excludeKeys, includeFunctions).length}]`;
+        } else {
+            let targetName = getTargetName(target);
+            if (targetName) {
+                innerText += ` <"${targetName}"> `
+            }
+            innerText += `{${getTargetKeys(target, excludeKeys, includeFunctions).length}}`;
+        }
+
+        matched = _setInnerText(currentLine, innerText, textFilter);
+
+        if (tmLabel) {
+            const tmWrapper = document.createElement('span');
+            const tmDetails = document.createElement('span');
+            tmDetails.className = 'obj-time';
+            tmDetails.innerText = tmLabel;
+            tmWrapper.appendChild(tmDetails);
+            tmWrapper.appendChild(currentLine);
+
+            currentLine = tmWrapper;
+        }
+
+        currentLine.className = 'obj-key expandable closed'
+    } else {
+        innerText = `${key ? key : 'obj'}: ${target.toString()}`;
+        matched = _setInnerText(currentLine, innerText, textFilter);
+
+        currentLine.className = 'obj-key';
+    }
+
+    rootDiv.appendChild(currentLine);
+    rootDiv.setAttribute("tabindex", "0");
+
+    if (childOpened) {
+        // A child node matched so auto-expand
+        _openNode(currentLine);
+    }    
+    if (isObj) {
+        if (isErr) { rootDiv.className = 'exception' }
+        const openHandler = (evt: Event, forceState?: boolean) => {
+            evt.stopPropagation();
+            if (Util.getIEVersion()) {
+                focusHandler(evt, target, level, excludeKeys, includeFunctions);
+            }
+            if (forceState !== undefined && openState === forceState) {
+                return;
+            }
+            if (lastSelectedElement === rootDiv) {
+                if (openState) {
+                    _collapseNode(currentLine);
+                }
+                else {
+                    _openNode(currentLine);
+                }
+            }
+        }
+
+        rootDiv.onkeydown = (evt: KeyboardEvent) => {
+            _navHandler(evt, openHandler, openState);
+        }
+        rootDiv.onclick = (evt: MouseEvent) => {
+            openHandler(evt);
+        }
+        rootDiv.ontouchend = (evt: TouchEvent) => {
+            openHandler(evt);
+        }
+        rootDiv.onfocus = (evt: Event) => {
+            focusHandler(evt, target, level, excludeKeys, includeFunctions);
+        }
+    }
+
+    return {
+        root: rootDiv,
+        isErr: isErr,
+        matched: matched || childOpened
+    };
 }
