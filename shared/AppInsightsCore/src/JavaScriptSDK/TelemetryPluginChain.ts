@@ -6,7 +6,7 @@ import { ITelemetryItem } from '../JavaScriptSDK.Interfaces/ITelemetryItem';
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { IPlugin, ITelemetryPlugin } from '../JavaScriptSDK.Interfaces/ITelemetryPlugin';
-import { CoreUtils } from "./CoreUtils";
+import { CoreUtils, doPerf } from "./CoreUtils";
 import { _InternalLogMessage } from "./DiagnosticLogger";
 import { LoggingSeverity, _InternalMessageId } from '../JavaScriptSDK.Enums/LoggingEnums';
 
@@ -70,47 +70,51 @@ export class TelemetryPluginChain implements ITelemetryPluginChain {
                 itemCtx = defItemCtx;
             }
 
-            if (plugin && _hasProcessTelemetry) {
-                _self._hasRun = true;
-                try {
+            let identifier = plugin ? plugin.identifier : "TelemetryPluginChain";
 
-                    // Ensure that we keep the context in sync (for processNext()), just in case a plugin
-                    // doesn't calls processTelemetry() instead of itemContext.processNext() or some 
-                    // other form of error occurred
-                    itemCtx.setNext(_nextProxy);
-                    if (_hasSetNext) {
-                        // Backward compatibility setting the next plugin on the instance
-                        plugin.setNextPlugin(_nextProxy);
+            doPerf(itemCtx ? itemCtx.core() : null, () => identifier + ":processTelemetry", () => {
+                if (plugin && _hasProcessTelemetry) {
+                    _self._hasRun = true;
+                    try {
+    
+                        // Ensure that we keep the context in sync (for processNext()), just in case a plugin
+                        // doesn't calls processTelemetry() instead of itemContext.processNext() or some 
+                        // other form of error occurred
+                        itemCtx.setNext(_nextProxy);
+                        if (_hasSetNext) {
+                            // Backward compatibility setting the next plugin on the instance
+                            plugin.setNextPlugin(_nextProxy);
+                        }
+    
+                        // Set a flag on the next plugin so we know if it was attempted to be executed
+                        _nextProxy && ((_nextProxy as TelemetryPluginChain)._hasRun = false);
+    
+                        plugin.processTelemetry(env, itemCtx);
+                    } catch (error) {
+                        let hasRun = _nextProxy && (_nextProxy as TelemetryPluginChain)._hasRun;
+                        if (!_nextProxy || !hasRun) {
+                            // Either we have no next plugin or the current one did not attempt to call the next plugin
+                            // Which means the current one is the root of the failure so log/report this failure
+                            itemCtx.diagLog().throwInternal(
+                                LoggingSeverity.CRITICAL,
+                                _InternalMessageId.PluginException,
+                                "Plugin [" + plugin.identifier + "] failed during processTelemetry - " + error);
+                        }
+    
+                        if (_nextProxy && !hasRun) {
+                            // As part of the failure the current plugin did not attempt to call the next plugin in the cahin
+                            // So rather than leave the pipeline dead in the water we call the next plugin
+                            _nextProxy.processTelemetry(env, itemCtx);
+                        }
                     }
-
-                    // Set a flag on the next plugin so we know if it was attempted to be executed
-                    _nextProxy && ((_nextProxy as TelemetryPluginChain)._hasRun = false);
-
-                    plugin.processTelemetry(env, itemCtx);
-                } catch (error) {
-                    let hasRun = _nextProxy && (_nextProxy as TelemetryPluginChain)._hasRun;
-                    if (!_nextProxy || !hasRun) {
-                        // Either we have no next plugin or the current one did not attempt to call the next plugin
-                        // Which means the current one is the root of the failure so log/report this failure
-                        itemCtx.diagLog().throwInternal(
-                            LoggingSeverity.CRITICAL,
-                            _InternalMessageId.PluginException,
-                            "Plugin [" + plugin.identifier + "] failed during processTelemetry - " + error);
-                    }
-
-                    if (_nextProxy && !hasRun) {
-                        // As part of the failure the current plugin did not attempt to call the next plugin in the cahin
-                        // So rather than leave the pipeline dead in the water we call the next plugin
-                        _nextProxy.processTelemetry(env, itemCtx);
-                    }
+                } else if (_nextProxy) {
+                    _self._hasRun = true;
+    
+                    // The underlying plugin is either not defined or does not have a processTelemetry implementation
+                    // so we still want the next plugin to be executed.
+                    _nextProxy.processTelemetry(env, itemCtx);
                 }
-            } else if (_nextProxy) {
-                _self._hasRun = true;
-
-                // The underlying plugin is either not defined or does not have a processTelemetry implementation
-                // so we still want the next plugin to be executed.
-                _nextProxy.processTelemetry(env, itemCtx);
-            }
+            }, () => ({ item: env }), !((env as any).sync));
         };
     }
 }

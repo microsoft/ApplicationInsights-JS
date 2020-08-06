@@ -8,7 +8,7 @@ import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { EventsDiscardedReason } from "../JavaScriptSDK.Enums/EventsDiscardedReason";
 import { NotificationManager } from "./NotificationManager";
-import { CoreUtils } from "./CoreUtils";
+import { CoreUtils, doPerf } from "./CoreUtils";
 import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { _InternalLogMessage, DiagnosticLogger } from "./DiagnosticLogger";
@@ -23,20 +23,22 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
         dynamicProto(AppInsightsCore, this, (_self, _base) => {
 
             _self.initialize = (config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void => {
-                _base.initialize(config, extensions, logger || new DiagnosticLogger(config), notificationManager || new NotificationManager());
+                _base.initialize(config, extensions, logger || new DiagnosticLogger(config), notificationManager || new NotificationManager(config));
             };
         
             _self.track = (telemetryItem: ITelemetryItem) => {
-                if (telemetryItem === null) {
-                    _notifyInvalidEvent(telemetryItem);
-                    // throw error
-                    throw Error("Invalid telemetry item");
-                }
-                
-                // do basic validation before sending it through the pipeline
-                _validateTelemetryItem(telemetryItem);
-        
-                _base.track(telemetryItem);
+                doPerf(_self.getPerfMgr(), () => "AppInsightsCore:track", () => {
+                    if (telemetryItem === null) {
+                        _notifyInvalidEvent(telemetryItem);
+                        // throw error
+                        throw Error("Invalid telemetry item");
+                    }
+                    
+                    // do basic validation before sending it through the pipeline
+                    _validateTelemetryItem(telemetryItem);
+            
+                    _base.track(telemetryItem);
+                }, () => ({ item: telemetryItem }), !((telemetryItem as any).sync));
             };
         
             /**

@@ -3,6 +3,7 @@
 "use strict";
 
 import { ITelemetryItem } from "./ITelemetryItem";
+import { IPerfEvent } from "./IPerfEvent";
 
 /**
  * An interface used for the notification listener.
@@ -28,4 +29,11 @@ export interface INotificationListener {
      * @param {boolean} isAsync   - A flag which identifies whether the requests are being sent in an async or sync manner.
      */
     eventsSendRequest?: (sendReason: number, isAsync?: boolean) => void;
+
+    /**
+     * [Optional] This event is sent if you have enabled perf events, they are primarily used to track internal performance testing and debugging
+     * the event can be displayed via the debug plugin extension.
+     * @param perfEvent 
+     */
+    perfEvent?: (perfEvent: IPerfEvent) => void;
 }

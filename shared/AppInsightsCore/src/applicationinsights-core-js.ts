@@ -16,7 +16,7 @@ export { SendRequestReason } from "./JavaScriptSDK.Enums/SendRequestReason";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseCore } from './JavaScriptSDK/BaseCore';
 export { BaseTelemetryPlugin } from './JavaScriptSDK/BaseTelemetryPlugin';
-export { CoreUtils, EventHelper, Undefined, normalizeJsName } from "./JavaScriptSDK/CoreUtils";
+export { CoreUtils, EventHelper, Undefined, normalizeJsName, doPerf } from "./JavaScriptSDK/CoreUtils";
 export { 
     getGlobal, getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, 
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
@@ -24,6 +24,9 @@ export {
 } from "./JavaScriptSDK/EnvUtils";
 export { NotificationManager } from "./JavaScriptSDK/NotificationManager";
 export { INotificationManager } from "./JavaScriptSDK.Interfaces/INotificationManager";
+export { IPerfEvent } from './JavaScriptSDK.Interfaces/IPerfEvent';
+export { IPerfManager, IPerfManagerProvider } from './JavaScriptSDK.Interfaces/IPerfManager';
+export { PerfEvent, PerfManager } from './JavaScriptSDK/PerfManager';
 export { DiagnosticLogger, _InternalLogMessage } from './JavaScriptSDK/DiagnosticLogger';
 export { ProcessTelemetryContext } from './JavaScriptSDK/ProcessTelemetryContext';
 export { initializePlugins, sortPlugins } from "./JavaScriptSDK/TelemetryHelpers";
