@@ -1,5 +1,26 @@
 # Releases
 
+## 2.5.7 (August 7th, 2020)
+
+### Changelog
+
+- #1335 Add Performance / Testing support
+  - Added IPerfManager and IPerfEvent interfaces to allow performance review / monitoring of the internal operations 
+- #1334 [BUG] Getting XMLHttpRequest and XDomainRequest is not defined errors for gatsby environment
+- #1333 [BUG] DebugPlugin various updates
+- #1331 AppInsightsCore: Enable setting NotificationManager during initialization
+  - #1076 Refactor code to provide better tree shaking and minification of generated code
+  - Updated Sender and support classes to move all private properties and methods into constructor closure
+- #1328 applicationinsights-debugplugin-js: fixed various issues and updating to beta-2
+- #1323 Add Retry as a SendRequestReason
+- #1324[BUG] Type 'ReactNativePlugin' is not assignable to type 'ITelemetryPlugin'
+  - Refactored the Plugin to extend BaseTelemetryPlugin (part of the #1076 work)
+- #1321 [BUG] @microsoft/applicationinsights-web fails to initialize with latest version
+- #1319 fix incorrect references to configuration parameter names
+- #1316 Update dependency version of DynamicProto
+  - Move all private properties and methods into constructor closure
+  - #1316 Update dependency version of DynamicProto
+
 ## 2.5.6 (Jul 6th, 2020)
 
 ### New (Beta) extension applicationinsights-debugplugin-js
