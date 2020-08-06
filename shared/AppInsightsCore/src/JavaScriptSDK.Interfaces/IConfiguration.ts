@@ -92,7 +92,7 @@ export interface IConfiguration {
     enablePerfMgr?: boolean;
 
     /**
-     * [Optional] Fire every single performance event not just the top level root performance event. Defaults to
+     * [Optional] Fire every single performance event not just the top level root performance event. Defaults to false.
      */
     perfEvtsSendAll?: boolean;
 }
