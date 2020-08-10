@@ -227,7 +227,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 if(!_validateInstrumentationKey(config)) {
                     _self.diagLog().throwInternal(
                         LoggingSeverity.CRITICAL,
-                        _InternalMessageId.InvalidInstrumentationKey, "Invalid Instrumentation key provided.");
+                        _InternalMessageId.InvalidInstrumentationKey, "Invalid Instrumentation key "+config.instrumentationKey);
                 }
 
                 if (!_self._senderConfig.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
@@ -771,18 +771,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
             /**
              * Validate UUID Format
-             * Specs taken from https://tools.ietf.org/html/rfc4122
+             * Specs taken from https://tools.ietf.org/html/rfc4122 and breeze repo 
              */
             function _validateInstrumentationKey(config: IConfiguration & IConfig) :boolean {
                 const disableIKeyValidationFlag = CoreUtils.isNullOrUndefined(config.disableInstrumentaionKeyValidation) ? false : config.disableInstrumentaionKeyValidation;
                 if(disableIKeyValidationFlag) {
                     return true;
                 }
-                const UUID_Regex = '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$';
-                const UUID_Regex_noDash = '^[0-9a-f]{8}[0-9a-f]{4}[1-5][0-9a-f]{3}[89ab][0-9a-f]{3}[0-9a-f]{12}$';
+                const UUID_Regex = '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
                 const regexp = new RegExp(UUID_Regex);
-                const regexp_noDash = new RegExp(UUID_Regex_noDash);
-                return regexp.test(config.instrumentationKey) || regexp_noDash.test(config.instrumentationKey);
+                return regexp.test(config.instrumentationKey);
             }            
         
         });

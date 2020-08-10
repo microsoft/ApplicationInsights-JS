@@ -996,8 +996,12 @@ export class SenderTests extends TestClass {
                     }, appInsightsCore, []
                 );
 
-                QUnit.assert.equal(false,logInternalSpy.calledOnce, 'valid Ikey test-2');
-                QUnit.assert.equal(0, appInsightsCore.logger.queue.length, "POST: No messageId logged");
+                QUnit.assert.ok(logInternalSpy.calledOnce, 'iKey Validation check -throwInternal called');
+                QUnit.assert.equal(messageId, logInternalSpy.args[0][1].messageId, "Correct message logged");
+                QUnit.assert.ok(logInternalSpy.args[0][1].message.indexOf('Invalid Instrumentation key') !== -1, "Correct message logged");
+                QUnit.assert.equal(1, appInsightsCore.logger.queue.length, "POST: Correct messageId logged");
+                QUnit.assert.ok(appInsightsCore.logger.queue[0].message.indexOf('Invalid Instrumentation key') !== -1, "Correct message logged");
+                QUnit.assert.equal(messageId, appInsightsCore.logger.queue[0].messageId, "Correct message logged");
 
                 appInsightsCore = new AppInsightsCore();
                 appInsightsCore.logger = new DiagnosticLogger();
