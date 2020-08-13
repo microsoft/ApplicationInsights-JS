@@ -148,8 +148,8 @@ export class PerfManager implements IPerfManager  {
 
         dynamicProto(PerfManager, this, (_self) => {
 
-            _self.create = (src: string, payloadDetails?: () => any, isAsync?: boolean): IPerfEvent => {
-                // TODO (newylie): at some point we will want to add additional configuration to "select" which events to instrument
+            _self.create = (src: string, payloadDetails?: () => any, isAsync?: boolean): IPerfEvent | null | undefined => {
+                // TODO (@MSNev): at some point we will want to add additional configuration to "select" which events to instrument
                 // for now this is just a simple do everything.
                 return new PerfEvent(src, payloadDetails, isAsync);
             };
@@ -157,10 +157,10 @@ export class PerfManager implements IPerfManager  {
             _self.fire = (perfEvent: IPerfEvent) => {
                 if (perfEvent) {
                     perfEvent.complete();
-                }
 
-                if (manager) {
-                    manager.perfEvent(perfEvent);
+                    if (manager) {
+                        manager.perfEvent(perfEvent);
+                    }
                 }
             };
 
@@ -177,11 +177,22 @@ export class PerfManager implements IPerfManager  {
         });
     }
 
-    public create(src: string, payload?: any, isAsync?: boolean): IPerfEvent {
+    /**
+     * Create a new event and start timing, the manager may return null/undefined to indicate that it does not 
+     * want to monitor this source event.
+     * @param src The source name of the event 
+     * @param payloadDetails - An optional callback function to fetch the payload details for the event.
+     * @param isAsync - Is the event occurring from a async event
+     */
+    public create(src: string, payload?: any, isAsync?: boolean): IPerfEvent | null | undefined {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
 
+    /**
+     * Complete the perfEvent and fire any notifications.
+     * @param perfEvent Fire the event which will also complete the passed event
+     */
     public fire(perfEvent: IPerfEvent): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
