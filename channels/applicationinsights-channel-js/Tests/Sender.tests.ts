@@ -3,7 +3,7 @@ import { Sender } from "../src/Sender";
 import { Offline } from '../src/Offline';
 import { EnvelopeCreator } from '../src/EnvelopeCreator';
 import { Exception, CtxTagKeys, Util } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _InternalMessageId, LoggingSeverity } from "@microsoft/applicationinsights-core-js";
 
 export class SenderTests extends TestClass {
     private _sender: Sender;
@@ -950,6 +950,136 @@ export class SenderTests extends TestClass {
                 QUnit.assert.equal(1, sendNotifications.length);
                 QUnit.assert.equal(SendRequestReason.ManualFlush, sendNotifications[0].sendReason);
             }
+        });
+
+        this.testCase({
+            name: "IKey Validation Test",
+            test: () => {
+                let appInsightsCore = new AppInsightsCore();
+                appInsightsCore.logger = new DiagnosticLogger();
+                let messageId: _InternalMessageId = _InternalMessageId.InvalidInstrumentationKey;
+                let logInternalSpy = this.sandbox.spy(appInsightsCore.logger, 'logInternalMessage');
+                this._sender.initialize(
+                    {
+                        instrumentationKey: '1aa11111-bbbb-1ccc-8ddd-eeeeffff3333',
+                        maxBatchInterval: 123,
+                        endpointUrl: 'https://example.com',
+                        maxBatchSizeInBytes: 654,
+                        extensionConfig: {
+                            [this._sender.identifier]: {
+                                maxBatchSizeInBytes: 456
+                            }
+                        }
+
+                    }, appInsightsCore, []
+                );
+
+                QUnit.assert.equal(false,logInternalSpy.calledOnce, 'valid Ikey test-1');
+                QUnit.assert.equal(0, appInsightsCore.logger.queue.length, "POST: No messageId logged");
+
+                appInsightsCore = new AppInsightsCore();
+                appInsightsCore.logger = new DiagnosticLogger();
+                messageId = _InternalMessageId.InvalidInstrumentationKey;
+                logInternalSpy = this.sandbox.spy(appInsightsCore.logger, 'logInternalMessage');
+                this._sender.initialize(
+                    {
+                        instrumentationKey: '1aa11111bbbb1ccc8dddeeeeffff3333',
+                        maxBatchInterval: 123,
+                        endpointUrl: 'https://example.com',
+                        maxBatchSizeInBytes: 654,
+                        extensionConfig: {
+                            [this._sender.identifier]: {
+                                maxBatchSizeInBytes: 456
+                            }
+                        }
+
+                    }, appInsightsCore, []
+                );
+
+                QUnit.assert.ok(logInternalSpy.calledOnce, 'iKey Validation check -throwInternal called');
+                QUnit.assert.equal(messageId, logInternalSpy.args[0][1].messageId, "Correct message logged");
+                QUnit.assert.ok(logInternalSpy.args[0][1].message.indexOf('Invalid Instrumentation key') !== -1, "Correct message logged");
+                QUnit.assert.equal(1, appInsightsCore.logger.queue.length, "POST: Correct messageId logged");
+                QUnit.assert.ok(appInsightsCore.logger.queue[0].message.indexOf('Invalid Instrumentation key') !== -1, "Correct message logged");
+                QUnit.assert.equal(messageId, appInsightsCore.logger.queue[0].messageId, "Correct message logged");
+
+                appInsightsCore = new AppInsightsCore();
+                appInsightsCore.logger = new DiagnosticLogger();
+                messageId = _InternalMessageId.InvalidInstrumentationKey;
+                logInternalSpy = this.sandbox.spy(appInsightsCore.logger, 'logInternalMessage');
+                this._sender.initialize(
+                    {
+                        instrumentationKey: 'abc',
+                        maxBatchInterval: 123,
+                        endpointUrl: 'https://example.com',
+                        maxBatchSizeInBytes: 654,
+                        extensionConfig: {
+                            [this._sender.identifier]: {
+                                maxBatchSizeInBytes: 456
+                            }
+                        }
+
+                    }, appInsightsCore, []
+                );
+
+                QUnit.assert.ok(logInternalSpy.calledOnce, 'iKey Validation check -throwInternal called');
+                QUnit.assert.equal(messageId, logInternalSpy.args[0][1].messageId, "Correct message logged");
+                QUnit.assert.ok(logInternalSpy.args[0][1].message.indexOf('Invalid Instrumentation key') !== -1, "Correct message logged");
+                QUnit.assert.equal(1, appInsightsCore.logger.queue.length, "POST: Correct messageId logged");
+                QUnit.assert.ok(appInsightsCore.logger.queue[0].message.indexOf('Invalid Instrumentation key') !== -1, "Correct message logged");
+                QUnit.assert.equal(messageId, appInsightsCore.logger.queue[0].messageId, "Correct message logged");
+
+                appInsightsCore = new AppInsightsCore();
+                appInsightsCore.logger = new DiagnosticLogger();
+                messageId = _InternalMessageId.InvalidInstrumentationKey;
+                logInternalSpy = this.sandbox.spy(appInsightsCore.logger, 'logInternalMessage');
+                this._sender.initialize(
+                    {
+                        instrumentationKey: '',
+                        maxBatchInterval: 123,
+                        endpointUrl: 'https://example.com',
+                        maxBatchSizeInBytes: 654,
+                        extensionConfig: {
+                            [this._sender.identifier]: {
+                                maxBatchSizeInBytes: 456
+                            }
+                        }
+
+                    }, appInsightsCore, []
+                );
+
+                QUnit.assert.ok(logInternalSpy.calledOnce, 'iKey Validation check -throwInternal called');
+                QUnit.assert.equal(messageId, logInternalSpy.args[0][1].messageId, "Correct message logged");
+                QUnit.assert.ok(logInternalSpy.args[0][1].message.indexOf('Invalid Instrumentation key') !== -1, "Correct message logged");
+                QUnit.assert.equal(1, appInsightsCore.logger.queue.length, "POST: Correct messageId logged");
+                QUnit.assert.ok(appInsightsCore.logger.queue[0].message.indexOf('Invalid Instrumentation key') !== -1, "Correct message logged");
+                QUnit.assert.equal(messageId, appInsightsCore.logger.queue[0].messageId, "Correct message logged");
+
+                appInsightsCore = new AppInsightsCore();
+                appInsightsCore.logger = new DiagnosticLogger();
+                messageId = _InternalMessageId.InvalidInstrumentationKey;
+                logInternalSpy = this.sandbox.spy(appInsightsCore.logger, 'logInternalMessage');
+                this._sender.initialize(
+                    {
+                        instrumentationKey: 'abc',
+                        maxBatchInterval: 123,
+                        endpointUrl: 'https://example.com',
+                        maxBatchSizeInBytes: 654,
+                        extensionConfig: {
+                            [this._sender.identifier]: {
+                                maxBatchSizeInBytes: 456
+                            }
+                        },
+                        disableInstrumentaionKeyValidation: true
+
+                    }, appInsightsCore, []
+                );
+
+                QUnit.assert.equal(false,logInternalSpy.calledOnce, 'disableIKeyValidation flag set to yes');
+                QUnit.assert.equal(0, appInsightsCore.logger.queue.length, "POST: No messageId logged");
+            }
+
+            
         });
 
     }

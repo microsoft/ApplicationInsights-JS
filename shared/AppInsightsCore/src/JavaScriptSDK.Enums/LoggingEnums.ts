@@ -94,6 +94,7 @@ export const _InternalMessageId = {
     SendBrowserInfoOnUserInit: 72,
     PluginException: 73,
     NotificationException: 74,
-    SnippetScriptLoadFailure: 99
+    SnippetScriptLoadFailure: 99,
+    InvalidInstrumentationKey:100
 };
 export type _InternalMessageId = number | typeof _InternalMessageId;
