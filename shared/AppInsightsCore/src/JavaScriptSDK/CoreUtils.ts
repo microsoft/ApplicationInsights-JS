@@ -2,11 +2,7 @@
 // Licensed under the MIT License.
 "use strict";
 import { objCreateFn, strShimObject, strShimUndefined, strShimFunction, strShimPrototype } from "@microsoft/applicationinsights-shims";
-import { getWindow, getDocument, getGlobalInst, getCrypto }  from './EnvUtils';
-import { ITelemetryItem } from '../JavaScriptSDK.Interfaces/ITelemetryItem';
-import { IPerfEvent } from '../JavaScriptSDK.Interfaces/IPerfEvent';
-import { IPerfManager, IPerfManagerProvider } from '../JavaScriptSDK.Interfaces/IPerfManager';
-import { PerfEvent } from '../JavaScriptSDK/PerfManager';
+import { getWindow, getDocument, getCrypto, getPerformance }  from './EnvUtils';
 
 // Added to help with minfication
 export const Undefined = strShimUndefined;
@@ -443,6 +439,32 @@ export class CoreUtils {
 
         return result;
     }
+
+    /**
+     * Return the current time via the Date now() function (if available) and falls back to (new Date()).getTime() if now() is unavailable (IE8 or less)
+     * https://caniuse.com/#search=Date.now
+     */
+    public static dateNow() {
+        let dt = Date;
+        if (dt.now) {
+            return dt.now();
+        }
+
+        return new dt().getTime();
+    }
+
+    /**
+     * Return the current value of the Performance Api now() function (if available) and fallback to CoreUtils.dateNow() if it is unavailable (IE9 or less)
+     * https://caniuse.com/#search=performance.now
+     */
+    public static perfNow() {
+        let perf = getPerformance();
+        if (perf && perf.now) {
+            return perf.now();
+        }
+
+        return CoreUtils.dateNow();
+    }
 }
 
 const GuidRegex = /[xy]/g;
@@ -483,64 +505,4 @@ export class EventHelper {
      * @return {boolean} - true if the handler was successfully added
      */
     public static DetachEvent: (obj: any, eventNameWithoutOn: string, handlerRef: any) => void = _detachEvent;
-}
-
-const doPerfActiveKey = "CoreUtils.doPerf";
-
-/**
- * Helper function to wrap a function with a perf event
- * @param mgrSource - The Performance Manager or a Performance provider source (may be null)
- * @param getSource - The callback to create the source name for the event (if perf monitoring is enabled)
- * @param func - The function to call and measure
- * @param details - A function to return the payload details
- * @param isAsync - Is the event / function being call asynchronously or synchronously 
- */
-export function doPerf<T>(mgrSource: IPerfManagerProvider | IPerfManager, getSource: () => string, func: (perfEvt?: IPerfEvent) => T, details?: () => any, isAsync?: boolean) {
-    if (mgrSource) {
-        let perfMgr: IPerfManager = mgrSource as IPerfManager;
-        if (perfMgr && CoreUtils.isFunction(perfMgr["getPerfMgr"])) {
-            // Looks like a perf manager provider object
-            perfMgr = perfMgr["getPerfMgr"]()
-        }
-        
-        if (perfMgr) {
-            let perfEvt: IPerfEvent;
-            let currentActive: IPerfEvent = perfMgr.getCtx(doPerfActiveKey);
-            try {
-                perfEvt = perfMgr.create(getSource(), details, isAsync);
-                if (perfEvt) {
-                    if (currentActive && perfEvt.setCtx) {
-                        perfEvt.setCtx(PerfEvent.ParentContextKey, currentActive);
-                        if (currentActive.getCtx && currentActive.setCtx) {
-                            let children: IPerfEvent[] = currentActive.getCtx(PerfEvent.ChildrenContextKey);
-                            if (!children) {
-                                children = [];
-                                currentActive.setCtx(PerfEvent.ChildrenContextKey, children);
-                            }
-    
-                            children.push(perfEvt);
-                        }
-                    }
-    
-                    // Set this event as the active event now
-                    perfMgr.setCtx(doPerfActiveKey, perfEvt);
-                    return func(perfEvt);
-                }
-            } catch (ex) {
-                if (perfEvt && perfEvt.setCtx) {
-                    perfEvt.setCtx("exception", ex);
-                }
-            } finally {
-                // fire the perf event
-                if (perfEvt) {
-                    perfMgr.fire(perfEvt);
-                }
-                
-                // Reset the active event to the previous value
-                perfMgr.setCtx(doPerfActiveKey, currentActive);
-            }
-        }
-    }
-
-    return func();
 }

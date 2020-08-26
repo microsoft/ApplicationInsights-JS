@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Util } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, hasJSON, getJSON } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, hasJSON, getJSON, CoreUtils } from '@microsoft/applicationinsights-core-js';
 
 /**
  * Used to track page visit durations
@@ -91,7 +91,7 @@ export class PageVisitTimeManager {
             if (Util.canUseSessionStorage()) {
 
                 // Define end time of page's visit
-                const pageVisitEndTime = Date.now();
+                const pageVisitEndTime = CoreUtils.dateNow();
 
                 // Try to retrieve  page name and start time from session storage
                 const pageVisitDataJsonStr = Util.getSessionStorage(this._logger, this.prevPageVisitDataKeyName);
@@ -127,7 +127,7 @@ export class PageVisitData {
     public pageVisitTime: number;
 
     constructor(pageName: string, pageUrl: string) {
-        this.pageVisitStartTime = Date.now();
+        this.pageVisitStartTime = CoreUtils.dateNow();
         this.pageName = pageName;
         this.pageUrl = pageUrl;
     }
