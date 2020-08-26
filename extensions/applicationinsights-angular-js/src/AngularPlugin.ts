@@ -13,13 +13,15 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { IAngularExtensionConfig } from './Interfaces/IAngularExtensionConfig';
 
+const NAVIGATIONEND = "NavigationEnd";
+
 export default class AngularPlugin extends BaseTelemetryPlugin {
     public priority = 186;
     public identifier = 'AngularPlugin';
 
     private _analyticsPlugin: IAppInsights;
 
-    initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) {
+    initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {
         super.initialize(config, core, extensions, pluginChain);
         let ctx = this._getTelCtx();
         let extConfig = ctx.getExtCfg<IAngularExtensionConfig>(this.identifier, { router: null });
@@ -30,19 +32,24 @@ export default class AngularPlugin extends BaseTelemetryPlugin {
             }
         });
         if (extConfig.router) {
+            let isPageInitialLoad = true;
+            if (isPageInitialLoad) {
+                const pageViewTelemetry: IPageViewTelemetry = {
+                    uri: extConfig.router.url
+                };
+                this.trackPageView(pageViewTelemetry);
+            }
             extConfig.router.events.subscribe(event => {
-                if (event.constructor.name === "NavigationEnd") {
-                    // Timeout to ensure any changes to the DOM made by route changes get included in pageView telemetry
-                    setTimeout(() => {
-                        const pageViewTelemetry: IPageViewTelemetry = { uri: extConfig.router.url };
-                        this.trackPageView(pageViewTelemetry);
-                    }, 500);
+                if (event.constructor.name === NAVIGATIONEND) {
+                    // for page initial load, do not call trackPageView twice
+                    if (isPageInitialLoad) {
+                        isPageInitialLoad = false;
+                        return;
+                    }
+                    const pageViewTelemetry: IPageViewTelemetry = { uri: extConfig.router.url };
+                    this.trackPageView(pageViewTelemetry);
                 }
             });
-            const pageViewTelemetry: IPageViewTelemetry = {
-                uri: extConfig.router.url
-            };
-            this.trackPageView(pageViewTelemetry);
         }
     }
 

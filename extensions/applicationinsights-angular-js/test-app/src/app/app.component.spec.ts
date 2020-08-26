@@ -86,29 +86,26 @@ describe('Router: App', () => {
 
     // trackPageView is called on plugin intialize
     // default route is '/'
-    expect(angularPluginTrackPageViewSpy).toHaveBeenCalled();
+    expect(angularPluginTrackPageViewSpy).toHaveBeenCalledTimes(1);
     expect(angularPluginTrackPageViewSpy).toHaveBeenCalledWith({ uri: '/' } as IPageViewTelemetry);
 
-    // Emulate navigation to different URL-addressed pages
+    // Simulate navigation to different URL-addressed pages - tick is used to simulate the asynchronous passage of time for the timers in the fakeAsync zone.
+    // This equals to .then() and is more clear
+    // navigate to / - first time router navigates, this is needed here to simulate user opens up browser, this call simulates the router behavior when core gets initialized
+    router.navigate(['/']);
+    tick(500);
     // navigate to /search
-    router.navigate(['search'])
-    .then(() => {
-      tick(500);
-      expect(angularPluginTrackPageViewSpy).toHaveBeenCalledTimes(2);
-      expect(angularPluginTrackPageViewSpy).toHaveBeenCalledWith({ uri: '/search' } as IPageViewTelemetry);
-    })
+    router.navigate(['search']);
+    tick(500);
+    expect(angularPluginTrackPageViewSpy).toHaveBeenCalledTimes(2);
+    expect(angularPluginTrackPageViewSpy).toHaveBeenCalledWith({ uri: '/search' } as IPageViewTelemetry);
     // navigate to /home
-    .then(() => {
-      router.navigate(['home'])
-      .then(() => {
-        tick(500);
-        expect(angularPluginTrackPageViewSpy).toHaveBeenCalledTimes(3);
-        expect(angularPluginTrackPageViewSpy).toHaveBeenCalledWith({ uri: '/home' } as IPageViewTelemetry);
-      });
-    });
+    router.navigate(['home']);
+    tick(500);
+    expect(angularPluginTrackPageViewSpy).toHaveBeenCalledTimes(3);
+    expect(angularPluginTrackPageViewSpy).toHaveBeenCalledWith({ uri: '/home' } as IPageViewTelemetry);
   }));
 });
-
 
 class ChannelPlugin implements IPlugin {
   public isFlushInvoked = false;
