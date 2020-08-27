@@ -67,6 +67,7 @@ const browserRollupConfigFactory = (isProduction, libVersion = '2') => {
   return browserRollupConfig;
 };
 
+// This it to generate commn js file and common js min file for SharePoint and similar scenarios 
 const browserCJSRollupConfigFactory = (isProduction, libVersion = '2') => {
   const browserRollupConfig = {
     input: "dist-esm/Init.js",
