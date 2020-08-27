@@ -545,3 +545,5 @@ This table does not attempt to include ALL of the ES3 unsuported features, just 
 | ```Array.prototype.reduce(...)``` | Use the provided helper. | ```CoreUtils.arrReduce<T,R>(arr: T[], callbackfn: (previousValue: T|R, currentValue?: T, currentIndex?: number, array?: T[]) => R, initialValue?: R): R``` |
 | ```Array.prototype.reduceRight(...)``` | Not supported and no provided workaround/solution. | N/A |
 | ```Date.prototype.toISOString()``` | Use the provided helper | ```CoreUtils.toISOString(date: Date)``` |
+| ```Date.now()``` | Use the provided helper | ```CoreUtils.dateNow()``` |
+| ```performance.now()``` | Use the provided helper for the Performance Api now function. | ```CoreUtils.perfNow()``` |

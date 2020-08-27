@@ -106,7 +106,7 @@ export const defaultEs3Tokens:IEs3Keyword[] = [
             "} " +
             "return cpy; "+
             "})(%value%)"
-    }
+        }
 ];
 
 export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
@@ -197,6 +197,14 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
         ignoreFuncMatch: [ 
             "Util.trim",                            // Make sure this isn't a reference to Util.trim()
             "DataSanitizer.trim"                    // Make sure this isn't a reference to Util.trim()
+        ]
+    },
+    {
+        funcNames: [ /([\w0-9\$]*)(\(\))?\.now[\s]*\(\)/g ],
+        errorMsg: "[%funcName%] is not supported in an ES3 environment, use CoreUtils.dateNow() or CoreUtils.perfNow()",
+        ignoreFuncMatch: [
+            "perf.now()",                           // This assume a pre-check that now actually exists
+            "dt.now()"                              // This assume a pre-check that now actually exists
         ]
     }
 ];
