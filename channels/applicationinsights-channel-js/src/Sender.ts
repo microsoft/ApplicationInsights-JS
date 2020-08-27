@@ -658,7 +658,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
         
                 // TODO: Log the backoff time like the C# version does.
-                const retryAfterTimeSpan = Date.now() + (delayInSeconds * 1000);
+                const retryAfterTimeSpan = CoreUtils.dateNow() + (delayInSeconds * 1000);
         
                 // TODO: Log the retry at time like the C# version does.
                 _retryAt = retryAfterTimeSpan;
@@ -669,7 +669,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              */
             function _setupTimer() {
                 if (!_timeoutHandle) {
-                    const retryInterval = _retryAt ? Math.max(0, _retryAt - Date.now()) : 0;
+                    const retryInterval = _retryAt ? Math.max(0, _retryAt - CoreUtils.dateNow()) : 0;
                     const timerValue = Math.max(_self._senderConfig.maxBatchInterval(), retryInterval);
         
                     _timeoutHandle = setTimeout(() => {
