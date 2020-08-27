@@ -256,6 +256,10 @@ Function GetReleaseFiles
     AddReleaseFile $files $jsSdkSrcDir "ai.$version.js.map"
     AddReleaseFile $files $jsSdkSrcDir "ai.$version.min.js"
     AddReleaseFile $files $jsSdkSrcDir "ai.$version.min.js.map"
+    AddReleaseFile $files $jsSdkSrcDir "ai.$version.cjs.js"
+    AddReleaseFile $files $jsSdkSrcDir "ai.$version.cjs.js.map"
+    AddReleaseFile $files $jsSdkSrcDir "ai.$version.cjs.min.js"
+    AddReleaseFile $files $jsSdkSrcDir "ai.$version.cjs.min.js.map"
 
     return $files
 }
