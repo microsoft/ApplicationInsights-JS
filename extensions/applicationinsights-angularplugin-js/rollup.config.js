@@ -5,7 +5,7 @@ import commonjs from "rollup-plugin-commonjs";
 import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
 
 const version = require("./package.json").version;
-const outputName = "applicationinsights-angular-js";
+const outputName = "applicationinsights-angularplugin-js";
 const banner = [
   "/*!",
   ` * Application Insights JavaScript SDK - Angular Plugin, ${version}`,
@@ -33,7 +33,7 @@ const browserRollupConfigFactory = isProduction => {
           "// Licensed under the MIT License.": ""
         }
       }),
-      importCheck({ exclude: [ "applicationinsights-angular-js" ] }),
+      importCheck({ exclude: [ "applicationinsights-angularplugin-js" ] }),
       nodeResolve({
         browser: false,
         preferBuiltins: false
@@ -87,7 +87,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
           "// Licensed under the MIT License.": ""
         }
       }),
-      importCheck({ exclude: [ "applicationinsights-angular-js" ] }),
+      importCheck({ exclude: [ "applicationinsights-angularplugin-js" ] }),
       nodeResolve({ preferBuiltins: true }),
       commonjs({
         include: 'node_modules/**'
