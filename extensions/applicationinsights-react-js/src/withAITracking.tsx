@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { IMetricTelemetry } from '@microsoft/applicationinsights-common';
+import { CoreUtils } from '@microsoft/applicationinsights-core-js';
 import * as React from 'react';
 import ReactPlugin from './ReactPlugin';
 
@@ -38,7 +39,7 @@ export default function withAITracking<P>(reactPlugin: ReactPlugin, Component: R
     private _intervalId?: any;
 
     public componentDidMount() {
-      this._mountTimestamp = Date.now();
+      this._mountTimestamp = CoreUtils.dateNow();
       this._firstActiveTimestamp = 0;
       this._totalIdleTime = 0;
       this._lastActiveTimestamp = 0;
@@ -46,8 +47,8 @@ export default function withAITracking<P>(reactPlugin: ReactPlugin, Component: R
       this._idleCount = 0;
 
       this._intervalId = setInterval(() => {
-        if (this._lastActiveTimestamp > 0 && this._idleStartTimestamp === 0 && Date.now() - this._lastActiveTimestamp >= this._idleTimeout) {
-          this._idleStartTimestamp = Date.now();
+        if (this._lastActiveTimestamp > 0 && this._idleStartTimestamp === 0 && CoreUtils.dateNow() - this._lastActiveTimestamp >= this._idleTimeout) {
+          this._idleStartTimestamp = CoreUtils.dateNow();
           this._idleCount++;
         }
       }, 100);
@@ -94,10 +95,10 @@ export default function withAITracking<P>(reactPlugin: ReactPlugin, Component: R
 
     private trackActivity = (e: React.SyntheticEvent<any>): void => {
       if (this._firstActiveTimestamp === 0) {
-        this._firstActiveTimestamp = Date.now();
+        this._firstActiveTimestamp = CoreUtils.dateNow();
         this._lastActiveTimestamp = this._firstActiveTimestamp;
       } else {
-        this._lastActiveTimestamp = Date.now();
+        this._lastActiveTimestamp = CoreUtils.dateNow();
       }
 
       if (this._idleStartTimestamp > 0) {
@@ -108,7 +109,7 @@ export default function withAITracking<P>(reactPlugin: ReactPlugin, Component: R
     }
 
     private getEngagementTimeSeconds(): number {
-      return (Date.now() - this._firstActiveTimestamp - this._totalIdleTime - this._idleCount * this._idleTimeout) / 1000;
+      return (CoreUtils.dateNow() - this._firstActiveTimestamp - this._totalIdleTime - this._idleCount * this._idleTimeout) / 1000;
     }
   }
 }
