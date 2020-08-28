@@ -67,6 +67,56 @@ const browserRollupConfigFactory = (isProduction, libVersion = '2') => {
   return browserRollupConfig;
 };
 
+// This it to generate commn js file and common js min file for SharePoint and similar scenarios 
+const browserCJSRollupConfigFactory = (isProduction, libVersion = '2') => {
+  const browserRollupConfig = {
+    input: "dist-esm/Init.js",
+    output: {
+      file: `browser/ai.${libVersion}.cjs.js`,
+      banner: banner,
+      format: "cjs",
+      name: "Microsoft.ApplicationInsights",
+      extend: true,
+      freeze: false,
+      sourcemap: true
+    },
+    plugins: [
+      dynamicRemove(),
+      replace({
+        delimiters: ["", ""],
+        values: replaceValues
+      }),
+      importCheck({ exclude: [ "applicationinsights-web" ] }),
+      nodeResolve({
+        browser: false,
+        preferBuiltins: false
+      }),
+      es3Poly(),
+      es3Check()
+    ]
+  };
+
+  if (isProduction) {
+    browserRollupConfig.output.file = `browser/ai.${libVersion}.cjs.min.js`;
+    browserRollupConfig.plugins.push(
+      uglify({
+        ie8: true,
+        toplevel: true,
+        compress: {
+          passes:3,
+          unsafe: true
+        },
+        output: {
+          preamble: banner,
+          webkit:true
+        }
+      })
+    );
+  }
+
+  return browserRollupConfig;
+};
+
 const nodeUmdRollupConfigFactory = (isProduction) => {
   const nodeRollupConfig = {
     input: `dist-esm/applicationinsights-web.js`,
@@ -121,5 +171,9 @@ export default [
   browserRollupConfigFactory(true),
   browserRollupConfigFactory(false),
   browserRollupConfigFactory(true, version),
-  browserRollupConfigFactory(false, version)
+  browserRollupConfigFactory(false, version),
+  browserCJSRollupConfigFactory(true),
+  browserCJSRollupConfigFactory(false),
+  browserCJSRollupConfigFactory(true, version),
+  browserCJSRollupConfigFactory(false, version)
 ];
