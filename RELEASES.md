@@ -16,6 +16,14 @@
 - #1350 [BUG] The new IPerfEvent is using Date.now() which is not supported in an ES3 environment
   - Added additional checks for Date.now() and Performance Api perf.now()
 
+### Update React plugin to v3.0.3
+
+- Update Core dependency to ^2.5.8 Core changes
+
+### Update React Native plugin to v2.2.7
+
+- Update Core dependency to ^2.5.8 Core changes
+
 ## 2.5.7 (August 7th, 2020)
 
 ### Changelog
