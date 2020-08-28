@@ -1,5 +1,21 @@
 # Releases
 
+## 2.5.8 (August 31st, 2020)
+
+### Changelog
+
+- #1350 [BUG] The new IPerfEvent is using Date.now() which is not supported in an ES3 environment
+- #1349 Update angular plugin track pageview logic and test
+- #1343 [BUG] IPerfManager interface - the create() function is defined to return an IPerfEvent and not an IPerfEvent?
+- #1340 Instrumentation Key validation
+- #1018 Error Mismatched anonymous define() module
+  - #1352 add .cjs.js and .cjs.min.js
+
+### Update applicationinsights-rollup-es3 to v1.1.3
+
+- #1350 [BUG] The new IPerfEvent is using Date.now() which is not supported in an ES3 environment
+  - Added additional checks for Date.now() and Performance Api perf.now()
+
 ## 2.5.7 (August 7th, 2020)
 
 ### Changelog

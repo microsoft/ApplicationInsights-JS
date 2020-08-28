@@ -663,7 +663,8 @@ if ($container -eq "beta" -or $container -eq "next") {
 
 if ($files.ContainsKey($activeVersion) -ne $true) {
     Log-Failure "Version [$activeVersion] does not appear to be deployed to [$container]"
-} elseif ($files[$activeVersion].Count -ne 4 -or $files[$activeVersion].Count -ne 8) {
+} elseif ($files[$activeVersion].Count -ne 4 -and # Prior to 2.5.8
+        $files[$activeVersion].Count -ne 8) {     # Since 2.5.8
     Log-Failure "Version [$activeVersion] does not fully deployed to [$container] -- only found [$($files[$activeVersion].Count)] file(s)"
 }
 
