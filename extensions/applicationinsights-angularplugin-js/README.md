@@ -14,7 +14,7 @@ Angular Plugin for the Application Insights Javascript SDK
 Install npm package:
 
 ```bash
-npm install @microsoft/applicationinsights-angular-js
+npm install @microsoft/applicationinsights-angularplugin-js
 ```
 
 ## Basic Usage
@@ -22,7 +22,7 @@ npm install @microsoft/applicationinsights-angular-js
 ```js
 import { Component, OnInit } from '@angular/core';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
-import { AngularPlugin } from '@microsoft/applicationinsights-angular-js';
+import { AngularPlugin } from '@microsoft/applicationinsights-angularplugin-js';
 import { Router } from '@angular/router';
 
 @Component({
@@ -69,7 +69,7 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 ### Note
 
 Angular plugin is using newer version of typescript, make sure to build and test before you create a pull request. 
-Navigate to the oot folder of Angular plugin, under /extensions/applicationinsights-angular-js:
+Navigate to the root folder of Angular plugin, under /extensions/applicationinsights-angularplugin-js:
 ```
 npm install
 npm run build
