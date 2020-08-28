@@ -19,7 +19,7 @@
     "@angular/platform-browser": "~8.1.2",
     "@angular/platform-browser-dynamic": "~8.1.2",
     "@angular/router": "~8.1.2",
-    "@microsoft/applicationinsights-angular-js": "file:../",
+    "@microsoft/applicationinsights-angular-js": "file:../../",
     "rxjs": "~6.4.0",
     "zone.js": "~0.9.1"
   },
