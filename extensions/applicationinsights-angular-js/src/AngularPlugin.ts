@@ -4,14 +4,16 @@
  */
 
 import {
-    IConfig, IPageViewTelemetry, IMetricTelemetry, IAppInsights
+    IConfig, IPageViewTelemetry, IMetricTelemetry, IAppInsights, PropertiesPluginIdentifier, Util
 } from "@microsoft/applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     ITelemetryPlugin, BaseTelemetryPlugin, CoreUtils, ITelemetryItem, ITelemetryPluginChain,
-    IProcessTelemetryContext, _InternalMessageId, LoggingSeverity, ICustomProperties
+    IProcessTelemetryContext, _InternalMessageId, LoggingSeverity, ICustomProperties, getLocation
 } from "@microsoft/applicationinsights-core-js";
 import { IAngularExtensionConfig } from './Interfaces/IAngularExtensionConfig';
+// For types only
+import * as properties from "@microsoft/applicationinsights-properties-js";
 
 const NAVIGATIONEND = "NavigationEnd";
 
@@ -20,6 +22,7 @@ export default class AngularPlugin extends BaseTelemetryPlugin {
     public identifier = 'AngularPlugin';
 
     private _analyticsPlugin: IAppInsights;
+    private _propertiesPlugin: properties.PropertiesPlugin;
 
     initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {
         super.initialize(config, core, extensions, pluginChain);
@@ -29,6 +32,9 @@ export default class AngularPlugin extends BaseTelemetryPlugin {
             const identifier = (ext as ITelemetryPlugin).identifier;
             if (identifier === 'ApplicationInsightsAnalytics') {
                 this._analyticsPlugin = (ext as any) as IAppInsights;
+            }
+            if (identifier === PropertiesPluginIdentifier) {
+                this._propertiesPlugin = (ext as any) as properties.PropertiesPlugin;
             }
         });
         if (extConfig.router) {
@@ -72,6 +78,11 @@ export default class AngularPlugin extends BaseTelemetryPlugin {
 
     trackPageView(pageView: IPageViewTelemetry) {
         if (this._analyticsPlugin) {
+            const location = getLocation();
+            if (this._propertiesPlugin && this._propertiesPlugin.context && this._propertiesPlugin.context.telemetryTrace) {
+                this._propertiesPlugin.context.telemetryTrace.traceID = Util.generateW3CId();
+                this._propertiesPlugin.context.telemetryTrace.name = location && location.pathname || "_unknown_";
+            }
             this._analyticsPlugin.trackPageView(pageView);
         } else {
             this.diagLog().throwInternal(

@@ -14,11 +14,12 @@
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "tsc -p tsconfig.json",
         "build:browser": "rollup -c",
-        "test": "cd test-app && npm install && ng test",
+        "test": "cd Tests/test-app && npm install && ng test",
         "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
-        "@microsoft/applicationinsights-rollup-es3" : "1.1.2",
+        "@microsoft/applicationinsights-rollup-es3": "1.1.2",
+        "@microsoft/applicationinsights-properties-js": "2.5.7",
         "@angular/core": "~8.1.2",
         "@angular/router": "~8.1.2",
         "grunt": "1.0.1",
@@ -38,7 +39,7 @@
         "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-shims" : "1.0.1",
+        "@microsoft/applicationinsights-shims": "1.0.1",
         "@microsoft/applicationinsights-common": "2.5.7",
         "@microsoft/applicationinsights-core-js": "2.5.7"
     },
