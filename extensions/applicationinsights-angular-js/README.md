@@ -20,41 +20,34 @@ npm install @microsoft/applicationinsights-angular-js
 ## Basic Usage
 
 ```js
+import { Component, OnInit } from '@angular/core';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import { AngularPlugin } from '@microsoft/applicationinsights-angular-js';
+import { Router } from '@angular/router';
 
-class TelemetryService {
-
-    constructor() {
-        this.angularPlugin = new AngularPlugin();
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent implements OnInit {
+    private appInsights;
+    constructor(
+        private router: Router
+    ){
+        var angularPlugin = new AngularPlugin();
+        this.appInsights = new ApplicationInsights({ config: {
+        instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+        extensions: [angularPlugin],
+        extensionConfig: {
+            [angularPlugin.identifier]: { router: this.router }
+        }
+        } });
     }
 
-    initialize(angularPluginConfig) {
-        let INSTRUMENTATION_KEY = 'INSTRUMENTATION_KEY'; // Enter your instrumentation key here
-        
-        this.appInsights = new ApplicationInsights({
-            config: {
-                instrumentationKey: INSTRUMENTATION_KEY,
-                extensions: [this.angularPlugin],
-                extensionConfig: {
-                    [this.angularPlugin.identifier]: angularPluginConfig
-                }
-            }
-        });
+    ngOnInit() {
         this.appInsights.loadAppInsights();
     }
-}
-
-export let ai = new TelemetryService();
-
-
-import { Router } from '@angular/router';
-import { ai } from './TelemetryService';
-
-export class AppComponent {
-  constructor(private router: Router, private location: Location) {
-    ai.initialize({ router: this.router });
-  }
 }
 
 ```
