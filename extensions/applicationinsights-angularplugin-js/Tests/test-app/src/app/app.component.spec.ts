@@ -1,6 +1,6 @@
 import { TestBed, fakeAsync, tick  } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { AngularPlugin } from '@microsoft/applicationinsights-angular-js';
+import { AngularPlugin } from '@microsoft/applicationinsights-angularplugin-js';
 import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, IPlugin } from '@microsoft/applicationinsights-core-js';
 import { IPageViewTelemetry } from '@microsoft/applicationinsights-common';
 
