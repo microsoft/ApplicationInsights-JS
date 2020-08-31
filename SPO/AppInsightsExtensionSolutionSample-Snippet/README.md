@@ -1,13 +1,13 @@
-## appinsights-extension-solution-sample
+## appinsights-extension-solution-sample-snippet
 
-This is a sample SharePoint Framework Extension solution that will set up Application Insights on a [SharePoint Online modern site](https://support.microsoft.com/en-ie/office/sharepoint-classic-and-modern-experiences-5725c103-505d-4a6e-9350-300d3ec7d73f?ui=en-us&rs=en-ie&ad=ie).
+This is a sample SharePoint Framework Extension solution that will set up Application Insights on a [SharePoint Online modern site](https://support.microsoft.com/en-ie/office/sharepoint-classic-and-modern-experiences-5725c103-505d-4a6e-9350-300d3ec7d73f?ui=en-us&rs=en-ie&ad=ie) through [Snippet setup](https://github.com/microsoft/ApplicationInsights-JS#snippet-setup-ignore-if-using-npm-setup).
 
 ### Building the code
 
 ```bash
 git clone the repo
 ```
-Inside AppInsightsExtensionSolutionSample root folder
+Inside AppInsightsExtensionSolutionSampleSnippet root folder
 ```bash
 npm i
 npm i -g gulp
