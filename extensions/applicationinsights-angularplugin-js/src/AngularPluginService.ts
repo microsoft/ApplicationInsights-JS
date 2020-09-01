@@ -17,7 +17,7 @@ export class AngularPluginService {
     private angularPlugin: AngularPlugin;
     private router: Router;
     
-    // router: any to avoid build error Types have separate declarations of a private property 'rootComponentType'.
+    // "router: any" to avoid build error - Types have separate declarations of a private property 'rootComponentType'.
     init(angularPlugin: AngularPlugin, router: any): void {
         this.angularPlugin = angularPlugin;
         this.router = router;

@@ -41,4 +41,24 @@ export class ChannelPlugin implements IPlugin {
   
     private _processTelemetry(env: ITelemetryItem) {
     }
-  }
+}
+
+export const analyticsExtension = {
+    initialize: (config, core, extensions) => { },
+    trackEvent: (event, customProperties) => { },
+    trackPageView: (pageView, customProperties) => { },
+    trackException: (exception, customProperties) => { },
+    trackTrace: (trace, customProperties) => { },
+    trackMetric: (metric, customProperties) => { },
+    _onerror: (exception) => { },
+    startTrackPage: (name) => { },
+    stopTrackPage: (name, properties, measurements) => { },
+    startTrackEvent: (name) => { },
+    stopTrackEvent: (name, properties, measurements) => { },
+    addTelemetryInitializer: (telemetryInitializer) => { },
+    trackPageViewPerformance: (pageViewPerformance, customProperties) => { },
+    processTelemetry: (env) => { },
+    setNextPlugin: (next) => { },
+    identifier: 'ApplicationInsightsAnalytics'
+};
+  

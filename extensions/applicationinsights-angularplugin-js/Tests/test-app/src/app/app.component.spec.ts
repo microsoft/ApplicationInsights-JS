@@ -1,20 +1,21 @@
 import { TestBed, fakeAsync, tick  } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AngularPlugin } from '@microsoft/applicationinsights-angularplugin-js';
-import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, IPlugin } from '@microsoft/applicationinsights-core-js';
+import { AppInsightsCore, IConfiguration, DiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 import { IPageViewTelemetry } from '@microsoft/applicationinsights-common';
-import { ChannelPlugin } from './Channel';
+import { ChannelPlugin, analyticsExtension } from './Common';
 
 let angularPlugin: AngularPlugin;
 let core: AppInsightsCore;
 let angularPluginTrackPageViewSpy;
+let angularPluginTrackMetricSpy;
 
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { HomeComponent, SearchComponent, AppComponent, routes } from './TestComponent';
 
-describe('Router: App', () => {
+describe('Angular Plugin basic events tracking tests', () => {
   let location: Location;
   let router: Router;
   let fixture;
@@ -23,7 +24,7 @@ describe('Router: App', () => {
     core = new AppInsightsCore();
     core.logger = new DiagnosticLogger();
     angularPlugin = new AngularPlugin();
-    angularPluginTrackPageViewSpy = spyOn(angularPlugin, 'trackPageView');
+    fixture.componentInstance.angularPluginService.init(angularPlugin, router);
   }
 
   beforeEach(() => {
@@ -55,34 +56,16 @@ describe('Router: App', () => {
 
   it('Angular Plugin: router change triggers trackPageView event', fakeAsync(() => {
     init();
-    const analyticsExtension = {
-        initialize: (config, core, extensions) => { },
-        trackEvent: (event, customProperties) => { },
-        trackPageView: (pageView, customProperties) => { },
-        trackException: (exception, customProperties) => { },
-        trackTrace: (trace, customProperties) => { },
-        trackMetric: (metric, customProperties) => { },
-        _onerror: (exception) => { },
-        startTrackPage: (name) => { },
-        stopTrackPage: (name, properties, measurements) => { },
-        startTrackEvent: (name) => { },
-        stopTrackEvent: (name, properties, measurements) => { },
-        addTelemetryInitializer: (telemetryInitializer) => { },
-        trackPageViewPerformance: (pageViewPerformance, customProperties) => { },
-        processTelemetry: (env) => { },
-        setNextPlugin: (next) => { },
-        identifier: 'ApplicationInsightsAnalytics'
-    };
+    angularPluginTrackPageViewSpy = spyOn(angularPlugin, 'trackPageView');
     const channel = new ChannelPlugin();
     const config: IConfiguration = {
         instrumentationKey: 'instrumentation_key',
         extensionConfig: {
-        [angularPlugin.identifier]: {
-            router
-        },
+          [angularPlugin.identifier]: {
+              router
+          },
         }
     };
-    
     core.initialize(config, [angularPlugin, analyticsExtension, channel]);
 
     // trackPageView is called on plugin intialize
@@ -105,5 +88,35 @@ describe('Router: App', () => {
     tick(500);
     expect(angularPluginTrackPageViewSpy).toHaveBeenCalledTimes(3);
     expect(angularPluginTrackPageViewSpy).toHaveBeenCalledWith({ uri: '/home' } as IPageViewTelemetry);
+  }));
+
+  it('Angular Plugin: component destroy triggers trackMetrics event', fakeAsync(() => {
+    init();
+    angularPluginTrackMetricSpy = spyOn(angularPlugin, 'trackMetric');
+    const channel = new ChannelPlugin();
+    const config: IConfiguration = {
+        instrumentationKey: 'instrumentation_key',
+        extensionConfig: {
+            [angularPlugin.identifier]: {
+                router
+            },
+        }
+    };
+    
+    core.initialize(config, [angularPlugin, analyticsExtension, channel]);
+
+    // navigate to / - first time router navigates, home component is added
+    router.navigate(['/']);
+    tick(500);
+    // navigate to /search, home component is destroyed
+    router.navigate(['search']);
+    tick(500);
+    expect(angularPluginTrackMetricSpy).toHaveBeenCalledTimes(1);
+    expect(angularPluginTrackMetricSpy).toHaveBeenCalledWith({average: 500, name: 'Angular Component Existed Time (seconds)'}, {'Component Name': 'HomeComponent'});
+    // navigate to /home, search component is destroyed
+    router.navigate(['home']);
+    tick(500);
+    expect(angularPluginTrackMetricSpy).toHaveBeenCalledTimes(2);
+    expect(angularPluginTrackMetricSpy).toHaveBeenCalledWith({average: 500, name: 'Angular Component Existed Time (seconds)'}, {'Component Name': 'SearchComponent'});
   }));
 });
