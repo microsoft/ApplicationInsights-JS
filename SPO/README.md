@@ -5,7 +5,7 @@ Please find the instructions [here](https://docs.microsoft.com/en-us/azure/azure
 
 ## Set up Application Insights 
 1. Follow [SPFx Extensions instruction](https://docs.microsoft.com/en-us/sharepoint/dev/spfx/extensions/get-started/build-a-hello-world-extension) to create a SharePoint Framework Extension.
-2. Add Application Insights to your extension solution. **There are 2 ways to do this.**
+2. Add Application Insights to your extension solution via one of the following two options:
     - Install via [NPM setup](https://github.com/microsoft/ApplicationInsights-JS#getting-started). Then, [set up an instance of Application Insights in your app.](#npm-setup-ignore-if-using-snippet-setup)
     - [Drop a script tag on the extension head.](#snippet-setup-ignore-if-using-npm-setup)
 
