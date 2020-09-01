@@ -3,6 +3,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { AngularPlugin } from '@microsoft/applicationinsights-angularplugin-js';
 import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, IPlugin } from '@microsoft/applicationinsights-core-js';
 import { IPageViewTelemetry } from '@microsoft/applicationinsights-common';
+import { ChannelPlugin } from './Channel';
 
 let angularPlugin: AngularPlugin;
 let core: AppInsightsCore;
@@ -106,46 +107,3 @@ describe('Router: App', () => {
     expect(angularPluginTrackPageViewSpy).toHaveBeenCalledWith({ uri: '/home' } as IPageViewTelemetry);
   }));
 });
-
-class ChannelPlugin implements IPlugin {
-  public isFlushInvoked = false;
-  public isTearDownInvoked = false;
-  public isResumeInvoked = false;
-  public isPauseInvoked = false;
-  public identifier = 'Sender';
-  public priority = 1001;
-
-  constructor() {
-      this.processTelemetry = this._processTelemetry.bind(this);
-  }
-  public pause(): void {
-      this.isPauseInvoked = true;
-  }
-
-  public resume(): void {
-      this.isResumeInvoked = true;
-  }
-
-  public teardown(): void {
-      this.isTearDownInvoked = true;
-  }
-
-  flush(async?: boolean, callBack?: () => void): void {
-      this.isFlushInvoked = true;
-      if (callBack) {
-      callBack();
-      }
-  }
-
-  public processTelemetry(env: ITelemetryItem) { }
-
-  setNextPlugin(next: any) {
-      // no next setup
-  }
-
-  public initialize = (config: IConfiguration, core: AppInsightsCore, plugin: IPlugin[]) => {
-  }
-
-  private _processTelemetry(env: ITelemetryItem) {
-  }
-}
