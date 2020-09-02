@@ -37,7 +37,7 @@ export class AngularPluginService {
             throw new Error('AngularPluginService: mountTimestamp is not initialized.');
         }
 
-        const componentLifeTime = CoreUtils.dateNow() - this._prevMountTimestamp;
+        const componentLifeTime = ( CoreUtils.dateNow() - this._prevMountTimestamp ) / 1000;
         const metricData: IMetricTelemetry = {
             average: componentLifeTime,
             name: 'Angular Component Existed Time (seconds)'
