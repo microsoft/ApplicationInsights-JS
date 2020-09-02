@@ -41,8 +41,6 @@ const browserRollupConfigFactory = isProduction => {
       commonjs({
         include: 'node_modules/**'
       }),
-      // es3Poly(),
-      // es3Check()
     ]
   };
 
@@ -92,8 +90,6 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       commonjs({
         include: 'node_modules/**'
       }),
-      // es3Poly(),
-      // es3Check()
     ]
   };
 
