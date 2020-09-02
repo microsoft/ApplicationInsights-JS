@@ -5,9 +5,10 @@
 import { ITelemetryItem } from '../JavaScriptSDK.Interfaces/ITelemetryItem';
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { IPlugin, ITelemetryPlugin } from '../JavaScriptSDK.Interfaces/ITelemetryPlugin';
-import { CoreUtils, doPerf } from "./CoreUtils";
+import { ITelemetryPlugin } from '../JavaScriptSDK.Interfaces/ITelemetryPlugin';
+import { CoreUtils } from "./CoreUtils";
 import { _InternalLogMessage } from "./DiagnosticLogger";
+import { doPerf } from "./PerfManager";
 import { LoggingSeverity, _InternalMessageId } from '../JavaScriptSDK.Enums/LoggingEnums';
 
 let _isFunction = CoreUtils.isFunction;

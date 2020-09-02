@@ -274,6 +274,10 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | ajaxPerfLookupDelay | 25 | Defaults to 25ms. The amount of time to wait before re-attempting to find the windows.performance timings for an ajax request, time is in milliseconds and is passed directly to setTimeout().
 | distributedTracingMode | `DistributedTracingModes.AI` | Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests. AI_AND_W3C is provided for back-compatibility with any legacy Application Insights instrumented services.
 | enableUnhandledPromiseRejectionTracking | false | If true, unhandled promise rejections will be autocollected and reported as a javascript error. When disableExceptionTracking is true (dont track exceptions) the config value will be ignored and unhandled promise rejections will not be reported.
+| disableInstrumentaionKeyValidation | false | If true, instrumentation key validation check is bypassed. Default value is false.
+| enablePerfMgr | false | [Optional] When enabled (true) this will create local perfEvents for code that has been instrumented to emit perfEvents (via the doPerf() helper). This can be used to identify performance issues within the SDK based on your usage or optionally within your own instrumented code. [More details are available by the basic documentation](./docs/PerformanceMonitoring.md). Since v2.5.7
+| perfEvtsSendAll | false | [Optional] When _enablePerfMgr_ is enabled and the [IPerfManager](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IPerfManager.ts) fires a [INotificationManager](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/INotificationManager.ts).perfEvent() this flag determines whether an event is fired (and sent to all listeners) for all events (true) or only for 'parent' events (false &lt;default&gt;).<br />A parent [IPerfEvent](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IPerfEvent.ts) is an event where no other IPerfEvent is still running at the point of this event being created and it's _parent_ property is not null or undefined. Since v2.5.7
+
 ## Single Page Applications
 
 By default, this SDK will **not** handle state based route changing that occurs in single page applications. To enable automatic route change tracking for your single page application, you can add `enableAutoRouteTracking: true` to your setup configuration.
@@ -402,7 +406,7 @@ ITelemetryPlugin has a simpler base type IPlugin that you can instantiate for in
 
 ## Performance
 
-At just ~28 KB gzipped, and taking only ~15 ms to initialize, Application Insights JS adds a negligible amount of loadtime to your website. By using the snippet, minimal components of the library are quickly loaded. In the meantime, the full script is downloaded in the background.
+Application Insights JS adds a negligible amount of load time to your website. By using the snippet, minimal components of the library are quickly loaded. In the meantime, the full script is downloaded in the background.
 
 While the script downloads from the CDN, all tracking of your page is queued. Once the downloaded script finishes asynchronously initializing, all events that were queued are tracked. As a result, you will not lose any telemetry during the entire life cycle of your page. This setup process provides your page with a seamless analytics system, invisible to your users.
 
@@ -410,7 +414,7 @@ While the script downloads from the CDN, all tracking of your page is queued. On
 >
 > - ![current npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-web.svg)
 > - ![gzip compressed size](https://img.badgesize.io/https://js.monitor.azure.com/scripts/b/ai.2.min.js.svg?compression=gzip)
-> - **15 ms** overall initialization time
+> - **~15 ms** overall initialization time
 > - **Zero** tracking missed during life cycle of page
 
 ## Browser Support
@@ -541,3 +545,5 @@ This table does not attempt to include ALL of the ES3 unsuported features, just 
 | ```Array.prototype.reduce(...)``` | Use the provided helper. | ```CoreUtils.arrReduce<T,R>(arr: T[], callbackfn: (previousValue: T|R, currentValue?: T, currentIndex?: number, array?: T[]) => R, initialValue?: R): R``` |
 | ```Array.prototype.reduceRight(...)``` | Not supported and no provided workaround/solution. | N/A |
 | ```Date.prototype.toISOString()``` | Use the provided helper | ```CoreUtils.toISOString(date: Date)``` |
+| ```Date.now()``` | Use the provided helper | ```CoreUtils.dateNow()``` |
+| ```performance.now()``` | Use the provided helper for the Performance Api now function. | ```CoreUtils.perfNow()``` |

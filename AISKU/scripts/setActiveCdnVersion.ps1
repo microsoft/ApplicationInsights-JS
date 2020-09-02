@@ -331,7 +331,7 @@ Function GenerateUserSasToken
 Function GetVersion(
     [string] $name
 ) {
-    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+\.\d+\.\d+(-[^\.]+)?)(\.(?:js|min\.js)(?:\.map)?)$'
+    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+\.\d+\.\d+(-[^\.]+)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js)(?:\.map)?)$'
     $match = ($name | select-string $regMatch -AllMatches).matches
 
     if ($null -eq $match) {
@@ -663,7 +663,9 @@ if ($container -eq "beta" -or $container -eq "next") {
 
 if ($files.ContainsKey($activeVersion) -ne $true) {
     Log-Failure "Version [$activeVersion] does not appear to be deployed to [$container]"
-} elseif ($files[$activeVersion].Count -ne 4) {
+} elseif ($files[$activeVersion].Count -ne 4 -and # Prior to 2.5.8
+        $files[$activeVersion].Count -ne 8 -and   # Since 2.5.8
+        $files[$activeVersion].Count -ne 12) {    # Since 2.5.8
     Log-Failure "Version [$activeVersion] does not fully deployed to [$container] -- only found [$($files[$activeVersion].Count)] file(s)"
 }
 

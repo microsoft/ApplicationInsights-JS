@@ -1,4 +1,4 @@
-cd extensions/applicationinsights-angular-js
+cd extensions/applicationinsights-angularplugin-js
 npm install
 npm run build
 npm run test

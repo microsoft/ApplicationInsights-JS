@@ -18,13 +18,15 @@ const replaceValues = {
   "// Licensed under the MIT License.": ""
 };
 
-const browserRollupConfigFactory = (isProduction, libVersion = '2') => {
+const majorVersion = version.split('.')[0];
+
+const browserRollupConfigFactory = (isProduction, libVersion = '2', format = 'umd', postfix = '') => {
   const browserRollupConfig = {
     input: "dist-esm/Init.js",
     output: {
-      file: `browser/ai.${libVersion}.js`,
+      file: `browser/ai.${libVersion}${postfix}.js`,
       banner: banner,
-      format: "umd",
+      format: format,
       name: "Microsoft.ApplicationInsights",
       extend: true,
       freeze: false,
@@ -47,7 +49,7 @@ const browserRollupConfigFactory = (isProduction, libVersion = '2') => {
   };
 
   if (isProduction) {
-    browserRollupConfig.output.file = `browser/ai.${libVersion}.min.js`;
+    browserRollupConfig.output.file = `browser/ai.${libVersion}${postfix}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
         ie8: true,
@@ -118,8 +120,16 @@ updateDistEsmFiles(replaceValues, banner);
 export default [
   nodeUmdRollupConfigFactory(true),
   nodeUmdRollupConfigFactory(false),
-  browserRollupConfigFactory(true),
-  browserRollupConfigFactory(false),
+  browserRollupConfigFactory(true, majorVersion),
+  browserRollupConfigFactory(false, majorVersion),
   browserRollupConfigFactory(true, version),
-  browserRollupConfigFactory(false, version)
+  browserRollupConfigFactory(false, version),
+  browserRollupConfigFactory(true, majorVersion, 'cjs', '.cjs'),
+  browserRollupConfigFactory(false, majorVersion, 'cjs', '.cjs'),
+  browserRollupConfigFactory(true, version, 'cjs', '.cjs'),
+  browserRollupConfigFactory(false, version, 'cjs', '.cjs'),
+  browserRollupConfigFactory(true, majorVersion, 'iife', '.gbl'),
+  browserRollupConfigFactory(false, majorVersion, 'iife', '.gbl'),
+  browserRollupConfigFactory(true, version, 'iife', '.gbl'),
+  browserRollupConfigFactory(false, version, 'iife', '.gbl'),
 ];

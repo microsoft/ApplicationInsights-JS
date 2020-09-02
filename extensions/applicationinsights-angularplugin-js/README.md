@@ -14,47 +14,40 @@ Angular Plugin for the Application Insights Javascript SDK
 Install npm package:
 
 ```bash
-npm install @microsoft/applicationinsights-angular-js
+npm install @microsoft/applicationinsights-angularplugin-js
 ```
 
 ## Basic Usage
 
 ```js
+import { Component, OnInit } from '@angular/core';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
-import { AngularPlugin } from '@microsoft/applicationinsights-angular-js';
+import { AngularPlugin } from '@microsoft/applicationinsights-angularplugin-js';
+import { Router } from '@angular/router';
 
-class TelemetryService {
-
-    constructor() {
-        this.angularPlugin = new AngularPlugin();
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent implements OnInit {
+    private appInsights;
+    constructor(
+        private router: Router
+    ){
+        var angularPlugin = new AngularPlugin();
+        this.appInsights = new ApplicationInsights({ config: {
+        instrumentationKey: 'YOUR_INSTRUMENTATION_KEY_GOES_HERE',
+        extensions: [angularPlugin],
+        extensionConfig: {
+            [angularPlugin.identifier]: { router: this.router }
+        }
+        } });
     }
 
-    initialize(angularPluginConfig) {
-        let INSTRUMENTATION_KEY = 'INSTRUMENTATION_KEY'; // Enter your instrumentation key here
-        
-        this.appInsights = new ApplicationInsights({
-            config: {
-                instrumentationKey: INSTRUMENTATION_KEY,
-                extensions: [this.angularPlugin],
-                extensionConfig: {
-                    [this.angularPlugin.identifier]: angularPluginConfig
-                }
-            }
-        });
+    ngOnInit() {
         this.appInsights.loadAppInsights();
     }
-}
-
-export let ai = new TelemetryService();
-
-
-import { Router } from '@angular/router';
-import { ai } from './TelemetryService';
-
-export class AppComponent {
-  constructor(private router: Router, private location: Location) {
-    ai.initialize({ router: this.router });
-  }
 }
 
 ```
@@ -76,7 +69,7 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 ### Note
 
 Angular plugin is using newer version of typescript, make sure to build and test before you create a pull request. 
-Navigate to the oot folder of Angular plugin, under /extensions/applicationinsights-angular-js:
+Navigate to the root folder of Angular plugin, under /extensions/applicationinsights-angularplugin-js:
 ```
 npm install
 npm run build

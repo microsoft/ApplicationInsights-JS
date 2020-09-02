@@ -79,8 +79,14 @@ export interface IConfiguration {
      * Channel queues that is setup by caller in desired order.
      * If channels are provided here, core will ignore any channels that are already setup, example if there is a SKU with an initialized channel
      */
-    channels?: IChannelControls[][];
-
+    channels?: IChannelControls[][];  
+    /**
+     * @type {boolean}
+     * @memberof IConfiguration
+     * Flag that disables the Instrumentation Key validation.
+     */
+    disableInstrumentaionKeyValidation?: boolean;
+    
     /**
      * [Optional] When enabled this will create local perfEvents based on sections of the code that have been instrumented
      * to emit perfEvents (via the doPerf()) when this is enabled. This can be used to identify performance issues within

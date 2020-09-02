@@ -1,6 +1,6 @@
 {
   "name": "appinsights-extension-solution-sample",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "main": "lib/index.js",
   "engines": {
@@ -12,7 +12,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "@microsoft/applicationinsights-web": "^2.5.7",
+    "@microsoft/applicationinsights-web": "^2.5.8",
     "@microsoft/decorators": "1.10.0",
     "@microsoft/sp-application-base": "1.10.0",
     "@microsoft/sp-core-library": "1.10.0",

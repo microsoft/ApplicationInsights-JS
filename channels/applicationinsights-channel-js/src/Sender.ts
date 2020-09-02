@@ -223,7 +223,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _self._buffer = (_self._senderConfig.enableSessionStorageBuffer && Util.canUseSessionStorage())
                     ? new SessionStorageSendBuffer(_self.diagLog(), _self._senderConfig) : new ArraySendBuffer(_self._senderConfig);
                     _self._sample = new Sample(_self._senderConfig.samplingPercentage(), _self.diagLog());
-        
+                
+                if(!_validateInstrumentationKey(config)) {
+                    _self.diagLog().throwInternal(
+                        LoggingSeverity.CRITICAL,
+                        _InternalMessageId.InvalidInstrumentationKey, "Invalid Instrumentation key "+config.instrumentationKey);
+                }
+
                 if (!_self._senderConfig.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
                     _self._sender = _beaconSender;
                 } else {
@@ -652,7 +658,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
         
                 // TODO: Log the backoff time like the C# version does.
-                const retryAfterTimeSpan = Date.now() + (delayInSeconds * 1000);
+                const retryAfterTimeSpan = CoreUtils.dateNow() + (delayInSeconds * 1000);
         
                 // TODO: Log the retry at time like the C# version does.
                 _retryAt = retryAfterTimeSpan;
@@ -663,7 +669,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              */
             function _setupTimer() {
                 if (!_timeoutHandle) {
-                    const retryInterval = _retryAt ? Math.max(0, _retryAt - Date.now()) : 0;
+                    const retryInterval = _retryAt ? Math.max(0, _retryAt - CoreUtils.dateNow()) : 0;
                     const timerValue = Math.max(_self._senderConfig.maxBatchInterval(), retryInterval);
         
                     _timeoutHandle = setTimeout(() => {
@@ -762,6 +768,20 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     }
                 }
             }
+
+            /**
+             * Validate UUID Format
+             * Specs taken from https://tools.ietf.org/html/rfc4122 and breeze repo 
+             */
+            function _validateInstrumentationKey(config: IConfiguration & IConfig) :boolean {
+                const disableIKeyValidationFlag = CoreUtils.isNullOrUndefined(config.disableInstrumentaionKeyValidation) ? false : config.disableInstrumentaionKeyValidation;
+                if(disableIKeyValidationFlag) {
+                    return true;
+                }
+                const UUID_Regex = '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
+                const regexp = new RegExp(UUID_Regex);
+                return regexp.test(config.instrumentationKey);
+            }            
         
         });
     }

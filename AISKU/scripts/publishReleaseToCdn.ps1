@@ -256,6 +256,14 @@ Function GetReleaseFiles
     AddReleaseFile $files $jsSdkSrcDir "ai.$version.js.map"
     AddReleaseFile $files $jsSdkSrcDir "ai.$version.min.js"
     AddReleaseFile $files $jsSdkSrcDir "ai.$version.min.js.map"
+    AddReleaseFile $files $jsSdkSrcDir "ai.$version.cjs.js"
+    AddReleaseFile $files $jsSdkSrcDir "ai.$version.cjs.js.map"
+    AddReleaseFile $files $jsSdkSrcDir "ai.$version.cjs.min.js"
+    AddReleaseFile $files $jsSdkSrcDir "ai.$version.cjs.min.js.map"
+    AddReleaseFile $files $jsSdkSrcDir "ai.$version.gbl.js"
+    AddReleaseFile $files $jsSdkSrcDir "ai.$version.gbl.js.map"
+    AddReleaseFile $files $jsSdkSrcDir "ai.$version.gbl.min.js"
+    AddReleaseFile $files $jsSdkSrcDir "ai.$version.gbl.min.js.map"
 
     return $files
 }
@@ -263,7 +271,7 @@ Function GetReleaseFiles
 Function GetVersion(
     [string] $name
 ) {
-    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[^\.]+)?)(\.(?:js|min\.js)(?:\.map)?)$'
+    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+\.\d+\.\d+(-[^\.]+)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js)(?:\.map)?)$'
     $match = ($name | select-string $regMatch -AllMatches).matches
 
     if ($null -eq $match) {

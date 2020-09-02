@@ -1,11 +1,36 @@
 # Releases
 
+## 2.5.8 (August 31st, 2020)
+
+### Changelog
+
+- #1350 [BUG] The new IPerfEvent is using Date.now() which is not supported in an ES3 environment
+- #1349 Update angular plugin track pageview logic and test
+- #1343 [BUG] IPerfManager interface - the create() function is defined to return an IPerfEvent and not an IPerfEvent?
+- #1340 Instrumentation Key validation
+- #1018 Error Mismatched anonymous define() module
+  - #1352 add .cjs.js and .cjs.min.js
+
+### Update applicationinsights-rollup-es3 to v1.1.3
+
+- #1350 [BUG] The new IPerfEvent is using Date.now() which is not supported in an ES3 environment
+  - Added additional checks for Date.now() and Performance Api perf.now()
+
+### Update React plugin to v3.0.3
+
+- Update Core dependency to ^2.5.8 Core changes
+
+### Update React Native plugin to v2.2.7
+
+- Update Core dependency to ^2.5.8 Core changes
+
 ## 2.5.7 (August 7th, 2020)
 
 ### Changelog
 
 - #1335 Add Performance / Testing support
-  - Added IPerfManager and IPerfEvent interfaces to allow performance review / monitoring of the internal operations 
+  - Added IPerfManager and IPerfEvent interfaces to allow performance review / monitoring of the internal operations
+  - [Performance Manager Documentation](./docs/PerformanceMonitoring.md)
 - #1334 [BUG] Getting XMLHttpRequest and XDomainRequest is not defined errors for gatsby environment
 - #1333 [BUG] DebugPlugin various updates
 - #1331 AppInsightsCore: Enable setting NotificationManager during initialization
@@ -26,12 +51,14 @@
 - Update Core dependency to ^2.5.7 Core changes
 - #1335 Add Performance / Testing support
   - Added IPerfManager and IPerfEvent interfaces to allow performance review / monitoring of the internal operations 
+  - [Performance Manager Documentation](./docs/PerformanceMonitoring.md)
 
 ### Updated React Native plugin to v2.2.6
 
 - Update Core dependency to ^2.5.7 Core changes
 - #1335 Add Performance / Testing support
   - Added IPerfManager and IPerfEvent interfaces to allow performance review / monitoring of the internal operations 
+  - [Performance Manager Documentation](./docs/PerformanceMonitoring.md)
 - #1324 [BUG] Type 'ReactNativePlugin' is not assignable to type 'ITelemetryPlugin'
   - Refactored the Plugin to extend BaseTelemetryPlugin (part of the #1076 work)
 - #1076 Refactor code to provide better tree shaking and minification of generated code

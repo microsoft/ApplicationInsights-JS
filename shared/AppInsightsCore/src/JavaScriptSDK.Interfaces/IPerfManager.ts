@@ -25,15 +25,16 @@ export interface IPerfManagerProvider {
  */
 export interface IPerfManager {
     /**
-     * Create a new event and start timing
+     * Create a new event and start timing, the manager may return null/undefined to indicate that it does not 
+     * want to monitor this source event.
      * @param src The source name of the event 
      * @param payloadDetails - An optional callback function to fetch the payload details for the event.
      * @param isAsync - Is the event occurring from a async event
      */
-    create(src: string, payloadDetails?: () => any, isAsync?: boolean): IPerfEvent;
+    create(src: string, payloadDetails?: () => any, isAsync?: boolean): IPerfEvent | null | undefined;
 
     /**
-     * 
+     * Complete the perfEvent and fire any notifications.
      * @param perfEvent Fire the event which will also complete the passed event
      */
     fire(perfEvent: IPerfEvent): void;
