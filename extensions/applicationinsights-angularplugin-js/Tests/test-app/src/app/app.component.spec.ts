@@ -112,11 +112,11 @@ describe('Angular Plugin basic events tracking tests', () => {
     router.navigate(['search']);
     tick(500);
     expect(angularPluginTrackMetricSpy).toHaveBeenCalledTimes(1);
-    expect(angularPluginTrackMetricSpy).toHaveBeenCalledWith({average: 500, name: 'Angular Component Existed Time (seconds)'}, {'Component Name': 'HomeComponent'});
+    expect(angularPluginTrackMetricSpy).toHaveBeenCalledWith({average: 0.5, name: 'Angular Component Existed Time (seconds)'}, {'Component Name': 'HomeComponent'});
     // navigate to /home, search component is destroyed
     router.navigate(['home']);
     tick(500);
     expect(angularPluginTrackMetricSpy).toHaveBeenCalledTimes(2);
-    expect(angularPluginTrackMetricSpy).toHaveBeenCalledWith({average: 500, name: 'Angular Component Existed Time (seconds)'}, {'Component Name': 'SearchComponent'});
+    expect(angularPluginTrackMetricSpy).toHaveBeenCalledWith({average: 0.5, name: 'Angular Component Existed Time (seconds)'}, {'Component Name': 'SearchComponent'});
   }));
 });

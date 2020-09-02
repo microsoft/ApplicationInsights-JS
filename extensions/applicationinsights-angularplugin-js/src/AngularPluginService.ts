@@ -37,6 +37,11 @@ export class AngularPluginService {
             throw new Error('AngularPluginService: mountTimestamp is not initialized.');
         }
 
+        // for the case when user opens up the page and close tab without going to any other pages
+        if (this._prevMountTimestamp === 0 && this._prevComponentName === '') {
+            this._prevMountTimestamp = this._mountTimestamp;
+            this._prevComponentName = this._componentName;
+        }
         const componentLifeTime = ( CoreUtils.dateNow() - this._prevMountTimestamp ) / 1000;
         const metricData: IMetricTelemetry = {
             average: componentLifeTime,
