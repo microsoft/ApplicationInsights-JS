@@ -7,7 +7,7 @@ This is a sample SharePoint Framework Extension solution that will set up Applic
 ```bash
 git clone the repo
 ```
-Inside AppInsightsExtensionSolutionSampleSnippet root folder
+Inside AppInsightsExtensionSolutionSample-Snippet root folder
 ```bash
 npm i
 npm i -g gulp
