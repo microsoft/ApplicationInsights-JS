@@ -36,7 +36,7 @@
         npm i --save @microsoft/applicationinsights-web
         ```
 
-    - [Pasting a script snippet at the beginning of every `<head>` tag for each page you want to monitor.](#snippet-setup-(ignore-if-using-npm-setup))
+    - [Pasting a script snippet at the beginning of every `<head>` tag for each page you want to monitor.](#snippet-setup-ignore-if-using-npm-setup)
 
 ## Basic Usage
 
