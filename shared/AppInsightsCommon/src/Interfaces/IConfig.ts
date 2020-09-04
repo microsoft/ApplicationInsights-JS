@@ -358,6 +358,12 @@ export interface IConfig {
      * @defaultValue false
      */
     enableUnhandledPromiseRejectionTracking?: boolean;
+
+    /**
+     * @description Disable correlation headers using regular expressions
+     * @type {RegExp[]}
+     */
+    correlationHeaderExcludePatterns?: RegExp[];
 }
 
 export class ConfigurationManager {
