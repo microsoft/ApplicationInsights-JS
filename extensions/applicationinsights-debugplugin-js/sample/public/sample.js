@@ -1,5 +1,8 @@
 // NOTE: this is a BETA release. see Note [1] for more information
 
+//const { ApplicationInsightsTests } = require("../../../applicationinsights-analytics-js/Tests/ApplicationInsights.tests");
+//const { PerfManager } = require("../../../../shared/appinsightscommon/node_modules/@microsoft/applicationinsights-core-js/types/JavaScriptSDK/PerfManager");
+
 if (!Object.keys) {
   Object.keys = (function() {
     'use strict';
@@ -43,34 +46,36 @@ if (!Object.keys) {
 
 function myFunc() {
 
-  // all trackers
-  // var toTrack = [
-  //   'trackEvent',
-  //   'trackPageView',
-  //   'trackPageViewPerformance',
-  //   'trackException',
-  //   'trackTrace',
-  //   'trackMetric',
-  //   'trackDependencyData',
-  //   'throwInternal',        // called when a message is logged internally
-  //   'logInternalMessage',   // called when a message is logged internally
-  //   'triggerSend',          // called when data is queued to be sent to the server
-  //   '_sender',              // called when data is sent to the server
-  // ];
-
+  //  all trackers
+  /*
+     var toTrack = [
+       'initialize',
+       'trackEvent',
+       'trackPageView',
+       'trackPageViewPerformance',
+       'trackException',
+       'trackTrace',
+       'trackMetric',
+       'trackDependencyData',
+       'throwInternal',        // called when a message is logged internally
+       'logInternalMessage',   // called when a message is logged internally
+       'triggerSend',          // called when data is queued to be sent to the server
+       '_sender',              // called when data is sent to the server
+     ];
+*/
   // error handling functions
-  var toTrack = [
+ /* var toTrack = [
     'trackException',
     'trackTrace',
     'throwInternal',
     'logInternalMessage'
-  ]
+  ]*/
 
   var debugPlugin = Microsoft.ApplicationInsights.DebugPlugin;
   var debugPluginInstance = new debugPlugin();
   // Application Insights Configuration
   var configObj = {
-    instrumentationKey: "MyInstrumentationKey",
+    instrumentationKey: "72d98313-cfb4-41c3-bc14-6edf1cd5b9c3",
     appId: "OSKAR",
     disableFetchTracking: false,
     enableCorsCorrelation: true,
@@ -80,17 +85,18 @@ function myFunc() {
       debugPluginInstance
     ],
     extensionConfig: { },
-    correlationHeaderDomains: ["oskarsvc", "localhost"],
-    enablePerfMgr: true
+    correlationHeaderDomains: ["oskarsvc", "localhost"]
   };
 
   configObj.extensionConfig[debugPlugin.identifier] = {
-    //trackers: toTrack
-    maxMessages: 50
+   // trackers: toTrack
+   // maxMessages: 50
   };
 
   var appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({ config: configObj });
-  appInsights.loadAppInsights();
+  var notificationManager = new Microsoft.ApplicationInsights.NotificationManager();
+  appInsights.core.setPerfMgr(new Microsoft.ApplicationInsights.PerfManager(notificationManager));
+  appInsights.loadAppInsights(false,null,notificationManager);
 
   var testBtnFns = {
     trackEvent: function () { appInsights.trackEvent({name: 'some event'}); },

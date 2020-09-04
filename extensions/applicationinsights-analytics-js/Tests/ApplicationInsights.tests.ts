@@ -3,7 +3,7 @@
 import { Util, Exception, SeverityLevel, Trace, PageViewPerformance, IConfig, IExceptionInternal } from "@microsoft/applicationinsights-common";
 import {
     ITelemetryItem, AppInsightsCore,
-    IPlugin, IConfiguration
+    IPlugin, IConfiguration, NotificationManager, IPerfEvent, PerfManager
 } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "../src/JavaScriptSDK/ApplicationInsights";
 
@@ -277,6 +277,44 @@ export class ApplicationInsightsTests extends TestClass {
         this.addOnErrorTests();
         this.addTrackMetricTests();
         this.addTelemetryInitializerTests();
+        this.addPerfTests();
+    }
+
+    private addPerfTests(): void {
+        this.testCase({
+            name: 'Perf Test',
+            test:() => {
+                const iKey: string = "BDC8736D-D8E8-4B69-B19B-B0CE6B66A456";
+                const iKeyNoDash: string = "BDC8736DD8E84B69B19BB0CE6B66A456";
+                let notificationManager = new NotificationManager();
+                notificationManager.addNotificationListener({
+                    perfEvent: (perfEvent: IPerfEvent): void => {
+                        let evtName = `Notification:perfEvent[${perfEvent.name}]`;
+                        sendNotifications.push({
+                            perfEvent,
+                            evtName
+                        });
+                    }
+                });
+                const plugin = new ChannelPlugin();
+                const core = new AppInsightsCore();
+                core.setPerfMgr(new PerfManager(notificationManager));
+                let sendNotifications = [];
+                
+                //this.sandbox.stub(core, "getNotifyMgr").returns(notificationManager);
+                core.initialize(
+                    {instrumentationKey: iKey},
+                    [plugin],
+                    null,
+                    notificationManager
+                );
+               // const appInsights = new ApplicationInsights();   
+              //  appInsights.initialize({
+             //       instrumentationKey: core.config.instrumentationKey}, core, []);
+                QUnit.assert.ok(sendNotifications.length === 1);
+                QUnit.assert.ok(sendNotifications[0].evtName === "AISKU.loadAppInsights");
+            }
+        })
     }
 
     private addGenericTests(): void {
