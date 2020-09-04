@@ -138,7 +138,7 @@ thanks to this new layer of transparency.
 run the following console command to install appInsights and the debug plugin:
 
 ```zsh
-npm install --save @microsoft/applicationinsights-debugplugin @microsoft/applicationinsights-web
+npm install --save @microsoft/applicationinsights-debugplugin-js @microsoft/applicationinsights-web
 ```
 
 ## Basic Usage
