@@ -17,7 +17,14 @@ export {
     LoggingSeverity,
     _InternalMessageId,
     ITelemetryItem,
-    ITelemetryPlugin
+    ITelemetryPlugin,
+    IPerfEvent,
+    IPerfManager, 
+    IPerfManagerProvider ,
+    PerfEvent, 
+    PerfManager, 
+    doPerf,
+    NotificationManager
 } from "@microsoft/applicationinsights-core-js";
 export {
     Util,
