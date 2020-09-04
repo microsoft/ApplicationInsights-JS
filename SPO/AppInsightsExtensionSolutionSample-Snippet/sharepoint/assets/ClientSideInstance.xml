@@ -3,7 +3,7 @@
     <ClientSideComponentInstance
         Title="AppInsights"
         Location="ClientSideExtension.ApplicationCustomizer"
-        ComponentId="53048b36-d45c-4706-b6ae-00afa52b2b3d"
+        ComponentId="2922ac66-d353-4899-955a-8b4bf018bb3a"
         Properties="{&quot;instrumentationKey&quot;:&quot;YOUR_INSTRUMENTATION_KEY_GOES_HERE&quot;}">
     </ClientSideComponentInstance>
 </Elements>

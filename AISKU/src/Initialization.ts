@@ -3,7 +3,7 @@
 
 import { 
     CoreUtils, IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, 
-    IChannelControls, hasWindow, hasDocument, isReactNative, doPerf
+    IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager
  } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -274,7 +274,7 @@ export class Initialization implements IApplicationInsights {
      * @returns {IApplicationInsights}
      * @memberof Initialization
      */
-    public loadAppInsights(legacyMode: boolean = false): IApplicationInsights {
+    public loadAppInsights(legacyMode: boolean = false, logger?: IDiagnosticLogger, notificationManager?: INotificationManager): IApplicationInsights {
         let _self = this;
 
         function _updateSnippetProperties(snippet: Snippet) {
@@ -317,7 +317,7 @@ export class Initialization implements IApplicationInsights {
             extensions.push(_self.appInsights);
     
             // initialize core
-            _self.core.initialize(_self.config, extensions);
+            _self.core.initialize(_self.config, extensions, logger, notificationManager);
             _self.context = _self.properties.context;
             if (_internalSdkSrc && _self.context) {
                 _self.context.internal.sdkSrc = _internalSdkSrc;

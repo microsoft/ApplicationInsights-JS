@@ -3,7 +3,7 @@
     <CustomAction
         Title="AppInsights"
         Location="ClientSideExtension.ApplicationCustomizer"
-        ClientSideComponentId="53048b36-d45c-4706-b6ae-00afa52b2b3d"
+        ClientSideComponentId="f0291cfb-07d9-4dc4-9b36-2b7fbd37e4c1"
         ClientSideComponentProperties="{&quot;instrumentationKey&quot;:&quot;YOUR_INSTRUMENTATION_KEY_GOES_HERE&quot;}">
     </CustomAction>
 </Elements>
