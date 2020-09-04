@@ -3,6 +3,7 @@
 
 import '@microsoft/applicationinsights-shims';
 import AngularPlugin from "./AngularPlugin";
+import { AngularPluginService } from "./AngularPluginService";
 import { IAngularExtensionConfig } from "./Interfaces/IAngularExtensionConfig";
 
-export { AngularPlugin, IAngularExtensionConfig };
+export { AngularPlugin, AngularPluginService, IAngularExtensionConfig };
