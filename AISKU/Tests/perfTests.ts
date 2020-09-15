@@ -59,7 +59,6 @@ export class PerfTests extends TestClass {
       const init = new ApplicationInsights({
         config: {
           instrumentationKey: this._instrumentationKey,
-          //perfEvtsSendAll: true,
           extensionConfig: {
             AppInsightsChannelPlugin: {
               maxBatchInterval: 2000,
@@ -152,7 +151,7 @@ export class PerfTests extends TestClass {
           }
           console.log(
             "Avg Exec time processTelemetry (avg over 300 track calls): " +
-              totalTrackExtime / 100
+              totalTrackExtime / 300
           );
         }),
     });
