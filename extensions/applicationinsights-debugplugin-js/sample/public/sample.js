@@ -75,7 +75,7 @@ function myFunc() {
   var debugPluginInstance = new debugPlugin();
   // Application Insights Configuration
   var configObj = {
-    instrumentationKey: "72d98313-cfb4-41c3-bc14-6edf1cd5b9c3",
+    instrumentationKey: "MyInstrumentationKey",
     appId: "OSKAR",
     disableFetchTracking: false,
     enableCorsCorrelation: true,

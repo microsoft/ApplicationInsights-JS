@@ -68,8 +68,7 @@ export class ApplicationInsightsTests extends TestClass {
                 namePrefix: this.sessionPrefix,
                 enableCorsCorrelation: true,
                 distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
-                samplingPercentage: 50,
-                enablePerfMgr:true
+                samplingPercentage: 50
             };
 
             const init = new ApplicationInsights({
@@ -90,7 +89,6 @@ export class ApplicationInsightsTests extends TestClass {
             this.trackSpy = this.sandbox.spy(this._ai.appInsights.core, 'track')
             this.sandbox.stub((sender as any)._sample, 'isSampledIn', () => true);
             this.envelopeConstructorSpy = this.sandbox.spy(Sender, 'constructEnvelope');
-            let sendNotifications = [];
             
             console.log("* testInitialize()");
         } catch (e) {
