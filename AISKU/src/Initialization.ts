@@ -472,7 +472,7 @@ export class Initialization implements IApplicationInsights {
             if (url) {
                 let src = "";
                 for (let idx = 0; idx < cdns.length; idx++) {
-                    if (url.indexof(cdns[idx]) !== -1) {
+                    if (url.indexOf(cdns[idx]) !== -1) {
                         src = "cdn" + (idx + 1);
                         if (url.indexOf("/scripts/") === -1) {
                             if (url.indexOf("/next/") !== -1) {
