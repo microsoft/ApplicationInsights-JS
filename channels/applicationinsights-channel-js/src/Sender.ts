@@ -202,7 +202,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     _self.flush();
                 }
             };
-        
+
             _self.teardown = _notImplemented;
         
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain): void => {
@@ -220,7 +220,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     _self._senderConfig[field] = () => ctx.getConfig(identifier, field, defaultConfig[field]());
                 }
         
-                _self._buffer = (_self._senderConfig.enableSessionStorageBuffer && Util.canUseSessionStorage())
+                _self._buffer = (_self._senderConfig.enableSessionStorageBuffer() && Util.canUseSessionStorage())
                     ? new SessionStorageSendBuffer(_self.diagLog(), _self._senderConfig) : new ArraySendBuffer(_self._senderConfig);
                     _self._sample = new Sample(_self._senderConfig.samplingPercentage(), _self.diagLog());
                 
