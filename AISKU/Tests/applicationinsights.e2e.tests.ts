@@ -89,7 +89,6 @@ export class ApplicationInsightsTests extends TestClass {
             this.trackSpy = this.sandbox.spy(this._ai.appInsights.core, 'track')
             this.sandbox.stub((sender as any)._sample, 'isSampledIn', () => true);
             this.envelopeConstructorSpy = this.sandbox.spy(Sender, 'constructEnvelope');
-            
             console.log("* testInitialize()");
         } catch (e) {
             console.error('Failed to initialize', e);
