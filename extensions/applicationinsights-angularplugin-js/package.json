@@ -39,7 +39,7 @@
         "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-shims": "1.0.1",
+        "@microsoft/applicationinsights-shims": "1.0.2",
         "@microsoft/applicationinsights-common": "2.5.8",
         "@microsoft/applicationinsights-core-js": "2.5.8"
     },

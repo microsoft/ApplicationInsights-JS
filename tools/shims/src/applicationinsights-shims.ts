@@ -112,11 +112,15 @@ let globalObj:any = getGlobal() || {};
 // tslint:disable: only-arrow-functions
 (function (root: any, assignFn, extendsFn) {
     // Assign the globally scoped versions of the functions -- used when consuming individual ts files
-    root.__assign = root.__assign || (Object as any).assign || assignFn;
-    root.__extends = root.__extends || extendsFn;
+    // If check is to support NativeScript where these are marked as readonly
+    if (!root.__assign) {
+        root.__assign = (Object as any).assign || assignFn;
+    }
+    if (!root.__extends) {
+        root.__extends = extendsFn;
+    }
 })(globalObj, __assignFn, __extendsFn);
 
-// Assign local variables that will be used for embedded scenarios
-__assign = globalObj.__assign;
-__extends = globalObj.__extends;
-
+// Assign local variables that will be used for embedded scenarios, if check is to support NativeScript where these are marked as readonly
+if (!__assign) { __assign = globalObj.__assign; }
+if (!__extends) { __extends = globalObj.__extends; }
