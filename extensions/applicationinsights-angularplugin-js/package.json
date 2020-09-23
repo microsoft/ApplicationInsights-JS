@@ -11,6 +11,7 @@
         "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-angularplugin-js"
     },
     "scripts": {
+        "prepublishOnly": "npm install && npm run build",
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "tsc -p tsconfig.json",
         "build:browser": "rollup -c",
