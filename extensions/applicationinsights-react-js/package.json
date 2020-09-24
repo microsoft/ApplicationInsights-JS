@@ -47,7 +47,7 @@
         "typescript": "^3.9.3"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-shims": "^1.0.2",
+        "@microsoft/applicationinsights-shims": "^1.0.3",
         "@microsoft/applicationinsights-core-js": "^2.5.8",
         "@microsoft/applicationinsights-common": "^2.5.8",
         "history": "^4.10.1"
