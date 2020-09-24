@@ -85,7 +85,8 @@ function myFunc() {
       debugPluginInstance
     ],
     extensionConfig: { },
-    correlationHeaderDomains: ["oskarsvc", "localhost"]
+    correlationHeaderDomains: ["oskarsvc", "localhost"],
+    perfEvtsSendAll: true
   };
 
   configObj.extensionConfig[debugPlugin.identifier] = {
@@ -94,7 +95,7 @@ function myFunc() {
   };
 
   var appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({ config: configObj });
-  var notificationManager = new Microsoft.ApplicationInsights.NotificationManager();
+  var notificationManager = new Microsoft.ApplicationInsights.NotificationManager(configObj);
   appInsights.core.setPerfMgr(new Microsoft.ApplicationInsights.PerfManager(notificationManager));
   appInsights.loadAppInsights(false,null,notificationManager);
 
