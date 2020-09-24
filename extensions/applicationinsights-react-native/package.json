@@ -19,27 +19,27 @@
         "lint": "tslint -p tsconfig.json"
     },
     "devDependencies": {
-        "typescript": "^3.6.4",
         "grunt": "1.0.1",
         "grunt-contrib-qunit": "^3.1.0",
         "grunt-contrib-uglify": "3.1.0",
         "grunt-ts": "^6.0.0-beta.15",
+        "qunit": "^2.11.2",
+        "react": "16.8.3",
+        "react-native": "0.59.8",
+        "react-native-device-info": "^5.6.5",
+        "rollup": "^0.66.0",
         "rollup-plugin-node-resolve": "^3.4.0",
         "rollup-plugin-replace": "^2.1.0",
-        "rollup-plugin-uglify": "^6.0.0",
-        "rollup": "^0.66.0",
-        "react-native-device-info": "^5.2.1",
-        "react-native": "0.59.8",
-        "react": "16.8.3",
+        "rollup-plugin-uglify": "^6.0.4",
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
-        "qunit": "^2.9.3"
+        "typescript": "^3.9.7"
     },
     "dependencies": {
-        "@microsoft/dynamicproto-js": "^1.0.0",
-        "@microsoft/applicationinsights-shims": "^1.0.2",
         "@microsoft/applicationinsights-common": "^2.5.8",
-        "@microsoft/applicationinsights-core-js": "^2.5.8"
+        "@microsoft/applicationinsights-core-js": "^2.5.8",
+        "@microsoft/applicationinsights-shims": "^1.0.3",
+        "@microsoft/dynamicproto-js": "^1.0.0"
     },
     "peerDependencies": {
         "react-native": "*",
