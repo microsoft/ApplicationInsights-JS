@@ -36,13 +36,61 @@ export interface IClickAnalyticsConfiguration {
      * Automatic populate element's parentId and parentName configuration
      */
     autoPopulateParentIdAndParentName?: boolean;
+    /**
+     * Core data configuration
+     */
+    coreData?: ICoreData;
+    /**
+     * Enables the logging of values after a "#" character of the URL. Default is "false."
+     */
+    urlCollectHash?: boolean;
+   /**
+    * Enables the logging of the query string of the URL. Default is "false."
+    */
+    urlCollectQuery?: boolean;
+    /**
+     * Automatic capture metadata name and content with provided prefix
+     */
+    metaDataPrefix?: string;
+    /**
+     * Automatic capture all metadata names and content. Default is false. If enabled this will override provided metaTagPrefix.
+     */
+    captureAllMetaDataContent?: boolean;
 
 }
+
+/**
+ * Core data configuration
+ */
+export interface ICoreData {
+    /**
+     * document.referrer is the default. This is used to override the default value.
+     */
+    referrerUri?: string;
+    /**
+     * window.location.href is the default. This is used to override the default value.
+     */
+    requestUri?: string;
+    /**
+     * Default page name is derived from the url. This is used to override the default.
+     */
+    pageName?: string;
+    /**
+     * PageType is captured from a meta tag named awa-pageType. This is used to override the value or bypass defining meta tags.
+     */
+    pageType?: string;
+}
+
 
 /**
  * Value Callbacks configuration
  */
 export interface IValueCallback {
+
+    /**
+     * Function to override the default pageName capturing behavior.
+     */
+    pageName?: () => string;
     /**
      * A callback function to augument the default pageTags collected during pageAction event.
      */
@@ -51,14 +99,6 @@ export interface IValueCallback {
      * A callback function to augument the default content tags collected in the content blob on a pageAction event.
      */
     pageActionContentTags?: (element?: Element) => IPageTags;
-    /**
-     * A callback function to augument the default pageTags collected during pageView event.
-     */
-    // pageViewPageTags?: () => IPageTags;
-    /**
-     * A callback function to augument the default pageTags collected during contentUpdate event.
-     */
-    contentUpdatePageTags?: () => IPageTags;
     /**
      * A callback function to populate customized contentName.
      */
@@ -276,10 +316,7 @@ export interface IContentHandler {
      * Get all visible content 
      */
     getVisibleContent: () => Array<IContent>;
-    /**
-     * Get lineage
-     */
-    getLineageDetails: (element: Element) => ILineage;
+    
   }
 
 export interface IRectangle {
@@ -293,7 +330,7 @@ export interface IRectangle {
 /**
  * Page Action event
  */
-export interface IPageActionTelemetry {
+export interface IPageActionTelemetry extends ITelemetryEventInternal {
     /**
      * Target uri for PageAction events
      */
@@ -349,3 +386,48 @@ export interface IPageActionProperties extends ITelemetryEventProperties {
     cookies?: string;
 }
 
+export interface ITelemetryEvent {
+    /**
+     * Page name.
+     */
+    name?: string;
+    /**
+     * A relative or absolute URL that identifies the page or other item. Defaults to the window location.
+     */
+    uri?: string;
+    /**
+     * Represents locale of the Site user has selected
+     */
+    market?: string;
+    /**
+     * Page type
+     */
+    pageType?: string;
+    /**
+     * boolean is user logged in
+     */
+    isLoggedIn?: boolean;
+    /**
+     * property bag to contain an extension to domain properties - extension to Part B
+     */
+    properties?: {
+        [key: string]: any;
+    };
+}
+
+export interface ITelemetryEventInternal extends ITelemetryEvent {
+    /**
+     * An identifier assigned to each distinct impression for the purposes of correlating with pageview.
+     * A new id is automatically generated on each pageview. You can manually specify this field if you
+     * want to use a specific value instead.
+     */
+    id?: string;
+    /**
+     * Version of the part B schema, todo: set this value in trackpageView
+     */
+    ver?: string;
+    /**
+     * Flag to report whether the event was fired manually
+     */
+    isManual?: boolean;
+}

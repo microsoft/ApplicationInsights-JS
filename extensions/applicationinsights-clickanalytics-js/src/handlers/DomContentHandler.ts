@@ -7,12 +7,12 @@
 import {
      _bracketIt, _findClosestByAttribute, _removeInvalidElements,
     _walkUpDomChainWithElementValidation, _isElementDnt, _isElementTrulyVisible,
-    _getViewportBoundingRect, _getViewportDimensions
+    _getViewportBoundingRect, _getViewportDimensions, isDocumentObjectAvailable, extend, _ExtendedInternalMessageId, isValueAssigned
 } from '../common/Utils';
 import { EventType } from '../Enums';
 import * as DataCollector from '../DataCollector';
-import { IDiagnosticLogger, extend, isDocumentObjectAvailable, LoggingSeverity, _ExtendedInternalMessageId, getDocument } from '@ms/1ds-core-js';
-import { IClickAnalyticsConfiguration, IRectangle, IContent, ILineage, IContentHandler} from '../Interfaces/Datamodel';
+import { IDiagnosticLogger, LoggingSeverity, getDocument } from "@microsoft/applicationinsights-core-js";
+import { IClickAnalyticsConfiguration, IRectangle, IContent, IContentHandler} from '../Interfaces/Datamodel';
 
 
 const doNotTrackFieldName = 'data-bi-dnt';
@@ -77,16 +77,15 @@ export class DomContentHandler implements IContentHandler {
      * @returns {object} - Metatags collection/property bag
      */
     public getMetadata(): { [name: string]: string } {
-        var msTags = {};
-        var awaTags = {};
+        
+        let metaTags = {};
         if (isDocumentObjectAvailable) {
             // Collect the awa-* tags.
-            awaTags = this._getMetaDataFromDOM('awa-', true);
+            metaTags = isValueAssigned(this._config.metaDataPrefix) ? this._getMetaDataFromDOM(this._config.captureAllMetaDataContent ,this._config.metaDataPrefix, false) : 
+            this._getMetaDataFromDOM(this._config.captureAllMetaDataContent ,'', false);
 
-            // Collect the legacy ms.* tags and append them to the metaTags.
-            msTags = this._getMetaDataFromDOM('ms.', false);
         }
-        return extend(true, awaTags, msTags);
+        return metaTags;
     }
 
     public getVisibleContent(): Array<IContent> {
@@ -123,76 +122,6 @@ export class DomContentHandler implements IContentHandler {
             }
         }
         return arrayOfContents;
-    }
-
-    /**
-     *  Computes the lineage of a given element.
-     * @param element - An html element
-     * @returns An object containing the different forms of lineage/hierarchy on DOM tree starting with the current element.
-     * example output: {'lineage':'GET OFFICE 365>coreui-hero-6zx3vxo-item-2>R1Hero 1>primaryR1 1>primaryArea 1',
-     * 'lineageById':'n10m1r1a2>nn9m1r1a2>m1r1a2>r1a2>a2Body','containerName':'R1Hero 1'}
-     */
-    public getLineageDetails(element: Element): ILineage {
-        var name = [];
-        var identifier = [];
-        var lineageDelimiter = '>';
-        var elementBiDataAttribute = this._config.biBlobAttributeTag; // data-m
-        var elementModuleIdAttribute = 'data-module-id';
-        var containerName = undefined;
-        var nameValue;
-        var idValue;
-
-        while (element) {
-            var dataAttr = element.getAttribute(elementBiDataAttribute) || element[elementBiDataAttribute];
-            var moduleIdAttribute = element.getAttribute(elementModuleIdAttribute) || element[elementModuleIdAttribute];
-
-            if (dataAttr) {
-                try {
-                    var telemetryObject = JSON.parse(dataAttr);
-                } catch (e) {
-                    this._traceLogger.throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _ExtendedInternalMessageId.CannotParseDataAttribute, "Can not parse " + dataAttr
-                    )
-                }
-                if (telemetryObject) {
-
-                    nameValue = telemetryObject.cN || telemetryObject.cT;
-                    idValue = telemetryObject.id || undefined;
-                    if (nameValue || idValue) {
-                        name.push(nameValue);
-
-                        if (moduleIdAttribute) {
-                            // reporting treats cN of modules as containerName
-                            containerName = nameValue;
-                        }
-
-                        identifier.push(idValue);
-                    }
-                }
-            } else {
-                nameValue = element.getAttribute(this._contentBlobFieldNames.contentName) || element.getAttribute(this._contentBlobFieldNames.contentType);
-                idValue = element.getAttribute(this._contentBlobFieldNames.id) || undefined;
-                if (nameValue || idValue) {
-                    name.push(nameValue);
-
-                    if (moduleIdAttribute) {
-                        containerName = nameValue;
-                    }
-
-                    identifier.push(idValue);
-                }
-            }
-            element = element.parentElement;
-        }
-
-        var lineageDetails: ILineage = {
-            lineage: name.join(lineageDelimiter),
-            lineageById: identifier.join(lineageDelimiter),
-            lineageContainerName: containerName
-        };
-
-        return lineageDetails;
     }
 
     /**
@@ -250,9 +179,11 @@ export class DomContentHandler implements IContentHandler {
             elementContent = extend(elementContent, this._populateElementContentwithDataBi(contentElement, element));
         }
         _removeInvalidElements(elementContent);
+        /*
         if (this._config.autoCapture.lineage && eventType == EventType.PAGE_ACTION) {
             elementContent = extend(elementContent, this.getLineageDetails(element));
         }
+        */
         if (this._config.autoPopulateParentIdAndParentName) {
             elementContent = extend(elementContent, this._getParentDetails(biBlobElement ? biBlobElement : contentElement, elementContent));
         }
@@ -349,7 +280,7 @@ export class DomContentHandler implements IContentHandler {
      * @param removePrefix - Specifies if the prefix must be excluded from key names in the returned collection.
      * @returns Metadata collection/property bag
      */
-    private _getMetaDataFromDOM(prefix: string, removePrefix: boolean): { [name: string]: string } {
+    private _getMetaDataFromDOM(captureAllMetaDataContent:boolean, prefix: string, removePrefix: boolean): { [name: string]: string } {
         var metaElements: any;
         var metaData = {};
         if (isDocumentObjectAvailable) {
@@ -357,9 +288,8 @@ export class DomContentHandler implements IContentHandler {
             for (var i = 0; i < metaElements.length; i++) {
                 var meta = metaElements[i];
                 if (meta.name) {
-                    var mt = meta.name.toLowerCase();
-                    if (mt.indexOf(prefix) === 0) {
-                        var name = removePrefix ? meta.name.replace(prefix, '') : meta.name;
+                    if(captureAllMetaDataContent || meta.name.indexOf(prefix) === 0) {
+                        const name = removePrefix ? meta.name.replace(prefix, '') : meta.name;
                         metaData[name] = meta.content;
                     }
                 }

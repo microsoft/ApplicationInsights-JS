@@ -9,7 +9,7 @@ const version = require("./package.json").version;
 const outputName = "applicationinsights-clickanalytics-js";
 const banner = [
   "/*!",
-  ` * Application Insights JavaScript SDK - Web Analytics, ${version}`,
+  ` * Application Insights JavaScript SDK - Click Analytics, ${version}`,
   " * Copyright (c) Microsoft and contributors. All rights reserved.",
   " */"
 ].join("\n");

@@ -6,10 +6,10 @@
 
 import { WebEvent } from './WebEvent';
 import * as DataCollector from '../DataCollector';
-import { IExtendedTelemetryItem, EventLatency, isValueAssigned, extend, getPerformance } from '@ms/1ds-core-js';
+import { ITelemetryItem, getPerformance } from "@microsoft/applicationinsights-core-js"
 import { IPageActionOverrideValues, IPageActionTelemetry, IPageActionProperties } from '../Interfaces/Datamodel';
 import { EventType } from '../Enums';
-import { _extractFieldFromObject, _bracketIt } from '../common/Utils';
+import { _extractFieldFromObject, _bracketIt, isValueAssigned, extend } from '../common/Utils';
 
 const CONTENT_VERSION = '2.0';
 
@@ -25,13 +25,12 @@ export class PageAction extends WebEvent {
         var ext = {};
         ext['web'] = {};
         ext['web']['isManual'] = pageActionEvent.isManual;
-        let event: IExtendedTelemetryItem = {
+        let event: ITelemetryItem = {
             name: 'Ms.Web.PageAction',
-            baseType: 'PageActionData',
+            baseType: 'ClickData',
             ext: ext,
             data: {},
-            baseData: {},
-            latency: EventLatency.Normal
+            baseData: {}
         };
         event.baseData['name'] = pageActionEvent.name;
         event.baseData['uri'] = pageActionEvent.uri;

@@ -2,7 +2,7 @@ import {
     IPlugin, IConfiguration, IAppInsightsCore,
     BaseTelemetryPlugin, CoreUtils, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
     IDiagnosticLogger, LoggingSeverity, _InternalMessageId, ICustomProperties,
-    getWindow, getDocument, getHistory, getLocation, doPerf
+    getWindow, getDocument, getHistory, getLocation, doPerf, 
 } from "@microsoft/applicationinsights-core-js";
 
 import {
@@ -14,7 +14,7 @@ import {
 } from "@microsoft/applicationinsights-common";
 
 import { IClickAnalyticsConfiguration, IPageActionOverrideValues, IContentHandler, IAutoCaptureHandler } from './Interfaces/Datamodel';
-import {  _removeNonObjectsAndInvalidElements, extend, _isElementDnt } from './common/Utils';
+import {  _removeNonObjectsAndInvalidElements, extend, _isElementDnt, isDocumentObjectAvailable } from './common/Utils';
 import { PageAction } from './events/PageAction';
 import { AutoCaptureHandler } from "./handlers/AutoCaptureHandler";
 import { DomContentHandler } from "./handlers/DomContentHandler";
@@ -40,8 +40,8 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
         config.extensionConfig[this.identifier] = config.extensionConfig[this.identifier] || {};
         this._config = this._mergeConfig(config.extensionConfig[this.identifier]);
         super.initialize(config, core, extensions, pluginChain);
-        let ctx = this._getTelCtx();
-        let _window = getWindow();
+       // let ctx = this._getTelCtx();
+       // let _window = getWindow();
         // Default to DOM content handler
         this._contentHandler = this._contentHandler ? this._contentHandler : new DomContentHandler(this._config, this.diagLog());
         // Default to DOM autoCapture handler
@@ -84,12 +84,18 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
         autoCapture: true,
         callback: {
             pageActionPageTags: null,
-            // pageViewPageTags: null,
-            contentUpdatePageTags: null,
             pageActionContentTags: null,
         },
         pageTags: {},
         autoPopulateParentIdAndParentName: false,
+        // overrideValues to use instead of collecting automatically
+        coreData: {
+            referrerUri: isDocumentObjectAvailable ? document.referrer : '',
+            requestUri: '',
+            pageName: '',
+            pageType: ''
+        },
+        captureAllMetaDataContent:false
     };
 
     let attributesThatAreObjectsInConfig: any[] = [];

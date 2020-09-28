@@ -6,11 +6,11 @@
 
 
 import {
-    _findClosestByAttribute, _removeInvalidElements, _walkUpDomChainWithElementValidation
+    _findClosestByAttribute, _removeInvalidElements, _walkUpDomChainWithElementValidation, isWindowObjectAvailable, isValueAssigned, extend
 } from '../common/Utils';
 import * as DataCollector from '../DataCollector';
-import { IDiagnosticLogger, isValueAssigned, extend, cookieAvailable, isWindowObjectAvailable, getLocation, isNumber } from '@ms/1ds-core-js';
-import { IClickAnalyticsConfiguration, IPageTags, IOverrideValues, IContentHandler } from '../Interfaces/Datamodel';
+import { IDiagnosticLogger, getLocation } from '@microsoft/applicationinsights-core-js';
+import { IClickAnalyticsConfiguration, IPageTags, IOverrideValues, IContentHandler, ICoreData, ITelemetryEventInternal, ITelemetryEventProperties } from '../Interfaces/Datamodel';
 import { ClickAnalyticsPlugin } from '../ClickAnalyticsPlugin';
 import { Behavior } from '../Behaviours';
 
@@ -34,6 +34,18 @@ export class WebEvent {
         protected _pageTagsCallback: any, protected _metaTags: { [name: string]: string },
         protected _traceLogger: IDiagnosticLogger) {
 
+    }
+
+    public _setBasicProperties(event: ITelemetryEventInternal, overrideValues: IOverrideValues) {
+        // Fill common PartB fields
+        
+        
+        if (!isValueAssigned(event.name)) {
+            event.name = DataCollector._getPageName(this._config, overrideValues);
+        }
+        if (!isValueAssigned(event.uri) && isWindowObjectAvailable) {
+            event.uri = DataCollector._getUri(this._config, getLocation());
+        }
     }
 
     /**
@@ -60,9 +72,8 @@ export class WebEvent {
         if (isValueAssigned(this._marketMetaTag)) {
             event.market = this._marketMetaTag;
         }
-        event.isLoggedIn = DataCollector._getSignedInStatus(this._config);
-        // Fill common PartC fields
-        eventProperties.cookieEnabled = cookieAvailable();
+        
+        
     }
 
     /**

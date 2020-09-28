@@ -5,13 +5,46 @@
  * File containing utility functions.
  */
 
-import { CoreUtils, getWindow, getDocument } from "@microsoft/applicationinsights-core-js";
+import { CoreUtils, getWindow, getDocument, _InternalMessageId } from "@microsoft/applicationinsights-core-js";
 import {
     IClickAnalyticsConfiguration, IRectangle
 } from '../Interfaces/Datamodel';
 
 
 const Prototype = 'prototype';
+
+export const _ExtendedInternalMessageId = {
+    ..._InternalMessageId,
+    AuthHandShakeError: 501,
+    AuthRedirectFail: 502,
+    BrowserCannotReadLocalStorage: 503,
+    BrowserCannotWriteLocalStorage: 504,
+    BrowserDoesNotSupportLocalStorage: 505,
+    CannotParseBiBlobValue: 506,
+    CannotParseDataAttribute: 507,
+    CVPluginNotAvailable: 508,
+    DroppedEvent: 509,
+    ErrorParsingAISessionCookie: 510,
+    ErrorProvidedChannels: 511,
+    FailedToGetCookies: 512,
+    FailedToInitializeCorrelationVector: 513,
+    FailedToInitializeSDK: 514,
+    InvalidContentBlob: 515,
+    InvalidCorrelationValue: 516,
+    SessionRenewalDateIsZero: 517,
+    SendPostOnCompleteFailure: 518,
+    PostResponseHandler: 519
+};
+
+/**
+ * Checks if document object is available
+ */
+export var isDocumentObjectAvailable: boolean = Boolean(getDocument());
+
+/**
+ * Checks if window object is available
+ */
+export var isWindowObjectAvailable: boolean = Boolean(getWindow());
 
 /**
  * Finds attributes in overrideConfig which are invalid or should be objects

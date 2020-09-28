@@ -91,6 +91,16 @@ module.exports = function (grunt) {
                     './extensions/applicationinsights-properties-js/Interfaces/*.ts'
                 ]
             },
+            clickanalytics: {
+                tsconfig: './extensions/applicationinsights-clickanalytics-js/tsconfig.json',
+                src: [
+                    './extensions/applicationinsights-clickanalytics-js/*.ts',
+                    './extensions/applicationinsights-clickanalytics-js/common/*.ts',
+                    './extensions/applicationinsights-clickanalytics-js/events/*.ts',
+                    './extensions/applicationinsights-clickanalytics-js/handlers/*.ts',
+                    './extensions/applicationinsights-clickanalytics-js/Interfaces/*.ts'
+                ]
+            },
             propertiestests: {
                 tsconfig: './extensions/applicationinsights-properties-js/Tests/tsconfig.json',
                 src: './extensions/applicationinsights-properties-js/Tests/**/*.ts',
@@ -428,4 +438,5 @@ module.exports = function (grunt) {
     grunt.registerTask("rollupes3test", ["ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3"]);
     grunt.registerTask("shims", ["ts:shims", "ts:shimstest", "qunit:shims"]);
     grunt.registerTask("shimstest", ["ts:shims", "ts:shimstest", "qunit:shims"]);
+    grunt.registerTask("clickanalytics", ["ts:clickanalytics"]);
 };
