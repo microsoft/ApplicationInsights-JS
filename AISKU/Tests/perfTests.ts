@@ -41,7 +41,7 @@ export class PerfTests extends TestClass {
   private _sendNotifications;
 
   public testInitialize() {
-    try {
+    
       this.useFakeServer = false;
       (sinon.fakeServer as any).restore();
       this.useFakeTimers = false;
@@ -49,40 +49,6 @@ export class PerfTests extends TestClass {
 
       // Setup Notification Listener
       this._sendNotifications = [];
-      this._notificationManager = new NotificationManager();
-      this._notificationManager.addNotificationListener({
-        perfEvent: (perfEvent: IPerfEvent): void => {
-          this._sendNotifications.push(perfEvent);
-        },
-      });
-
-      const init = new ApplicationInsights({
-        config: {
-          instrumentationKey: this._instrumentationKey,
-          extensionConfig: {
-            AppInsightsChannelPlugin: {
-              maxBatchInterval: 2000,
-              maxBatchSizeInBytes: 10 * 1024 * 1024, // 10 MB
-            },
-          },
-        },
-      });
-
-      init.core.setPerfMgr(new PerfManager(this._notificationManager));
-      init.loadAppInsights(false, null, this._notificationManager);
-      this._ai = init;
-
-      // Setup Sinon stuff
-      const sender: Sender = this._ai.appInsights.core.getTransmissionControls()[0][0] as Sender;
-      this.errorSpy = this.sandbox.spy(sender, "_onError");
-      this.successSpy = this.sandbox.spy(sender, "_onSuccess");
-      this.loggingSpy = this.sandbox.stub(
-        this._ai.appInsights.core.logger,
-        "throwInternal"
-      );
-    } catch (e) {
-      console.error("Failed to initialize");
-    }
   }
 
   public testCleanup() {
@@ -100,14 +66,48 @@ export class PerfTests extends TestClass {
     this.testCase({
       name: "AISKU Perf Tests -> load AppInsights",
       test: () => {
+        try {
+          const configObj= {
+            instrumentationKey: this._instrumentationKey,
+            extensionConfig: {
+              AppInsightsChannelPlugin: {
+                maxBatchInterval: 2000,
+                maxBatchSizeInBytes: 10 * 1024 * 1024, // 10 MB
+              },
+            },
+          };
+          const init = new ApplicationInsights({
+            config: configObj
+          });
+          this._notificationManager = new NotificationManager();
+          this._notificationManager.addNotificationListener({
+              perfEvent: (perfEvent: IPerfEvent): void => {
+              this._sendNotifications.push(perfEvent);
+            },
+          });
+          init.core.setPerfMgr(new PerfManager(this._notificationManager));
+          init.loadAppInsights(false, null, this._notificationManager);
+          this._ai = init;
+    
+          // Setup Sinon stuff
+          const sender: Sender = this._ai.appInsights.core.getTransmissionControls()[0][0] as Sender;
+          this.errorSpy = this.sandbox.spy(sender, "_onError");
+          this.successSpy = this.sandbox.spy(sender, "_onSuccess");
+          this.loggingSpy = this.sandbox.stub(
+            this._ai.appInsights.core.logger,
+            "throwInternal"
+          );
+        } catch (e) {
+          console.error("Failed to initialize");
+        }
         QUnit.assert.ok(this._sendNotifications.length === 1);
         QUnit.assert.ok(
           this._sendNotifications[0].name.indexOf("AISKU.loadAppInsights") !==
             -1,
-          "AppInsights Load time: " + this._sendNotifications[0].exTime
+          "AppInsights Load time: " + this._sendNotifications[0].time
         );
         console.log(
-          "Exec time loadAppInsights: " + this._sendNotifications[0].exTime
+          "Exec time loadAppInsights: " + this._sendNotifications[0].time
         );
       },
     });
@@ -117,6 +117,42 @@ export class PerfTests extends TestClass {
       stepDelay: 100,
       steps: [
         () => {
+          try {
+            const configObj= {
+              instrumentationKey: this._instrumentationKey,
+              extensionConfig: {
+                AppInsightsChannelPlugin: {
+                  maxBatchInterval: 2000,
+                  maxBatchSizeInBytes: 10 * 1024 * 1024, // 10 MB
+                },
+              },
+              perfEvtsSendAll: true
+            };
+            const init = new ApplicationInsights({
+              config: configObj
+            });
+            this._notificationManager = new NotificationManager(configObj);
+            this._notificationManager.addNotificationListener({
+                perfEvent: (perfEvent: IPerfEvent): void => {
+                this._sendNotifications.push(perfEvent);
+              },
+            });
+      
+            init.core.setPerfMgr(new PerfManager(this._notificationManager));
+            init.loadAppInsights(false, null, this._notificationManager);
+            this._ai = init;
+      
+            // Setup Sinon stuff
+            const sender: Sender = this._ai.appInsights.core.getTransmissionControls()[0][0] as Sender;
+            this.errorSpy = this.sandbox.spy(sender, "_onError");
+            this.successSpy = this.sandbox.spy(sender, "_onSuccess");
+            this.loggingSpy = this.sandbox.stub(
+              this._ai.appInsights.core.logger,
+              "throwInternal"
+            );
+          } catch (e) {
+            console.error("Failed to initialize");
+          }
           for (let i = 0; i < 100; i++) {
             let exception = null;
             try {
@@ -139,15 +175,12 @@ export class PerfTests extends TestClass {
         .concat(this.asserts(300))
         .concat(() => {
           let totalTrackExtime = 0;
-          let perfEvents = this._sendNotifications;
-          while (perfEvents.length > 0) {
-            const currEvent = perfEvents.shift();
-            if (currEvent.name.indexOf("processTelemetry") !== -1) {
-              totalTrackExtime += currEvent.exTime;
-            }
-            if (currEvent.childEvts && currEvent.childEvts.length > 0) {
-              perfEvents.push.apply(perfEvents, currEvent.childEvts);
-            }
+          let processTelemetryEvents = this._sendNotifications.filter(
+            (event) => event.name.indexOf("processTelemetry") !== -1
+          );
+          QUnit.assert.ok(processTelemetryEvents.length === 300*6);
+          for(let i=0;i<processTelemetryEvents.length;i++) {
+            totalTrackExtime += processTelemetryEvents[i].exTime;
           }
           console.log(
             "Avg Exec time processTelemetry (avg over 300 track calls): " +
@@ -161,6 +194,41 @@ export class PerfTests extends TestClass {
       stepDelay: 1,
       steps: [
         () => {
+          try {
+            const configObj= {
+              instrumentationKey: this._instrumentationKey,
+              extensionConfig: {
+                AppInsightsChannelPlugin: {
+                  maxBatchInterval: 2000,
+                  maxBatchSizeInBytes: 10 * 1024 * 1024, // 10 MB
+                },
+              },
+            };
+            const init = new ApplicationInsights({
+              config: configObj
+            });
+            this._notificationManager = new NotificationManager();
+            this._notificationManager.addNotificationListener({
+                perfEvent: (perfEvent: IPerfEvent): void => {
+                this._sendNotifications.push(perfEvent);
+              },
+            });
+      
+            init.core.setPerfMgr(new PerfManager(this._notificationManager));
+            init.loadAppInsights(false, null, this._notificationManager);
+            this._ai = init;
+      
+            // Setup Sinon stuff
+            const sender: Sender = this._ai.appInsights.core.getTransmissionControls()[0][0] as Sender;
+            this.errorSpy = this.sandbox.spy(sender, "_onError");
+            this.successSpy = this.sandbox.spy(sender, "_onSuccess");
+            this.loggingSpy = this.sandbox.stub(
+              this._ai.appInsights.core.logger,
+              "throwInternal"
+            );
+          } catch (e) {
+            console.error("Failed to initialize");
+          }
           let exception = null;
           try {
             window["a"]["b"]();
@@ -190,7 +258,7 @@ export class PerfTests extends TestClass {
             (event) => event.name.indexOf("AISKU.flush") !== -1
           );
           console.log(
-            "Exec time flush (all event types): " + flushEvent[0].exTime
+            "Exec time flush (all event types): " + flushEvent[0].time
           );
         }),
     });
@@ -200,6 +268,41 @@ export class PerfTests extends TestClass {
       stepDelay: 100,
       steps: [
         () => {
+          try {
+            const configObj= {
+              instrumentationKey: this._instrumentationKey,
+              extensionConfig: {
+                AppInsightsChannelPlugin: {
+                  maxBatchInterval: 2000,
+                  maxBatchSizeInBytes: 10 * 1024 * 1024, // 10 MB
+                },
+              },
+            };
+            const init = new ApplicationInsights({
+              config: configObj
+            });
+            this._notificationManager = new NotificationManager();
+            this._notificationManager.addNotificationListener({
+                perfEvent: (perfEvent: IPerfEvent): void => {
+                this._sendNotifications.push(perfEvent);
+              },
+            });
+      
+            init.core.setPerfMgr(new PerfManager(this._notificationManager));
+            init.loadAppInsights(false, null, this._notificationManager);
+            this._ai = init;
+      
+            // Setup Sinon stuff
+            const sender: Sender = this._ai.appInsights.core.getTransmissionControls()[0][0] as Sender;
+            this.errorSpy = this.sandbox.spy(sender, "_onError");
+            this.successSpy = this.sandbox.spy(sender, "_onSuccess");
+            this.loggingSpy = this.sandbox.stub(
+              this._ai.appInsights.core.logger,
+              "throwInternal"
+            );
+          } catch (e) {
+            console.error("Failed to initialize");
+          }
           for (let i = 0; i < 100; i++) {
             let exception = null;
             try {
@@ -224,13 +327,14 @@ export class PerfTests extends TestClass {
           let trackEvent = this._sendNotifications.filter(
             (event) => event.name.indexOf("AppInsightsCore:track") !== -1
           );
+          QUnit.assert.ok(trackEvent.length === 300);
           let totalTrackExtime = 0;
           for (let i = 0; i < trackEvent.length; i++) {
-            totalTrackExtime += trackEvent[i].exTime;
+            totalTrackExtime += trackEvent[i].time;
           }
           console.log(
             "Exec time track (avg over 300 track calls): " +
-              totalTrackExtime / trackEvent.length
+              totalTrackExtime / 300
           );
         }),
     });
