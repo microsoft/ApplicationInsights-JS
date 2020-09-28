@@ -46,7 +46,7 @@
         "rollup": "^0.66.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-shims" : "1.0.1",
+        "@microsoft/applicationinsights-shims" : "1.0.3",
         "@microsoft/dynamicproto-js": "^1.0.0"
     }
 }
