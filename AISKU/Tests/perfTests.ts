@@ -325,7 +325,7 @@ export class PerfTests extends TestClass {
         .concat(this.asserts(300))
         .concat(() => {
           let trackEvent = this._sendNotifications.filter(
-            (event) => event.name.indexOf("AppInsightsCore:track") !== -1
+            (event) => event.name.indexOf("track") !== -1
           );
           QUnit.assert.ok(trackEvent.length === 300);
           let totalTrackExtime = 0;
