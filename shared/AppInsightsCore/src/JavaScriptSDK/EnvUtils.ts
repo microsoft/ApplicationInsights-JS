@@ -27,6 +27,7 @@ const strConsole = "console";
 const strPerformance = "performance";
 const strJSON = "JSON";
 const strCrypto = "crypto";
+const strMsCrypto = "msCrypto";
 const strReactNative = "ReactNative";
 
 /**
@@ -224,6 +225,15 @@ export function getJSON(): JSON | null {
  */
 export function getCrypto(): Crypto | null {
     return getGlobalInst(strCrypto);
+}
+
+/**
+ * Returns the crypto object if it is present otherwise null.
+ * This helper is used to access the crypto object from the current
+ * global instance which could be window or globalThis for a web worker
+ */
+export function getMsCrypto(): Crypto | null {
+    return getGlobalInst(strMsCrypto);
 }
 
 /**

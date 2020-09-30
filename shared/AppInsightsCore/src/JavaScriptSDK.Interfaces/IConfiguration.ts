@@ -101,4 +101,10 @@ export interface IConfiguration {
      * [Optional] Fire every single performance event not just the top level root performance event. Defaults to false.
      */
     perfEvtsSendAll?: boolean;
+
+    /**
+     * [Optional] Identifies the default length used to generate random session and user id's if non currently exists for the user / session.
+     * Defaults to 22, previous default value was 5, if you need to keep the previous maximum length you should set this value to 5.
+     */
+    idLength?: number;
 }

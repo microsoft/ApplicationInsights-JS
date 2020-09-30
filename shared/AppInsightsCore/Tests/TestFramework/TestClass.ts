@@ -154,6 +154,7 @@ class TestClass {
         config.injectInto = config.injectIntoThis && this || config.injectInto;
         this.sandbox = sinon.sandbox.create(config);
         this.server = this.sandbox.server;
+        this._orgCrypto = window.crypto;
 
         // Allow the derived class to perform test initialization.
         this.testInitialize();
@@ -166,6 +167,10 @@ class TestClass {
             this.sandbox.restore();
         }
         else {
+            if (this._orgCrypto && window.crypto !== this._orgCrypto) {
+                this.setCrypto(this._orgCrypto);
+            }
+
             // Verify the sandbox and restore.
             (this.sandbox as any).verifyAndRestore();
         }
@@ -183,6 +188,7 @@ class TestClass {
     public clock: SinonFakeTimers;
     public server: SinonFakeServer;
     public sandbox: SinonSandbox;
+    protected _orgCrypto: Crypto | null;
 
     /** Creates an anonymous function that records arguments, this value, exceptions and return values for all calls. */
     public spy(): SinonSpy;
@@ -228,6 +234,16 @@ class TestClass {
                 configurable: true,
                 get () {
                     return userAgent;
+                }
+            });
+    }
+
+    protected setCrypto(crypto: Crypto | null) {
+        Object.defineProperty(window, 'crypto',
+            {
+                configurable: true,
+                get () {
+                    return crypto;
                 }
             });
     }

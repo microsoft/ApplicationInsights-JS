@@ -3,7 +3,7 @@
 
 import { StorageType } from "./Enums";
 import {
-    CoreUtils, EventHelper, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin,
+    CoreUtils, EventHelper, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin, getCrypto, getMsCrypto,
     getGlobal, getGlobalInst, getWindow, getDocument, getNavigator, getPerformance, getLocation, hasJSON, getJSON,
     strPrototype
 } from "@microsoft/applicationinsights-core-js";
@@ -479,53 +479,19 @@ export class Util {
     /**
      * generate random id string
      */
-    public static newId(): string {
-        const base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-        let result = "";
-        // tslint:disable-next-line:insecure-random
-        let random = Math.random() * 1073741824; // 5 symbols in base64, almost maxint
-
-        while (random > 0) {
-            const char = base64chars.charAt(random % 64);
-            result += char;
-            random = Math.floor(random / 64);
-        }
-        return result;
-    }
+    public static newId = CoreUtils.newId;
 
     /**
      * generate a random 32bit number (-0x80000000..0x7FFFFFFF).
      */
     public static random32() {
-        return (0x100000000 * Math.random()) | 0;
+        return CoreUtils.random32(true);
     }
 
     /**
      * generate W3C trace id
      */
-    public static generateW3CId() {
-        const hexValues = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
-
-        // rfc4122 version 4 UUID without dashes and with lowercase letters
-        let oct = "", tmp;
-        for (let a = 0; a < 4; a++) {
-            tmp = Util.random32();
-            oct +=
-                hexValues[tmp & 0xF] +
-                hexValues[tmp >> 4 & 0xF] +
-                hexValues[tmp >> 8 & 0xF] +
-                hexValues[tmp >> 12 & 0xF] +
-                hexValues[tmp >> 16 & 0xF] +
-                hexValues[tmp >> 20 & 0xF] +
-                hexValues[tmp >> 24 & 0xF] +
-                hexValues[tmp >> 28 & 0xF];
-        }
-
-        // "Set the two most significant bits (bits 6 and 7) of the clock_seq_hi_and_reserved to zero and one, respectively"
-        const clockSequenceHi = hexValues[8 + (Math.random() * 4) | 0];
-        return oct.substr(0, 8) + oct.substr(9, 4) + "4" + oct.substr(13, 3) + clockSequenceHi + oct.substr(16, 3) + oct.substr(19, 12);
-    }
+    public static generateW3CId = CoreUtils.generateW3CId;
 
     /**
      * Check if an object is of type Array
@@ -889,10 +855,14 @@ export class DateTimeUtils {
         // returns the window or webworker performance object
         let perf = getPerformance();
         if (perf && perf.now && perf.timing) {
-            return perf.now() + perf.timing.navigationStart
+            let now = perf.now() + perf.timing.navigationStart;
+            // Known issue with IE where this calculation can be negative, so if it is then ignore and fallback
+            if (now > 0) {
+                return now;
+            }
         }
 
-        return new Date().getTime()
+        return new Date().getTime();
     };
 
     /**

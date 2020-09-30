@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ISession, Util, DateTimeUtils } from '@microsoft/applicationinsights-common';
+import { ISession, Util } from '@microsoft/applicationinsights-common';
 import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity, CoreUtils, DiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 
 export interface ISessionConfig {
@@ -9,6 +9,7 @@ export interface ISessionConfig {
     sessionExpirationMs?: () => number;
     cookieDomain?: () => string;
     namePrefix?: () => string;
+    idLength?: () => number;
 }
 
 export class Session implements ISession {
@@ -18,8 +19,8 @@ export class Session implements ISession {
     public id?: string;
 
     /**
-     * The date at which this guid was genereated.
-     * Per the spec the ID will be regenerated if more than acquisitionSpan milliseconds ellapse from this time.
+     * The date at which this guid was generated.
+     * Per the spec the ID will be regenerated if more than acquisitionSpan milliseconds elapsed from this time.
      */
     public acquisitionDate?: number;
 
@@ -74,12 +75,14 @@ export class _SessionManager {
             this.initializeAutomaticSession();
         }
 
-        const now = DateTimeUtils.Now();
+        // Always using Date getTime() as there is a bug in older IE instances that causes the performance timings to have the hi-bit set eg 0x800000000 causing
+        // the number to be incorrect.
+        const now = new Date().getTime();
 
         const acquisitionExpired = this.config.sessionExpirationMs() === 0 ? false : now - this.automaticSession.acquisitionDate > this.config.sessionExpirationMs();
         const renewalExpired = this.config.sessionExpirationMs() === 0 ? false : now - this.automaticSession.renewalDate > this.config.sessionRenewalMs();
 
-        // renew if acquisitionSpan or renewalSpan has ellapsed
+        // renew if acquisitionSpan or renewalSpan has elapsed
         if (acquisitionExpired || renewalExpired) {
             // update automaticSession so session state has correct id
             this.renew();
@@ -126,7 +129,7 @@ export class _SessionManager {
     }
 
     /**
-     *  Extract id, aquisitionDate, and renewalDate from an ai_session payload string and
+     *  Extract id, acquisitionDate, and renewalDate from an ai_session payload string and
      *  use this data to initialize automaticSession.
      *
      *  @param {string} sessionData - The string stored in an ai_session cookie or local storage backup
@@ -166,9 +169,9 @@ export class _SessionManager {
     }
 
     private renew() {
-        const now = DateTimeUtils.Now();
+        const now = new Date().getTime();
 
-        this.automaticSession.id = Util.newId();
+        this.automaticSession.id = Util.newId((this.config && this.config.idLength) ? this.config.idLength() : 22);
         this.automaticSession.acquisitionDate = now;
         this.automaticSession.renewalDate = now;
 
@@ -196,15 +199,15 @@ export class _SessionManager {
             cookieExpiry.setTime(renewalExpiry);
         }
 
-        const cookieDomnain = this.config.cookieDomain ? this.config.cookieDomain() : null;
+        const cookieDomain = this.config.cookieDomain ? this.config.cookieDomain() : null;
 
         // if sessionExpirationMs is set to 0, it means the expiry is set to 0 for this session cookie
         // A cookie with 0 expiry in the session cookie will never expire for that browser session.  If the browser is closed the cookie expires.  
         // Another browser instance does not inherit this cookie.
         const UTCString = this.config.sessionExpirationMs() === 0 ? '0' : cookieExpiry.toUTCString();
-        Util.setCookie(this._logger, this._storageNamePrefix(), cookie.join('|') + ';expires=' + UTCString, cookieDomnain);
+        Util.setCookie(this._logger, this._storageNamePrefix(), cookie.join('|') + ';expires=' + UTCString, cookieDomain);
 
-        this.cookieUpdatedTimestamp = DateTimeUtils.Now();
+        this.cookieUpdatedTimestamp = new Date().getTime();
     }
 
     private setStorage(guid: string, acq: number, renewal: number) {
