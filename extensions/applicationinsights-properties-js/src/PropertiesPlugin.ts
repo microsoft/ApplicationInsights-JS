@@ -26,7 +26,8 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
             sdkExtension: () => null,
             isBrowserLinkTrackingEnabled: () => false,
             appId: () => null,
-            namePrefix: () => undefined
+            namePrefix: () => undefined,
+            idLength: () => 22
         }
         return defaultConfig;
     }

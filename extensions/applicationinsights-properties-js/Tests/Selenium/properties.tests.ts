@@ -1,6 +1,6 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 
-import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, CoreUtils } from "@microsoft/applicationinsights-core-js";
 import PropertiesPlugin from "../../src/PropertiesPlugin";
 import { ITelemetryConfig } from "../../src/Interfaces/ITelemetryConfig";
 import { Util, IWeb } from "@microsoft/applicationinsights-common";
@@ -142,29 +142,35 @@ export class PropertiesTests extends TestClass {
                 // setup
                 var actualCookieName: string;
                 var actualCookieValue: string;
-                var newIdStub = this.sandbox.stub(Util, "newId", () => "newId");
-                var getCookieStub = this.sandbox.stub(Util, "getCookie", () => "");
-                var setCookieStub = this.sandbox.stub(Util, "setCookie", (logger, cookieName, cookieValue) => {
-                    actualCookieName = cookieName;
-                    actualCookieValue = cookieValue;
-                });
+                let newIdPrev = CoreUtils.newId;
+                try {
+                    // Not using sinon stub as it's not restoring the previous version properly (getting newId is not a function for tests run after this one)
+                    CoreUtils.newId = () => "newId";
+                    var getCookieStub = this.sandbox.stub(Util, "getCookie", () => "");
+                    var setCookieStub = this.sandbox.stub(Util, "setCookie", (logger, cookieName, cookieValue) => {
+                        actualCookieName = cookieName;
+                        actualCookieValue = cookieValue;
+                    });
 
-                // act
-                this.properties.initialize(this.getEmptyConfig(), this.core, []);
+                    // act
+                    this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
-                // verify
-                Assert.equal("ai_user", actualCookieName, "ai_user cookie is set");
-                var cookieValueParts = actualCookieValue.split(';');
+                    // verify
+                    Assert.equal("ai_user", actualCookieName, "ai_user cookie is set");
+                    var cookieValueParts = actualCookieValue.split(';');
 
-                Assert.equal(2, cookieValueParts.length, "ai_user cookie value should have actual value and expiration");
-                Assert.equal(2, cookieValueParts[0].split('|').length, "ai_user cookie value before expiration should include user id and acq date");
-                Assert.equal("newId", cookieValueParts[0].split('|')[0], "First part of ai_user cookie value should be new user id guid");
-                Assert.equal(new Date().toString(), (new Date(cookieValueParts[0].split('|')[1])).toString(), "Second part of ai_user cookie should be parsable as date");
+                    Assert.equal(2, cookieValueParts.length, "ai_user cookie value should have actual value and expiration");
+                    Assert.equal(2, cookieValueParts[0].split('|').length, "ai_user cookie value before expiration should include user id and acq date");
+                    Assert.equal("newId", cookieValueParts[0].split('|')[0], "First part of ai_user cookie value should be new user id guid");
+                    Assert.equal(new Date().toString(), (new Date(cookieValueParts[0].split('|')[1])).toString(), "Second part of ai_user cookie should be parsable as date");
 
-                var expiration = cookieValueParts[1];
-                Assert.equal(true, expiration.substr(0, "expires=".length) === "expires=", "ai_user cookie expiration part should start with expires=");
-                var expirationDate = new Date(expiration.substr("expires=".length));
-                Assert.equal(true, expirationDate > (new Date), "ai_user cookie expiration should be in the future");
+                    var expiration = cookieValueParts[1];
+                    Assert.equal(true, expiration.substr(0, "expires=".length) === "expires=", "ai_user cookie expiration part should start with expires=");
+                    var expirationDate = new Date(expiration.substr("expires=".length));
+                    Assert.equal(true, expirationDate > (new Date), "ai_user cookie expiration should be in the future");
+                } finally {
+                    CoreUtils.newId = newIdPrev;
+                }
             }
         });
 
@@ -175,29 +181,35 @@ export class PropertiesTests extends TestClass {
                 var id = "userId"
                 var actualCookieName: string;
                 var actualCookieValue: string;
-                var newIdStub = this.sandbox.stub(Util, "newId", () => "newId");
-                var getCookieStub = this.sandbox.stub(Util, "getCookie", () => "");
-                var setCookieStub = this.sandbox.stub(Util, "setCookie", (logger, cookieName, cookieValue) => {
-                    actualCookieName = cookieName;
-                    actualCookieValue = cookieValue;
-                });
-
-                // act
-                this.properties.initialize(this.getEmptyConfig(), this.core, []);
-
-                // verify
-                Assert.equal("ai_user", actualCookieName, "ai_user cookie is set");
-                var cookieValueParts = actualCookieValue.split(';');
-
-                Assert.equal(2, cookieValueParts.length, "ai_user cookie value should have actual value and expiration");
-                Assert.equal(2, cookieValueParts[0].split('|').length, "ai_user cookie value before expiration should include user id and acq date");
-                Assert.equal("newId", cookieValueParts[0].split('|')[0], "First part of ai_user cookie value should be new user id guid");
-                Assert.equal(new Date().toString(), (new Date(cookieValueParts[0].split('|')[1])).toString(), "Second part of ai_user cookie should be parsable as date");
-
-                var expiration = cookieValueParts[1];
-                Assert.equal(true, expiration.substr(0, "expires=".length) === "expires=", "ai_user cookie expiration part should start with expires=");
-                var expirationDate = new Date(expiration.substr("expires=".length));
-                Assert.equal(true, expirationDate > (new Date), "ai_user cookie expiration should be in the future");
+                let newIdPrev = CoreUtils.newId;
+                try {
+                    // Not using sinon stub as it's not restoring the previous version properly (getting newId is not a function for tests run after this one)
+                    CoreUtils.newId = () => "newId";
+                    var getCookieStub = this.sandbox.stub(Util, "getCookie", () => "");
+                    var setCookieStub = this.sandbox.stub(Util, "setCookie", (logger, cookieName, cookieValue) => {
+                        actualCookieName = cookieName;
+                        actualCookieValue = cookieValue;
+                    });
+    
+                    // act
+                    this.properties.initialize(this.getEmptyConfig(), this.core, []);
+    
+                    // verify
+                    Assert.equal("ai_user", actualCookieName, "ai_user cookie is set");
+                    var cookieValueParts = actualCookieValue.split(';');
+    
+                    Assert.equal(2, cookieValueParts.length, "ai_user cookie value should have actual value and expiration");
+                    Assert.equal(2, cookieValueParts[0].split('|').length, "ai_user cookie value before expiration should include user id and acq date");
+                    Assert.equal("newId", cookieValueParts[0].split('|')[0], "First part of ai_user cookie value should be new user id guid");
+                    Assert.equal(new Date().toString(), (new Date(cookieValueParts[0].split('|')[1])).toString(), "Second part of ai_user cookie should be parsable as date");
+    
+                    var expiration = cookieValueParts[1];
+                    Assert.equal(true, expiration.substr(0, "expires=".length) === "expires=", "ai_user cookie expiration part should start with expires=");
+                    var expirationDate = new Date(expiration.substr("expires=".length));
+                    Assert.equal(true, expirationDate > (new Date), "ai_user cookie expiration should be in the future");
+                } finally {
+                    CoreUtils.newId = newIdPrev;
+                }
             }
         });
 
@@ -662,7 +674,8 @@ export class PropertiesTests extends TestClass {
             sdkExtension: () => "",
             isBrowserLinkTrackingEnabled: () => true,
             appId: () => "",
-            namePrefix: () => ""
+            namePrefix: () => "",
+            idLength: () => 22
         }
     }
 }

@@ -163,7 +163,7 @@ export class PageViewPerformanceManager {
         } else {
             // for other page views, don't report if it's outside of a reasonable range
             for (let i = 0; i < durations.length; i++) {
-                if (durations[i] >= this.MAX_DURATION_ALLOWED) {
+                if (durations[i] < 0 || durations[i] >= this.MAX_DURATION_ALLOWED) {
                     return false;
                 }
             }
