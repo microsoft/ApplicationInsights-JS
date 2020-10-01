@@ -21,21 +21,21 @@ export interface IClickAnalyticsConfiguration {
      */
     callback?: IValueCallback;
     /**
-     * When a particular element is not tagged with data-bi-name or data-bi-cN attribute, this flag is used to collect standard HTML attribute for contentName.
+     * When a particular element is not tagged with content name prefix or content name prefix is not provided by user, this flag is used to collect standard HTML attribute for contentName.
      */
     useDefaultContentName?: boolean;
     /**
-     * Web Analytics supports a JSON blob content meta data tagging instead of individual data-bi attributes. The default attribute is data-bi-m. This property allows for changing that attribute name.
+     * Automatic capture content name and value of elements which are tagged with provided prefix
      */
-    biBlobAttributeTag?: string;
+    contentNamePrefix?: string;
+    /**
+     * Web Analytics supports a JSON blob content meta data tagging instead of individual data-* attributes. The default attribute is data-ai-blob. This property allows for changing that attribute name.
+     */
+    aiBlobAttributeTag?: string;
     /**
      * Page tags 
      */
     pageTags?: { [name: string]: string | number | boolean | string[] | number[] | boolean[] | object };
-    /**
-     * Automatic populate element's parentId and parentName configuration
-     */
-    autoPopulateParentIdAndParentName?: boolean;
     /**
      * Core data configuration
      */
@@ -56,6 +56,7 @@ export interface IClickAnalyticsConfiguration {
      * Automatic capture all metadata names and content. Default is false. If enabled this will override provided metaTagPrefix.
      */
     captureAllMetaDataContent?: boolean;
+
 
 }
 
@@ -355,6 +356,14 @@ export interface IPageActionTelemetry extends ITelemetryEventInternal {
      * Version indicating content version which aids in parsing the content.
      */
     contentVer?: string;
+    /**
+     * Uri of the referrer, this is a convinence for adaptors to just leverage PageAction for click analytics without linking it to the respective Page Views.
+     */
+    refUri?: string;
+    /**
+     * Time taken in milliseconds since the user saw the page and took the action (such as click on a link, etc.). This will be in seconds.
+     */
+    timeToAction?: number;
 }
 
 export interface ITelemetryEventProperties {

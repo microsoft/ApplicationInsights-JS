@@ -387,3 +387,7 @@ export function _getViewportDimensions() {
 
     return viewport;
 }
+
+export function _validateContentNamePrefix ( config: IClickAnalyticsConfiguration) {
+    return isValueAssigned(config.contentNamePrefix) && (config.contentNamePrefix.indexOf('data-') === 0) ;
+}

@@ -102,7 +102,7 @@ export class DomContentHandler implements IContentHandler {
             elements = document.querySelectorAll(
                 _bracketIt(this._contentBlobFieldNames.areaName) + ',' +
                 _bracketIt(this._contentBlobFieldNames.slotNumber) + ',' +
-                _bracketIt(this._config.biBlobAttributeTag));
+                _bracketIt(this._config.aiBlobAttributeTag));
         }
 
         let arrayOfContents = [];
@@ -126,7 +126,7 @@ export class DomContentHandler implements IContentHandler {
 
     /**
      * Collect data-bi attributes for the given element.
-     * All attributes with data-bi prefix are collected.  'data-bi' prefix is removed from the key name.
+     * All attributes with data-* prefix or user provided contentNamePrefix are collected.  'data-*' prefix is removed from the key name.
      * @param element - The element from which attributes need to be collected.
      * @returns String representation of the Json array of element attributes
      */
@@ -139,13 +139,20 @@ export class DomContentHandler implements IContentHandler {
         var biBlobElement;
         var biBlobValue;
         var contentElement;
+        const dataTag:string = this._config.contentNamePrefix;
 
         // element has no tags - look for the closest upper element with tags
-        if (!this._isTracked(element)) {
+        if (!this._isTracked(element, dataTag)) {
+            // Get the element if it has any data-* tag defined.  If not traverse up the DOM to find the closest parent with data-* tag defined
+            contentElement = _walkUpDomChainWithElementValidation(element, this._isTracked, dataTag);
+            elementContent = extend(elementContent, this._populateElementContentwithDataTag(contentElement, element, dataTag));
+            
+        } else {
+            // Get the element if it has any data-bi tag defined.  If not traverse up the DOM to find the closest parent with data-bi tag defined
             // capture config.biBlobAttributeTag blob from element or hierarchy
-            biBlobElement = _findClosestByAttribute(element, this._config.biBlobAttributeTag);
+            biBlobElement = _findClosestByAttribute(element, this._config.aiBlobAttributeTag);
             if (biBlobElement) {
-                biBlobValue = biBlobElement.getAttribute(this._config.biBlobAttributeTag);
+                biBlobValue = biBlobElement.getAttribute(this._config.aiBlobAttributeTag);
             }
 
             if (biBlobValue) {
@@ -158,39 +165,15 @@ export class DomContentHandler implements IContentHandler {
                     )
                 }
             } else {
-                // Get the element if it has any data-bi tag defined.  If not traverse up the DOM to find the closest parent with data-bi tag defined
-                contentElement = _walkUpDomChainWithElementValidation(element, this._isTrackedWithDataBi);
-                elementContent = extend(elementContent, this._populateElementContentwithDataBi(contentElement, element));
+                contentElement = element;
+                elementContent = extend(elementContent, this._populateElementContentwithDataTag(contentElement, element, dataTag));
             }
-        } else if (this._isTrackedWithDataM(element)) {
-            biBlobElement = element;
-            biBlobValue = biBlobElement.getAttribute(this._config.biBlobAttributeTag);
-            try {
-                elementContent = JSON.parse(biBlobValue);
-            } catch (e) {
-                this._traceLogger.throwInternal(
-                    LoggingSeverity.CRITICAL,
-                    _ExtendedInternalMessageId.CannotParseBiBlobValue, "Can not parse " + biBlobValue
-                )
-            }
-        } else if (this._isTrackedWithDataBi(element)) {
-            // Get the element if it has any data-bi tag defined.  If not traverse up the DOM to find the closest parent with data-bi tag defined
-            contentElement = element;
-            elementContent = extend(elementContent, this._populateElementContentwithDataBi(contentElement, element));
         }
         _removeInvalidElements(elementContent);
-        /*
-        if (this._config.autoCapture.lineage && eventType == EventType.PAGE_ACTION) {
-            elementContent = extend(elementContent, this.getLineageDetails(element));
-        }
-        */
-        if (this._config.autoPopulateParentIdAndParentName) {
-            elementContent = extend(elementContent, this._getParentDetails(biBlobElement ? biBlobElement : contentElement, elementContent));
-        }
         return elementContent;
     }
 
-    private _populateElementContentwithDataBi(contentElement: Element, element: Element) {
+    private _populateElementContentwithDataTag(contentElement: Element, element: Element, dataTag: string) {
         var elementContent: any = {};
         if (!contentElement) {
             // None of the element and its parent has any tags, collect standard HTML attribute for contentName when useDefaultContentName flag is true 
@@ -200,35 +183,23 @@ export class DomContentHandler implements IContentHandler {
                 return elementContent
             }
         }
-
-        // Get the closest element with attribute data-bi-area.
-        var areaElement = _findClosestByAttribute(contentElement, this._contentBlobFieldNames.areaName);
-        var areaContent = extend({}, this._getAreaContent(areaElement));
-
+        
         var customizedContentName = this._config.callback.contentName ? this._config.callback.contentName(contentElement, this._config.useDefaultContentName) : "";
         var defaultContentName = this._getDefaultContentName(contentElement, this._config.useDefaultContentName);
 
         elementContent = {
             id: contentElement.getAttribute(this._contentBlobFieldNames.id) || contentElement.id || '',
-            aN: areaContent.areaName,
-            sN: contentElement.getAttribute(this._contentBlobFieldNames.slotNumber),
             cN: customizedContentName || contentElement.getAttribute(this._contentBlobFieldNames.contentName) || defaultContentName || contentElement.getAttribute('alt') || '',
-            cS: contentElement.getAttribute(this._contentBlobFieldNames.contentSource) || areaContent.contentSource,
-            tN: areaContent.templateName,
-            pid: contentElement.getAttribute(this._contentBlobFieldNames.productId),
-            cT: contentElement.getAttribute(this._contentBlobFieldNames.contentType) || areaContent.type,
-            pI: contentElement.getAttribute(this._contentBlobFieldNames.parentId),
-            pN: contentElement.getAttribute(this._contentBlobFieldNames.parentName)
         };
 
         // Validate to ensure the minimum required field 'contentName/cN' is present.  
         // The content schema defines id, aN and sN as required fields.  However, 
         /// requiring these fields would result in majority of adopter's content from being collected.
         // Just throw a warning and continue collection.
-        if (!elementContent.id || !elementContent.aN || !elementContent.sN || !elementContent.cN) {
+        if (!elementContent.id || !elementContent.cN) {
             this._traceLogger.throwInternal(
                 LoggingSeverity.WARNING,
-                _ExtendedInternalMessageId.InvalidContentBlob, 'Invalid content blob.  Missing required attributes (id, aN/area, sN/slot), cN/contentName. ' +
+                _ExtendedInternalMessageId.InvalidContentBlob, 'Invalid content blob.  Missing required attributes (id, cN/contentName. ' +
                 ' Content information will still be collected!'
             )
         }
@@ -237,38 +208,24 @@ export class DomContentHandler implements IContentHandler {
         if (!this._contentBlobFieldNames.isShortNames) {
             elementContent = {
                 contentId: elementContent.id,
-                areaName: elementContent.aN,
-                slotNumber: elementContent.sN,
                 contentName: elementContent.cN,
-                contentSource: elementContent.cS,
-                templateName: elementContent.tN,
-                productId: elementContent.pid,
-                contentType: elementContent.cT,
-                parentId: elementContent.pI,
-                parentName: elementContent.pN
             };
         }
 
-        // Collect all other data-bi attributes and name them w/o the data-bi prefix.
+        // Collect all other data-* attributes and name them w/o the data-* prefix.
         for (var i = 0, attrib; i < contentElement.attributes.length; i++) {
             attrib = contentElement.attributes[i];
 
             if (attrib.name === this._contentBlobFieldNames.id ||
-                attrib.name === this._contentBlobFieldNames.areaName ||
-                attrib.name === this._contentBlobFieldNames.slotNumber ||
-                attrib.name === this._contentBlobFieldNames.contentName ||
-                attrib.name === this._contentBlobFieldNames.contentSource ||
-                attrib.name === this._contentBlobFieldNames.templateName ||
-                attrib.name === this._contentBlobFieldNames.productId ||
-                attrib.name === this._contentBlobFieldNames.contentType ||
-                attrib.name === this._contentBlobFieldNames.parentId ||
-                attrib.name === this._contentBlobFieldNames.parentName ||
-                attrib.name.indexOf('data-bi-') === -1) {
+                attrib.name === this._contentBlobFieldNames.contentName || 
+                attrib.name.indexOf(dataTag) !== 0 || 
+                attrib.name.indexOf('data-') !== 0 ) {
                 continue;
             }
 
-            var attribName = attrib.name.replace('data-bi-', '');
+            var attribName = dataTag !=='data-' ? attrib.name.replace(dataTag, '') : attrib.name.replace('data-', '');
             elementContent[attribName] = attrib.value;
+            
         }
         return elementContent;
     }
@@ -300,29 +257,11 @@ export class DomContentHandler implements IContentHandler {
     }
 
     /**
-     * extracts area content from element
-     * @param areaElement An html element
-     * @returns A JSON object representing the content.
-     */
-    private _getAreaContent(areaElement: Element) {
-        if (areaElement) {
-            return {
-                areaName: areaElement.getAttribute(this._contentBlobFieldNames.areaName),
-                templateName: areaElement.getAttribute(this._contentBlobFieldNames.templateName),
-                contentSource: areaElement.getAttribute(this._contentBlobFieldNames.contentSource),
-                product: areaElement.getAttribute(this._contentBlobFieldNames.productId),
-                type: areaElement.getAttribute(this._contentBlobFieldNames.contentType)
-            };
-        }
-    }
-
-    /**
      * Gets the default content name.
      * @param element - An html element
      * @param useDefaultContentName -Flag indicating if an element is market PII.
      * @returns Content name
      */
-    /*ignore jslint start*/
     private _getDefaultContentName(element: any, useDefaultContentName: boolean) {
         if (useDefaultContentName === false || DataCollector._isPii(element) || !element.tagName) {
             return '';
@@ -344,110 +283,19 @@ export class DomContentHandler implements IContentHandler {
 
         return contentName.substring(0, MAX_CONTENTNAME_LENGTH);
     }
-    /*ignore jslint end*/
-
-    /**
-     * Computes the parentId and parentName of a given element.
-     * @param element - An html element
-     * @returns An object containing the closest parentId and parentName, can be empty if nothing was found
-     */
-    private _getParentDetails(element: Element, elementContent: Object): IContent {
-        var parentIdKey = this._contentBlobFieldNames.isShortNames ? _keyName.shortKeys.parentId : _keyName.longKeys.parentId;
-        var parentNameKey = this._contentBlobFieldNames.isShortNames ? _keyName.shortKeys.parentName : _keyName.longKeys.parentName;
-        var parentId = elementContent[parentIdKey];
-        var parentName = elementContent[parentNameKey];
-        var parentInfo = {};
-
-        if (parentId || parentName || !element) {
-            return parentInfo;
-        }
-
-        return this._populateParentInfo(element, parentIdKey, parentNameKey);
-    }
 
     /**
      * Check if the user wants to track the element, which means if the element has any tags
      * @param element - An html element
      * @returns true if any data-bi- tag or data-m tag exist, otherwise return false 
      */
-    private _isTrackedWithDataM(element: Element): boolean {
+    private _isTracked(element: Element, dataTag: string): boolean {
         var attrs = element.attributes;
         for (var i = 0; i < attrs.length; i++) {
-            if (attrs[i].name.indexOf('data-m') >= 0) {
+            if (attrs[i].name.indexOf(dataTag) === 0 || attrs[i].name.indexOf('data-') === 0) {
                 return true;
             }
         }
         return false;
-    }
-
-    /**
-     * Check if the user wants to track the element, which means if the element has any tags
-     * @param element - An html element
-     * @returns true if any data-bi- tag or data-m tag exist, otherwise return false 
-     */
-    private _isTrackedWithDataBi(element: Element): boolean {
-        var attrs = element.attributes;
-        for (var i = 0; i < attrs.length; i++) {
-            if (attrs[i].name.indexOf('data-bi-') >= 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Check if the user wants to track the element, which means if the element has any tags
-     * @param element - An html element
-     * @returns true if any data-bi- tag or data-m tag exist, otherwise return false 
-     */
-    private _isTracked(element: Element): boolean {
-        var attrs = element.attributes;
-        for (var i = 0; i < attrs.length; i++) {
-            if (attrs[i].name.indexOf('data-m') >= 0 || attrs[i].name.indexOf('data-bi-') >= 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Check if parent info already set up, if so take and put into content, if not walk up the DOM to find correct info
-     * @param element - An html element that the user wants to track
-     * @returns n object containing the parent info, can be empty if nothing was found
-     */
-    private _populateParentInfo(element: Element, parentIdKey: string, parentNameKey: string): IContent {
-        var parentInfo: IContent = {};
-        var elementBiDataAttribute = this._config.biBlobAttributeTag; // data-m
-        var parentId;
-        var parentName;
-
-        // if the user does not set up parent info, walk to the DOM, find the closest parent element (with tags) and populate the info
-        var closestParentElement = _walkUpDomChainWithElementValidation(element.parentElement, this._isTracked);
-        if (closestParentElement) {
-            var dataAttr = closestParentElement.getAttribute(elementBiDataAttribute) || element[elementBiDataAttribute];
-            if (dataAttr) {
-                try {
-                    var telemetryObject = JSON.parse(dataAttr);
-                } catch (e) {
-                    this._traceLogger.throwInternal(
-                        LoggingSeverity.CRITICAL,
-                        _ExtendedInternalMessageId.CannotParseDataAttribute, "Can not parse " + dataAttr
-                    )
-                }
-                if (telemetryObject) {
-                    parentId = telemetryObject.id;
-                    parentName = telemetryObject.cN;
-                }
-            } else {
-                parentId = closestParentElement.getAttribute(this._contentBlobFieldNames.id);
-                parentName = closestParentElement.getAttribute(this._contentBlobFieldNames.contentName);
-            }
-            if (parentId) { parentInfo[parentIdKey] = parentId; }
-            if (parentName) { parentInfo[parentNameKey] = parentName; }
-        }
-
-        return parentInfo;
-    }
-
-    
+    }  
 }

@@ -34,18 +34,14 @@ export class PageAction extends WebEvent {
         };
         event.baseData['name'] = pageActionEvent.name;
         event.baseData['uri'] = pageActionEvent.uri;
-        event.baseData['market'] = pageActionEvent.market;
-        event.baseData['pageType'] = pageActionEvent.pageType;
-        event.baseData['isLoggedIn'] = pageActionEvent.isLoggedIn;
-        event.baseData['id'] = pageActionEvent.id;
+        event.baseData['pageType'] = pageActionEvent.pageType;   
         event.baseData['properties'] = pageActionEvent.properties;
-        event.baseData['ver'] = pageActionEvent.ver;
         event.baseData['actionType'] = pageActionEvent.actionType;
         event.baseData['behavior'] = pageActionEvent.behavior;
         event.baseData['clickCoordinates'] = pageActionEvent.clickCoordinates;
         event.baseData['content'] = pageActionEvent.content;
-        event.baseData['contentVer'] = pageActionEvent.contentVer;
         event.baseData['targetUri'] = pageActionEvent.targetUri;
+        
         for (let property in properties) {
             if (properties.hasOwnProperty(property)) {
                 if (!event.data[property]) {
@@ -81,10 +77,9 @@ export class PageAction extends WebEvent {
         if (element) {
             pageActionEvent.targetUri = DataCollector._getClickTarget(element);
 
-            elementContent = this._contentHandler.getElementContent(element, EventType.PAGE_ACTION); // collect data-bi tags
-            elementContent = extend(elementContent, this._getCustomTags(element)); // collect ms.* tags
+            elementContent = this._contentHandler.getElementContent(element, EventType.PAGE_ACTION); // collect id,cn tags
 
-            // if the element has a data-bi-bhvr attrib defined, use it.
+            // if the element has a data-*-bhvr attrib defined, use it.
             if (elementContent.bhvr && !isValueAssigned(overrideValues.behavior)) {
                 let currentBehavior: string = _extractFieldFromObject(elementContent, 'bhvr');
                 pageActionEvent.behavior = this._getValidBehavior(currentBehavior);
@@ -103,39 +98,10 @@ export class PageAction extends WebEvent {
             typeof pageActionContentTags === 'function' ? pageActionContentTags(element) : {},
             overrideValues && overrideValues.contentTags ? overrideValues.contentTags : {})));
 
-        // set PartC values
+        
         pageActionProperties.timeToAction = this._getTimeToClick();
         pageActionProperties.refUri = isValueAssigned(overrideValues.refUri) ? overrideValues.refUri : this._config.coreData.referrerUri;
         this.trackPageAction(pageActionEvent, pageActionProperties);
-    }
-
-    private _getCustomTags(obj: Element) {
-        /// <summary>Collect data from attributes that have a ms. prefix.  
-        /// This functionality is there to provide compatibility with WEDCS.  
-        ///   TODO: When all adopters have moved to the new tagging taxanomy we can remove this functionality. 
-        /// </summary>
-        /// <param type='Object'>The element from which attributes need to be collected.</param>
-        /// <returns type='Object'>Tags collection/property bag</returns>
-        var customParameters = {};
-        while (obj) {
-            if (DataCollector._isPii(obj)) {
-                continue;
-            }
-            for (var attr in obj.attributes) {
-                if (attr) {
-                    if (obj.attributes[attr]) {
-                        var nn = obj.attributes[attr].name;
-                        if (nn) {
-                            if (nn.toLowerCase().indexOf('ms.') === 0) {
-                                customParameters[nn] = obj.attributes[attr].value;
-                            }
-                        }
-                    }
-                }
-            }
-            obj = <Element>(obj.parentElement || obj.parentNode);
-        }
-        return customParameters;
     }
 
     private _getTimeToClick() {
