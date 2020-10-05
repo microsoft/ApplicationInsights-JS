@@ -391,7 +391,7 @@
     },
     "brace-expansion": {
       "version": "1.1.11",
-      "from": "brace-expansion@>=1.1.7 <2.0.0",
+      "from": "brace-expansion@^1.1.7",
       "resolved": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-1.1.11.tgz"
     },
     "braces": {
@@ -1840,9 +1840,9 @@
       "resolved": "https://registry.npmjs.org/qs/-/qs-6.5.2.tgz"
     },
     "qunit": {
-      "version": "2.11.2",
+      "version": "2.11.3",
       "from": "qunit@^2.9.1",
-      "resolved": "https://registry.npmjs.org/qunit/-/qunit-2.11.2.tgz",
+      "resolved": "https://registry.npmjs.org/qunit/-/qunit-2.11.3.tgz",
       "dependencies": {
         "commander": {
           "version": "6.0.0",
@@ -2056,9 +2056,9 @@
       "resolved": "https://registry.npmjs.org/rollup-plugin-uglify/-/rollup-plugin-uglify-6.0.4.tgz",
       "dependencies": {
         "uglify-js": {
-          "version": "3.11.0",
+          "version": "3.11.1",
           "from": "uglify-js@^3.4.9",
-          "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-3.11.0.tgz"
+          "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-3.11.1.tgz"
         }
       }
     },

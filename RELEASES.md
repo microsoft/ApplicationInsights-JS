@@ -1,9 +1,42 @@
 # Releases
 
+## 2.5.9 (September 5th, 2020)
+
+### Changelog
+
+- #1395 Update publishing scripts to support automation
+- #1391 Increase the randomness and size of the sessionId (newId())
+- #1390 using older version of types/cheerio dependecy
+- #1389 take out SPO support
+- #1388 Bump shims version for React, React-Native and Angular to latest.
+- #1384 Add sideEffects field to applicationinsights-shims package.json
+  - Use updated Shims module (v1.0.2)
+- #1381 [BUG] NPM package for @microsoft/applicationinsights-angularplugin-js does not have a dist folder
+- #1377 [BUG] Session storage buffers being initialized though configured not to use
+- #1375 Make AI JS SDK for with NativeScript-Angular
+  - Use updated Shims module (v1.0.1)
+- #1374 indexof is wrongly cased
+- #1365 correlationHeaderExcludePatterns added to IConfig
+- #1364 [BUG] PerfManager and NotificationManager are not exported in AISKU
+- #1363 [BUG] correlationHeaderExcludePatterns missing from types
+- #1361 Debug plugin readme changes
+- #1359 Add trackMetric method for Angular plugin
+- #1358 Add snippet setup for SPO extension solution and update README
+
+### New Package applicationinsights-shims v1.0.2
+
+- #1384 Add sideEffects field to applicationinsights-shims package.json
+
+### New Package applicationinsights-shims v1.0.1
+
+- #1375 Make AI JS SDK for with NativeScript-Angular
+
 ## 2.5.8 (August 31st, 2020)
 
 ### Changelog
 
+- #1356 add documentation on how to make snippet changes
+- #1355 update angular package name
 - #1350 [BUG] The new IPerfEvent is using Date.now() which is not supported in an ES3 environment
 - #1349 Update angular plugin track pageview logic and test
 - #1343 [BUG] IPerfManager interface - the create() function is defined to return an IPerfEvent and not an IPerfEvent?

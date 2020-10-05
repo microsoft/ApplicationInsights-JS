@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-channel-js",
-    "version": "2.5.8",
+    "version": "2.5.9",
     "description": "Microsoft Application Insights JavaScript SDK Channel",
     "main": "dist/applicationinsights-channel-js.js",
     "module": "dist-esm/applicationinsights-channel-js.js",
@@ -38,8 +38,8 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^1.0.0",
         "@microsoft/applicationinsights-shims" : "1.0.3",
-        "@microsoft/applicationinsights-core-js": "2.5.8",
-        "@microsoft/applicationinsights-common": "2.5.8"
+        "@microsoft/applicationinsights-core-js": "2.5.9",
+        "@microsoft/applicationinsights-common": "2.5.9"
     },
     "license": "MIT"
 }
