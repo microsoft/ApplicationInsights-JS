@@ -20,30 +20,10 @@ const MAX_CONTENTNAME_LENGTH = 200;
 
 export var _contentBlobFieldNameObjects = {
     longNames: {
-        isShortNames: false,
-        id: 'data-bi-id',
-        areaName: 'data-bi-area',
-        slotNumber: 'data-bi-slot',
-        contentName: 'data-bi-name',
-        contentSource: 'data-bi-source',
-        templateName: 'data-bi-view',
-        productId: 'data-bi-product',
-        contentType: 'data-bi-type',
-        parentId: 'data-bi-parentid',
-        parentName: 'data-bi-parentname'
+        isShortNames: false, 
     },
     shortNames: {
         isShortNames: true,
-        id: 'data-bi-id',
-        areaName: 'data-bi-an',
-        slotNumber: 'data-bi-sn',
-        contentName: 'data-bi-cn',
-        contentSource: 'data-bi-cs',
-        templateName: 'data-bi-tn',
-        productId: 'data-bi-pid',
-        contentType: 'data-bi-ct',
-        parentId: 'data-bi-pi',
-        parentName: 'data-bi-pn'
     }
 };
 
@@ -80,7 +60,6 @@ export class DomContentHandler implements IContentHandler {
         
         let metaTags = {};
         if (isDocumentObjectAvailable) {
-            // Collect the awa-* tags.
             metaTags = isValueAssigned(this._config.metaDataPrefix) ? this._getMetaDataFromDOM(this._config.captureAllMetaDataContent ,this._config.metaDataPrefix, false) : 
             this._getMetaDataFromDOM(this._config.captureAllMetaDataContent ,'', false);
 
@@ -141,20 +120,13 @@ export class DomContentHandler implements IContentHandler {
         var contentElement;
         const dataTag:string = this._config.contentNamePrefix;
 
-        // element has no tags - look for the closest upper element with tags
-        if (!this._isTracked(element, dataTag)) {
-            // Get the element if it has any data-* tag defined.  If not traverse up the DOM to find the closest parent with data-* tag defined
-            contentElement = _walkUpDomChainWithElementValidation(element, this._isTracked, dataTag);
-            elementContent = extend(elementContent, this._populateElementContentwithDataTag(contentElement, element, dataTag));
-            
-        } else {
-            // Get the element if it has any data-bi tag defined.  If not traverse up the DOM to find the closest parent with data-bi tag defined
+        
+        if (!this._isTracked(element, dataTag, this._config.aiBlobAttributeTag)) {
             // capture config.biBlobAttributeTag blob from element or hierarchy
             biBlobElement = _findClosestByAttribute(element, this._config.aiBlobAttributeTag);
             if (biBlobElement) {
                 biBlobValue = biBlobElement.getAttribute(this._config.aiBlobAttributeTag);
             }
-
             if (biBlobValue) {
                 try {
                     elementContent = JSON.parse(biBlobValue);
@@ -165,9 +137,13 @@ export class DomContentHandler implements IContentHandler {
                     )
                 }
             } else {
-                contentElement = element;
+                // traverse up the DOM to find the closest parent with data-* tag defined
+                contentElement = _walkUpDomChainWithElementValidation(element, this._isTracked, dataTag);
                 elementContent = extend(elementContent, this._populateElementContentwithDataTag(contentElement, element, dataTag));
             }
+        } else {
+            contentElement = element;
+            elementContent = extend(elementContent, this._populateElementContentwithDataTag(contentElement, element, dataTag));   
         }
         _removeInvalidElements(elementContent);
         return elementContent;
@@ -216,14 +192,11 @@ export class DomContentHandler implements IContentHandler {
         for (var i = 0, attrib; i < contentElement.attributes.length; i++) {
             attrib = contentElement.attributes[i];
 
-            if (attrib.name === this._contentBlobFieldNames.id ||
-                attrib.name === this._contentBlobFieldNames.contentName || 
-                attrib.name.indexOf(dataTag) !== 0 || 
-                attrib.name.indexOf('data-') !== 0 ) {
+            if ( attrib.name.indexOf(dataTag) !== 0 ) {
                 continue;
             }
 
-            var attribName = dataTag !=='data-' ? attrib.name.replace(dataTag, '') : attrib.name.replace('data-', '');
+            var attribName = attrib.name.replace(dataTag, '');
             elementContent[attribName] = attrib.value;
             
         }
@@ -285,14 +258,18 @@ export class DomContentHandler implements IContentHandler {
     }
 
     /**
-     * Check if the user wants to track the element, which means if the element has any tags
+     * Check if the user wants to track the element, which means if the element has any tags with data-*
      * @param element - An html element
-     * @returns true if any data-bi- tag or data-m tag exist, otherwise return false 
+     * @returns true if any data-* exist, otherwise return false 
      */
-    private _isTracked(element: Element, dataTag: string): boolean {
+    private _isTracked(element: Element, dataTag: string, aiBlobAttributeTag: string): boolean {
         var attrs = element.attributes;
         for (var i = 0; i < attrs.length; i++) {
-            if (attrs[i].name.indexOf(dataTag) === 0 || attrs[i].name.indexOf('data-') === 0) {
+            if (attrs[i].name.indexOf(dataTag) === 0) {
+                if(attrs[i].name === aiBlobAttributeTag) {
+                    // ignore if the attribute name is equal to aiBlobAttributeTag
+                    continue;
+                }
                 return true;
             }
         }
