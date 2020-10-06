@@ -36,7 +36,7 @@ function _dispatchEvent(target:EventTarget, evnt: Event) {
 }
 
 export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
-    public static Version = "2.5.8"; // Not currently used anywhere
+    public static Version = "2.5.9"; // Not currently used anywhere
 
     public static getDefaultConfig(config?: IConfig): IConfig {
         if (!config) {
