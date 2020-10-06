@@ -150,9 +150,9 @@
       "resolved": "https://registry.npmjs.org/@types/minimatch/-/minimatch-3.0.3.tgz"
     },
     "@types/node": {
-      "version": "14.11.2",
+      "version": "14.11.3",
       "from": "@types/node@*",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-14.11.2.tgz"
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-14.11.3.tgz"
     },
     "@types/qunit": {
       "version": "2.9.5",
