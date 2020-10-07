@@ -31,6 +31,14 @@
 
 - #1375 Make AI JS SDK for with NativeScript-Angular
 
+### Update React plugin to v3.0.4
+
+- Update Core dependency to ^2.5.9 Core changes
+
+### Update React Native plugin to v2.2.8
+
+- Update Core dependency to ^2.5.9 Core changes
+
 ## 2.5.8 (August 31st, 2020)
 
 ### Changelog
