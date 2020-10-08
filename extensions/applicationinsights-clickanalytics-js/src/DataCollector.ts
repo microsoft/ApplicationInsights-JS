@@ -33,34 +33,6 @@ export function _getImageHref(element: HTMLImageElement): string {
     return '';
 }
 
-/**
- * Check if a given element has an element has data-dc attribute defined with a value 'pii'
- * @param element - An html element
- * @returns Flag indicating if an element is market PII.
- */
-export function _isPii(element: Element) {
-    if (!element || !element.attributes) {
-        return false;
-    }
-
-    try {
-        var pii = element.getAttribute('data-dc');
-
-        if (isValueAssigned(pii)) {
-            if (pii.toLowerCase() === 'pii') {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    } catch (e) {
-        return false;
-    }
-}
-
-
 
 /** 
  * Get click target

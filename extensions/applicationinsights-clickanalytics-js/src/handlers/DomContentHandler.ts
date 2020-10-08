@@ -12,10 +12,8 @@ import {
 import { EventType } from '../Enums';
 import * as DataCollector from '../DataCollector';
 import { IDiagnosticLogger, LoggingSeverity, getDocument } from "@microsoft/applicationinsights-core-js";
-import { IClickAnalyticsConfiguration, IRectangle, IContent, IContentHandler} from '../Interfaces/Datamodel';
+import { IClickAnalyticsConfiguration, IContent, IContentHandler, DEFAULT_AI_BLOB_ATTRIBUTE_TAG, DEFAULT_DATA_PREFIX, doNotTrackFieldName} from '../Interfaces/Datamodel';
 
-
-const doNotTrackFieldName = 'data-bi-dnt';
 const MAX_CONTENTNAME_LENGTH = 200;
 
 export var _contentBlobFieldNameObjects = {
@@ -60,47 +58,10 @@ export class DomContentHandler implements IContentHandler {
         
         let metaTags = {};
         if (isDocumentObjectAvailable) {
-            metaTags = isValueAssigned(this._config.metaDataPrefix) ? this._getMetaDataFromDOM(this._config.captureAllMetaDataContent ,this._config.metaDataPrefix, false) : 
-            this._getMetaDataFromDOM(this._config.captureAllMetaDataContent ,'', false);
-
+            metaTags = isValueAssigned(this._config.dataTags.metaDataPrefix) ? this._getMetaDataFromDOM(this._config.dataTags.captureAllMetaDataContent ,this._config.dataTags.metaDataPrefix, false) : 
+            this._getMetaDataFromDOM(this._config.dataTags.captureAllMetaDataContent ,'', false);
         }
         return metaTags;
-    }
-
-    public getVisibleContent(): Array<IContent> {
-        /// <summary> takes an array of elements and only pushes the visible ones to arrayOfContents </summary>
-        /// <param type='object'> the list of elements </param>
-        /// <param type='object'> the array to push in </param>
-
-        let viewportDim = _getViewportDimensions();
-        let viewportBoundingRect: IRectangle = _getViewportBoundingRect(viewportDim);
-
-        // Select all elements that have data-bi-area/aN, data-bi-slot/sN or data-m (biAttributeName) defined in the viewPort.
-        var elements: NodeListOf<Element> = null;
-        if (isDocumentObjectAvailable) {
-            elements = document.querySelectorAll(
-                _bracketIt(this._contentBlobFieldNames.areaName) + ',' +
-                _bracketIt(this._contentBlobFieldNames.slotNumber) + ',' +
-                _bracketIt(this._config.aiBlobAttributeTag));
-        }
-
-        let arrayOfContents = [];
-
-        if (elements) {
-            for (var i = 0; i < elements.length; i++) {
-                // DNT = Do Not Track
-                var element = elements[i];
-                if (!_isElementDnt(element, doNotTrackFieldName)) {
-                    if (_isElementTrulyVisible(element, viewportBoundingRect)) {
-                        var elementContent = this.getElementContent(element, EventType.CONTENT_UPDATE);
-                        if (elementContent) {
-                            arrayOfContents.push(elementContent);
-                        }
-                    }
-                }
-            }
-        }
-        return arrayOfContents;
     }
 
     /**
@@ -118,14 +79,14 @@ export class DomContentHandler implements IContentHandler {
         var biBlobElement;
         var biBlobValue;
         var contentElement;
-        const dataTag:string = this._config.contentNamePrefix;
-
+        const dataTagPrefix:string = this._config.dataTags.customDataPrefix;
+        const parentDataTagPrefix:string = this._config.dataTags.parentDataPrefix;
         
-        if (!this._isTracked(element, dataTag, this._config.aiBlobAttributeTag)) {
-            // capture config.biBlobAttributeTag blob from element or hierarchy
-            biBlobElement = _findClosestByAttribute(element, this._config.aiBlobAttributeTag);
+        if (!this._isTracked(element, dataTagPrefix, this._config.dataTags.aiBlobAttributeTag)) {
+            // capture blob from element or hierarchy
+            biBlobElement = _findClosestByAttribute(element, this._config.dataTags.aiBlobAttributeTag);
             if (biBlobElement) {
-                biBlobValue = biBlobElement.getAttribute(this._config.aiBlobAttributeTag);
+                biBlobValue = biBlobElement.getAttribute(this._config.dataTags.aiBlobAttributeTag);
             }
             if (biBlobValue) {
                 try {
@@ -138,30 +99,30 @@ export class DomContentHandler implements IContentHandler {
                 }
             } else {
                 // traverse up the DOM to find the closest parent with data-* tag defined
-                contentElement = _walkUpDomChainWithElementValidation(element, this._isTracked, dataTag);
-                elementContent = extend(elementContent, this._populateElementContentwithDataTag(contentElement, element, dataTag));
+                contentElement = _walkUpDomChainWithElementValidation(element, this._isTracked, dataTagPrefix);
+                elementContent = extend(elementContent, this._populateElementContentwithDataTag(contentElement, element, dataTagPrefix, parentDataTagPrefix));
             }
         } else {
             contentElement = element;
-            elementContent = extend(elementContent, this._populateElementContentwithDataTag(contentElement, element, dataTag));   
+            elementContent = extend(elementContent, this._populateElementContentwithDataTag(contentElement, element, dataTagPrefix, parentDataTagPrefix));   
         }
         _removeInvalidElements(elementContent);
         return elementContent;
     }
 
-    private _populateElementContentwithDataTag(contentElement: Element, element: Element, dataTag: string) {
+    private _populateElementContentwithDataTag(contentElement: Element, element: Element, dataTagPrefix: string, parentDataTagPrefix: string) {
         var elementContent: any = {};
         if (!contentElement) {
             // None of the element and its parent has any tags, collect standard HTML attribute for contentName when useDefaultContentName flag is true 
-            if (this._config.useDefaultContentName) {
+            if (this._config.dataTags.useDefaultContentName) {
                 contentElement = element;
             } else {
                 return elementContent
             }
         }
         
-        var customizedContentName = this._config.callback.contentName ? this._config.callback.contentName(contentElement, this._config.useDefaultContentName) : "";
-        var defaultContentName = this._getDefaultContentName(contentElement, this._config.useDefaultContentName);
+        var customizedContentName = this._config.callback.contentName ? this._config.callback.contentName(contentElement, this._config.dataTags.useDefaultContentName) : "";
+        var defaultContentName = this._getDefaultContentName(contentElement, this._config.dataTags.useDefaultContentName);
 
         elementContent = {
             id: contentElement.getAttribute(this._contentBlobFieldNames.id) || contentElement.id || '',
@@ -188,21 +149,58 @@ export class DomContentHandler implements IContentHandler {
             };
         }
 
-        // Collect all other data-* attributes and name them w/o the data-* prefix.
-        for (var i = 0, attrib; i < contentElement.attributes.length; i++) {
-            attrib = contentElement.attributes[i];
+        
+        if(isValueAssigned(parentDataTagPrefix)) {
 
-            if ( attrib.name.indexOf(dataTag) !== 0 ) {
-                continue;
+            this._walkUpDomChainCaptureData(contentElement, elementContent, dataTagPrefix, parentDataTagPrefix);
+
+        } else {
+
+            for (var i = 0, attrib; i < contentElement.attributes.length; i++) {
+                attrib = contentElement.attributes[i];
+    
+                if ( attrib.name.indexOf(dataTagPrefix) !== 0 ) {
+                    continue;
+                }
+    
+                var attribName = attrib.name.replace(dataTagPrefix, '');
+                elementContent[attribName] = attrib.value;
             }
-
-            var attribName = attrib.name.replace(dataTag, '');
-            elementContent[attribName] = attrib.value;
-            
         }
+
         return elementContent;
     }
 
+    private _walkUpDomChainCaptureData(el: Element, elementContent: any, dataTagPrefix: string, parentDataTagPrefix: string ): void {
+        let element = el;
+        let parentDataTagFound: boolean = false;
+        while(element!==undefined && element.attributes!==undefined) {
+            let attributes=element.attributes;
+            for (let i = 0; i < attributes.length; i++) {
+                const attrib = attributes[i];
+    
+                if ( attrib.name.indexOf(dataTagPrefix) !== 0 ) {
+                    continue;
+                }
+
+                if( attrib.name.indexOf(parentDataTagPrefix) === 0) {
+                    parentDataTagFound = true;
+                }
+    
+                const attribName = attrib.name.replace(dataTagPrefix, '');
+                if(!isValueAssigned(elementContent[attribName])) {
+                    elementContent[attribName] = attrib.value;
+                }
+            }
+    
+            // break after current level;
+            if(parentDataTagFound) {
+                break;
+            }
+    
+            element = <Element>element.parentNode;
+        }
+    }
 
     /**
      * Retrieve a specified metadata tag value from the DOM.
@@ -236,7 +234,7 @@ export class DomContentHandler implements IContentHandler {
      * @returns Content name
      */
     private _getDefaultContentName(element: any, useDefaultContentName: boolean) {
-        if (useDefaultContentName === false || DataCollector._isPii(element) || !element.tagName) {
+        if (useDefaultContentName === false || !element.tagName) {
             return '';
         }
 

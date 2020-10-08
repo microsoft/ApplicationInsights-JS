@@ -1,25 +1,20 @@
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
-    BaseTelemetryPlugin, CoreUtils, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
-    IDiagnosticLogger, LoggingSeverity, _InternalMessageId, ICustomProperties,
-    getWindow, getDocument, getHistory, getLocation, doPerf, 
+    BaseTelemetryPlugin, CoreUtils, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,_InternalMessageId, 
 } from "@microsoft/applicationinsights-core-js";
 
 import {
-    IConfig, Util, PageViewPerformance, IAppInsights, PageView, RemoteDependencyData, Event as EventTelemetry, IEventTelemetry,
-    TelemetryItemCreator, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
-    IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
-    IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
-    DateTimeUtils, IExceptionInternal, PropertiesPluginIdentifier, AnalyticsPluginIdentifier
+    IConfig
 } from "@microsoft/applicationinsights-common";
 
-import { IClickAnalyticsConfiguration, IPageActionOverrideValues, IContentHandler, IAutoCaptureHandler } from './Interfaces/Datamodel';
+import { IClickAnalyticsConfiguration, IPageActionOverrideValues, IContentHandler, 
+    IAutoCaptureHandler, DEFAULT_DATA_PREFIX, DEFAULT_AI_BLOB_ATTRIBUTE_TAG, doNotTrackFieldName 
+} from './Interfaces/Datamodel';
 import {  _removeNonObjectsAndInvalidElements, extend, _isElementDnt, isDocumentObjectAvailable, _validateContentNamePrefix } from './common/Utils';
 import { PageAction } from './events/PageAction';
 import { AutoCaptureHandler } from "./handlers/AutoCaptureHandler";
 import { DomContentHandler } from "./handlers/DomContentHandler";
 
-const doNotTrackFieldName = 'data-bi-dnt';
 
 export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
     public identifier: string = 'ClickAnalyticsPlugin';
@@ -63,7 +58,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
      * @param isRightClick - Flag for mouse right clicks
      */
    public capturePageAction(element: Element, overrideValues?: IPageActionOverrideValues, customProperties?: { [name: string]: string | number | boolean | string[] | number[] | boolean[] | object }, isRightClick?: boolean): void {
-    if (!_isElementDnt(element, doNotTrackFieldName)) {
+    if (!_isElementDnt(element, this._config.dataTags.donotTrackDataTag)) {
         this.pageAction.capturePageAction(element, overrideValues, customProperties, isRightClick);
     }
 
@@ -77,12 +72,9 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
    private _mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClickAnalyticsConfiguration {
     let defaultConfig: IClickAnalyticsConfiguration = {
         // General library settings
-        useDefaultContentName: true,
-        aiBlobAttributeTag: 'data-ai-blob',
         autoCapture: true,
         callback: {
             pageActionPageTags: null,
-            pageActionContentTags: null,
         },
         pageTags: {},
         // overrideValues to use instead of collecting automatically
@@ -92,8 +84,13 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
             pageName: '',
             pageType: ''
         },
-        captureAllMetaDataContent:false,
-        contentNamePrefix : 'data-'
+        dataTags: {
+            useDefaultContentName: false,
+            aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
+            customDataPrefix: DEFAULT_DATA_PREFIX,
+            captureAllMetaDataContent: false,
+            donotTrackDataTag: doNotTrackFieldName
+        }
     };
 
     let attributesThatAreObjectsInConfig: any[] = [];
@@ -107,9 +104,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
         // delete attributes that should be object and 
         // delete properties that are null, undefined, ''
         _removeNonObjectsAndInvalidElements(overrideConfig, attributesThatAreObjectsInConfig);
-        overrideConfig.contentNamePrefix = _validateContentNamePrefix(overrideConfig) ? overrideConfig.contentNamePrefix : 'data-';
-        
-
+        overrideConfig.dataTags.customDataPrefix = _validateContentNamePrefix(overrideConfig) ? overrideConfig.dataTags.customDataPrefix : DEFAULT_DATA_PREFIX;
         return extend(true, defaultConfig, overrideConfig);
     }
 }

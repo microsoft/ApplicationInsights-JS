@@ -92,10 +92,8 @@ export class PageAction extends WebEvent {
             pageActionEvent.clickCoordinates = overrideValues.clickCoordinateX + 'X' + overrideValues.clickCoordinateY;
         }
         pageActionEvent.contentVer = CONTENT_VERSION;
-        let pageActionContentTags = this._config.callback.pageActionContentTags;
         pageActionEvent.content = _bracketIt(JSON.stringify(extend(
             elementContent,
-            typeof pageActionContentTags === 'function' ? pageActionContentTags(element) : {},
             overrideValues && overrideValues.contentTags ? overrideValues.contentTags : {})));
 
         

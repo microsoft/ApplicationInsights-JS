@@ -7,7 +7,7 @@
 
 import { CoreUtils, getWindow, getDocument, _InternalMessageId } from "@microsoft/applicationinsights-core-js";
 import {
-    IClickAnalyticsConfiguration, IRectangle
+    IClickAnalyticsConfiguration, IRectangle, DEFAULT_DATA_PREFIX
 } from '../Interfaces/Datamodel';
 
 
@@ -255,6 +255,7 @@ export function _walkUpDomChainWithElementValidation(el: Element, validationMeth
     }
 }
 
+
 /**
  * Determine if DOM element is an anchor
  * @param element - DOM element
@@ -389,5 +390,5 @@ export function _getViewportDimensions() {
 }
 
 export function _validateContentNamePrefix ( config: IClickAnalyticsConfiguration) {
-    return isValueAssigned(config.contentNamePrefix) && (config.contentNamePrefix.indexOf('data-') === 0) ;
+    return isValueAssigned(config.dataTags.customDataPrefix) && (config.dataTags.customDataPrefix.indexOf(DEFAULT_DATA_PREFIX) === 0);
 }
