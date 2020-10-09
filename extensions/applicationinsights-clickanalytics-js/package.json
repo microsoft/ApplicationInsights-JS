@@ -1,5 +1,5 @@
 {
-  "name": "applicationinsights-clickanalytics-js",
+  "name": "@microsoft/applicationinsights-clickanalytics-js",
   "version": "2.5.8",
   "description": "Microsoft Application Insights Click Analytics extension",
   "main": "dist/applicationinsights-clickanalytics-js.js",
