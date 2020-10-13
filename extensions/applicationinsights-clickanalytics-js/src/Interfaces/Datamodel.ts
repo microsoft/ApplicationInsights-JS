@@ -8,9 +8,9 @@
 
 import { EventType } from '../Enums';
 
-export const doNotTrackFieldName = 'data-ai-dnt';
+export const DEFAULT_DONOT_TRACK_TAG = 'ai-dnt';
 export const DEFAULT_DATA_PREFIX = 'data-';
-export const DEFAULT_AI_BLOB_ATTRIBUTE_TAG = 'data-ai-blob';
+export const DEFAULT_AI_BLOB_ATTRIBUTE_TAG = 'ai-blob';
 
     /**
      * ClickAnalytics Configuration
@@ -74,9 +74,9 @@ export interface ICustomDataTags {
      */
     captureAllMetaDataContent?: boolean;
     /**
-     * Automatic capture content name and value of elements which are tagged with provided prefix
+     * Stop capturing content name and value of elements which are tagged with provided tag
      */
-    parentDataPrefix?: string;
+    parentDataTag?: string;
     /**
      * Custom attribute Tag to not track telemetry data
      */

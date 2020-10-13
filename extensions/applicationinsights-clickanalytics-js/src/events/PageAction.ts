@@ -11,8 +11,6 @@ import { IPageActionOverrideValues, IPageActionTelemetry, IPageActionProperties 
 import { EventType } from '../Enums';
 import { _extractFieldFromObject, _bracketIt, isValueAssigned, extend } from '../common/Utils';
 
-const CONTENT_VERSION = '2.0';
-
 export class PageAction extends WebEvent {
     
     /**
@@ -28,7 +26,7 @@ export class PageAction extends WebEvent {
         let event: ITelemetryItem = {
             name: 'Ms.Web.PageAction',
             baseType: 'ClickData',
-            ext: ext,
+            ext,
             data: {},
             baseData: {}
         };
@@ -61,8 +59,8 @@ export class PageAction extends WebEvent {
      */
     public capturePageAction(element: Element, overrideValues?: IPageActionOverrideValues, customProperties?: { [name: string]: string | number | boolean | string[] | number[] | boolean[] | object }, isRightClick?: boolean): void {
         overrideValues = !isValueAssigned(overrideValues) ? {} : overrideValues;
-        var pageActionEvent: IPageActionTelemetry = {};
-        var pageActionProperties: IPageActionProperties = isValueAssigned(customProperties) ? customProperties : {};
+        let pageActionEvent: IPageActionTelemetry = {};
+        let pageActionProperties: IPageActionProperties = isValueAssigned(customProperties) ? customProperties : {};
         this._setCommonProperties(pageActionEvent, pageActionProperties, overrideValues);
         pageActionEvent.isManual = !overrideValues.isAuto;
         pageActionEvent.behavior = this._getBehavior(overrideValues);
@@ -91,7 +89,6 @@ export class PageAction extends WebEvent {
         if (isValueAssigned(overrideValues.clickCoordinateX) && isValueAssigned(overrideValues.clickCoordinateY)) {
             pageActionEvent.clickCoordinates = overrideValues.clickCoordinateX + 'X' + overrideValues.clickCoordinateY;
         }
-        pageActionEvent.contentVer = CONTENT_VERSION;
         pageActionEvent.content = _bracketIt(JSON.stringify(extend(
             elementContent,
             overrideValues && overrideValues.contentTags ? overrideValues.contentTags : {})));
@@ -104,7 +101,7 @@ export class PageAction extends WebEvent {
 
     private _getTimeToClick() {
         // capture performance data into PageTags
-        let perf = getPerformance();
+        const perf = getPerformance();
         if (perf && perf.timing) {
             var isNavigationStart = perf.timing.navigationStart;
             if (isNavigationStart && isNavigationStart !== 0) {
