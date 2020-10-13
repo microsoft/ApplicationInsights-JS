@@ -1,51 +1,26 @@
 /**
  * DomContentHandler.ts
  * @author Krishna Yalamanchili (kryalama)
- * @copyright Microsoft 2018
+ * @copyright Microsoft 2020
  */
-
 import {
-     _bracketIt, _findClosestByAttribute, _removeInvalidElements,
+    _bracketIt, _findClosestByAttribute, _removeInvalidElements,
     _walkUpDomChainWithElementValidation, _isElementDnt, _isElementTrulyVisible,
     _getViewportBoundingRect, _getViewportDimensions, isDocumentObjectAvailable, extend, _ExtendedInternalMessageId, isValueAssigned
 } from '../common/Utils';
 import { EventType } from '../Enums';
-import * as DataCollector from '../DataCollector';
 import { IDiagnosticLogger, LoggingSeverity, getDocument } from "@microsoft/applicationinsights-core-js";
-import { IClickAnalyticsConfiguration, IContent, IContentHandler, DEFAULT_AI_BLOB_ATTRIBUTE_TAG, DEFAULT_DATA_PREFIX, doNotTrackFieldName} from '../Interfaces/Datamodel';
+import { IClickAnalyticsConfiguration, IContent, IContentHandler } from '../Interfaces/Datamodel';
 
 const MAX_CONTENTNAME_LENGTH = 200;
 
-export var _contentBlobFieldNameObjects = {
-    longNames: {
-        isShortNames: false, 
-    },
-    shortNames: {
-        isShortNames: true,
-    }
-};
-
-export var _keyName = {
-    longKeys: {
-        parentId: 'parentId',
-        parentName: 'parentName'
-    },
-    shortKeys: {
-        parentId: 'pI',
-        parentName: 'pN'
-    }
-}
-
 export class DomContentHandler implements IContentHandler {
 
-    protected _contentBlobFieldNames: any = null;
-
     /**
-     * @param config - WebAnalytics configuration object
+     * @param config - ClickAnalytics configuration object
      * @param traceLogger - Trace logger to log to console.
      */
     constructor(protected _config: IClickAnalyticsConfiguration, protected _traceLogger: IDiagnosticLogger) {
-        this._contentBlobFieldNames = _contentBlobFieldNameObjects.longNames;
     }
 
     /**
@@ -65,28 +40,30 @@ export class DomContentHandler implements IContentHandler {
     }
 
     /**
-     * Collect data-bi attributes for the given element.
-     * All attributes with data-* prefix or user provided contentNamePrefix are collected.  'data-*' prefix is removed from the key name.
+     * Collect data-* attributes for the given element.
+     * All attributes with data-* prefix or user provided contentNamePrefix are collected.'data-*' prefix is removed from the key name.
      * @param element - The element from which attributes need to be collected.
      * @returns String representation of the Json array of element attributes
      */
     public getElementContent(element: Element, eventType: EventType): IContent {
+        
         if (!element) {
             return {};
         }
 
-        var elementContent: any = {};
-        var biBlobElement;
-        var biBlobValue;
-        var contentElement;
+        let elementContent: any = {};
+        let biBlobElement;
+        let biBlobValue;
+        let contentElement;
         const dataTagPrefix:string = this._config.dataTags.customDataPrefix;
-        const parentDataTagPrefix:string = this._config.dataTags.parentDataPrefix;
+        const parentDataTagPrefix:string = dataTagPrefix + this._config.dataTags.parentDataTag;
+        const aiBlobAttributeTag:string = dataTagPrefix + this._config.dataTags.aiBlobAttributeTag
         
-        if (!this._isTracked(element, dataTagPrefix, this._config.dataTags.aiBlobAttributeTag)) {
+        if (!this._isTracked(element, dataTagPrefix, aiBlobAttributeTag)) {
             // capture blob from element or hierarchy
-            biBlobElement = _findClosestByAttribute(element, this._config.dataTags.aiBlobAttributeTag);
+            biBlobElement = _findClosestByAttribute(element, aiBlobAttributeTag);
             if (biBlobElement) {
-                biBlobValue = biBlobElement.getAttribute(this._config.dataTags.aiBlobAttributeTag);
+                biBlobValue = biBlobElement.getAttribute(aiBlobAttributeTag);
             }
             if (biBlobValue) {
                 try {
@@ -100,7 +77,7 @@ export class DomContentHandler implements IContentHandler {
             } else {
                 // traverse up the DOM to find the closest parent with data-* tag defined
                 contentElement = _walkUpDomChainWithElementValidation(element, this._isTracked, dataTagPrefix);
-                elementContent = extend(elementContent, this._populateElementContentwithDataTag(contentElement, element, dataTagPrefix, parentDataTagPrefix));
+                elementContent = extend(elementContent, this._populateElementContentwithDataTag( contentElement, element, dataTagPrefix, parentDataTagPrefix));
             }
         } else {
             contentElement = element;
@@ -110,67 +87,26 @@ export class DomContentHandler implements IContentHandler {
         return elementContent;
     }
 
-    private _populateElementContentwithDataTag(contentElement: Element, element: Element, dataTagPrefix: string, parentDataTagPrefix: string) {
-        var elementContent: any = {};
-        if (!contentElement) {
-            // None of the element and its parent has any tags, collect standard HTML attribute for contentName when useDefaultContentName flag is true 
-            if (this._config.dataTags.useDefaultContentName) {
-                contentElement = element;
-            } else {
-                return elementContent
+    /**
+     * Capture current level Element content
+     */
+    private _captureElementContent(contentElement: Element, elementContent: any, dataTagPrefix: string) {
+
+        for (var i = 0, attrib; i < contentElement.attributes.length; i++) {
+            attrib = contentElement.attributes[i];
+
+            if ( attrib.name.indexOf(dataTagPrefix) !== 0 ) {
+                continue;
             }
+
+            var attribName = attrib.name.replace(dataTagPrefix, '');
+            elementContent[attribName] = attrib.value;
         }
-        
-        var customizedContentName = this._config.callback.contentName ? this._config.callback.contentName(contentElement, this._config.dataTags.useDefaultContentName) : "";
-        var defaultContentName = this._getDefaultContentName(contentElement, this._config.dataTags.useDefaultContentName);
-
-        elementContent = {
-            id: contentElement.getAttribute(this._contentBlobFieldNames.id) || contentElement.id || '',
-            cN: customizedContentName || contentElement.getAttribute(this._contentBlobFieldNames.contentName) || defaultContentName || contentElement.getAttribute('alt') || '',
-        };
-
-        // Validate to ensure the minimum required field 'contentName/cN' is present.  
-        // The content schema defines id, aN and sN as required fields.  However, 
-        /// requiring these fields would result in majority of adopter's content from being collected.
-        // Just throw a warning and continue collection.
-        if (!elementContent.id || !elementContent.cN) {
-            this._traceLogger.throwInternal(
-                LoggingSeverity.WARNING,
-                _ExtendedInternalMessageId.InvalidContentBlob, 'Invalid content blob.  Missing required attributes (id, cN/contentName. ' +
-                ' Content information will still be collected!'
-            )
-        }
-
-        // use legacy fullNames for the content blob if configured so.
-        if (!this._contentBlobFieldNames.isShortNames) {
-            elementContent = {
-                contentId: elementContent.id,
-                contentName: elementContent.cN,
-            };
-        }
-
-        
-        if(isValueAssigned(parentDataTagPrefix)) {
-
-            this._walkUpDomChainCaptureData(contentElement, elementContent, dataTagPrefix, parentDataTagPrefix);
-
-        } else {
-
-            for (var i = 0, attrib; i < contentElement.attributes.length; i++) {
-                attrib = contentElement.attributes[i];
-    
-                if ( attrib.name.indexOf(dataTagPrefix) !== 0 ) {
-                    continue;
-                }
-    
-                var attribName = attrib.name.replace(dataTagPrefix, '');
-                elementContent[attribName] = attrib.value;
-            }
-        }
-
-        return elementContent;
     }
 
+    /**
+     * Walk Up the DOM to capture Element content
+     */
     private _walkUpDomChainCaptureData(el: Element, elementContent: any, dataTagPrefix: string, parentDataTagPrefix: string ): void {
         let element = el;
         let parentDataTagFound: boolean = false;
@@ -198,12 +134,53 @@ export class DomContentHandler implements IContentHandler {
                 break;
             }
     
-            element = <Element>element.parentNode;
+            element = (element.parentNode as Element);
         }
     }
 
+    private _populateElementContentwithDataTag(contentElement: Element, element: Element, dataTagPrefix: string, parentDataTagPrefix: string) {
+        
+        let elementContent: any = {};
+        if (!contentElement) {
+            // None of the element and its parent has any tags, collect standard HTML attribute for contentName when useDefaultContentName flag is true 
+            if (this._config.dataTags.useDefaultContentName) {
+                contentElement = element;
+            } else {
+                return elementContent
+            }
+        }
+        
+        var customizedContentName = this._config.callback.contentName ? this._config.callback.contentName(contentElement, this._config.dataTags.useDefaultContentName) : "";
+        var defaultContentName = this._getDefaultContentName(contentElement, this._config.dataTags.useDefaultContentName);
+
+        elementContent = {
+            id: contentElement.id || '',
+            contentName: customizedContentName || defaultContentName || contentElement.getAttribute('alt') || '',
+        };
+
+        // Validate to ensure the minimum required field 'contentName' is present.  
+        // The content schema defines id, aN and sN as required fields.  However, 
+        // requiring these fields would result in majority of adopter's content from being collected.
+        // Just throw a warning and continue collection.
+        if (!elementContent.id || !elementContent.cN) {
+            this._traceLogger.throwInternal(
+                LoggingSeverity.WARNING,
+                _ExtendedInternalMessageId.InvalidContentBlob, 'Invalid content blob.  Missing required attributes (id, contentName. ' +
+                ' Content information will still be collected!'
+            )
+        }
+        
+        isValueAssigned(parentDataTagPrefix) ? 
+            this._walkUpDomChainCaptureData(contentElement, elementContent, dataTagPrefix, parentDataTagPrefix) : 
+            this._captureElementContent(contentElement, elementContent, dataTagPrefix);
+
+        return elementContent;
+    }
+
+
     /**
      * Retrieve a specified metadata tag value from the DOM.
+     * @param captureAllMetaDataContent - Flag to capture all metadata content
      * @param prefix - Prefix to search the metatags with.
      * @param removePrefix - Specifies if the prefix must be excluded from key names in the returned collection.
      * @returns Metadata collection/property bag
@@ -238,7 +215,7 @@ export class DomContentHandler implements IContentHandler {
             return '';
         }
 
-        var doc = getDocument() || <Document>{};
+        var doc = getDocument() || ({} as Document);
         var contentName;
         switch (element.tagName) {
             case 'A':
@@ -256,13 +233,13 @@ export class DomContentHandler implements IContentHandler {
     }
 
     /**
-     * Check if the user wants to track the element, which means if the element has any tags with data-*
+     * Check if the user wants to track the element, which means if the element has any tags with data-* or customDataPrefix
      * @param element - An html element
      * @returns true if any data-* exist, otherwise return false 
      */
     private _isTracked(element: Element, dataTag: string, aiBlobAttributeTag: string): boolean {
-        var attrs = element.attributes;
-        for (var i = 0; i < attrs.length; i++) {
+        const attrs = element.attributes;
+        for (let i = 0; i < attrs.length; i++) {
             if (attrs[i].name.indexOf(dataTag) === 0) {
                 if(attrs[i].name === aiBlobAttributeTag) {
                     // ignore if the attribute name is equal to aiBlobAttributeTag
