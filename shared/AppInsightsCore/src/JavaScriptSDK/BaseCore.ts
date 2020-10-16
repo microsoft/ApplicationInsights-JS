@@ -44,6 +44,11 @@ export class BaseCore implements IAppInsightsCore {
         dynamicProto(BaseCore, this, (_self) => {
             _self._extensions = new Array<IPlugin>();
             _channelController = new ChannelController();
+            _self.logger = CoreUtils.objCreate({
+                throwInternal: (severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) => { },
+                warnToConsole: (message: string) => { },
+                resetInternalMessageCount: () => { }
+            });
             
             _eventQueue = [];
             _self.isInitialized = () => _isInitialized;
@@ -71,15 +76,9 @@ export class BaseCore implements IAppInsightsCore {
                 let extConfig = config.extensionConfig = _isNullOrUndefined(config.extensionConfig) ? {} : config.extensionConfig;
                 extConfig.NotificationManager = notificationManager;
 
-                if (!logger) {
-                    logger = CoreUtils.objCreate({
-                        throwInternal: (severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) => { },
-                        warnToConsole: (message: string) => { },
-                        resetInternalMessageCount: () => { }
-                    });
+                if (logger) {
+                    _self.logger = logger;
                 }
-
-                _self.logger = logger;
         
                 // Concat all available extensions
                 let allExtensions = [];
