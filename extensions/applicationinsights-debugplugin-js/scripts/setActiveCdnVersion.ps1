@@ -8,7 +8,8 @@ param (
     [string] $sasToken = $null,                         # The SAS Token to use rather than using or attempting to login
     [string] $logPath = $null,                          # The location where logs should be written
     [switch] $minorOnly = $false,                       # Only set the active minor version (v2.x) and not the major version (v2)
-    [switch] $testOnly = $false                         # Uploads to a "tst" test container on the storage account
+    [switch] $testOnly = $false,                        # Uploads to a "tst" test container on the storage account
+    [switch] $cdn = $false                              # Uploads to a "cdn" container on the storage account
 )
 
 $metaSdkVer = "aijssdkver"
@@ -27,6 +28,7 @@ Function Log-Params
     Log "Version   : $activeVersion"
     Log "Store Path: $cdnStorePath"
     Log "Test Mode : $testOnly"
+    Log "Cdn       : $cdn"
     Log "Log Path  : $logDir"
     
     if ([string]::IsNullOrWhiteSpace($global:sasToken) -eq $true) {
@@ -416,6 +418,11 @@ Function GetContainerContext(
     if ($testOnly -eq $true) {
         $blobPrefix = $storageContainer + "/" + $blobPrefix
         $storageContainer = "tst"
+    }
+
+    if ($cdn -eq $true) {
+        $blobPrefix = $storageContainer + "/" + $blobPrefix
+        $storageContainer = "cdn"
     }
 
     Log "Container  : $storageContainer Prefix: $blobPrefix"

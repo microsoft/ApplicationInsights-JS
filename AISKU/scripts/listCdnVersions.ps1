@@ -8,7 +8,8 @@ param (
     [switch] $showFiles = $false,                       # Show the individual files with details as well
     [switch] $inclExt = $false,                         # Include the extensions
     [switch] $activeOnly = $false,                      # Only show the active (deployed) versions
-    [switch] $testOnly = $false                         # Uploads to a "tst" test container on the storage account
+    [switch] $testOnly = $false,                        # Uploads to a "tst" test container on the storage account
+    [switch] $cdn = $false                              # Uploads to a "cdn" container on the storage account
 )
 
 $metaSdkVer = "aijssdkver"
@@ -28,6 +29,7 @@ Function Log-Params
     Log "Log Path  : $logDir"
     Log "Show Files: $showFiles"
     Log "Test Mode : $testOnly"
+    Log "Cdn       : $cdn"
     
     if ([string]::IsNullOrWhiteSpace($global:sasToken) -eq $true) {
         Log "Mode      : User-Credentials"
@@ -418,6 +420,11 @@ Function GetContainerContext(
         $storageContainer = "tst"
     }
 
+    if ($cdn -eq $true) {
+        $blobPrefix = $storageContainer + "/" + $blobPrefix
+        $storageContainer = "cdn"
+    }
+
     Log "Container  : $storageContainer Prefix: $blobPrefix"
 
     # Use the Users Storage Context credentials
@@ -477,6 +484,35 @@ Function GetVersionFiles(
     }
 }
 
+Function HasMetaTag(
+    $blob,
+    [string] $metaKey
+) {
+    foreach ($dataKey in $blob.ICloudBlob.Metadata.Keys) {
+        if ($dataKey -ieq $metaKey) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
+Function GetMetaTagValue(
+    $blob,
+    [string] $metaKey
+) {
+    $value = ""
+
+    foreach ($dataKey in $blob.ICloudBlob.Metadata.Keys) {
+        if ($dataKey -ieq $metaKey) {
+            $value = $blob.ICloudBlob.Metadata[$dataKey]
+            break
+        }
+    }
+
+    return $value
+}
+
 Function ListVersions(
    [system.collections.generic.dictionary[string, system.collections.generic.list[hashtable]]] $files
 ) {
@@ -514,8 +550,9 @@ Function ListVersions(
             $pathList = ""
             foreach ($theBlob in $fileList) {
                 $thePath = $theBlob.path
-                if ($theBlob.blob.ICloudBlob.Metadata.ContainsKey($metaSdkSrc)) {
-                    $version = GetVersion $theBlob.blob.ICloudBlob.Metadata[$metaSdkSrc]
+                if (HasMetaTag($theBlob, $metaSdkSrc)) {
+                    $sdkVer = GetMetaTagValue $theBlob $metaSdkSrc
+                    $version = GetVersion $sdkVer
                     $thePath = "$($version.path)$($version.prefix)$($version.ver)"
                 }
 
@@ -538,7 +575,7 @@ Function ListVersions(
             foreach ($theBlob in $fileList) {
                 $blob = $theBlob.blob
                 $blob.ICloudBlob.FetchAttributes()
-                $sdkVersion = $blob.ICloudBlob.Metadata[$metaSdkVer]
+                $sdkVersion = GetMetaTagValue $blob $metaSdkVer
                 if ([string]::IsNullOrWhiteSpace($sdkVersion) -ne $true) {
                     $sdkVersion = "v$sdkVersion"
                 } else {
@@ -547,7 +584,7 @@ Function ListVersions(
     
                 $metaTags = ""
                 foreach ($dataKey in $blob.ICloudBlob.Metadata.Keys) {
-                    if ($dataKey -ne $metaSdkVer) {
+                    if ($dataKey -ine $metaSdkVer) {
                         $metaTags = "$metaTags$dataKey=$($blob.ICloudBlob.Metadata[$dataKey]); "
                     }
                 }
