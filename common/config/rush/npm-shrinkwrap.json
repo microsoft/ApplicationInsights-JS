@@ -35,9 +35,9 @@
       }
     },
     "@microsoft/dynamicproto-js": {
-      "version": "1.0.1",
-      "from": "@microsoft/dynamicproto-js@^1.0.0",
-      "resolved": "https://registry.npmjs.org/@microsoft/dynamicproto-js/-/dynamicproto-js-1.0.1.tgz"
+      "version": "1.1.0",
+      "from": "@microsoft/dynamicproto-js@^1.1.0",
+      "resolved": "https://registry.npmjs.org/@microsoft/dynamicproto-js/-/dynamicproto-js-1.1.0.tgz"
     },
     "@nodelib/fs.scandir": {
       "version": "2.1.3",
@@ -150,9 +150,9 @@
       "resolved": "https://registry.npmjs.org/@types/minimatch/-/minimatch-3.0.3.tgz"
     },
     "@types/node": {
-      "version": "14.11.3",
+      "version": "14.11.10",
       "from": "@types/node@*",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-14.11.3.tgz"
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-14.11.10.tgz"
     },
     "@types/qunit": {
       "version": "2.9.5",
@@ -175,9 +175,9 @@
       "resolved": "https://registry.npmjs.org/agent-base/-/agent-base-4.3.0.tgz"
     },
     "ajv": {
-      "version": "6.12.5",
+      "version": "6.12.6",
       "from": "ajv@^6.12.3",
-      "resolved": "https://registry.npmjs.org/ajv/-/ajv-6.12.5.tgz"
+      "resolved": "https://registry.npmjs.org/ajv/-/ajv-6.12.6.tgz"
     },
     "ansi-regex": {
       "version": "2.1.1",
@@ -2056,9 +2056,9 @@
       "resolved": "https://registry.npmjs.org/rollup-plugin-uglify/-/rollup-plugin-uglify-6.0.4.tgz",
       "dependencies": {
         "uglify-js": {
-          "version": "3.11.1",
+          "version": "3.11.2",
           "from": "uglify-js@^3.4.9",
-          "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-3.11.1.tgz"
+          "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-3.11.2.tgz"
         }
       }
     },
@@ -2415,9 +2415,9 @@
       "resolved": "https://registry.npmjs.org/trim-newlines/-/trim-newlines-1.0.0.tgz"
     },
     "tslib": {
-      "version": "1.13.0",
+      "version": "1.14.1",
       "from": "tslib@^1.8.0",
-      "resolved": "https://registry.npmjs.org/tslib/-/tslib-1.13.0.tgz"
+      "resolved": "https://registry.npmjs.org/tslib/-/tslib-1.14.1.tgz"
     },
     "tslint": {
       "version": "5.20.1",

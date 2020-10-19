@@ -6,7 +6,8 @@ param (
     [string] $sasToken = $null,                         # The SAS Token to use rather than using or attempting to login
     [string] $logPath = $null,                          # The location where logs should be written
     [switch] $overwrite = $false,                       # Overwrite any existing files   
-    [switch] $testOnly = $false                         # Uploads to a "tst" test container on the storage account
+    [switch] $testOnly = $false,                        # Uploads to a "tst" test container on the storage account
+    [switch] $cdn = $false                              # Uploads to a "cdn" container on the storage account
 )
 
 $metaSdkVer = "aijssdkver"
@@ -24,6 +25,7 @@ Function Log-Params
     Log "Store Path: $cdnStorePath"
     Log "Overwrite : $overwrite"
     Log "Test Mode : $testOnly"
+    Log "Cdn       : $cdn"
     Log "SourcePath: $jsSdkDir"
     Log "Log Path  : $logDir"
     
@@ -330,6 +332,11 @@ Function PublishFiles(
     if ($testOnly -eq $true) {
         $blobPrefix = $storageContainer + "/" + $blobPrefix
         $storageContainer = "tst"
+    }
+
+    if ($cdn -eq $true) {
+        $blobPrefix = $storageContainer + "/" + $blobPrefix
+        $storageContainer = "cdn"
     }
 
     Log "Container  : $storageContainer Prefix: $blobPrefix"

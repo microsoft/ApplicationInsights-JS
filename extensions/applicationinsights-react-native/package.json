@@ -39,7 +39,7 @@
         "@microsoft/applicationinsights-common": "^2.5.9",
         "@microsoft/applicationinsights-core-js": "^2.5.9",
         "@microsoft/applicationinsights-shims": "^1.0.3",
-        "@microsoft/dynamicproto-js": "^1.0.1"
+        "@microsoft/dynamicproto-js": "^1.1.0"
     },
     "peerDependencies": {
         "react-native": "*",
