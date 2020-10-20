@@ -95,11 +95,16 @@ module.exports = function (grunt) {
                 tsconfig: './extensions/applicationinsights-clickanalytics-js/tsconfig.json',
                 src: [
                     './extensions/applicationinsights-clickanalytics-js/*.ts',
-                    './extensions/applicationinsights-clickanalytics-js/common/*.ts',
-                    './extensions/applicationinsights-clickanalytics-js/events/*.ts',
-                    './extensions/applicationinsights-clickanalytics-js/handlers/*.ts',
                     './extensions/applicationinsights-clickanalytics-js/Interfaces/*.ts'
                 ]
+            },
+            clickanalyticstests: {
+                tsconfig: './extensions/applicationinsights-clickanalytics-js/Tests/tsconfig.json',
+                src: [
+                    './extensions/applicationinsights-clickanalytics-js/Tests/Selenium/*.ts',
+                    './extensions/applicationinsights-clickanalytics-js/Tests/*.ts'
+                ],
+                out: 'extensions/applicationinsights-clickanalytics-js/Tests/Selenium/appinsights-clickanalytics.tests.js'
             },
             propertiestests: {
                 tsconfig: './extensions/applicationinsights-properties-js/Tests/tsconfig.json',
@@ -398,7 +403,18 @@ module.exports = function (grunt) {
                     summaryOnly: true,
                     '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
-            }
+            },
+            clickanalytics: {
+                options: {
+                    urls: [
+                        './extensions/applicationinsights-clickanalytics-js/Tests/Selenium/Tests.html'
+                    ],
+                    timeout: 300 * 1000, // 5 min
+                    console: true,
+                    summaryOnly: false,
+                    '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
+                }
+            },
         }
     });
 
@@ -439,4 +455,5 @@ module.exports = function (grunt) {
     grunt.registerTask("shims", ["ts:shims", "ts:shimstest", "qunit:shims"]);
     grunt.registerTask("shimstest", ["ts:shims", "ts:shimstest", "qunit:shims"]);
     grunt.registerTask("clickanalytics", ["ts:clickanalytics"]);
+    grunt.registerTask("clickanalyticstests", ["ts:clickanalytics", "ts:clickanalyticstests", "qunit:clickanalytics"]);
 };

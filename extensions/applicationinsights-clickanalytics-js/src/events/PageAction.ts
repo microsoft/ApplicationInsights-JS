@@ -1,14 +1,13 @@
 /**
  * pageAction.ts
  * @author Krishna Yalamanchili (kryalama)
- * @copyright Microsoft 2018
+ * @copyright Microsoft 2020
  */
 
 import { WebEvent } from './WebEvent';
 import * as DataCollector from '../DataCollector';
 import { ITelemetryItem, getPerformance } from "@microsoft/applicationinsights-core-js"
 import { IPageActionOverrideValues, IPageActionTelemetry, IPageActionProperties } from '../Interfaces/Datamodel';
-import { EventType } from '../Enums';
 import { _extractFieldFromObject, _bracketIt, isValueAssigned, extend } from '../common/Utils';
 
 export class PageAction extends WebEvent {
@@ -75,7 +74,7 @@ export class PageAction extends WebEvent {
         if (element) {
             pageActionEvent.targetUri = DataCollector._getClickTarget(element);
 
-            elementContent = this._contentHandler.getElementContent(element, EventType.PAGE_ACTION); // collect id,cn tags
+            elementContent = this._contentHandler.getElementContent(element); // collect id,cn tags
 
             // if the element has a data-*-bhvr attrib defined, use it.
             if (elementContent.bhvr && !isValueAssigned(overrideValues.behavior)) {
@@ -99,8 +98,8 @@ export class PageAction extends WebEvent {
         this.trackPageAction(pageActionEvent, pageActionProperties);
     }
 
+    // capture performance data into PageTags
     private _getTimeToClick() {
-        // capture performance data into PageTags
         const perf = getPerformance();
         if (perf && perf.timing) {
             var isNavigationStart = perf.timing.navigationStart;

@@ -1,10 +1,8 @@
-
 /**
  * AutoCaptureHandler.ts
  * @author Krishna Yalamanchili (kryalama)
- * @copyright Microsoft 2018
+ * @copyright Microsoft 2020
  */
-
 
 import { IDiagnosticLogger, _InternalMessageId, getWindow, getDocument } from "@microsoft/applicationinsights-core-js";
 import { IAutoCaptureHandler, IPageActionOverrideValues } from '../Interfaces/Datamodel'
@@ -32,14 +30,15 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
             var event = (navigator.appVersion.indexOf('MSIE') !== -1) ? 'click' : 'mousedown';
             win.addEventListener(event, (evt) => { this._processClick(evt); }, false);
             win.addEventListener('keyup', (evt) => { this._processClick(evt); }, false);
-        } else if (doc && (<any>doc).attachEvent) {
+        } else if (doc && (doc as any).attachEvent) {
             // IE8 and below doesn't have addEventListener so it will use attachEvent
             // attaching to window does not work in IE8
-            (<any>doc).attachEvent('onclick', (evt: Event) => { this._processClick(evt); });
-            (<any>doc).attachEvent('keyup', (evt: Event) => { this._processClick(evt); });
+            (doc as any).attachEvent('onclick', (evt: Event) => { this._processClick(evt); });
+            (doc as any).attachEvent('keyup', (evt: Event) => { this._processClick(evt); });
         }
     }
 
+    // Process click event
     private _processClick(clickEvent: any) {
         var clickCaptureElements = { A: true, BUTTON: true, AREA: true, INPUT: true };
         let win = getWindow();

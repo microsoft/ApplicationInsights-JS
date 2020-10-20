@@ -1,13 +1,13 @@
 /**
  * Utils.ts
- * @author Ram Thiru (ramthi) Hector Hernandez (hectorh) Krishna Yalamanchili(kryalama)
- * @copyright Microsoft 2018
+ * @author Krishna Yalamanchili(kryalama)
+ * @copyright Microsoft 2020
  * File containing utility functions.
  */
 
 import { CoreUtils, getWindow, getDocument, _InternalMessageId } from "@microsoft/applicationinsights-core-js";
 import {
-    IClickAnalyticsConfiguration, IRectangle, DEFAULT_DATA_PREFIX
+    IClickAnalyticsConfiguration, DEFAULT_DATA_PREFIX
 } from '../Interfaces/Datamodel';
 
 
@@ -15,25 +15,8 @@ const Prototype = 'prototype';
 
 export const _ExtendedInternalMessageId = {
     ..._InternalMessageId,
-    AuthHandShakeError: 501,
-    AuthRedirectFail: 502,
-    BrowserCannotReadLocalStorage: 503,
-    BrowserCannotWriteLocalStorage: 504,
-    BrowserDoesNotSupportLocalStorage: 505,
-    CannotParseBiBlobValue: 506,
-    CannotParseDataAttribute: 507,
-    CVPluginNotAvailable: 508,
-    DroppedEvent: 509,
-    ErrorParsingAISessionCookie: 510,
-    ErrorProvidedChannels: 511,
-    FailedToGetCookies: 512,
-    FailedToInitializeCorrelationVector: 513,
-    FailedToInitializeSDK: 514,
+    CannotParseAiBlobValue: 506,
     InvalidContentBlob: 515,
-    InvalidCorrelationValue: 516,
-    SessionRenewalDateIsZero: 517,
-    SendPostOnCompleteFailure: 518,
-    PostResponseHandler: 519
 };
 
 /**
@@ -63,49 +46,6 @@ export function _removeNonObjectsAndInvalidElements(overrideConfig: IClickAnalyt
                 delete overrideConfig[objectName];
             }
         }
-    }
-}
-
-/**
- * Gets intersection area of two rectangles
- * and deletes them. useful in override config
- * @param  rect1 - object containing top, left, right, and bottom numbers
- * @param  rect2 - object containing top, left, right, and bottom numbers
- * @returns Intersection area in px^2
- */
-export function _getIntersectionArea(rect1: IRectangle, rect2: IRectangle): number {
-    var x11 = rect1.left,
-        y11 = rect1.top,
-        x12 = rect1.right,
-        y12 = rect1.bottom,
-        x21 = rect2.left,
-        y21 = rect2.top,
-        x22 = rect2.right,
-        y22 = rect2.bottom;
-
-    var x_overlap = Math.max(0, Math.min(x12, x22) - Math.max(x11, x21));
-    var y_overlap = Math.max(0, Math.min(y12, y22) - Math.max(y11, y21));
-
-    return x_overlap * y_overlap;
-} 
-
-/**
- * Determines if an element is currently visible to the user
- * @param element - element to check for visibility
- * @param viewportBoundingRect - Viewport bounding rectangle
- * @returns true if element is truly visible
- */
-export function _isElementTrulyVisible(element: Element, viewportBoundingRect: IRectangle) {
-    
-
-    var rect = element.getBoundingClientRect();
-
-    var intersectionArea = _getIntersectionArea(rect, viewportBoundingRect);
-
-    if (intersectionArea > 0) {
-        return true;
-    } else {
-        return false;
     }
 }
 
@@ -246,7 +186,7 @@ export function _walkUpDomChainWithElementValidation(el: Element, validationMeth
     var element = el;
     if (element) {
         while (!validationMethod(element, validationMethodParam)) {
-            element = <Element>element.parentNode;
+            element = (element.parentNode as Element);
             if (!element || !(element.getAttribute)) {
                 return null;
             }
@@ -331,7 +271,7 @@ export function extend(obj?: any, obj2?: any, obj3?: any, obj4?: any, obj5?: any
     }
 
     // Merge the object into the extended object
-    var merge = function (obj: Object) {
+    var merge = (obj: Object) => {
         for (var prop in obj) {
             if (CoreUtils.hasOwnProperty(obj, prop)) {
                 // If deep merge and property is an object, merge properties
@@ -352,41 +292,6 @@ export function extend(obj?: any, obj2?: any, obj3?: any, obj4?: any, obj5?: any
 
     return extended;
 
-}
-
-/**
- *  Get viewport bounding dimensions
- * @param viewportDimensions Dimensions of the viewport
- * @returns Returns viewport bounding rect
- */
-export function _getViewportBoundingRect(viewportDimensions: any): IRectangle {
-    var viewportBoundingRect: IRectangle = {
-        top: 0,
-        bottom: viewportDimensions.h,
-        left: 0,
-        right: viewportDimensions.w
-    };
-    return viewportBoundingRect;
-}
-
-/**
- * Use window dimensions if available before reaching into DOM.
- * Accessing DOM frequently causes layout to reflow and impacts perf.
- * @returns Returns a Viewport object that contains dimensions of the current viewport
- * @description When this is executed from within an iFrame, the dimensions would be that of the iFrame and not the browser window.
- */
-export function _getViewportDimensions() {
-    var viewport = { h: 0, w: 0 };
-    let win = getWindow();
-    let doc = getDocument();
-    if (win && doc && win.screen) {
-        let body:HTMLElement = doc.body || <HTMLElement>{};
-        let docElem:HTMLElement = doc.documentElement || <HTMLElement>{};
-        viewport.h = win.innerHeight || body.clientHeight || docElem.clientHeight;
-        viewport.w = win.innerWidth || body.clientWidth || docElem.clientWidth;
-    }
-
-    return viewport;
 }
 
 export function _validateContentNamePrefix ( config: IClickAnalyticsConfiguration) {

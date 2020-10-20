@@ -1,3 +1,9 @@
+/**
+ * ClickAnalyticsPlugin.ts
+ * @author Krishna Yalamanchili (kryalama)
+ * @copyright Microsoft 2020
+ */
+
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     BaseTelemetryPlugin, CoreUtils, ITelemetryItem,
@@ -11,7 +17,7 @@ import {
 } from './Interfaces/Datamodel';
 import {
     _removeNonObjectsAndInvalidElements, extend, _isElementDnt, 
-     isDocumentObjectAvailable, _validateContentNamePrefix 
+     isDocumentObjectAvailable, _validateContentNamePrefix, isValueAssigned 
         } from './common/Utils';
 import { PageAction } from './events/PageAction';
 import { AutoCaptureHandler } from "./handlers/AutoCaptureHandler";
@@ -107,7 +113,9 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
             // delete attributes that should be object and 
             // delete properties that are null, undefined, ''
             _removeNonObjectsAndInvalidElements(overrideConfig, attributesThatAreObjectsInConfig);
-            overrideConfig.dataTags.customDataPrefix = _validateContentNamePrefix(overrideConfig) ? overrideConfig.dataTags.customDataPrefix : DEFAULT_DATA_PREFIX;
+            if(isValueAssigned(overrideConfig.dataTags)) {
+                overrideConfig.dataTags.customDataPrefix = _validateContentNamePrefix(overrideConfig) ? overrideConfig.dataTags.customDataPrefix : DEFAULT_DATA_PREFIX;
+            }
             return extend(true, defaultConfig, overrideConfig);
         }
     }

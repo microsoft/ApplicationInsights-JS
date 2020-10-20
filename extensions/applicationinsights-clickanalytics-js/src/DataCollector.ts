@@ -1,8 +1,9 @@
 /**
  * DataCollector.ts
  * @author Krishna Yalamanchili (kryalama)
- * @copyright Microsoft 2018
+ * @copyright Microsoft 2020
  */
+
 import {
     getLocation, getDocument, getWindow
 } from '@microsoft/applicationinsights-core-js';
@@ -21,8 +22,8 @@ var clickCaptureInputTypes = { BUTTON: true, CHECKBOX: true, RADIO: true, RESET:
 export function _getImageHref(element: HTMLImageElement): string {
     var temp = element;
     if (temp) {
-        var parent = _findClosestAnchor(<Element>temp);
-        if ((<any>parent).length === 1) {
+        var parent = _findClosestAnchor(temp as Element);
+        if ((parent as any).length === 1) {
             if (parent[0].href) {
                 return parent[0].href;
             } else if (parent[0].src) {
@@ -46,12 +47,12 @@ export function _getClickTarget(element: any) {
             clickTarget = element.href || '';
             break;
         case 'IMG':
-            clickTarget = _getImageHref(<HTMLImageElement>element);
+            clickTarget = _getImageHref(element as HTMLImageElement);
             break;
         case 'INPUT':
             var type = element.type;
             if (type && (clickCaptureInputTypes[type.toUpperCase()])) {
-                let loc = getLocation() || <Location>{};
+                let loc = getLocation() || ({} as Location);
                 if (element.form) {
                     clickTarget = element.form.action || (loc.pathname || "");
                 } else {
@@ -79,8 +80,8 @@ export function onDomLoaded(callback: () => void) {
                     win.addEventListener('load', () => {
                         callback();
                     }); // NB **not** 'onload'
-                } else if ((<any>win).attachEvent) {
-                    (<any>win).attachEvent('onload', () => {
+                } else if ((win as any).attachEvent) {
+                    (win as any).attachEvent('onload', () => {
                         callback();
                     }); // IE8
                 }
@@ -94,7 +95,7 @@ function onDomReadyDo(f: any) {
     /// <summary> fires function f on domRead </summary>
     /// <param type='function'>function to call on domRead</param>
 
-    let doc = getDocument() || <Document>{};
+    let doc = getDocument() || ({} as Document);
     /in/.test(doc.readyState) ? setTimeout(() => { onDomReadyDo(f); }, 100) : f.call();
 }
 
@@ -115,7 +116,7 @@ export function _getPageName(config: IClickAnalyticsConfiguration, overrideValue
     } else if (config.coreData && config.coreData.pageName) {
         return config.coreData.pageName;
     } else {
-        let loc = getLocation() || <Location>{};
+        let loc = getLocation() || ({} as Location);
         var pagename = loc.pathname || "";
         var fragments = pagename.split('/');
         if (fragments && fragments[fragments.length - 1] !== '') {

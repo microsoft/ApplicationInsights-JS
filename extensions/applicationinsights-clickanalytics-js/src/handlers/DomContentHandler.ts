@@ -5,11 +5,10 @@
  */
 import {
     _bracketIt, _findClosestByAttribute, _removeInvalidElements,
-    _walkUpDomChainWithElementValidation, _isElementDnt, _isElementTrulyVisible,
-    _getViewportBoundingRect, _getViewportDimensions, isDocumentObjectAvailable, extend, _ExtendedInternalMessageId, isValueAssigned
+    _walkUpDomChainWithElementValidation, _isElementDnt,
+    isDocumentObjectAvailable, extend, _ExtendedInternalMessageId, isValueAssigned
 } from '../common/Utils';
-import { EventType } from '../Enums';
-import { IDiagnosticLogger, LoggingSeverity, getDocument } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, LoggingSeverity, getDocument, CoreUtils} from "@microsoft/applicationinsights-core-js";
 import { IClickAnalyticsConfiguration, IContent, IContentHandler } from '../Interfaces/Datamodel';
 
 const MAX_CONTENTNAME_LENGTH = 200;
@@ -25,8 +24,7 @@ export class DomContentHandler implements IContentHandler {
 
     /**
      * Collect metatags from DOM.
-     * Collect data from meta tags. Assign specific field values
-     * in the event object.Return an object that is a kvp of awa- and ms.tags.
+     * Collect data from meta tags.
      * @returns {object} - Metatags collection/property bag
      */
     public getMetadata(): { [name: string]: string } {
@@ -41,11 +39,11 @@ export class DomContentHandler implements IContentHandler {
 
     /**
      * Collect data-* attributes for the given element.
-     * All attributes with data-* prefix or user provided contentNamePrefix are collected.'data-*' prefix is removed from the key name.
+     * All attributes with data-* prefix or user provided customDataPrefix are collected.'data-*' prefix is removed from the key name.
      * @param element - The element from which attributes need to be collected.
      * @returns String representation of the Json array of element attributes
      */
-    public getElementContent(element: Element, eventType: EventType): IContent {
+    public getElementContent(element: Element): IContent {
         
         if (!element) {
             return {};
@@ -55,9 +53,12 @@ export class DomContentHandler implements IContentHandler {
         let biBlobElement;
         let biBlobValue;
         let contentElement;
+        let parentDataTagPrefix;
         const dataTagPrefix:string = this._config.dataTags.customDataPrefix;
-        const parentDataTagPrefix:string = dataTagPrefix + this._config.dataTags.parentDataTag;
-        const aiBlobAttributeTag:string = dataTagPrefix + this._config.dataTags.aiBlobAttributeTag
+        const aiBlobAttributeTag:string = dataTagPrefix + this._config.dataTags.aiBlobAttributeTag;
+        if(isValueAssigned(this._config.dataTags.parentDataTag)) {
+            parentDataTagPrefix = dataTagPrefix + this._config.dataTags.parentDataTag;
+        }
         
         if (!this._isTracked(element, dataTagPrefix, aiBlobAttributeTag)) {
             // capture blob from element or hierarchy
@@ -71,7 +72,7 @@ export class DomContentHandler implements IContentHandler {
                 } catch (e) {
                     this._traceLogger.throwInternal(
                         LoggingSeverity.CRITICAL,
-                        _ExtendedInternalMessageId.CannotParseBiBlobValue, "Can not parse " + biBlobValue
+                        _ExtendedInternalMessageId.CannotParseAiBlobValue, "Can not parse " + biBlobValue
                     )
                 }
             } else {
@@ -110,7 +111,7 @@ export class DomContentHandler implements IContentHandler {
     private _walkUpDomChainCaptureData(el: Element, elementContent: any, dataTagPrefix: string, parentDataTagPrefix: string ): void {
         let element = el;
         let parentDataTagFound: boolean = false;
-        while(element!==undefined && element.attributes!==undefined) {
+        while(!CoreUtils.isNullOrUndefined(element) && !CoreUtils.isNullOrUndefined(element.attributes)) {
             let attributes=element.attributes;
             for (let i = 0; i < attributes.length; i++) {
                 const attrib = attributes[i];
@@ -138,6 +139,9 @@ export class DomContentHandler implements IContentHandler {
         }
     }
 
+    /**
+     * Capture Element content along with Data Tag attributes and values
+     */
     private _populateElementContentwithDataTag(contentElement: Element, element: Element, dataTagPrefix: string, parentDataTagPrefix: string) {
         
         let elementContent: any = {};
@@ -162,7 +166,7 @@ export class DomContentHandler implements IContentHandler {
         // The content schema defines id, aN and sN as required fields.  However, 
         // requiring these fields would result in majority of adopter's content from being collected.
         // Just throw a warning and continue collection.
-        if (!elementContent.id || !elementContent.cN) {
+        if (!elementContent.id || !elementContent.contentName) {
             this._traceLogger.throwInternal(
                 LoggingSeverity.WARNING,
                 _ExtendedInternalMessageId.InvalidContentBlob, 'Invalid content blob.  Missing required attributes (id, contentName. ' +
@@ -239,15 +243,15 @@ export class DomContentHandler implements IContentHandler {
      */
     private _isTracked(element: Element, dataTag: string, aiBlobAttributeTag: string): boolean {
         const attrs = element.attributes;
+        let dataTagFound = false;
         for (let i = 0; i < attrs.length; i++) {
-            if (attrs[i].name.indexOf(dataTag) === 0) {
-                if(attrs[i].name === aiBlobAttributeTag) {
-                    // ignore if the attribute name is equal to aiBlobAttributeTag
-                    continue;
-                }
-                return true;
+            if(attrs[i].name === aiBlobAttributeTag) {
+                // ignore if the attribute name is equal to aiBlobAttributeTag
+                return false;
+            } else if (attrs[i].name.indexOf(dataTag) === 0) { 
+                dataTagFound = true;
             }
         }
-        return false;
+        return dataTagFound;
     }  
 }

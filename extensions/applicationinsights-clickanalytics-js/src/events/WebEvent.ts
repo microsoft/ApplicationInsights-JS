@@ -36,10 +36,8 @@ export class WebEvent {
 
     }
 
+    // Fill common PartB fields
     public _setBasicProperties(event: ITelemetryEventInternal, overrideValues: IOverrideValues) {
-        // Fill common PartB fields
-        
-        
         if (!isValueAssigned(event.name)) {
             event.name = DataCollector._getPageName(this._config, overrideValues);
         }
@@ -59,7 +57,6 @@ export class WebEvent {
         // extract specific meta tags out of the pageTags.metaTags collection.  These will go into assigned first class fields in the event.
         // the rest will go into pageTags.metaTags collection as is.
         this._pageTypeMetaTag = this._getMetaData(this._metaTags, this._config.coreData, 'pageType');
-        this._marketMetaTag = this._getMetaData(this._metaTags, this._config.coreData, 'market');
         this._behaviorMetaTag = this._getMetaData(this._metaTags, this._config.coreData, 'behavior');
 
         if (isValueAssigned(overrideValues.pageType)) {
@@ -125,7 +122,7 @@ export class WebEvent {
                 result = value;
             }
             else {
-                result = Behavior[<string>behavior];
+                result = Behavior[behavior as string];
             }
 
             if (result in Behavior) {
@@ -139,7 +136,7 @@ export class WebEvent {
      * Get the specified metadata value from the collection
      * If overrideValue is specified in the config that takes precedence.
      * @param metaTags - Meta data.
-     * @param awaTags - Coredata values from configuration.
+     * @param coreData - Coredata values from configuration.
      * @param metaTagName - Name of the metaTag to get.
      * @returns Meta data value
      */

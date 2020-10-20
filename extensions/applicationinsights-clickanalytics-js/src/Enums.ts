@@ -1,7 +1,7 @@
 /**
  * Enums.ts
  * @author Krishna Yalamanchili (kryalama)
- * @copyright Microsoft 2018
+ * @copyright Microsoft 2020
  */
 
 export const ActionType = {

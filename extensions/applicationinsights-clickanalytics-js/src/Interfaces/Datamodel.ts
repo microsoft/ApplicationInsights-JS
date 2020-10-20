@@ -12,9 +12,9 @@ export const DEFAULT_DONOT_TRACK_TAG = 'ai-dnt';
 export const DEFAULT_DATA_PREFIX = 'data-';
 export const DEFAULT_AI_BLOB_ATTRIBUTE_TAG = 'ai-blob';
 
-    /**
-     * ClickAnalytics Configuration
-     */
+/**
+ * ClickAnalytics Configuration
+ */
 export interface IClickAnalyticsConfiguration {
     /**
      * Automatic capture configuration. Default is true
@@ -48,10 +48,9 @@ export interface IClickAnalyticsConfiguration {
 
 }
 
-    /**
-     * Custom Data Tags Configuration
-     */
-
+/**
+ * Custom Data Tags Configuration
+ */
 export interface ICustomDataTags {
     /**
      * When a particular element is not tagged with content name prefix or content name prefix is not provided by user, this flag is used to collect standard HTML attribute for contentName.
@@ -268,14 +267,6 @@ export interface IContentHandler {
     getElementContent: (element: Element, eventType?: EventType) => IContent;
     
   }
-
-export interface IRectangle {
-    top: number;
-    bottom: number;
-    left: number;
-    right: number;
-}
-
 
 /**
  * Page Action event
