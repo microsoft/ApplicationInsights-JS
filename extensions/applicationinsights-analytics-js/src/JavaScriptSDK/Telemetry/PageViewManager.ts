@@ -117,9 +117,11 @@ export class PageViewManager {
         
                 // if the performance timing is supported by the browser, calculate the custom duration
                 const start = pageViewPerformanceManager.getPerformanceTiming().navigationStart;
-                customDuration = DateTimeUtils.GetDuration(start, +new Date);
-                if (!pageViewPerformanceManager.shouldCollectDuration(customDuration)) {
-                    customDuration = undefined;
+                if (start > 0) {
+                    customDuration = DateTimeUtils.GetDuration(start, +new Date);
+                    if (!pageViewPerformanceManager.shouldCollectDuration(customDuration)) {
+                        customDuration = undefined;
+                    }
                 }
         
                 // if the user has provided duration, send a page view telemetry with the provided duration. Otherwise, if
@@ -185,7 +187,7 @@ export class PageViewManager {
                                     pageViewPerformanceSent = true;
                                 }
                             }
-                        } else if (DateTimeUtils.GetDuration(start, +new Date) > maxDurationLimit) {
+                        } else if (start > 0 && DateTimeUtils.GetDuration(start, +new Date) > maxDurationLimit) {
                             // if performance timings are not ready but we exceeded the maximum duration limit, just log a page view telemetry
                             // with the maximum duration limit. Otherwise, keep waiting until performance timings are ready
                             processed = true;

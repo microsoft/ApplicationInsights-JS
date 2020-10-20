@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-angularplugin-js",
-    "version": "2.5.8",
+    "version": "2.5.9",
     "description": "Microsoft Application Insights Angular plugin",
     "main": "dist/applicationinsights-angularplugin-js.js",
     "module": "dist-esm/applicationinsights-angularplugin-js.js",
@@ -11,6 +11,7 @@
         "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-angularplugin-js"
     },
     "scripts": {
+        "prepublishOnly": "npm install && npm run build",
         "build": "npm run build:esm && npm run build:browser",
         "build:esm": "tsc -p tsconfig.json",
         "build:browser": "rollup -c",
@@ -19,7 +20,7 @@
     },
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-es3": "1.1.3",
-        "@microsoft/applicationinsights-properties-js": "2.5.8",
+        "@microsoft/applicationinsights-properties-js": "2.5.9",
         "@angular/core": "~8.1.2",
         "@angular/router": "~8.1.2",
         "grunt": "1.0.1",
@@ -39,9 +40,9 @@
         "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-shims": "1.0.2",
-        "@microsoft/applicationinsights-common": "2.5.8",
-        "@microsoft/applicationinsights-core-js": "2.5.8"
+        "@microsoft/applicationinsights-shims": "^1.0.3",
+        "@microsoft/applicationinsights-common": "2.5.9",
+        "@microsoft/applicationinsights-core-js": "2.5.9"
     },
     "license": "MIT"
 }

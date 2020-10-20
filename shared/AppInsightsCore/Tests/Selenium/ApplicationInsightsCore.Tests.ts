@@ -2,7 +2,7 @@
 /// <reference path="../../src/JavaScriptSDK/AppInsightsCore.ts" />
 /// <reference path="../../src/applicationinsights-core-js.ts" />
 
-import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, CoreUtils, IAppInsightsCore } from "../../src/applicationinsights-core-js"
+import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, CoreUtils, IAppInsightsCore, getCrypto, getMsCrypto } from "../../src/applicationinsights-core-js"
 import { AppInsightsCore } from "../../src/JavaScriptSDK/AppInsightsCore";
 import { IChannelControls } from "../../src/JavaScriptSDK.Interfaces/IChannelControls";
 import { _InternalMessageId, LoggingSeverity } from "../../src/JavaScriptSDK.Enums/LoggingEnums";
@@ -10,6 +10,7 @@ import { _InternalLogMessage, DiagnosticLogger } from "../../src/JavaScriptSDK/D
 import { normalizeJsName } from "../../src/JavaScriptSDK/CoreUtils";
 
 const AIInternalMessagePrefix = "AITR_";
+const MaxInt32 = 0xFFFFFFFF;
 
 export class ApplicationInsightsCoreTests extends TestClass {
 
@@ -575,6 +576,242 @@ export class ApplicationInsightsCoreTests extends TestClass {
             }
         });
 
+
+        this.testCase({
+            name: 'newId tests length',
+            test: () => {
+                _checkNewId(5, CoreUtils.newId(5), "Test the previous length");
+                _checkNewId(10, CoreUtils.newId(10), "Test the double the previous length");
+                _checkNewId(22, CoreUtils.newId(), "Test new default length");
+                _checkNewId(99, CoreUtils.newId(99), "Test 99 character == 74.25 bytes");
+                _checkNewId(200, CoreUtils.newId(200), "Test 200 character == 150 bytes");
+
+                // Check the id is not zero filled ("A") based on the an int32 === 5 base64 bytes (plus 2 bits)
+                let newId = CoreUtils.newId();
+                Assert.notEqual("AAAAAAAAAAAAAAAA", newId.substring(0, 16), "Make sure that [" + newId + "] value is not zero filled (generally -- it is randomly possible)")
+                Assert.notEqual("AAAAAAAAAAAAAAAA", newId.substring(5), "Make sure that [" + newId + "] value is not zero filled (generally -- it is randomly possible)")
+            }
+        });
+
+        this.testCase({
+            name: 'newId check randomness',
+            test: () => {
+                let map = {};
+
+                let mwcRandCalled = 0;
+                let randCalled = 0;
+
+                // Using manual spies as sinon spy is failing to correctly restore the function
+                let orgMwcRandom = CoreUtils.mwcRandom32;
+                CoreUtils.mwcRandom32 = function() {
+                    mwcRandCalled++;
+                    return orgMwcRandom.apply(this, arguments);
+                };
+
+                let orgRandom32 = CoreUtils.random32;
+                CoreUtils.random32 = function() {
+                    randCalled++;
+                    return orgRandom32.apply(this, arguments);
+                };
+
+                try {
+                    for (let lp = 0; lp < 10000; lp ++) {
+                        let newId = CoreUtils.newId();
+                        if (map[newId]) {
+                            Assert.ok(false, "[" + newId + "] was duplicated...")
+                        }
+    
+                        map[newId] = true;
+                    }
+    
+                    Assert.equal(true, randCalled > 0, "Make sure it used random32");
+                    Assert.equal(false, mwcRandCalled > 0, "Make sure it did not use mwcRandom32");
+                } finally {
+                    CoreUtils.mwcRandom32 = orgMwcRandom;
+                    CoreUtils.random32 = orgRandom32;
+                }
+            }
+        });
+
+        this.testCase({
+            name: 'newId check randomness -- emulating IE',
+            test: () => {
+                let map = {};
+
+                let ieStub = this.sandbox.stub(CoreUtils, "isIE", () => true);
+                this.setCrypto(null);
+                
+                let mwcRandCalled = 0;
+                let randCalled = 0;
+
+                // Using manual spies as sinon spy is failing to correctly restore the function
+                let orgMwcRandom = CoreUtils.mwcRandom32;
+                CoreUtils.mwcRandom32 = function() {
+                    mwcRandCalled++;
+                    return orgMwcRandom.apply(this, arguments);
+                };
+
+                let orgRandom32 = CoreUtils.random32;
+                CoreUtils.random32 = function() {
+                    randCalled++;
+                    return orgRandom32.apply(this, arguments);
+                };
+
+                try {
+                    for (let lp = 0; lp < 10000; lp ++) {
+                        let newId = CoreUtils.newId();
+                        if (map[newId]) {
+                            Assert.ok(false, "[" + newId + "] was duplicated...")
+                        }
+    
+                        map[newId] = true;
+                    }
+    
+                    Assert.equal(true, ieStub.called, "Make sure it used isIE stub");
+                    Assert.equal(true, mwcRandCalled > 0, "Make sure it used mwcRandom32");
+                    Assert.equal(true, randCalled > 0, "Make sure it did not use random32");
+                } finally {
+                    CoreUtils.mwcRandom32 = orgMwcRandom;
+                    CoreUtils.random32 = orgRandom32;
+                }
+            }
+        });
+
+        this.testCase({
+            name: 'Test CoreUtils.randomValue() randomness and distribution',
+            test: () => {
+                let numBuckets = 100;
+                let buckets: number[] = _createBuckets(100);
+                let runs = 1000000;
+
+                for (let lp = 0; lp < runs; lp++) {
+                    const bucket = CoreUtils.randomValue(numBuckets-1);
+                    buckets[bucket] ++;
+                }
+
+                let min = 10;
+                let max = -1;
+                let mode = 0;
+            
+                for (let lp = 0; lp < numBuckets; lp++) {
+                    buckets[lp] /= runs;
+                    mode += buckets[lp];
+                    min = Math.min(min, buckets[lp]);
+                    max = Math.max(max, buckets[lp]);
+
+                    if (buckets[lp] === 0) {
+                        Assert.ok(false, 'Bucket: ' + lp + ' is empty!');
+                    }
+                }
+
+                Assert.equal(undefined, buckets[numBuckets], 'Make sure that we only allocated the correct number of buckets');
+            
+                const totalVariance = mode / numBuckets;
+
+                let perfectDist = 1 / numBuckets;
+                let testDist = perfectDist * 1.5;
+
+                Assert.ok(min > 0 && min <= testDist, min + ': Make sure that we have a good minimum distribution, perfect distribution is (1/bucketCount) = ' + perfectDist);
+                Assert.ok(max > 0 && max <= testDist, max + ': Make sure that we have a good maximum distribution, perfect distribution is (1/bucketCount) = ' + perfectDist);
+                Assert.ok(totalVariance > 0 && totalVariance <= testDist, totalVariance + ': Check the average distribution perfect distribution is (1/bucketCount) = ' + perfectDist);
+            }
+        });
+
+        this.testCase({
+            name: 'Test CoreUtils.random32() randomness and distribution',
+            test: () => {
+                let numBuckets = 100;
+                let buckets: number[] = _createBuckets(100);
+                let runs = 1000000;
+
+                for (let lp = 0; lp < runs; lp++) {
+                    // Need to use floor otherwise the bucket is defined as a float as the index
+                    const bucket = Math.floor((CoreUtils.random32() / MaxInt32) * numBuckets);
+                    buckets[bucket] ++;
+                }
+
+                let min = 10;
+                let max = -1;
+                let mode = 0;
+            
+                for (let lp = 0; lp < numBuckets; lp++) {
+                    buckets[lp] /= runs;
+                    mode += buckets[lp];
+                    min = Math.min(min, buckets[lp]);
+                    max = Math.max(max, buckets[lp]);
+
+                    if (buckets[lp] === 0) {
+                        Assert.ok(false, 'Bucket: ' + lp + ' is empty!');
+                    }
+                }
+
+                Assert.equal(undefined, buckets[numBuckets], 'Make sure that we only allocated the correct number of buckets');
+            
+                const totalVariance = mode / numBuckets;
+
+                let perfectDist = 1 / numBuckets;
+                let testDist = perfectDist * 1.5;
+
+                Assert.ok(min > 0 && min <= testDist, min + ': Make sure that we have a good minimum distribution, perfect distribution is (1/bucketCount) = ' + perfectDist);
+                Assert.ok(max > 0 && max <= testDist, max + ': Make sure that we have a good maximum distribution, perfect distribution is (1/bucketCount) = ' + perfectDist);
+                Assert.ok(totalVariance > 0 && totalVariance <= testDist, totalVariance + ': Check the average distribution perfect distribution is (1/bucketCount) = ' + perfectDist);
+            }
+        });
+
+        this.testCase({
+            name: 'Test CoreUtils.mwcRandom32() randomness and distribution',
+            test: () => {
+                let numBuckets = 100;
+                let buckets: number[] = _createBuckets(100);
+                let runs = 1000000;
+
+                for (let lp = 0; lp < runs; lp++) {
+                    // Need to use floor otherwise the bucket is defined as a float as the index
+                    const bucket = Math.floor((CoreUtils.mwcRandom32() / MaxInt32) * numBuckets);
+                    buckets[bucket] ++;
+                }
+
+                let min = 10;
+                let max = -1;
+                let mode = 0;
+            
+                for (let lp = 0; lp < numBuckets; lp++) {
+                    buckets[lp] /= runs;
+                    mode += buckets[lp];
+                    min = Math.min(min, buckets[lp]);
+                    max = Math.max(max, buckets[lp]);
+
+                    if (buckets[lp] === 0) {
+                        Assert.ok(false, 'Bucket: ' + lp + ' is empty!');
+                    }
+                }
+            
+                Assert.equal(undefined, buckets[numBuckets], 'Make sure that we only allocated the correct number of buckets');
+
+                const totalVariance = mode / numBuckets;
+
+                let perfectDist = 1 / numBuckets;
+                let testDist = perfectDist * 1.5;
+
+                Assert.ok(min > 0 && min <= testDist, min + ': Make sure that we have a good minimum distribution, perfect distribution is (1/bucketCount) = ' + perfectDist);
+                Assert.ok(max > 0 && max <= testDist, max + ': Make sure that we have a good maximum distribution, perfect distribution is (1/bucketCount) = ' + perfectDist);
+                Assert.ok(totalVariance > 0 && totalVariance <= testDist, totalVariance + ': Check the average distribution perfect distribution is (1/bucketCount) = ' + perfectDist);
+            }
+        });
+
+        function _createBuckets(num: number) {
+            // Using helper function as TypeScript 2.5.3 is complaining about new Array<number>(100).fill(0);
+            let buckets: number[] = [];
+            for (let lp = 0; lp < num; lp++) {
+                buckets[lp] = 0;
+            }
+
+            return buckets;
+        }
+
+        function _checkNewId(idLen: number, newId: string, message: string) {
+            Assert.equal(idLen, newId.length, "[" + newId + "] - " + message);
+        }
     }
 }
 

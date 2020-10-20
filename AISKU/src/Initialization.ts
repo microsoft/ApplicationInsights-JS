@@ -447,6 +447,7 @@ export class Initialization implements IApplicationInsights {
     let sdkSrc = null;
     let isModule = false;
     let cdns: string[] = [
+        "://js.monitor.azure.com/",
         "://az416426.vo.msecnd.net/"
     ];
 

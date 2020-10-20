@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web-basic",
-    "version": "2.5.8",
+    "version": "2.5.9",
     "description": "Microsoft Application Insights Javascript SDK core and channel",
     "main": "dist/applicationinsights-web-basic.js",
     "module": "dist-esm/index.js",
@@ -27,11 +27,11 @@
         "tslint-config-prettier": "^1.18.0"
     },
     "dependencies": {
-        "@microsoft/dynamicproto-js": "^1.0.0",
-        "@microsoft/applicationinsights-shims" : "1.0.2",
-        "@microsoft/applicationinsights-common": "2.5.8",
-        "@microsoft/applicationinsights-channel-js": "2.5.8",
-        "@microsoft/applicationinsights-core-js": "2.5.8"
+        "@microsoft/dynamicproto-js": "^1.1.0",
+        "@microsoft/applicationinsights-shims" : "1.0.3",
+        "@microsoft/applicationinsights-common": "2.5.9",
+        "@microsoft/applicationinsights-channel-js": "2.5.9",
+        "@microsoft/applicationinsights-core-js": "2.5.9"
     },
     "peerDependencies": {
     },

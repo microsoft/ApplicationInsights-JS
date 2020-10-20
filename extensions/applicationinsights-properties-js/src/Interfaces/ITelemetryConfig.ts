@@ -12,4 +12,5 @@ export interface ITelemetryConfig {
     isBrowserLinkTrackingEnabled: () => boolean;
     appId: () => string;
     namePrefix: () => string;
+    idLength: () => number;
 }

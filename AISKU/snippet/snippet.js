@@ -20,13 +20,13 @@
         // Only set if supplied or another name is defined to avoid polluting the global namespace
         win[sdkInstanceName] = aiName;
     }
-    var aisdk = win[aiName] || (function (aiConfig) {
+    var aiSdk = win[aiName] || (function (aiConfig) {
         var loadFailed = false;
         var handled = false;
         var appInsights = {
             initialize: true,   // initialize sdk on download
             queue: [],
-            sv: "4",            // Track the actual snippet version for reporting.
+            sv: "5",            // Track the actual snippet version for reporting.
             version: 2.0,       // initialization version, if this is not 2.0 the previous scripts fail to initialize
             config: aiConfig
         };
@@ -75,7 +75,7 @@
             var conString = _parseConnectionString();
             var iKey = conString[strInstrumentationKey] || aiConfig[strInstrumentationKey] || strEmpty;
             var ingest = conString[strIngestionendpoint];
-            var endpointUrl = ingest ? ingest + "/v2/track" : config.endpointUrl; // only add /v2/track when from connectionstring
+            var endpointUrl = ingest ? ingest + "/v2/track" : aiConfig.endpointUrl; // only add /v2/track when from connectionstring
 
             var message = "SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)";
             var evts = [];
@@ -274,7 +274,7 @@
         //  AppAnalytics. It is defined in ApplicationInsights.ts:ApplicationInsights.identifer
         var analyticsCfg = ((aiConfig.extensionConfig || {}).ApplicationInsightsAnalytics ||{});
         if (!(aiConfig[strDisableExceptionTracking] === true || analyticsCfg[strDisableExceptionTracking] === true)) {
-            method = "onerror";
+            var method = "onerror";
             _createMethods(["_" + method]);
             var originalOnError = win[method];
             win[method] = function(message, url, lineNumber, columnNumber, error) {
@@ -296,20 +296,31 @@
     
         return appInsights;
     })(snipConfig.cfg);
-    
+
     // global instance must be set in this order to mitigate issues in ie8 and lower
-    win[aiName] = aisdk;
+    win[aiName] = aiSdk;
     
+    function _onInit() {
+        if (snipConfig.onInit) {
+            snipConfig.onInit(aiSdk);
+        }
+    }
+
     // if somebody calls the snippet twice, don't report page view again
-    if (aisdk.queue && aisdk.queue.length === 0) {
-         aisdk.trackPageView({});
+    if (aiSdk.queue && aiSdk.queue.length === 0) {
+        aiSdk.queue.push(_onInit);
+        aiSdk.trackPageView({});
+    } else {
+        // Already loaded so just call the onInit
+        _onInit();
     }
 })(window, document, {
-    src: "https://az416426.vo.msecnd.net/scripts/b/ai.2.min.js", // The SDK URL Source
-    //name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied
-    //ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,
-    //useXhr: 1, // Use XHR instead of fetch to report failures (if available),
-    //crossOrigin: "anonymous", // When supplied this will add the provided value as the cross origin attribute on the script tag 
+    src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js", // The SDK URL Source
+    // name: "appInsights", // Global SDK Instance name defaults to "appInsights" when not supplied
+    // ld: 0, // Defines the load delay (in ms) before attempting to load the sdk. -1 = block page load and add to head. (default) = 0ms load after timeout,
+    // useXhr: 1, // Use XHR instead of fetch to report failures (if available),
+    // crossOrigin: "anonymous", // When supplied this will add the provided value as the cross origin attribute on the script tag
+    // onInit: null, // Once the application insights instance has loaded and initialized this callback function will be called with 1 argument -- the sdk instance (DO NOT ADD anything to the sdk.queue -- As they won't get called)
     cfg: { // Application Insights Configuration
         instrumentationKey: "INSTRUMENTATION_KEY"
     }

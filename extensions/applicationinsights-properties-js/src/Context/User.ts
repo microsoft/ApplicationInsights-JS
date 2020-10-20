@@ -61,7 +61,7 @@ export class User implements IUser {
         this.config = config;
 
         if (!this.id) {
-            this.id = Util.newId();
+            this.id = CoreUtils.newId(config && config.idLength ? config.idLength() : 22);
             const date = new Date();
             const acqStr = CoreUtils.toISOString(date);
             this.accountAcquisitionDate = acqStr;

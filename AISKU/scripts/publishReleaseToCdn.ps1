@@ -1,10 +1,13 @@
 param (
     [string] $releaseFrom = $null,                      # The root path for where to find the files to be released
-    [string] $cdnStorePath = "daprodcdn",               # Identifies the target Azure Storage account (by name)
+    [string] $cdnStorePath = "cdnstoragename",          # Identifies the target Azure Storage account (by name)
+    [string] $subscriptionId = $null,                   # Identifies the target Azure Subscription Id (if not encoded in the cdnStorePath)
+    [string] $resourceGroup = $null,                    # Identifies the target Azure Subscription Resource Group (if not encoded in the cdnStorePath)
     [string] $sasToken = $null,                         # The SAS Token to use rather than using or attempting to login
     [string] $logPath = $null,                          # The location where logs should be written
     [switch] $overwrite = $false,                       # Overwrite any existing files   
-    [switch] $testOnly = $false                         # Uploads to a "tst" test container on the storage account
+    [switch] $testOnly = $false,                        # Uploads to a "tst" test container on the storage account
+    [switch] $cdn = $false                              # Uploads to a "cdn" container on the storage account
 )
 
 $metaSdkVer = "aijssdkver"
@@ -12,20 +15,22 @@ $metaSdkVer = "aijssdkver"
 $global:hasErrors = $false
 $global:cacheValue = $null
 $global:sasToken = $sasToken
-$global:resourceGroup = $null
-$global:storeName = $null                               # The endpoint needs to the base name of the endpoint, not the full URL (eg. “my-cdn” rather than “my-cdn.azureedge.net”)
-$global:subscriptionId = $null
+$global:resourceGroup = $resourceGroup
+$global:storeName = $null                              # The endpoint needs to the base name of the endpoint, not the full URL (eg. “my-cdn” rather than “my-cdn.azureedge.net”)
+$global:subscriptionId = $subscriptionId
+$global:storageContext = $null
 
 Function Log-Params 
 {
     Log "Store Path: $cdnStorePath"
     Log "Overwrite : $overwrite"
     Log "Test Mode : $testOnly"
+    Log "Cdn       : $cdn"
     Log "SourcePath: $jsSdkDir"
     Log "Log Path  : $logDir"
     
     if ([string]::IsNullOrWhiteSpace($global:sasToken) -eq $true) {
-        Log "Mode      : Manual"
+        Log "Mode      : User-Credentials"
     } else {
         Log "Mode      : Sas-Token"
     }
@@ -80,19 +85,24 @@ Function Log-Failure (
 
 Function Log-Exception(
     [System.Management.Automation.ErrorRecord] $err,
-    [boolean] $asError = $true
+    [boolean] $asError = $true,
+    [string] $prefix = ""
 ) {
-    Log-Failure "Exception: $($err.Exception.Message)" $asError
-    Log-Failure "Source   : $($err.Exception.Source)"  $asError
-    Write-LogDetail "Full Exception: $($err.Exception)"
-    Log-Failure $err.ScriptStackTrace  $asError
+    Log-Failure "$($prefix)Exception: $($err.Exception.Message)" $asError
+    Log-Failure "$($prefix)Source   : $($err.Exception.Source)"  $asError
+    Write-LogDetail "$($prefix)Full Exception: $($err.Exception)"
+    Log-Failure "$($prefix)$($err.ScriptStackTrace)" $asError
 }
 
 Function Log-Errors(
-    [boolean] $asError = $true
+    [boolean] $asError = $true,
+    [string] $prefix = ""
 ) {
     foreach ($err in $Error) {
         Log-Exception $err $asError
+        foreach ($innerEx in $err.InnerExceptions) {
+            Log-Exception $innerEx $asError "$prefix  "
+        }
     }
 }
 
@@ -166,7 +176,16 @@ Function CheckLogin
         }
 
         $loggedIn = $true
-        Get-AzureRmStorageAccount -ErrorAction SilentlyContinue | Out-Null
+        if ([string]::IsNullOrWhiteSpace($global:resourceGroup) -ne $true) {
+            if ([string]::IsNullOrWhiteSpace($global:storeName) -eq $true) {
+                Get-AzureRmStorageAccount -ResourceGroupName $global:resourceGroup -AccountName $global:storeName -ErrorAction SilentlyContinue | Out-Null
+            } else {
+                Get-AzureRmStorageAccount -ResourceGroupName $global:resourceGroup -ErrorAction SilentlyContinue | Out-Null
+            }
+        } else {
+            Get-AzureRmStorageAccount -ErrorAction SilentlyContinue | Out-Null
+        }
+
         Log-Errors $false
 
         #Get-AzureRmSubscription -SubscriptionId $subscriptionId -ErrorAction SilentlyContinue
@@ -323,10 +342,21 @@ Function PublishFiles(
         $storageContainer = "tst"
     }
 
+    if ($cdn -eq $true) {
+        $blobPrefix = $storageContainer + "/" + $blobPrefix
+        $storageContainer = "cdn"
+    }
+
     Log "Container  : $storageContainer Prefix: $blobPrefix"
     Log "    Using Cache Control: $cacheControlValue"
 
-    $azureContext = New-AzureStorageContext -StorageAccountName $global:storeName -Sastoken $global:sasToken
+    # Use the Users Storage Context credentials
+    $azureContext = $global:storageContext
+    if ([string]::IsNullOrWhiteSpace($global:sasToken) -ne $true) {
+        # Use the Sas token
+        $azureContext = New-AzureStorageContext -StorageAccountName $global:storeName -Sastoken $global:sasToken
+    }
+    
     $container = Get-AzureStorageContainer -Name $storageContainer -Context $azureContext -ErrorAction SilentlyContinue
     if ($null -eq $container) {
         $Error.Clear()
@@ -383,7 +413,8 @@ Function ParseCdnStorePath
     }
 
     $global:storeName = $cdnStorePath
-    $parts = $cdnStorePath.split("::")
+    $splitOptions = [System.StringSplitOptions]::RemoveEmptyEntries    
+    $parts = $cdnStorePath.split(":", $splitOptions)
     if ($parts.Length -eq 3) {
         $global:subscriptionId = $parts[0]
         $global:resourceGroup = $parts[1]
@@ -414,52 +445,82 @@ Function ParseCdnStorePath
     Log "----------------------------------------------------------------------"
 }
 
-Function GenerateUserSasToken
+Function ValidateAccess
 {
     CheckLogin | Out-Null
 
-    Log "  Finding Subscriptions"
-    $subs = Get-AzureRmSubscription | Where-Object State -eq "Enabled"
-    if ($null -eq $subs -or $subs.Length -eq 0) {
-        Log-Failure "  - No Active Subscriptions"
-        exit 500;
-    }
-
-    # Limit to the defined subscription
-    if ([string]::IsNullOrWhiteSpace($global:subscriptionId) -ne $true) {
-        $subs = $subs | Where-Object Id -like $("*$global:subscriptionId*")
-    }
-
-    Log "  Finding Storage Account"
     $store = $null
-    $accounts = $null
-    foreach ($id in $subs) {
-        Log "    Checking Subscription $($id.Id)"
-        Select-AzureRmSubscription -SubscriptionId $id.Id | Out-Null
-        $accounts = Get-AzureRmStorageAccount
-        if ($null -ne $accounts -and $accounts.Length -ge 1) {
-            # If a resource group has been supplied limit to just that group
-            if ([string]::IsNullOrWhiteSpace($global:resourceGroup) -ne $true) {
-                $accounts = $accounts | Where-Object ResourceGroupName -eq $global:resourceGroup
-            }
-
-            $accounts = $accounts | Where-Object StorageAccountName -eq $global:storeName
-
-            if ($accounts.Length -gt 1) {
-                Log-Failure "    - Too many [$($accounts.Length)] matching storage accounts located for $($cdnStorePath) please specify the resource group as a prefix for the store name parameter '[<Subscription>::[<ResourceGroup>::]]<StoreName>"
-                exit 300;
-            } elseif ($accounts.Length -eq 1 -and $null -eq $store) {
-                Log "    - Found Candidate Subscription $($id.Id)"
-                $global:subscriptionId = $id.Id
+    $subs = $null
+    if ([string]::IsNullOrWhiteSpace($global:subscriptionId) -ne $true -and (IsGuid($global:subscriptionId) -eq $true)) {
+        Select-AzureRmSubscription -SubscriptionId $global:subscriptionId | Out-Null
+        if ([string]::IsNullOrWhiteSpace($global:resourceGroup) -ne $true -and [string]::IsNullOrWhiteSpace($global:storeName) -ne $true) {
+            Log "  Getting Storage Account"
+            $accounts = Get-AzureRmStorageAccount -ResourceGroupName $global:resourceGroup -AccountName $global:storeName
+            if ($null -ne $accounts -and $accounts.Length -eq 1) {
                 $store = $accounts[0]
-            } elseif ($accounts.Length -ne 0 -or $null -ne $store) {
-                Log-Failure "    - More than 1 storage account was located for $($cdnStorePath) please specify the resource group as a prefix for the store name parameter '[<Subscription>::[<ResourceGroup>::]]<StoreName>"
-                exit 300;
-            } else {
-                Log "    - No Matching Accounts"
             }
-        } else {
-            Log "    - No Storage Accounts"
+        }
+        
+        if ($null -eq $store) {
+            Log "  Selecting Subscription"
+            $subs = Get-AzureRmSubscription -SubscriptionId $global:subscriptionId | Where-Object State -eq "Enabled"
+        }
+    } else {
+        Log "  Finding Subscriptions"
+        $subs = Get-AzureRmSubscription | Where-Object State -eq "Enabled"
+    }
+
+    if ($null -eq $store -and $null -ne $subs) {
+        if ($null -eq $subs -or $subs.Length -eq 0) {
+            Log-Failure "  - No Active Subscriptions"
+            exit 500;
+        }
+    
+        # Limit to the defined subscription
+        if ([string]::IsNullOrWhiteSpace($global:subscriptionId) -ne $true) {
+            $subs = $subs | Where-Object Id -like $("*$global:subscriptionId*")
+        }
+
+        Log "  Finding Storage Account"
+        $accounts = $null
+        foreach ($id in $subs) {
+            Log "    Checking Subscription $($id.Id)"
+            Select-AzureRmSubscription -SubscriptionId $id.Id | Out-Null
+            $accounts = $null
+            if ([string]::IsNullOrWhiteSpace($global:resourceGroup) -ne $true) {
+                if ([string]::IsNullOrWhiteSpace($global:storeName) -eq $true) {
+                    $accounts = Get-AzureRmStorageAccount -ResourceGroupName $global:resourceGroup -AccountName $global:storeName
+                } else {
+                    $accounts = Get-AzureRmStorageAccount -ResourceGroupName $global:resourceGroup
+                }
+            } else {
+                $accounts = Get-AzureRmStorageAccount
+            }
+    
+            if ($null -ne $accounts -and $accounts.Length -ge 1) {
+                # If a resource group has been supplied limit to just that group
+                if ([string]::IsNullOrWhiteSpace($global:resourceGroup) -ne $true) {
+                    $accounts = $accounts | Where-Object ResourceGroupName -eq $global:resourceGroup
+                }
+    
+                $accounts = $accounts | Where-Object StorageAccountName -eq $global:storeName
+    
+                if ($accounts.Length -gt 1) {
+                    Log-Failure "    - Too many [$($accounts.Length)] matching storage accounts located for $($cdnStorePath) please specify the resource group as a prefix for the store name parameter '[<Subscription>:[<ResourceGroup>:]]<StoreName>"
+                    exit 300;
+                } elseif ($accounts.Length -eq 1 -and $null -eq $store) {
+                    Log "    - Found Candidate Subscription $($id.Id)"
+                    $global:subscriptionId = $id.Id
+                    $store = $accounts[0]
+                } elseif ($accounts.Length -ne 0 -or $null -ne $store) {
+                    Log-Failure "    - More than 1 storage account was located for $($cdnStorePath) please specify the resource group as a prefix for the store name parameter '[<Subscription>:[<ResourceGroup>:]]<StoreName>"
+                    exit 300;
+                } else {
+                    Log "    - No Matching Accounts"
+                }
+            } else {
+                Log "    - No Storage Accounts"
+            }
         }
     }
 
@@ -471,7 +532,7 @@ Function GenerateUserSasToken
     $global:storeName = $store.StorageAccountName
     $global:resourceGroup = $store.ResourceGroupName
 
-    Log "Generating SAS Token for"
+    Log "Getting StorageContext for"
     if ([string]::IsNullOrWhiteSpace($global:subscriptionId) -ne $true) {
         Log "  Subscription: $global:subscriptionId"
     }
@@ -481,15 +542,11 @@ Function GenerateUserSasToken
     }
 
     Log "  StoreName   : $global:storeName"    
-    $storageContext = $store.context
-    $sasToken = New-AzureStorageAccountSASToken -Context $storageContext -Service Blob -ResourceType Service,Container,Object -Permission racwdlup -Protocol HttpsOnly
-
-    if ([string]::IsNullOrWhiteSpace($sasToken) -eq $true) {
+    $global:storageContext = $store.context
+    if ($null -eq $global:storageContext) {
         Log-Failure "  - Unable to access or locate a storage account $cdnStorePath"
         exit 301;
     }
-
-    $global:sasToken = $sasToken
 }
 
 #-----------------------------------------------------------------------------
@@ -523,9 +580,9 @@ ParseCdnStorePath
 
 if ([string]::IsNullOrWhiteSpace($global:sasToken) -eq $true) {
     Log "**********************************************************************"
-    Log "Generating SAS token for user"
+    Log "Validating user access"
     Log "**********************************************************************"
-    GenerateUserSasToken
+    ValidateAccess
 }
 
 Log "======================================================================"

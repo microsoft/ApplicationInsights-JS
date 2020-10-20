@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-core-js",
     "author": "Microsoft Corporation",
-    "version": "2.5.8",
+    "version": "2.5.9",
     "description": "Microsoft Application Insights Core Javascript SDK",
     "keywords": [
         "azure",
@@ -46,7 +46,7 @@
         "rollup": "^0.66.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-shims" : "1.0.2",
-        "@microsoft/dynamicproto-js": "^1.0.0"
+        "@microsoft/applicationinsights-shims" : "1.0.3",
+        "@microsoft/dynamicproto-js": "^1.1.0"
     }
 }
