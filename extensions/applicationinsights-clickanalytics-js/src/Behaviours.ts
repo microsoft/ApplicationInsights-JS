@@ -1,5 +1,5 @@
 /**
- * Enums.ts
+ * Behaviours.ts
  * @author Krishna Yalamanchili(kryalama)
  * Copyright (c) Microsoft and contributors. All rights reserved.
  */
