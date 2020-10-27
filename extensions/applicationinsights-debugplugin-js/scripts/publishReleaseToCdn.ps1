@@ -1,5 +1,6 @@
 param (
     [string] $releaseFrom = $null,                      # The root path for where to find the files to be released
+    [string] $storeContainer = "cdn",                   # Identifies the destination storage account container
     [string] $cdnStorePath = "cdnstoragename",          # Identifies the target Azure Storage account (by name)
     [string] $subscriptionId = $null,                   # Identifies the target Azure Subscription Id (if not encoded in the cdnStorePath)
     [string] $resourceGroup = $null,                    # Identifies the target Azure Subscription Resource Group (if not encoded in the cdnStorePath)
@@ -7,7 +8,7 @@ param (
     [string] $logPath = $null,                          # The location where logs should be written
     [switch] $overwrite = $false,                       # Overwrite any existing files   
     [switch] $testOnly = $false,                        # Uploads to a "tst" test container on the storage account
-    [switch] $cdn = $false                              # Uploads to a "cdn" container on the storage account
+    [switch] $cdn = $false                              # (No longer used -- kept for now for backward compatibility)
 )
 
 $metaSdkVer = "aijssdkver"
@@ -22,12 +23,12 @@ $global:storageContext = $null
 
 Function Log-Params 
 {
-    Log "Store Path: $cdnStorePath"
-    Log "Overwrite : $overwrite"
-    Log "Test Mode : $testOnly"
-    Log "Cdn       : $cdn"
-    Log "SourcePath: $jsSdkDir"
-    Log "Log Path  : $logDir"
+    Log "Storage Container : $storeContainer"
+    Log "Store Path        : $cdnStorePath"
+    Log "Overwrite         : $overwrite"
+    Log "Test Mode         : $testOnly"
+    Log "SourcePath        : $jsSdkDir"
+    Log "Log Path          : $logDir"
     
     if ([string]::IsNullOrWhiteSpace($global:sasToken) -eq $true) {
         Log "Mode      : User-Credentials"
@@ -334,10 +335,10 @@ Function PublishFiles(
         $storageContainer = "tst"
     }
 
-    if ($cdn -eq $true) {
+    if ($storeContainer.Length -gt 0) {
         $blobPrefix = $storageContainer + "/" + $blobPrefix
-        $storageContainer = "cdn"
-    }
+        $storageContainer = $storeContainer
+   }
 
     Log "Container  : $storageContainer Prefix: $blobPrefix"
     Log "    Using Cache Control: $cacheControlValue"
