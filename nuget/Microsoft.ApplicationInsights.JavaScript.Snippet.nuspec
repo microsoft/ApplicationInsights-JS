@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Microsoft.ApplicationInsights.JavaScript.Snippet</id>
-    <version>2.5.9</version>
+    <version>1.0.0</version>
     <title>Application Insights Snippet for JavaScript Applications</title>
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
@@ -17,7 +17,7 @@
     <copyright>Copyright © 2013-2022, Microsoft. All rights reserved.</copyright>
   </metadata>
   <files>
-    <file src="..\AISKU\snippet\snippet.min.js" target="content\scripts"/>
+    <file src="..\AISKU\snippet\snippet.min.js" target="content\scripts\ai-snippet.min.js"/>
     <file src="icon.png" target="images" />
   </files>
 </package>
