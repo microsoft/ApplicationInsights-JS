@@ -1,0 +1,22 @@
+﻿<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Microsoft.ApplicationInsights.JavaScript.Snippet</id>
+    <version>2.5.9</version>
+    <title>Application Insights Snippet for JavaScript Applications</title>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <language>en-us</language>
+    <licenseUrl>http://go.microsoft.com/fwlink/?LinkID=510709</licenseUrl>
+    <projectUrl>http://go.microsoft.com/fwlink/?LinkId=392727</projectUrl>
+    <icon>images\icon.png</icon>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <summary>Application Insights Snippet for JavaScript Applications</summary>
+    <description>Application Insights Snippet for Javascript Applications</tags>
+    <copyright>Copyright © 2013-2022, Microsoft. All rights reserved.</copyright>
+  </metadata>
+  <files>
+    <file src="..\AISKU\snippet\snippet.min.js" target="content\scripts"/>
+    <file src="icon.png" target="images" />
+  </files>
+</package>
