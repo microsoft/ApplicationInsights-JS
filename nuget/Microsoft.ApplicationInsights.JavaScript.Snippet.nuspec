@@ -9,10 +9,11 @@
     <language>en-us</language>
     <licenseUrl>http://go.microsoft.com/fwlink/?LinkID=510709</licenseUrl>
     <projectUrl>http://go.microsoft.com/fwlink/?LinkId=392727</projectUrl>
-    <icon>images\icon.png</icon>
+     <icon>images\icon.png</icon>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <summary>Application Insights Snippet for JavaScript Applications</summary>
-    <description>Application Insights Snippet for Javascript Applications</tags>
+    <description>Application Insights Snippet for JavaScript Applications, more infor about snipept available in https://github.com/microsoft/ApplicationInsights-JS</description>
+    <tags>Analytics Azure ApplicationInsights Telemetry Monitoring SDK</tags>
     <copyright>Copyright © 2013-2022, Microsoft. All rights reserved.</copyright>
   </metadata>
   <files>
