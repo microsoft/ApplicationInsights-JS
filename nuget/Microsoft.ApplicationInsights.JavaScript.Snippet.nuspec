@@ -14,7 +14,7 @@
     <summary>Application Insights Snippet for JavaScript Applications</summary>
     <description>Application Insights Snippet for JavaScript Applications, more infor about snipept available in https://github.com/microsoft/ApplicationInsights-JS</description>
     <tags>Analytics Azure ApplicationInsights Telemetry Monitoring SDK</tags>
-    <copyright>Copyright © 2013-2022, Microsoft. All rights reserved.</copyright>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
   </metadata>
   <files>
     <file src="..\AISKU\snippet\snippet.min.js" target="content\scripts\ai-snippet.min.js"/>
