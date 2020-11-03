@@ -1,5 +1,6 @@
 param (
     [string] $container = $null,                        # Identify the container that you want to check blank == all
+    [string] $storeContainer = "cdn",                   # Identifies the destination storage account container
     [string] $cdnStorePath = "cdnstoragename",          # Identifies the target Azure Storage account (by name)
     [string] $subscriptionId = $null,                   # Identifies the target Azure Subscription Id (if not encoded in the cdnStorePath)
     [string] $resourceGroup = $null,                    # Identifies the target Azure Subscription Resource Group (if not encoded in the cdnStorePath)
@@ -8,7 +9,7 @@ param (
     [switch] $showFiles = $false,                       # Show the individual files with details as well
     [switch] $activeOnly = $false,                      # Only show the active (deployed) versions
     [switch] $testOnly = $false,                        # Uploads to a "tst" test container on the storage account
-    [switch] $cdn = $false                              # Uploads to a "cdn" container on the storage account
+    [switch] $cdn = $false                              # (No longer used -- kept for now for backward compatibility)
 )
 
 $metaSdkVer = "aijssdkver"
@@ -23,12 +24,12 @@ $global:storageContext = $null
 
 Function Log-Params 
 {
-    Log "Container : $container"
-    Log "Store Path: $cdnStorePath"
-    Log "Log Path  : $logDir"
-    Log "Show Files: $showFiles"
-    Log "Test Mode : $testOnly"
-    Log "Cdn       : $cdn"
+    Log "Container         : $container"
+    Log "Storage Container : $storeContainer"
+    Log "Store Path        : $cdnStorePath"
+    Log "Log Path          : $logDir"
+    Log "Show Files        : $showFiles"
+    Log "Test Mode         : $testOnly"
     
     if ([string]::IsNullOrWhiteSpace($global:sasToken) -eq $true) {
         Log "Mode      : User-Credentials"
@@ -419,9 +420,9 @@ Function GetContainerContext(
         $storageContainer = "tst"
     }
 
-    if ($cdn -eq $true) {
-        $blobPrefix = $storageContainer + "/" + $blobPrefix
-        $storageContainer = "cdn"
+    if ($storeContainer.Length -gt 0) {
+         $blobPrefix = $storageContainer + "/" + $blobPrefix
+         $storageContainer = $storeContainer
     }
 
     Log "Container  : $storageContainer Prefix: $blobPrefix"
