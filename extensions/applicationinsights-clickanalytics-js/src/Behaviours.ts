@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Microsoft and contributors. All rights reserved.
+ *  @copyright Microsoft 2020
  */
 
 // Behavior enum values
