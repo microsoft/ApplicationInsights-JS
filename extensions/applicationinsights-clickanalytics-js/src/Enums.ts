@@ -1,6 +1,4 @@
 /**
- * Enums.ts
- * @author Krishna Yalamanchili (kryalama)
  * @copyright Microsoft 2020
  */
 
@@ -14,9 +12,4 @@ export const ActionType = {
     KEYBOARDENTER: 'KE',
     KEYBOARDSPACE: 'KS',
     OTHER: 'O'
-};
-
-export enum EventType {
-    PAGE_ACTION,
-    CONTENT_UPDATE
 };

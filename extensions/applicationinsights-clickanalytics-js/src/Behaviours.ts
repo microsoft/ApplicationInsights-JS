@@ -1,6 +1,4 @@
 /**
- * Enums.ts
- * @author Krishna Yalamanchili(kryalama)
  * Copyright (c) Microsoft and contributors. All rights reserved.
  */
 
@@ -55,8 +53,6 @@ export enum Behavior {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Commerce [80-99]
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    PURCHASE = 80,				// Purchasing physical or digital goods or services from a Microsoft online storefront 
-    ADDTOCART = 81,				// Adding physical or digital goods or services to a shopping cart located on a Microsoft online storefront
     VIEWCART = 82,               // Viewing the cart
     ADDWISHLIST = 83,            // Adding a physical or digital good or services to a wishlist
     FINDSTORE = 84,              // Finding a physical store
@@ -85,22 +81,16 @@ export enum Behavior {
     CALL = 123,                  // Click on a "call" link
     EMAIL = 124,                 // Click on an "email" link
     COMMUNITY = 125,             // Click on a "community" link
-    SOCIALFOLLOW = 126,         // "Following" a Microsoft social channel
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Feedback [140-159]
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     VOTE = 140,					// Rating content or voting for content
-    SURVEYINITIATE = 141,		// Initiating  survey feedback to Microsoft
-    SURVEYCOMPLETE = 142,		// Completing survey feedback to Microsoft
-    REPORTAPPLICATION = 143,	    // Reporting an application to Microsoft for bad content, etc.
-    REPORTREVIEW = 144,	        // Reporting a review to Microsoft for bad content, etc.
     SURVEYCHECKPOINT = 145,      // reaching the survey page/form
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Registration, Contact [160-179]
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    CONTACT = 160,				// Requesting contact from Microsoft or Microsoft Partner
     REGISTRATIONINITIATE = 161,  // Initiating a registration process 
     REGISTRATIONCOMPLETE = 162,  // Completing a registration process 
     CANCELSUBSCRIPTION = 163,    // Canceling a subscription
@@ -163,23 +153,13 @@ export enum Behavior {
     VIDEORESOLUTIONCONTROL = 259,     //  Click to change resolution
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Virtual Event [260-279]
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    VIRTUALEVENTJOIN = 260,		// Joining a Microsoft web event
-    VIRTUALEVENTEND = 261,		// Joining ending a Microsoft web event
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
     // 	Advertisement Engagement [280-299]
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    IMPRESSION = 280,			// User impression of a Microsoft advertisement
-    CLICK = 281,				    // User page actions for the purpose of clicking a Microsoft advertisement
-    RICHMEDIACOMPLETE = 282,	    // User page actions for the purpose of clicking a Microsoft advertisement
     ADBUFFERING = 283,           // Ad is buffering
     ADERROR = 284,               // Ad error
     ADSTART = 285,               // Ad start
     ADCOMPLETE = 286,            // Ad complete
     ADSKIP = 287,                // Ad skipped
     ADTIMEOUT = 288,             // Ad timed-out
-
     OTHER = 300					// Other
 };

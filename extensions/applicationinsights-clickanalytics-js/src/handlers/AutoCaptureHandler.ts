@@ -1,14 +1,13 @@
 /**
- * AutoCaptureHandler.ts
- * @author Krishna Yalamanchili (kryalama)
  * @copyright Microsoft 2020
  */
 
 import { IDiagnosticLogger, _InternalMessageId, getWindow, getDocument } from "@microsoft/applicationinsights-core-js";
-import { IAutoCaptureHandler, IPageActionOverrideValues } from '../Interfaces/Datamodel'
-import { _isRightClick, _isLeftClick, _isKeyboardEnter, _isKeyboardSpace, _isMiddleClick } from '../common/Utils';
+import { IAutoCaptureHandler, IPageActionOverrideValues, IClickAnalyticsConfiguration } from '../Interfaces/Datamodel'
+import { _isRightClick, _isLeftClick, _isKeyboardEnter, _isKeyboardSpace, _isMiddleClick, _isElementDnt } from '../common/Utils';
 import { ActionType } from '../Enums';
 import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
+import { PageAction } from '../events/PageAction';
 
 const clickCaptureInputTypes = { BUTTON: true, CHECKBOX: true, RADIO: true, RESET: true, SUBMIT: true };
 
@@ -18,7 +17,8 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
      * @param analyticsPlugin - WebAnalytics plugin
      * @param traceLogger - Trace logger to log to console.
      */
-   constructor(protected _analyticsPlugin: ClickAnalyticsPlugin, protected _traceLogger: IDiagnosticLogger) {
+   constructor(protected _analyticsPlugin: ClickAnalyticsPlugin, protected _config: IClickAnalyticsConfiguration, protected _pageAction: PageAction,
+     protected _traceLogger: IDiagnosticLogger) {
 
     }
     // handle automatic event firing on user click
@@ -36,6 +36,21 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
             (doc as any).attachEvent('onclick', (evt: Event) => { this._processClick(evt); });
             (doc as any).attachEvent('keyup', (evt: Event) => { this._processClick(evt); });
         }
+    }
+
+    /**
+     * API to create and send a populated PageAction event 
+     * @param element - DOM element
+     * @param overrideValues - PageAction overrides
+     * @param customProperties - Custom properties(Part C)
+     * @param isRightClick - Flag for mouse right clicks
+     */
+    private capturePageAction(element: Element, overrideValues?: IPageActionOverrideValues, customProperties?: { [name: string]: string | number | boolean | string[] | number[] | boolean[] | object }, isRightClick?: boolean): void {
+        const donotTrackTag = this._config.dataTags.customDataPrefix + this._config.dataTags.donotTrackDataTag;
+        if (!_isElementDnt(element, donotTrackTag)) {
+            this._pageAction.capturePageAction(element, overrideValues, customProperties, isRightClick);
+        }
+
     }
 
     // Process click event
@@ -79,7 +94,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
                 // Check allowed INPUT types
                 var sendEvent = element.tagName.toUpperCase() === 'INPUT' ? clickCaptureInputTypes[element.type.toUpperCase()] : true;
                 if (sendEvent) {
-                    this._analyticsPlugin.capturePageAction(element, overrideValues, {}, isRightClick);
+                    this.capturePageAction(element, overrideValues, {}, isRightClick);
                 }
                 break;
             }

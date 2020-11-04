@@ -1,13 +1,11 @@
 /**
- * DataCollector.ts
- * @author Krishna Yalamanchili (kryalama)
  * @copyright Microsoft 2020
  */
 
 import {
-    getLocation, getDocument, getWindow
+    getLocation, getDocument, getWindow, hasDocument
 } from '@microsoft/applicationinsights-core-js';
-import { _findClosestAnchor, isDocumentObjectAvailable, isValueAssigned } from './common/Utils';
+import { _findClosestAnchor, isValueAssigned } from './common/Utils';
 import { IClickAnalyticsConfiguration, IOverrideValues } from './Interfaces/Datamodel';
 
 
@@ -71,7 +69,7 @@ export function _getClickTarget(element: any) {
  */
 export function onDomLoaded(callback: () => void) {
     onDomReadyDo(() => {
-        if (isDocumentObjectAvailable && document.readyState === 'complete') {
+        if (hasDocument && document.readyState === 'complete') {
             callback();
         } else {
             let win = getWindow();

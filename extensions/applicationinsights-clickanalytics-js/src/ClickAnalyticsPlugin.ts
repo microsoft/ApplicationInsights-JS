@@ -1,28 +1,26 @@
 /**
- * ClickAnalyticsPlugin.ts
- * @author Krishna Yalamanchili (kryalama)
  * @copyright Microsoft 2020
  */
 
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
     BaseTelemetryPlugin, CoreUtils, ITelemetryItem,
-    IProcessTelemetryContext, ITelemetryPluginChain, _InternalMessageId
+    IProcessTelemetryContext, ITelemetryPluginChain,
+    _InternalMessageId, ICustomProperties, 
+    LoggingSeverity
 } from "@microsoft/applicationinsights-core-js";
-import { IConfig } from "@microsoft/applicationinsights-common";
+import { IConfig, Util } from "@microsoft/applicationinsights-common";
 import { 
-    IClickAnalyticsConfiguration, IPageActionOverrideValues,
-    IContentHandler, IAutoCaptureHandler, DEFAULT_DATA_PREFIX, DEFAULT_AI_BLOB_ATTRIBUTE_TAG, 
-    DEFAULT_DONOT_TRACK_TAG 
+    IClickAnalyticsConfiguration, IContentHandler, 
+    IAutoCaptureHandler, IPageActionTelemetry 
 } from './Interfaces/Datamodel';
 import {
-    _removeNonObjectsAndInvalidElements, extend, _isElementDnt, 
-     isDocumentObjectAvailable, _validateContentNamePrefix, isValueAssigned 
+    _removeNonObjectsAndInvalidElements, _isElementDnt, 
+    _validateContentNamePrefix, _mergeConfig 
         } from './common/Utils';
 import { PageAction } from './events/PageAction';
 import { AutoCaptureHandler } from "./handlers/AutoCaptureHandler";
 import { DomContentHandler } from "./handlers/DomContentHandler";
-
 
 export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
     public identifier: string = 'ClickAnalyticsPlugin';
@@ -41,14 +39,14 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
         }
         config.extensionConfig = config.extensionConfig || [];
         config.extensionConfig[this.identifier] = config.extensionConfig[this.identifier] || {};
-        this._config = this._mergeConfig(config.extensionConfig[this.identifier]);
+        this._config = _mergeConfig(config.extensionConfig[this.identifier]);
         super.initialize(config, core, extensions, pluginChain);
         // Default to DOM content handler
         this._contentHandler = this._contentHandler ? this._contentHandler : new DomContentHandler(this._config, this.diagLog());
-        // Default to DOM autoCapture handler
-        this._autoCaptureHandler = this._autoCaptureHandler ? this._autoCaptureHandler : new AutoCaptureHandler(this, this.diagLog());
         let metaTags = this._contentHandler.getMetadata();
         this.pageAction = new PageAction(this, this._config, this._contentHandler, this._config.callback.pageActionPageTags, metaTags, this.diagLog());
+        // Default to DOM autoCapture handler
+        this._autoCaptureHandler = this._autoCaptureHandler ? this._autoCaptureHandler : new AutoCaptureHandler(this, this._config, this.pageAction, this.diagLog());
         if (this._config.autoCapture) {
             this._autoCaptureHandler.click();
         }
@@ -59,66 +57,21 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
     }
 
     /**
-     * API to create and send a populated PageAction event 
-     * @param element - DOM element
-     * @param overrideValues - PageAction overrides
-     * @param customProperties - Custom properties(Part C)
-     * @param isRightClick - Flag for mouse right clicks
+     * Logs a page action event.
+     * @param IPageActionTelemetry
+     * @param customProperties Additional data used to filter events and metrics. Defaults to empty.
      */
-   public capturePageAction(element: Element, overrideValues?: IPageActionOverrideValues, customProperties?: { [name: string]: string | number | boolean | string[] | number[] | boolean[] | object }, isRightClick?: boolean): void {
-        const donotTrackTag = this._config.dataTags.customDataPrefix + this._config.dataTags.donotTrackDataTag;
-        if (!_isElementDnt(element, donotTrackTag)) {
-            this.pageAction.capturePageAction(element, overrideValues, customProperties, isRightClick);
-        }
+    public trackPageAction(pageAction?: IPageActionTelemetry, customProperties?: ICustomProperties) {
+        try {
 
-    }
+            this.pageAction.trackPageAction(pageAction,customProperties);
 
-
-    /**
-     * Merge passed in configuration with default configuration
-     * @param overrideConfig
-     */
-   private _mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClickAnalyticsConfiguration {
-        let defaultConfig: IClickAnalyticsConfiguration = {
-            // General library settings
-            autoCapture: true,
-            callback: {
-                pageActionPageTags: null,
-            },
-            pageTags: {},
-            // overrideValues to use instead of collecting automatically
-            coreData: {
-                referrerUri: isDocumentObjectAvailable ? document.referrer : '',
-                requestUri: '',
-                pageName: '',
-                pageType: ''
-            },
-            dataTags: {
-                useDefaultContentName: false,
-                aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
-                customDataPrefix: DEFAULT_DATA_PREFIX,
-                captureAllMetaDataContent: false,
-                donotTrackDataTag: DEFAULT_DONOT_TRACK_TAG
-            }
-        };
-
-    let attributesThatAreObjectsInConfig: any[] = [];
-        for (const attribute in defaultConfig) {
-            if (typeof defaultConfig[attribute] === 'object') {
-                attributesThatAreObjectsInConfig.push(attribute);
-            }
-        }
-
-    if (overrideConfig) {
-            // delete attributes that should be object and 
-            // delete properties that are null, undefined, ''
-            _removeNonObjectsAndInvalidElements(overrideConfig, attributesThatAreObjectsInConfig);
-            if(isValueAssigned(overrideConfig.dataTags)) {
-                overrideConfig.dataTags.customDataPrefix = _validateContentNamePrefix(overrideConfig) ? overrideConfig.dataTags.customDataPrefix : DEFAULT_DATA_PREFIX;
-            }
-            return extend(true, defaultConfig, overrideConfig);
+        } catch (e) {
+            this.diagLog().throwInternal(
+                LoggingSeverity.CRITICAL,
+                _InternalMessageId.TrackEventFailed,
+                "trackPageAction failed, page action event will not be collected: " + Util.getExceptionName(e),
+                { exception: Util.dump(e) });
         }
     }
-
-
 }

@@ -1,16 +1,10 @@
 /**
- * DataModel.ts
- * @author Krishna Yalamanchili(kryalama) and Hector Hernandez(hectorh)
  * @copyright Microsoft 2020
- * File containing the interfaces for Web Analytics SDK.
  */
 
+import { IEventTelemetry } from "@microsoft/applicationinsights-common";
+import { ICustomProperties } from "@microsoft/applicationinsights-core-js";
 
-import { EventType } from '../Enums';
-
-export const DEFAULT_DONOT_TRACK_TAG = 'ai-dnt';
-export const DEFAULT_DATA_PREFIX = 'data-';
-export const DEFAULT_AI_BLOB_ATTRIBUTE_TAG = 'ai-blob';
 
 /**
  * ClickAnalytics Configuration
@@ -73,7 +67,7 @@ export interface ICustomDataTags {
      */
     captureAllMetaDataContent?: boolean;
     /**
-     * Stop capturing content name and value of elements which are tagged with provided tag
+     * Stop traversing up the DOM to capture content name and value of elements when encountered with this tag
      */
     parentDataTag?: string;
     /**
@@ -264,14 +258,14 @@ export interface IContentHandler {
     /**
      * Get element content 
      */
-    getElementContent: (element: Element, eventType?: EventType) => IContent;
+    getElementContent: (element: Element) => IContent;
     
   }
 
 /**
  * Page Action event
  */
-export interface IPageActionTelemetry extends ITelemetryEventInternal {
+export interface IPageActionTelemetry extends IEventTelemetry {
     /**
      * Target uri for PageAction events
      */
@@ -304,19 +298,24 @@ export interface IPageActionTelemetry extends ITelemetryEventInternal {
      * Time taken in milliseconds since the user saw the page and took the action (such as click on a link, etc.). This will be in seconds.
      */
     timeToAction?: number;
-}
-
-export interface ITelemetryEventProperties {
     /**
-     * User specified custom properties
+     * Flag to report whether the event was fired manually
      */
-    [name: string]: string | number | boolean | string[] | number[] | boolean[] | object;
+    isManual?: boolean;
+    /**
+     * A relative or absolute URL that identifies the page or other item. Defaults to the window location.
+     */
+    uri?: string;
+    /**
+     * Page type
+     */
+    pageType?: string;
 }
 
 /**
  * Page Action event properties (part C)
  */
-export interface IPageActionProperties extends ITelemetryEventProperties {
+export interface IPageActionProperties extends ICustomProperties {
     /**
      * Uri of the referrer, this is a convinence for adaptors to just leverage PageAction for click analytics without linking it to the respective Page Views.
      */
@@ -333,50 +332,4 @@ export interface IPageActionProperties extends ITelemetryEventProperties {
      * List of cookies in semi-colon delimited name value pair
      */
     cookies?: string;
-}
-
-export interface ITelemetryEvent {
-    /**
-     * Page name.
-     */
-    name?: string;
-    /**
-     * A relative or absolute URL that identifies the page or other item. Defaults to the window location.
-     */
-    uri?: string;
-    /**
-     * Represents locale of the Site user has selected
-     */
-    market?: string;
-    /**
-     * Page type
-     */
-    pageType?: string;
-    /**
-     * boolean is user logged in
-     */
-    isLoggedIn?: boolean;
-    /**
-     * property bag to contain an extension to domain properties - extension to Part B
-     */
-    properties?: {
-        [key: string]: any;
-    };
-}
-
-export interface ITelemetryEventInternal extends ITelemetryEvent {
-    /**
-     * An identifier assigned to each distinct impression for the purposes of correlating with pageview.
-     * A new id is automatically generated on each pageview. You can manually specify this field if you
-     * want to use a specific value instead.
-     */
-    id?: string;
-    /**
-     * Version of the part B schema, todo: set this value in trackpageView
-     */
-    ver?: string;
-    /**
-     * Flag to report whether the event was fired manually
-     */
-    isManual?: boolean;
 }

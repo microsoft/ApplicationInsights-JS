@@ -1,6 +1,4 @@
 /**
- * pageAction.ts
- * @author Krishna Yalamanchili (kryalama)
  * @copyright Microsoft 2020
  */
 
@@ -23,7 +21,7 @@ export class PageAction extends WebEvent {
         ext['web'] = {};
         ext['web']['isManual'] = pageActionEvent.isManual;
         let event: ITelemetryItem = {
-            name: 'Ms.Web.PageAction',
+            name: '',
             baseType: 'ClickData',
             ext,
             data: {},
@@ -58,9 +56,9 @@ export class PageAction extends WebEvent {
      */
     public capturePageAction(element: Element, overrideValues?: IPageActionOverrideValues, customProperties?: { [name: string]: string | number | boolean | string[] | number[] | boolean[] | object }, isRightClick?: boolean): void {
         overrideValues = !isValueAssigned(overrideValues) ? {} : overrideValues;
-        let pageActionEvent: IPageActionTelemetry = {};
+        let pageActionEvent: IPageActionTelemetry = { name : ''};
         let pageActionProperties: IPageActionProperties = isValueAssigned(customProperties) ? customProperties : {};
-        this._setCommonProperties(pageActionEvent, pageActionProperties, overrideValues);
+        this._setCommonProperties(pageActionEvent, overrideValues);
         pageActionEvent.isManual = !overrideValues.isAuto;
         pageActionEvent.behavior = this._getBehavior(overrideValues);
         // element in scope is needed for below properties.  We cannot pass element into the plugin call chain.  

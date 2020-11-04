@@ -1,30 +1,29 @@
 /**
- * ClickEventTest.ts
- * @author Krishna Yalamanchili (kryalama)
  * @copyright Microsoft 2020
  */
 
 /// <reference path="./TestFramework/Common.ts" />
 
 import { Util, IConfig } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration} from '@microsoft/applicationinsights-core-js';
+import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger} from '@microsoft/applicationinsights-core-js';
 import { ClickAnalyticsPlugin } from '../src/ClickAnalyticsPlugin';
+import { PageAction } from "../src/events/PageAction";
+import { DomContentHandler } from '../src/handlers/DomContentHandler';
 import { IPageActionOverrideValues, IOverrideValues } from '../src/Interfaces/Datamodel'
+import { _mergeConfig } from "../src/common/Utils";
+
+
 
 
 export class ClickEventTest extends TestClass {
     public testInitialize() {
         this.clock.reset();
-        Util.setCookie(undefined, 'ai_session', "");
-        Util.setCookie(undefined, 'ai_user', "");
         if (Util.canUseLocalStorage()) {
             window.localStorage.clear();
         }
     }
 
     public testCleanup() {
-        Util.setCookie(undefined, 'ai_session', "");
-        Util.setCookie(undefined, 'ai_user', "");
         if (Util.canUseLocalStorage()) {
             window.localStorage.clear();
         }
@@ -34,7 +33,7 @@ export class ClickEventTest extends TestClass {
         this.testCase({
             name: "PageAction properties are correctly assigned (Empty)",
             test: () => {
-                const config = {
+                let config = {
                     coreData: {},
                     callback: {
                         pageActionPageTags: () => ({ key2: "value2" })
@@ -51,16 +50,21 @@ export class ClickEventTest extends TestClass {
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, config.callback.pageActionPageTags, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
                         [clickAnalyticsPlugin.identifier] : config
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
-                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
+                
                 const element = document.createElement('a');
-                clickAnalyticsPlugin.capturePageAction(element, {} as IOverrideValues, {}, false);
-                Assert.equal(spy.called, true);
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');   
+                // clickAnalyticsPlugin.capturePageAction(element, {} as IOverrideValues, {}, false);
+                pageAction.capturePageAction(element);
+                Assert.equal(true, spy.called);
                 let calledEvent: ITelemetryItem = spy.getCall(0).args[0];
                 Assert.notEqual(-1, calledEvent.baseData["uri"].indexOf("Tests.html"),);
                 Assert.equal(0,calledEvent.baseData["behavior"],);
@@ -88,6 +92,9 @@ export class ClickEventTest extends TestClass {
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -95,9 +102,11 @@ export class ClickEventTest extends TestClass {
                     }
                 } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
                 const element = document.createElement('a');
-                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');  
-                clickAnalyticsPlugin.capturePageAction(element, overrides, { customProperty: { customNextedProperty: "test" } });
-                Assert.equal(spy.called, true);
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
+                this.clock.tick(500);  
+                // clickAnalyticsPlugin.capturePageAction(element, overrides, { customProperty: { customNextedProperty: "test" } });
+                pageAction.capturePageAction(element, overrides, { customProperty: { customNextedProperty: "test" } });
+                Assert.equal(true, spy.called);
                 var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
                 Assert.equal("overrideActionType", calledEvent.baseData["actionType"]);
                 Assert.equal('[{"testTag":"testValue"}]', calledEvent.baseData["content"]);
@@ -125,6 +134,9 @@ export class ClickEventTest extends TestClass {
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -153,7 +165,9 @@ export class ClickEventTest extends TestClass {
                     pid: "testpid",
                     ct: "testcT"
                 }]);
-                clickAnalyticsPlugin.capturePageAction(element);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
                 Assert.equal(expectedContent, calledEvent.baseData["content"]);
@@ -178,6 +192,9 @@ export class ClickEventTest extends TestClass {
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -198,7 +215,9 @@ export class ClickEventTest extends TestClass {
                     contentName: "testContentName",
                     name: "testParentName",
                 }]);
-                clickAnalyticsPlugin.capturePageAction(element);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
                 Assert.equal(expectedContent, calledEvent.baseData["content"]);
@@ -221,6 +240,9 @@ export class ClickEventTest extends TestClass {
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -245,7 +267,9 @@ export class ClickEventTest extends TestClass {
                     contentName: "testContentName",
                     name: "testGrandParentName",
                 }]);
-                clickAnalyticsPlugin.capturePageAction(element);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
                 Assert.equal(expectedContent, calledEvent.baseData["content"]);
@@ -265,6 +289,9 @@ export class ClickEventTest extends TestClass {
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -287,7 +314,9 @@ export class ClickEventTest extends TestClass {
                 var expectedContent = JSON.stringify([{
                     id: "testId"
                 }]);
-                clickAnalyticsPlugin.capturePageAction(element);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
                 Assert.equal(expectedContent, calledEvent.baseData["content"]);
@@ -309,6 +338,9 @@ export class ClickEventTest extends TestClass {
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -329,7 +361,9 @@ export class ClickEventTest extends TestClass {
                     pI: "parentIdSelfDefined",
                     pN: "parentNameSelfDefined"
                 }]);
-                clickAnalyticsPlugin.capturePageAction(element);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
                 Assert.equal(expectedContent, calledEvent.baseData["content"]);
@@ -351,6 +385,9 @@ export class ClickEventTest extends TestClass {
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -373,7 +410,9 @@ export class ClickEventTest extends TestClass {
                     pI: "parentIdSelfDefined",
                     pN: "parentNameSelfDefined"
                 }]);
-                clickAnalyticsPlugin.capturePageAction(element);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
                 Assert.equal(expectedContent, calledEvent.baseData["content"]);
@@ -394,6 +433,9 @@ export class ClickEventTest extends TestClass {
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -419,7 +461,9 @@ export class ClickEventTest extends TestClass {
                     parentid: "testParentId",
                     name: "testParentName",
                 }]);
-                clickAnalyticsPlugin.capturePageAction(element);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
                 Assert.equal(expectedContent, calledEvent.baseData["content"]);

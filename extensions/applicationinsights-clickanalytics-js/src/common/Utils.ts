@@ -1,33 +1,24 @@
 /**
- * Utils.ts
- * @author Krishna Yalamanchili(kryalama)
  * @copyright Microsoft 2020
  * File containing utility functions.
  */
 
-import { CoreUtils, getWindow, getDocument, _InternalMessageId } from "@microsoft/applicationinsights-core-js";
+import { CoreUtils, _InternalMessageId, hasDocument } from "@microsoft/applicationinsights-core-js";
 import {
-    IClickAnalyticsConfiguration, DEFAULT_DATA_PREFIX
+    IClickAnalyticsConfiguration
 } from '../Interfaces/Datamodel';
 
 
 const Prototype = 'prototype';
+const DEFAULT_DONOT_TRACK_TAG = 'ai-dnt';
+const DEFAULT_AI_BLOB_ATTRIBUTE_TAG = 'ai-blob';
+const DEFAULT_DATA_PREFIX = 'data-';
 
 export const _ExtendedInternalMessageId = {
     ..._InternalMessageId,
     CannotParseAiBlobValue: 506,
     InvalidContentBlob: 515,
 };
-
-/**
- * Checks if document object is available
- */
-export var isDocumentObjectAvailable: boolean = Boolean(getDocument());
-
-/**
- * Checks if window object is available
- */
-export var isWindowObjectAvailable: boolean = Boolean(getWindow());
 
 /**
  * Finds attributes in overrideConfig which are invalid or should be objects
@@ -294,6 +285,52 @@ export function extend(obj?: any, obj2?: any, obj3?: any, obj4?: any, obj5?: any
 
 }
 
-export function _validateContentNamePrefix ( config: IClickAnalyticsConfiguration) {
-    return isValueAssigned(config.dataTags.customDataPrefix) && (config.dataTags.customDataPrefix.indexOf(DEFAULT_DATA_PREFIX) === 0);
+export function _validateContentNamePrefix ( config: IClickAnalyticsConfiguration, defaultDataPrefix: string) {
+    return isValueAssigned(config.dataTags.customDataPrefix) && (config.dataTags.customDataPrefix.indexOf(defaultDataPrefix) === 0);
+}
+
+/**
+ * Merge passed in configuration with default configuration
+ * @param overrideConfig
+ */
+export function _mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClickAnalyticsConfiguration {
+    let defaultConfig: IClickAnalyticsConfiguration = {
+        // General library settings
+        autoCapture: true,
+        callback: {
+            pageActionPageTags: null,
+        },
+        pageTags: {},
+            // overrideValues to use instead of collecting automatically
+        coreData: {
+            referrerUri: hasDocument ? document.referrer : '',
+            requestUri: '',
+            pageName: '',
+            pageType: ''
+        },
+        dataTags: {
+            useDefaultContentName: false,
+            aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
+            customDataPrefix: DEFAULT_DATA_PREFIX,
+            captureAllMetaDataContent: false,
+            donotTrackDataTag: DEFAULT_DONOT_TRACK_TAG
+        }
+    };
+
+    let attributesThatAreObjectsInConfig: any[] = [];
+        for (const attribute in defaultConfig) {
+            if (typeof defaultConfig[attribute] === 'object') {
+                attributesThatAreObjectsInConfig.push(attribute);
+            }
+        }
+
+    if (overrideConfig) {
+            // delete attributes that should be object and 
+            // delete properties that are null, undefined, ''
+         _removeNonObjectsAndInvalidElements(overrideConfig, attributesThatAreObjectsInConfig);
+        if(isValueAssigned(overrideConfig.dataTags)) {
+                overrideConfig.dataTags.customDataPrefix = _validateContentNamePrefix(overrideConfig, DEFAULT_DATA_PREFIX) ? overrideConfig.dataTags.customDataPrefix : DEFAULT_DATA_PREFIX;
+        }
+        return extend(true, defaultConfig, overrideConfig);
+    }
 }

@@ -1,14 +1,12 @@
 /**
- * DomContentHandler.ts
- * @author Krishna Yalamanchili (kryalama)
  * @copyright Microsoft 2020
  */
 import {
     _bracketIt, _findClosestByAttribute, _removeInvalidElements,
     _walkUpDomChainWithElementValidation, _isElementDnt,
-    isDocumentObjectAvailable, extend, _ExtendedInternalMessageId, isValueAssigned
+    extend, _ExtendedInternalMessageId, isValueAssigned
 } from '../common/Utils';
-import { IDiagnosticLogger, LoggingSeverity, getDocument, CoreUtils} from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, LoggingSeverity, getDocument, CoreUtils, hasDocument} from "@microsoft/applicationinsights-core-js";
 import { IClickAnalyticsConfiguration, IContent, IContentHandler } from '../Interfaces/Datamodel';
 
 const MAX_CONTENTNAME_LENGTH = 200;
@@ -30,7 +28,7 @@ export class DomContentHandler implements IContentHandler {
     public getMetadata(): { [name: string]: string } {
         
         let metaTags = {};
-        if (isDocumentObjectAvailable) {
+        if (hasDocument) {
             metaTags = isValueAssigned(this._config.dataTags.metaDataPrefix) ? this._getMetaDataFromDOM(this._config.dataTags.captureAllMetaDataContent ,this._config.dataTags.metaDataPrefix, false) : 
             this._getMetaDataFromDOM(this._config.dataTags.captureAllMetaDataContent ,'', false);
         }
@@ -192,7 +190,7 @@ export class DomContentHandler implements IContentHandler {
     private _getMetaDataFromDOM(captureAllMetaDataContent:boolean, prefix: string, removePrefix: boolean): { [name: string]: string } {
         var metaElements: any;
         var metaData = {};
-        if (isDocumentObjectAvailable) {
+        if (hasDocument) {
             metaElements = document.querySelectorAll('meta');
             for (var i = 0; i < metaElements.length; i++) {
                 var meta = metaElements[i];

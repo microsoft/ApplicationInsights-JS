@@ -1,16 +1,14 @@
 /**
- * webEvents.ts
- * @author Krishna Yalmanchili (kryalama)
  * @copyright Microsoft 2020
  */
 
 
 import {
-    _findClosestByAttribute, _removeInvalidElements, _walkUpDomChainWithElementValidation, isWindowObjectAvailable, isValueAssigned, extend
+    _findClosestByAttribute, _removeInvalidElements, _walkUpDomChainWithElementValidation, isValueAssigned, extend
 } from '../common/Utils';
 import * as DataCollector from '../DataCollector';
-import { IDiagnosticLogger, getLocation } from '@microsoft/applicationinsights-core-js';
-import { IClickAnalyticsConfiguration, IPageTags, IOverrideValues, IContentHandler, ICoreData, ITelemetryEventInternal, ITelemetryEventProperties } from '../Interfaces/Datamodel';
+import { IDiagnosticLogger, getLocation, hasWindow } from '@microsoft/applicationinsights-core-js';
+import { IClickAnalyticsConfiguration, IPageTags, IOverrideValues, IContentHandler, ICoreData, IPageActionTelemetry } from '../Interfaces/Datamodel';
 import { ClickAnalyticsPlugin } from '../ClickAnalyticsPlugin';
 import { Behavior } from '../Behaviours';
 
@@ -37,11 +35,11 @@ export class WebEvent {
     }
 
     // Fill common PartB fields
-    public _setBasicProperties(event: ITelemetryEventInternal, overrideValues: IOverrideValues) {
+    public _setBasicProperties(event: IPageActionTelemetry, overrideValues: IOverrideValues) {
         if (!isValueAssigned(event.name)) {
             event.name = DataCollector._getPageName(this._config, overrideValues);
         }
-        if (!isValueAssigned(event.uri) && isWindowObjectAvailable) {
+        if (!isValueAssigned(event.uri) && hasWindow) {
             event.uri = DataCollector._getUri(this._config, getLocation());
         }
     }
@@ -50,7 +48,7 @@ export class WebEvent {
      * Sets common properties for events that are based on the WebEvent schema.
      * @param event - The event
      */
-    public _setCommonProperties(event: ITelemetryEventInternal, eventProperties: ITelemetryEventProperties, overrideValues: IOverrideValues) {
+    public _setCommonProperties(event: IPageActionTelemetry, overrideValues: IOverrideValues) {
         this._setBasicProperties(event, overrideValues);
         this._setPageTags(event, overrideValues);
 
@@ -66,18 +64,13 @@ export class WebEvent {
         if (isValueAssigned(this._pageTypeMetaTag) && !isValueAssigned(event.pageType)) {
             event.pageType = this._pageTypeMetaTag;
         }
-        if (isValueAssigned(this._marketMetaTag)) {
-            event.market = this._marketMetaTag;
-        }
-        
-        
     }
 
     /**
      * Sets pageTags.
      * @param event - The event
      */
-    protected _setPageTags(event: ITelemetryEventInternal, overrideValues: IOverrideValues) {
+    protected _setPageTags(event: IPageActionTelemetry, overrideValues: IOverrideValues) {
         // Prepare the pageTags object that is mostly the same for all events.  Event specific pageTags will be added inside event constructors.
        
         if (this._pageTagsCallback) {
