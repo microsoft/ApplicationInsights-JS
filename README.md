@@ -221,7 +221,7 @@ All autocollection is ON by default. The full version of the Application Insight
   - ID (if any) of user making the request
   - Correlation context (if any) where request is made
 - **User information** (e.g. Location, network, IP)
-- **Device information** (e.g. Browser, OS, version, language, resolution, model)
+- **Device information** (e.g. Browser, OS, version, language, model)
 - **Session information**
 
 ### Telemetry Initializers
