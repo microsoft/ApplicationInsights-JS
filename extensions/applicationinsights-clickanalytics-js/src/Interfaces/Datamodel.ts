@@ -163,10 +163,6 @@ export interface IOverrideValues {
      * KVP to be added to the page tags collected
      */
     pageTags?: any;
-    /**
-     * Indicates if the event was fired automatically
-     */
-    isAuto?: boolean;
   }
 
 
@@ -299,10 +295,6 @@ export interface IPageActionTelemetry extends IEventTelemetry {
      */
     timeToAction?: number;
     /**
-     * Flag to report whether the event was fired manually
-     */
-    isManual?: boolean;
-    /**
      * A relative or absolute URL that identifies the page or other item. Defaults to the window location.
      */
     uri?: string;
@@ -310,26 +302,4 @@ export interface IPageActionTelemetry extends IEventTelemetry {
      * Page type
      */
     pageType?: string;
-}
-
-/**
- * Page Action event properties (part C)
- */
-export interface IPageActionProperties extends ICustomProperties {
-    /**
-     * Uri of the referrer, this is a convinence for adaptors to just leverage PageAction for click analytics without linking it to the respective Page Views.
-     */
-    refUri?: string;
-    /**
-     * Time taken in milliseconds since the user saw the page and took the action (such as click on a link, etc.). This will be in seconds.
-     */
-    timeToAction?: number;
-    /**
-     * Server impression Guid, as set by the adopter
-     */
-    serverImpressionGuid?: string;
-    /**
-     * List of cookies in semi-colon delimited name value pair
-     */
-    cookies?: string;
 }

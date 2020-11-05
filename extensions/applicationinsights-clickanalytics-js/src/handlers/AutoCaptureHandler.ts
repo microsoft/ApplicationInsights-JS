@@ -62,7 +62,6 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
 
         // populate overrideValues 
         var overrideValues: IPageActionOverrideValues = {
-            isAuto: true,
             clickCoordinateX: clickEvent.pageX,
             clickCoordinateY: clickEvent.pageY
         };

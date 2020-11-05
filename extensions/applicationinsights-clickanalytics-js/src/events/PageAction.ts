@@ -4,8 +4,8 @@
 
 import { WebEvent } from './WebEvent';
 import * as DataCollector from '../DataCollector';
-import { ITelemetryItem, getPerformance } from "@microsoft/applicationinsights-core-js"
-import { IPageActionOverrideValues, IPageActionTelemetry, IPageActionProperties } from '../Interfaces/Datamodel';
+import { ITelemetryItem, getPerformance, ICustomProperties } from "@microsoft/applicationinsights-core-js"
+import { IPageActionOverrideValues, IPageActionTelemetry } from '../Interfaces/Datamodel';
 import { _extractFieldFromObject, _bracketIt, isValueAssigned, extend } from '../common/Utils';
 
 export class PageAction extends WebEvent {
@@ -15,11 +15,10 @@ export class PageAction extends WebEvent {
      * @param pageActionEvent - PageAction event
      * @param properties - PageAction properties(Part C)
      */
-    public trackPageAction(pageActionEvent: IPageActionTelemetry, properties?: IPageActionProperties): void {
+    public trackPageAction(pageActionEvent: IPageActionTelemetry, properties?: ICustomProperties): void {
         // Get part A properties
         var ext = {};
         ext['web'] = {};
-        ext['web']['isManual'] = pageActionEvent.isManual;
         let event: ITelemetryItem = {
             name: '',
             baseType: 'ClickData',
@@ -36,6 +35,8 @@ export class PageAction extends WebEvent {
         event.baseData['clickCoordinates'] = pageActionEvent.clickCoordinates;
         event.baseData['content'] = pageActionEvent.content;
         event.baseData['targetUri'] = pageActionEvent.targetUri;
+        event.data['timeToAction'] = pageActionEvent.timeToAction;
+        event.data['refUri'] = pageActionEvent.refUri;
         
         for (let property in properties) {
             if (properties.hasOwnProperty(property)) {
@@ -57,9 +58,8 @@ export class PageAction extends WebEvent {
     public capturePageAction(element: Element, overrideValues?: IPageActionOverrideValues, customProperties?: { [name: string]: string | number | boolean | string[] | number[] | boolean[] | object }, isRightClick?: boolean): void {
         overrideValues = !isValueAssigned(overrideValues) ? {} : overrideValues;
         let pageActionEvent: IPageActionTelemetry = { name : ''};
-        let pageActionProperties: IPageActionProperties = isValueAssigned(customProperties) ? customProperties : {};
+        let pageActionProperties: ICustomProperties = isValueAssigned(customProperties) ? customProperties : {};
         this._setCommonProperties(pageActionEvent, overrideValues);
-        pageActionEvent.isManual = !overrideValues.isAuto;
         pageActionEvent.behavior = this._getBehavior(overrideValues);
         // element in scope is needed for below properties.  We cannot pass element into the plugin call chain.  
         // process them here.
@@ -91,8 +91,8 @@ export class PageAction extends WebEvent {
             overrideValues && overrideValues.contentTags ? overrideValues.contentTags : {})));
 
         
-        pageActionProperties.timeToAction = this._getTimeToClick();
-        pageActionProperties.refUri = isValueAssigned(overrideValues.refUri) ? overrideValues.refUri : this._config.coreData.referrerUri;
+        pageActionEvent.timeToAction = this._getTimeToClick();
+        pageActionEvent.refUri = isValueAssigned(overrideValues.refUri) ? overrideValues.refUri : this._config.coreData.referrerUri;
         this.trackPageAction(pageActionEvent, pageActionProperties);
     }
 

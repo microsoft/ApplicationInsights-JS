@@ -9,7 +9,7 @@ import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLog
 import { ClickAnalyticsPlugin } from '../src/ClickAnalyticsPlugin';
 import { PageAction } from "../src/events/PageAction";
 import { DomContentHandler } from '../src/handlers/DomContentHandler';
-import { IPageActionOverrideValues, IOverrideValues } from '../src/Interfaces/Datamodel'
+import { IPageActionOverrideValues } from '../src/Interfaces/Datamodel'
 import { _mergeConfig } from "../src/common/Utils";
 
 
