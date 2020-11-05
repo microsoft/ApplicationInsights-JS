@@ -4,7 +4,7 @@
 import {
     BaseTelemetryPlugin, IConfiguration, CoreUtils,
     IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, _InternalMessageId,
-    ITelemetryPluginChain, InstrumentFunc, IInstrumentCallDetails, InstrumentorHooksCallback, IPerfEvent, IChannelControls
+    ITelemetryPluginChain, InstrumentFunc, IInstrumentCallDetails, InstrumentorHooksCallback, IPerfEvent, IChannelControls, objForEachKey
 } from '@microsoft/applicationinsights-core-js';
 import { Dashboard } from './components/Dashboard';
 import { getTargetName } from './components/helpers';
@@ -123,8 +123,8 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                     const defaultConfig = getDefaultConfig();
                     const ctx = _self._getTelCtx();
                     const identifier = _self.identifier;
-                    _arrForEach(CoreUtils.objKeys(defaultConfig), (field) => {
-                        _theConfig[field] = () => ctx.getConfig(identifier, field, defaultConfig[field]());
+                    objForEachKey(defaultConfig, (field, value) => {
+                        _theConfig[field] = () => ctx.getConfig(identifier, field, value());
                     });
 
                     let foundTrackers: string[] = [];
@@ -177,7 +177,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
 
                     // 2. Get all of the extensions and channels
                     debugBins = {};
-                    let targetObjects: any = [core, _self.diagLog()];
+                    let targetObjects: any[] = [core, _self.diagLog()];
 
                     // Get all of the config extensions
                     if (config.extensions) {

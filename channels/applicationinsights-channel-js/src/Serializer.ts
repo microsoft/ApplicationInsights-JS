@@ -1,5 +1,5 @@
 ﻿import { Util, ISerializable, FieldType } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, CoreUtils, getJSON } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, CoreUtils, getJSON, objForEachKey } from '@microsoft/applicationinsights-core-js';
 import dynamicProto from '@microsoft/dynamicproto-js'
 
 export class Serializer {
@@ -60,9 +60,7 @@ export class Serializer {
                 }
 
                 source[circularReferenceCheck] = true;
-                for (const field in source.aiDataContract) {
-
-                    const contract = source.aiDataContract[field];
+                objForEachKey(source.aiDataContract, (field, contract) => {
                     const isRequired = (CoreUtils.isFunction(contract)) ? (contract() & FieldType.Required) : (contract & FieldType.Required);
                     const isHidden = (CoreUtils.isFunction(contract)) ? (contract() & FieldType.Hidden) : (contract & FieldType.Hidden);
                     const isArray = contract & FieldType.Array;
@@ -78,33 +76,27 @@ export class Serializer {
                             { field, name });
 
                         // If not in debug mode, continue and hope the error is permissible
-                        continue;
-                    }
-
-                    if (isHidden) {
-                        // Don't serialize hidden fields
-                        continue;
-                    }
-
-                    let value;
-                    if (isObject) {
-                        if (isArray) {
-                            // special case; recurse on each object in the source array
-                            value = _serializeArray(source[field], field);
+                    } else if (!isHidden) {  // Don't serialize hidden fields
+                        let value;
+                        if (isObject) {
+                            if (isArray) {
+                                // special case; recurse on each object in the source array
+                                value = _serializeArray(source[field], field);
+                            } else {
+                                // recurse on the source object in this field
+                                value = _serializeObject(source[field], field);
+                            }
                         } else {
-                            // recurse on the source object in this field
-                            value = _serializeObject(source[field], field);
+                            // assign the source field to the output even if undefined or required
+                            value = source[field];
                         }
-                    } else {
-                        // assign the source field to the output even if undefined or required
-                        value = source[field];
-                    }
 
-                    // only emit this field if the value is defined
-                    if (value !== undefined) {
-                        output[field] = value;
+                        // only emit this field if the value is defined
+                        if (value !== undefined) {
+                            output[field] = value;
+                        }
                     }
-                }
+                });
 
                 delete source[circularReferenceCheck];
                 return output;
@@ -134,11 +126,10 @@ export class Serializer {
             }
 
             function _serializeStringMap(map: any, expectedType: string, name: string) {
-                let output;
+                let output: any;
                 if (map) {
                     output = {};
-                    for (const field in map) {
-                        const value = map[field];
+                    objForEachKey(map, (field, value) => {
                         if (expectedType === "string") {
                             if (value === undefined) {
                                 output[field] = "undefined";
@@ -170,7 +161,7 @@ export class Serializer {
                             output[field] = "invalid field: " + name + " is of unknown type.";
                             logger.throwInternal(LoggingSeverity.CRITICAL, output[field], null, true);
                         }
-                    }
+                    });
                 }
 
                 return output;

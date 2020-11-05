@@ -5,7 +5,8 @@ import { StorageType } from "./Enums";
 import {
     CoreUtils, EventHelper, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin, getCrypto, getMsCrypto,
     getGlobal, getGlobalInst, getWindow, getDocument, getNavigator, getPerformance, getLocation, hasJSON, getJSON,
-    strPrototype
+    strPrototype,
+    objForEachKey
 } from "@microsoft/applicationinsights-core-js";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
@@ -227,13 +228,14 @@ export class Util {
      *  @returns {string[]} List of session storage keys
      */
     public static getSessionStorageKeys(): string[] {
-        const keys = [];
+        const keys: string[] = [];
 
         if (Util.canUseSessionStorage()) {
-            for (const key in getGlobalInst<any>("sessionStorage")) {
+            objForEachKey(getGlobalInst<any>("sessionStorage"), (key) => {
                 keys.push(key);
-            }
+            });
         }
+
         return keys;
     }
 

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, CoreUtils, hasJSON, getJSON } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, CoreUtils, hasJSON, getJSON, objForEachKey } from '@microsoft/applicationinsights-core-js';
 
 export class DataSanitizer {
 
@@ -132,8 +132,7 @@ export class DataSanitizer {
     public static sanitizeProperties(logger: IDiagnosticLogger, properties: any) {
         if (properties) {
             const tempProps = {};
-            for (let prop in properties) {
-                let value = properties[prop];
+            objForEachKey(properties, (prop, value) => {
                 if (CoreUtils.isObject(value) && hasJSON()) {
                     // Stringify any part C properties
                     try {
@@ -145,7 +144,7 @@ export class DataSanitizer {
                 value = DataSanitizer.sanitizeString(logger, value, DataSanitizer.MAX_PROPERTY_LENGTH);
                 prop = DataSanitizer.sanitizeKeyAndAddUniqueness(logger, prop, tempProps);
                 tempProps[prop] = value;
-            }
+            });
             properties = tempProps;
         }
 
@@ -155,11 +154,11 @@ export class DataSanitizer {
     public static sanitizeMeasurements(logger: IDiagnosticLogger, measurements: any) {
         if (measurements) {
             const tempMeasurements = {};
-            for (let measure in measurements) {
-                const value = measurements[measure];
+            objForEachKey(measurements, (measure, value) => {
                 measure = DataSanitizer.sanitizeKeyAndAddUniqueness(logger, measure, tempMeasurements);
                 tempMeasurements[measure] = value;
-            }
+            });
+
             measurements = tempMeasurements;
         }
 

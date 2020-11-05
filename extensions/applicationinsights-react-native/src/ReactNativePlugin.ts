@@ -12,7 +12,8 @@ import {
     LoggingSeverity,
     _InternalMessageId,
     BaseTelemetryPlugin,
-    IProcessTelemetryContext
+    IProcessTelemetryContext,
+    objForEachKey
 } from '@microsoft/applicationinsights-core-js';
 import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, SeverityLevel, AnalyticsPluginIdentifier  } from '@microsoft/applicationinsights-common';
 import DeviceInfo from 'react-native-device-info';
@@ -45,14 +46,14 @@ export class ReactNativePlugin extends BaseTelemetryPlugin {
 
                     const inConfig = config || {};
                     const defaultConfig = _getDefaultConfig();
-                    for (const option in defaultConfig) {
+                    objForEachKey(defaultConfig, (option, value) => {
                         _config[option] = ConfigurationManager.getConfig(
                             inConfig as any,
                             option,
                             _self.identifier,
-                            _config[option]
+                            value
                         );
-                    }
+                    });
         
                     if (!_config.disableDeviceCollection) {
                         _collectDeviceInfo();

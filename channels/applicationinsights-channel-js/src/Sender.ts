@@ -21,7 +21,7 @@ import {
     ITelemetryItem, IProcessTelemetryContext, IConfiguration, CoreUtils,
     _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
     getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain, INotificationManager,
-    SendRequestReason, getGlobalInst
+    SendRequestReason, getGlobalInst, objForEachKey
 } from '@microsoft/applicationinsights-core-js';
 import { Offline } from './Offline';
 import { Sample } from './TelemetryProcessors/Sample'
@@ -216,9 +216,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _self._sender = null;
                 const defaultConfig = Sender._getDefaultAppInsightsChannelConfig();
                 _self._senderConfig = Sender._getEmptyAppInsightsChannelConfig();
-                for (const field in defaultConfig) {
-                    _self._senderConfig[field] = () => ctx.getConfig(identifier, field, defaultConfig[field]());
-                }
+                objForEachKey(defaultConfig, (field, value) => {
+                    _self._senderConfig[field] = () => ctx.getConfig(identifier, field, value());
+                });
         
                 _self._buffer = (_self._senderConfig.enableSessionStorageBuffer() && Util.canUseSessionStorage())
                     ? new SessionStorageSendBuffer(_self.diagLog(), _self._senderConfig) : new ArraySendBuffer(_self._senderConfig);
