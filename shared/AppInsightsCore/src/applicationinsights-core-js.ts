@@ -16,7 +16,7 @@ export { SendRequestReason } from "./JavaScriptSDK.Enums/SendRequestReason";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseCore } from './JavaScriptSDK/BaseCore';
 export { BaseTelemetryPlugin } from './JavaScriptSDK/BaseTelemetryPlugin';
-export { CoreUtils, EventHelper, Undefined, normalizeJsName } from "./JavaScriptSDK/CoreUtils";
+export { CoreUtils, EventHelper, Undefined, normalizeJsName, objForEachKey } from "./JavaScriptSDK/CoreUtils";
 export { 
     getGlobal, getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,

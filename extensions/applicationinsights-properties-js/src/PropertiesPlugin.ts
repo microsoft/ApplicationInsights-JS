@@ -6,7 +6,7 @@
 import {
     BaseTelemetryPlugin, IConfiguration, CoreUtils,
     IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, LoggingSeverity, _InternalMessageId, getNavigator,
-    ITelemetryPluginChain    
+    ITelemetryPluginChain, objForEachKey
 } from '@microsoft/applicationinsights-core-js';
 import { TelemetryContext } from './TelemetryContext';
 import { PageView, ConfigurationManager,
@@ -45,9 +45,9 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
         let identifier = this.identifier;
         const defaultConfig: ITelemetryConfig = PropertiesPlugin.getDefaultConfig();
         this._extensionConfig = this._extensionConfig || PropertiesPlugin.getDefaultConfig();
-        for (const field in defaultConfig) {
-            this._extensionConfig[field] = () => ctx.getConfig(identifier, field, defaultConfig[field]());
-        }
+        objForEachKey(defaultConfig, (field, value) => {
+            this._extensionConfig[field] = () => ctx.getConfig(identifier, field, value());
+        });
 
         this.context = new TelemetryContext(core.logger, this._extensionConfig);
         this._breezeChannel = Util.getExtension(extensions, BreezeChannelIdentifier);

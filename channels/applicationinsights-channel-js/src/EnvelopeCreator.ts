@@ -10,7 +10,7 @@ import {
 import {
     ITelemetryItem, CoreUtils,
     IDiagnosticLogger, LoggingSeverity, _InternalMessageId,
-    hasJSON, getJSON
+    hasJSON, getJSON, objForEachKey
 } from '@microsoft/applicationinsights-core-js';
 
 // these two constants are used to filter out properties not needed when trying to extract custom properties and measurements from the incoming payload
@@ -19,7 +19,6 @@ const strBaseData = 'baseData';
 const strProperties = 'properties';
 const strTrue = 'true';
 const arrForEach = CoreUtils.arrForEach;
-const objKeys = CoreUtils.objKeys;
 const isNullOrUndefined = CoreUtils.isNullOrUndefined;
 
 function _setValueIf<T>(target:T, field:keyof T, value:any) {
@@ -36,8 +35,7 @@ export abstract class EnvelopeCreator {
 
     protected static extractPropsAndMeasurements(data: { [key: string]: any }, properties: { [key: string]: any }, measurements: { [key: string]: any }) {
         if (!isNullOrUndefined(data)) {
-            arrForEach(objKeys(data), (key) => {
-                const value = data[key];
+            objForEachKey(data, (key, value) => {
                 if (CoreUtils.isNumber(value)) {
                     measurements[key] = value;
                 } else if (CoreUtils.isString(value)) {
@@ -149,17 +147,16 @@ export abstract class EnvelopeCreator {
         // deals with tags.push({object})
         for(let i = itmTags.length - 1; i >= 0; i--){
             const tg = itmTags[i];
-            // CoreUtils.objKeys returns an array of keys
-            arrForEach(objKeys(tg), key => {
-                tgs[key] = tg[key];
+            objForEachKey(tg, (key, value) => {
+                tgs[key] = value;
             });
 
             itmTags.splice(i, 1);
         }
 
         // deals with tags[key]=value (and handles hasOwnProperty)
-        arrForEach(objKeys(itmTags), (tg) => {
-            tgs[tg] = itmTags[tg];
+        objForEachKey(itmTags, (tg, value) => {
+            tgs[tg] = value;
         });
 
         env.tags = { ...envTags, ...tgs };
@@ -321,8 +318,8 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
         // pageTags is a field that Breeze still does not recognize as part of Part B. For now, put it in Part C until it supports it as a domain property
         if (!isNullOrUndefined(bd[strProperties])) {
             const pageTags = bd[strProperties];
-            arrForEach(objKeys(pageTags), (key) => {
-                properties[key] = pageTags[key];
+            objForEachKey(pageTags, (key, value) => {
+                properties[key] = value;
             });
         }
 

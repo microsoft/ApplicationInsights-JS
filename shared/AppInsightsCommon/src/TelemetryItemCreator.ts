@@ -3,7 +3,7 @@
 
 import { Util } from "./Util";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
-import { ITelemetryItem, CoreUtils, IDiagnosticLogger } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, CoreUtils, IDiagnosticLogger, objForEachKey } from "@microsoft/applicationinsights-core-js";
 
 export class TelemetryItemCreator {
 
@@ -46,11 +46,9 @@ export class TelemetryItemCreator {
 
         // Part C
         if (!CoreUtils.isNullOrUndefined(customProperties)) {
-            for (const prop in customProperties) {
-                if (customProperties.hasOwnProperty(prop)) {
-                    telemetryItem.data[prop] = customProperties[prop];
-                }
-            }
+            objForEachKey(customProperties, (prop, value) => {
+                telemetryItem.data[prop] = value;
+            });
         }
 
         return telemetryItem;

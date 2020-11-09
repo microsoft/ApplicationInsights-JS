@@ -21,7 +21,7 @@
        "no-string-literal": false,
        "no-reference": false,
        "no-empty": false,
-       "forin": false,
+       "forin": true,
        "ban-types": false,
        "no-shadowed-variable": false,
        "no-implicit-dependencies": false,
