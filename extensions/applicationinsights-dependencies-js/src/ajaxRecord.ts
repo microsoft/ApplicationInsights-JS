@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { DataSanitizer, UrlHelper, DateTimeUtils, IDependencyTelemetry, Util } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, CoreUtils, normalizeJsName } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, CoreUtils, normalizeJsName, objForEachKey } from '@microsoft/applicationinsights-core-js';
 import dynamicProto from "@microsoft/dynamicproto-js";
 
 export interface IAjaxRecordResponse {
@@ -144,8 +144,7 @@ function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry)
             _arrForEach(serverTiming, (value, idx) => {
                 let name = normalizeJsName(value[strName] || "" + idx);
                 let newValue = server[name] || {};
-                _arrForEach(_objKeys(value), (key) => {
-                    let val = value[key];
+                objForEachKey(value, (key, val) => {
                     if (key !== strName && _isString(val) || CoreUtils.isNumber(val)) {
                         if (newValue[key]) {
                             val = newValue[key] + ";" + val;

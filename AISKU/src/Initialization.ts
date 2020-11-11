@@ -3,7 +3,7 @@
 
 import { 
     CoreUtils, IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, 
-    IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager
+    IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey
  } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -292,13 +292,13 @@ export class Initialization implements IApplicationInsights {
                 }
 
                 // apply updated properties to the global instance (snippet)
-                for (const field in _self) {
+                objForEachKey(_self, (field, value) => {
                     if (CoreUtils.isString(field) && 
-                            !CoreUtils.isFunction(_self[field]) && 
+                            !CoreUtils.isFunction(value) && 
                             field.substring(0, 1) !== "_") {            // Don't copy "internal" values
-                        snippet[field as string] = _self[field];
+                        snippet[field as string] = value;
                     }
-                }
+                });
             }
         }
 
@@ -342,11 +342,11 @@ export class Initialization implements IApplicationInsights {
     public updateSnippetDefinitions(snippet: Snippet) {
         // apply full appInsights to the global instance
         // Note: This must be called before loadAppInsights is called
-        for (const field in this) {
+        objForEachKey(this, (field, value) => {
             if (CoreUtils.isString(field)) {
-                snippet[field as string] = this[field];
+                snippet[field as string] = value;
             }
-        }
+        });
     }
 
     /**

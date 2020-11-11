@@ -23,6 +23,11 @@ var _mwcZ = 987654321;
 
 // Takes any integer
 function _mwcSeed(seedValue: number) {
+    if (seedValue < 0) {
+        // Make sure we end up with a positive number and not -ve one.
+        seedValue >>>= 0;    
+    }
+
     _mwcW = (123456789 + seedValue) & MaxUInt32;
     _mwcZ = (987654321 - seedValue) & MaxUInt32;
     _mwcSeeded = true;
@@ -123,6 +128,22 @@ export function normalizeJsName(name: string): string {
     }
 
     return value;
+}
+
+/**
+ * This is a helper function for the equivalent of arForEach(objKeys(target), callbackFn), this is a 
+ * performance optimization to avoid the creation of a new array for large objects
+ * @param target The target object to find and process the keys
+ * @param callbackfn The function to call with the details
+ */
+export function objForEachKey(target: any, callbackfn: (name: string, value: any) => void) {
+    if (target && _isObject(target)) {
+        for (let prop in target) {
+            if (_hasOwnProperty(target, prop)) {
+                callbackfn.call(target, prop, target[prop]);
+            }
+        }
+    }
 }
 
 export class CoreUtils {

@@ -15,7 +15,7 @@ import {
     IPlugin, IConfiguration, IAppInsightsCore,
     BaseTelemetryPlugin, CoreUtils, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
     IDiagnosticLogger, LoggingSeverity, _InternalMessageId, ICustomProperties,
-    getWindow, getDocument, getHistory, getLocation, doPerf
+    getWindow, getDocument, getHistory, getLocation, doPerf, objForEachKey
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -487,17 +487,17 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
         // load default values if specified
         const defaults: IConfig = ApplicationInsights.getDefaultConfig();
         if (defaults !== undefined) {
-            for (const field in defaults) {
+            objForEachKey(defaults, (field, value) => {
                 // for each unspecified field, set the default value
-                this.config[field] = ctx.getConfig(identifier, field, defaults[field]);
-            }
+                this.config[field] = ctx.getConfig(identifier, field, value);
+            });
 
             if (this._globalconfig) {
-                for (const field in defaults) {
+                objForEachKey(defaults, (field, value) => {
                     if (this._globalconfig[field] === undefined) {
-                        this._globalconfig[field] = defaults[field];
+                        this._globalconfig[field] = value;
                     }
-                }
+                });
             }
         }
 

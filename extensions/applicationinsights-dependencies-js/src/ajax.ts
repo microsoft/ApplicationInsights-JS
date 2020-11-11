@@ -10,7 +10,7 @@ import {
     CoreUtils, LoggingSeverity, _InternalMessageId,
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
     getLocation, getGlobal, strUndefined, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
-    IInstrumentHooksCallbacks, IInstrumentHook
+    IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey
 } from '@microsoft/applicationinsights-core-js';
 import { ajaxRecord, IAjaxRecordResponse } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
@@ -25,7 +25,6 @@ const strFetch = "fetch";
 
 let _isNullOrUndefined = CoreUtils.isNullOrUndefined;
 let _arrForEach = CoreUtils.arrForEach;
-let _objKeys = CoreUtils.objKeys;
 
 // Using a global value so that to handle same iKey with multiple app insights instances (mostly for testing)
 let _markCount: number = 0;
@@ -181,7 +180,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
     public static getEmptyConfig(): ICorrelationConfig {
         let emptyConfig = this.getDefaultConfig();
-        _arrForEach(_objKeys(emptyConfig), (value) => {
+        objForEachKey(emptyConfig, (value) => {
             emptyConfig[value] = undefined;
         });
 
@@ -218,8 +217,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     base.initialize(config, core, extensions, pluginChain);
                     let ctx = _self._getTelCtx();
                     const defaultConfig = AjaxMonitor.getDefaultConfig();
-                    _arrForEach(_objKeys(defaultConfig), (field) => {
-                        _config[field] = ctx.getConfig(AjaxMonitor.identifier, field, defaultConfig[field]);
+                    objForEachKey(defaultConfig, (field, value) => {
+                        _config[field] = ctx.getConfig(AjaxMonitor.identifier, field, value);
                     });
 
                     let distributedTracingMode = _config.distributedTracingMode;
