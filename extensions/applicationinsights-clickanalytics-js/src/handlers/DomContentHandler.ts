@@ -2,8 +2,8 @@
  * @copyright Microsoft 2020
  */
 import {
-    _bracketIt, _findClosestByAttribute, _removeInvalidElements,
-    _walkUpDomChainWithElementValidation, _isElementDnt,
+    findClosestByAttribute, removeInvalidElements,
+    walkUpDomChainWithElementValidation,
     extend, _ExtendedInternalMessageId, isValueAssigned
 } from '../common/Utils';
 import { IDiagnosticLogger, LoggingSeverity, getDocument, CoreUtils, hasDocument} from "@microsoft/applicationinsights-core-js";
@@ -60,7 +60,7 @@ export class DomContentHandler implements IContentHandler {
         
         if (!this._isTracked(element, dataTagPrefix, aiBlobAttributeTag)) {
             // capture blob from element or hierarchy
-            biBlobElement = _findClosestByAttribute(element, aiBlobAttributeTag);
+            biBlobElement = findClosestByAttribute(element, aiBlobAttributeTag);
             if (biBlobElement) {
                 biBlobValue = biBlobElement.getAttribute(aiBlobAttributeTag);
             }
@@ -75,14 +75,14 @@ export class DomContentHandler implements IContentHandler {
                 }
             } else {
                 // traverse up the DOM to find the closest parent with data-* tag defined
-                contentElement = _walkUpDomChainWithElementValidation(element, this._isTracked, dataTagPrefix);
+                contentElement = walkUpDomChainWithElementValidation(element, this._isTracked, dataTagPrefix);
                 elementContent = extend(elementContent, this._populateElementContentwithDataTag( contentElement, element, dataTagPrefix, parentDataTagPrefix));
             }
         } else {
             contentElement = element;
             elementContent = extend(elementContent, this._populateElementContentwithDataTag(contentElement, element, dataTagPrefix, parentDataTagPrefix));   
         }
-        _removeInvalidElements(elementContent);
+        removeInvalidElements(elementContent);
         return elementContent;
     }
 
@@ -243,10 +243,11 @@ export class DomContentHandler implements IContentHandler {
         const attrs = element.attributes;
         let dataTagFound = false;
         for (let i = 0; i < attrs.length; i++) {
-            if(attrs[i].name === aiBlobAttributeTag) {
+            const attributeName = attrs[i].name;
+            if(attributeName === aiBlobAttributeTag) {
                 // ignore if the attribute name is equal to aiBlobAttributeTag
                 return false;
-            } else if (attrs[i].name.indexOf(dataTag) === 0) { 
+            } else if (attributeName.indexOf(dataTag) === 0) { 
                 dataTagFound = true;
             }
         }

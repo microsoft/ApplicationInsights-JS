@@ -15,12 +15,13 @@ import {
     IAutoCaptureHandler, IPageActionTelemetry 
 } from './Interfaces/Datamodel';
 import {
-    _removeNonObjectsAndInvalidElements, _isElementDnt, 
-    _validateContentNamePrefix, _mergeConfig 
-        } from './common/Utils';
+    mergeConfig, BehaviorMapValidator,
+    BehaviorValueValidator, BehaviorEnumValidator, _ExtendedInternalMessageId
+    } from './common/Utils';
 import { PageAction } from './events/PageAction';
 import { AutoCaptureHandler } from "./handlers/AutoCaptureHandler";
 import { DomContentHandler } from "./handlers/DomContentHandler";
+export { BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }
 
 export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
     public identifier: string = 'ClickAnalyticsPlugin';
@@ -39,7 +40,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
         }
         config.extensionConfig = config.extensionConfig || [];
         config.extensionConfig[this.identifier] = config.extensionConfig[this.identifier] || {};
-        this._config = _mergeConfig(config.extensionConfig[this.identifier]);
+        this._config = mergeConfig(config.extensionConfig[this.identifier]);
         super.initialize(config, core, extensions, pluginChain);
         // Default to DOM content handler
         this._contentHandler = this._contentHandler ? this._contentHandler : new DomContentHandler(this._config, this.diagLog());
@@ -69,7 +70,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
         } catch (e) {
             this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL,
-                _InternalMessageId.TrackEventFailed,
+                _ExtendedInternalMessageId.TrackPageActionEventFailed,
                 "trackPageAction failed, page action event will not be collected: " + Util.getExceptionName(e),
                 { exception: Util.dump(e) });
         }

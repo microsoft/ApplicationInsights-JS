@@ -2,5 +2,6 @@
 // Licensed under the MIT License.
 
 import '@microsoft/applicationinsights-shims';
-import { ClickAnalyticsPlugin } from "./ClickAnalyticsPlugin";
-export { ClickAnalyticsPlugin }
+import { ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator } from "./ClickAnalyticsPlugin";
+export { ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }
+

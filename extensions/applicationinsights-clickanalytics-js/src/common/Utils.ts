@@ -16,8 +16,9 @@ const DEFAULT_DATA_PREFIX = 'data-';
 
 export const _ExtendedInternalMessageId = {
     ..._InternalMessageId,
-    CannotParseAiBlobValue: 506,
-    InvalidContentBlob: 515,
+    CannotParseAiBlobValue: 101,
+    InvalidContentBlob: 102,
+    TrackPageActionEventFailed: 103
 };
 
 /**
@@ -26,13 +27,13 @@ export const _ExtendedInternalMessageId = {
  * @param overrideConfig - override config object
  * @param attributeNamesExpectedObjects - attributes that should be objects in override config object
  */
-export function _removeNonObjectsAndInvalidElements(overrideConfig: IClickAnalyticsConfiguration, attributeNamesExpectedObjects: Array<string>): void {
-    _removeInvalidElements(overrideConfig);
+export function removeNonObjectsAndInvalidElements(overrideConfig: IClickAnalyticsConfiguration, attributeNamesExpectedObjects: Array<string>): void {
+    removeInvalidElements(overrideConfig);
     for (var i in attributeNamesExpectedObjects) {
         if (attributeNamesExpectedObjects.hasOwnProperty(i)) {
             var objectName = attributeNamesExpectedObjects[i];
             if (typeof overrideConfig[objectName] === 'object') {
-                _removeInvalidElements(overrideConfig[objectName]);
+                removeInvalidElements(overrideConfig[objectName]);
             } else {
                 delete overrideConfig[objectName];
             }
@@ -45,7 +46,7 @@ export function _removeNonObjectsAndInvalidElements(overrideConfig: IClickAnalyt
  * and deletes them. useful in override config
  * @param object Input object
  */
-export function _removeInvalidElements(object: Object): void {
+export function removeInvalidElements(object: Object): void {
     /// Because the config object 'callback' contains only functions, 
     /// when it is stringified it returns the empty object. This explains
     /// the workaround regarding 'callback'
@@ -74,7 +75,7 @@ export function isValueAssigned(value: any) {
  * @param evt - Mouse event 
  * @returns true if the event is a right click 
  */
-export function _isRightClick(evt: any): boolean {
+export function isRightClick(evt: any): boolean {
     if ('which' in evt) { // Chrome, FF, ...
         return (evt.which === 3);
     } else if ('button' in evt) { // IE, ...
@@ -87,7 +88,7 @@ export function _isRightClick(evt: any): boolean {
  * @param evt - Mouse event 
  * @returns true if the event is a left click 
  */
-export function _isLeftClick(evt: any): boolean {
+export function isLeftClick(evt: any): boolean {
     if ('which' in evt) { // Chrome, FF, ...
         return (evt.which === 1);
     } else if ('button' in evt) { // IE, ...
@@ -100,7 +101,7 @@ export function _isLeftClick(evt: any): boolean {
  * @param evt - Mouse event 
  * @returns true if the event is a middle click 
  */
-export function _isMiddleClick(evt: any): boolean {
+export function isMiddleClick(evt: any): boolean {
     if ('which' in evt) { // Chrome, FF, ...
         return (evt.which === 2);
     } else if ('button' in evt) { // IE, ...
@@ -113,7 +114,7 @@ export function _isMiddleClick(evt: any): boolean {
  * @param evt - Keyboard event 
  * @returns true if the event is a keyboard enter
  */
-export function _isKeyboardEnter(evt: KeyboardEvent): boolean {
+export function isKeyboardEnter(evt: KeyboardEvent): boolean {
     if ('keyCode' in evt) { // Chrome, FF, ...
         return (evt.keyCode === 13);
     }
@@ -124,7 +125,7 @@ export function _isKeyboardEnter(evt: KeyboardEvent): boolean {
  * @param evt - Keyboard event 
  * @returns true if the event is a space enter
  */
-export function _isKeyboardSpace(evt: KeyboardEvent) {
+export function isKeyboardSpace(evt: KeyboardEvent) {
     if ('keyCode' in evt) { // Chrome, FF, ...
         return (evt.keyCode === 32);
     }
@@ -136,8 +137,8 @@ export function _isKeyboardSpace(evt: KeyboardEvent) {
  * @param doNotTrackFieldName - DOM element
  * @returns true if the element must not be tarcked
  */
-export function _isElementDnt(element: Element, doNotTrackFieldName: string): boolean {
-    var dntElement = _findClosestByAttribute(element, doNotTrackFieldName);
+export function isElementDnt(element: Element, doNotTrackFieldName: string): boolean {
+    var dntElement = findClosestByAttribute(element, doNotTrackFieldName);
     if (!isValueAssigned(dntElement)) {
         return false;
     }
@@ -150,8 +151,8 @@ export function _isElementDnt(element: Element, doNotTrackFieldName: string): bo
  * @param attribute - Attribute name 
  * @returns Dom element which contains attribute
  */
-export function _findClosestByAttribute(el: Element, attribute: string): Element {
-    return _walkUpDomChainWithElementValidation(el, _isAttributeInElement, attribute);
+export function findClosestByAttribute(el: Element, attribute: string): Element {
+    return walkUpDomChainWithElementValidation(el, isAttributeInElement, attribute);
 }
 
 /**
@@ -161,7 +162,7 @@ export function _findClosestByAttribute(el: Element, attribute: string): Element
  * @param attributeToLookFor - Attribute name 
  * @returns true if attribute is in element, even if empty string
  */
-export function _isAttributeInElement(element: Element, attributeToLookFor: string): Boolean {
+export function isAttributeInElement(element: Element, attributeToLookFor: string): Boolean {
     var value = element.getAttribute(attributeToLookFor);
     return isValueAssigned(value) || value === '';
 }
@@ -173,7 +174,7 @@ export function _isAttributeInElement(element: Element, attributeToLookFor: stri
  * @param validationMethodParam - DOM element validation method parameters
  * @returns Dom element which is an anchor
  */
-export function _walkUpDomChainWithElementValidation(el: Element, validationMethod: Function, validationMethodParam?: any): Element {
+export function walkUpDomChainWithElementValidation(el: Element, validationMethod: Function, validationMethodParam?: any): Element {
     var element = el;
     if (element) {
         while (!validationMethod(element, validationMethodParam)) {
@@ -192,7 +193,7 @@ export function _walkUpDomChainWithElementValidation(el: Element, validationMeth
  * @param element - DOM element
  * @returns Is element an anchor
  */
-export function _isElementAnAnchor(element: Element): boolean {
+export function isElementAnAnchor(element: Element): boolean {
     return element.nodeName === 'A';
 }
 
@@ -201,12 +202,12 @@ export function _isElementAnAnchor(element: Element): boolean {
  * @param element - DOM element
  * @returns Dom element which is an anchor
  */
-export function _findClosestAnchor(element: Element): Element {
+export function findClosestAnchor(element: Element): Element {
     /// <summary> Walks up DOM tree to find anchor element </summary>
     /// <param type='object'> DOM element </param>
     /// <returns> Dom element which is an anchor</returns>
 
-    return _walkUpDomChainWithElementValidation(element, _isElementAnAnchor);
+    return walkUpDomChainWithElementValidation(element, isElementAnAnchor);
 }
 
 /**
@@ -215,7 +216,7 @@ export function _findClosestAnchor(element: Element): Element {
  * @param fieldName - >Name of the field/property to be extracted
  * @returns Value of the specified tag
  */
-export function _extractFieldFromObject(obj: Object, fieldName: string): string {
+export function extractFieldFromObject(obj: Object, fieldName: string): string {
     var fieldValue: any;
     if (obj && obj[fieldName]) {
         fieldValue = obj[fieldName];
@@ -230,7 +231,7 @@ export function _extractFieldFromObject(obj: Object, fieldName: string): string 
  * @param str - Input string
  * @returns String with surrounding brackets
  */
-export function _bracketIt(str: string): string {
+export function bracketIt(str: string): string {
     /// <summary>
     ///  Adds surrounding square brackets to the passed in text
     /// </summary>
@@ -285,7 +286,7 @@ export function extend(obj?: any, obj2?: any, obj3?: any, obj4?: any, obj5?: any
 
 }
 
-export function _validateContentNamePrefix ( config: IClickAnalyticsConfiguration, defaultDataPrefix: string) {
+export function validateContentNamePrefix ( config: IClickAnalyticsConfiguration, defaultDataPrefix: string) {
     return isValueAssigned(config.dataTags.customDataPrefix) && (config.dataTags.customDataPrefix.indexOf(defaultDataPrefix) === 0);
 }
 
@@ -293,7 +294,7 @@ export function _validateContentNamePrefix ( config: IClickAnalyticsConfiguratio
  * Merge passed in configuration with default configuration
  * @param overrideConfig
  */
-export function _mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClickAnalyticsConfiguration {
+export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClickAnalyticsConfiguration {
     let defaultConfig: IClickAnalyticsConfiguration = {
         // General library settings
         autoCapture: true,
@@ -301,7 +302,7 @@ export function _mergeConfig(overrideConfig: IClickAnalyticsConfiguration): ICli
             pageActionPageTags: null,
         },
         pageTags: {},
-            // overrideValues to use instead of collecting automatically
+        // overrideValues to use instead of collecting automatically
         coreData: {
             referrerUri: hasDocument ? document.referrer : '',
             requestUri: '',
@@ -313,8 +314,9 @@ export function _mergeConfig(overrideConfig: IClickAnalyticsConfiguration): ICli
             aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
             customDataPrefix: DEFAULT_DATA_PREFIX,
             captureAllMetaDataContent: false,
-            donotTrackDataTag: DEFAULT_DONOT_TRACK_TAG
-        }
+            donotTrackDataTag: DEFAULT_DONOT_TRACK_TAG,
+        },
+        behaviorValidator: (key:string) => key || "",
     };
 
     let attributesThatAreObjectsInConfig: any[] = [];
@@ -327,10 +329,34 @@ export function _mergeConfig(overrideConfig: IClickAnalyticsConfiguration): ICli
     if (overrideConfig) {
             // delete attributes that should be object and 
             // delete properties that are null, undefined, ''
-         _removeNonObjectsAndInvalidElements(overrideConfig, attributesThatAreObjectsInConfig);
+         removeNonObjectsAndInvalidElements(overrideConfig, attributesThatAreObjectsInConfig);
         if(isValueAssigned(overrideConfig.dataTags)) {
-                overrideConfig.dataTags.customDataPrefix = _validateContentNamePrefix(overrideConfig, DEFAULT_DATA_PREFIX) ? overrideConfig.dataTags.customDataPrefix : DEFAULT_DATA_PREFIX;
+                overrideConfig.dataTags.customDataPrefix = validateContentNamePrefix(overrideConfig, DEFAULT_DATA_PREFIX) ? overrideConfig.dataTags.customDataPrefix : DEFAULT_DATA_PREFIX;
         }
         return extend(true, defaultConfig, overrideConfig);
     }
 }
+
+export function BehaviorMapValidator (map: any) {
+    return (key: string)  => map[key] || "";
+}
+
+export function BehaviorValueValidator (behaviorArray: string[]) {
+    return (key: string) => {
+        let result;
+        CoreUtils.arrForEach(behaviorArray, (value) => {
+            if (value === key) {
+                result = value;
+                return -1;
+            }
+        });
+        return result || "";
+    }
+
+}
+
+export function BehaviorEnumValidator (enumObj: any) {
+    return (key: string)  => enumObj[key] || "";
+}
+
+

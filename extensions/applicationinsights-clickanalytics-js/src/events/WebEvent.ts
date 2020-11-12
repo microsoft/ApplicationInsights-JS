@@ -4,13 +4,12 @@
 
 
 import {
-    _findClosestByAttribute, _removeInvalidElements, _walkUpDomChainWithElementValidation, isValueAssigned, extend
+    isValueAssigned, extend
 } from '../common/Utils';
 import * as DataCollector from '../DataCollector';
 import { IDiagnosticLogger, getLocation, hasWindow } from '@microsoft/applicationinsights-core-js';
 import { IClickAnalyticsConfiguration, IPageTags, IOverrideValues, IContentHandler, ICoreData, IPageActionTelemetry } from '../Interfaces/Datamodel';
 import { ClickAnalyticsPlugin } from '../ClickAnalyticsPlugin';
-import { Behavior } from '../Behaviours';
 
 export class WebEvent {
 
@@ -35,12 +34,12 @@ export class WebEvent {
     }
 
     // Fill common PartB fields
-    public _setBasicProperties(event: IPageActionTelemetry, overrideValues: IOverrideValues) {
+    public setBasicProperties(event: IPageActionTelemetry, overrideValues: IOverrideValues) {
         if (!isValueAssigned(event.name)) {
-            event.name = DataCollector._getPageName(this._config, overrideValues);
+            event.name = DataCollector.getPageName(this._config, overrideValues);
         }
         if (!isValueAssigned(event.uri) && hasWindow) {
-            event.uri = DataCollector._getUri(this._config, getLocation());
+            event.uri = DataCollector.getUri(this._config, getLocation());
         }
     }
 
@@ -48,8 +47,8 @@ export class WebEvent {
      * Sets common properties for events that are based on the WebEvent schema.
      * @param event - The event
      */
-    public _setCommonProperties(event: IPageActionTelemetry, overrideValues: IOverrideValues) {
-        this._setBasicProperties(event, overrideValues);
+    public setCommonProperties(event: IPageActionTelemetry, overrideValues: IOverrideValues) {
+        this.setBasicProperties(event, overrideValues);
         this._setPageTags(event, overrideValues);
 
         // extract specific meta tags out of the pageTags.metaTags collection.  These will go into assigned first class fields in the event.
@@ -94,8 +93,8 @@ export class WebEvent {
         event.properties['pageTags'] = this._pageTags;
     }
 
-    protected _getBehavior(overrideValues?: IOverrideValues): number {
-        let behavior: any;
+    protected _getBehavior(overrideValues?: IOverrideValues): string | number {
+        let behavior: string | number;
         // If override specified 
         if (overrideValues && isValueAssigned(overrideValues.behavior)) {
             behavior = overrideValues.behavior;
@@ -107,22 +106,8 @@ export class WebEvent {
         return this._getValidBehavior(behavior);
     }
 
-    protected _getValidBehavior(behavior: any): number {
-        if (isValueAssigned(behavior)) {
-            let result: number;
-            let value: any = parseInt(behavior);
-            if (!isNaN(value)) {
-                result = value;
-            }
-            else {
-                result = Behavior[behavior as string];
-            }
-
-            if (result in Behavior) {
-                return result;
-            }
-        }
-        return 0; /*UNDEFINED*/
+    protected _getValidBehavior(behavior: string | number): string | number {
+       return this._config.behaviorValidator(behavior);
     }
 
     /**

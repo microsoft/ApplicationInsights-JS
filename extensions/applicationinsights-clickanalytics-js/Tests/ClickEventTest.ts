@@ -6,11 +6,11 @@
 
 import { Util, IConfig } from "@microsoft/applicationinsights-common";
 import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, DiagnosticLogger} from '@microsoft/applicationinsights-core-js';
-import { ClickAnalyticsPlugin } from '../src/ClickAnalyticsPlugin';
+import { ClickAnalyticsPlugin, BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator } from '../src/ClickAnalyticsPlugin';
 import { PageAction } from "../src/events/PageAction";
 import { DomContentHandler } from '../src/handlers/DomContentHandler';
 import { IPageActionOverrideValues } from '../src/Interfaces/Datamodel'
-import { _mergeConfig } from "../src/common/Utils";
+import { mergeConfig } from "../src/common/Utils";
 
 
 
@@ -51,8 +51,8 @@ export class ClickEventTest extends TestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, config.callback.pageActionPageTags, {}, traceLogger );
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, config.callback.pageActionPageTags, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -93,8 +93,8 @@ export class ClickEventTest extends TestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -135,8 +135,8 @@ export class ClickEventTest extends TestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -193,8 +193,8 @@ export class ClickEventTest extends TestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -241,8 +241,8 @@ export class ClickEventTest extends TestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -290,8 +290,8 @@ export class ClickEventTest extends TestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -333,14 +333,14 @@ export class ClickEventTest extends TestClass {
                         metaDataPrefix:'ha-',
                         customDataPrefix: 'data-ha-',
                         aiBlobAttributeTag: 'blob'
-                    }
+                    },
                 };
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -386,8 +386,8 @@ export class ClickEventTest extends TestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -434,8 +434,8 @@ export class ClickEventTest extends TestClass {
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
                 const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
-                const contentHandler = new DomContentHandler(_mergeConfig(config), traceLogger);
-                const pageAction = new PageAction(clickAnalyticsPlugin, _mergeConfig(config), contentHandler, null, {}, traceLogger );
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
                 core.initialize({
                     instrumentationKey: 'testIkey',
                     extensionConfig : {
@@ -467,6 +467,269 @@ export class ClickEventTest extends TestClass {
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
                 Assert.equal(expectedContent, calledEvent.baseData["content"]);
+            }
+        });
+
+        this.testCase({
+            name: "PageAction Behaviours test default value",
+            test: () => {
+                const config = {
+                    callback: {
+                        contentName: () => "testContentName"                  
+                    },
+                    dataTags : {
+                        useDefaultContentName : true,
+                        metaDataPrefix:'ha-',
+                        customDataPrefix: 'data-ha-',
+                        aiBlobAttributeTag: 'blob'
+                    }
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                core.initialize({
+                    instrumentationKey: 'testIkey',
+                    extensionConfig : {
+                        [clickAnalyticsPlugin.identifier] : config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
+                const element = document.createElement('a');
+                element.setAttribute("id","testId")
+                element.setAttribute("data-ha-aN", "testAn");
+                element.setAttribute("data-ha-bhvr", "testBehavior");
+                ((element) as HTMLBaseElement).href = "testClickTarget";
+
+                var expectedContent = JSON.stringify([{
+                    id: "testId",
+                    contentName: "testContentName",
+                    an: "testAn"
+                }]);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
+                Assert.equal(true, spy.called);
+                var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
+                Assert.equal(expectedContent, calledEvent.baseData["content"]);
+                Assert.equal("testBehavior",calledEvent.baseData["behavior"]);
+            }
+        });
+
+        this.testCase({
+            name: "PageAction Behaviours test empty default value",
+            test: () => {
+                const config = {
+                    callback: {
+                        contentName: () => "testContentName"                  
+                    },
+                    dataTags : {
+                        useDefaultContentName : true,
+                        metaDataPrefix:'ha-',
+                        customDataPrefix: 'data-ha-',
+                        aiBlobAttributeTag: 'blob'
+                    }
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                core.initialize({
+                    instrumentationKey: 'testIkey',
+                    extensionConfig : {
+                        [clickAnalyticsPlugin.identifier] : config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
+                const element = document.createElement('a');
+                element.setAttribute("id","testId")
+                element.setAttribute("data-ha-aN", "testAn");
+                ((element) as HTMLBaseElement).href = "testClickTarget";
+
+                var expectedContent = JSON.stringify([{
+                    id: "testId",
+                    contentName: "testContentName",
+                    an: "testAn"
+                }]);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
+                Assert.equal(true, spy.called);
+                var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
+                Assert.equal(expectedContent, calledEvent.baseData["content"]);
+                Assert.equal("",calledEvent.baseData["behavior"]);
+            }
+        });
+
+        this.testCase({
+            name: "PageAction Behaviours test default BehaviorMapValidator",
+            test: () => {
+                const behaviorMap = {
+                    BEHAVIOR1:"behavior1_Value",
+                    BEHAVIOR2:"behavior2_Value",
+                }
+                const config = {
+                    callback: {
+                        contentName: () => "testContentName"                  
+                    },
+                    dataTags : {
+                        useDefaultContentName : true,
+                        metaDataPrefix:'ha-',
+                        customDataPrefix: 'data-ha-',
+                        aiBlobAttributeTag: 'blob'
+                    },
+                    behaviorValidator : BehaviorMapValidator(behaviorMap)
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
+                core.initialize({
+                    instrumentationKey: 'testIkey',
+                    extensionConfig : {
+                        [clickAnalyticsPlugin.identifier] : config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
+                const element = document.createElement('a');
+                element.setAttribute("id","testId")
+                element.setAttribute("data-ha-aN", "testAn");
+                element.setAttribute("data-ha-bhvr", "BEHAVIOR1");
+                ((element) as HTMLBaseElement).href = "testClickTarget";
+
+                var expectedContent = JSON.stringify([{
+                    id: "testId",
+                    contentName: "testContentName",
+                    an: "testAn"
+                }]);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
+                Assert.equal(true, spy.called);
+                var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
+                Assert.equal(expectedContent, calledEvent.baseData["content"]);
+                Assert.equal("behavior1_Value",calledEvent.baseData["behavior"]);
+            }
+        });
+
+        this.testCase({
+            name: "PageAction Behaviours test default BehaviorValueValidator",
+            test: () => {
+                const behaviorArray = [
+                    "BEHAVIOR1",
+                    "BEHAVIOR2"
+                ]
+                const config = {
+                    callback: {
+                        contentName: () => "testContentName"                  
+                    },
+                    dataTags : {
+                        useDefaultContentName : true,
+                        metaDataPrefix:'ha-',
+                        customDataPrefix: 'data-ha-',
+                        aiBlobAttributeTag: 'blob'
+                    },
+                    behaviorValidator : BehaviorValueValidator(behaviorArray)
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
+                core.initialize({
+                    instrumentationKey: 'testIkey',
+                    extensionConfig : {
+                        [clickAnalyticsPlugin.identifier] : config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
+                const element = document.createElement('a');
+                element.setAttribute("id","testId")
+                element.setAttribute("data-ha-aN", "testAn");
+                element.setAttribute("data-ha-bhvr", "BEHAVIOR1");
+                ((element) as HTMLBaseElement).href = "testClickTarget";
+
+                var expectedContent = JSON.stringify([{
+                    id: "testId",
+                    contentName: "testContentName",
+                    an: "testAn"
+                }]);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
+                Assert.equal(true, spy.called);
+                var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
+                Assert.equal(expectedContent, calledEvent.baseData["content"]);
+                Assert.equal("BEHAVIOR1",calledEvent.baseData["behavior"]);
+            }
+        });
+
+        this.testCase({
+            name: "PageAction Behaviours test default BehaviorEnumValidator",
+            test: () => {
+                const behaviorEnum = {
+                    NAVIGATIONBACK: 1,
+                    NAVIGATION: 2,          
+                    NAVIGATIONFORWARD: 3
+                };
+                const config = {
+                    callback: {
+                        contentName: () => "testContentName"                  
+                    },
+                    dataTags : {
+                        useDefaultContentName : true,
+                        metaDataPrefix:'ha-',
+                        customDataPrefix: 'data-ha-',
+                        aiBlobAttributeTag: 'blob'
+                    },
+                    behaviorValidator : BehaviorEnumValidator(behaviorEnum)
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                
+                core.initialize({
+                    instrumentationKey: 'testIkey',
+                    extensionConfig : {
+                        [clickAnalyticsPlugin.identifier] : config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
+                const element = document.createElement('a');
+                element.setAttribute("id","testId")
+                element.setAttribute("data-ha-aN", "testAn");
+                element.setAttribute("data-ha-bhvr", "NAVIGATION");
+                ((element) as HTMLBaseElement).href = "testClickTarget";
+
+                var expectedContent = JSON.stringify([{
+                    id: "testId",
+                    contentName: "testContentName",
+                    an: "testAn"
+                }]);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
+                Assert.equal(true, spy.called);
+                var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
+                Assert.equal(expectedContent, calledEvent.baseData["content"]);
+                Assert.equal(2,calledEvent.baseData["behavior"]);
             }
         });
     }

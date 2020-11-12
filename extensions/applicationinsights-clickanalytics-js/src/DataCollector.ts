@@ -5,7 +5,7 @@
 import {
     getLocation, getDocument, getWindow, hasDocument
 } from '@microsoft/applicationinsights-core-js';
-import { _findClosestAnchor, isValueAssigned } from './common/Utils';
+import { findClosestAnchor, isValueAssigned } from './common/Utils';
 import { IClickAnalyticsConfiguration, IOverrideValues } from './Interfaces/Datamodel';
 
 
@@ -17,15 +17,16 @@ var clickCaptureInputTypes = { BUTTON: true, CHECKBOX: true, RADIO: true, RESET:
  * @param element - An html image element
  * @returns Href value.
  */
-export function _getImageHref(element: HTMLImageElement): string {
+export function getImageHref(element: HTMLImageElement): string {
     var temp = element;
     if (temp) {
-        var parent = _findClosestAnchor(temp as Element);
+        var parent = findClosestAnchor(temp as Element);
         if ((parent as any).length === 1) {
-            if (parent[0].href) {
-                return parent[0].href;
-            } else if (parent[0].src) {
-                return (parent[0].src);
+            const firstParent = parent[0];
+            if (firstParent.href) {
+                return firstParent.href;
+            } else if (firstParent.src) {
+                return (firstParent.src);
             }
         }
     }
@@ -37,7 +38,7 @@ export function _getImageHref(element: HTMLImageElement): string {
  * Get click target
  * @returns Click target URI
  */
-export function _getClickTarget(element: any) {
+export function getClickTarget(element: any) {
     var clickTarget = '';
     switch (element.tagName) {
         case 'A':
@@ -45,7 +46,7 @@ export function _getClickTarget(element: any) {
             clickTarget = element.href || '';
             break;
         case 'IMG':
-            clickTarget = _getImageHref(element as HTMLImageElement);
+            clickTarget = getImageHref(element as HTMLImageElement);
             break;
         case 'INPUT':
             var type = element.type;
@@ -102,7 +103,7 @@ function onDomReadyDo(f: any) {
  * @param config - configuration object
  * @returns Page name.
  */
-export function _getPageName(config: IClickAnalyticsConfiguration, overrideValues: IOverrideValues) {
+export function getPageName(config: IClickAnalyticsConfiguration, overrideValues: IOverrideValues) {
     /// <summary>
     ///  Gets the pageName from the DOM or by calling a override if set.
     /// </summary>
@@ -132,7 +133,7 @@ export function _getPageName(config: IClickAnalyticsConfiguration, overrideValue
  * @param location - window.location or document.location
  * @returns Flag indicating if an element is market PII.
  */
-export function _sanitizeUrl(config: IClickAnalyticsConfiguration, location: Location): string {
+export function sanitizeUrl(config: IClickAnalyticsConfiguration, location: Location): string {
     if (!location) {
         return null;
     }
@@ -165,9 +166,9 @@ export function _sanitizeUrl(config: IClickAnalyticsConfiguration, location: Loc
  * @param location - window.location or document.location
  * @returns Flag indicating if an element is market PII.
  */
-export function _getUri(config: IClickAnalyticsConfiguration, location: any): string {
+export function getUri(config: IClickAnalyticsConfiguration, location: any): string {
     if (config.coreData && config.coreData.requestUri && config.coreData.requestUri !== '') {
         return config.coreData.requestUri;
     }
-    return _sanitizeUrl(config, location);
+    return sanitizeUrl(config, location);
 }

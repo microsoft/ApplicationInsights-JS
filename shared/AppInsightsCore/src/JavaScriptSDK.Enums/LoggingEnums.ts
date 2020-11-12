@@ -95,6 +95,9 @@ export const _InternalMessageId = {
     PluginException: 73,
     NotificationException: 74,
     SnippetScriptLoadFailure: 99,
-    InvalidInstrumentationKey:100
+    InvalidInstrumentationKey:100,
+    CannotParseAiBlobValue: 101,
+    InvalidContentBlob: 102,
+    TrackPageActionEventFailed: 103
 };
 export type _InternalMessageId = number | typeof _InternalMessageId;

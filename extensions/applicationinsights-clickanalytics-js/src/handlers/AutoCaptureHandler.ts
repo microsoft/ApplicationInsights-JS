@@ -2,9 +2,9 @@
  * @copyright Microsoft 2020
  */
 
-import { IDiagnosticLogger, _InternalMessageId, getWindow, getDocument } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, _InternalMessageId, getWindow, getDocument, EventHelper } from "@microsoft/applicationinsights-core-js";
 import { IAutoCaptureHandler, IPageActionOverrideValues, IClickAnalyticsConfiguration } from '../Interfaces/Datamodel'
-import { _isRightClick, _isLeftClick, _isKeyboardEnter, _isKeyboardSpace, _isMiddleClick, _isElementDnt } from '../common/Utils';
+import { isRightClick, isLeftClick, isKeyboardEnter, isKeyboardSpace, isMiddleClick, isElementDnt } from '../common/Utils';
 import { ActionType } from '../Enums';
 import { ClickAnalyticsPlugin } from "../ClickAnalyticsPlugin";
 import { PageAction } from '../events/PageAction';
@@ -25,11 +25,11 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
     public click() {
         let win = getWindow();
         let doc = getDocument();
-        if (win && win.addEventListener) {
+        if (win) {
             // IE9 onwards addEventListener is available, 'click' event captures mouse click. mousedown works on other browsers
-            var event = (navigator.appVersion.indexOf('MSIE') !== -1) ? 'click' : 'mousedown';
-            win.addEventListener(event, (evt) => { this._processClick(evt); }, false);
-            win.addEventListener('keyup', (evt) => { this._processClick(evt); }, false);
+            const event = (navigator.appVersion.indexOf('MSIE') !== -1) ? 'click' : 'mousedown';
+            EventHelper.Attach(win, event , (evt:any) => { this._processClick(evt); });
+            EventHelper.Attach(win, 'keyup' , (evt:any) => { this._processClick(evt); });
         } else if (doc && (doc as any).attachEvent) {
             // IE8 and below doesn't have addEventListener so it will use attachEvent
             // attaching to window does not work in IE8
@@ -47,7 +47,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
      */
     private capturePageAction(element: Element, overrideValues?: IPageActionOverrideValues, customProperties?: { [name: string]: string | number | boolean | string[] | number[] | boolean[] | object }, isRightClick?: boolean): void {
         const donotTrackTag = this._config.dataTags.customDataPrefix + this._config.dataTags.donotTrackDataTag;
-        if (!_isElementDnt(element, donotTrackTag)) {
+        if (!isElementDnt(element, donotTrackTag)) {
             this._pageAction.capturePageAction(element, overrideValues, customProperties, isRightClick);
         }
 
@@ -65,16 +65,16 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
             clickCoordinateX: clickEvent.pageX,
             clickCoordinateY: clickEvent.pageY
         };
-        var isRightClick = _isRightClick(clickEvent as MouseEvent);
-        if (isRightClick) {
+        var isRightClickObj = isRightClick(clickEvent as MouseEvent);
+        if (isRightClickObj) {
             overrideValues.actionType = ActionType.CLICKRIGHT;
-        } else if (_isLeftClick(clickEvent as MouseEvent)) {
+        } else if (isLeftClick(clickEvent as MouseEvent)) {
             overrideValues.actionType = ActionType.CLICKLEFT;
-        } else if (_isKeyboardEnter(clickEvent as KeyboardEvent)) {
+        } else if (isKeyboardEnter(clickEvent as KeyboardEvent)) {
             overrideValues.actionType = ActionType.KEYBOARDENTER;
-        } else if (_isKeyboardSpace(clickEvent as KeyboardEvent)) {
+        } else if (isKeyboardSpace(clickEvent as KeyboardEvent)) {
             overrideValues.actionType = ActionType.KEYBOARDSPACE;
-        } else if (_isMiddleClick(clickEvent as MouseEvent)) {
+        } else if (isMiddleClick(clickEvent as MouseEvent)) {
             overrideValues.actionType = ActionType.CLICKMIDDLE;
         } else {
             return;
@@ -86,14 +86,15 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
             if (element.control && clickCaptureElements[element.control.tagName.toUpperCase()]) {
                 element = element.control;
             }
-            if (!clickCaptureElements[element.tagName.toUpperCase()]) {
+            const tagNameUpperCased = element.tagName.toUpperCase();
+            if (!clickCaptureElements[tagNameUpperCased]) {
                 element = element.parentElement || element.parentNode;
                 continue;
             } else {
                 // Check allowed INPUT types
-                var sendEvent = element.tagName.toUpperCase() === 'INPUT' ? clickCaptureInputTypes[element.type.toUpperCase()] : true;
+                var sendEvent = tagNameUpperCased === 'INPUT' ? clickCaptureInputTypes[element.type.toUpperCase()] : true;
                 if (sendEvent) {
-                    this.capturePageAction(element, overrideValues, {}, isRightClick);
+                    this.capturePageAction(element, overrideValues, {}, isRightClickObj);
                 }
                 break;
             }

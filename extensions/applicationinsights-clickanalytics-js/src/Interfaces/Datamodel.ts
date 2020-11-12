@@ -3,7 +3,6 @@
  */
 
 import { IEventTelemetry } from "@microsoft/applicationinsights-common";
-import { ICustomProperties } from "@microsoft/applicationinsights-core-js";
 
 
 /**
@@ -34,12 +33,14 @@ export interface IClickAnalyticsConfiguration {
      * Enables the logging of values after a "#" character of the URL. Default is "false."
      */
     urlCollectHash?: boolean;
-   /**
-    * Enables the logging of the query string of the URL. Default is "false."
-    */
+    /**
+     * Enables the logging of the query string of the URL. Default is "false."
+     */
     urlCollectQuery?: boolean;
-
-
+    /**
+     * Validator to use for the data-bhvr value
+     */
+    behaviorValidator?: (value: string | number) => string | number;
 }
 
 /**
@@ -143,29 +144,6 @@ export interface IAutoCaptureHandler {
     click: () => void;
   }
 
-/**
- * Override values interface
- */
-export interface IOverrideValues {
-    /**
-     * One of the awa.behavior values. 
-     */
-    behavior?: number;
-    /**
-     * Page name
-     */
-    pageName?: string;
-    /**
-     * Page type
-     */
-    pageType?: string;
-    /**
-     * KVP to be added to the page tags collected
-     */
-    pageTags?: any;
-  }
-
-
   export interface IPageActionOverrideValues extends IOverrideValues {
     /**
      * Uri of the referrer page
@@ -204,7 +182,7 @@ export interface IOverrideValues {
     /**
      * One of the awa.behavior values. 
      */
-    behavior?: number;
+    behavior?: string | number;
     /**
      * Page name
      */
@@ -273,7 +251,7 @@ export interface IPageActionTelemetry extends IEventTelemetry {
     /**
      * One of the awa.behavior values. 
      */
-    behavior?: number;
+    behavior?: string | number;
     /**
      * X, Y representing the absolute co-ordinates withrespect to topleft corner of the page. This should be normalized for the screen resolution to provide better heat map.
      */

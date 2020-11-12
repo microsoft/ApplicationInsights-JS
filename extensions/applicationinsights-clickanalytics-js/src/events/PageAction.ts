@@ -6,7 +6,7 @@ import { WebEvent } from './WebEvent';
 import * as DataCollector from '../DataCollector';
 import { ITelemetryItem, getPerformance, ICustomProperties } from "@microsoft/applicationinsights-core-js"
 import { IPageActionOverrideValues, IPageActionTelemetry } from '../Interfaces/Datamodel';
-import { _extractFieldFromObject, _bracketIt, isValueAssigned, extend } from '../common/Utils';
+import { extractFieldFromObject, bracketIt, isValueAssigned, extend } from '../common/Utils';
 
 export class PageAction extends WebEvent {
     
@@ -59,24 +59,25 @@ export class PageAction extends WebEvent {
         overrideValues = !isValueAssigned(overrideValues) ? {} : overrideValues;
         let pageActionEvent: IPageActionTelemetry = { name : ''};
         let pageActionProperties: ICustomProperties = isValueAssigned(customProperties) ? customProperties : {};
-        this._setCommonProperties(pageActionEvent, overrideValues);
+        this.setCommonProperties(pageActionEvent, overrideValues);
         pageActionEvent.behavior = this._getBehavior(overrideValues);
         // element in scope is needed for below properties.  We cannot pass element into the plugin call chain.  
         // process them here.
         let elementContent: any = {};
+        /* //TODO
         if (isRightClick) {
             // Default behavior for righ click
-            pageActionEvent.behavior = 9 /*CONTEXTMENU*/;
-        }
+            pageActionEvent.behavior = 9 /*CONTEXTMENU
         // Fill PartB
+        */
         if (element) {
-            pageActionEvent.targetUri = DataCollector._getClickTarget(element);
+            pageActionEvent.targetUri = DataCollector.getClickTarget(element);
 
             elementContent = this._contentHandler.getElementContent(element); // collect id,cn tags
 
             // if the element has a data-*-bhvr attrib defined, use it.
             if (elementContent.bhvr && !isValueAssigned(overrideValues.behavior)) {
-                let currentBehavior: string = _extractFieldFromObject(elementContent, 'bhvr');
+                let currentBehavior: string = extractFieldFromObject(elementContent, 'bhvr');
                 pageActionEvent.behavior = this._getValidBehavior(currentBehavior);
             }
         }
@@ -86,7 +87,7 @@ export class PageAction extends WebEvent {
         if (isValueAssigned(overrideValues.clickCoordinateX) && isValueAssigned(overrideValues.clickCoordinateY)) {
             pageActionEvent.clickCoordinates = overrideValues.clickCoordinateX + 'X' + overrideValues.clickCoordinateY;
         }
-        pageActionEvent.content = _bracketIt(JSON.stringify(extend(
+        pageActionEvent.content = bracketIt(JSON.stringify(extend(
             elementContent,
             overrideValues && overrideValues.contentTags ? overrideValues.contentTags : {})));
 
