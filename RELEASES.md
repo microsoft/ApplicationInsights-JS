@@ -20,6 +20,14 @@ Provides the ability to gather telemetry in Web pages to automatic track clicks 
 - #1402 [BUG] "ReferenceError: method is not defined" from 2.5.5+
 - #420 CDN endpoint
 
+### Update React plugin to v3.0.5
+
+- Update Core dependency to ^2.5.10 Core changes
+
+### Update React Native plugin to v2.2.9
+
+- Update Core dependency to ^2.5.10 Core changes
+
 ## 2.5.9 (October 5th, 2020)
 
 ### Changelog
