@@ -314,7 +314,7 @@ export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClic
             aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
             customDataPrefix: DEFAULT_DATA_PREFIX,
             captureAllMetaDataContent: false,
-            donotTrackDataTag: DEFAULT_DONOT_TRACK_TAG,
+            dntDataTag: DEFAULT_DONOT_TRACK_TAG,
         },
         behaviorValidator: (key:string) => key || "",
         defaultRightClickBhvr: ""

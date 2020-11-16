@@ -46,7 +46,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
      * @param isRightClick - Flag for mouse right clicks
      */
     private capturePageAction(element: Element, overrideValues?: IPageActionOverrideValues, customProperties?: { [name: string]: string | number | boolean | string[] | number[] | boolean[] | object }, isRightClick?: boolean): void {
-        const donotTrackTag = this._config.dataTags.customDataPrefix + this._config.dataTags.donotTrackDataTag;
+        const donotTrackTag = this._config.dataTags.customDataPrefix + this._config.dataTags.dntDataTag;
         if (!isElementDnt(element, donotTrackTag)) {
             this._pageAction.capturePageAction(element, overrideValues, customProperties, isRightClick);
         }

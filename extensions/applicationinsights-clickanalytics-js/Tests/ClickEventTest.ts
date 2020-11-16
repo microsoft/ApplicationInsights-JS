@@ -44,7 +44,7 @@ export class ClickEventTest extends TestClass {
                         customDataPrefix: 'data-ha-',
                         aiBlobAttributeTag: 'blob',
                         parentDataTag: 'parent',
-                        donotTrackDataTag: 'donotTrack'
+                        dntDataTag: 'donotTrack'
                     }
                 };
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();

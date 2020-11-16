@@ -79,7 +79,7 @@ export interface ICustomDataTags {
     /**
      * Custom attribute Tag to not track telemetry data
      */
-    donotTrackDataTag?: string
+    dntDataTag?: string
 }
 
 /**
