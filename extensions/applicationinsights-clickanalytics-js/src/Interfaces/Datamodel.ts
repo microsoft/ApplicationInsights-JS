@@ -41,6 +41,11 @@ export interface IClickAnalyticsConfiguration {
      * Validator to use for the data-bhvr value
      */
     behaviorValidator?: (value: string | number) => string | number;
+    /**
+     * Default Behavior value when Right Click event has occured. This 
+     * value will be ovverriden if the element has the data-*-bhvr attribute present.
+     */
+    defaultRightClickBhvr?: string | number;
 }
 
 /**
@@ -131,7 +136,7 @@ export interface IPageTags {
    /**
     * Any other page tag
     */
-    [name: string]: string | number | boolean | string[] | number[] | boolean[] | object;
+    [name: string]: string | number | boolean | string[] | number[] | boolean[] | object | undefined;
 }
 
 /**
@@ -218,7 +223,7 @@ export interface IContent {
     /**
      * User specified custom content properties
      */
-    [name: string]: string | number | boolean | string[] | number[] | boolean[] | object;
+    [name: string]: string | number | boolean | string[] | number[] | boolean[] | object | undefined;
 }
 
  /**

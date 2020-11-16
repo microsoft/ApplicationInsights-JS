@@ -164,7 +164,7 @@ export function findClosestByAttribute(el: Element, attribute: string): Element 
  */
 export function isAttributeInElement(element: Element, attributeToLookFor: string): Boolean {
     var value = element.getAttribute(attributeToLookFor);
-    return isValueAssigned(value) || value === '';
+    return isValueAssigned(value);
 }
 
 /**
@@ -317,6 +317,7 @@ export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClic
             donotTrackDataTag: DEFAULT_DONOT_TRACK_TAG,
         },
         behaviorValidator: (key:string) => key || "",
+        defaultRightClickBhvr: ""
     };
 
     let attributesThatAreObjectsInConfig: any[] = [];

@@ -64,12 +64,12 @@ export class PageAction extends WebEvent {
         // element in scope is needed for below properties.  We cannot pass element into the plugin call chain.  
         // process them here.
         let elementContent: any = {};
-        /* //TODO
+        
         if (isRightClick) {
             // Default behavior for righ click
-            pageActionEvent.behavior = 9 /*CONTEXTMENU
+            pageActionEvent.behavior = this._config.defaultRightClickBhvr;
+        }
         // Fill PartB
-        */
         if (element) {
             pageActionEvent.targetUri = DataCollector.getClickTarget(element);
 
