@@ -12,14 +12,32 @@ import {
     LoggingSeverity,
     _InternalMessageId,
     BaseTelemetryPlugin,
-    IProcessTelemetryContext,
-    objForEachKey
+    IProcessTelemetryContext//,
+    // objForEachKey
 } from '@microsoft/applicationinsights-core-js';
 import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, SeverityLevel, AnalyticsPluginIdentifier  } from '@microsoft/applicationinsights-common';
 import DeviceInfo from 'react-native-device-info';
 
 import { INativeDevice, IReactNativePluginConfig } from './Interfaces';
 import dynamicProto from '@microsoft/dynamicproto-js';
+
+
+/**
+ * This is a helper function for the equivalent of arForEach(objKeys(target), callbackFn), this is a 
+ * performance optimization to avoid the creation of a new array for large objects
+ * @param target The target object to find and process the keys
+ * @param callbackfn The function to call with the details
+ */
+export function objForEachKey(target: any, callbackfn: (name: string, value: any) => void) {
+    if (target && CoreUtils.isObject(target)) {
+        for (let prop in target) {
+            if (CoreUtils.hasOwnProperty(target, prop)) {
+                callbackfn.call(target, prop, target[prop]);
+            }
+        }
+    }
+}
+
 
 export class ReactNativePlugin extends BaseTelemetryPlugin {
 
