@@ -1,6 +1,26 @@
 # Releases
 
-## 2.5.9 (September 5th, 2020)
+## 2.5.10 (November 16th, 2020)
+
+### New extension @microsoft/applicationinsights-clickanalytics-js
+
+Provides the ability to gather telemetry in Web pages to automatic track clicks using data meta tags.
+
+### Changelog
+
+- #1420 Fix issues with for..in usage with prototype extension libraries like ember.js and prototype.js
+- #1417 Adding nuspec for new Snippet nuget package
+- #1415 Update Publishing scripts to allow different container names -- replaces the cdn switch #1415
+- #1411 [BUG] - License file link is invalid #1411
+- #1410 Remove mention of resolution in Device Information
+- #1408 Update publish scripts to support a sub-container
+- #1409 Initial release of new Click Analytics Plugin
+- #1407 Adding logger during core constructor
+- #1403 [Feature Request] Snippet - Add an easier way to inject queue items as part of the snippet config (version 5 of snippet)
+- #1402 [BUG] "ReferenceError: method is not defined" from 2.5.5+
+- #420 CDN endpoint
+
+## 2.5.9 (October 5th, 2020)
 
 ### Changelog
 

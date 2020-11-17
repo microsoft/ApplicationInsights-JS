@@ -47,6 +47,11 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@microsoft/applicationinsights-clickanalytics-js",
+      "projectFolder": "extensions/applicationinsights-clickanalytics-js",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@microsoft/applicationinsights-channel-js",
       "projectFolder": "channels/applicationinsights-channel-js",
       "shouldPublish": true

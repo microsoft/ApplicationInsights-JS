@@ -64,6 +64,11 @@
       "from": "projects\\applicationinsights-channel-js.tgz",
       "resolved": "file:projects\\applicationinsights-channel-js.tgz"
     },
+    "@rush-temp/applicationinsights-clickanalytics-js": {
+      "version": "0.0.0",
+      "from": "projects\\applicationinsights-clickanalytics-js.tgz",
+      "resolved": "file:projects\\applicationinsights-clickanalytics-js.tgz"
+    },
     "@rush-temp/applicationinsights-common": {
       "version": "0.0.0",
       "from": "projects\\applicationinsights-common.tgz",
@@ -150,9 +155,9 @@
       "resolved": "https://registry.npmjs.org/@types/minimatch/-/minimatch-3.0.3.tgz"
     },
     "@types/node": {
-      "version": "14.14.6",
+      "version": "14.14.7",
       "from": "@types/node@*",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-14.14.6.tgz"
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-14.14.7.tgz"
     },
     "@types/qunit": {
       "version": "2.9.6",
@@ -1284,9 +1289,9 @@
       "resolved": "https://registry.npmjs.org/is-buffer/-/is-buffer-1.1.6.tgz"
     },
     "is-core-module": {
-      "version": "2.0.0",
-      "from": "is-core-module@^2.0.0",
-      "resolved": "https://registry.npmjs.org/is-core-module/-/is-core-module-2.0.0.tgz"
+      "version": "2.1.0",
+      "from": "is-core-module@^2.1.0",
+      "resolved": "https://registry.npmjs.org/is-core-module/-/is-core-module-2.1.0.tgz"
     },
     "is-data-descriptor": {
       "version": "0.1.4",
@@ -1624,9 +1629,9 @@
       }
     },
     "node-watch": {
-      "version": "0.6.4",
-      "from": "node-watch@0.6.4",
-      "resolved": "https://registry.npmjs.org/node-watch/-/node-watch-0.6.4.tgz"
+      "version": "0.7.0",
+      "from": "node-watch@0.7.0",
+      "resolved": "https://registry.npmjs.org/node-watch/-/node-watch-0.7.0.tgz"
     },
     "nopt": {
       "version": "3.0.6",
@@ -1855,14 +1860,14 @@
       "resolved": "https://registry.npmjs.org/qs/-/qs-6.5.2.tgz"
     },
     "qunit": {
-      "version": "2.11.3",
+      "version": "2.12.0",
       "from": "qunit@^2.9.1",
-      "resolved": "https://registry.npmjs.org/qunit/-/qunit-2.11.3.tgz",
+      "resolved": "https://registry.npmjs.org/qunit/-/qunit-2.12.0.tgz",
       "dependencies": {
         "commander": {
-          "version": "6.0.0",
-          "from": "commander@6.0.0",
-          "resolved": "https://registry.npmjs.org/commander/-/commander-6.0.0.tgz"
+          "version": "6.2.0",
+          "from": "commander@6.2.0",
+          "resolved": "https://registry.npmjs.org/commander/-/commander-6.2.0.tgz"
         }
       }
     },
@@ -1982,9 +1987,9 @@
       "resolved": "https://registry.npmjs.org/request/-/request-2.88.2.tgz"
     },
     "resolve": {
-      "version": "1.18.1",
+      "version": "1.19.0",
       "from": "resolve@^1.10.0",
-      "resolved": "https://registry.npmjs.org/resolve/-/resolve-1.18.1.tgz"
+      "resolved": "https://registry.npmjs.org/resolve/-/resolve-1.19.0.tgz"
     },
     "resolve-url": {
       "version": "0.2.1",
@@ -2071,9 +2076,9 @@
       "resolved": "https://registry.npmjs.org/rollup-plugin-uglify/-/rollup-plugin-uglify-6.0.4.tgz",
       "dependencies": {
         "uglify-js": {
-          "version": "3.11.5",
+          "version": "3.11.6",
           "from": "uglify-js@^3.4.9",
-          "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-3.11.5.tgz"
+          "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-3.11.6.tgz"
         }
       }
     },
