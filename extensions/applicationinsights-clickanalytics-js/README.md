@@ -5,8 +5,8 @@ This plugin uses the `data-\*` global attributes to capture the click even
 
 ## Some insights to effectively use the plugin
 
-1.  If the clicked HTML element donot have the `data-\*` attribute and if the `useDefaultContentName` flag is set to true, the plugin captures the `id` and the standard HTML attribute for contentName.
-2.  `customDataPrefix` provided by user should always start with `data-`, for example `data-sample-`. The reasoning behind this is that, in HTML the `data-\*` global attributes form a class of attributes called custom data attributes, that allow proprietary information to be exchanged between the HTML and its DOM representation by scripts.
+1.  If the clicked HTML element doesn't have the `data-\*` attribute and if the `useDefaultContentName` flag is set to true, the plugin captures the `id` and the standard HTML attribute for contentName.
+2.  `customDataPrefix` provided by user should always start with `data-`, for example `data-sample-`. The reasoning behind this is that, in HTML the `data-\*` global attributes form a class of attributes called custom data attributes, that allow proprietary information to be exchanged between the HTML and its DOM representation by scripts. Also, older browsers (IE, Safari) will drop attributes that it doesn't understand on the floor, unless they start with `data-`.
     The \* may be replaced by any name following the [production rule of XML names](https://www.w3.org/TR/REC-xml/#NT-Name) with the following restrictions:
 
         - the name must not start with xml, whatever case is used for these letters;
@@ -30,14 +30,14 @@ import { DebugPlugin } from " @microsoft/applicationinsights-clickanalytics-js";
 const clickPluginInstance = new ClickAnalyticsPlugin();
 // Click Analytics configuration
 const clickPluginConfig = {
-  autoCapture: true,
+  autoCapture: true
 };
 // Application Insights Configuration
 const configObj = {
   instrumentationKey: "YOUR INSTRUMENTATION KEY",
   extensions: [clickPluginInstance],
   extensionConfig: {
-    [clickPluginInstance.identifier]: clickPluginConfig,
+    [clickPluginInstance.identifier]: clickPluginConfig
   },
 };
 
@@ -58,19 +58,19 @@ appInsights.loadAppInsights();
   var clickPluginInstance = new Microsoft.ApplicationInsights.ClickAnalyticsPlugin();
   // Click Analytics configuration
   var clickPluginConfig = {
-    autoCapture: true,
+    autoCapture: true
   };
   // Application Insights Configuration
   var configObj = {
     instrumentationKey: "YOUR INSTRUMENTATION KEY",
     extensions: [clickPluginInstance],
     extensionConfig: {
-      [clickPluginInstance.identifier]: clickPluginConfig,
+      [clickPluginInstance.identifier]: clickPluginConfig
     },
   };
 
   var appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({
-    config: configObj,
+    config: configObj
   });
   appInsights.loadAppInsights();
 </script>
@@ -111,7 +111,7 @@ appInsights.loadAppInsights();
 
 ## behaviorValidator
 
-There are three different behaviorValidator callback functions exposed as part of this extension. Users can also bring their own callback functions if the exposed functions donot solve their requirements. The basic idea is to bring your own behaviors datastructure and plugin uses this validator function while extracting the behaviors from the data tags.
+There are three different behaviorValidator callback functions exposed as part of this extension. Users can also bring their own callback functions if the exposed functions do not solve your requirements. The basic idea is to bring your own behaviors datastructure and plugin uses this validator function while extracting the behaviors from the data tags.
 
 | Name                   | Description                                                                         |
 | ---------------------- | ----------------------------------------------------------------------------------- |
@@ -122,7 +122,6 @@ There are three different behaviorValidator callback functions exposed as part o
 ### Sample Usage with behaviorValidator
 
 ```js
-
 var clickPlugin = Microsoft.ApplicationInsights.ClickAnalyticsPlugin;
 var clickPluginInstance = new clickPlugin();
 
@@ -285,25 +284,26 @@ var behaviorMap = {
   ADCOMPLETE: 286, // Ad complete
   ADSKIP: 287, // Ad skipped
   ADTIMEOUT: 288, // Ad timed-out
-  OTHER: 300, // Other
+  OTHER: 300 // Other
 };
 
 // Application Insights Configuration
 var configObj = {
-    instrumentationKey: "YOUR INSTRUMENTATION KEY",
-    extensions: [
-      clickPluginInstance
-    ],
-    extensionConfig: {
-        [clickPluginInstance.identifier] : {
-            behaviorValidator : Microsoft.ApplicationInsights.BehaviorMapValidator(behaviorMap),
-            defaultRightClickBhvr: 9
-        } 
-    }
-  };
-  var appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({ config: configObj });
-  appInsights.loadAppInsights();
+  instrumentationKey: "YOUR INSTRUMENTATION KEY",
+  extensions: [clickPluginInstance],
+  extensionConfig: {
+    [clickPluginInstance.identifier]: {
+      behaviorValidator: Microsoft.ApplicationInsights.BehaviorMapValidator(behaviorMap),
+      defaultRightClickBhvr: 9
+    },
+  },
+};
+var appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({
+  config: configObj
+});
+appInsights.loadAppInsights();
 ```
+
 ## Sample App
 
 [Simple Web App with Click Analytics Plugin Enabled](https://github.com/kryalama/application-insights-clickanalytics-demo)
