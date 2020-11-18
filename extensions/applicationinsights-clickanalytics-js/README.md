@@ -25,7 +25,7 @@ npm install --save @microsoft/applicationinsights-clickanalytics-js @microsoft/a
 
 ```js
 import { ApplicationInsights } from "@microsoft/applicationinsights-web";
-import { DebugPlugin } from " @microsoft/applicationinsights-clickanalytics-js";
+import { ClickAnalyticsPlugin } from " @microsoft/applicationinsights-clickanalytics-js";
 
 const clickPluginInstance = new ClickAnalyticsPlugin();
 // Click Analytics configuration
