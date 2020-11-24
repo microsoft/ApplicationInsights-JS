@@ -23,6 +23,7 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
             samplingPercentage: () => 100,
             sessionExpirationMs: () => 24 * 60 * 60 * 1000,
             cookieDomain: () => null,
+            cookiePath: () => '/',
             sdkExtension: () => null,
             isBrowserLinkTrackingEnabled: () => false,
             appId: () => null,

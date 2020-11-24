@@ -60,6 +60,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
         config.isBrowserLinkTrackingEnabled = Util.stringToBoolOrDefault(config.isBrowserLinkTrackingEnabled);
         config.enableAutoRouteTracking = Util.stringToBoolOrDefault(config.enableAutoRouteTracking);
         config.namePrefix = config.namePrefix || "";
+        config.cookiePath = "/";
 
         return config;
     }
@@ -518,6 +519,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
             sessionExpirationMs: () => this.config.sessionExpirationMs || config.sessionExpirationMs,
             sampleRate: () => this.config.samplingPercentage || config.samplingPercentage,
             cookieDomain: () => this.config.cookieDomain || config.cookieDomain,
+            cookiePath: () => this.config.cookiePath || config.cookiePath,
             sdkExtension: () => this.config.sdkExtension || config.sdkExtension,
             isBrowserLinkTrackingEnabled: () => this.config.isBrowserLinkTrackingEnabled || config.isBrowserLinkTrackingEnabled,
             appId: () => this.config.appId || config.appId

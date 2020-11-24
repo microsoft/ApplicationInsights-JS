@@ -72,8 +72,9 @@ export class User implements IUser {
             date.setTime(date.getTime() + 31536000000);
             const newCookie = [this.id, acqStr];
             const cookieDomain = this.config.cookieDomain ? this.config.cookieDomain() : undefined;
+            const cookiePath = this.config.cookiePath ? this.config.cookiePath() : null;
 
-            Util.setCookie(this._logger, User.userCookieName, newCookie.join(User.cookieSeparator) + ';expires=' + date.toUTCString(), cookieDomain);
+            Util.setCookie(this._logger, User.userCookieName, newCookie.join(User.cookieSeparator) + ';expires=' + date.toUTCString(), cookieDomain, cookiePath);
 
             // If we have an config.namePrefix() + ai_session in local storage this means the user actively removed our cookies.
             // We should respect their wishes and clear ourselves from local storage
@@ -131,7 +132,7 @@ export class User implements IUser {
         if (storeInCookie) {
             // Set the cookie. No expiration date because this is a session cookie (expires when browser closed).
             // Encoding the cookie to handle unexpected unicode characters.
-            Util.setCookie(this._logger, User.authUserCookieName, encodeURI(authCookie), this.config.cookieDomain());
+            Util.setCookie(this._logger, User.authUserCookieName, encodeURI(authCookie), this.config.cookieDomain(), this.config.cookiePath());
         }
     }
 

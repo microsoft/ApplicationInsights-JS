@@ -287,6 +287,7 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | enableSessionStorageBuffer | true | Default true. If true, the buffer with all unsent telemetry is stored in session storage. The buffer is restored on page load |
 | isCookieUseDisabled | false | Default false. If true, the SDK will not store or read any data from cookies.|
 | cookieDomain | null | Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. |
+| cookiePath | `/` | Custom cookie path. This is helpful if you want to control the path the cookie is available on. |
 | isRetryDisabled | false | Default false. If false, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error), 503 (service unavailable), and 0 (offline, only if detected) |
 | isStorageUseDisabled | false | If true, the SDK will not store or read any data from local and session storage. Default is false. |
 | isBeaconApiDisabled | true | If false, the SDK will send all telemetry using the [Beacon API](https://www.w3.org/TR/beacon) |

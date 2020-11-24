@@ -8,6 +8,7 @@ export interface ITelemetryConfig {
     sampleRate: () => number;
     sessionExpirationMs: () => number;
     cookieDomain: () => string;
+    cookiePath: () => string;
     sdkExtension: () => string;
     isBrowserLinkTrackingEnabled: () => boolean;
     appId: () => string;

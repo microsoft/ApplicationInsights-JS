@@ -404,13 +404,18 @@ export class Util {
     /**
      * helper method to set userId and sessionId cookie
      */
-    public static setCookie(logger: IDiagnosticLogger, name: string, value: string, domain?: string) {
+    public static setCookie(logger: IDiagnosticLogger, name: string, value: string, domain?: string, path?: string) {
         if (Util.canUseCookies(logger)) {
             let domainAttrib = "";
             let secureAttrib = "";
+            let pathAttrib = "";
 
             if (domain) {
                 domainAttrib = ";domain=" + domain;
+            }
+
+            if (path) {
+                pathAttrib = ";path=" + path;
             }
 
             let location = getLocation();
@@ -425,7 +430,7 @@ export class Util {
                 }
             }
 
-            Util.document.cookie = name + "=" + value + domainAttrib + ";path=/" + secureAttrib;
+            Util.document.cookie = name + "=" + value + domainAttrib + pathAttrib + secureAttrib;
         }
     }
 
