@@ -88,7 +88,7 @@ export class _SessionManager {
             // update automaticSession so session state has correct id
             this.renew();
         } else {
-            // do not update the cookie more often than cookieUpdateInterva
+            // do not update the cookie more often than cookieUpdateInterval
             if (!this.cookieUpdatedTimestamp || now - this.cookieUpdatedTimestamp > _SessionManager.cookieUpdateInterval) {
                 this.automaticSession.renewalDate = now;
                 this.setCookie(this.automaticSession.id, this.automaticSession.acquisitionDate, this.automaticSession.renewalDate);
