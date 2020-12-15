@@ -1070,7 +1070,7 @@ export class SenderTests extends TestClass {
                                 maxBatchSizeInBytes: 456
                             }
                         },
-                        disableInstrumentaionKeyValidation: true
+                        disableInstrumentationKeyValidation: true
 
                     }, appInsightsCore, []
                 );
