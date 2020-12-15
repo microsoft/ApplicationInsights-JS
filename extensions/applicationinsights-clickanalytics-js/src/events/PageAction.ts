@@ -20,28 +20,28 @@ export class PageAction extends WebEvent {
         var ext = {};
         ext['web'] = {};
         let event: ITelemetryItem = {
-            name: '',
-            baseType: 'ClickData',
+            name: "Microsoft.ApplicationInsights.{0}.Event",
+            baseType: 'ClickEvent',
             ext,
             data: {},
             baseData: {}
         };
-        event.baseData['name'] = pageActionEvent.name;
-        event.baseData['uri'] = pageActionEvent.uri;
-        event.baseData['pageType'] = pageActionEvent.pageType;   
-        event.baseData['properties'] = pageActionEvent.properties;
-        event.baseData['actionType'] = pageActionEvent.actionType;
-        event.baseData['behavior'] = pageActionEvent.behavior;
-        event.baseData['clickCoordinates'] = pageActionEvent.clickCoordinates;
-        event.baseData['content'] = pageActionEvent.content;
-        event.baseData['targetUri'] = pageActionEvent.targetUri;
-        event.data['timeToAction'] = pageActionEvent.timeToAction;
-        event.data['refUri'] = pageActionEvent.refUri;
-        
+
+        this._populateEventDataIfPresent(event.baseData, 'name', pageActionEvent.name);
+        this._populateEventDataIfPresent(event.baseData, 'uri', pageActionEvent.uri);
+        this._populateEventDataIfPresent(event.baseData, 'pageType', pageActionEvent.pageType);
+        this._populateEventDataIfPresent(event.baseData, 'properties', pageActionEvent.properties);
+        this._populateEventDataIfPresent(event.baseData, 'actionType', pageActionEvent.actionType);
+        this._populateEventDataIfPresent(event.baseData, 'behavior', pageActionEvent.behavior);
+        this._populateEventDataIfPresent(event.baseData, 'clickCoordinates', pageActionEvent.clickCoordinates);
+        this._populateEventDataIfPresent(event.baseData, 'content', pageActionEvent.content);
+        this._populateEventDataIfPresent(event.baseData, 'targetUri', pageActionEvent.targetUri);
+        this._populateEventDataIfPresent(event.data, 'timeToAction', pageActionEvent.timeToAction);
+        this._populateEventDataIfPresent(event.data, 'refUri', pageActionEvent.refUri);
         for (let property in properties) {
             if (properties.hasOwnProperty(property)) {
                 if (!event.data[property]) {
-                    event.data[property] = properties[property];
+                    this._populateEventDataIfPresent(event.data, property, properties[property]);
                 }
             }
         }
@@ -107,6 +107,12 @@ export class PageAction extends WebEvent {
             }
         }
         return -1;
+    }
+
+    private _populateEventDataIfPresent(obj:any, property:any, value:any) {
+        if(isValueAssigned(value)) {
+            obj[property] = value;
+        }
     }
 
 }
