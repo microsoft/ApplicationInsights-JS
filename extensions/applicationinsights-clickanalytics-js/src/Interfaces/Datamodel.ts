@@ -30,14 +30,6 @@ export interface IClickAnalyticsConfiguration {
      */
     dataTags?: ICustomDataTags;
     /**
-     * Enables the logging of values after a "#" character of the URL. Default is "false."
-     */
-    urlCollectHash?: boolean;
-    /**
-     * Enables the logging of the query string of the URL. Default is "false."
-     */
-    urlCollectQuery?: boolean;
-    /**
      * Validator to use for the data-bhvr value
      */
     behaviorValidator?: (value: string | number) => string | number;

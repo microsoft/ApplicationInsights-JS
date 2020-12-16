@@ -67,7 +67,7 @@ export class ClickEventTest extends TestClass {
                 Assert.equal(true, spy.called);
                 let calledEvent: ITelemetryItem = spy.getCall(0).args[0];
                 Assert.notEqual(-1, calledEvent.baseData["uri"].indexOf("Tests.html"),);
-                Assert.equal(0,calledEvent.baseData["behavior"],);
+                Assert.equal(undefined, calledEvent.baseData["behavior"],);
                 Assert.equal(undefined, calledEvent.baseData["actionType"],);
                 Assert.equal("[{}]", calledEvent.baseData["content"]);
                 Assert.equal(false, isNaN(calledEvent.data["timeToAction"] as number));
@@ -563,7 +563,7 @@ export class ClickEventTest extends TestClass {
                 Assert.equal(true, spy.called);
                 var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
                 Assert.equal(expectedContent, calledEvent.baseData["content"]);
-                Assert.equal("",calledEvent.baseData["behavior"]);
+                Assert.equal(undefined, calledEvent.baseData["behavior"]);
             }
         });
 

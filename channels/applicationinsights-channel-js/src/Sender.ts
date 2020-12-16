@@ -774,7 +774,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              * Specs taken from https://tools.ietf.org/html/rfc4122 and breeze repo 
              */
             function _validateInstrumentationKey(config: IConfiguration & IConfig) :boolean {
-                const disableIKeyValidationFlag = CoreUtils.isNullOrUndefined(config.disableInstrumentaionKeyValidation) ? false : config.disableInstrumentaionKeyValidation;
+                const disableIKeyValidationFlag = CoreUtils.isNullOrUndefined(config.disableInstrumentationKeyValidation) ? false : config.disableInstrumentationKeyValidation;
                 if(disableIKeyValidationFlag) {
                     return true;
                 }

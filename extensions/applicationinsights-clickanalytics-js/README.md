@@ -76,8 +76,6 @@ appInsights.loadAppInsights();
 | callback | IValueCallback | null | Callbacks configuration |
 | pageTags | string | null | Page tags |
 | dataTags | ICustomDataTags | null | Custom Data Tags provided to ovverride default tags used to capture click data. |
-| urlCollectHash | boolean | false | Enables the logging of values after a "#" character of the URL. |
-| urlCollectQuery | boolean | false | Enables the logging of the query string of the URL. |
 | behaviorValidator | Function | null | Callback function to use for the data-bhvr value validation. Documentation still in progress for this feature.|
 | defaultRightClickBhvr | string (or) number | '' | Default Behavior value when Right Click event has occured. This value will be overriden if the element has the data-*-bhvr attribute.|
 
