@@ -115,15 +115,8 @@ export function getPageName(config: IClickAnalyticsConfiguration, overrideValues
     } else if (config.coreData && config.coreData.pageName) {
         return config.coreData.pageName;
     } else {
-        let loc = getLocation() || ({} as Location);
-        var pagename = loc.pathname || "";
-        var fragments = pagename.split('/');
-        if (fragments && fragments[fragments.length - 1] !== '') {
-            pagename = fragments[fragments.length - 1];
-        } else {
-            pagename = 'Undefined';
-        }
-        return pagename;
+       const doc = getDocument();
+       return doc && doc.title || "";
     }
 }
 
@@ -140,23 +133,6 @@ export function sanitizeUrl(config: IClickAnalyticsConfiguration, location: Loca
     var url = location.protocol + '//' + (location.hostname || location.host) +         // location.hostname is not supported on Opera and Opera for Android
         (isValueAssigned(location.port) ? ':' + location.port : '') +
         location.pathname;
-
-    if (config.urlCollectHash) { // false by default
-        url += (location.hash || '');
-    }
-
-    if (config.urlCollectQuery) { // false by default
-        var query = location.search;
-        if (!query) {
-            // in older browsers the query parameters can be contained in the hash
-            var hash = location.hash || '';
-            var queryIndex = hash.indexOf('?');
-            if (queryIndex !== -1) {
-                query = hash.slice(queryIndex);
-            }
-        }
-        return url + query;
-    }
     return url;
 }
 

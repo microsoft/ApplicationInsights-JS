@@ -85,7 +85,7 @@ export interface IConfiguration {
      * @memberof IConfiguration
      * Flag that disables the Instrumentation Key validation.
      */
-    disableInstrumentaionKeyValidation?: boolean;
+    disableInstrumentationKeyValidation?: boolean;
     
     /**
      * [Optional] When enabled this will create local perfEvents based on sections of the code that have been instrumented
