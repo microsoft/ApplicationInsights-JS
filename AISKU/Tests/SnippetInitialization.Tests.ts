@@ -1,98 +1,92 @@
-import { TestClass } from './TestFramework/TestClass';
-import { SinonSpy } from 'sinon';
-import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
-import { Sender } from '@microsoft/applicationinsights-channel-js';
-import { IDependencyTelemetry, ContextTagKeys, Util, Event, Trace, Exception, Metric, PageView, PageViewPerformance, RemoteDependencyData, DistributedTracingModes, RequestHeaders } from '@microsoft/applicationinsights-common';
-import { AppInsightsCore, ITelemetryItem, getGlobal } from "@microsoft/applicationinsights-core-js";
-import { TelemetryContext } from '@microsoft/applicationinsights-properties-js';
-import { AjaxPlugin } from '@microsoft/applicationinsights-dependencies-js';
-import { EventValidator } from './TelemetryValidation/EventValidator';
-import { TraceValidator } from './TelemetryValidation/TraceValidator';
-import { ExceptionValidator } from './TelemetryValidation/ExceptionValidator';
-import { MetricValidator } from './TelemetryValidation/MetricValidator';
-import { PageViewPerformanceValidator } from './TelemetryValidation/PageViewPerformanceValidator';
-import { PageViewValidator } from './TelemetryValidation/PageViewValidator';
-import { RemoteDepdencyValidator } from './TelemetryValidation/RemoteDepdencyValidator';
-import { Assert } from './TestFramework/Assert';
-import { PollingAssert } from './TestFramework/PollingAssert';
+import { IAppInsightsDeprecated } from "../src/ApplicationInsightsDeprecated";
+import { ApplicationInsightsContainer } from "../src/ApplicationInsightsContainer";
+import { IApplicationInsights, Snippet } from "../src/Initialization";
+import { Sender } from "@microsoft/applicationinsights-channel-js";
+import { SinonSpy } from "sinon";
+import { Assert } from "./TestFramework/Assert";
+import { PollingAssert } from "./TestFramework/PollingAssert";
+import { TestClass } from "./TestFramework/TestClass";
+import { createSnippetV5 } from "./testSnippet";
+import { ITelemetryItem, objForEachKey } from "@microsoft/applicationinsights-core-js";
+import { ContextTagKeys, DistributedTracingModes, IDependencyTelemetry, RequestHeaders, Util } from "@microsoft/applicationinsights-common";
+import { getGlobal } from "@microsoft/applicationinsights-shims";
+import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
 
-export class ApplicationInsightsTests extends TestClass {
-    private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
-    private static readonly _connectionString = `InstrumentationKey=${ApplicationInsightsTests._instrumentationKey}`;
-    private static readonly _expectedTrackMethods = [
-        "startTrackPage",
-        "stopTrackPage",
-        "trackException",
-        "trackEvent",
-        "trackMetric",
-        "trackPageView",
-        "trackTrace",
-        "trackDependencyData",
-        "setAuthenticatedUserContext",
-        "clearAuthenticatedUserContext",
-        "trackPageViewPerformance",
-        "addTelemetryInitializer",
-        "flush"
-    ];
+const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
 
-    private _ai: ApplicationInsights;
-    private _aiName: string = 'AppInsightsSDK';
-    private isFetchPolyfill:boolean = false;
+const _expectedProperties = [
+    "config",
+    "appInsights",
+    "core",
+    "context"
+];
+
+const _expectedTrackMethods = [
+    "startTrackPage",
+    "stopTrackPage",
+    "trackException",
+    "trackEvent",
+    "trackMetric",
+    "trackPageView",
+    "trackTrace",
+    "trackDependencyData",
+    "setAuthenticatedUserContext",
+    "clearAuthenticatedUserContext",
+    "trackPageViewPerformance",
+    "addTelemetryInitializer",
+    "flush"
+];
+
+function getSnippetConfig(sessionPrefix: string) {
+    return {
+        src: "",
+        cfg: {
+            connectionString: `InstrumentationKey=${TestInstrumentationKey}`,
+            disableAjaxTracking: false,
+            disableFetchTracking: false,
+            enableRequestHeaderTracking: true,
+            enableResponseHeaderTracking: true,
+            maxBatchInterval: 500,
+            disableExceptionTracking: false,
+            namePrefix: `sessionPrefix`,
+            enableCorsCorrelation: true,
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+            samplingPercentage: 50
+        }
+    };
+};
+
+export class SnippetInitializationTests extends TestClass {
+
+    // Context 
+    private tagKeys = new ContextTagKeys();
 
     // Sinon
     private errorSpy: SinonSpy;
     private successSpy: SinonSpy;
     private loggingSpy: SinonSpy;
-    private userSpy: SinonSpy;
+    private isFetchPolyfill:boolean = false;
     private sessionPrefix: string = Util.newId();
     private trackSpy: SinonSpy;
     private envelopeConstructorSpy: SinonSpy;
 
-    // Context
-    private tagKeys = new ContextTagKeys();
-    private _config;
-    private _appId: string;
-
-    constructor() {
-        super("ApplicationInsightsTests");
+    constructor(emulateEs3: boolean) {
+        super("SnippetInitializationTests", emulateEs3);
     }
+
+    // Add any new snippet configurations to this map
+    private _theSnippets = {
+        "v5": createSnippetV5
+    };
     
     public testInitialize() {
+        this._disableDynProtoBaseFuncs(); // We need to disable the useBaseInst performance setting as the sinon spy fools the internal logic and the spy is bypassed
+
         try {
+            this.useFakeServer = true;
+            this.fakeServerAutoRespond = true;
             this.isFetchPolyfill = fetch["polyfill"];
-            this.useFakeServer = false;
-            this._config = {
-                connectionString: ApplicationInsightsTests._connectionString,
-                disableAjaxTracking: false,
-                disableFetchTracking: false,
-                enableRequestHeaderTracking: true,
-                enableResponseHeaderTracking: true,
-                maxBatchInterval: 2500,
-                disableExceptionTracking: false,
-                namePrefix: this.sessionPrefix,
-                enableCorsCorrelation: true,
-                distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
-                samplingPercentage: 50
-            };
 
-            const init = new ApplicationInsights({
-                config: this._config
-            });
-            init.loadAppInsights();
-            this._ai = init;
-            this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
-                Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
-            });
-
-
-            // Setup Sinon stuff
-            const sender: Sender = this._ai.appInsights.core.getTransmissionControls()[0][0] as Sender;
-            this.errorSpy = this.sandbox.spy(sender, '_onError');
-            this.successSpy = this.sandbox.spy(sender, '_onSuccess');
-            this.loggingSpy = this.sandbox.stub(this._ai['core'].logger, 'throwInternal');
-            this.trackSpy = this.sandbox.spy(this._ai.appInsights.core, 'track')
-            this.sandbox.stub((sender as any)._sample, 'isSampledIn').returns(true);
-            this.envelopeConstructorSpy = this.sandbox.spy(Sender, 'constructEnvelope');
             console.log("* testInitialize()");
         } catch (e) {
             console.error('Failed to initialize', e);
@@ -100,58 +94,111 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public testCleanup() {
-        if (this._ai && this._ai["dependencies"]) {
-            this._ai["dependencies"].teardown();
-        }
-
-        console.log("* testCleanup(" + (TestClass.currentTestInfo ? TestClass.currentTestInfo.name : "<null>") + ")");
     }
 
     public registerTests() {
-        this.addGenericE2ETests();
-        this.addAnalyticsApiTests();
-        this.addAsyncTests();
-        this.addDependencyPluginTests();
-        this.addPropertiesPluginTests();
-    }
 
-    public addGenericE2ETests(): void {
-        this.testCase({
-            name: 'E2E.GenericTests: ApplicationInsightsAnalytics is loaded correctly',
-            test: () => {
-                Assert.ok(this._ai, 'ApplicationInsights SDK exists');
-                // TODO: reenable this test when module is available from window w/o snippet
-                // Assert.deepEqual(this._ai, window[this._aiName], `AI is available from window.${this._aiName}`);
+        objForEachKey(this._theSnippets, (snippetName, snippetCreator) => {
+            this.testCase({
+                name: "[" + snippetName + "] check NO support for 1.0 apis",
+                test: () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix))) as any;
+                    Assert.ok(theSnippet, 'ApplicationInsights SDK exists');
+                    Assert.ok(!(theSnippet as IAppInsightsDeprecated).downloadAndSetup, "The [" + snippetName + "] snippet should NOT have the downloadAndSetup"); // has legacy method
+                }
+            });
 
-                Assert.ok(this._ai.appInsights, 'App Analytics exists');
-                Assert.equal(true, this._ai.appInsights.isInitialized(), 'App Analytics is initialized');
+            this.testCaseAsync({
+                name: "[" + snippetName + "] : Public Members exist",
+                stepDelay: 1,
+                steps: [() => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix))) as any;
+                    _expectedTrackMethods.forEach(method => {
+                        Assert.ok(theSnippet[method], `${method} exists`);
+                        Assert.equal('function', typeof theSnippet[method], `${method} is a function`);
 
+                        let funcSpy;
+                        if (method === "trackDependencyData" || method === "flush") {
+                            // we don't have any available reference to the underlying call, so while we want to check
+                            // that this functions exists we can't validate that it is called
+                        } else if (method === "setAuthenticatedUserContext" || method === "clearAuthenticatedUserContext") {
+                            funcSpy = this.sandbox.spy(theSnippet.context.user, method);
+                        } else {
+                            funcSpy = this.sandbox.spy(theSnippet.appInsights, method);
+                        }
 
-                Assert.ok(this._ai.appInsights.core, 'Core exists');
-                Assert.equal(true, this._ai.appInsights.core.isInitialized(),
-                    'Core is initialized');
-            }
+                        try {
+                            theSnippet[method]();
+                        } catch(e) {
+                            // Do nothing
+                        }
+    
+                        if (funcSpy) {
+                            Assert.ok(funcSpy.called, "Function [" + method + "] of the appInsights should have been called")
+                        }
+                    });
+                }, PollingAssert.createPollingAssert(() => {
+                    try {
+                        Assert.ok(true, "* waiting for scheduled actions to send events " + new Date().toISOString());
+            
+                        if(this.successSpy.called) {
+                            let currentCount: number = 0;
+                            this.successSpy.args.forEach(call => {
+                                call[0].forEach(message => {
+                                    // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                                    if (!message || message.indexOf("AI (Internal): 72 ") == -1) {
+                                        currentCount ++;
+                                    }
+                                });
+                            });
+                            return currentCount > 0;
+                        }
+            
+                        return false;
+                    } catch (e) {
+                        Assert.ok(false, "Exception:" + e);
+                    }
+                }, "waiting for sender success", 30, 1000)]
+            });
+
+            this.testCase({
+                name: "Check properties exist",
+                test: () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix))) as any;
+                    _expectedProperties.forEach(property => {
+                        Assert.ok(theSnippet[property], `${property} exists`);
+                        Assert.notEqual('function', typeof theSnippet[property], `${property} is not a function`);
+                    });
+                }
+            });
+
+            this.addAnalyticsApiTests(snippetName, snippetCreator);
+            this.addAsyncTests(snippetName, snippetCreator);
+            this.addDependencyPluginTests(snippetName, snippetCreator);
+            this.addPropertiesPluginTests(snippetName, snippetCreator);
         });
     }
 
-    public addAnalyticsApiTests(): void {
+    public addAnalyticsApiTests(snippetName: string, snippetCreator: (config:any) => Snippet): void {
         this.testCase({
             name: 'E2E.AnalyticsApiTests: Public Members exist',
             test: () => {
-                ApplicationInsightsTests._expectedTrackMethods.forEach(method => {
-                    Assert.ok(this._ai[method], `${method} exists`);
-                    Assert.equal('function', typeof this._ai[method], `${method} is a function`);
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix))) as any;
+                _expectedTrackMethods.forEach(method => {
+                    Assert.ok(theSnippet[method], `${method} exists`);
+                    Assert.equal('function', typeof theSnippet[method], `${method} is a function`);
                 });
-            }
+        }
         });
     }
 
-    public addAsyncTests(): void {
+    public addAsyncTests(snippetName: string, snippetCreator: (config:any) => Snippet): void {
         this.testCaseAsync({
             name: 'E2E.GenericTests: trackEvent sends to backend',
             stepDelay: 1,
             steps: [() => {
-                this._ai.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                theSnippet.trackEvent({ name: 'event', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 } });
             }].concat(this.asserts(1)).concat(() => {
 
                 const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
@@ -168,7 +215,8 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'E2E.GenericTests: trackTrace sends to backend',
             stepDelay: 1,
             steps: [() => {
-                this._ai.trackTrace({ message: 'trace', properties: { "foo": "bar", "prop2": "value2" } });
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                theSnippet.trackTrace({ message: 'trace', properties: { "foo": "bar", "prop2": "value2" } });
             }].concat(this.asserts(1)).concat(() => {
                 const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                 const payload = JSON.parse(payloadStr[0]);
@@ -184,13 +232,14 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'E2E.GenericTests: trackException sends to backend',
             stepDelay: 1,
             steps: [() => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                 let exception: Error = null;
                 try {
                     window['a']['b']();
                     Assert.ok(false, 'trackException test not run');
                 } catch (e) {
                     exception = e;
-                    this._ai.trackException({ exception });
+                    theSnippet.trackException({ exception });
                 }
                 Assert.ok(exception);
             }].concat(this.asserts(1))
@@ -200,13 +249,14 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'E2E.GenericTests: legacy trackException sends to backend',
             stepDelay: 1,
             steps: [() => {
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                 let exception: Error = null;
                 try {
                     window['a']['b']();
                     Assert.ok(false, 'trackException test not run');
                 } catch (e) {
                     exception = e;
-                    this._ai.trackException({ error: exception } as any);
+                    theSnippet.trackException({ error: exception } as any);
                 }
                 Assert.ok(exception);
             }].concat(this.asserts(1))
@@ -217,9 +267,10 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                     console.log("* calling trackMetric " + new Date().toISOString());
                     for (let i = 0; i < 100; i++) {
-                        this._ai.trackMetric({ name: "test" + i, average: Math.round(100 * Math.random()) });
+                        theSnippet.trackMetric({ name: "test" + i, average: Math.round(100 * Math.random()) });
                     }
                     console.log("* done calling trackMetric " + new Date().toISOString());
                 }
@@ -231,7 +282,8 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 500,
             steps: [
                 () => {
-                    this._ai.trackPageView(); // sends 2
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    theSnippet.trackPageView({}); // sends 2
                 }
             ]
             .concat(this.asserts(2))
@@ -256,7 +308,8 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    this._ai.trackPageViewPerformance({ name: 'name', uri: 'url' });
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    theSnippet.trackPageViewPerformance({ name: 'name', uri: 'url' });
                 }
             ].concat(this.asserts(1))
         });
@@ -266,6 +319,7 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                     let exception = null;
                     try {
                         window["a"]["b"]();
@@ -275,12 +329,12 @@ export class ApplicationInsightsTests extends TestClass {
 
                     Assert.ok(exception);
 
-                    this._ai.trackException({ exception });
-                    this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
-                    this._ai.trackTrace({ message: "test" });
-                    this._ai.trackPageView({}); // sends 2
-                    this._ai.trackPageViewPerformance({ name: 'name', uri: 'http://someurl' });
-                    this._ai.flush();
+                    theSnippet.trackException({ exception });
+                    theSnippet.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
+                    theSnippet.trackTrace({ message: "test" });
+                    theSnippet.trackPageView({}); // sends 2
+                    theSnippet.trackPageViewPerformance({ name: 'name', uri: 'http://someurl' });
+                    theSnippet.flush();
                 }
             ].concat(this.asserts(6))
         });
@@ -290,6 +344,7 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                     let exception = null;
                     try {
                         window["a"]["b"]();
@@ -299,10 +354,10 @@ export class ApplicationInsightsTests extends TestClass {
                     Assert.ok(exception);
 
                     for (let i = 0; i < 100; i++) {
-                        this._ai.trackException({ exception });
-                        this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
-                        this._ai.trackTrace({ message: "test" });
-                        this._ai.trackPageView({ name: `${i}` }); // sends 2 1st time
+                        theSnippet.trackException({ exception });
+                        theSnippet.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
+                        theSnippet.trackTrace({ message: "test" });
+                        theSnippet.trackPageView({ name: `${i}` }); // sends 2 1st time
                     }
                 }
             ].concat(this.asserts(401, false))
@@ -313,6 +368,7 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                     // Setup
                     const telemetryInitializer = {
                         init: (envelope) => {
@@ -321,9 +377,10 @@ export class ApplicationInsightsTests extends TestClass {
                         }
                     }
 
+
                     // Act
-                    this._ai.addTelemetryInitializer(telemetryInitializer.init);
-                    this._ai.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
+                    theSnippet.addTelemetryInitializer(telemetryInitializer.init);
+                    theSnippet.trackMetric({ name: "test", average: Math.round(100 * Math.random()) });
                 }
             ]
                 .concat(this.asserts(1))
@@ -345,20 +402,21 @@ export class ApplicationInsightsTests extends TestClass {
         });
     }
 
-    public addDependencyPluginTests(): void {
+    public addDependencyPluginTests(snippetName: string, snippetCreator: (config:any) => Snippet): void {
 
         this.testCaseAsync({
             name: "TelemetryContext: trackDependencyData",
             stepDelay: 1,
             steps: [
                 () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                     const data: IDependencyTelemetry = {
                         target: 'http://abc',
                         responseCode: 200,
                         type: 'GET',
                         id: 'abc'
                     }
-                    this._ai.trackDependencyData(data);
+                    theSnippet.trackDependencyData(data);
                 }
             ].concat(this.asserts(1))
         });
@@ -368,6 +426,7 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                     const xhr = new XMLHttpRequest();
                     xhr.open('GET', 'https://httpbin.org/status/200');
                     xhr.send();
@@ -376,12 +435,13 @@ export class ApplicationInsightsTests extends TestClass {
             ].concat(this.asserts(1))
         });
         let global = getGlobal();
-        if (global && global.fetch) {
+        if (global && global.fetch && !this.isEmulatingEs3) {
             this.testCaseAsync({
                 name: "DependenciesPlugin: auto collection of outgoing fetch requests " + (this.isFetchPolyfill ? " using polyfill " : ""),
                 stepDelay: 5000,
                 steps: [
                     () => {
+                        let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
                         fetch('https://httpbin.org/status/200', { method: 'GET', headers: { 'header': 'value'} });
                         Assert.ok(true, "fetch monitoring is instrumented");
                     },
@@ -439,16 +499,17 @@ export class ApplicationInsightsTests extends TestClass {
         }
     }
 
-    public addPropertiesPluginTests(): void {
+    public addPropertiesPluginTests(snippetName: string, snippetCreator: (config:any) => Snippet): void {
         this.testCaseAsync({
             name: 'Custom Tags: allowed to send custom properties via addTelemetryInitializer',
             stepDelay: 1,
             steps: [
                 () => {
-                    this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    theSnippet.addTelemetryInitializer((item: ITelemetryItem) => {
                         item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
                     });
-                    this._ai.trackEvent({ name: "Custom event via addTelemetryInitializer" });
+                    theSnippet.trackEvent({ name: "Custom event via addTelemetryInitializer" });
                 }
             ]
             .concat(this.asserts(1, false, false))
@@ -475,10 +536,11 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    theSnippet.addTelemetryInitializer((item: ITelemetryItem) => {
                         item.tags.push({[this.tagKeys.cloudName]: "my.shim.cloud.name"});
                     });
-                    this._ai.trackEvent({ name: "Custom event" });
+                    theSnippet.trackEvent({ name: "Custom event" });
                 }
             ]
             .concat(this.asserts(1))
@@ -505,13 +567,14 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    this._ai.addTelemetryInitializer((item: ITelemetryItem) => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    theSnippet.addTelemetryInitializer((item: ITelemetryItem) => {
                         item.tags[this.tagKeys.cloudName] = "my.custom.cloud.name";
                         item.tags[this.tagKeys.locationCity] = "my.custom.location.city";
                         item.tags.push({[this.tagKeys.locationCountry]: "my.custom.location.country"});
                         item.tags.push({[this.tagKeys.operationId]: "my.custom.operation.id"});
                     });
-                    this._ai.trackEvent({ name: "Custom event via shimmed addTelemetryInitializer" });
+                    theSnippet.trackEvent({ name: "Custom event via shimmed addTelemetryInitializer" });
                 }
             ]
             .concat(this.asserts(1))
@@ -550,9 +613,10 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = (this._ai.context) as TelemetryContext;
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    const context = (theSnippet.context) as TelemetryContext;
                     context.user.setAuthenticatedUserContext('10001');
-                    this._ai.trackTrace({ message: 'authUserContext test' });
+                    theSnippet.trackTrace({ message: 'authUserContext test' });
                 }
             ]
                 .concat(this.asserts(1))
@@ -581,9 +645,10 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = (this._ai.context) as TelemetryContext;
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    const context = (theSnippet.context) as TelemetryContext;
                     context.user.setAuthenticatedUserContext('10001', 'account123');
-                    this._ai.trackTrace({ message: 'authUserContext test' });
+                    theSnippet.trackTrace({ message: 'authUserContext test' });
                 }
             ]
                 .concat(this.asserts(1))
@@ -611,9 +676,10 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = (this._ai.context) as TelemetryContext;
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    const context = (theSnippet.context) as TelemetryContext;
                     context.user.setAuthenticatedUserContext("\u0428", "\u0429");
-                    this._ai.trackTrace({ message: 'authUserContext test' });
+                    theSnippet.trackTrace({ message: 'authUserContext test' });
                 }
             ]
                 .concat(this.asserts(1))
@@ -641,10 +707,11 @@ export class ApplicationInsightsTests extends TestClass {
             stepDelay: 1,
             steps: [
                 () => {
-                    const context = (this._ai.context) as TelemetryContext;
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                    const context = (theSnippet.context) as TelemetryContext;
                     context.user.setAuthenticatedUserContext('10002', 'account567');
                     context.user.clearAuthenticatedUserContext();
-                    this._ai.trackTrace({ message: 'authUserContext test' });
+                    theSnippet.trackTrace({ message: 'authUserContext test' });
                 }
             ]
                 .concat(this.asserts(1))
@@ -672,7 +739,8 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'AuthenticatedUserContext: setAuthenticatedUserContext does not set the cookie by default',
             test: () => {
                 // Setup
-                const context = (this._ai.context) as TelemetryContext;
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                const context = (theSnippet.context) as TelemetryContext;
                 const authSpy: SinonSpy = this.sandbox.spy(context.user, 'setAuthenticatedUserContext');
                 const cookieSpy: SinonSpy = this.sandbox.spy(Util, 'setCookie');
 
@@ -689,12 +757,46 @@ export class ApplicationInsightsTests extends TestClass {
         this.testCase({
             name: 'Sampling: sampleRate is generated as a field in the envelope when it is less than 100',
             test: () => {
-                this._ai.trackEvent({ name: 'event' });
+                let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                theSnippet.trackEvent({ name: 'event' });
                 Assert.ok(this.envelopeConstructorSpy.called);
                 const envelope = this.envelopeConstructorSpy.returnValues[0];
                 Assert.equal(envelope.sampleRate, 50, "sampleRate is generated");
             }
         })
+    }
+
+    private _initializeSnippet(snippet: Snippet): IApplicationInsights {
+        try {
+            this.useFakeServer = false;
+
+            // Call the initialization
+            ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IApplicationInsights); 
+
+            // Setup Sinon stuff
+            const appInsights = (snippet as any).appInsights;
+            Assert.ok(appInsights, "The App insights instance should be populated");
+            Assert.ok(appInsights.core, "The Core exists");
+            Assert.equal(appInsights.core, (snippet as any).core, "The core instances should match");
+
+            Assert.equal(true, appInsights.isInitialized(), 'App Analytics is initialized');
+            Assert.equal(true, appInsights.core.isInitialized(), 'Core is initialized');
+
+            const sender: Sender = appInsights.core.getTransmissionControls()[0][0] as Sender;
+            this.errorSpy = this.sandbox.spy(sender, '_onError');
+            this.successSpy = this.sandbox.spy(sender, '_onSuccess');
+            this.loggingSpy = this.sandbox.stub(appInsights.core.logger, 'throwInternal');
+            this.trackSpy = this.sandbox.spy(appInsights.core, 'track')
+            this.sandbox.stub((sender as any)._sample, 'isSampledIn').returns(true);
+            this.envelopeConstructorSpy = this.sandbox.spy(Sender, 'constructEnvelope');
+
+        } catch (e) {
+            console.error('Failed to initialize');
+            Assert.ok(false, e);
+        }
+
+        // Note: Explicitly returning the original snippet as this should have been updated!
+        return snippet as any;
     }
 
     private boilerPlateAsserts = () => {
@@ -708,61 +810,35 @@ export class ApplicationInsightsTests extends TestClass {
             }
         }
     }
-    private asserts: any = (expectedCount: number, includeInit:boolean = false, doBoilerPlate:boolean = true) => [
-        () => {
-            const message = "polling: " + new Date().toISOString();
-            Assert.ok(true, message);
-            console.log(message);
+    private asserts: any = (expectedCount: number) => [() => {
+        const message = "polling: " + new Date().toISOString();
+        Assert.ok(true, message);
+        console.log(message);
 
-            if (doBoilerPlate) {
-                if (this.successSpy.called || this.errorSpy.called || this.loggingSpy.called) {
-                    this.boilerPlateAsserts();
-                }
-            }
-        },
-        (PollingAssert.createPollingAssert(() => {
-            let argCount = 0;
-            if (this.successSpy.called && this.successSpy.args && this.successSpy.args.length > 0) {
-                this.successSpy.args.forEach(call => {
-                    argCount += call[0].length;
-                });
-            }
+        if (this.successSpy.called) {
+            this.boilerPlateAsserts();
+            this.testCleanup();
+        } else if (this.errorSpy.called || this.loggingSpy.called) {
+            this.boilerPlateAsserts();
+        }
+    },
+    (PollingAssert.createPollingAssert(() => {
+        Assert.ok(true, "* checking success spy " + new Date().toISOString());
 
-            Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking success spy " + new Date().toISOString());
-
-            if (argCount >= expectedCount) {
-                let payloadStr = this.getPayloadMessages(this.successSpy, includeInit);
-                if (payloadStr.length > 0) {
-                    let currentCount: number = payloadStr.length;
-                    console.log('curr: ' + currentCount + ' exp: ' + expectedCount, ' appId: ' + this._ai.context.appId());
-                    if (currentCount === expectedCount && !!this._ai.context.appId()) {
-                        const payload = JSON.parse(payloadStr[0]);
-                        const baseType = payload.data.baseType;
-                        // call the appropriate Validate depending on the baseType
-                        switch (baseType) {
-                            case Event.dataType:
-                                return EventValidator.EventValidator.Validate(payload, baseType);
-                            case Trace.dataType:
-                                return TraceValidator.TraceValidator.Validate(payload, baseType);
-                            case Exception.dataType:
-                                return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
-                            case Metric.dataType:
-                                return MetricValidator.MetricValidator.Validate(payload, baseType);
-                            case PageView.dataType:
-                                return PageViewValidator.PageViewValidator.Validate(payload, baseType);
-                            case PageViewPerformance.dataType:
-                                return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
-                            case RemoteDependencyData.dataType:
-                                return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
-
-                            default:
-                                return EventValidator.EventValidator.Validate(payload, baseType);
-                        }
+        if(this.successSpy.called) {
+            let currentCount: number = 0;
+            this.successSpy.args.forEach(call => {
+                call[0].forEach(message => {
+                    // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                    if (!message || message.indexOf("AI (Internal): 72 ") == -1) {
+                        currentCount ++;
                     }
-                }
-            }
-
+                });
+            });
+            console.log('curr: ' + currentCount + ' exp: ' + expectedCount);
+            return currentCount === expectedCount;
+        } else {
             return false;
-        }, "sender succeeded", 60, 1000))
-    ];
+        }
+    }, "sender succeeded", 30, 1000))];
 }

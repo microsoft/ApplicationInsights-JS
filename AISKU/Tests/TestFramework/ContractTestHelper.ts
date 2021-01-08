@@ -1,7 +1,8 @@
 ﻿/// <reference path="../../JavaScriptSDK/Serializer.ts" />
-/// <reference path="./TestClass.ts"/>
 
-class ContractTestHelper extends TestClass {
+import { TestClass } from "./TestClass";
+
+export class ContractTestHelper extends TestClass {
 
     public name: string;
     private initializer: () => Microsoft.ApplicationInsights.ISerializable;
