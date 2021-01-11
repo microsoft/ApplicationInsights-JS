@@ -8,7 +8,7 @@ React Plugin for the Application Insights Javascript SDK, enables the following:
 - Tracking of router changes
 - React components usage statistics
 
-React Plugin for the Application Insights Javascript SDK
+Full documentation for the React Plugin for the Application Insights JavaScript SDK can be found on [Microsoft Docs](https://docs.microsoft.com/azure/azure-monitor/app/javascript-react-plugin).
 
 ## Getting Started
 
