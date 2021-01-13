@@ -7,6 +7,7 @@ import * as DataCollector from '../DataCollector';
 import { ITelemetryItem, getPerformance, ICustomProperties, LoggingSeverity } from "@microsoft/applicationinsights-core-js"
 import { IPageActionOverrideValues, IPageActionTelemetry } from '../Interfaces/Datamodel';
 import { extractFieldFromObject, bracketIt, isValueAssigned, extend, _ExtendedInternalMessageId } from '../common/Utils';
+import { Util as CommonUtil } from '@microsoft/applicationinsights-common';
 
 export class PageAction extends WebEvent {
     
@@ -94,8 +95,8 @@ export class PageAction extends WebEvent {
                 )
             }
         }
-        pageActionEvent.name = elementContent.id || elementContent.contentName || '';
-        pageActionEvent.parentId = elementContent.parentid || elementContent.parentName || '';
+        pageActionEvent.name = elementContent.id || elementContent.contentName || CommonUtil.NotSpecified;
+        pageActionEvent.parentId = elementContent.parentid || elementContent.parentName || CommonUtil.NotSpecified;
 
         if (isValueAssigned(overrideValues.actionType)) {
             pageActionEvent.actionType = overrideValues.actionType;
@@ -112,6 +113,7 @@ export class PageAction extends WebEvent {
         
         pageActionEvent.timeToAction = this._getTimeToClick();
         pageActionEvent.refUri = isValueAssigned(overrideValues.refUri) ? overrideValues.refUri : this._config.coreData.referrerUri;
+        if(this._isUndefinedEvent(pageActionEvent)) return;
         this.trackPageAction(pageActionEvent, pageActionProperties);
     }
 
@@ -142,6 +144,16 @@ export class PageAction extends WebEvent {
                 delete pageActionContent[this._config.dataTags.parentDataTag];
             }
         }
+    }
+
+    private _isUndefinedEvent(pageActionEvent: IPageActionTelemetry) {
+        if(this._config.disableUndefinedEventsTracking) {
+            if(pageActionEvent.name === CommonUtil.NotSpecified 
+                && pageActionEvent.parentId === CommonUtil.NotSpecified
+                && pageActionEvent.content === "[{}]") 
+                return true;
+        }
+        return false;
     }
 
 }

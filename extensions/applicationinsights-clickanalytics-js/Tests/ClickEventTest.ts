@@ -225,7 +225,7 @@ export class ClickEventTest extends TestClass {
                 this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
-                Assert.equal(undefined, calledEvent.baseData["name"]);
+                Assert.equal("not_specified", calledEvent.baseData["name"]);
                 Assert.equal(expectedContent, calledEvent.data["content"]);
             }
         });
@@ -275,7 +275,7 @@ export class ClickEventTest extends TestClass {
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
                 Assert.equal("testId", calledEvent.baseData["name"]);
-                Assert.equal(undefined, calledEvent.data["parentId"]);
+                Assert.equal("not_specified", calledEvent.data["parentId"]);
                 Assert.equal(expectedContent, calledEvent.data["content"]);
             }
         });
@@ -533,7 +533,7 @@ export class ClickEventTest extends TestClass {
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
                 Assert.equal("testId", calledEvent.baseData["name"]);
-                Assert.equal(undefined, calledEvent.data["parentId"]);
+                Assert.equal("not_specified", calledEvent.data["parentId"]);
                 Assert.equal(expectedContent, calledEvent.data["content"]);
             }
         });
@@ -626,7 +626,7 @@ export class ClickEventTest extends TestClass {
                 this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
-                Assert.equal(undefined, calledEvent.baseData["name"]);
+                Assert.equal("not_specified", calledEvent.baseData["name"]);
                 Assert.equal("parentTestId", calledEvent.data["parentId"]);
                 Assert.equal(expectedContent, calledEvent.data["content"]);
             }
@@ -938,6 +938,44 @@ export class ClickEventTest extends TestClass {
                 var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
                 Assert.equal(expectedContent, calledEvent.data["content"]);
                 Assert.equal(2,calledEvent.data["behavior"]);
+            }
+        });
+
+        this.testCase({
+            name: "PageAction not called on undefined event and disableUndefinedEventsTracking is set to true",
+            test: () => {
+                const config = {
+                    callback: {
+                        contentName: () => "testContentName"                  
+                    },
+                    dataTags : {
+                        useDefaultContentNameOrId : false,
+                        metaDataPrefix:'ha-',
+                        customDataPrefix: 'data-ha-',
+                        aiBlobAttributeTag: 'blob'
+                    },
+                    disableUndefinedEventsTracking:true
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                core.initialize({
+                    instrumentationKey: 'testIkey',
+                    extensionConfig : {
+                        [clickAnalyticsPlugin.identifier] : config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
+                const element = document.createElement('a');
+                element.setAttribute("id","testId");
+                ((element) as HTMLBaseElement).href = "testClickTarget";
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
+                Assert.equal(false, spy.called);
             }
         });
     }

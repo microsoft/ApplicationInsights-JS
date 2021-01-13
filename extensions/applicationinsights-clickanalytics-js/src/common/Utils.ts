@@ -317,7 +317,8 @@ export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClic
             dntDataTag: DEFAULT_DONOT_TRACK_TAG,
         },
         behaviorValidator: (key:string) => key || "",
-        defaultRightClickBhvr: ""
+        defaultRightClickBhvr: "",
+        disableUndefinedEventsTracking: false
     };
 
     let attributesThatAreObjectsInConfig: any[] = [];

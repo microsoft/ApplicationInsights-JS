@@ -1,6 +1,6 @@
 {
   "name": "@microsoft/applicationinsights-clickanalytics-js",
-  "version": "2.5.11",
+  "version": "2.5.10",
   "description": "Microsoft Application Insights Click Analytics extension",
   "main": "dist/applicationinsights-clickanalytics-js.js",
   "module": "dist-esm/applicationinsights-clickanalytics-js.js",

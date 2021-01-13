@@ -2,7 +2,7 @@
  * @copyright Microsoft 2020
  */
 import {
-    findClosestByAttribute, removeInvalidElements,
+    removeInvalidElements,
     walkUpDomChainWithElementValidation,
     extend, _ExtendedInternalMessageId, isValueAssigned
 } from '../common/Utils';
@@ -48,7 +48,6 @@ export class DomContentHandler implements IContentHandler {
         }
 
         let elementContent: any = {};
-        let biBlobElement;
         let biBlobValue;
         let parentDataTagPrefix;
         const dataTagPrefix:string = this._config.dataTags.customDataPrefix;
