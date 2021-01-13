@@ -50,7 +50,6 @@ export class DomContentHandler implements IContentHandler {
         let elementContent: any = {};
         let biBlobElement;
         let biBlobValue;
-        let contentElement;
         let parentDataTagPrefix;
         const dataTagPrefix:string = this._config.dataTags.customDataPrefix;
         const aiBlobAttributeTag:string = dataTagPrefix + this._config.dataTags.aiBlobAttributeTag;
@@ -60,10 +59,7 @@ export class DomContentHandler implements IContentHandler {
         
         if (!this._isTracked(element, dataTagPrefix, aiBlobAttributeTag)) {
             // capture blob from element or hierarchy
-            biBlobElement = findClosestByAttribute(element, aiBlobAttributeTag);
-            if (biBlobElement) {
-                biBlobValue = biBlobElement.getAttribute(aiBlobAttributeTag);
-            }
+            biBlobValue = element.getAttribute(aiBlobAttributeTag);
             if (biBlobValue) {
                 try {
                     elementContent = JSON.parse(biBlobValue);
@@ -75,21 +71,24 @@ export class DomContentHandler implements IContentHandler {
                 }
             } else {
                 // traverse up the DOM to find the closest parent with data-* tag defined
-                contentElement = walkUpDomChainWithElementValidation(element, this._isTracked, dataTagPrefix);
-                elementContent = extend(elementContent, this._populateElementContentwithDataTag( contentElement, element, dataTagPrefix, parentDataTagPrefix));
+                //contentElement = walkUpDomChainWithElementValidation(element, this._isTracked, dataTagPrefix);
+                elementContent = extend(elementContent, this._populateElementContent(element, dataTagPrefix, parentDataTagPrefix, aiBlobAttributeTag));
             }
         } else {
-            contentElement = element;
-            elementContent = extend(elementContent, this._populateElementContentwithDataTag(contentElement, element, dataTagPrefix, parentDataTagPrefix));   
+            elementContent = extend(elementContent, this._populateElementContentwithDataTag(element, dataTagPrefix, parentDataTagPrefix, aiBlobAttributeTag));   
         }
         removeInvalidElements(elementContent);
+        if (parentDataTagPrefix) {
+            elementContent = extend(elementContent, this._getParentDetails(element, elementContent, dataTagPrefix, aiBlobAttributeTag ));
+        }
+
         return elementContent;
     }
 
     /**
      * Capture current level Element content
      */
-    private _captureElementContent(contentElement: Element, elementContent: any, dataTagPrefix: string) {
+    private _captureElementContentWithDataTag(contentElement: Element, elementContent: any, dataTagPrefix: string) {
 
         for (var i = 0, attrib; i < contentElement.attributes.length; i++) {
             attrib = contentElement.attributes[i];
@@ -106,9 +105,10 @@ export class DomContentHandler implements IContentHandler {
     /**
      * Walk Up the DOM to capture Element content
      */
-    private _walkUpDomChainCaptureData(el: Element, elementContent: any, dataTagPrefix: string, parentDataTagPrefix: string ): void {
+    private _walkUpDomChainCaptureData(el: Element, elementContent: any, dataTagPrefix: string, parentDataTagPrefix: string, aiBlobAttributeTag: string ): void {
         let element = el;
         let parentDataTagFound: boolean = false;
+        let elementLevelFlag: boolean = false; // Use this flag to capture 'id' only at the incoming html element level.
         while(!CoreUtils.isNullOrUndefined(element) && !CoreUtils.isNullOrUndefined(element.attributes)) {
             let attributes=element.attributes;
             for (let i = 0; i < attributes.length; i++) {
@@ -121,8 +121,13 @@ export class DomContentHandler implements IContentHandler {
                 if( attrib.name.indexOf(parentDataTagPrefix) === 0) {
                     parentDataTagFound = true;
                 }
-    
+                
+                // Todo handle blob data
+                if( attrib.name.indexOf(aiBlobAttributeTag) === 0) {
+                    continue;
+                }
                 const attribName = attrib.name.replace(dataTagPrefix, '');
+                if(elementLevelFlag && attribName ==='id') continue; // skip capturing id if not at the first level.
                 if(!isValueAssigned(elementContent[attribName])) {
                     elementContent[attribName] = attrib.value;
                 }
@@ -132,49 +137,80 @@ export class DomContentHandler implements IContentHandler {
             if(parentDataTagFound) {
                 break;
             }
-    
+            elementLevelFlag = true; // after the initial level set this flag to true.
             element = (element.parentNode as Element);
         }
     }
 
-    /**
+     /**
      * Capture Element content along with Data Tag attributes and values
      */
-    private _populateElementContentwithDataTag(contentElement: Element, element: Element, dataTagPrefix: string, parentDataTagPrefix: string) {
+    private _populateElementContent(element: Element, dataTagPrefix: string, parentDataTagPrefix: string, aiBlobAttributeTag: string) {
         
         let elementContent: any = {};
-        if (!contentElement) {
-            // None of the element and its parent has any tags, collect standard HTML attribute for contentName when useDefaultContentName flag is true 
-            if (this._config.dataTags.useDefaultContentName) {
-                contentElement = element;
-            } else {
-                return elementContent
-            }
-        }
-        
-        var customizedContentName = this._config.callback.contentName ? this._config.callback.contentName(contentElement, this._config.dataTags.useDefaultContentName) : "";
-        var defaultContentName = this._getDefaultContentName(contentElement, this._config.dataTags.useDefaultContentName);
+        if(!element) return elementContent;
 
+        let htmlContent = this._getHtmlIdAndContentName(element);
         elementContent = {
-            id: contentElement.id || '',
-            contentName: customizedContentName || defaultContentName || contentElement.getAttribute('alt') || '',
+            id: htmlContent.id || '',
+            contentName: htmlContent.contentName || ''
         };
+        
+        if(isValueAssigned(parentDataTagPrefix)) { 
+            this._walkUpDomChainCaptureData(element, elementContent, dataTagPrefix, parentDataTagPrefix, aiBlobAttributeTag);
+        }
 
-        // Validate to ensure the minimum required field 'contentName' is present.  
+        // Validate to ensure the minimum required field 'id' or 'contentName' is present.  
         // The content schema defines id, aN and sN as required fields.  However, 
         // requiring these fields would result in majority of adopter's content from being collected.
         // Just throw a warning and continue collection.
-        if (!elementContent.id || !elementContent.contentName) {
+        if (!elementContent.id && !elementContent.contentName) {
             this._traceLogger.throwInternal(
                 LoggingSeverity.WARNING,
                 _ExtendedInternalMessageId.InvalidContentBlob, 'Invalid content blob.  Missing required attributes (id, contentName. ' +
                 ' Content information will still be collected!'
             )
         }
+
+        return elementContent;
+    }
+
+    /**
+     * Capture Element content along with Data Tag attributes and values
+     */
+    private _populateElementContentwithDataTag(element: Element, dataTagPrefix: string, parentDataTagPrefix: string, aiBlobAttributeTag: string) {
         
-        isValueAssigned(parentDataTagPrefix) ? 
-            this._walkUpDomChainCaptureData(contentElement, elementContent, dataTagPrefix, parentDataTagPrefix) : 
-            this._captureElementContent(contentElement, elementContent, dataTagPrefix);
+        let elementContent: any = {};
+        if(!element) return elementContent;
+        
+        
+        let htmlContent = this._getHtmlIdAndContentName(element);
+        
+        if(isValueAssigned(parentDataTagPrefix)) {
+            this._walkUpDomChainCaptureData(element, elementContent, dataTagPrefix, parentDataTagPrefix, aiBlobAttributeTag);
+        } else {
+            this._captureElementContentWithDataTag(element, elementContent, dataTagPrefix);
+        } 
+            
+        
+        if (this._config.dataTags.useDefaultContentNameOrId) {
+            if(!isValueAssigned(elementContent.id)) {
+                elementContent.id = htmlContent.id || '';
+            }
+            elementContent.contentName = htmlContent.contentName || '';
+        }
+        
+        // Validate to ensure the minimum required field 'id' or 'contentName' is present.  
+        // The content schema defines id, aN and sN as required fields.  However, 
+        // requiring these fields would result in majority of adopter's content from being collected.
+        // Just throw a warning and continue collection.
+        if (!elementContent.id && !elementContent.contentName) {
+            this._traceLogger.throwInternal(
+                LoggingSeverity.WARNING,
+                _ExtendedInternalMessageId.InvalidContentBlob, 'Invalid content blob.  Missing required attributes (id, contentName. ' +
+                ' Content information will still be collected!'
+            )
+        }
 
         return elementContent;
     }
@@ -209,7 +245,7 @@ export class DomContentHandler implements IContentHandler {
     /**
      * Gets the default content name.
      * @param element - An html element
-     * @param useDefaultContentName -Flag indicating if an element is market PII.
+     * @param useDefaultContentNameOrId -Flag indicating if an element is market PII.
      * @returns Content name
      */
     private _getDefaultContentName(element: any, useDefaultContentName: boolean) {
@@ -253,4 +289,77 @@ export class DomContentHandler implements IContentHandler {
         }
         return dataTagFound;
     }  
+
+    private _getHtmlIdAndContentName(element:Element) {
+        let htmlContent: any = {};
+        if(!element) return htmlContent;
+
+        if (this._config.dataTags.useDefaultContentNameOrId) {
+            const customizedContentName = this._config.callback.contentName ? this._config.callback.contentName(element, this._config.dataTags.useDefaultContentNameOrId) : "";
+            const defaultContentName = this._getDefaultContentName(element, this._config.dataTags.useDefaultContentNameOrId);
+
+            htmlContent = {
+                id: element.id,
+                contentName: customizedContentName || defaultContentName || element.getAttribute('alt'),
+            };
+        }
+
+        return htmlContent;
+    }
+
+    /**
+    * Computes the parentId of a given element.
+    * @param element - An html element
+    * @returns An object containing the closest parentId , can be empty if nothing was found
+    */
+    private _getParentDetails(element: Element, elementContent: any, dataTagPrefix: string, aiBlobAttributeTag: string): IContent {
+        const parentId = elementContent['parentid'];
+        const parentName = elementContent['parentname'];
+        let parentInfo = {};
+
+        if (parentId || parentName || !element) {
+            return parentInfo;
+        }
+
+        return this._populateParentInfo(element, dataTagPrefix, aiBlobAttributeTag);
+    }
+    /**
+    * Check if parent info already set up, if so take and put into content, if not walk up the DOM to find correct info
+    * @param element - An html element that the user wants to track
+    * @returns An object containing the parent info, can be empty if nothing was found
+    */
+    private _populateParentInfo(element: Element, dataTagPrefix: string, aiBlobAttributeTag: string): IContent {
+        let parentInfo: IContent = {};
+        let parentId;
+
+        // if the user does not set up parent info, walk to the DOM, find the closest parent element (with tags) and populate the info
+        const closestParentElement = walkUpDomChainWithElementValidation(element.parentElement, this._isTracked, dataTagPrefix);
+        if (closestParentElement) {
+            const dataAttr = closestParentElement.getAttribute(aiBlobAttributeTag) || element[aiBlobAttributeTag];
+            if (dataAttr) {
+                try {
+                    var telemetryObject = JSON.parse(dataAttr);
+                } catch (e) {
+                    this._traceLogger.throwInternal(
+                        LoggingSeverity.CRITICAL,
+                        _ExtendedInternalMessageId.CannotParseAiBlobValue, "Can not parse " + dataAttr,
+                    );
+                }
+                if (telemetryObject) {
+                    parentId = telemetryObject.id;
+                }
+            } else {
+                parentId = closestParentElement.getAttribute(dataTagPrefix+"id");
+            }
+        }
+        if (parentId) { 
+            parentInfo['parentid'] = parentId;
+        }
+        else {
+            let htmlContent= this._getHtmlIdAndContentName(element.parentElement);
+            parentInfo['parentid'] = htmlContent.id;
+            parentInfo['parentname'] = htmlContent.contentName;
+        }
+        return parentInfo;
+    }
 }

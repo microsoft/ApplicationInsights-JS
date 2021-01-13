@@ -45,9 +45,9 @@ export interface IClickAnalyticsConfiguration {
  */
 export interface ICustomDataTags {
     /**
-     * When a particular element is not tagged with content name prefix or content name prefix is not provided by user, this flag is used to collect standard HTML attribute for contentName.
+     * When a particular element is not tagged with content name prefix or content name prefix is not provided by user, this flag is used to collect standard HTML attribute for contentName and id.
      */
-    useDefaultContentName?: boolean;
+    useDefaultContentNameOrId?: boolean;
     /**
      * Automatic capture content name and value of elements which are tagged with provided prefix
      */
@@ -277,4 +277,12 @@ export interface IPageActionTelemetry extends IEventTelemetry {
      * Page type
      */
     pageType?: string;
+    /**
+     * Title of the page
+     */
+    pageName?: string;
+    /**
+     * Content Id (Parent Id) of the parent in which the content was located;
+     */
+    parentId?: string;
 }

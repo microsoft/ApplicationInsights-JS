@@ -39,7 +39,7 @@ export class ClickEventTest extends TestClass {
                         pageActionPageTags: () => ({ key2: "value2" })
                     },
                     dataTags : {
-                        useDefaultContentName : true,
+                        useDefaultContentNameOrId : true,
                         metaDataPrefix:'ha-',
                         customDataPrefix: 'data-ha-',
                         aiBlobAttributeTag: 'blob',
@@ -66,12 +66,12 @@ export class ClickEventTest extends TestClass {
                 pageAction.capturePageAction(element);
                 Assert.equal(true, spy.called);
                 let calledEvent: ITelemetryItem = spy.getCall(0).args[0];
-                Assert.notEqual(-1, calledEvent.baseData["uri"].indexOf("Tests.html"),);
-                Assert.equal(undefined, calledEvent.baseData["behavior"],);
-                Assert.equal(undefined, calledEvent.baseData["actionType"],);
-                Assert.equal("[{}]", calledEvent.baseData["content"]);
+                Assert.notEqual(-1, calledEvent.data["uri"].indexOf("Tests.html"),);
+                Assert.equal(undefined, calledEvent.data["behavior"],);
+                Assert.equal(undefined, calledEvent.data["actionType"],);
+                Assert.equal("[{}]", calledEvent.data["content"]);
                 Assert.equal(false, isNaN(calledEvent.data["timeToAction"] as number));
-                Assert.equal("value2", calledEvent.baseData["properties"]["pageTags"].key2);
+                Assert.equal("value2", calledEvent.data["properties"]["pageTags"].key2);
             }
 
         });
@@ -108,9 +108,9 @@ export class ClickEventTest extends TestClass {
                 pageAction.capturePageAction(element, overrides, { customProperty: { customNextedProperty: "test" } });
                 Assert.equal(true, spy.called);
                 var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
-                Assert.equal("overrideActionType", calledEvent.baseData["actionType"]);
-                Assert.equal('[{"testTag":"testValue"}]', calledEvent.baseData["content"]);
-                Assert.equal(2, calledEvent.baseData["behavior"]);
+                Assert.equal("overrideActionType", calledEvent.data["actionType"]);
+                Assert.equal('[{"testTag":"testValue"}]', calledEvent.data["content"]);
+                Assert.equal(2, calledEvent.data["behavior"]);
                 Assert.equal("overrideReferrerUri", calledEvent.data["refUri"]);
                 Assert.equal("test", calledEvent.data["customProperty"]["customNextedProperty"]);
             }
@@ -125,7 +125,7 @@ export class ClickEventTest extends TestClass {
                         contentName: () => "testContentName"                  
                     },
                     dataTags : {
-                        useDefaultContentName : true,
+                        useDefaultContentNameOrId : true,
                         metaDataPrefix:'ha-',
                         customDataPrefix: 'data-ha-',
                         aiBlobAttributeTag: 'blob'
@@ -156,25 +156,81 @@ export class ClickEventTest extends TestClass {
                 ((element) as HTMLBaseElement).href = "testClickTarget";
 
                 var expectedContent = JSON.stringify([{
-                    id: "testId",
-                    contentName: "testContentName",
                     an: "testAn",
                     sn: "testsN",
                     cs: "testcS",
                     tn: "testtN",
                     pid: "testpid",
-                    ct: "testcT"
+                    ct: "testcT",
+                    contentName: "testContentName",
                 }]);
                 // clickAnalyticsPlugin.capturePageAction(element);
                 pageAction.capturePageAction(element);
                 this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
-                Assert.equal(expectedContent, calledEvent.baseData["content"]);
+                Assert.equal("testId", calledEvent.baseData["name"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
             }
         });
 
-        // pageAction - clicked element has no tags, walk up the DOM to find the closest element with tags for tracking recognized as same element
+        this.testCase({
+            name: "PageAction properties are correctly assigned (Populated) with useDefaultContentNameOrId flag false",
+            test: () => {
+                const config = {
+                    callback: {
+                        contentName: () => "testContentName"                  
+                    },
+                    dataTags : {
+                        useDefaultContentNameOrId : false,
+                        metaDataPrefix:'ha-',
+                        customDataPrefix: 'data-ha-',
+                        aiBlobAttributeTag: 'blob'
+                    }
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                core.initialize({
+                    instrumentationKey: 'testIkey',
+                    extensionConfig : {
+                        [clickAnalyticsPlugin.identifier] : config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
+                const element = document.createElement('a');
+                element.setAttribute("id","testId")
+                element.setAttribute("data-ha-aN", "testAn");
+                element.setAttribute("data-ha-sN", "testsN");
+                element.setAttribute("data-ha-cS", "testcS");
+                element.setAttribute("data-ha-tN", "testtN");
+                element.setAttribute("data-ha-pid", "testpid");
+                element.setAttribute("data-ha-cT", "testcT");
+                ((element) as HTMLBaseElement).href = "testClickTarget";
+
+                var expectedContent = JSON.stringify([{
+                    an: "testAn",
+                    sn: "testsN",
+                    cs: "testcS",
+                    tn: "testtN",
+                    pid: "testpid",
+                    ct: "testcT",
+                }]);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
+                Assert.equal(true, spy.called);
+                var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
+                Assert.equal(undefined, calledEvent.baseData["name"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
+            }
+        });
+
+        // pageAction - clicked element has no tags, capture the id of the html element
         this.testCase({
             name: "PageAction properties are correctly populated when parent element has data tags",
             test: () => {
@@ -183,7 +239,7 @@ export class ClickEventTest extends TestClass {
                         contentName: () => "testContentName"                  
                     },
                     dataTags : {
-                        useDefaultContentName : true,
+                        useDefaultContentNameOrId : true,
                         metaDataPrefix:'ha-',
                         customDataPrefix: 'data-ha-',
                         aiBlobAttributeTag: 'blob'
@@ -211,20 +267,175 @@ export class ClickEventTest extends TestClass {
                 parentElement.appendChild(element);
                 ((element) as HTMLBaseElement).href = "testClickTarget";
                 var expectedContent = JSON.stringify([{
-                    id:"testParentId",
                     contentName: "testContentName",
-                    name: "testParentName",
                 }]);
                 // clickAnalyticsPlugin.capturePageAction(element);
                 pageAction.capturePageAction(element);
                 this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
-                Assert.equal(expectedContent, calledEvent.baseData["content"]);
+                Assert.equal("testId", calledEvent.baseData["name"]);
+                Assert.equal(undefined, calledEvent.data["parentId"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
+            }
+        });
+
+
+        // pageAction - clicked element has no tags on current element, capture the id of the html element and parentId of the parent
+        this.testCase({
+            name: "PageAction - clicked element has no tags on current element, capture the id of the html element and parentId of the parent",
+            test: () => {
+                const config = {
+                    callback: {
+                        contentName: () => "testContentName"                  
+                    },
+                    dataTags : {
+                        useDefaultContentNameOrId : true,
+                        metaDataPrefix:'ha-',
+                        customDataPrefix: 'data-ha-',
+                        aiBlobAttributeTag: 'blob',
+                        parentDataTag:'parentgroup'
+                    }
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                core.initialize({
+                    instrumentationKey: 'testIkey',
+                    extensionConfig : {
+                        [clickAnalyticsPlugin.identifier] : config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
+                const element = document.createElement('a');
+                element.setAttribute("id", "testId")
+                const parentElement = document.createElement('div');
+                parentElement.setAttribute("data-ha-id", "testParentId");
+                parentElement.setAttribute("data-ha-name", "testParentName");
+                parentElement.setAttribute("data-ha-parentgroup", "testParentGroup");
+                parentElement.appendChild(element);
+                ((element) as HTMLBaseElement).href = "testClickTarget";
+                var expectedContent = JSON.stringify([{
+                    contentName: "testContentName",
+                    name: "testParentName"
+                }]);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
+                Assert.equal(true, spy.called);
+                var calledEvent = spy.getCall(0).args[0];
+                Assert.equal("testId", calledEvent.baseData["name"]);
+                Assert.equal("testParentId", calledEvent.data["parentId"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
+            }
+        });
+
+        // pageAction - clicked element has no tags on current element, capture the id of the html element and html id of the parent
+        this.testCase({
+            name: "PageAction - clicked element has no tags on current element, capture the id of the html element and html id of the parent",
+            test: () => {
+                const config = {
+                    callback: {
+                        contentName: () => "testContentName"                  
+                    },
+                    dataTags : {
+                        useDefaultContentNameOrId : true,
+                        metaDataPrefix:'ha-',
+                        customDataPrefix: 'data-ha-',
+                        aiBlobAttributeTag: 'blob',
+                        parentDataTag:'parentgroup'
+                    }
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                core.initialize({
+                    instrumentationKey: 'testIkey',
+                    extensionConfig : {
+                        [clickAnalyticsPlugin.identifier] : config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
+                const element = document.createElement('a');
+                element.setAttribute("id", "testId")
+                const parentElement = document.createElement('div');
+                parentElement.setAttribute("id","testParentId")
+                parentElement.setAttribute("data-ha-name", "testParentName");
+                parentElement.setAttribute("data-ha-parentgroup", "testParentGroup");
+                parentElement.appendChild(element);
+                ((element) as HTMLBaseElement).href = "testClickTarget";
+                var expectedContent = JSON.stringify([{
+                    contentName: "testContentName",
+                    name: "testParentName"
+                }]);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
+                Assert.equal(true, spy.called);
+                var calledEvent = spy.getCall(0).args[0];
+                Assert.equal("testId", calledEvent.baseData["name"]);
+                Assert.equal("testParentId", calledEvent.data["parentId"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
+            }
+        });
+
+        // pageAction - clicked element has no tags, no html id capture the content name of html element should be event name
+        this.testCase({
+            name: "PageAction name populated from contentname",
+            test: () => {
+                const config = {
+                    callback: {
+                        contentName: () => "testContentName"                  
+                    },
+                    dataTags : {
+                        useDefaultContentNameOrId : true,
+                        metaDataPrefix:'ha-',
+                        customDataPrefix: 'data-ha-',
+                        aiBlobAttributeTag: 'blob'
+                    }
+                };
+                const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const traceLogger = new DiagnosticLogger({ loggingLevelConsole: 1 } as any);
+                const contentHandler = new DomContentHandler(mergeConfig(config), traceLogger);
+                const pageAction = new PageAction(clickAnalyticsPlugin, mergeConfig(config), contentHandler, null, {}, traceLogger );
+                core.initialize({
+                    instrumentationKey: 'testIkey',
+                    extensionConfig : {
+                        [clickAnalyticsPlugin.identifier] : config
+                    }
+                } as IConfig & IConfiguration, [clickAnalyticsPlugin, channel]);
+
+                let spy = this.sandbox.spy(clickAnalyticsPlugin.core, 'track');
+                const element = document.createElement('a');
+                const parentElement = document.createElement('div');
+                parentElement.setAttribute("data-ha-id", "testParentId");
+                parentElement.setAttribute("data-ha-name", "testParentName");
+                parentElement.appendChild(element);
+                ((element) as HTMLBaseElement).href = "testClickTarget";
+                var expectedContent = JSON.stringify([{
+                    contentName: "testContentName",
+                }]);
+                // clickAnalyticsPlugin.capturePageAction(element);
+                pageAction.capturePageAction(element);
+                this.clock.tick(500);
+                Assert.equal(true, spy.called);
+                var calledEvent = spy.getCall(0).args[0];
+                Assert.equal("testContentName", calledEvent.baseData["name"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
             }
         });
         
-        // upper element has no tags, continue walk up the DOM to find grand parent element's info
+        // Parent element has no tags, continue walk up the DOM to find grand parent element's info
         this.testCase({
             name: "PageAction: element and its upper element does not have any tags, so grand parent element is recognize as under one area, no parent info is populated.",
             test: () => {
@@ -233,8 +444,9 @@ export class ClickEventTest extends TestClass {
                         contentName: () => "testContentName"                  
                     },
                     dataTags : {
-                        useDefaultContentName : true,
+                        useDefaultContentNameOrId : true,
                         customDataPrefix: 'data-ha-',
+                        parentDataTag:'parentgroup'
                     }
                 };
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
@@ -257,13 +469,13 @@ export class ClickEventTest extends TestClass {
                 parentElement.setAttribute("id", "testParentId");
                 parentElement.appendChild(element);
                 const grandParentElement = document.createElement('div');
+                grandParentElement.setAttribute("data-ha-parentgroup", "group1");
                 grandParentElement.setAttribute("data-ha-id", "testGrandParentId");
                 grandParentElement.setAttribute("data-ha-name", "testGrandParentName");
                 grandParentElement.appendChild(parentElement);
 
                 ((element) as HTMLBaseElement).href = "testClickTarget";
                 var expectedContent = JSON.stringify([{
-                    id:"testGrandParentId",
                     contentName: "testContentName",
                     name: "testGrandParentName",
                 }]);
@@ -272,7 +484,9 @@ export class ClickEventTest extends TestClass {
                 this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
-                Assert.equal(expectedContent, calledEvent.baseData["content"]);
+                Assert.equal("testId", calledEvent.baseData["name"]);
+                Assert.equal("testGrandParentId", calledEvent.data["parentId"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
             }
         });
 
@@ -282,7 +496,7 @@ export class ClickEventTest extends TestClass {
             test: () => {
                 const config = {
                     dataTags : {
-                        useDefaultContentName : true,
+                        useDefaultContentNameOrId : true,
                         customDataPrefix: 'data-ha-',
                     }
                 };
@@ -312,14 +526,15 @@ export class ClickEventTest extends TestClass {
                 ((element) as HTMLBaseElement).href = "testClickTarget";
 
                 var expectedContent = JSON.stringify([{
-                    id: "testId"
                 }]);
                 // clickAnalyticsPlugin.capturePageAction(element);
                 pageAction.capturePageAction(element);
                 this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
-                Assert.equal(expectedContent, calledEvent.baseData["content"]);
+                Assert.equal("testId", calledEvent.baseData["name"]);
+                Assert.equal(undefined, calledEvent.data["parentId"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
             }
         });
 
@@ -329,7 +544,7 @@ export class ClickEventTest extends TestClass {
             test: () => {
                 const config = {
                     dataTags : {
-                        useDefaultContentName : true,
+                        useDefaultContentNameOrId : true,
                         metaDataPrefix:'ha-',
                         customDataPrefix: 'data-ha-',
                         aiBlobAttributeTag: 'blob'
@@ -354,7 +569,6 @@ export class ClickEventTest extends TestClass {
                 element.setAttribute("data-ha-blob", '{"id":"parentTestId","aN":"areaTestName","sN":"slotTestName","cN":"contentTestName", "pI":"parentIdSelfDefined", "pN":"parentNameSelfDefined"}');
                 ((element) as HTMLBaseElement).href = "testClickTarget";
                 var expectedContent = JSON.stringify([{
-                    id: "parentTestId",
                     aN: "areaTestName",
                     sN: "slotTestName",
                     cN: "contentTestName",
@@ -366,7 +580,8 @@ export class ClickEventTest extends TestClass {
                 this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
-                Assert.equal(expectedContent, calledEvent.baseData["content"]);
+                Assert.equal("parentTestId", calledEvent.baseData["name"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
             }
         });
 
@@ -376,10 +591,11 @@ export class ClickEventTest extends TestClass {
             test: () => {
                 const config = {
                     dataTags : {
-                        useDefaultContentName : true,
+                        useDefaultContentNameOrId : true,
                         metaDataPrefix:'ha-',
                         customDataPrefix: 'data-ha-',
-                        aiBlobAttributeTag: 'blob'
+                        aiBlobAttributeTag: 'blob',
+                        parentDataTag:'parentgroup'
                     }
                 };
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
@@ -399,23 +615,20 @@ export class ClickEventTest extends TestClass {
                 const element = document.createElement('a');  
                 const parentElement = document.createElement('div');
                 parentElement.setAttribute("id", "testParentId");
+                parentElement.setAttribute("data-ha-parentgroup", "group1");
                 parentElement.setAttribute("data-ha-blob", '{"id":"parentTestId","aN":"areaTestName","sN":"slotTestName","cN":"contentTestName", "pI":"parentIdSelfDefined", "pN":"parentNameSelfDefined"}');
                 parentElement.appendChild(element);
                 ((element) as HTMLBaseElement).href = "testClickTarget";
                 var expectedContent = JSON.stringify([{
-                    id: "parentTestId",
-                    aN: "areaTestName",
-                    sN: "slotTestName",
-                    cN: "contentTestName",
-                    pI: "parentIdSelfDefined",
-                    pN: "parentNameSelfDefined"
                 }]);
                 // clickAnalyticsPlugin.capturePageAction(element);
                 pageAction.capturePageAction(element);
                 this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
-                Assert.equal(expectedContent, calledEvent.baseData["content"]);
+                Assert.equal(undefined, calledEvent.baseData["name"]);
+                Assert.equal("parentTestId", calledEvent.data["parentId"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
             }
         });
 
@@ -425,7 +638,7 @@ export class ClickEventTest extends TestClass {
             test: () => {
                 const config = {
                     dataTags : {
-                        useDefaultContentName : true,
+                        useDefaultContentNameOrId : true,
                         customDataPrefix: 'data-ha-',
                         parentDataTag: 'parent'
                     }
@@ -457,8 +670,6 @@ export class ClickEventTest extends TestClass {
 
                 ((element) as HTMLBaseElement).href = "testClickTarget";
                 var expectedContent = JSON.stringify([{
-                    id:"testId",
-                    parentid: "testParentId",
                     name: "testParentName",
                 }]);
                 // clickAnalyticsPlugin.capturePageAction(element);
@@ -466,7 +677,9 @@ export class ClickEventTest extends TestClass {
                 this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent = spy.getCall(0).args[0];
-                Assert.equal(expectedContent, calledEvent.baseData["content"]);
+                Assert.equal("testId", calledEvent.baseData["name"]);
+                Assert.equal("testParentId", calledEvent.data["parentId"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
             }
         });
 
@@ -478,7 +691,7 @@ export class ClickEventTest extends TestClass {
                         contentName: () => "testContentName"                  
                     },
                     dataTags : {
-                        useDefaultContentName : true,
+                        useDefaultContentNameOrId : true,
                         metaDataPrefix:'ha-',
                         customDataPrefix: 'data-ha-',
                         aiBlobAttributeTag: 'blob'
@@ -505,17 +718,16 @@ export class ClickEventTest extends TestClass {
                 ((element) as HTMLBaseElement).href = "testClickTarget";
 
                 var expectedContent = JSON.stringify([{
-                    id: "testId",
-                    contentName: "testContentName",
-                    an: "testAn"
+                    an: "testAn",
+                    contentName: "testContentName"
                 }]);
                 // clickAnalyticsPlugin.capturePageAction(element);
                 pageAction.capturePageAction(element);
                 this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
-                Assert.equal(expectedContent, calledEvent.baseData["content"]);
-                Assert.equal("testBehavior",calledEvent.baseData["behavior"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
+                Assert.equal("testBehavior",calledEvent.data["behavior"]);
             }
         });
 
@@ -527,7 +739,7 @@ export class ClickEventTest extends TestClass {
                         contentName: () => "testContentName"                  
                     },
                     dataTags : {
-                        useDefaultContentName : true,
+                        useDefaultContentNameOrId : true,
                         metaDataPrefix:'ha-',
                         customDataPrefix: 'data-ha-',
                         aiBlobAttributeTag: 'blob'
@@ -553,17 +765,16 @@ export class ClickEventTest extends TestClass {
                 ((element) as HTMLBaseElement).href = "testClickTarget";
 
                 var expectedContent = JSON.stringify([{
-                    id: "testId",
-                    contentName: "testContentName",
-                    an: "testAn"
+                    an: "testAn",
+                    contentName: "testContentName"
                 }]);
                 // clickAnalyticsPlugin.capturePageAction(element);
                 pageAction.capturePageAction(element);
                 this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
-                Assert.equal(expectedContent, calledEvent.baseData["content"]);
-                Assert.equal(undefined, calledEvent.baseData["behavior"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
+                Assert.equal(undefined, calledEvent.data["behavior"]);
             }
         });
 
@@ -579,7 +790,7 @@ export class ClickEventTest extends TestClass {
                         contentName: () => "testContentName"                  
                     },
                     dataTags : {
-                        useDefaultContentName : true,
+                        useDefaultContentNameOrId : true,
                         metaDataPrefix:'ha-',
                         customDataPrefix: 'data-ha-',
                         aiBlobAttributeTag: 'blob'
@@ -608,17 +819,16 @@ export class ClickEventTest extends TestClass {
                 ((element) as HTMLBaseElement).href = "testClickTarget";
 
                 var expectedContent = JSON.stringify([{
-                    id: "testId",
+                    an: "testAn",
                     contentName: "testContentName",
-                    an: "testAn"
                 }]);
                 // clickAnalyticsPlugin.capturePageAction(element);
                 pageAction.capturePageAction(element);
                 this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
-                Assert.equal(expectedContent, calledEvent.baseData["content"]);
-                Assert.equal("behavior1_Value",calledEvent.baseData["behavior"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
+                Assert.equal("behavior1_Value",calledEvent.data["behavior"]);
             }
         });
 
@@ -634,7 +844,7 @@ export class ClickEventTest extends TestClass {
                         contentName: () => "testContentName"                  
                     },
                     dataTags : {
-                        useDefaultContentName : true,
+                        useDefaultContentNameOrId : true,
                         metaDataPrefix:'ha-',
                         customDataPrefix: 'data-ha-',
                         aiBlobAttributeTag: 'blob'
@@ -663,17 +873,16 @@ export class ClickEventTest extends TestClass {
                 ((element) as HTMLBaseElement).href = "testClickTarget";
 
                 var expectedContent = JSON.stringify([{
-                    id: "testId",
+                    an: "testAn",
                     contentName: "testContentName",
-                    an: "testAn"
                 }]);
                 // clickAnalyticsPlugin.capturePageAction(element);
                 pageAction.capturePageAction(element);
                 this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
-                Assert.equal(expectedContent, calledEvent.baseData["content"]);
-                Assert.equal("BEHAVIOR1",calledEvent.baseData["behavior"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
+                Assert.equal("BEHAVIOR1",calledEvent.data["behavior"]);
             }
         });
 
@@ -690,7 +899,7 @@ export class ClickEventTest extends TestClass {
                         contentName: () => "testContentName"                  
                     },
                     dataTags : {
-                        useDefaultContentName : true,
+                        useDefaultContentNameOrId : true,
                         metaDataPrefix:'ha-',
                         customDataPrefix: 'data-ha-',
                         aiBlobAttributeTag: 'blob'
@@ -719,17 +928,16 @@ export class ClickEventTest extends TestClass {
                 ((element) as HTMLBaseElement).href = "testClickTarget";
 
                 var expectedContent = JSON.stringify([{
-                    id: "testId",
-                    contentName: "testContentName",
-                    an: "testAn"
+                    an: "testAn",
+                    contentName: "testContentName"
                 }]);
                 // clickAnalyticsPlugin.capturePageAction(element);
                 pageAction.capturePageAction(element);
                 this.clock.tick(500);
                 Assert.equal(true, spy.called);
                 var calledEvent: ITelemetryItem = spy.getCall(0).args[0];
-                Assert.equal(expectedContent, calledEvent.baseData["content"]);
-                Assert.equal(2,calledEvent.baseData["behavior"]);
+                Assert.equal(expectedContent, calledEvent.data["content"]);
+                Assert.equal(2,calledEvent.data["behavior"]);
             }
         });
     }

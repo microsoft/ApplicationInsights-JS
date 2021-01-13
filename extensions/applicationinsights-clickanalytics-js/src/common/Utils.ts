@@ -310,7 +310,7 @@ export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClic
             pageType: ''
         },
         dataTags: {
-            useDefaultContentName: false,
+            useDefaultContentNameOrId: false,
             aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
             customDataPrefix: DEFAULT_DATA_PREFIX,
             captureAllMetaDataContent: false,
