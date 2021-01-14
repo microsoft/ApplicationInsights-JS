@@ -1,0 +1,289 @@
+import { IAppInsightsDeprecated } from "../src/ApplicationInsightsDeprecated";
+import { ApplicationInsightsContainer } from "../src/ApplicationInsightsContainer";
+import { IApplicationInsights, Snippet } from "../src/Initialization";
+import { Sender } from "@microsoft/applicationinsights-channel-js";
+import { createLegacySnippet } from "./testLegacySnippet";
+import { SinonSpy } from "sinon";
+import { Assert } from "./TestFramework/Assert";
+import { PollingAssert } from "./TestFramework/PollingAssert";
+import { TestClass } from "./TestFramework/TestClass";
+
+const BasicLegacySnippetConfig = {
+    instrumentationKey: 'b7170927-2d1c-44f1-acec-59f4e1751c11',
+    disableAjaxTracking: false,
+    disableFetchTracking: false,
+    maxBatchInterval: 500
+};
+
+const _expectedProperties = [
+    "config",
+    "core",
+    "context",
+    "cookie",
+    "appInsights",
+    "appInsightsNew",
+    "version"
+];
+
+const _expectedTrackMethods = [
+    "startTrackEvent",
+    "stopTrackEvent",
+    "startTrackPage",
+    "stopTrackPage",
+    "trackException",
+    "trackEvent",
+    "trackMetric",
+    "trackPageView",
+    "trackTrace",
+    "setAuthenticatedUserContext",
+    "clearAuthenticatedUserContext",
+    "flush"
+];
+
+export class SnippetLegacyInitializationTests extends TestClass {
+
+    // Sinon
+    private errorSpy: SinonSpy;
+    private successSpy: SinonSpy;
+    private loggingSpy: SinonSpy;
+
+    constructor(emulateEs3: boolean) {
+        super("SnippetLegacyInitializationTests", emulateEs3);
+    }
+
+    public testInitialize() {
+        this._disableDynProtoBaseFuncs(); // We need to disable the useBaseInst performance setting as the sinon spy fools the internal logic and the spy is bypassed
+        this.useFakeServer = true;
+        this.fakeServerAutoRespond = true;
+    }
+
+    public testCleanup() {
+    }
+
+    public registerTests() {
+
+        this.testCase({
+            name: "Check support for 1.0 apis",
+            test: () => {
+                let theSnippet = this._initializeSnippet(createLegacySnippet(BasicLegacySnippetConfig));
+                Assert.ok(theSnippet, 'ApplicationInsights SDK exists');
+                Assert.ok(theSnippet.downloadAndSetup, "The [Legacy] snippet should have the downloadAndSetup"); // has legacy method
+            }
+        });
+
+        this.testCaseAsync({
+            name: "Public Members exist",
+            stepDelay: 1,
+            steps: [() => {
+                let theSnippet = this._initializeSnippet(createLegacySnippet(BasicLegacySnippetConfig)) as any;
+                _expectedTrackMethods.forEach(method => {
+                    Assert.ok(theSnippet[method], `${method} exists`);
+                    Assert.equal('function', typeof theSnippet[method], `${method} is a function`);
+
+                    let funcSpyNew;
+                    let funcSpy;
+                    if (method === "setAuthenticatedUserContext" || method === "clearAuthenticatedUserContext") {
+                        //funcSpy = this.sandbox.spy(theSnippet.context.user, method);
+                        funcSpyNew = this.sandbox.spy(theSnippet.appInsightsNew.context.user, method);
+                     } else if (method === "flush") {
+                        funcSpyNew = this.sandbox.spy(theSnippet.appInsightsNew, method);
+                    } else {
+                        funcSpy = this.sandbox.spy(theSnippet.appInsights, method);
+                        funcSpyNew = this.sandbox.spy(theSnippet.appInsightsNew, method);
+                    }
+
+                    try {
+                        theSnippet[method]();
+                    } catch(e) {
+                        // Do nothing
+                    }
+
+                    Assert.ok(funcSpyNew.called, "Function [" + method + "] of the new implementation should have been called")
+                    if (funcSpy) {
+                        Assert.ok(funcSpy.called, "Function [" + method + "] of the appInsights should have been called")
+                    }
+                });
+            }, PollingAssert.createPollingAssert(() => {
+                try {
+                    Assert.ok(true, "* waiting for scheduled actions to send events " + new Date().toISOString());
+        
+                    if(this.successSpy.called) {
+                        let currentCount: number = 0;
+                        this.successSpy.args.forEach(call => {
+                            call[0].forEach(message => {
+                                // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                                if (!message || message.indexOf("AI (Internal): 72 ") == -1) {
+                                    currentCount ++;
+                                }
+                            });
+                        });
+                        return currentCount > 0;
+                    }
+        
+                    return false;
+                } catch (e) {
+                    Assert.ok(false, "Exception:" + e);
+                }
+            }, "waiting for sender success", 30, 1000)]
+        });
+
+        this.testCase({
+            name: "Check properties exist",
+            test: () => {
+                let theSnippet = this._initializeSnippet(createLegacySnippet(BasicLegacySnippetConfig)) as any;
+                _expectedProperties.forEach(property => {
+                    Assert.notEqual(undefined, theSnippet[property], `${property} exists`);
+                    Assert.notEqual('function', typeof theSnippet[property], `${property} is not a function`);
+                });
+            }
+        });
+
+        this.addLegacyApiTests(createLegacySnippet);
+    }
+
+    public addLegacyApiTests(snippetCreator: (config:any) => Snippet): void {
+        this.testCaseAsync({
+            name: "[Legacy] trackEvent sends to backend",
+            stepDelay: 1,
+            steps: [() => {
+                let theSnippet = this._initializeSnippet(snippetCreator(BasicLegacySnippetConfig)) as IAppInsightsDeprecated;
+                theSnippet.trackEvent("event");
+            }].concat(this.asserts(1))
+        });
+
+        this.testCaseAsync({
+            name: "[Legacy] trackTrace sends to backend",
+            stepDelay: 1,
+            steps: [() => {
+                let theSnippet = this._initializeSnippet(snippetCreator(BasicLegacySnippetConfig)) as IAppInsightsDeprecated;
+                theSnippet.trackTrace("trace");
+            }].concat(this.asserts(1))
+        });
+
+        this.testCaseAsync({
+            name: "[Legacy] trackException sends to backend",
+            stepDelay: 1,
+            steps: [() => {
+                let exception: Error = null;
+                let theSnippet = this._initializeSnippet(snippetCreator(BasicLegacySnippetConfig)) as IAppInsightsDeprecated;
+
+                try {
+                    window['a']['b']();
+                    Assert.ok(false, 'trackException test not run');
+                } catch (e) {
+                    exception = e;
+                    theSnippet.trackException(exception);
+                }
+                Assert.ok(exception);
+            }].concat(this.asserts(1))
+        });
+
+        this.testCaseAsync({
+            name: "[Legacy] track metric",
+            stepDelay: 1,
+            steps: [
+                () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(BasicLegacySnippetConfig)) as IAppInsightsDeprecated;
+
+                    console.log("* calling trackMetric " + new Date().toISOString());
+                    for (let i = 0; i < 100; i++) {
+                        theSnippet.trackMetric("test" + i,Math.round(100 * Math.random()));
+                    }
+                    console.log("* done calling trackMetric " + new Date().toISOString());
+                }
+            ].concat(this.asserts(100))
+        });
+
+        this.testCaseAsync({
+            name: "[Legacy] track page view",
+            stepDelay: 1,
+            steps: [
+                () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(BasicLegacySnippetConfig)) as IAppInsightsDeprecated;
+                    theSnippet.trackPageView(); // sends 2
+                }
+            ].concat(this.asserts(2))
+        });
+    }
+
+    private _initializeSnippet(snippet: Snippet): IAppInsightsDeprecated {
+        try {
+            // Call the initialization
+            ((ApplicationInsightsContainer.getAppInsights(snippet, snippet.version)) as IAppInsightsDeprecated); 
+
+            const appInsights = (snippet as any).appInsights;
+            Assert.ok(appInsights, "The App insights instance should be populated");
+            Assert.ok(appInsights.core, "The Core exists");
+            Assert.equal(appInsights.core, (snippet as any).core, "The core instances should match");
+
+            Assert.equal(true, appInsights.isInitialized(), 'App Analytics is initialized');
+            Assert.equal(true, appInsights.core.isInitialized(), 'Core is initialized');
+
+            const appInsightsNew = (snippet as any).appInsightsNew;
+            Assert.ok(appInsightsNew, "The App insights new instance should be populated");
+            Assert.ok(appInsightsNew.core, "The Core exists");
+            Assert.equal(appInsightsNew.core, (snippet as any).core, "The core instances should match");
+            Assert.equal(true, appInsightsNew.appInsights.isInitialized(), 'App Analytics is initialized');
+            Assert.equal(true, appInsightsNew.core.isInitialized(), 'Core is initialized');
+
+            // Setup Sinon stuff
+            const sender: Sender = appInsightsNew.core.getTransmissionControls()[0][0] as Sender;
+            this.errorSpy = this.sandbox.spy(sender, '_onError');
+            this.successSpy = this.sandbox.spy(sender, '_onSuccess');
+            this.loggingSpy = this.sandbox.stub(appInsights.core.logger, 'throwInternal');
+        } catch (e) {
+            console.error('Failed to initialize');
+            Assert.ok(false, e);
+        }
+
+        // Note: Explicitly returning the original snippet as this should have been updated!
+        return snippet as IAppInsightsDeprecated;
+    }
+
+    private boilerPlateAsserts = () => {
+        Assert.ok(this.successSpy.called, "success");
+        Assert.ok(!this.errorSpy.called, "no error sending");
+        const isValidCallCount = this.loggingSpy.callCount === 0;
+        Assert.ok(isValidCallCount, "logging spy was called 0 time(s)");
+        if (!isValidCallCount) {
+            while (this.loggingSpy.args.length) {
+                Assert.ok(false, "[warning thrown]: " + this.loggingSpy.args.pop());
+            }
+        }
+    }
+    private asserts: any = (expectedCount: number) => [() => {
+        const message = "polling: " + new Date().toISOString();
+        Assert.ok(true, message);
+        console.log(message);
+
+        if (this.successSpy.called) {
+            this.boilerPlateAsserts();
+            this.testCleanup();
+        } else if (this.errorSpy.called || this.loggingSpy.called) {
+            this.boilerPlateAsserts();
+        }
+    },
+    (PollingAssert.createPollingAssert(() => {
+        try {
+            Assert.ok(true, "* checking success spy " + new Date().toISOString());
+
+            if(this.successSpy.called) {
+                let currentCount: number = 0;
+                this.successSpy.args.forEach(call => {
+                    call[0].forEach(message => {
+                        // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                        if (!message || message.indexOf("AI (Internal): 72 ") == -1) {
+                            currentCount ++;
+                        }
+                    });
+                });
+                console.log('curr: ' + currentCount + ' exp: ' + expectedCount);
+                return currentCount === expectedCount;
+            }
+
+            return false;
+        } catch (e) {
+            Assert.ok(false, "Exception:" + e);
+        }
+    }, "sender succeeded", 30, 1000))];
+}
