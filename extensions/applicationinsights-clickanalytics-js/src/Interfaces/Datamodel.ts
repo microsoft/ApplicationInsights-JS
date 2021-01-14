@@ -39,10 +39,10 @@ export interface IClickAnalyticsConfiguration {
      */
     defaultRightClickBhvr?: string | number;
     /**
-     * Flag to drop events that donot have custom event names, no parentId and no data in content (basically no useful click data).
+     * Flag to drop events that do not have custom event names, no parentId and no data in content (basically no useful click data).
      * Default will be false
      */
-    disableUndefinedEventsTracking?: boolean;
+    dropInvalidEvents?: boolean;
 }
 
 /**

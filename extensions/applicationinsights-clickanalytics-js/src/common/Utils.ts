@@ -318,7 +318,7 @@ export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClic
         },
         behaviorValidator: (key:string) => key || "",
         defaultRightClickBhvr: "",
-        disableUndefinedEventsTracking: false
+        dropInvalidEvents : false
     };
 
     let attributesThatAreObjectsInConfig: any[] = [];

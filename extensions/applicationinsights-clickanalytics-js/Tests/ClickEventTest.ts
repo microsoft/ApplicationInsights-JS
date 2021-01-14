@@ -954,7 +954,7 @@ export class ClickEventTest extends TestClass {
                         customDataPrefix: 'data-ha-',
                         aiBlobAttributeTag: 'blob'
                     },
-                    disableUndefinedEventsTracking:true
+                    dropInvalidEvents:true
                 };
                 const clickAnalyticsPlugin = new ClickAnalyticsPlugin();
                 const core = new AppInsightsCore();

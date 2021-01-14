@@ -4,7 +4,7 @@
 
 import { WebEvent } from './WebEvent';
 import * as DataCollector from '../DataCollector';
-import { ITelemetryItem, getPerformance, ICustomProperties, LoggingSeverity } from "@microsoft/applicationinsights-core-js"
+import { ITelemetryItem, getPerformance, ICustomProperties, LoggingSeverity, objForEachKey } from "@microsoft/applicationinsights-core-js"
 import { IPageActionOverrideValues, IPageActionTelemetry } from '../Interfaces/Datamodel';
 import { extractFieldFromObject, bracketIt, isValueAssigned, extend, _ExtendedInternalMessageId } from '../common/Utils';
 import { Util as CommonUtil } from '@microsoft/applicationinsights-common';
@@ -42,12 +42,13 @@ export class PageAction extends WebEvent {
         this._populateEventDataIfPresent(event.data, 'refUri', pageActionEvent.refUri);
         this._populateEventDataIfPresent(event.data, 'pageName', pageActionEvent.pageName);
         this._populateEventDataIfPresent(event.data, 'parentId', pageActionEvent.parentId);
-        for (let property in properties) {
-            if (properties.hasOwnProperty(property)) {
+
+        if (properties) {
+            objForEachKey(properties, (property, value) => {
                 if (!event.data[property]) {
-                    this._populateEventDataIfPresent(event.data, property, properties[property]);
+                    this._populateEventDataIfPresent(event.data, property, value);
                 }
-            }
+            });
         }
         this._clickAnalyticsPlugin.core.track(event);
     }
@@ -140,14 +141,14 @@ export class PageAction extends WebEvent {
             delete pageActionContent.id;
             delete pageActionContent.parentid;
             delete pageActionContent.parentname;
-            if(isValueAssigned(this._config.dataTags.parentDataTag)) {
+            if(this._config && this._config.dataTags && isValueAssigned(this._config.dataTags.parentDataTag)) {
                 delete pageActionContent[this._config.dataTags.parentDataTag];
             }
         }
     }
 
     private _isUndefinedEvent(pageActionEvent: IPageActionTelemetry) {
-        if(this._config.disableUndefinedEventsTracking) {
+        if(this._config.dropInvalidEvents) {
             if(pageActionEvent.name === CommonUtil.NotSpecified 
                 && pageActionEvent.parentId === CommonUtil.NotSpecified
                 && pageActionEvent.content === "[{}]") 
