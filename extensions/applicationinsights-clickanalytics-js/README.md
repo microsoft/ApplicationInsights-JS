@@ -1,13 +1,13 @@
 # Microsoft Application Insights JavaScript SDK - Click Analytics Plugin
 
-Click Analytics Plugin for the Application Insights Javascript SDK, enables automatic tracking of the click events on web pages based on `data-\*` meta tags.
-This plugin uses the `data-\*` global attributes to capture the click events and populate telemetry data.
+Click Analytics Plugin for the Application Insights Javascript SDK, enables automatic tracking of the click events on web pages based on `data-*` meta tags.
+This plugin uses the `data-*` global attributes to capture the click events and populate telemetry data.
 
 ## Some insights to effectively use the plugin
 
-1.  If the clicked HTML element doesn't have the `data-\*` attribute and if the `useDefaultContentName` flag is set to true, the plugin captures the `id` and the standard HTML attribute for contentName.
-2.  `customDataPrefix` provided by user should always start with `data-`, for example `data-sample-`. The reasoning behind this is that, in HTML the `data-\*` global attributes form a class of attributes called custom data attributes, that allow proprietary information to be exchanged between the HTML and its DOM representation by scripts. Also, older browsers (IE, Safari) will drop attributes that it doesn't understand on the floor, unless they start with `data-`.
-    The \* may be replaced by any name following the [production rule of XML names](https://www.w3.org/TR/REC-xml/#NT-Name) with the following restrictions:
+1.  If the clicked HTML element doesn't have the `data-*` attribute and if the `useDefaultContentNameOrId` flag is set to true, the plugin captures the `id` and the standard HTML attribute for contentName.
+2.  `customDataPrefix` provided by user should always start with `data-`, for example `data-sample-`. The reasoning behind this is that, in HTML the `data-*` global attributes form a class of attributes called custom data attributes, that allow proprietary information to be exchanged between the HTML and its DOM representation by scripts. Also, older browsers (IE, Safari) will drop attributes that it doesn't understand on the floor, unless they start with `data-`.
+    The `*` in `data-*` may be replaced by any name following the [production rule of XML names](https://www.w3.org/TR/REC-xml/#NT-Name) with the following restrictions:
 
         - the name must not start with xml, whatever case is used for these letters;
         - the name must not contain any semicolon (U+003A);
@@ -46,37 +46,6 @@ const appInsights = new ApplicationInsights({ config: configObj });
 appInsights.loadAppInsights();
 ```
 
-## Consuming via the CDN using the Snippet Setup (Ignore if using NPM Setup)
-
-```html
-<script
-  type="text/javascript"
-  src="https://js.monitor.azure.com/scripts/b/ai.2.min.js"
-></script>
-<script type="text/javascript" src="cdnPathToCLickAnalyticsJS"></script>
-
-<script type="text/javascript">
-  var clickPluginInstance = new Microsoft.ApplicationInsights.ClickAnalyticsPlugin();
-  // Click Analytics configuration
-  var clickPluginConfig = {
-    autoCapture: true
-  };
-  // Application Insights Configuration
-  var configObj = {
-    instrumentationKey: "YOUR INSTRUMENTATION KEY",
-    extensions: [clickPluginInstance],
-    extensionConfig: {
-      [clickPluginInstance.identifier]: clickPluginConfig
-    },
-  };
-
-  var appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({
-    config: configObj
-  });
-  appInsights.loadAppInsights();
-</script>
-```
-
 ## Configuration
 
 | Name                  | Type               | Default | Description                                                                                                                              |
@@ -87,8 +56,9 @@ appInsights.loadAppInsights();
 | dataTags              | ICustomDataTags    | null    | Custom Data Tags provided to ovverride default tags used to capture click data.                                                          |
 | urlCollectHash        | boolean            | false   | Enables the logging of values after a "#" character of the URL.                                                                          |
 | urlCollectQuery       | boolean            | false   | Enables the logging of the query string of the URL.                                                                                      |
-| behaviorValidator     | Function           | null    | Callback function to use for the `data-\*-bhvr` value validation. For more information click [here](#behaviorValidator)                  |
-| defaultRightClickBhvr | string (or) number | ''      | Default Behavior value when Right Click event has occured. This value will be overriden if the element has the `data-\*-bhvr` attribute. |
+| behaviorValidator     | Function           | null    | Callback function to use for the `data-*-bhvr` value validation. For more information click [here](#behaviorValidator)                  |
+| defaultRightClickBhvr | string (or) number | ''      | Default Behavior value when Right Click event has occured. This value will be overriden if the element has the `data-*-bhvr` attribute. |
+| disableUndefinedEventsTracking | boolean | false      | Flag to drop events that donot have useful click data.|
 
 ## IValueCallback
 
@@ -102,7 +72,7 @@ appInsights.loadAppInsights();
 
 | Name                      | Type    | Default   | Description                                                                                                                                                                              |
 | ------------------------- | ------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| useDefaultContentName     | boolean | false     | When a particular element is not tagged with default customDataPrefix or customDataPrefix is not provided by user, this flag is used to collect standard HTML attribute for contentName. |
+| useDefaultContentNameOrId     | boolean | false     | When a particular element is not tagged with default customDataPrefix or customDataPrefix is not provided by user, this flag is used to collect standard HTML attribute for contentName. |
 | customDataPrefix          | string  | `data-`   | Automatic capture content name and value of elements which are tagged with provided prefix.                                                                                              |
 | aiBlobAttributeTag        | string  | `ai-blob` | Plugin supports a JSON blob content meta data tagging instead of individual `data-\*` attributes.                                                                                        |
 | metaDataPrefix            | string  | null      | Automatic capture HTML Head's meta element name and content with provided prefix.                                                                                                        |
