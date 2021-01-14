@@ -58,7 +58,7 @@ appInsights.loadAppInsights();
 | urlCollectQuery       | boolean            | false   | Enables the logging of the query string of the URL.                                                                                      |
 | behaviorValidator     | Function           | null    | Callback function to use for the `data-*-bhvr` value validation. For more information click [here](#behaviorValidator)                  |
 | defaultRightClickBhvr | string (or) number | ''      | Default Behavior value when Right Click event has occured. This value will be overriden if the element has the `data-*-bhvr` attribute. |
-| disableUndefinedEventsTracking | boolean | false      | Flag to drop events that donot have useful click data.|
+| dropInvalidEvents | boolean | false      | Flag to drop events that donot have useful click data.|
 
 ## IValueCallback
 
