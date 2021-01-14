@@ -2,6 +2,10 @@ import { IAppInsightsDeprecated } from "../src/ApplicationInsightsDeprecated";
 import { ApplicationInsightsContainer } from "../src/ApplicationInsightsContainer";
 import { Snippet } from "../src/Initialization";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
+import { SinonSpy } from "sinon";
+import { Assert } from "./TestFramework/Assert";
+import { PollingAssert } from "./TestFramework/PollingAssert";
+import { TestClass } from "./TestFramework/TestClass";
 
 export class ApplicationInsightsDeprecatedTests extends TestClass {
     private static readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -15,19 +19,18 @@ export class ApplicationInsightsDeprecatedTests extends TestClass {
     private clearSpy: SinonSpy;
     private _name = "ApplicationInsightsDeprecatedTests: ";
     
+    constructor() {
+        super("ApplicationInsightsDeprecatedTests");
+    }
     public testInitialize() {
         try {
-
             this.useFakeServer = false;
-            (sinon.fakeServer as any).restore();
-            this.useFakeTimers = false;
-            this.clock.restore();
-
             this._snippet = {
                 config: {
                     instrumentationKey: ApplicationInsightsDeprecatedTests._instrumentationKey,
                     disableAjaxTracking: false,
-                    disableFetchTracking: false
+                    disableFetchTracking: false,
+                    maxBatchInterval: 2500
                 },
                 queue: [],
                 version: 1.0
@@ -46,8 +49,6 @@ export class ApplicationInsightsDeprecatedTests extends TestClass {
     }
 
     public testCleanup() {
-        this.useFakeServer = true;
-        this.useFakeTimers = true;
     }
 
     public registerTests() {

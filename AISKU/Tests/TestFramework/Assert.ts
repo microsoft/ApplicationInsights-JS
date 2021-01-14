@@ -5,7 +5,7 @@
  * - Make Assertion methods easy to discover.
  * - Make them consistent with XUnit assertions in the order of the actual and expected parameter values.
  */
-class Assert {
+export class Assert {
    /**
     * A deep recursive comparison assertion, working on primitive types, arrays, objects, 
     * regular expressions, dates and functions.

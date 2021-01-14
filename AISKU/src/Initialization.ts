@@ -3,7 +3,7 @@
 
 import { 
     CoreUtils, IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, 
-    IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey
+    IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign
  } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -14,6 +14,15 @@ import * as Common from "@microsoft/applicationinsights-common"
 "use strict";
 
 let _internalSdkSrc: string;
+let _arrForEach = CoreUtils.arrForEach;
+let _isString = CoreUtils.isString;
+let _isFunction = CoreUtils.isFunction;
+
+// This is an exclude list of properties that should not be updated during initialization
+// They include a combination of private and internal property names
+const _ignoreUpdateSnippetProperties = [
+    "snippet", "dependencies", "properties", "_snippetVersion", "appInsightsNew", "getSKUDefaults", 
+];
 
 /**
  *
@@ -117,7 +126,7 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public trackException(exception: Common.IExceptionTelemetry): void {
-        if (!exception.exception && (exception as any).error) {
+        if (exception && !exception.exception && (exception as any).error) {
             exception.exception = (exception as any).error;
         }
         this.appInsights.trackException(exception);
@@ -243,8 +252,8 @@ export class Initialization implements IApplicationInsights {
      */
     public flush(async: boolean = true) {
         doPerf(this.core, () => "AISKU.flush", () => {
-            CoreUtils.arrForEach(this.core.getTransmissionControls(), channels => {
-                CoreUtils.arrForEach(channels, channel => {
+            _arrForEach(this.core.getTransmissionControls(), channels => {
+                _arrForEach(channels, channel => {
                     channel.flush(async);
                 })
             })
@@ -258,8 +267,8 @@ export class Initialization implements IApplicationInsights {
      * @memberof Initialization
      */
     public onunloadFlush(async: boolean = true) {
-        CoreUtils.arrForEach(this.core.getTransmissionControls(), channels => {
-            CoreUtils.arrForEach(channels, (channel: IChannelControls & Sender) => {
+        _arrForEach(this.core.getTransmissionControls(), channels => {
+            _arrForEach(channels, (channel: IChannelControls & Sender) => {
                 if (channel.onunloadFlush) {
                     channel.onunloadFlush();
                 } else {
@@ -293,9 +302,10 @@ export class Initialization implements IApplicationInsights {
 
                 // apply updated properties to the global instance (snippet)
                 objForEachKey(_self, (field, value) => {
-                    if (CoreUtils.isString(field) && 
-                            !CoreUtils.isFunction(value) && 
-                            field.substring(0, 1) !== "_") {            // Don't copy "internal" values
+                    if (_isString(field) && 
+                            !_isFunction(value) && 
+                            field && field[0] !== "_" &&                                // Don't copy "internal" values
+                            _ignoreUpdateSnippetProperties.indexOf(field) === -1) {            
                         snippet[field as string] = value;
                     }
                 });
@@ -342,10 +352,9 @@ export class Initialization implements IApplicationInsights {
     public updateSnippetDefinitions(snippet: Snippet) {
         // apply full appInsights to the global instance
         // Note: This must be called before loadAppInsights is called
-        objForEachKey(this, (field, value) => {
-            if (CoreUtils.isString(field)) {
-                snippet[field as string] = value;
-            }
+        proxyAssign(snippet, this, (name: string) => {
+            // Not excluding names prefixed with "_" as we need to proxy some functions like _onError
+            return name && _ignoreUpdateSnippetProperties.indexOf(name) === -1;
         });
     }
 
@@ -371,7 +380,7 @@ export class Initialization implements IApplicationInsights {
             }
         } catch (exception) {
             const properties: any = {};
-            if (exception && CoreUtils.isFunction(exception.toString)) {
+            if (exception && _isFunction(exception.toString)) {
                 properties.exception = exception.toString();
             }
 
