@@ -36,7 +36,7 @@ export class WebEvent {
     // Fill common PartB fields
     public setBasicProperties(event: IPageActionTelemetry, overrideValues: IOverrideValues) {
         if (!isValueAssigned(event.name)) {
-            event.name = DataCollector.getPageName(this._config, overrideValues);
+            event.pageName = DataCollector.getPageName(this._config, overrideValues);
         }
         if (!isValueAssigned(event.uri) && hasWindow) {
             event.uri = DataCollector.getUri(this._config, getLocation());
