@@ -5,15 +5,6 @@
 ### Changelog
 
 - #1452 [BUG] v2.5.10 Snippet Initialization fails to redirect proxied functions -- causing terminal exception
-- #1434 Adding cookie path to make AI client SDK work behind Azure Application Gateway
-
-### Update React plugin to v3.0.6
-
-- Update Core dependency to ^2.5.11 Core changes
-
-### Update React Native plugin to v2.2.10
-
-- Update Core dependency to ^2.5.11 Core changes
 
 ### Update Click Analytics plugin to v2.5.11
 
