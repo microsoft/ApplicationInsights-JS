@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-common",
-    "version": "2.5.10",
+    "version": "2.5.11",
     "description": "Microsoft Application Insights Common JavaScript Library",
     "main": "./dist/applicationinsights-common.js",
     "module": "./dist-esm/applicationinsights-common.js",
@@ -34,7 +34,7 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims" : "1.0.3",
-        "@microsoft/applicationinsights-core-js": "2.5.10"
+        "@microsoft/applicationinsights-core-js": "2.5.11"
     },
     "license": "MIT"
 }
