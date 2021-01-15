@@ -31,7 +31,7 @@ function _setValueIf<T>(target:T, field:keyof T, value:any) {
 }
 
 export abstract class EnvelopeCreator {
-    public static Version = "2.5.10";
+    public static Version = "2.5.11";
 
     protected static extractPropsAndMeasurements(data: { [key: string]: any }, properties: { [key: string]: any }, measurements: { [key: string]: any }) {
         if (!isNullOrUndefined(data)) {
