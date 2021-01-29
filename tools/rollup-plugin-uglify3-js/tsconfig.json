@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+      "sourceMap": true,
+      "inlineSources": true,
+      "noImplicitAny": false,
+      "module": "es6",
+      "moduleResolution": "node",
+      "target": "es5",
+      "forceConsistentCasingInFileNames": true,
+      "importHelpers": true,
+      "alwaysStrict": true,
+      "declaration": true,
+      "outDir": "./out",
+      "rootDir": "tools/rollup-plugin-uglify3-js",
+      "suppressImplicitAnyIndexErrors": true,
+      "allowSyntheticDefaultImports": true,
+      "skipLibCheck": true
+    },
+    "files": [
+    ]
+  }
