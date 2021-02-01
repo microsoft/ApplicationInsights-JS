@@ -310,14 +310,15 @@ export function mergeConfig(overrideConfig: IClickAnalyticsConfiguration): IClic
             pageType: ''
         },
         dataTags: {
-            useDefaultContentName: false,
+            useDefaultContentNameOrId: false,
             aiBlobAttributeTag: DEFAULT_AI_BLOB_ATTRIBUTE_TAG,
             customDataPrefix: DEFAULT_DATA_PREFIX,
             captureAllMetaDataContent: false,
             dntDataTag: DEFAULT_DONOT_TRACK_TAG,
         },
         behaviorValidator: (key:string) => key || "",
-        defaultRightClickBhvr: ""
+        defaultRightClickBhvr: "",
+        dropInvalidEvents : false
     };
 
     let attributesThatAreObjectsInConfig: any[] = [];

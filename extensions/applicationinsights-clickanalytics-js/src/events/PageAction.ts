@@ -4,9 +4,10 @@
 
 import { WebEvent } from './WebEvent';
 import * as DataCollector from '../DataCollector';
-import { ITelemetryItem, getPerformance, ICustomProperties } from "@microsoft/applicationinsights-core-js"
+import { ITelemetryItem, getPerformance, ICustomProperties, LoggingSeverity, objForEachKey } from "@microsoft/applicationinsights-core-js"
 import { IPageActionOverrideValues, IPageActionTelemetry } from '../Interfaces/Datamodel';
-import { extractFieldFromObject, bracketIt, isValueAssigned, extend } from '../common/Utils';
+import { extractFieldFromObject, bracketIt, isValueAssigned, extend, _ExtendedInternalMessageId } from '../common/Utils';
+import { Util as CommonUtil } from '@microsoft/applicationinsights-common';
 
 export class PageAction extends WebEvent {
     
@@ -20,30 +21,34 @@ export class PageAction extends WebEvent {
         var ext = {};
         ext['web'] = {};
         let event: ITelemetryItem = {
-            name: '',
-            baseType: 'ClickData',
+            name: "Microsoft.ApplicationInsights.{0}.Event",
+            baseType: 'EventData',
             ext,
             data: {},
             baseData: {}
         };
-        event.baseData['name'] = pageActionEvent.name;
-        event.baseData['uri'] = pageActionEvent.uri;
-        event.baseData['pageType'] = pageActionEvent.pageType;   
-        event.baseData['properties'] = pageActionEvent.properties;
-        event.baseData['actionType'] = pageActionEvent.actionType;
-        event.baseData['behavior'] = pageActionEvent.behavior;
-        event.baseData['clickCoordinates'] = pageActionEvent.clickCoordinates;
-        event.baseData['content'] = pageActionEvent.content;
-        event.baseData['targetUri'] = pageActionEvent.targetUri;
-        event.data['timeToAction'] = pageActionEvent.timeToAction;
-        event.data['refUri'] = pageActionEvent.refUri;
-        
-        for (let property in properties) {
-            if (properties.hasOwnProperty(property)) {
+
+        this._populateEventDataIfPresent(event.baseData, 'name', pageActionEvent.name);
+        this._populateEventDataIfPresent(event.data, 'baseTypeSource', 'ClickEvent');
+        this._populateEventDataIfPresent(event.data, 'uri', pageActionEvent.uri);
+        this._populateEventDataIfPresent(event.data, 'pageType', pageActionEvent.pageType);
+        this._populateEventDataIfPresent(event.data, 'properties', pageActionEvent.properties);
+        this._populateEventDataIfPresent(event.data, 'actionType', pageActionEvent.actionType);
+        this._populateEventDataIfPresent(event.data, 'behavior', pageActionEvent.behavior);
+        this._populateEventDataIfPresent(event.data, 'clickCoordinates', pageActionEvent.clickCoordinates);
+        this._populateEventDataIfPresent(event.data, 'content', pageActionEvent.content);
+        this._populateEventDataIfPresent(event.data, 'targetUri', pageActionEvent.targetUri);
+        this._populateEventDataIfPresent(event.data, 'timeToAction', pageActionEvent.timeToAction);
+        this._populateEventDataIfPresent(event.data, 'refUri', pageActionEvent.refUri);
+        this._populateEventDataIfPresent(event.data, 'pageName', pageActionEvent.pageName);
+        this._populateEventDataIfPresent(event.data, 'parentId', pageActionEvent.parentId);
+
+        if (properties) {
+            objForEachKey(properties, (property, value) => {
                 if (!event.data[property]) {
-                    event.data[property] = properties[property];
+                    this._populateEventDataIfPresent(event.data, property, value);
                 }
-            }
+            });
         }
         this._clickAnalyticsPlugin.core.track(event);
     }
@@ -80,13 +85,28 @@ export class PageAction extends WebEvent {
                 let currentBehavior: string = extractFieldFromObject(elementContent, 'bhvr');
                 pageActionEvent.behavior = this._getValidBehavior(currentBehavior);
             }
+
+            // Validate to ensure the minimum required field 'contentName' or 'id' is present. However, 
+            // requiring these fields would result in majority of adopter's content from being collected.
+            // Just throw a warning and continue collection.
+            if (!isValueAssigned(elementContent.id) && !isValueAssigned(elementContent.contentName)) {
+                this._traceLogger.throwInternal(
+                    LoggingSeverity.WARNING,
+                    _ExtendedInternalMessageId.InvalidContentBlob, `Missing attributes id or contentName in click event. Click event information will still be collected!`
+                )
+            }
         }
+        pageActionEvent.name = elementContent.id || elementContent.contentName || CommonUtil.NotSpecified;
+        pageActionEvent.parentId = elementContent.parentid || elementContent.parentName || CommonUtil.NotSpecified;
+
         if (isValueAssigned(overrideValues.actionType)) {
             pageActionEvent.actionType = overrideValues.actionType;
         }
         if (isValueAssigned(overrideValues.clickCoordinateX) && isValueAssigned(overrideValues.clickCoordinateY)) {
             pageActionEvent.clickCoordinates = overrideValues.clickCoordinateX + 'X' + overrideValues.clickCoordinateY;
         }
+
+        this._sanitizePageActionEventContent(elementContent);
         pageActionEvent.content = bracketIt(JSON.stringify(extend(
             elementContent,
             overrideValues && overrideValues.contentTags ? overrideValues.contentTags : {})));
@@ -94,6 +114,7 @@ export class PageAction extends WebEvent {
         
         pageActionEvent.timeToAction = this._getTimeToClick();
         pageActionEvent.refUri = isValueAssigned(overrideValues.refUri) ? overrideValues.refUri : this._config.coreData.referrerUri;
+        if(this._isUndefinedEvent(pageActionEvent)) return;
         this.trackPageAction(pageActionEvent, pageActionProperties);
     }
 
@@ -107,6 +128,33 @@ export class PageAction extends WebEvent {
             }
         }
         return -1;
+    }
+
+    private _populateEventDataIfPresent(obj:any, property:any, value:any) {
+        if(isValueAssigned(value)) {
+            obj[property] = value;
+        }
+    }
+
+    private _sanitizePageActionEventContent(pageActionContent: any) {
+        if(pageActionContent) {
+            delete pageActionContent.id;
+            delete pageActionContent.parentid;
+            delete pageActionContent.parentname;
+            if(this._config && this._config.dataTags && isValueAssigned(this._config.dataTags.parentDataTag)) {
+                delete pageActionContent[this._config.dataTags.parentDataTag];
+            }
+        }
+    }
+
+    private _isUndefinedEvent(pageActionEvent: IPageActionTelemetry) {
+        if(this._config.dropInvalidEvents) {
+            if(pageActionEvent.name === CommonUtil.NotSpecified 
+                && pageActionEvent.parentId === CommonUtil.NotSpecified
+                && pageActionEvent.content === "[{}]") 
+                return true;
+        }
+        return false;
     }
 
 }

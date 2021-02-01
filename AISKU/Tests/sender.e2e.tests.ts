@@ -1,9 +1,11 @@
-/// <reference path='./TestFramework/Common.ts' />
-"use strict"
 import { ApplicationInsights, IApplicationInsights } from '../src/applicationinsights-web'
 import { Sender } from '@microsoft/applicationinsights-channel-js';
 import { Util } from '@microsoft/applicationinsights-common';
 import { getJSON } from '@microsoft/applicationinsights-core-js';
+import { SinonSpy } from 'sinon';
+import { Assert } from './TestFramework/Assert';
+import { PollingAssert } from './TestFramework/PollingAssert';
+import { TestClass } from './TestFramework/TestClass';
 
 export class SenderE2ETests extends TestClass {
     private readonly _instrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
@@ -21,13 +23,13 @@ export class SenderE2ETests extends TestClass {
 
     private delay = 100;
 
-    public testInitialize() {
-        try{
-            this.useFakeServer = false;
-            (sinon.fakeServer as any).restore();
-            this.useFakeTimers = false;
-            this.clock.restore();
+    constructor() {
+        super("SenderE2ETests");
+    }
 
+    public testInitialize() {
+        try {
+            this.useFakeServer = false;
             const init = new ApplicationInsights({
                 config: {
                     instrumentationKey: this._instrumentationKey,
@@ -57,9 +59,6 @@ export class SenderE2ETests extends TestClass {
     }
 
     public testCleanup() {
-        this.useFakeServer = true;
-        this.useFakeTimers = true;
-
         this.successSpy.restore();
     }
 

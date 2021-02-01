@@ -1,6 +1,6 @@
 {
   "name": "@microsoft/applicationinsights-clickanalytics-js",
-  "version": "2.5.10",
+  "version": "2.5.11",
   "description": "Microsoft Application Insights Click Analytics extension",
   "main": "dist/applicationinsights-clickanalytics-js.js",
   "module": "dist-esm/applicationinsights-clickanalytics-js.js",
@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@microsoft/applicationinsights-rollup-es3": "1.1.3",
-    "@microsoft/applicationinsights-properties-js": "2.5.10",
+    "@microsoft/applicationinsights-properties-js": "2.5.11",
     "typescript": "2.5.3",
     "globby": "^11.0.0",
     "rollup-plugin-node-resolve": "^3.4.0",
@@ -32,8 +32,8 @@
   "dependencies": {
     "@microsoft/dynamicproto-js": "^1.1.0",
     "@microsoft/applicationinsights-shims": "1.0.3",
-    "@microsoft/applicationinsights-core-js": "2.5.10",
-    "@microsoft/applicationinsights-common": "2.5.10"
+    "@microsoft/applicationinsights-core-js": "2.5.11",
+    "@microsoft/applicationinsights-common": "2.5.11"
   },
   "repository": {
     "type": "git",
