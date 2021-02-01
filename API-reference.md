@@ -142,7 +142,7 @@ Parameter | Type | Description
 ---|---|---
 `name` | string | **Required**<br>An event name string.
 `properties?` | dictionary | **Optional**<br>Map of string to any: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
-`measurements?` | dictionary | **Optional**<br>Map of string to any: Additional data (metrics) used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
+~~`measurements?`~~ | dictionary | **Optional**<br>Map of string to any: Additional data (metrics) used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
 ### flush
 
