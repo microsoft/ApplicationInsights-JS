@@ -33,7 +33,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // For more information, see: https://rushjs.io/pages/maintainer/setup_new_repo/
 const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
-const install_run_1 = require("./install-run");
+const install_run_1 = require("./install-run-silent");
 const PACKAGE_NAME = '@microsoft/rush';
 const RUSH_PREVIEW_VERSION = 'RUSH_PREVIEW_VERSION';
 function _getRushVersion() {
