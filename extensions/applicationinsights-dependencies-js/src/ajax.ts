@@ -156,7 +156,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         const config: ICorrelationConfig = {
             maxAjaxCallsPerView: 500,
             disableAjaxTracking: false,
-            disableFetchTracking: true,
+            disableFetchTracking: false,
             excludeRequestFromAutoTrackingPatterns: undefined,
             disableCorrelationHeaders: false,
             distributedTracingMode: eDistributedTracingModes.AI_AND_W3C,
@@ -365,7 +365,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 _enableResponseHeaderTracking = false;
                 _disabledUrls = {};
                 _disableAjaxTracking = false;
-                _disableFetchTracking = true;
+                _disableFetchTracking = false;
         
                 _excludeRequestFromAutoTrackingPatterns = null
                 _addRequestContext = null;
