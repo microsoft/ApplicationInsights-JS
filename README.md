@@ -461,10 +461,12 @@ Read our [contributing guide](./CONTRIBUTING.md) to learn about our development 
 
 ### Build and Test this Project
 
+Note: With the recent update to the latest version of rush ```npm run build``` fails with exit code 1 on successful build, hence the addition of ```--silent``` to the ```npm run build``` command.
+
 ```zsh
 npm install -g @microsoft/rush
 npm install
-npm run build
+npm run build --silent
 ```
 
 ### Submitting a Change to this Project

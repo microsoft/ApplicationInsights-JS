@@ -3,7 +3,13 @@ import { IConfig, PageViewPerformance, SeverityLevel, Util,
     IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry,
     IEventTelemetry, IEnvelope, ProcessLegacy, HttpMethod } from "@microsoft/applicationinsights-common";
 import { Snippet, Initialization as ApplicationInsights } from "./Initialization";
-import { ITelemetryItem, IDiagnosticLogger, IConfiguration, CoreUtils, objForEachKey } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, IDiagnosticLogger, IConfiguration, proxyAssign } from "@microsoft/applicationinsights-core-js";
+
+// This is an exclude list of properties that should not be updated during initialization
+// They include a combination of private and internal property names
+const _ignoreUpdateSnippetProperties = [
+    "snippet", "getDefaultConfig", "_hasLegacyInitializers", "_queue", "_processLegacyInitializers"
+];
 
 // ToDo: fix properties and measurements once updates are done to common
 export class AppInsightsDeprecated implements IAppInsightsDeprecated {
@@ -13,42 +19,44 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
             config = ({} as any);
         }
 
+        let stringToBoolOrDefault = Util.stringToBoolOrDefault;
+
         // set default values
         config.endpointUrl = config.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
         config.sessionRenewalMs = 30 * 60 * 1000;
         config.sessionExpirationMs = 24 * 60 * 60 * 1000;
         config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 102400; // 100kb
         config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
-        config.enableDebug = Util.stringToBoolOrDefault(config.enableDebug);
-        config.disableExceptionTracking = Util.stringToBoolOrDefault(config.disableExceptionTracking);
-        config.disableTelemetry = Util.stringToBoolOrDefault(config.disableTelemetry);
-        config.verboseLogging = Util.stringToBoolOrDefault(config.verboseLogging);
-        config.emitLineDelimitedJson = Util.stringToBoolOrDefault(config.emitLineDelimitedJson);
+        config.enableDebug = stringToBoolOrDefault(config.enableDebug);
+        config.disableExceptionTracking = stringToBoolOrDefault(config.disableExceptionTracking);
+        config.disableTelemetry = stringToBoolOrDefault(config.disableTelemetry);
+        config.verboseLogging = stringToBoolOrDefault(config.verboseLogging);
+        config.emitLineDelimitedJson = stringToBoolOrDefault(config.emitLineDelimitedJson);
         config.diagnosticLogInterval = config.diagnosticLogInterval || 10000;
-        config.autoTrackPageVisitTime = Util.stringToBoolOrDefault(config.autoTrackPageVisitTime);
+        config.autoTrackPageVisitTime = stringToBoolOrDefault(config.autoTrackPageVisitTime);
 
         if (isNaN(config.samplingPercentage) || config.samplingPercentage <= 0 || config.samplingPercentage >= 100) {
             config.samplingPercentage = 100;
         }
 
-        config.disableAjaxTracking = Util.stringToBoolOrDefault(config.disableAjaxTracking);
+        config.disableAjaxTracking = stringToBoolOrDefault(config.disableAjaxTracking);
         config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
 
-        config.isBeaconApiDisabled = Util.stringToBoolOrDefault(config.isBeaconApiDisabled, true);
-        config.disableCorrelationHeaders = Util.stringToBoolOrDefault(config.disableCorrelationHeaders);
+        config.isBeaconApiDisabled = stringToBoolOrDefault(config.isBeaconApiDisabled, true);
+        config.disableCorrelationHeaders = stringToBoolOrDefault(config.disableCorrelationHeaders);
         config.correlationHeaderExcludedDomains = config.correlationHeaderExcludedDomains || [
             "*.blob.core.windows.net",
             "*.blob.core.chinacloudapi.cn",
             "*.blob.core.cloudapi.de",
             "*.blob.core.usgovcloudapi.net"];
-        config.disableFlushOnBeforeUnload = Util.stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
-        config.disableFlushOnUnload = Util.stringToBoolOrDefault(config.disableFlushOnUnload, config.disableFlushOnBeforeUnload);
-        config.enableSessionStorageBuffer = Util.stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
-        config.isRetryDisabled = Util.stringToBoolOrDefault(config.isRetryDisabled);
-        config.isCookieUseDisabled = Util.stringToBoolOrDefault(config.isCookieUseDisabled);
-        config.isStorageUseDisabled = Util.stringToBoolOrDefault(config.isStorageUseDisabled);
-        config.isBrowserLinkTrackingEnabled = Util.stringToBoolOrDefault(config.isBrowserLinkTrackingEnabled);
-        config.enableCorsCorrelation = Util.stringToBoolOrDefault(config.enableCorsCorrelation);
+        config.disableFlushOnBeforeUnload = stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
+        config.disableFlushOnUnload = stringToBoolOrDefault(config.disableFlushOnUnload, config.disableFlushOnBeforeUnload);
+        config.enableSessionStorageBuffer = stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
+        config.isRetryDisabled = stringToBoolOrDefault(config.isRetryDisabled);
+        config.isCookieUseDisabled = stringToBoolOrDefault(config.isCookieUseDisabled);
+        config.isStorageUseDisabled = stringToBoolOrDefault(config.isStorageUseDisabled);
+        config.isBrowserLinkTrackingEnabled = stringToBoolOrDefault(config.isBrowserLinkTrackingEnabled);
+        config.enableCorsCorrelation = stringToBoolOrDefault(config.enableCorsCorrelation);
 
         return config;
     }
@@ -170,10 +178,9 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     public updateSnippetDefinitions(snippet: Snippet) {
         // apply full appInsights to the global instance
         // Note: This must be called before loadAppInsights is called
-        objForEachKey(this, (field, value) => {
-            if (CoreUtils.isString(field)) {
-                snippet[field as string] = value;
-            }
+        proxyAssign(snippet, this, (name: string) => {
+            // Not excluding names prefixed with "_" as we need to proxy some functions like _onError
+            return name && _ignoreUpdateSnippetProperties.indexOf(name) === -1;
         });
     }
 

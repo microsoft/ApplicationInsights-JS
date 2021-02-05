@@ -31,6 +31,8 @@
        "no-unused-expression": false,
        "no-var-keyword": false,
        "no-duplicate-variable": false,
-       "prefer-const": false
+       "prefer-const": false,
+       "only-arrow-functions": false,
+       "member-ordering": false
     }
 }

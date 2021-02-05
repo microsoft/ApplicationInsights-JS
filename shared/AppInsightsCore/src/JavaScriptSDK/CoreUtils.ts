@@ -114,6 +114,43 @@ function _detachEvent(obj: any, eventNameWithoutOn: string, handlerRef: any, use
 }
 
 /**
+ * Try to define get/set object property accessors for the target object/prototype, this will provide compatibility with
+ * existing API definition when run within an ES5+ container that supports accessors but still enable the code to be loaded
+ * and executed in an ES3 container, providing basic IE8 compatibility.
+ * @param target The object on which to define the property.
+ * @param prop The name of the property to be defined or modified.
+ * @param getProp The getter function to wire against the getter.
+ * @param setProp The setter function to wire against the setter.
+ * @returns True if it was able to create the accessors otherwise false
+ */
+export function objDefineAccessors<T>(target: any, prop: string, getProp?: () => T, setProp?: (v: T) => void): boolean {
+    let defineProp = Object["defineProperty"];
+    if (defineProp) {
+        try {
+            let descriptor: PropertyDescriptor = {
+                enumerable: true,
+                configurable: true
+            }
+
+            if (getProp) {
+                descriptor.get = getProp;
+            }
+            if (setProp) {
+                descriptor.set = setProp;
+            }
+
+            defineProp(target, prop, descriptor);
+            return true;
+        } catch (e) {
+            // IE8 Defines a defineProperty on Object but it's only supported for DOM elements so it will throw
+            // We will just ignore this here.
+        }
+    }
+
+    return false;
+}
+
+/**
  * Validates that the string name conforms to the JS IdentifierName specification and if not
  * normalizes the name so that it would. This method does not identify or change any keywords
  * meaning that if you pass in a known keyword the same value will be returned.
@@ -144,6 +181,63 @@ export function objForEachKey(target: any, callbackfn: (name: string, value: any
             }
         }
     }
+}
+
+/**
+ * Effectively assigns all enumerable properties (not just own properties) and functions (including inherited prototype) from 
+ * the source object to the target, it attempts to use proxy getters / setters (if possible) and proxy functions to avoid potential
+ * implementation issues by assigning prototype functions as instance ones
+ * 
+ * This method is the primary method used to "update" the snippet proxy with the ultimate implementations.
+ * 
+ * Special ES3 Notes:
+ * Updates (setting) of direct property values on the target or indirectly on the source object WILL NOT WORK PROPERLY, updates to the 
+ * properties of "referenced" object will work (target.context.newValue = 10 => will be reflected in the source.context as it's the
+ * same object). ES3 Failures: assigning target.myProp = 3 -> Won't change source.myProp = 3, likewise the reverse would also fail.
+ * @param target - The target object to be assigned with the source properties and functions
+ * @param source - The source object which will be assigned / called by setting / calling the targets proxies
+ * @param chkSet - An optional callback to determine whether a specific property/function should be proxied
+ * @memberof Initialization
+ */
+export function proxyAssign(target: any, source: any, chkSet?: (name: string, isFunc?: boolean, source?: any, target?: any) => boolean) {
+    if (target && source && target !== source && _isObject(target) && _isObject(source)) {
+        // effectively apply/proxy full source to the target instance
+        for (const field in source) {
+            if (CoreUtils.isString(field)) {
+                let value = source[field] as any;
+                if (_isFunction(value)) {
+                    if (!chkSet || chkSet(field, true, source, target)) {
+                        // Create a proxy function rather than just copying the (possible) prototype to the new object as an instance function
+                        target[field as string] = (function(funcName: string) {
+                            return function() {
+                                // Capture the original arguments passed to the method
+                                var originalArguments = arguments;
+                                return source[funcName].apply(source, originalArguments);
+                            }
+                        })(field);
+                    }
+                } else if (!chkSet || chkSet(field, false, source, target)) {
+                    if (_hasOwnProperty(target, field)) {
+                        // Remove any previous instance property
+                        delete target[field];
+                    }
+
+                    if (!objDefineAccessors(target, field, () => {
+                        return source[field];
+                    }, (theValue) => {
+                        source[field] = theValue;
+                    })) {
+                        // Unable to create an accessor, so just assign the values as a fallback
+                        // -- this will (mostly) work for objects
+                        // -- but will fail for accessing primitives (if the source changes it) and all types of "setters" as the source won't be modified
+                        target[field as string] = value;
+                    }
+                }
+            }
+        }
+    }
+
+    return target;
 }
 
 export class CoreUtils {
@@ -430,32 +524,7 @@ export class CoreUtils {
      * @param setProp The setter function to wire against the setter.
      * @returns True if it was able to create the accessors otherwise false
      */
-    public static objDefineAccessors<T>(target: any, prop: string, getProp?: () => T, setProp?: (v: T) => void): boolean {
-        let defineProp = Object["defineProperty"];
-        if (defineProp) {
-            try {
-                let descriptor: PropertyDescriptor = {
-                    enumerable: true,
-                    configurable: true
-                }
-
-                if (getProp) {
-                    descriptor.get = getProp;
-                }
-                if (setProp) {
-                    descriptor.set = setProp;
-                }
-
-                defineProp(target, prop, descriptor);
-                return true;
-            } catch (e) {
-                // IE8 Defines a defineProperty on Object but it's only supported for DOM elements so it will throw
-                // We will just ignore this here.
-            }
-        }
-
-        return false;
-    }
+    public static objDefineAccessors = objDefineAccessors;
 
     /**
      * Trys to add an event handler for the specified event to the window, body and document

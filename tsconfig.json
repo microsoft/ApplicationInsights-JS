@@ -8,5 +8,8 @@
     "alwaysStrict": true,
     "declaration": true
   },
-  "files": []
+  "files": [],
+  "exclude": [
+    "**/node_modules/**"
+  ]
 }
