@@ -1,26 +1,25 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "src",
-    "module": "es6",
-    "outDir": "dist-esm",
+    "baseUrl": "./",
+    "outDir": "./dist/out-tsc",
     "sourceMap": true,
-    "declaration": true,
-    "declarationDir": "./types",
-    "moduleResolution": "node",
-    "emitDecoratorMetadata": true,
+    "declaration": false,
+    "downlevelIteration": true,
     "experimentalDecorators": true,
-    "target": "es5",
-    "rootDir": "./src",
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "es2020",
     "lib": [
-      "es2017",
+      "es2018",
       "dom"
-    ]
-  },
-  "include": [
-    "./src/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+    ],
+    "paths": {
+      "applicationinsights-angularplugin-js": [
+        "dist/applicationinsights-angularplugin-js/applicationinsights-angularplugin-js",
+        "dist/applicationinsights-angularplugin-js"
+      ]
+    }
+  }
 }
