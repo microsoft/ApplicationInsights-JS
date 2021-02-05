@@ -1,15 +1,18 @@
 {
   "name": "@microsoft/applicationinsights-angularplugin-js",
-    "version": "2.5.10",
-    "description": "Microsoft Application Insights Angular plugin",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-angularplugin-js"
-    },
+  "version": "2.5.11",
+  "description": "Microsoft Application Insights Angular plugin",
+  "main": "dist/bundles/microsoft-applicationinsights-angularplugin-js.umd.js",
+  "module": "dist/fesm2015/microsoft-applicationinsights-angularplugin-js.js",
+  "types": "dist/microsoft-applicationinsights-angularplugin-js.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-angularplugin-js"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build --prod",
     "test": "ng test",
     "lint": "ng lint"
   },
