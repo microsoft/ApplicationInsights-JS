@@ -3,3 +3,4 @@
 
 import '@microsoft/applicationinsights-shims';
 export { ApplicationInsights } from "./JavaScriptSDK/ApplicationInsights";
+export { IAppInsightsInternal } from "./JavaScriptSDK/Telemetry/PageViewManager";

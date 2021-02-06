@@ -1,7 +1,7 @@
 import { IConfig, PageViewPerformance, SeverityLevel, Util,
     IPageViewTelemetry, ITraceTelemetry, IMetricTelemetry,
     IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry,
-    IEventTelemetry, IEnvelope, ProcessLegacy, HttpMethod } from "@microsoft/applicationinsights-common";
+    IEventTelemetry, IEnvelope, ProcessLegacy, HttpMethod, ITelemetryContext as Common_ITelemetryContext } from "@microsoft/applicationinsights-common";
 import { Snippet, Initialization as ApplicationInsights } from "./Initialization";
 import { ITelemetryItem, IDiagnosticLogger, IConfiguration, proxyAssign } from "@microsoft/applicationinsights-core-js";
 

@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-analytics-js",
     "version": "2.5.11",
-    "description": "Microsoft Application Insights Javascript SDK apis",
+    "description": "Microsoft Application Insights JavaScript SDK - Web Analytics",
     "main": "dist/applicationinsights-analytics-js.js",
     "module": "dist-esm/applicationinsights-analytics-js.js",
     "types": "types/applicationinsights-analytics-js.d.ts",

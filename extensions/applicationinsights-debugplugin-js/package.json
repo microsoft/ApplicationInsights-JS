@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-debugplugin-js",
     "version": "2.5.11-beta",
-    "description": "Microsoft Application Insights Javascript SDK apis",
+    "description": "Microsoft Application Insights JavaScript SDK - Debug Plugin extension",
     "main": "dist/applicationinsights-debugplugin-js.js",
     "module": "dist-esm/applicationinsights-debugplugin-js.js",
     "types": "types/applicationinsights-debugplugin-js.d.ts",
@@ -11,15 +11,17 @@
         "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-debugplugin-js"
     },
     "scripts": {
-        "build": "npm run build:esm && npm run build:browser",
+        "build": "npm run build:esm && npm run build:browser && npm run dtsgen",
         "build:esm": "grunt debugplugin",
         "build:browser": "rollup -c",
         "test": "",
-        "lint": "tslint -p tsconfig.json"
+        "lint": "tslint -p tsconfig.json",
+        "dtsgen": "api-extractor run --local && powershell -ExecutionPolicy Bypass ../../scripts/dtsgen.ps1 'Microsoft.ApplicationInsights'"
     },
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es3": "1.1.3",
+        "@microsoft/api-extractor" : "^7.9.11",
         "typescript": "2.5.3",
         "grunt": "^1.3.0",
         "grunt-contrib-qunit": "^3.1.0",

@@ -5,7 +5,7 @@ import { IApplication } from './Context/IApplication';
 import { IDevice } from './Context/IDevice';
 import { IInternal } from './Context/IInternal';
 import { ILocation } from './Context/ILocation';
-import { IUser } from './Context/IUser';
+import { IUserContext } from './Context/IUser';
 import { ISession } from './Context/ISession';
 import { ITelemetryTrace } from './Context/ITelemetryTrace';
 
@@ -38,7 +38,7 @@ export interface ITelemetryContext {
     /**
      * The object describing a user tracked by this object.
      */
-    user: IUser;
+    user: IUserContext;
 
     /**
      * The object describing a session tracked by this object.

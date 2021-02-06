@@ -3,6 +3,7 @@
     "author": "Microsoft Corporation",
     "version": "1.0.3",
     "description": "Microsoft Application Insights JavaScript SDK - Shim functions",
+    "homepage": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/tools/shims",
     "keywords": [
         "azure",
         "cloud",

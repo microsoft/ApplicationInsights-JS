@@ -7,16 +7,18 @@
     "types": "types/applicationinsights-clickanalytics-js.d.ts",
     "sideEffects": false,
     "scripts": {
-        "build": "npm run build:esm && npm run build:browser",
+        "build": "npm run build:esm && npm run build:browser && npm run dtsgen",
         "build:esm": "grunt clickanalytics",
         "build:browser": "rollup -c",
         "test": "grunt clickanalyticstests",
-        "lint": "tslint -p tsconfig.json"
+        "lint": "tslint -p tsconfig.json",
+        "dtsgen": "api-extractor run --local && powershell -ExecutionPolicy Bypass ../../scripts/dtsgen.ps1 'Microsoft.ApplicationInsights'"
     },
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es3": "1.1.3",
         "@microsoft/applicationinsights-properties-js": "2.5.11",
+        "@microsoft/api-extractor" : "^7.9.11",
         "typescript": "2.5.3",
         "globby": "^11.0.0",
         "@rollup/plugin-commonjs": "^15.1.0",
