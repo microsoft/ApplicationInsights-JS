@@ -85,7 +85,7 @@ export class SnippetInitializationTests extends TestClass {
         try {
             this.useFakeServer = true;
             this.fakeServerAutoRespond = true;
-            this.isFetchPolyfill = fetch["polyfill"];
+            this.isFetchPolyfill = fetch && fetch["polyfill"];
 
             console.log("* testInitialize()");
         } catch (e) {
@@ -421,19 +421,23 @@ export class SnippetInitializationTests extends TestClass {
             ].concat(this.asserts(1))
         });
 
-        this.testCaseAsync({
-            name: "TelemetryContext: auto collection of ajax requests",
-            stepDelay: 1,
-            steps: [
-                () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('GET', 'https://httpbin.org/status/200');
-                    xhr.send();
-                    Assert.ok(true);
-                }
-            ].concat(this.asserts(1))
-        });
+        if (!this.isEmulatingEs3) {
+            // If we are emulating ES3 then XHR is not hooked
+            this.testCaseAsync({
+                name: "TelemetryContext: auto collection of ajax requests",
+                stepDelay: 1,
+                steps: [
+                    () => {
+                        let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix)));
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('GET', 'https://httpbin.org/status/200');
+                        xhr.send();
+                        Assert.ok(true);
+                    }
+                ].concat(this.asserts(1))
+            });
+        }
+        
         let global = getGlobal();
         if (global && global.fetch && !this.isEmulatingEs3) {
             this.testCaseAsync({

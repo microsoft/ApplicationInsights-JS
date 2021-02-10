@@ -3,7 +3,7 @@
 
 import { Util } from "./Util";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
-import { ITelemetryItem, CoreUtils, IDiagnosticLogger, objForEachKey } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, IDiagnosticLogger, objForEachKey, isNullOrUndefined, toISOString } from "@microsoft/applicationinsights-core-js";
 
 export class TelemetryItemCreator {
 
@@ -26,15 +26,15 @@ export class TelemetryItemCreator {
 
         envelopeName = DataSanitizer.sanitizeString(logger, envelopeName) || Util.NotSpecified;
 
-        if (CoreUtils.isNullOrUndefined(item) ||
-            CoreUtils.isNullOrUndefined(baseType) ||
-            CoreUtils.isNullOrUndefined(envelopeName)) {
+        if (isNullOrUndefined(item) ||
+            isNullOrUndefined(baseType) ||
+            isNullOrUndefined(envelopeName)) {
                 throw Error("Input doesn't contain all required fields");
         }
 
         const telemetryItem: ITelemetryItem = {
             name: envelopeName,
-            time: CoreUtils.toISOString(new Date()),
+            time: toISOString(new Date()),
             iKey: "", // this will be set in TelemetryContext
             ext: systemProperties ? systemProperties : {}, // part A
             tags: [],
@@ -45,7 +45,7 @@ export class TelemetryItemCreator {
         };
 
         // Part C
-        if (!CoreUtils.isNullOrUndefined(customProperties)) {
+        if (!isNullOrUndefined(customProperties)) {
             objForEachKey(customProperties, (prop, value) => {
                 telemetryItem.data[prop] = value;
             });
