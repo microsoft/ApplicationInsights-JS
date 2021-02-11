@@ -10,11 +10,11 @@ import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetr
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
-import { CoreUtils } from "./CoreUtils";
 import { ProcessTelemetryContext } from './ProcessTelemetryContext';
+import { isFunction, isNullOrUndefined, setValue } from "./HelperFuncs";
+import { strExtensionConfig } from "./Constants";
 
-let _isFunction = CoreUtils.isFunction;
-let getPlugin = "getPlugin";
+let strGetPlugin = "getPlugin";
 
 /**
  * BaseTelemetryPlugin provides a basic implementation of the ITelemetryPlugin interface so that plugins
@@ -109,7 +109,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
             if (itemCtx) {
                 // Normal core execution sequence
                 itemCtx.processNext(env);
-            } else if (_nextPlugin && _isFunction(_nextPlugin.processTelemetry)) {
+            } else if (_nextPlugin && isFunction(_nextPlugin.processTelemetry)) {
                 // Looks like backward compatibility or out of band processing. And as it looks 
                 // like a ITelemetryPlugin or ITelemetryPluginChain, just call processTelemetry
                 _nextPlugin.processTelemetry(env, null);
@@ -121,9 +121,9 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
             if (!itemCtx) {
                 let rootCtx = _rootCtx || new ProcessTelemetryContext(null, {}, _self.core);
                 // tslint:disable-next-line: prefer-conditional-expression
-                if (_nextPlugin && _nextPlugin[getPlugin]) {
+                if (_nextPlugin && _nextPlugin[strGetPlugin]) {
                     // Looks like a chain object
-                    itemCtx = rootCtx.createNew(null, _nextPlugin[getPlugin]);
+                    itemCtx = rootCtx.createNew(null, _nextPlugin[strGetPlugin]);
                 } else {
                     itemCtx = rootCtx.createNew(null, _nextPlugin as ITelemetryPlugin);
                 }
@@ -135,7 +135,7 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
         _self._baseTelInit = (config: IConfiguration, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => { 
             if (config) {
                 // Make sure the extensionConfig exists
-                config.extensionConfig = config.extensionConfig || [];
+                setValue(config, strExtensionConfig, [], null, isNullOrUndefined);
             }
     
             if (!pluginChain && core) {
@@ -144,9 +144,9 @@ export abstract class BaseTelemetryPlugin implements ITelemetryPlugin {
             }
     
             let nextPlugin:IPlugin = _nextPlugin as IPlugin;
-            if (_nextPlugin && _nextPlugin[getPlugin]) {
+            if (_nextPlugin && _nextPlugin[strGetPlugin]) {
                 // If it looks like a proxy/chain then get the plugin
-                nextPlugin = _nextPlugin[getPlugin]();
+                nextPlugin = _nextPlugin[strGetPlugin]();
             }
 
             // Support legacy plugins where core was defined as a property

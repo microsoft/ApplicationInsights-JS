@@ -16,12 +16,22 @@ export { SendRequestReason } from "./JavaScriptSDK.Enums/SendRequestReason";
 export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseCore } from './JavaScriptSDK/BaseCore';
 export { BaseTelemetryPlugin } from './JavaScriptSDK/BaseTelemetryPlugin';
-export { CoreUtils, EventHelper, Undefined, normalizeJsName, objForEachKey, proxyAssign } from "./JavaScriptSDK/CoreUtils";
+export { randomValue, random32, mwcRandomSeed, mwcRandom32 } from './JavaScriptSDK/RandomHelper';
+export { CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, addEventHandler, disableCookies, newGuid, perfNow, newId, generateW3CId } from "./JavaScriptSDK/CoreUtils";
+export {
+    isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, attachEvent, detachEvent, normalizeJsName, 
+    objForEachKey, strEndsWith, isDate, isArray, isError, isString, isNumber, isBoolean, toISOString, arrForEach, arrIndexOf, 
+    arrMap, arrReduce, strTrim, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError, strContains,
+    setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign
+} from './JavaScriptSDK/HelperFuncs';
 export { 
     getGlobal, getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
-    isReactNative, getConsole, strUndefined, strObject, strPrototype, strFunction
+    isReactNative, getConsole, dumpObj, isIE, getIEVersion, strUndefined, strObject, strPrototype, strFunction
 } from "./JavaScriptSDK/EnvUtils";
+export {
+    objCreateFn as objCreate
+} from '@microsoft/applicationinsights-shims';
 export { NotificationManager } from "./JavaScriptSDK/NotificationManager";
 export { INotificationManager } from "./JavaScriptSDK.Interfaces/INotificationManager";
 export { IPerfEvent } from './JavaScriptSDK.Interfaces/IPerfEvent';
@@ -32,3 +42,4 @@ export { ProcessTelemetryContext } from './JavaScriptSDK/ProcessTelemetryContext
 export { initializePlugins, sortPlugins } from "./JavaScriptSDK/TelemetryHelpers";
 export { _InternalMessageId, LoggingSeverity } from './JavaScriptSDK.Enums/LoggingEnums';
 export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs } from "./JavaScriptSDK/InstrumentHooks";
+export { strIKey, strExtensionConfig } from './JavaScriptSDK/Constants';

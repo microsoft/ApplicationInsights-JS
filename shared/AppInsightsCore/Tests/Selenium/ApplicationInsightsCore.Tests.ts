@@ -1,18 +1,14 @@
-/// <reference path="../TestFramework/Common.ts" />
-/// <reference path="../../src/JavaScriptSDK/AppInsightsCore.ts" />
-/// <reference path="../../src/applicationinsights-core-js.ts" />
-
-import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, CoreUtils, IAppInsightsCore, getCrypto, getMsCrypto } from "../../src/applicationinsights-core-js"
+import { Assert, AITestClass } from "@microsoft/ai-test-framework";
+import { IConfiguration, ITelemetryPlugin, ITelemetryItem, IPlugin, CoreUtils, IAppInsightsCore, normalizeJsName, random32, mwcRandom32, mwcRandomSeed } from "../../src/applicationinsights-core-js"
 import { AppInsightsCore } from "../../src/JavaScriptSDK/AppInsightsCore";
 import { IChannelControls } from "../../src/JavaScriptSDK.Interfaces/IChannelControls";
 import { _InternalMessageId, LoggingSeverity } from "../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage, DiagnosticLogger } from "../../src/JavaScriptSDK/DiagnosticLogger";
-import { normalizeJsName } from "../../src/JavaScriptSDK/CoreUtils";
 
 const AIInternalMessagePrefix = "AITR_";
 const MaxInt32 = 0xFFFFFFFF;
 
-export class ApplicationInsightsCoreTests extends TestClass {
+export class ApplicationInsightsCoreTests extends AITestClass {
 
     public testInitialize() {
         super.testInitialize();
@@ -186,6 +182,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
 
         this.testCase({
             name: 'ApplicationInsightsCore: track adds required default fields if missing',
+            useFakeTimers: true,
             test: () => {
                 const expectedIKey: string = "09465199-12AA-4124-817F-544738CC7C41";
                 const expectedTimestamp = new Date().toISOString();
@@ -290,6 +287,7 @@ export class ApplicationInsightsCoreTests extends TestClass {
         // TODO: test pollInternalLogs
         this.testCase({
             name: "DiagnosticLogger: Logs can be polled",
+            useFakeTimers: true,
             test: () => {
                 // Setup
                 const channelPlugin = new ChannelPlugin();
@@ -598,38 +596,25 @@ export class ApplicationInsightsCoreTests extends TestClass {
             test: () => {
                 let map = {};
 
-                let mwcRandCalled = 0;
-                let randCalled = 0;
+                // Check that mwcRandom is bing called (relies on the mwc implementation from the default seed)
+                mwcRandomSeed(1);
+                Assert.notEqual(722346555, random32(), "Make sure that the mwcRandom was not being called - step 1");
+                Assert.notEqual(3284929732, random32(), "Make sure that the mwcRandom was not being called - step2");
 
-                // Using manual spies as sinon spy is failing to correctly restore the function
-                let orgMwcRandom = CoreUtils.mwcRandom32;
-                CoreUtils.mwcRandom32 = function() {
-                    mwcRandCalled++;
-                    return orgMwcRandom.apply(this, arguments);
-                };
+                // cause auto seeding again
+                mwcRandomSeed();
 
-                let orgRandom32 = CoreUtils.random32;
-                CoreUtils.random32 = function() {
-                    randCalled++;
-                    return orgRandom32.apply(this, arguments);
-                };
-
-                try {
-                    for (let lp = 0; lp < 10000; lp ++) {
-                        let newId = CoreUtils.newId();
-                        if (map[newId]) {
-                            Assert.ok(false, "[" + newId + "] was duplicated...")
-                        }
-    
-                        map[newId] = true;
+                for (let lp = 0; lp < 10000; lp ++) {
+                    let newId = CoreUtils.newId();
+                    if (map[newId]) {
+                        Assert.ok(false, "[" + newId + "] was duplicated...")
                     }
-    
-                    Assert.equal(true, randCalled > 0, "Make sure it used random32");
-                    Assert.equal(false, mwcRandCalled > 0, "Make sure it did not use mwcRandom32");
-                } finally {
-                    CoreUtils.mwcRandom32 = orgMwcRandom;
-                    CoreUtils.random32 = orgRandom32;
+
+                    map[newId] = true;
                 }
+
+                mwcRandomSeed(1);
+                Assert.notEqual(722346555, random32(), "Make sure that the mwcRandom was not being called");
             }
         });
 
@@ -638,42 +623,31 @@ export class ApplicationInsightsCoreTests extends TestClass {
             test: () => {
                 let map = {};
 
-                let ieStub = this.sandbox.stub(CoreUtils, "isIE", () => true);
+                // Enumlate IE
+                this.setUserAgent("Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)");
                 this.setCrypto(null);
                 
-                let mwcRandCalled = 0;
-                let randCalled = 0;
+                // Check that mwcRandom is bing called (relies on the mwc implementation from the default seed)
+                mwcRandomSeed(1);
+                Assert.equal(722346555, random32(), "Make sure that the mwcRandom was being called - step 1");
+                Assert.equal(3284929732, random32(), "Make sure that the mwcRandom was being called - step2");
 
-                // Using manual spies as sinon spy is failing to correctly restore the function
-                let orgMwcRandom = CoreUtils.mwcRandom32;
-                CoreUtils.mwcRandom32 = function() {
-                    mwcRandCalled++;
-                    return orgMwcRandom.apply(this, arguments);
-                };
+                // cause auto seeding again
+                mwcRandomSeed();
+                Assert.notEqual(722346555, random32(), "Make sure that the mwcRandom was being called - step 3");
 
-                let orgRandom32 = CoreUtils.random32;
-                CoreUtils.random32 = function() {
-                    randCalled++;
-                    return orgRandom32.apply(this, arguments);
-                };
-
-                try {
-                    for (let lp = 0; lp < 10000; lp ++) {
-                        let newId = CoreUtils.newId();
-                        if (map[newId]) {
-                            Assert.ok(false, "[" + newId + "] was duplicated...")
-                        }
-    
-                        map[newId] = true;
+                for (let lp = 0; lp < 10000; lp ++) {
+                    let newId = CoreUtils.newId();
+                    if (map[newId]) {
+                        Assert.ok(false, "[" + newId + "] was duplicated...")
                     }
-    
-                    Assert.equal(true, ieStub.called, "Make sure it used isIE stub");
-                    Assert.equal(true, mwcRandCalled > 0, "Make sure it used mwcRandom32");
-                    Assert.equal(true, randCalled > 0, "Make sure it did not use random32");
-                } finally {
-                    CoreUtils.mwcRandom32 = orgMwcRandom;
-                    CoreUtils.random32 = orgRandom32;
+
+                    map[newId] = true;
                 }
+
+                // Reset the seed and re-check the expected result
+                mwcRandomSeed(1);
+                Assert.equal(722346555, random32(), "Make sure that the mwcRandom was not being called - step 4");
             }
         });
 
