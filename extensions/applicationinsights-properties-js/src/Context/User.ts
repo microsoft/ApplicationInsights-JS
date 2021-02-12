@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { ITelemetryConfig } from '../Interfaces/ITelemetryConfig';
-import { Util, IUser } from '@microsoft/applicationinsights-common';
+import { Util, IUser, IUserContext } from '@microsoft/applicationinsights-common';
 import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity, CoreUtils } from '@microsoft/applicationinsights-core-js';
 
-export class User implements IUser {
+export class User implements IUserContext {
 
     static cookieSeparator: string = '|';
     static userCookieName: string = 'ai_user';

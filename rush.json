@@ -2,10 +2,15 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/rush/v5/rush.schema.json",
 
-  "npmVersion": "4.5.0",
-  "rushVersion": "5.4.0",
+  "npmVersion": "7.4.3",
+  "rushVersion": "5.36.2",
   "projectFolderMaxDepth": 4,
   "projects": [
+    {
+      "packageName": "@microsoft/applicationinsights-rollup-plugin-uglify3-js",
+      "projectFolder": "tools/rollup-plugin-uglify3-js",
+      "shouldPublish": true
+    },
     {
       "packageName": "@microsoft/applicationinsights-rollup-es3",
       "projectFolder": "tools/rollup-es3",

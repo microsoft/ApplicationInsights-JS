@@ -8,6 +8,7 @@ export {
 } from "./Initialization";
 
 export { ApplicationInsightsContainer } from "./ApplicationInsightsContainer";
+export { IAppInsightsDeprecated } from "./ApplicationInsightsDeprecated";
 
 // Re-exports
 export {
@@ -24,7 +25,17 @@ export {
     PerfEvent, 
     PerfManager, 
     doPerf,
-    NotificationManager
+    INotificationListener,
+    NotificationManager,
+    IPlugin,
+    IDiagnosticLogger,
+    BaseTelemetryPlugin,
+    ITelemetryPluginChain,
+    ICustomProperties,
+    INotificationManager,
+    IProcessTelemetryContext,
+    Tags,
+    BaseCore
 } from "@microsoft/applicationinsights-core-js";
 export {
     Util,
@@ -49,6 +60,6 @@ export {
     DistributedTracingModes
 } from "@microsoft/applicationinsights-common";
 export { Sender } from "@microsoft/applicationinsights-channel-js";
-export { ApplicationInsights as ApplicationAnalytics } from "@microsoft/applicationinsights-analytics-js";
+export { ApplicationInsights as ApplicationAnalytics, IAppInsightsInternal } from "@microsoft/applicationinsights-analytics-js";
 export { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 export { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from "@microsoft/applicationinsights-dependencies-js";

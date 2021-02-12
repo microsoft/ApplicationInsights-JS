@@ -1,11 +1,13 @@
-import nodeResolve from "rollup-plugin-node-resolve";
-import {uglify} from "rollup-plugin-uglify";
-import replace from "rollup-plugin-replace";
+import nodeResolve from "@rollup/plugin-node-resolve";
+import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js";
+import replace from "@rollup/plugin-replace";
 import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/node/removedynamic";
 import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
 import { updateDistEsmFiles } from "../tools/updateDistEsm/updateDistEsm";
 
-const version = require("./package.json").version;
+const packageJson = require("./package.json");
+const version = packageJson.version;
+const pkgDesc = packageJson.description;
 const banner = [
   "/*!",
   ` * Application Insights JavaScript SDK - Web, ${version}`,

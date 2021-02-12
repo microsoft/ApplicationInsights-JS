@@ -151,6 +151,14 @@ module.exports = function (grunt) {
                 ],
                 out: './channels/applicationinsights-channel-js/Tests/Selenium/aichannel.tests.js'
             },
+            rollupuglify: {
+                tsconfig: './tools/rollup-plugin-uglify3-js/tsconfig.json',
+                src: [
+                    './tools/rollup-plugin-uglify3-js/src/*.ts',
+                    '!node_modules/**'
+                ],
+                out: './tools/rollup-plugin-uglify3-js/out/src/uglify3-js.js'
+            },
             rollupes3: {
                 tsconfig: './tools/rollup-es3/tsconfig.json'
             },
@@ -427,7 +435,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
     grunt.loadNpmTasks('grunt-run');
-    grunt.registerTask("default", ["ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
+    grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("core", ["ts:core"]);
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("module", ["ts:module"]);
@@ -450,6 +458,7 @@ module.exports = function (grunt) {
     grunt.registerTask("debugplugin", ["ts:debugplugin"]);
     grunt.registerTask("aichannel", ["ts:aichannel"]);
     grunt.registerTask("aichanneltest", ["ts:aichannel", "ts:aichanneltest", "qunit:aichannel"]);
+    grunt.registerTask("rollupuglify", ["ts:rollupuglify"]);
     grunt.registerTask("rollupes3", ["ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3"]);
     grunt.registerTask("rollupes3test", ["ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3"]);
     grunt.registerTask("shims", ["ts:shims", "ts:shimstest", "qunit:shims"]);

@@ -1,16 +1,18 @@
-import nodeResolve from "rollup-plugin-node-resolve";
-import {uglify} from "rollup-plugin-uglify";
-import replace from "rollup-plugin-replace";
+import nodeResolve from "@rollup/plugin-node-resolve";
+import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js";
+import replace from "@rollup/plugin-replace";
 import minify from 'rollup-plugin-minify-es';
 import { es3Poly, es3Check } from "@microsoft/applicationinsights-rollup-es3";
 
-const version = require("./package.json").version;
+const packageJson = require("./package.json");
+const version = packageJson.version;
+const pkgDesc = packageJson.description;
 const inputName = "./dist-esm/applicationinsights-shims";
 const outputName = "applicationinsights-shims";
 const distPath = "./dist/";
 const banner = [
   "/*!",
-  ` * Application Insights JavaScript SDK - Shim functions, ${version}`,
+  ` * ${pkgDesc}, ${version}`,
   " * Copyright (c) Microsoft and contributors. All rights reserved.",
   " */"
 ].join("\n");

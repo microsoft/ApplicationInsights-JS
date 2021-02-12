@@ -1,6 +1,6 @@
 /// <reference path="./TestFramework/Common.ts" />
 
-import { es3Check, es3Poly, importCheck } from "../src/applicationinsignts-rollup-es3";
+import { es3Check, es3Poly, importCheck } from "../src/applicationinsights-rollup-es3";
 
 //import * as sinon from 'sinon';
 
