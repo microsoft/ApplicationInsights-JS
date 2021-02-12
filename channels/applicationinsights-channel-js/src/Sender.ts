@@ -168,6 +168,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
         let _serializer: Serializer;
 
+        let _stamp_specific_redirects: number;
+
         dynamicProto(Sender, this, (_self, _base) => {
             function _notImplemented() {
                 throw new Error("Method not implemented.");
@@ -214,6 +216,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _retryAt = null;
                 _lastSend = 0;
                 _self._sender = null;
+                _stamp_specific_redirects = 0;
+
                 const defaultConfig = Sender._getDefaultAppInsightsChannelConfig();
                 _self._senderConfig = Sender._getEmptyAppInsightsChannelConfig();
                 objForEachKey(defaultConfig, (field, value) => {
@@ -357,6 +361,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             _self._xhrReadyStateChange = (xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) => {
                 if (xhr.readyState === 4) {
                     let response: IBackendResponse = null;
+
+                    // check if the xhr's responseURL is same as endpoint url
+                    // TODO after 10 redirects force send telemetry with'redirect=false' as query parameter. 
+                    if(xhr.responseURL !== _self._senderConfig.endpointUrl()) {
+                        const updatedUrl = xhr.responseURL;
+                        _self._senderConfig.endpointUrl = () => updatedUrl;
+                        ++_stamp_specific_redirects;
+                    }
+                    
                     if (!_self._appId) {
                         response = _parseResponse(_getResponseText(xhr) || xhr.response);
                         if (response && response.appId) {
