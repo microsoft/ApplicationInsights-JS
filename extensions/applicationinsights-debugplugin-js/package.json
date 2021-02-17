@@ -16,7 +16,7 @@
         "build:browser": "rollup -c",
         "test": "",
         "lint": "tslint -p tsconfig.json",
-        "dtsgen": "api-extractor run --local && powershell -ExecutionPolicy Bypass ../../scripts/dtsgen.ps1 'Microsoft.ApplicationInsights'"
+        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js 'Microsoft.ApplicationInsights'"
     },
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
