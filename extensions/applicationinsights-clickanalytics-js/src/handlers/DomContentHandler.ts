@@ -6,7 +6,7 @@ import {
     walkUpDomChainWithElementValidation,
     extend, _ExtendedInternalMessageId, isValueAssigned
 } from '../common/Utils';
-import { IDiagnosticLogger, LoggingSeverity, getDocument, CoreUtils, hasDocument} from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, LoggingSeverity, getDocument, isNullOrUndefined, hasDocument} from "@microsoft/applicationinsights-core-js";
 import { IClickAnalyticsConfiguration, IContent, IContentHandler } from '../Interfaces/Datamodel';
 
 const MAX_CONTENTNAME_LENGTH = 200;
@@ -108,7 +108,7 @@ export class DomContentHandler implements IContentHandler {
         let element = el;
         let parentDataTagFound: boolean = false;
         let elementLevelFlag: boolean = false; // Use this flag to capture 'id' only at the incoming html element level.
-        while(!CoreUtils.isNullOrUndefined(element) && !CoreUtils.isNullOrUndefined(element.attributes)) {
+        while(!isNullOrUndefined(element) && !isNullOrUndefined(element.attributes)) {
             let attributes=element.attributes;
             for (let i = 0; i < attributes.length; i++) {
                 const attrib = attributes[i];

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { DataSanitizer, UrlHelper, DateTimeUtils, IDependencyTelemetry, Util } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, CoreUtils, normalizeJsName, objForEachKey } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, objKeys, arrForEach, isNumber, isString, normalizeJsName, objForEachKey } from '@microsoft/applicationinsights-core-js';
 import dynamicProto from "@microsoft/dynamicproto-js";
 
 export interface IAjaxRecordResponse {
@@ -15,8 +15,6 @@ export interface IAjaxRecordResponse {
 }
 
 let strProperties = "properties";
-let _objKeys = CoreUtils.objKeys;
-let _arrForEach = CoreUtils.arrForEach;
 
 /** @ignore */
 function _calcPerfDuration(resourceEntry:PerformanceResourceTiming, start:string, end:string) {
@@ -80,7 +78,6 @@ function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry)
     let resourceEntry = ajaxData.perfTiming;
     let props = dependency[strProperties] || {};
     let propsSet = 0;
-    let _isString = CoreUtils.isString;
     let strName = "name";
     let strStart = "Start";
     let strEnd = "End";
@@ -141,15 +138,15 @@ function _populatePerfData(ajaxData:ajaxRecord, dependency:IDependencyTelemetry)
         var serverTiming = resourceEntry[strServerTiming];
         if (serverTiming) {
             let server = {};
-            _arrForEach(serverTiming, (value, idx) => {
+            arrForEach(serverTiming, (value, idx) => {
                 let name = normalizeJsName(value[strName] || "" + idx);
                 let newValue = server[name] || {};
                 objForEachKey(value, (key, val) => {
-                    if (key !== strName && _isString(val) || CoreUtils.isNumber(val)) {
+                    if (key !== strName && isString(val) || isNumber(val)) {
                         if (newValue[key]) {
                             val = newValue[key] + ";" + val;
                         }
-                        if (val || !_isString(val)) {
+                        if (val || !isString(val)) {
                             // Only set the value if it has a value and it's not an empty string
                             newValue[key] = val;
                         }
@@ -301,7 +298,7 @@ export class ajaxRecord {
                 _populatePerfData(self, dependency);
         
                 if (enableRequestHeaderTracking) {
-                    if (_objKeys(self.requestHeaders).length > 0) {
+                    if (objKeys(self.requestHeaders).length > 0) {
                         dependency[strProperties] = dependency[strProperties] || {};
                         dependency[strProperties].requestHeaders = self.requestHeaders;
                     }
@@ -318,7 +315,7 @@ export class ajaxRecord {
                         }
         
                         if (response.headerMap) {
-                            if (_objKeys(response.headerMap).length > 0) {
+                            if (objKeys(response.headerMap).length > 0) {
                                 dependency[strProperties] = dependency[strProperties] || {};
                                 dependency[strProperties].responseHeaders = response.headerMap;
                             }
