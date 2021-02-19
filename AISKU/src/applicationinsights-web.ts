@@ -21,7 +21,7 @@ export {
     ITelemetryPlugin,
     IPerfEvent,
     IPerfManager, 
-    IPerfManagerProvider ,
+    IPerfManagerProvider,
     PerfEvent, 
     PerfManager, 
     doPerf,
@@ -35,7 +35,8 @@ export {
     INotificationManager,
     IProcessTelemetryContext,
     Tags,
-    BaseCore
+    BaseCore,
+    CoreUtils
 } from "@microsoft/applicationinsights-core-js";
 export {
     Util,

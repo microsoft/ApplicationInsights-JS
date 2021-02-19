@@ -6,12 +6,10 @@ import { ITelemetryItem } from '../JavaScriptSDK.Interfaces/ITelemetryItem';
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from "../JavaScriptSDK.Interfaces/ITelemetryPluginChain";
 import { ITelemetryPlugin } from '../JavaScriptSDK.Interfaces/ITelemetryPlugin';
-import { CoreUtils } from "./CoreUtils";
 import { _InternalLogMessage } from "./DiagnosticLogger";
 import { doPerf } from "./PerfManager";
 import { LoggingSeverity, _InternalMessageId } from '../JavaScriptSDK.Enums/LoggingEnums';
-
-let _isFunction = CoreUtils.isFunction;
+import { isFunction } from './HelperFuncs';
 
 export class TelemetryPluginChain implements ITelemetryPluginChain {
 
@@ -48,8 +46,8 @@ export class TelemetryPluginChain implements ITelemetryPluginChain {
     constructor(plugin:ITelemetryPlugin, defItemCtx:IProcessTelemetryContext) {
         let _self = this;
         let _nextProxy:ITelemetryPluginChain = null;
-        let _hasProcessTelemetry = _isFunction(plugin.processTelemetry);
-        let _hasSetNext = _isFunction(plugin.setNextPlugin);
+        let _hasProcessTelemetry = isFunction(plugin.processTelemetry);
+        let _hasSetNext = isFunction(plugin.setNextPlugin);
 
         _self._hasRun = false;
 

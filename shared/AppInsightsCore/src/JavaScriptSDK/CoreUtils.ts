@@ -1,91 +1,89 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 "use strict";
-import { objCreateFn, strShimObject, strShimUndefined, strShimFunction, strShimPrototype } from "@microsoft/applicationinsights-shims";
-import { getWindow, getDocument, getCrypto, getPerformance, getMsCrypto, getNavigator }  from './EnvUtils';
+import { objCreateFn, strShimUndefined } from "@microsoft/applicationinsights-shims";
+import { getWindow, getDocument, getPerformance, isIE }  from "./EnvUtils";
+import { 
+    arrForEach, arrIndexOf, arrMap, arrReduce, attachEvent, dateNow, detachEvent, hasOwnProperty, 
+    isArray, isBoolean, isDate, isError, isFunction, isNullOrUndefined, isNumber, isObject, isString, isTypeof, 
+    isUndefined, objDefineAccessors, objKeys, strTrim, toISOString
+} from "./HelperFuncs";
+import { randomValue, random32, mwcRandomSeed, mwcRandom32 } from "./RandomHelper";
 
 // Added to help with minfication
 export const Undefined = strShimUndefined;
-const strOnPrefix = "on";
-const strAttachEvent = "attachEvent";
-const strAddEventHelper = "addEventListener";
-const strDetachEvent = "detachEvent";
-const strRemoveEventListener = "removeEventListener";
-const UInt32Mask = 0x100000000;
-const MaxUInt32 = 0xffffffff;
-
-let _isTrident: boolean = null;
-
-// MWC based Random generator (for IE)
-let _mwcSeeded = false;
-let _mwcW = 123456789;
-var _mwcZ = 987654321;
-
-// Takes any integer
-function _mwcSeed(seedValue: number) {
-    if (seedValue < 0) {
-        // Make sure we end up with a positive number and not -ve one.
-        seedValue >>>= 0;    
-    }
-
-    _mwcW = (123456789 + seedValue) & MaxUInt32;
-    _mwcZ = (987654321 - seedValue) & MaxUInt32;
-    _mwcSeeded = true;
-}
-
-function _autoSeedMwc() {
-    // Simple initialization using default Math.random() - So we inherit any entropy from the browser
-    // and bitwise XOR with the current milliseconds
-    _mwcSeed((Math.random() * UInt32Mask) ^ new Date().getTime());
-}
-
-function _isTypeof(value: any, theType: string): boolean {
-    return typeof value === theType;
-};
-
-function _isUndefined(value: any): boolean {
-    return _isTypeof(value, strShimUndefined) || value === undefined;
-};
-
-function _isNullOrUndefined(value: any): boolean {
-    return (_isUndefined(value) || value === null);
-}
-
-function _hasOwnProperty(obj: any, prop: string): boolean {
-    return obj && Object[strShimPrototype].hasOwnProperty.call(obj, prop);
-};
-
-function _isObject(value: any): boolean {
-    return _isTypeof(value, strShimObject);
-};
-
-function _isFunction(value: any): value is Function {
-    return _isTypeof(value, strShimFunction);
-};
 
 /**
- * Binds the specified function to an event, so that the function gets called whenever the event fires on the object
- * @param obj Object to add the event too.
- * @param eventNameWithoutOn String that specifies any of the standard DHTML Events without "on" prefix
- * @param handlerRef Pointer that specifies the function to call when event fires
- * @param useCapture [Optional] Defaults to false
- * @returns True if the function was bound successfully to the event, otherwise false
+ * Trys to add an event handler for the specified event to the window, body and document
+ * @param eventName {string} - The name of the event
+ * @param callback {any} - The callback function that needs to be executed for the given event
+ * @return {boolean} - true if the handler was successfully added
  */
-function _attachEvent(obj: any, eventNameWithoutOn: string, handlerRef: any, useCapture: boolean = false) {
+export function addEventHandler(eventName: string, callback: any): boolean {
     let result = false;
-    if (!_isNullOrUndefined(obj)) {
-        try {
-            if (!_isNullOrUndefined(obj[strAddEventHelper])) {
-                // all browsers except IE before version 9
-                obj[strAddEventHelper](eventNameWithoutOn, handlerRef, useCapture);
-                result = true;
-            } else if (!_isNullOrUndefined(obj[strAttachEvent])) {
-                // IE before version 9                    
-                obj[strAttachEvent](strOnPrefix + eventNameWithoutOn, handlerRef);
-                result = true;
-            }
-        } catch (e) {
-            // Just Ignore any error so that we don't break any execution path
+    let w = getWindow();
+    if (w) {
+        result = attachEvent(w, eventName, callback);
+        result = attachEvent(w["body"], eventName, callback) || result;
+    }
+
+    let doc = getDocument();
+    if (doc) {
+        result = EventHelper.Attach(doc, eventName, callback) || result;
+    }
+
+    return result;
+}
+
+export function disableCookies() {
+    CoreUtils._canUseCookies = false;
+}
+
+export function newGuid(): string {
+    function randomHexDigit() {
+        return randomValue(15); // Get a random value from 0..15
+    }
+
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(GuidRegex, (c) => {
+        const r = (randomHexDigit() | 0), v = (c === 'x' ? r : r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+/**
+ * Return the current value of the Performance Api now() function (if available) and fallback to dateNow() if it is unavailable (IE9 or less)
+ * https://caniuse.com/#search=performance.now
+ */
+export function perfNow(): number {
+    let perf = getPerformance();
+    if (perf && perf.now) {
+        return perf.now();
+    }
+
+    return dateNow();
+}
+
+/**
+ * Generate random base64 id string. 
+ * The default length is 22 which is 132-bits so almost the same as a GUID but as base64 (the previous default was 5)
+ * @param maxLength - Optional value to specify the length of the id to be generated, defaults to 22
+ */
+export function newId(maxLength = 22): string {
+    const base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+    // Start with an initial random number, consuming the value in reverse byte order
+    let number = random32() >>> 0;  // Make sure it's a +ve number
+    let chars = 0;
+    let result = "";
+    while (result.length < maxLength) {
+        chars ++;
+        result += base64chars.charAt(number & 0x3F);
+        number >>>= 6;              // Zero fill with right shift
+        if (chars === 5) {
+            // 5 base64 characters === 30 bits so we don't have enough bits for another base64 char
+            // So add on another 30 bits and make sure it's +ve
+            number = (((random32() << 2) & 0xFFFFFFFF) | (number & 0x03)) >>> 0;
+            chars = 0;      // We need to reset the number every 5 chars (30 bits)
         }
     }
 
@@ -93,287 +91,133 @@ function _attachEvent(obj: any, eventNameWithoutOn: string, handlerRef: any, use
 }
 
 /**
- * Removes an event handler for the specified event
- * @param Object to remove the event from
- * @param eventNameWithoutOn {string} - The name of the event
- * @param handlerRef {any} - The callback function that needs to be executed for the given event
- * @param useCapture [Optional] Defaults to false
+ * The strEndsWith() method determines whether a string ends with the characters of a specified string, returning true or false as appropriate.
+ * @param value - The value to check whether it ends with the search value.
+ * @param search - The characters to be searched for at the end of the value.
+ * @returns true if the given search value is found at the end of the string, otherwise false.
  */
-function _detachEvent(obj: any, eventNameWithoutOn: string, handlerRef: any, useCapture: boolean = false) {
-    if (!_isNullOrUndefined(obj)) {
-        try {
-            if (!_isNullOrUndefined(obj[strRemoveEventListener])) {
-                obj[strRemoveEventListener](eventNameWithoutOn, handlerRef, useCapture);
-            } else if (!_isNullOrUndefined(obj[strDetachEvent])) {
-                obj[strDetachEvent](strOnPrefix + eventNameWithoutOn, handlerRef);
-            }
-        } catch (e) {
-            // Just Ignore any error so that we don't break any execution path
-        }
-    }
-}
-
-/**
- * Try to define get/set object property accessors for the target object/prototype, this will provide compatibility with
- * existing API definition when run within an ES5+ container that supports accessors but still enable the code to be loaded
- * and executed in an ES3 container, providing basic IE8 compatibility.
- * @param target The object on which to define the property.
- * @param prop The name of the property to be defined or modified.
- * @param getProp The getter function to wire against the getter.
- * @param setProp The setter function to wire against the setter.
- * @returns True if it was able to create the accessors otherwise false
- */
-export function objDefineAccessors<T>(target: any, prop: string, getProp?: () => T, setProp?: (v: T) => void): boolean {
-    let defineProp = Object["defineProperty"];
-    if (defineProp) {
-        try {
-            let descriptor: PropertyDescriptor = {
-                enumerable: true,
-                configurable: true
-            }
-
-            if (getProp) {
-                descriptor.get = getProp;
-            }
-            if (setProp) {
-                descriptor.set = setProp;
-            }
-
-            defineProp(target, prop, descriptor);
-            return true;
-        } catch (e) {
-            // IE8 Defines a defineProperty on Object but it's only supported for DOM elements so it will throw
-            // We will just ignore this here.
-        }
+export function strEndsWith(value: string, search: string) {
+    if (value && search) {
+        let len = value.length;
+        let start = len - search.length;
+        return value.substring(start >= 0 ? start : 0, len) === search;
     }
 
     return false;
+}    
+
+/**
+ * generate W3C trace id
+ */
+export function generateW3CId(): string {
+    const hexValues = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
+
+    // rfc4122 version 4 UUID without dashes and with lowercase letters
+    let oct = "", tmp;
+    for (let a = 0; a < 4; a++) {
+        tmp = random32();
+        oct +=
+            hexValues[tmp & 0xF] +
+            hexValues[tmp >> 4 & 0xF] +
+            hexValues[tmp >> 8 & 0xF] +
+            hexValues[tmp >> 12 & 0xF] +
+            hexValues[tmp >> 16 & 0xF] +
+            hexValues[tmp >> 20 & 0xF] +
+            hexValues[tmp >> 24 & 0xF] +
+            hexValues[tmp >> 28 & 0xF];
+    }
+
+    // "Set the two most significant bits (bits 6 and 7) of the clock_seq_hi_and_reserved to zero and one, respectively"
+    const clockSequenceHi = hexValues[8 + (random32() & 0x03) | 0];
+    return oct.substr(0, 8) + oct.substr(9, 4) + "4" + oct.substr(13, 3) + clockSequenceHi + oct.substr(16, 3) + oct.substr(19, 12);
 }
 
 /**
- * Validates that the string name conforms to the JS IdentifierName specification and if not
- * normalizes the name so that it would. This method does not identify or change any keywords
- * meaning that if you pass in a known keyword the same value will be returned.
- * This is a simplified version
- * @param name The name to validate
+ * Provides a collection of utility functions, included for backward compatibility with previous releases.
+ * @deprecated Marking this interface and instance as deprecated in favor of direct usage of the helper functions
+ * as direct usage provides better tree-shaking and minification by avoiding the inclusion of the unused items 
+ * in your resulting code.
  */
-export function normalizeJsName(name: string): string {
-    let value = name;
-    let match = /([^\w\d_$])/g;
-    if (match.test(name)) {
-        value = name.replace(match, "_");
-    }
+export interface ICoreUtils {
 
-    return value;
-}
+    /**
+     * Internal - Do not use directly.
+     * @deprecated Direct usage of this property is not recommend
+     */
+    _canUseCookies: boolean;
 
-/**
- * This is a helper function for the equivalent of arForEach(objKeys(target), callbackFn), this is a 
- * performance optimization to avoid the creation of a new array for large objects
- * @param target The target object to find and process the keys
- * @param callbackfn The function to call with the details
- */
-export function objForEachKey(target: any, callbackfn: (name: string, value: any) => void) {
-    if (target && _isObject(target)) {
-        for (let prop in target) {
-            if (_hasOwnProperty(target, prop)) {
-                callbackfn.call(target, prop, target[prop]);
-            }
-        }
-    }
-}
+    isTypeof: (value: any, theType: string) => boolean;
 
-/**
- * Effectively assigns all enumerable properties (not just own properties) and functions (including inherited prototype) from 
- * the source object to the target, it attempts to use proxy getters / setters (if possible) and proxy functions to avoid potential
- * implementation issues by assigning prototype functions as instance ones
- * 
- * This method is the primary method used to "update" the snippet proxy with the ultimate implementations.
- * 
- * Special ES3 Notes:
- * Updates (setting) of direct property values on the target or indirectly on the source object WILL NOT WORK PROPERLY, updates to the 
- * properties of "referenced" object will work (target.context.newValue = 10 => will be reflected in the source.context as it's the
- * same object). ES3 Failures: assigning target.myProp = 3 -> Won't change source.myProp = 3, likewise the reverse would also fail.
- * @param target - The target object to be assigned with the source properties and functions
- * @param source - The source object which will be assigned / called by setting / calling the targets proxies
- * @param chkSet - An optional callback to determine whether a specific property/function should be proxied
- * @memberof Initialization
- */
-export function proxyAssign(target: any, source: any, chkSet?: (name: string, isFunc?: boolean, source?: any, target?: any) => boolean) {
-    if (target && source && target !== source && _isObject(target) && _isObject(source)) {
-        // effectively apply/proxy full source to the target instance
-        for (const field in source) {
-            if (CoreUtils.isString(field)) {
-                let value = source[field] as any;
-                if (_isFunction(value)) {
-                    if (!chkSet || chkSet(field, true, source, target)) {
-                        // Create a proxy function rather than just copying the (possible) prototype to the new object as an instance function
-                        target[field as string] = (function(funcName: string) {
-                            return function() {
-                                // Capture the original arguments passed to the method
-                                var originalArguments = arguments;
-                                return source[funcName].apply(source, originalArguments);
-                            }
-                        })(field);
-                    }
-                } else if (!chkSet || chkSet(field, false, source, target)) {
-                    if (_hasOwnProperty(target, field)) {
-                        // Remove any previous instance property
-                        delete target[field];
-                    }
+    isUndefined: (value: any) => boolean;
 
-                    if (!objDefineAccessors(target, field, () => {
-                        return source[field];
-                    }, (theValue) => {
-                        source[field] = theValue;
-                    })) {
-                        // Unable to create an accessor, so just assign the values as a fallback
-                        // -- this will (mostly) work for objects
-                        // -- but will fail for accessing primitives (if the source changes it) and all types of "setters" as the source won't be modified
-                        target[field as string] = value;
-                    }
-                }
-            }
-        }
-    }
+    isNullOrUndefined: (value: any) => boolean;
 
-    return target;
-}
-
-export class CoreUtils {
-    public static _canUseCookies: boolean;
-
-    public static isTypeof: (value: any, theType: string) => boolean = _isTypeof;
-
-    public static isUndefined: (value: any) => boolean = _isUndefined;
-
-    public static isNullOrUndefined: (value: any) => boolean = _isNullOrUndefined;
-
-    public static hasOwnProperty: (obj: any, prop: string) => boolean = _hasOwnProperty;
+    hasOwnProperty: (obj: any, prop: string) => boolean;
 
     /**
      * Checks if the passed of value is a function.
      * @param {any} value - Value to be checked.
      * @return {boolean} True if the value is a boolean, false otherwise.
      */
-    public static isFunction: (value: any) => value is Function = _isFunction;
+    isFunction: (value: any) => value is Function;
 
     /**
      * Checks if the passed of value is a function.
      * @param {any} value - Value to be checked.
      * @return {boolean} True if the value is a boolean, false otherwise.
      */
-    public static isObject: (value: any) => boolean = _isObject;
+    isObject: (value: any) => boolean;
 
     /**
      * Check if an object is of type Date
      */
-    public static isDate(obj: any): obj is Date {
-        return Object[strShimPrototype].toString.call(obj) === "[object Date]";
-    }
+    isDate: (obj: any) => obj is Date;
 
     /**
      * Check if an object is of type Array
      */
-    public static isArray(obj: any): boolean {
-        return Object[strShimPrototype].toString.call(obj) === "[object Array]";
-    }
+    isArray: (obj: any) => boolean;
 
     /**
      * Check if an object is of type Error
      */
-    public static isError(obj: any): boolean {
-        return Object[strShimPrototype].toString.call(obj) === "[object Error]";
-    }
+    isError: (obj: any) => boolean;
 
     /**
      * Checks if the type of value is a string.
      * @param {any} value - Value to be checked.
      * @return {boolean} True if the value is a string, false otherwise.
      */
-    public static isString(value: any): value is string {
-        return _isTypeof(value, "string");
-    }
+    isString: (value: any) => value is string;
 
     /**
      * Checks if the type of value is a number.
      * @param {any} value - Value to be checked.
      * @return {boolean} True if the value is a number, false otherwise.
      */
-    public static isNumber(value: any): value is number {
-        return _isTypeof(value, "number");
-    }
+    isNumber: (value: any) => value is number;
 
     /**
      * Checks if the type of value is a boolean.
      * @param {any} value - Value to be checked.
      * @return {boolean} True if the value is a boolean, false otherwise.
      */
-    public static isBoolean(value: any): value is boolean {
-        return _isTypeof(value, "boolean");
-    }
-
-    /**
-     * Creates a new GUID.
-     * @return {string} A GUID.
-     */
-
-    public static disableCookies() {
-        CoreUtils._canUseCookies = false;
-    }
-
-    public static newGuid(): string {
-        function randomHexDigit() {
-            return CoreUtils.randomValue(15); // Get a random value from 0..15
-        }
-
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(GuidRegex, (c) => {
-            const r = (randomHexDigit() | 0), v = (c === 'x' ? r : r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
+    isBoolean: (value: any) => value is boolean;
 
     /**
      * Convert a date to I.S.O. format in IE8
      */
-    public static toISOString(date: Date) {
-        if (CoreUtils.isDate(date)) {
-            const pad = (num: number) => {
-                let r = String(num);
-                if (r.length === 1) {
-                    r = "0" + r;
-                }
-
-                return r;
-            }
-
-            return date.getUTCFullYear()
-                + "-" + pad(date.getUTCMonth() + 1)
-                + "-" + pad(date.getUTCDate())
-                + "T" + pad(date.getUTCHours())
-                + ":" + pad(date.getUTCMinutes())
-                + ":" + pad(date.getUTCSeconds())
-                + "." + String((date.getUTCMilliseconds() / 1000).toFixed(3)).slice(2, 5)
-                + "Z";
-        }
-    }
+    toISOString: (date: Date) => string;
 
     /**
      * Performs the specified action for each element in an array. This helper exists to avoid adding a polyfil for older browsers
      * that do not define Array.prototype.xxxx (eg. ES3 only, IE8) just in case any page checks for presence/absence of the prototype
      * implementation. Note: For consistency this will not use the Array.prototype.xxxx implementation if it exists as this would
      * cause a testing requirement to test with and without the implementations
-     * @param callbackfn  A function that accepts up to three arguments. forEach calls the callbackfn function one time for each element in the array.
+     * @param callbackfn  A function that accepts up to three arguments. forEach calls the callbackfn function one time for each element in the array. It can return -1 to break out of the loop
      * @param thisArg  [Optional] An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
      */
-    public static arrForEach<T>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => void, thisArg?: any): void {
-        let len = arr.length;
-        for (let idx = 0; idx < len; idx++) {
-            if (idx in arr) {
-                callbackfn.call(thisArg || arr, arr[idx], idx, arr);
-            }
-        }
-    }
+    arrForEach: <T>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => void|number, thisArg?: any) => void;
 
     /**
      * Returns the index of the first occurrence of a value in an array. This helper exists to avoid adding a polyfil for older browsers
@@ -383,17 +227,7 @@ export class CoreUtils {
      * @param searchElement The value to locate in the array.
      * @param fromIndex The array index at which to begin the search. If fromIndex is omitted, the search starts at index 0.
      */
-    public static arrIndexOf<T>(arr: T[], searchElement: T, fromIndex?: number): number {
-        let len = arr.length;
-        let from = fromIndex || 0;
-        for (let lp = Math.max(from >= 0 ? from : len - Math.abs(from), 0); lp < len; lp++) {
-            if (lp in arr && arr[lp] === searchElement) {
-                return lp;
-            }
-        }
-
-        return -1;
-    }
+    arrIndexOf: <T>(arr: T[], searchElement: T, fromIndex?: number) => number;
 
     /**
      * Calls a defined callback function on each element of an array, and returns an array that contains the results. This helper exists 
@@ -403,19 +237,7 @@ export class CoreUtils {
      * @param callbackfn A function that accepts up to three arguments. The map method calls the callbackfn function one time for each element in the array.
      * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
      */
-    public static arrMap<T, R>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => R, thisArg?: any): R[] {
-        let len = arr.length;
-        let _this = thisArg || arr;
-        let results = new Array(len);
-
-        for (let lp = 0; lp < len; lp++) {
-            if (lp in arr) {
-                results[lp] = callbackfn.call(_this, arr[lp], arr);
-            }
-        }
-
-        return results;
-    }
+    arrMap: <T, R>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => R, thisArg?: any) => R[];
 
     /**
      * Calls the specified callback function for all the elements in an array. The return value of the callback function is the accumulated result, and is
@@ -425,42 +247,12 @@ export class CoreUtils {
      * @param callbackfn A function that accepts up to four arguments. The reduce method calls the callbackfn function one time for each element in the array.
      * @param initialValue If initialValue is specified, it is used as the initial value to start the accumulation. The first call to the callbackfn function provides this value as an argument instead of an array value.
      */
-    public static arrReduce<T, R>(arr: T[], callbackfn: (previousValue: T | R, currentValue?: T, currentIndex?: number, array?: T[]) => R, initialValue?: R): R {
-        let len = arr.length;
-        let lp = 0;
-        let value;
-
-        // Specifically checking the number of passed arguments as the value could be anything
-        if (arguments.length >= 3) {
-            value = arguments[2];
-        } else {
-            while (lp < len && !(lp in arr)) {
-                lp++;
-            }
-
-            value = arr[lp++];
-        }
-
-        while (lp < len) {
-            if (lp in arr) {
-                value = callbackfn(value, arr[lp], lp, arr);
-            }
-            lp++;
-        }
-
-        return value;
-    }
+    arrReduce: <T, R>(arr: T[], callbackfn: (previousValue: T | R, currentValue?: T, currentIndex?: number, array?: T[]) => R, initialValue?: R) => R;
 
     /**
      * helper method to trim strings (IE8 does not implement String.prototype.trim)
      */
-    public static strTrim(str: any): string {
-        if (!CoreUtils.isString(str)) {
-            return str;
-        }
-
-        return str.replace(/^\s+|\s+$/g, "");
-    }
+    strTrim: (str: any) => string;
 
     /**
      * Creates an object that has the specified prototype, and that optionally contains specified properties. This helper exists to avoid adding a polyfil
@@ -469,7 +261,7 @@ export class CoreUtils {
      * @param obj Object to use as a prototype. May be null
      */
     // tslint:disable-next-line: member-ordering
-    public static objCreate:(obj: object) => any = objCreateFn;
+    objCreate:(obj: object) => any;
 
     /**
      * Returns the names of the enumerable string properties and methods of an object. This helper exists to avoid adding a polyfil for older browsers 
@@ -477,42 +269,7 @@ export class CoreUtils {
      * Note: For consistency this will not use the Object.keys implementation if it exists as this would cause a testing requirement to test with and without the implementations
      * @param obj Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
      */
-    public static objKeys(obj: {}): string[] {
-        var hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString');
-
-        if (!_isFunction(obj) && (!_isObject(obj) || obj === null)) {
-            throw new TypeError('objKeys called on non-object');
-        }
-
-        let result: string[] = [];
-
-        for (let prop in obj) {
-            if (_hasOwnProperty(obj, prop)) {
-                result.push(prop);
-            }
-        }
-
-        if (hasDontEnumBug) {
-            let dontEnums = [
-                'toString',
-                'toLocaleString',
-                'valueOf',
-                'hasOwnProperty',
-                'isPrototypeOf',
-                'propertyIsEnumerable',
-                'constructor'
-            ];
-            let dontEnumsLength = dontEnums.length;
-
-            for (let lp = 0; lp < dontEnumsLength; lp++) {
-                if (_hasOwnProperty(obj, dontEnums[lp])) {
-                    result.push(dontEnums[lp]);
-                }
-            }
-        }
-
-        return result;
-    }
+    objKeys: (obj: {}) => string[];
 
     /**
      * Try to define get/set object property accessors for the target object/prototype, this will provide compatibility with
@@ -524,7 +281,7 @@ export class CoreUtils {
      * @param setProp The setter function to wire against the setter.
      * @returns True if it was able to create the accessors otherwise false
      */
-    public static objDefineAccessors = objDefineAccessors;
+    objDefineAccessors: <T>(target: any, prop: string, getProp?: () => T, setProp?: (v: T) => void) => boolean;
 
     /**
      * Trys to add an event handler for the specified event to the window, body and document
@@ -532,146 +289,58 @@ export class CoreUtils {
      * @param callback {any} - The callback function that needs to be executed for the given event
      * @return {boolean} - true if the handler was successfully added
      */
-    public static addEventHandler(eventName: string, callback: any): boolean {
-        let result = false;
-        let w = getWindow();
-        if (w) {
-            result = _attachEvent(w, eventName, callback);
-            result = _attachEvent(w["body"], eventName, callback) || result;
-        }
-
-        let doc = getDocument();
-        if (doc) {
-            result = EventHelper.Attach(doc, eventName, callback) || result;
-        }
-
-        return result;
-    }
+    addEventHandler: (eventName: string, callback: any) => boolean;
 
     /**
      * Return the current time via the Date now() function (if available) and falls back to (new Date()).getTime() if now() is unavailable (IE8 or less)
      * https://caniuse.com/#search=Date.now
      */
-    public static dateNow() {
-        let dt = Date;
-        if (dt.now) {
-            return dt.now();
-        }
-
-        return new dt().getTime();
-    }
+    dateNow: () => number;
 
     /**
-     * Return the current value of the Performance Api now() function (if available) and fallback to CoreUtils.dateNow() if it is unavailable (IE9 or less)
+     * Identifies whether the current environment appears to be IE
+     */
+    isIE: () => boolean;
+
+    /**
+     * @deprecated - Use the core.getCookieMgr().disable()
+     * Force the SDK not to store and read any data from cookies.
+     */
+    disableCookies: () => void;
+
+    newGuid: () => string;
+
+    /**
+     * Return the current value of the Performance Api now() function (if available) and fallback to dateNow() if it is unavailable (IE9 or less)
      * https://caniuse.com/#search=performance.now
      */
-    public static perfNow() {
-        let perf = getPerformance();
-        if (perf && perf.now) {
-            return perf.now();
-        }
-
-        return CoreUtils.dateNow();
-    }
+    perfNow: () => number;
 
     /**
      * Generate random base64 id string. 
      * The default length is 22 which is 132-bits so almost the same as a GUID but as base64 (the previous default was 5)
      * @param maxLength - Optional value to specify the length of the id to be generated, defaults to 22
      */
-    public static newId(maxLength = 22): string {
-        const base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-        // Start with an initial random number, consuming the value in reverse byte order
-        let number = CoreUtils.random32() >>> 0;  // Make sure it's a +ve number
-        let chars = 0;
-        let result = "";
-        while (result.length < maxLength) {
-            chars ++;
-            result += base64chars.charAt(number & 0x3F);
-            number >>>= 6;              // Zero fill with right shift
-            if (chars === 5) {
-                // 5 base64 characters === 30 bits so we don't have enough bits for another base64 char
-                // So add on another 30 bits and make sure it's +ve
-                number = (((CoreUtils.random32() << 2) & 0xFFFFFFFF) | (number & 0x03)) >>> 0;
-                chars = 0;      // We need to reset the number every 5 chars (30 bits)
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Identifies whether the current environment appears to be IE
-     */
-    public static isIE() {
-        if (_isTrident === null) {
-            let navigator = getNavigator() || ({} as Navigator);
-            let userAgent = (navigator.userAgent || "").toLowerCase();
-            _isTrident = (userAgent.indexOf("msie") !== -1 || userAgent.indexOf("trident/") !== -1);
-        }
-    
-        return _isTrident;
-    }    
+    newId: (maxLength?: number) => string;
 
     /**
      * Generate a random value between 0 and maxValue, max value should be limited to a 32-bit maximum.
      * So maxValue(16) will produce a number from 0..16 (range of 17)
      * @param maxValue
      */
-    public static randomValue(maxValue: number) {
-        if (maxValue > 0) {
-            return Math.floor((CoreUtils.random32() / MaxUInt32) * (maxValue + 1)) >>> 0;
-        }
-
-        return 0;
-    }
+    randomValue: (maxValue: number) => number;
 
     /**
      * generate a random 32-bit number (0x000000..0xFFFFFFFF) or (-0x80000000..0x7FFFFFFF), defaults un-unsigned.
      * @param signed - True to return a signed 32-bit number (-0x80000000..0x7FFFFFFF) otherwise an unsigned one (0x000000..0xFFFFFFFF)
      */
-    public static random32(signed?: boolean) {
-        let value;
-        let c = getCrypto() || getMsCrypto();
-        if (c && c.getRandomValues) {
-            // Make sure the number is converted into the specified range (-0x80000000..0x7FFFFFFF)
-            value = c.getRandomValues(new Uint32Array(1))[0] & MaxUInt32;
-        } else if (CoreUtils.isIE()) {
-            // For IE 6, 7, 8 (especially on XP) Math.random is not very random
-            if (!_mwcSeeded) {
-                // Set the seed for the Mwc algorithm
-                _autoSeedMwc();
-            }
-
-            // Don't use Math.random for IE
-            // Make sure the number is converted into the specified range (-0x80000000..0x7FFFFFFF)
-            value = CoreUtils.mwcRandom32() & MaxUInt32;
-        } else {
-            // Make sure the number is converted into the specified range (-0x80000000..0x7FFFFFFF)
-            value = Math.floor((UInt32Mask * Math.random()) | 0);
-        }
-
-        if (!signed) {
-            // Make sure we end up with a positive number and not -ve one.
-            value >>>= 0;
-        }
-
-        return value;
-    }
+    random32: (signed?: boolean) => number;
 
     /**
      * Seed the MWC random number generator with the specified seed or a random value
      * @param value - optional the number to used as the seed, if undefined, null or zero a random value will be chosen
      */
-    public static mwcRandomSeed(value?: number)
-    {
-        if (!value) {
-            _autoSeedMwc();
-        } else {
-            _mwcSeed(value);
-        }
-    }
+    mwcRandomSeed: (value?: number) => void;
 
     /**
      * Generate a random 32-bit number between (0x000000..0xFFFFFFFF) or (-0x80000000..0x7FFFFFFF), using MWC (Multiply with carry)
@@ -679,50 +348,65 @@ export class CoreUtils {
      * Used as a replacement random generator for IE to avoid issues with older IE instances.
      * @param signed - True to return a signed 32-bit number (-0x80000000..0x7FFFFFFF) otherwise an unsigned one (0x000000..0xFFFFFFFF)
      */
-    public static mwcRandom32(signed?: boolean) {
-        _mwcZ = (36969 * (_mwcZ & 0xFFFF) + (_mwcZ >> 16)) & MaxUInt32;
-        _mwcW = (18000 * (_mwcW & 0xFFFF) + (_mwcW >> 16)) & MaxUInt32;
-
-        let value = (((_mwcZ << 16) + (_mwcW & 0xFFFF)) >>> 0) & MaxUInt32 | 0;
-
-        if (!signed) {
-            // Make sure we end up with a positive number and not -ve one.
-            value >>>= 0;
-        }
-
-        return value;
-    }
+    mwcRandom32: (signed?: boolean) => number;
 
     /**
      * generate W3C trace id
      */
-    public static generateW3CId() {
-        const hexValues = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
-
-        // rfc4122 version 4 UUID without dashes and with lowercase letters
-        let oct = "", tmp;
-        for (let a = 0; a < 4; a++) {
-            tmp = CoreUtils.random32();
-            oct +=
-                hexValues[tmp & 0xF] +
-                hexValues[tmp >> 4 & 0xF] +
-                hexValues[tmp >> 8 & 0xF] +
-                hexValues[tmp >> 12 & 0xF] +
-                hexValues[tmp >> 16 & 0xF] +
-                hexValues[tmp >> 20 & 0xF] +
-                hexValues[tmp >> 24 & 0xF] +
-                hexValues[tmp >> 28 & 0xF];
-        }
-
-        // "Set the two most significant bits (bits 6 and 7) of the clock_seq_hi_and_reserved to zero and one, respectively"
-        const clockSequenceHi = hexValues[8 + (CoreUtils.random32() & 0x03) | 0];
-        return oct.substr(0, 8) + oct.substr(9, 4) + "4" + oct.substr(13, 3) + clockSequenceHi + oct.substr(16, 3) + oct.substr(19, 12);
-    }
+    generateW3CId: () => string;
 }
+
+/**
+ * Provides a collection of utility functions, included for backward compatibility with previous releases.
+ * @deprecated Marking this instance as deprecated in favor of direct usage of the helper functions
+ * as direct usage provides better tree-shaking and minification by avoiding the inclusion of the unused items 
+ * in your resulting code.
+ */
+export const CoreUtils: ICoreUtils = (function() {
+
+    const coreUtils: ICoreUtils = {
+        _canUseCookies: undefined,
+        isTypeof: isTypeof,
+        isUndefined: isUndefined,
+        isNullOrUndefined: isNullOrUndefined,
+        hasOwnProperty: hasOwnProperty,
+        isFunction: isFunction,
+        isObject: isObject,
+        isDate: isDate,
+        isArray: isArray,
+        isError: isError,
+        isString: isString,
+        isNumber: isNumber,
+        isBoolean: isBoolean,
+        toISOString: toISOString,
+        arrForEach: arrForEach,
+        arrIndexOf: arrIndexOf,
+        arrMap: arrMap,
+        arrReduce: arrReduce,
+        strTrim: strTrim,
+        objCreate: objCreateFn,
+        objKeys: objKeys,
+        objDefineAccessors: objDefineAccessors,
+        addEventHandler: addEventHandler,
+        dateNow: dateNow,
+        isIE: isIE,
+        disableCookies: disableCookies,
+        newGuid: newGuid,
+        perfNow: perfNow,
+        newId: newId,
+        randomValue: randomValue,
+        random32: random32,
+        mwcRandomSeed: mwcRandomSeed,
+        mwcRandom32: mwcRandom32,
+        generateW3CId: generateW3CId
+    };
+
+    return coreUtils;
+})();
 
 const GuidRegex = /[xy]/g;
 
-export class EventHelper {
+export interface IEventHelper {
     /**
      * Binds the specified function to an event, so that the function gets called whenever the event fires on the object
      * @param obj Object to add the event too.
@@ -730,7 +414,7 @@ export class EventHelper {
      * @param handlerRef Pointer that specifies the function to call when event fires
      * @returns True if the function was bound successfully to the event, otherwise false
      */
-    public static Attach: (obj: any, eventNameWithoutOn: string, handlerRef: any) => boolean = _attachEvent;
+    Attach: (obj: any, eventNameWithoutOn: string, handlerRef: any) => boolean;
 
     /**
      * Binds the specified function to an event, so that the function gets called whenever the event fires on the object
@@ -740,7 +424,7 @@ export class EventHelper {
      * @param handlerRef Pointer that specifies the function to call when event fires
      * @returns True if the function was bound successfully to the event, otherwise false
      */
-    public static AttachEvent: (obj: any, eventNameWithoutOn: string, handlerRef: any) => boolean = _attachEvent;
+    AttachEvent: (obj: any, eventNameWithoutOn: string, handlerRef: any) => boolean;
 
     /**
      * Removes an event handler for the specified event
@@ -748,7 +432,7 @@ export class EventHelper {
      * @param callback {any} - The callback function that needs to be executed for the given event
      * @return {boolean} - true if the handler was successfully added
      */
-    public static Detach: (obj: any, eventNameWithoutOn: string, handlerRef: any) => void = _detachEvent;
+    Detach: (obj: any, eventNameWithoutOn: string, handlerRef: any) => void;
 
     /**
      * Removes an event handler for the specified event
@@ -757,5 +441,15 @@ export class EventHelper {
      * @param callback {any} - The callback function that needs to be executed for the given event
      * @return {boolean} - true if the handler was successfully added
      */
-    public static DetachEvent: (obj: any, eventNameWithoutOn: string, handlerRef: any) => void = _detachEvent;
+    DetachEvent: (obj: any, eventNameWithoutOn: string, handlerRef: any) => void;
 }
+
+export const EventHelper: IEventHelper = (function() {
+    return {
+        Attach: attachEvent,
+        AttachEvent: attachEvent,
+        Detach: detachEvent,
+        DetachEvent: detachEvent
+    };
+})();
+

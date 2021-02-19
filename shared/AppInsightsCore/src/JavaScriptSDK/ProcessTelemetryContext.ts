@@ -9,11 +9,9 @@ import { ITelemetryItem } from '../JavaScriptSDK.Interfaces/ITelemetryItem';
 import { IPlugin, ITelemetryPlugin } from '../JavaScriptSDK.Interfaces/ITelemetryPlugin';
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from '../JavaScriptSDK.Interfaces/ITelemetryPluginChain';
-import { CoreUtils } from "./CoreUtils";
 import { DiagnosticLogger } from "./DiagnosticLogger";
 import { TelemetryPluginChain } from "./TelemetryPluginChain";
-
-let _isNullOrUndefined = CoreUtils.isNullOrUndefined;
+import { arrForEach, isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
 
 /**
  * Creates the instance execution chain for the plugins
@@ -26,7 +24,7 @@ function _createProxyChain(plugins:IPlugin[], itemCtx:IProcessTelemetryContext) 
         let lastProxy:TelemetryPluginChain = null;
         for (let idx = 0; idx < plugins.length; idx++) {
             let thePlugin = plugins[idx] as ITelemetryPlugin;
-            if (thePlugin && CoreUtils.isFunction(thePlugin.processTelemetry)) {
+            if (thePlugin && isFunction(thePlugin.processTelemetry)) {
                 // Only add plugins that are processors
                 let newProxy = new TelemetryPluginChain(thePlugin, itemCtx);
                 proxies.push(newProxy);
@@ -71,7 +69,7 @@ function _copyPluginChain(srcPlugins:IPlugin[], itemCtx:IProcessTelemetryContext
     if (startAt && srcPlugins) {
         plugins = [];
     
-        CoreUtils.arrForEach(srcPlugins, thePlugin => {
+        arrForEach(srcPlugins, thePlugin => {
             if (add || thePlugin === startAt) {
                 add = true;
                 plugins.push(thePlugin);
@@ -151,14 +149,14 @@ export class ProcessTelemetryContext implements IProcessTelemetryContext {
 
         // There is no next element (null) vs not defined (undefined)
         if (startAt !== null) {
-            if (plugins && CoreUtils.isFunction((plugins as ITelemetryPluginChain).getPlugin)) {
+            if (plugins && isFunction((plugins as ITelemetryPluginChain).getPlugin)) {
                 // We have a proxy chain object
                 _nextProxy = _copyProxyChain(plugins as ITelemetryPluginChain, _self, startAt||(plugins as ITelemetryPluginChain).getPlugin());
             } else {
                 // We just have an array
                 if (startAt) {
                     _nextProxy = _copyPluginChain(plugins as IPlugin[], _self, startAt);
-                } else if (CoreUtils.isUndefined(startAt)) {
+                } else if (isUndefined(startAt)) {
                     // Undefined means copy the existing chain
                     _nextProxy = _createProxyChain(plugins as IPlugin[], _self)
                 }
@@ -198,13 +196,13 @@ export class ProcessTelemetryContext implements IProcessTelemetryContext {
         _self.getConfig = (identifier:string, field: string, defaultValue: number | string | boolean = false) => {
             let theValue;
             let extConfig = _self.getExtCfg(identifier, null);
-            if (extConfig && !_isNullOrUndefined(extConfig[field])) {
+            if (extConfig && !isNullOrUndefined(extConfig[field])) {
                 theValue = extConfig[field];
-            } else if (config && !_isNullOrUndefined(config[field])) {
+            } else if (config && !isNullOrUndefined(config[field])) {
                 theValue = config[field];
             }
     
-            return !_isNullOrUndefined(theValue) ? theValue : defaultValue;
+            return !isNullOrUndefined(theValue) ? theValue : defaultValue;
         };
 
         _self.hasNext = () => {

@@ -5,8 +5,8 @@ import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
 import { IPerfEvent } from "../JavaScriptSDK.Interfaces/IPerfEvent";
-import { CoreUtils, } from "./CoreUtils";
 import dynamicProto from "@microsoft/dynamicproto-js";
+import { arrForEach, arrIndexOf } from './HelperFuncs';
 
 /**
  * Class to manage sending notifications to all the listeners.
@@ -15,7 +15,6 @@ export class NotificationManager implements INotificationManager {
     listeners: INotificationListener[] = [];
 
     constructor(config?: IConfiguration) {
-        let arrForEach = CoreUtils.arrForEach;
         let perfEvtsSendAll = !!(config ||{}).perfEvtsSendAll;
 
         dynamicProto(NotificationManager, this, (_self) => {
@@ -28,10 +27,10 @@ export class NotificationManager implements INotificationManager {
              * @param {INotificationListener} listener - AWTNotificationListener to remove.
              */
             _self.removeNotificationListener = (listener: INotificationListener): void => {
-                let index: number = CoreUtils.arrIndexOf(_self.listeners, listener);
+                let index: number = arrIndexOf(_self.listeners, listener);
                 while (index > -1) {
                     _self.listeners.splice(index, 1);
-                    index = CoreUtils.arrIndexOf(_self.listeners, listener);
+                    index = arrIndexOf(_self.listeners, listener);
                 }
             };
 

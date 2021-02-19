@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 "use strict";
 
+import { objCreateFn } from "@microsoft/applicationinsights-shims";
+import dynamicProto from '@microsoft/dynamicproto-js';
 import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore"
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
 import { IPlugin, ITelemetryPlugin } from "../JavaScriptSDK.Interfaces/ITelemetryPlugin";
 import { IChannelControls } from "../JavaScriptSDK.Interfaces/IChannelControls";
 import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
-import { CoreUtils } from "./CoreUtils";
 import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
@@ -16,14 +17,13 @@ import { IProcessTelemetryContext } from '../JavaScriptSDK.Interfaces/IProcessTe
 import { ProcessTelemetryContext } from './ProcessTelemetryContext';
 import { initializePlugins, sortPlugins } from './TelemetryHelpers';
 import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
-import dynamicProto from '@microsoft/dynamicproto-js';
 import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
 import { PerfManager } from "./PerfManager";
+import { arrForEach, isNullOrUndefined, isUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy } from "./HelperFuncs";
+import { strExtensionConfig, strIKey } from "./Constants";
 
 const validationError = "Extensions must provide callback to initialize";
 
-const _arrForEach = CoreUtils.arrForEach;
-const _isNullOrUndefined = CoreUtils.isNullOrUndefined;
 const strNotificationManager = "_notificationManager";
 
 export class BaseCore implements IAppInsightsCore {
@@ -44,7 +44,7 @@ export class BaseCore implements IAppInsightsCore {
         dynamicProto(BaseCore, this, (_self) => {
             _self._extensions = new Array<IPlugin>();
             _channelController = new ChannelController();
-            _self.logger = CoreUtils.objCreate({
+            _self.logger = objCreateFn({
                 throwInternal: (severity: LoggingSeverity, msgId: _InternalMessageId, msg: string, properties?: Object, isUserAct = false) => { },
                 warnToConsole: (message: string) => { },
                 resetInternalMessageCount: () => { }
@@ -56,11 +56,11 @@ export class BaseCore implements IAppInsightsCore {
             _self.initialize = (config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void => {
                 // Make sure core is only initialized once
                 if (_self.isInitialized()) {
-                    throw Error("Core should not be initialized more than once");
+                    throwError("Core should not be initialized more than once");
                 }
         
-                if (!config || _isNullOrUndefined(config.instrumentationKey)) {
-                    throw Error("Please provide instrumentation key");
+                if (!config || isNullOrUndefined(config.instrumentationKey)) {
+                    throwError("Please provide instrumentation key");
                 }
         
                 _notificationManager = notificationManager;
@@ -69,11 +69,11 @@ export class BaseCore implements IAppInsightsCore {
                 _self[strNotificationManager] = notificationManager;
                
                 _self.config = config || {};
-        
-                config.extensions = _isNullOrUndefined(config.extensions) ? [] : config.extensions;
+
+                config.extensions = isNullOrUndefined(config.extensions) ? [] : config.extensions;
         
                 // add notification to the extensions in the config so other plugins can access it
-                let extConfig = config.extensionConfig = _isNullOrUndefined(config.extensionConfig) ? {} : config.extensionConfig;
+                let extConfig = getSetValue(config, strExtensionConfig);
                 extConfig.NotificationManager = notificationManager;
 
                 if (logger) {
@@ -93,16 +93,16 @@ export class BaseCore implements IAppInsightsCore {
                 const extPriorities = {};
         
                 // Extension validation
-                _arrForEach(allExtensions, (ext: ITelemetryPlugin) => {
-                    if (_isNullOrUndefined(ext) || _isNullOrUndefined(ext.initialize)) {
-                        throw Error(validationError);
+                arrForEach(allExtensions, (ext: ITelemetryPlugin) => {
+                    if (isNullOrUndefined(ext) || isNullOrUndefined(ext.initialize)) {
+                        throwError(validationError);
                     }
         
                     const extPriority = ext.priority;
                     const identifier = ext.identifier;
         
                     if (ext && extPriority) {
-                        if (!_isNullOrUndefined(extPriorities[extPriority])) {
+                        if (!isNullOrUndefined(extPriorities[extPriority])) {
                             logger.warnToConsole("Two extensions have same priority #" + extPriority + " - " + extPriorities[extPriority] + ", " + identifier);
                         } else {
                             // set a value
@@ -138,7 +138,7 @@ export class BaseCore implements IAppInsightsCore {
                 _self._extensions = coreExtensions;
         
                 if (_self.getTransmissionControls().length === 0) {
-                    throw new Error("No channels available");
+                    throwError("No channels available");
                 }
         
                 _isInitialized = true;
@@ -150,18 +150,14 @@ export class BaseCore implements IAppInsightsCore {
             };
         
             _self.track = (telemetryItem: ITelemetryItem) => {
-                if (!telemetryItem.iKey) {
-                    // setup default iKey if not passed in
-                    telemetryItem.iKey = _self.config.instrumentationKey;
-                }
-                if (!telemetryItem.time) {
-                    // add default timestamp if not passed in
-                    telemetryItem.time = CoreUtils.toISOString(new Date());
-                }
-                if (_isNullOrUndefined(telemetryItem.ver)) {
-                    // CommonSchema 4.0
-                    telemetryItem.ver = "4.0";
-                }
+                // setup default iKey if not passed in
+                setValue(telemetryItem, strIKey, _self.config.instrumentationKey, null, isNotTruthy);
+
+                // add default timestamp if not passed in
+                setValue(telemetryItem, "time", toISOString(new Date()), null, isNotTruthy);
+
+                // Common Schema 4.0
+                setValue(telemetryItem, "ver", "4.0", null, isNullOrUndefined);
         
                 if (_self.isInitialized()) {
                     // Process the telemetry plugin chain
@@ -188,7 +184,7 @@ export class BaseCore implements IAppInsightsCore {
             _self.getNotifyMgr = (): INotificationManager => {
                 if (!_notificationManager) {
                     // Create Dummy notification manager
-                    _notificationManager = CoreUtils.objCreate({
+                    _notificationManager = objCreateFn({
                         addNotificationListener: (listener: INotificationListener) => { },
                         removeNotificationListener: (listener: INotificationListener) => { },
                         eventsSent: (events: ITelemetryItem[]) => { },
@@ -223,7 +219,7 @@ export class BaseCore implements IAppInsightsCore {
 
             _self.releaseQueue = () => {
                 if (_eventQueue.length > 0) {
-                    _arrForEach(_eventQueue, (event: ITelemetryItem) => {
+                    arrForEach(_eventQueue, (event: ITelemetryItem) => {
                         _self.getProcessTelContext().processNext(event);
                     });
 
