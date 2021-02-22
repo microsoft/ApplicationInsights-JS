@@ -4,7 +4,7 @@
 
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
-    BaseTelemetryPlugin, CoreUtils, ITelemetryItem,
+    BaseTelemetryPlugin, isNullOrUndefined, ITelemetryItem,
     IProcessTelemetryContext, ITelemetryPluginChain,
     _InternalMessageId, ICustomProperties, 
     LoggingSeverity
@@ -34,7 +34,7 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
 
     initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?: ITelemetryPluginChain) {
         
-        if (CoreUtils.isNullOrUndefined(core)) {
+        if (isNullOrUndefined(core)) {
             throw Error("Error initializing");
         }
         config.extensionConfig = config.extensionConfig || [];

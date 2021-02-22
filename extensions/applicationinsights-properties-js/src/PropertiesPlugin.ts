@@ -4,7 +4,7 @@
  */
 
 import {
-    BaseTelemetryPlugin, IConfiguration, CoreUtils,
+    BaseTelemetryPlugin, IConfiguration, isNullOrUndefined,
     IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, LoggingSeverity, _InternalMessageId, getNavigator,
     ITelemetryPluginChain, objForEachKey
 } from '@microsoft/applicationinsights-core-js';
@@ -59,7 +59,7 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
      * @param event The event that needs to be processed
      */
     processTelemetry(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
-        if (CoreUtils.isNullOrUndefined(event)) {
+        if (isNullOrUndefined(event)) {
             // TODO(barustum): throw an internal event once we have support for internal logging
         } else {
             itemCtx = this._getTelCtx(itemCtx);

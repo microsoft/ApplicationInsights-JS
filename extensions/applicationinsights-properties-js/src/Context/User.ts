@@ -3,7 +3,7 @@
 
 import { ITelemetryConfig } from '../Interfaces/ITelemetryConfig';
 import { Util, IUser, IUserContext } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity, CoreUtils } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity, toISOString } from '@microsoft/applicationinsights-core-js';
 
 export class User implements IUserContext {
 
@@ -61,9 +61,9 @@ export class User implements IUserContext {
         this.config = config;
 
         if (!this.id) {
-            this.id = CoreUtils.newId(config && config.idLength ? config.idLength() : 22);
+            this.id = Util.newId(config && config.idLength ? config.idLength() : 22);
             const date = new Date();
-            const acqStr = CoreUtils.toISOString(date);
+            const acqStr = toISOString(date);
             this.accountAcquisitionDate = acqStr;
             this.isNewUser = true;
             // without expiration, cookies expire at the end of the session

@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import {
-    BaseTelemetryPlugin, IConfiguration, CoreUtils,
+    BaseTelemetryPlugin, IConfiguration, arrForEach,
     IAppInsightsCore, IPlugin, ITelemetryItem, IProcessTelemetryContext, _InternalLogMessage, _InternalMessageId,
-    ITelemetryPluginChain, InstrumentFunc, IInstrumentCallDetails, InstrumentorHooksCallback, IPerfEvent, IChannelControls, objForEachKey
+    ITelemetryPluginChain, InstrumentFunc, IInstrumentCallDetails, InstrumentorHooksCallback, IPerfEvent, IChannelControls, objForEachKey, isFunction, dateNow, isArray, isUndefined
 } from '@microsoft/applicationinsights-core-js';
 import { Dashboard } from './components/Dashboard';
 import { getTargetName } from './components/helpers';
@@ -78,8 +78,6 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
 
     constructor() {
         super();
-        let _arrForEach = CoreUtils.arrForEach;
-
         let dashboard: Dashboard;
 
         /**
@@ -133,30 +131,30 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
 
                     // 1. Listen to Notifications
                     if (!_theConfig.disableNotifications()) {
-                        let notifyMgr = (CoreUtils.isFunction(core.getNotifyMgr) && core.getNotifyMgr()) || core["_notificationManager"];
+                        let notifyMgr = (isFunction(core.getNotifyMgr) && core.getNotifyMgr()) || core["_notificationManager"];
                         if (notifyMgr) {
                             notifyMgr.addNotificationListener({
                                 eventsSent: (events: ITelemetryItem[]) => {
-                                    dashboard.newLogEntry(events, CoreUtils.dateNow() - startTime, 'Notification:eventsSent', 0, 'eventsSent');
+                                    dashboard.newLogEntry(events, dateNow() - startTime, 'Notification:eventsSent', 0, 'eventsSent');
                                 },
                                 eventsDiscarded: (events: ITelemetryItem[], reason: number) => {
                                     dashboard.newLogEntry({
                                         events,
                                         reason
-                                    }, CoreUtils.dateNow() - startTime, 'Notification:eventsDiscarded', 0, 'eventsDiscarded');
+                                    }, dateNow() - startTime, 'Notification:eventsDiscarded', 0, 'eventsDiscarded');
     
                                 },
                                 eventsSendRequest: (sendReason: number, isAsync: boolean): void => {
                                     dashboard.newLogEntry({
                                         sendReason,
                                         isAsync
-                                    }, CoreUtils.dateNow() - startTime, 'Notification:eventsSendRequest', 0, 'eventsSendRequest');
+                                    }, dateNow() - startTime, 'Notification:eventsSendRequest', 0, 'eventsSendRequest');
                                 },
                                 perfEvent: (perfEvent: IPerfEvent): void => {
                                     let evtName = `Notification:perfEvent[${perfEvent.name}]`;
                                     dashboard.newLogEntry(
                                         perfEvent,
-                                        CoreUtils.dateNow() - startTime, evtName, 0, 'perfEvent');
+                                        dateNow() - startTime, evtName, 0, 'perfEvent');
                                 }
                             });
 
@@ -181,24 +179,24 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
 
                     // Get all of the config extensions
                     if (config.extensions) {
-                        CoreUtils.arrForEach(config.extensions, (ext) => {
+                        arrForEach(config.extensions, (ext) => {
                             _addTargets(targetObjects, ext);
                         });
                     }
 
                     // Get all of the passed extensions
                     if (extensions) {
-                        CoreUtils.arrForEach(extensions, (ext) => {
+                        arrForEach(extensions, (ext) => {
                             _addTargets(targetObjects, ext);
                         });
                     }
 
-                    if (CoreUtils.isFunction(core.getTransmissionControls)) {
+                    if (isFunction(core.getTransmissionControls)) {
                         let channelControls: IChannelControls[][] = core.getTransmissionControls();
                         if (channelControls) {
-                            CoreUtils.arrForEach(channelControls, (channel) => {
-                                if (CoreUtils.isArray(channel)) {
-                                    CoreUtils.arrForEach(channel, (theChannel) => {
+                            arrForEach(channelControls, (channel) => {
+                                if (isArray(channel)) {
+                                    arrForEach(channel, (theChannel) => {
                                         _addTargets(targetObjects, theChannel);
                                     });
                                 }
@@ -207,8 +205,8 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                     }
 
                     // 3. Instrument the functions
-                    _arrForEach(trackers, (tracker: string) => {
-                        _arrForEach(targetObjects, (target, idx) => {
+                    arrForEach(trackers, (tracker: string) => {
+                        arrForEach(targetObjects, (target, idx) => {
                             let val = InstrumentFunc(target, tracker, {
                                 req: _handleInstPreHook() as any as () => InstrumentorHooksCallback,
                                 rsp: _handleInstPostHook() as any as () => InstrumentorHooksCallback
@@ -239,7 +237,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                     debugBinContainer.className = `${prefix}-debug-bin-container`;
                     debugBinParent = new DebugBinParent(debugBinContainer, [], 0, prefix);
 
-                    CoreUtils.arrForEach(foundTrackers, (tracker, idx) => {
+                    arrForEach(foundTrackers, (tracker, idx) => {
                         debugBins[tracker] = new DebugBin(tracker, 0, debugBinParent, (idx + 1) * 50);
                     });
 
@@ -279,10 +277,10 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
 
             function _addTargets(targetObjects: any[], ext:any) {
                 if (_addTarget(targetObjects, ext)) {
-                    if (CoreUtils.isFunction(ext["_getDbgPlgTargets"])) {
+                    if (isFunction(ext["_getDbgPlgTargets"])) {
                         let extra = ext["_getDbgPlgTargets"]();
-                        if (CoreUtils.isArray(extra)) {
-                            CoreUtils.arrForEach(extra, (tgt) => {
+                        if (isArray(extra)) {
+                            arrForEach(extra, (tgt) => {
                                 _addTargets(targetObjects, tgt);
                             });
                         }
@@ -298,10 +296,10 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                 if (orgArgs && orgArgs.length) {
                     result.args = orgArgs;
                 }
-                if (!CoreUtils.isUndefined(funcArgs.err)) {
+                if (!isUndefined(funcArgs.err)) {
                     result.err = funcArgs.err;
                 }
-                if (!CoreUtils.isUndefined(funcArgs.rslt)) {
+                if (!isUndefined(funcArgs.rslt)) {
                     result.rslt = funcArgs.rslt;
                 }
 
@@ -326,7 +324,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                     }
 
                     let evtPrefix = _getEvtPrefix(funcArgs);
-                    dashboard.newLogEntry(_createInstrumentObject(funcArgs, orgArgs), CoreUtils.dateNow() - startTime, `${evtPrefix}`, 0, funcArgs.name);
+                    dashboard.newLogEntry(_createInstrumentObject(funcArgs, orgArgs), dateNow() - startTime, `${evtPrefix}`, 0, funcArgs.name);
                     if (_theConfig.dumpToConsole() && console && console.log) {
                         console.log(`[${evtPrefix}] preProcess - funcArgs: `, funcArgs);
                         console.log(`[${evtPrefix}] preProcess - orgArgs: `, orgArgs);
@@ -336,7 +334,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
 
             function _handleInstPostHook() {
                 return (funcArgs: IInstrumentCallDetails, ...orgArgs: any[]) => {
-                    if (!CoreUtils.isUndefined(funcArgs.err)) {
+                    if (!isUndefined(funcArgs.err)) {
                         let evtPrefix = _getEvtPrefix(funcArgs);
 
                         if (!debugBinParent.showChildren) {
@@ -344,7 +342,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                         }
     
                         // The called function threw an exception
-                        dashboard.newLogEntry(_createInstrumentObject(funcArgs, orgArgs), CoreUtils.dateNow() - startTime, `${evtPrefix}`, 0, funcArgs.name)
+                        dashboard.newLogEntry(_createInstrumentObject(funcArgs, orgArgs), dateNow() - startTime, `${evtPrefix}`, 0, funcArgs.name)
                         if (_theConfig.dumpToConsole() && console && console.log) {
                             console.log(`[${evtPrefix}] complete`);
                         }
@@ -358,7 +356,7 @@ export default class DebugPlugin extends BaseTelemetryPlugin {
                 }
 
                 if (!debugBins['processTelemetry']) {
-                    dashboard.newLogEntry(event, CoreUtils.dateNow() - startTime, `[${_self.identifier}:processTelemetry[${event.baseType}]`, 0, 'processTelemetry');
+                    dashboard.newLogEntry(event, dateNow() - startTime, `[${_self.identifier}:processTelemetry[${event.baseType}]`, 0, 'processTelemetry');
                 }
                 _self.processNext(event, itemCtx);
             }

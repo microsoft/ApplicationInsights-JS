@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CoreUtils } from '@microsoft/applicationinsights-core-js';
+import { arrForEach, arrIndexOf, hasOwnProperty, isFunction, isObject, isString, objKeys } from '@microsoft/applicationinsights-core-js';
 import { Util } from '@microsoft/applicationinsights-common';
 import { strShimPrototype } from '@microsoft/applicationinsights-shims';
 
@@ -36,12 +36,12 @@ export function traverseAndReplace(target: Object, maxDepth: number, currentDept
     if (!thingsReferenced) {
         thingsReferenced = [];
     }
-    if (CoreUtils.isObject(target)) {
+    if (isObject(target)) {
         for (const key of getTargetKeys(target, excludedKeys, includeFunctions)) {
-            if (target[key] !== null && CoreUtils.arrIndexOf(thingsReferenced, target[key]) !== -1) {
+            if (target[key] !== null && arrIndexOf(thingsReferenced, target[key]) !== -1) {
                 out[key] = `<circular (${key} - "${getTargetName(target[key])}")>`;
             }
-            else if (target[key] !== null && CoreUtils.isObject(target[key])) {
+            else if (target[key] !== null && isObject(target[key])) {
                 if (currentDepth >= maxDepth) {
                     out[key] = '<max allowed depth reached>';
                 } else {
@@ -172,15 +172,15 @@ function _navHandler(evt: KeyboardEvent, openHandler?: (evt: Event, forceState?:
 
 export function getTargetName(target: any) {
     if (target) {
-        if (CoreUtils.isString(target.identifier)) {
+        if (isString(target.identifier)) {
             return target.identifier;
         }
 
-        if (CoreUtils.isString(target.name)) {
+        if (isString(target.name)) {
             return target.name;
         }
 
-        if (CoreUtils.hasOwnProperty(target, strShimPrototype)) {
+        if (hasOwnProperty(target, strShimPrototype)) {
             // Look like a prototype
             return target.name || "";
         }
@@ -192,7 +192,7 @@ export function getTargetName(target: any) {
 }
 
 export function getTargetKeys(target: any, excludedKeys: string[], includeFunctions: boolean) {
-    let keys: string[] = CoreUtils.objKeys(target);
+    let keys: string[] = objKeys(target);
 
     if (!Util.isArray(target)) {
         try {
@@ -200,7 +200,7 @@ export function getTargetKeys(target: any, excludedKeys: string[], includeFuncti
                 // We need to use this for built in objects such as Error which don't return their values via objKeys because they are not enumerable for example
                 let propKeys = Object[strGetOwnPropertyNames](target);
                 if (propKeys) {
-                    CoreUtils.arrForEach(propKeys, (key) => {
+                    arrForEach(propKeys, (key) => {
                         if (keys.indexOf(key) === -1) {
                             keys.push(key);
                         }
@@ -214,8 +214,8 @@ export function getTargetKeys(target: any, excludedKeys: string[], includeFuncti
     }
 
     let theKeys: string[] = [];
-    CoreUtils.arrForEach(keys, (key) => {
-        if (!includeFunctions && CoreUtils.isFunction(target[key])) {
+    arrForEach(keys, (key) => {
+        if (!includeFunctions && isFunction(target[key])) {
             return;
         }
 
@@ -237,14 +237,14 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
         thingsReferenced = [];
     }
 
-    let isObj = CoreUtils.isObject(target) || Util.isError(target);
+    let isObj = isObject(target) || Util.isError(target);
     let isErr = target['baseType'] === 'ExceptionData' || Util.isError(target);
 
     const children: HTMLElement[] = [];
 
     function _openNode(currentLine: HTMLElement) {
         openState = true;
-        CoreUtils.arrForEach(children, (child) => {
+        arrForEach(children, (child) => {
             rootDiv.appendChild(child);
         });
 
@@ -253,7 +253,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
 
     function _collapseNode(currentLine: HTMLElement) {
         // rootDiv.innerHTML = '';
-        CoreUtils.arrForEach(children, (child) => {
+        arrForEach(children, (child) => {
             rootDiv.removeChild(child);
         });
         // rootDiv.appendChild(currentLine);
@@ -283,13 +283,13 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
             builder.innerText = '<empty>';
             children.push(builder);
         }
-        else if (target[key] !== null && CoreUtils.arrIndexOf(thingsReferenced, target[key]) !== -1) {
+        else if (target[key] !== null && arrIndexOf(thingsReferenced, target[key]) !== -1) {
             const builder = document.createElement("div");
             builder.className = 'empty';
             builder.innerText = `<circular (${key}) - "${getTargetName(target[key])}">`;
             children.push(builder);
         }
-        else if (target[key] !== null && (CoreUtils.isObject(target[key]) || Util.isError(target[key]))) {
+        else if (target[key] !== null && (isObject(target[key]) || Util.isError(target[key]))) {
             thingsReferenced.push(target);
             let formatted = formatLogElements(target[key], null, key, level + 1, textFilter, excludeKeys, thingsReferenced, includeFunctions);
             thingsReferenced.pop();
@@ -328,7 +328,7 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
             outerSpan.appendChild(keySpan);
 
             const valueSpan = document.createElement("span");
-            if (CoreUtils.isFunction(target[key])) {
+            if (isFunction(target[key])) {
                 const fnStr = target[key].toString();
                 const fnHead = fnStr.match(/^([^{]+)/)[1];
                 valueSpan.textContent = `${fnHead}{...}`;

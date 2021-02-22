@@ -13,9 +13,10 @@ import {
 
 import {
     IPlugin, IConfiguration, IAppInsightsCore,
-    BaseTelemetryPlugin, CoreUtils, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
+    BaseTelemetryPlugin, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
     IDiagnosticLogger, LoggingSeverity, _InternalMessageId, ICustomProperties,
-    getWindow, getDocument, getHistory, getLocation, doPerf, objForEachKey
+    getWindow, getDocument, getHistory, getLocation, doPerf, objForEachKey, 
+    isNullOrUndefined, isFunction, arrForEach
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -468,7 +469,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
             return;
         }
 
-        if (CoreUtils.isNullOrUndefined(core)) {
+        if (isNullOrUndefined(core)) {
             throw Error("Error initializing");
         }
 
@@ -547,7 +548,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
         this._pageTracking.action = (name, url, duration, properties, measurements) => {
 
             // duration must be a custom property in order for the collector to extract it
-            if (CoreUtils.isNullOrUndefined(properties)) {
+            if (isNullOrUndefined(properties)) {
                 properties = {};
             }
             properties[durationProperty] = duration.toString();
@@ -616,12 +617,12 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
          * Create a custom "locationchange" event which is triggered each time the history object is changed
          */
         if (this.config.enableAutoRouteTracking === true
-            && _history && CoreUtils.isFunction(_history.pushState) && CoreUtils.isFunction(_history.replaceState)
+            && _history && isFunction(_history.pushState) && isFunction(_history.replaceState)
             && _window
             && typeof Event !== "undefined") {
             const _self = this;
             // Find the properties plugin
-            CoreUtils.arrForEach(extensions, extension => {
+            arrForEach(extensions, extension => {
                 if (extension.identifier === PropertiesPluginIdentifier) {
                     this._properties = extension as properties.PropertiesPlugin;
                 }

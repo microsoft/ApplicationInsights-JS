@@ -1,4 +1,4 @@
-import { CoreUtils } from '@microsoft/applicationinsights-core-js';
+import { arrForEach } from '@microsoft/applicationinsights-core-js';
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { tempStyle } from './styleNodeSrc';
 import { FilterList } from './filterList';
@@ -127,7 +127,7 @@ export class Dashboard {
             _self.render = () => {
                 if (_self.isDisplayed()) {
                     const excludedTypes = filterList.getCurrentFilter();
-                    CoreUtils.arrForEach(msgTracker, (entry) => {
+                    arrForEach(msgTracker, (entry) => {
                         let el = entry.getEl();
                         if (el && el.parentElement) {
                             el.parentElement.removeChild(el);
@@ -157,7 +157,7 @@ export class Dashboard {
 
             function clearEvents() {
                 let newEvents: LogEntry[] = [];
-                CoreUtils.arrForEach(msgTracker, (entry) => {
+                arrForEach(msgTracker, (entry) => {
                     if (entry.isKeep()) {
                         newEvents.push(entry);
                     } else {

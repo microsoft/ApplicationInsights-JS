@@ -3,7 +3,7 @@
  */
 
 import {
-    getLocation, getDocument, getWindow, hasDocument, CoreUtils
+    getLocation, getDocument, getWindow, hasDocument, isFunction
 } from '@microsoft/applicationinsights-core-js';
 import { findClosestAnchor, isValueAssigned } from './common/Utils';
 import { IClickAnalyticsConfiguration, IOverrideValues } from './Interfaces/Datamodel';
@@ -110,7 +110,7 @@ export function getPageName(config: IClickAnalyticsConfiguration, overrideValues
 
     if (overrideValues && overrideValues.pageName) {
         return overrideValues.pageName;
-    } else if (config.callback && CoreUtils.isFunction(config.callback.pageName)) {
+    } else if (config.callback && isFunction(config.callback.pageName)) {
         return config.callback.pageName();
     } else if (config.coreData && config.coreData.pageName) {
         return config.coreData.pageName;
