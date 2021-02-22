@@ -5,8 +5,9 @@ import {
     DateTimeUtils, Util, IPageViewTelemetry, IPageViewTelemetryInternal, IPageViewPerformanceTelemetryInternal
 } from '@microsoft/applicationinsights-common';
 import {
-    IAppInsightsCore, CoreUtils, IDiagnosticLogger, LoggingSeverity,
-    _InternalMessageId, IChannelControls, getDocument, getLocation
+    IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
+    _InternalMessageId, IChannelControls, getDocument, getLocation,
+    arrForEach, isNullOrUndefined
 } from '@microsoft/applicationinsights-core-js';
 import { PageViewPerformanceManager } from './PageViewPerformanceManager';
 import dynamicProto from "@microsoft/dynamicproto-js";
@@ -31,8 +32,6 @@ export class PageViewManager {
             pageViewPerformanceManager: PageViewPerformanceManager) {
 
         dynamicProto(PageViewManager, this, (_self) => {
-            let arrForEach = CoreUtils.arrForEach;
-            let isNullOrUndefined = CoreUtils.isNullOrUndefined;
             let intervalHandle: any = null;
             let itemQueue: Array<() => boolean> = [];
             let pageViewPerformanceSent: boolean = false;

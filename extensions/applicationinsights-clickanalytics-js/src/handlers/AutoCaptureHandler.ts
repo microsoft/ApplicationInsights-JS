@@ -2,7 +2,7 @@
  * @copyright Microsoft 2020
  */
 
-import { IDiagnosticLogger, _InternalMessageId, getWindow, getDocument, EventHelper, CoreUtils } from "@microsoft/applicationinsights-core-js";
+import { IDiagnosticLogger, _InternalMessageId, getWindow, getDocument, EventHelper, isNullOrUndefined } from "@microsoft/applicationinsights-core-js";
 import { IAutoCaptureHandler, IPageActionOverrideValues, IClickAnalyticsConfiguration } from '../Interfaces/Datamodel'
 import { isRightClick, isLeftClick, isKeyboardEnter, isKeyboardSpace, isMiddleClick, isElementDnt } from '../common/Utils';
 import { ActionType } from '../Enums';
@@ -57,7 +57,7 @@ export class AutoCaptureHandler implements IAutoCaptureHandler {
     private _processClick(clickEvent: any) {
         var clickCaptureElements = { A: true, BUTTON: true, AREA: true, INPUT: true };
         let win = getWindow();
-        if(CoreUtils.isNullOrUndefined(clickEvent) && win) {
+        if(isNullOrUndefined(clickEvent) && win) {
             clickEvent = win.event; // IE 8 does not pass the event
         }
         if(clickEvent) {
