@@ -1,5 +1,5 @@
 ﻿import { Util } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, CoreUtils } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, arrForEach, isFunction, arrIndexOf, isString } from '@microsoft/applicationinsights-core-js';
 import { ISenderConfig } from './Interfaces';
 import dynamicProto from '@microsoft/dynamicproto-js';
 
@@ -232,8 +232,8 @@ export class SessionStorageSendBuffer implements ISendBuffer {
             function _removePayloadsFromBuffer(payloads: string[], buffer: string[]): string[] {
                 const remaining: string[] = [];
         
-                CoreUtils.arrForEach(buffer, (value) => {
-                    if (!CoreUtils.isFunction(value) && CoreUtils.arrIndexOf(payloads, value) === -1) {
+                arrForEach(buffer, (value) => {
+                    if (!isFunction(value) && arrIndexOf(payloads, value) === -1) {
                         remaining.push(value);
                     }
                 });
@@ -248,7 +248,7 @@ export class SessionStorageSendBuffer implements ISendBuffer {
                     const bufferJson = Util.getSessionStorage(logger, prefixedKey);
                     if (bufferJson) {
                         let buffer: string[] = getJSON().parse(bufferJson);
-                        if (CoreUtils.isString(buffer)) {
+                        if (isString(buffer)) {
                             // When using some version prototype.js the stringify / parse cycle does not decode array's correctly
                             buffer = getJSON().parse(buffer as any);
                         }
