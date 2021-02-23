@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import {
-    DateTimeUtils, Util, IPageViewTelemetry, IPageViewTelemetryInternal, IPageViewPerformanceTelemetryInternal
+    dateTimeUtilsDuration, Util, IPageViewTelemetry, IPageViewTelemetryInternal, IPageViewPerformanceTelemetryInternal
 } from '@microsoft/applicationinsights-common';
 import {
     IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
@@ -117,7 +117,7 @@ export class PageViewManager {
                 // if the performance timing is supported by the browser, calculate the custom duration
                 const start = pageViewPerformanceManager.getPerformanceTiming().navigationStart;
                 if (start > 0) {
-                    customDuration = DateTimeUtils.GetDuration(start, +new Date);
+                    customDuration = dateTimeUtilsDuration(start, +new Date);
                     if (!pageViewPerformanceManager.shouldCollectDuration(customDuration)) {
                         customDuration = undefined;
                     }
@@ -186,7 +186,7 @@ export class PageViewManager {
                                     pageViewPerformanceSent = true;
                                 }
                             }
-                        } else if (start > 0 && DateTimeUtils.GetDuration(start, +new Date) > maxDurationLimit) {
+                        } else if (start > 0 && dateTimeUtilsDuration(start, +new Date) > maxDurationLimit) {
                             // if performance timings are not ready but we exceeded the maximum duration limit, just log a page view telemetry
                             // with the maximum duration limit. Otherwise, keep waiting until performance timings are ready
                             processed = true;

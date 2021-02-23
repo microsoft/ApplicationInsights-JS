@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import {
-    Util, IPageViewPerformanceTelemetryInternal, DateTimeUtils
+    Util, IPageViewPerformanceTelemetryInternal, dateTimeUtilsDuration
 } from '@microsoft/applicationinsights-common';
 import {
     IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
@@ -43,16 +43,16 @@ export class PageViewPerformanceManager {
         if (navigationTiming || timing) {
             if (navigationTiming) {
                 var total = navigationTiming.duration;
-                var network = DateTimeUtils.GetDuration(navigationTiming.startTime, navigationTiming.connectEnd);
-                var request = DateTimeUtils.GetDuration(navigationTiming.requestStart, navigationTiming.responseStart);
-                var response = DateTimeUtils.GetDuration(navigationTiming.responseStart, navigationTiming.responseEnd);
-                var dom = DateTimeUtils.GetDuration(navigationTiming.responseEnd, navigationTiming.loadEventEnd);
+                var network = dateTimeUtilsDuration(navigationTiming.startTime, navigationTiming.connectEnd);
+                var request = dateTimeUtilsDuration(navigationTiming.requestStart, navigationTiming.responseStart);
+                var response = dateTimeUtilsDuration(navigationTiming.responseStart, navigationTiming.responseEnd);
+                var dom = dateTimeUtilsDuration(navigationTiming.responseEnd, navigationTiming.loadEventEnd);
             } else {
-                var total = DateTimeUtils.GetDuration(timing.navigationStart, timing.loadEventEnd);
-                var network = DateTimeUtils.GetDuration(timing.navigationStart, timing.connectEnd);
-                var request = DateTimeUtils.GetDuration(timing.requestStart, timing.responseStart);
-                var response = DateTimeUtils.GetDuration(timing.responseStart, timing.responseEnd);
-                var dom = DateTimeUtils.GetDuration(timing.responseEnd, timing.loadEventEnd);
+                var total = dateTimeUtilsDuration(timing.navigationStart, timing.loadEventEnd);
+                var network = dateTimeUtilsDuration(timing.navigationStart, timing.connectEnd);
+                var request = dateTimeUtilsDuration(timing.requestStart, timing.responseStart);
+                var response = dateTimeUtilsDuration(timing.responseStart, timing.responseEnd);
+                var dom = dateTimeUtilsDuration(timing.responseEnd, timing.loadEventEnd);
             }
 
             if (total === 0) {

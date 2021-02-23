@@ -11,7 +11,7 @@ import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
 import { 
-    Util, CorrelationIdHelper, UrlHelper, DateTimeUtils, ConnectionStringParser, FieldType, RequestHeaders,
+    Util, CorrelationIdHelper, UrlHelper, IDateTimeUtils, DateTimeUtils, ConnectionStringParser, FieldType, RequestHeaders,
     DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, AIData, AIBase,
     Envelope, Event, Exception, Metric, PageView, PageViewData, RemoteDependencyData, IEventTelemetry,
     ITraceTelemetry, IMetricTelemetry, IDependencyTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry,
