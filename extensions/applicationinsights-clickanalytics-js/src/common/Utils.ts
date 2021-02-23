@@ -3,7 +3,7 @@
  * File containing utility functions.
  */
 
-import { CoreUtils, _InternalMessageId, hasDocument } from "@microsoft/applicationinsights-core-js";
+import { isNullOrUndefined, _InternalMessageId, hasDocument, hasOwnProperty, arrForEach } from "@microsoft/applicationinsights-core-js";
 import {
     IClickAnalyticsConfiguration
 } from '../Interfaces/Datamodel';
@@ -67,7 +67,7 @@ export function isValueAssigned(value: any) {
     /// <summary> takes a value and checks for undefined, null and empty string </summary>
     /// <param type="any"> value to be tested </param>
     /// <returns> true if value is null undefined or emptyString </returns>
-    return !(CoreUtils.isNullOrUndefined(value) || value === '');
+    return !(isNullOrUndefined(value) || value === '');
 }
 
 /**
@@ -265,7 +265,7 @@ export function extend(obj?: any, obj2?: any, obj3?: any, obj4?: any, obj5?: any
     // Merge the object into the extended object
     var merge = (obj: Object) => {
         for (var prop in obj) {
-            if (CoreUtils.hasOwnProperty(obj, prop)) {
+            if (hasOwnProperty(obj, prop)) {
                 // If deep merge and property is an object, merge properties
                 if (deep && objProto.toString.call(obj[prop]) === '[object Object]') {
                     extended[prop] = extend(true, extended[prop], obj[prop]);
@@ -346,7 +346,7 @@ export function BehaviorMapValidator (map: any) {
 export function BehaviorValueValidator (behaviorArray: string[]) {
     return (key: string) => {
         let result;
-        CoreUtils.arrForEach(behaviorArray, (value) => {
+        arrForEach(behaviorArray, (value) => {
             if (value === key) {
                 result = value;
                 return -1;

@@ -3,7 +3,7 @@
 
 import { SamplingScoreGenerator } from './SamplingScoreGenerators/SamplingScoreGenerator';
 import { ISample, Metric } from '@microsoft/applicationinsights-common';
-import { ITelemetryItem, IDiagnosticLogger, _InternalMessageId, LoggingSeverity, DiagnosticLogger, CoreUtils } from '@microsoft/applicationinsights-core-js';
+import { ITelemetryItem, IDiagnosticLogger, _InternalMessageId, LoggingSeverity, DiagnosticLogger, isNullOrUndefined } from '@microsoft/applicationinsights-core-js';
 
 export class Sample implements ISample {
     public sampleRate: number;
@@ -14,7 +14,7 @@ export class Sample implements ISample {
     private _logger: IDiagnosticLogger;
 
     constructor(sampleRate: number, logger?: IDiagnosticLogger) {
-        this._logger = CoreUtils.isNullOrUndefined(logger) ? new DiagnosticLogger() : logger;
+        this._logger = isNullOrUndefined(logger) ? new DiagnosticLogger() : logger;
         
         if (sampleRate > 100 || sampleRate < 0) {
             this._logger.throwInternal(LoggingSeverity.WARNING,
