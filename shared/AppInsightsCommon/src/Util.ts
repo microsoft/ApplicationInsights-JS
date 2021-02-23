@@ -3,24 +3,20 @@
 
 import { StorageType } from "./Enums";
 import {
-    CoreUtils, EventHelper, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin, getCrypto, getMsCrypto,
-    getGlobal, getGlobalInst, getWindow, getDocument, getNavigator, getPerformance, getLocation, hasJSON, getJSON,
-    strPrototype,
-    objForEachKey
+    EventHelper, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin, CoreUtils,
+    getGlobal, getGlobalInst, getWindow, getDocument, getNavigator, getPerformance, getLocation,
+    getExceptionName as coreGetExceptionName, dumpObj, objForEachKey, strEndsWith,
+    isString, isFunction, isNullOrUndefined, disableCookies as coreDisableCookies, strTrim, 
+    random32, isArray, isError, isDate, newId, generateW3CId, toISOString, arrForEach, getIEVersion, attachEvent
 } from "@microsoft/applicationinsights-core-js";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
+import { createDomEvent } from './DomHelperFuncs';
+import { stringToBoolOrDefault, msToTimeSpan } from "./HelperFuncs";
 
 let _navigator = getNavigator();
-let _isString = CoreUtils.isString;
 let _uaDisallowsSameSiteNone: boolean = null;
-
-function _endsWith(value: string, search: string) {
-    let len = value.length;
-    let start = len - search.length;
-    return value.substring(start >= 0 ? start : 0, len) === search;
-}
 
 export class Util {
     private static document: any = getDocument() || {};
@@ -34,21 +30,7 @@ export class Util {
     ];
     public static NotSpecified = "not_specified";
 
-    public static createDomEvent(eventName: string): Event {
-        let event: Event = null;
-
-        if (CoreUtils.isFunction(Event)) { // Use Event constructor when available
-            event = new Event(eventName);
-        } else { // Event has no constructor in IE
-            let doc = getDocument();
-            if (doc && doc.createEvent) {
-                event = doc.createEvent("Event");
-                event.initEvent(eventName, true, true);
-            }
-        }
-
-        return event;
-    }
+    public static createDomEvent = createDomEvent;
 
     /*
      * Force the SDK not to use local and session storage
@@ -81,7 +63,7 @@ export class Util {
         let fail: boolean;
         let uid: Date;
         try {
-            if (CoreUtils.isNullOrUndefined(getGlobal())) {
+            if (isNullOrUndefined(getGlobal())) {
                 return null;
             }
             uid = new Date;
@@ -139,8 +121,8 @@ export class Util {
                 logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.BrowserCannotReadLocalStorage,
-                    "Browser failed read of local storage. " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) });
+                    "Browser failed read of local storage. " + coreGetExceptionName(e),
+                    { exception: dumpObj(e) });
             }
         }
         return null;
@@ -165,8 +147,8 @@ export class Util {
                 logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.BrowserCannotWriteLocalStorage,
-                    "Browser failed write to local storage. " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) });
+                    "Browser failed write to local storage. " + coreGetExceptionName(e),
+                    { exception: dumpObj(e) });
             }
         }
         return false;
@@ -190,8 +172,8 @@ export class Util {
                 logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.BrowserFailedRemovalFromLocalStorage,
-                    "Browser failed removal of local storage item. " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) });
+                    "Browser failed removal of local storage item. " + coreGetExceptionName(e),
+                    { exception: dumpObj(e) });
             }
         }
         return false;
@@ -256,8 +238,8 @@ export class Util {
                 logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.BrowserCannotReadSessionStorage,
-                    "Browser failed read of session storage. " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) });
+                    "Browser failed read of session storage. " + coreGetExceptionName(e),
+                    { exception: dumpObj(e) });
             }
         }
         return null;
@@ -282,8 +264,8 @@ export class Util {
                 logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.BrowserCannotWriteSessionStorage,
-                    "Browser failed write to session storage. " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) });
+                    "Browser failed write to session storage. " + coreGetExceptionName(e),
+                    { exception: dumpObj(e) });
             }
         }
         return false;
@@ -307,8 +289,8 @@ export class Util {
                 logger.throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.BrowserFailedRemovalFromSessionStorage,
-                    "Browser failed removal of session storage item. " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) });
+                    "Browser failed removal of session storage item. " + coreGetExceptionName(e),
+                    { exception: dumpObj(e) });
             }
         }
         return false;
@@ -318,7 +300,7 @@ export class Util {
      * Force the SDK not to store and read any data from cookies
      */
     public static disableCookies() {
-        CoreUtils.disableCookies();
+        coreDisableCookies();
     }
 
     /*
@@ -343,7 +325,7 @@ export class Util {
     }
 
     public static disallowsSameSiteNone(userAgent: string) {
-        if (!_isString(userAgent)) {
+        if (!isString(userAgent)) {
             return false;
         }
 
@@ -374,7 +356,7 @@ export class Util {
         // - Chrome on Mac OS X
         // - Chromium on Mac OS X
         // Because they do not use the Mac OS networking stack.
-        if (userAgent.indexOf("Macintosh; Intel Mac OS X 10_14") !== -1 && _endsWith(userAgent, "AppleWebKit/605.1.15 (KHTML, like Gecko)")) {
+        if (userAgent.indexOf("Macintosh; Intel Mac OS X 10_14") !== -1 && strEndsWith(userAgent, "AppleWebKit/605.1.15 (KHTML, like Gecko)")) {
             return true;
         }
 
@@ -429,13 +411,7 @@ export class Util {
         }
     }
 
-    public static stringToBoolOrDefault(str: any, defaultValue = false): boolean {
-        if (str === undefined || str === null) {
-            return defaultValue;
-        }
-
-        return str.toString().toLowerCase() === "true";
-    }
+    public static stringToBoolOrDefault = stringToBoolOrDefault;
 
     /**
      * helper method to access userId and sessionId cookie
@@ -476,117 +452,70 @@ export class Util {
     /**
      * helper method to trim strings (IE8 does not implement String.prototype.trim)
      */
-    public static trim = CoreUtils.strTrim;
+    public static trim = strTrim;
 
     /**
      * generate random id string
      */
-    public static newId = CoreUtils.newId;
+    public static newId = newId;
 
     /**
      * generate a random 32bit number (-0x80000000..0x7FFFFFFF).
      */
     public static random32() {
-        return CoreUtils.random32(true);
+        return random32(true);
     }
 
     /**
      * generate W3C trace id
      */
-    public static generateW3CId = CoreUtils.generateW3CId;
+    public static generateW3CId = generateW3CId;
 
     /**
      * Check if an object is of type Array
      */
-    public static isArray = CoreUtils.isArray;
+    public static isArray = isArray;
 
     /**
      * Check if an object is of type Error
      */
-    public static isError = CoreUtils.isError;
+    public static isError = isError;
 
     /**
      * Check if an object is of type Date
      */
-    public static isDate = CoreUtils.isDate;
+    public static isDate = isDate;
 
     // Keeping this name for backward compatibility (for now)
-    public static toISOStringForIE8 = CoreUtils.toISOString;
+    public static toISOStringForIE8 = toISOString;
 
     /**
      * Gets IE version returning the document emulation mode if we are running on IE, or null otherwise
      */
-    public static getIEVersion(userAgentStr: string = null): number {
-        const myNav = userAgentStr ? userAgentStr.toLowerCase() : (_navigator ? (_navigator.userAgent || "").toLowerCase() : "");
-        if (myNav.indexOf("msie") !== -1) {
-            return parseInt(myNav.split("msie")[1]);
-        } else if (myNav.indexOf("trident/")) {
-            let tridentVer = parseInt(myNav.split("trident/")[1]);
-            if (tridentVer) {
-                return tridentVer + 4;
-            }
-        }
-
-        return null;
-    }
+    public static getIEVersion = getIEVersion;
 
     /**
      * Convert ms to c# time span format
      */
-    public static msToTimeSpan(totalms: number): string {
-        if (isNaN(totalms) || totalms < 0) {
-            totalms = 0;
-        }
-
-        totalms = Math.round(totalms);
-
-        let ms = "" + totalms % 1000;
-        let sec = "" + Math.floor(totalms / 1000) % 60;
-        let min = "" + Math.floor(totalms / (1000 * 60)) % 60;
-        let hour = "" + Math.floor(totalms / (1000 * 60 * 60)) % 24;
-        const days = Math.floor(totalms / (1000 * 60 * 60 * 24));
-
-        ms = ms.length === 1 ? "00" + ms : ms.length === 2 ? "0" + ms : ms;
-        sec = sec.length < 2 ? "0" + sec : sec;
-        min = min.length < 2 ? "0" + min : min;
-        hour = hour.length < 2 ? "0" + hour : hour;
-
-        return (days > 0 ? days + "." : "") + hour + ":" + min + ":" + sec + "." + ms;
-    }
+    public static msToTimeSpan = msToTimeSpan;
 
     /**
      * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error
      * happens in a script from other domain (cross origin, CORS).
      */
-    public static isCrossOriginError(message: string, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
-        return (message === "Script error." || message === "Script error") && !error;
+    public static isCrossOriginError(message: string|Event, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
+        return !error && isString(message) && (message === "Script error." || message === "Script error");
     }
 
     /**
      * Returns string representation of an object suitable for diagnostics logging.
      */
-    public static dump(object: any): string {
-        const objectTypeDump: string = Object[strPrototype].toString.call(object);
-        let propertyValueDump: string = "";
-        if (objectTypeDump === "[object Error]") {
-            propertyValueDump = "{ stack: '" + object.stack + "', message: '" + object.message + "', name: '" + object.name + "'";
-        } else if (hasJSON()) {
-            propertyValueDump = getJSON().stringify(object);
-        }
-
-        return objectTypeDump + propertyValueDump;
-    }
+    public static dump = dumpObj;
 
     /**
      * Returns the name of object if it's an Error. Otherwise, returns empty string.
      */
-    public static getExceptionName(object: any): string {
-        const objectTypeDump: string = Object[strPrototype].toString.call(object);
-        if (objectTypeDump === "[object Error]") {
-            return object.name;
-        }
-        return "";
-    }
+    public static getExceptionName = coreGetExceptionName;
 
     /**
      * Adds an event handler for the specified event to the window
@@ -594,9 +523,7 @@ export class Util {
      * @param callback {any} - The callback function that needs to be executed for the given event
      * @return {boolean} - true if the handler was successfully added
      */
-    public static addEventHandler(eventName: string, callback: any): boolean {
-        return EventHelper.Attach(getWindow(), eventName, callback);
-    }
+    public static addEventHandler = attachEvent;
 
     /**
      * Tells if a browser supports a Beacon API
@@ -686,7 +613,7 @@ export class UrlHelper {
         let fullHost = UrlHelper.parseFullHost(url, inclPort);
         if (fullHost) {
             const match = fullHost.match(/(www[0-9]?\.)?(.[^/:]+)(\:[\d]+)?/i);
-            if (match != null && match.length > 3 && _isString(match[2]) && match[2].length > 0) {
+            if (match != null && match.length > 3 && isString(match[2]) && match[2].length > 0) {
                 return match[2] + (match[3] || "");
             }
         }
@@ -701,7 +628,7 @@ export class UrlHelper {
         let result = null;
         if (url) {
             const match = url.match(/(\w*):\/\/(.[^/:]+)(\:[\d]+)?/i);
-            if (match != null && match.length > 2 && _isString(match[2]) && match[2].length > 0) {
+            if (match != null && match.length > 2 && isString(match[2]) && match[2].length > 0) {
                 result = match[2] || "";
                 if (inclPort && match.length > 2) {
                     const protocol = (match[1] || "").toLowerCase();
@@ -759,7 +686,7 @@ export class CorrelationIdHelper {
         const includedDomains = config && config.correlationHeaderDomains;
         if (includedDomains) {
             let matchExists: boolean;
-            CoreUtils.arrForEach(includedDomains, (domain) => {
+            arrForEach(includedDomains, (domain) => {
                 const regex = new RegExp(domain.toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
                 matchExists = matchExists || regex.test(requestHost);
             });
@@ -872,7 +799,7 @@ export class DateTimeUtils {
      */
     public static GetDuration = (start: number, end: number): number => {
         let result = null;
-        if (start !== 0 && end !== 0 && !CoreUtils.isNullOrUndefined(start) && !CoreUtils.isNullOrUndefined(end)) {
+        if (start !== 0 && end !== 0 && !isNullOrUndefined(start) && !isNullOrUndefined(end)) {
             result = end - start;
         }
 

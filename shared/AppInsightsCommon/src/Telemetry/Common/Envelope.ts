@@ -7,7 +7,7 @@ import { IEnvelope } from '../../Interfaces/Telemetry/IEnvelope';
 import { DataSanitizer } from './DataSanitizer';
 import { FieldType } from '../../Enums';
 import { Util } from '../../Util';
-import { IDiagnosticLogger, CoreUtils } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, toISOString } from '@microsoft/applicationinsights-core-js';
 
 export class Envelope extends AIEnvelope implements IEnvelope {
 
@@ -24,7 +24,7 @@ export class Envelope extends AIEnvelope implements IEnvelope {
 
         this.name = DataSanitizer.sanitizeString(logger, name) || Util.NotSpecified;
         this.data = data;
-        this.time = CoreUtils.toISOString(new Date());
+        this.time = toISOString(new Date());
 
         this.aiDataContract = {
             time: FieldType.Required,

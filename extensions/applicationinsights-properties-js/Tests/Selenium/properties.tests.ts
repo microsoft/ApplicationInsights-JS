@@ -1,6 +1,6 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 
-import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, CoreUtils } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
 import PropertiesPlugin from "../../src/PropertiesPlugin";
 import { ITelemetryConfig } from "../../src/Interfaces/ITelemetryConfig";
 import { Util, IWeb } from "@microsoft/applicationinsights-common";
@@ -142,10 +142,10 @@ export class PropertiesTests extends TestClass {
                 // setup
                 var actualCookieName: string;
                 var actualCookieValue: string;
-                let newIdPrev = CoreUtils.newId;
+                let newIdPrev = Util.newId;
                 try {
                     // Not using sinon stub as it's not restoring the previous version properly (getting newId is not a function for tests run after this one)
-                    CoreUtils.newId = () => "newId";
+                    Util.newId = () => "newId";
                     var getCookieStub = this.sandbox.stub(Util, "getCookie", () => "");
                     var setCookieStub = this.sandbox.stub(Util, "setCookie", (logger, cookieName, cookieValue) => {
                         actualCookieName = cookieName;
@@ -169,7 +169,7 @@ export class PropertiesTests extends TestClass {
                     var expirationDate = new Date(expiration.substr("expires=".length));
                     Assert.equal(true, expirationDate > (new Date), "ai_user cookie expiration should be in the future");
                 } finally {
-                    CoreUtils.newId = newIdPrev;
+                    Util.newId = newIdPrev;
                 }
             }
         });
@@ -181,10 +181,10 @@ export class PropertiesTests extends TestClass {
                 var id = "userId"
                 var actualCookieName: string;
                 var actualCookieValue: string;
-                let newIdPrev = CoreUtils.newId;
+                let newIdPrev = Util.newId;
                 try {
                     // Not using sinon stub as it's not restoring the previous version properly (getting newId is not a function for tests run after this one)
-                    CoreUtils.newId = () => "newId";
+                    Util.newId = () => "newId";
                     var getCookieStub = this.sandbox.stub(Util, "getCookie", () => "");
                     var setCookieStub = this.sandbox.stub(Util, "setCookie", (logger, cookieName, cookieValue) => {
                         actualCookieName = cookieName;
@@ -208,7 +208,7 @@ export class PropertiesTests extends TestClass {
                     var expirationDate = new Date(expiration.substr("expires=".length));
                     Assert.equal(true, expirationDate > (new Date), "ai_user cookie expiration should be in the future");
                 } finally {
-                    CoreUtils.newId = newIdPrev;
+                    Util.newId = newIdPrev;
                 }
             }
         });

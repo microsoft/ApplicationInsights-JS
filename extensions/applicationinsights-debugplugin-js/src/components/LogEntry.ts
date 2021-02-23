@@ -1,4 +1,4 @@
-import { CoreUtils } from '@microsoft/applicationinsights-core-js';
+import { isBoolean, isNumber, isObject, isString } from '@microsoft/applicationinsights-core-js';
 import { makeRegex, traverseAndReplace, toggleClassName, MAX_DEPTH, formatLogElements, getTargetName, getTargetKeys } from './helpers';
 import { Util } from '@microsoft/applicationinsights-common';
 
@@ -35,7 +35,7 @@ export class LogEntry {
                             return true;
                         }
                     }
-                } else if (CoreUtils.isObject(value) || Util.isError(value)) {
+                } else if (isObject(value) || Util.isError(value)) {
                     let keys = getTargetKeys(value, excludedKeys, includeFunctions);
                     for (let lp = 0; lp < keys.length; lp++) {
                         let key = keys[lp];
@@ -43,7 +43,7 @@ export class LogEntry {
                             return true;
                         }
                     }
-                } else if (CoreUtils.isString(value) || CoreUtils.isNumber(value) || CoreUtils.isBoolean(value)) {
+                } else if (isString(value) || isNumber(value) || isBoolean(value)) {
                     return _testValue(rg, value.toString());
                 }
             }
