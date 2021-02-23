@@ -50,6 +50,8 @@ export { IPropertiesPlugin } from './Interfaces/IPropertiesPlugin';
 export { IUser, IUserContext } from './Interfaces/Context/IUser';
 export { ITelemetryTrace, ITraceState } from './Interfaces/Context/ITelemetryTrace';
 export { DistributedTracingModes } from './Enums';
+export { stringToBoolOrDefault, msToTimeSpan } from './HelperFuncs';
+export { createDomEvent } from './DomHelperFuncs';
 export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
 export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";
 export const AnalyticsPluginIdentifier = "ApplicationInsightsAnalytics";
