@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { DataSanitizer, UrlHelper, DateTimeUtils, IDependencyTelemetry, Util } from '@microsoft/applicationinsights-common';
+import { DataSanitizer, UrlHelper, dateTimeUtilsDuration, IDependencyTelemetry, Util } from '@microsoft/applicationinsights-common';
 import { IDiagnosticLogger, objKeys, arrForEach, isNumber, isString, normalizeJsName, objForEachKey } from '@microsoft/applicationinsights-core-js';
 import dynamicProto from "@microsoft/dynamicproto-js";
 
@@ -22,7 +22,7 @@ function _calcPerfDuration(resourceEntry:PerformanceResourceTiming, start:string
     let from = resourceEntry[start];
     let to = resourceEntry[end];
     if (from && to) {
-        result = DateTimeUtils.GetDuration(from, to);
+        result = dateTimeUtilsDuration(from, to);
     }
 
     return result;
@@ -277,7 +277,7 @@ export class ajaxRecord {
         
             self.CreateTrackItem = (ajaxType:string, enableRequestHeaderTracking:boolean, getResponse:() => IAjaxRecordResponse):IDependencyTelemetry => {
                 // round to 3 decimal points
-                self.ajaxTotalDuration = Math.round(DateTimeUtils.GetDuration(self.requestSentTime, self.responseFinishedTime) * 1000) / 1000;
+                self.ajaxTotalDuration = Math.round(dateTimeUtilsDuration(self.requestSentTime, self.responseFinishedTime) * 1000) / 1000;
                 if (self.ajaxTotalDuration < 0) {
                     return null;
                 }
@@ -293,6 +293,12 @@ export class ajaxRecord {
                     method: self.method,
                     [strProperties]: { HttpMethod: self.method }
                 } as IDependencyTelemetry;
+
+                if (self.requestSentTime) {
+                    // Set the correct dependency start time
+                    dependency.startTime = new Date();
+                    dependency.startTime.setTime(self.requestSentTime);
+                }
         
                 // Add Ajax perf details if available
                 _populatePerfData(self, dependency);

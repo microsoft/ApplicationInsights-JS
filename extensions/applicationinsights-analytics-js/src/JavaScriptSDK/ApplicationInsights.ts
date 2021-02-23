@@ -8,7 +8,7 @@ import {
     TelemetryItemCreator, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
-    DateTimeUtils, IExceptionInternal, PropertiesPluginIdentifier, AnalyticsPluginIdentifier
+    dateTimeUtilsDuration, IExceptionInternal, PropertiesPluginIdentifier, AnalyticsPluginIdentifier
 } from "@microsoft/applicationinsights-common";
 
 import {
@@ -767,7 +767,7 @@ class Timing {
                 { name: this._name, key: name }, true);
         } else {
             const end = +new Date;
-            const duration = DateTimeUtils.GetDuration(start, end);
+            const duration = dateTimeUtilsDuration(start, end);
             this.action(name, url, duration, properties, measurements);
         }
 

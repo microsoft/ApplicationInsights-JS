@@ -3,7 +3,7 @@
 
 import {
     RequestHeaders, Util, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
-    RemoteDependencyData, DateTimeUtils, DisabledPropertyName, IDependencyTelemetry,
+    RemoteDependencyData, dateTimeUtilsNow, DisabledPropertyName, IDependencyTelemetry,
     IConfig, ITelemetryContext, PropertiesPluginIdentifier, DistributedTracingModes
 } from '@microsoft/applicationinsights-common';
 import {
@@ -485,7 +485,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             let ajaxData = xhr[strAjaxData];
                             if (_isMonitoredXhrInstance(xhr) && !ajaxData.xhrMonitoringState.sendDone) {
                                 _createMarkId("xhr", ajaxData);
-                                ajaxData.requestSentTime = DateTimeUtils.Now();
+                                ajaxData.requestSentTime = dateTimeUtilsNow();
                                 xhr = _self.includeCorrelationHeaders(ajaxData, undefined, undefined, xhr);
                                 ajaxData.xhrMonitoringState.sendDone = true;
                             }
@@ -634,7 +634,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
             function _onAjaxComplete(xhr: XMLHttpRequestInstrumented) {
                 let ajaxData = xhr[strAjaxData];
-                ajaxData.responseFinishedTime = DateTimeUtils.Now();
+                ajaxData.responseFinishedTime = dateTimeUtilsNow();
                 ajaxData.status = xhr.status;
 
                 function _reportXhrError(e: any, failedProps?:Object) {
@@ -809,7 +809,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 const spanID = Util.generateW3CId().substr(0, 16);
 
                 const ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog]());
-                ajaxData.requestSentTime = DateTimeUtils.Now();
+                ajaxData.requestSentTime = dateTimeUtilsNow();
 
                 if (input instanceof Request) {
                     ajaxData.requestUrl = input ? input.url : "";
@@ -878,7 +878,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         errorProps
                     );
                 }
-                ajaxData.responseFinishedTime = DateTimeUtils.Now();
+                ajaxData.responseFinishedTime = dateTimeUtilsNow();
                 ajaxData.status = status;
 
                 _findPerfResourceEntry("fetch", ajaxData, () => {

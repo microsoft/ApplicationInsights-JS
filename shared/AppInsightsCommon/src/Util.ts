@@ -3,11 +3,12 @@
 
 import { StorageType } from "./Enums";
 import {
-    EventHelper, _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin, CoreUtils,
-    getGlobal, getGlobalInst, getWindow, getDocument, getNavigator, getPerformance, getLocation,
+    _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin, CoreUtils,
+    getGlobal, getGlobalInst, getDocument, getNavigator, getPerformance, getLocation,
     getExceptionName as coreGetExceptionName, dumpObj, objForEachKey, strEndsWith,
-    isString, isFunction, isNullOrUndefined, disableCookies as coreDisableCookies, strTrim, 
-    random32, isArray, isError, isDate, newId, generateW3CId, toISOString, arrForEach, getIEVersion, attachEvent
+    isString, isNullOrUndefined, disableCookies as coreDisableCookies, strTrim, 
+    random32, isArray, isError, isDate, newId, generateW3CId, toISOString, arrForEach, getIEVersion,
+    attachEvent, dateNow
 } from "@microsoft/applicationinsights-core-js";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
@@ -773,36 +774,48 @@ export class AjaxHelper {
     }
 }
 
-/**
- * A utility class that helps getting time related parameters
- */
-export class DateTimeUtils {
+
+export function dateTimeUtilsNow() {
+    // returns the window or webworker performance object
+    let perf = getPerformance();
+    if (perf && perf.now && perf.timing) {
+        let now = perf.now() + perf.timing.navigationStart;
+        // Known issue with IE where this calculation can be negative, so if it is then ignore and fallback
+        if (now > 0) {
+            return now;
+        }
+    }
+
+    return dateNow();
+}
+
+export function dateTimeUtilsDuration(start: number, end: number): number {
+    let result = null;
+    if (start !== 0 && end !== 0 && !isNullOrUndefined(start) && !isNullOrUndefined(end)) {
+        result = end - start;
+    }
+
+    return result;
+}
+
+export interface IDateTimeUtils {
     /**
      * Get the number of milliseconds since 1970/01/01 in local timezone
      */
-    public static Now = () => {
-        // returns the window or webworker performance object
-        let perf = getPerformance();
-        if (perf && perf.now && perf.timing) {
-            let now = perf.now() + perf.timing.navigationStart;
-            // Known issue with IE where this calculation can be negative, so if it is then ignore and fallback
-            if (now > 0) {
-                return now;
-            }
-        }
-
-        return new Date().getTime();
-    };
+    Now: () => number;
 
     /**
      * Gets duration between two timestamps
      */
-    public static GetDuration = (start: number, end: number): number => {
-        let result = null;
-        if (start !== 0 && end !== 0 && !isNullOrUndefined(start) && !isNullOrUndefined(end)) {
-            result = end - start;
-        }
-
-        return result;
-    }
+    GetDuration: (start: number, end: number) => number;
 }
+
+/**
+ * A utility class that helps getting time related parameters
+ */
+export const DateTimeUtils: IDateTimeUtils = (function() {
+    return {
+        Now: dateTimeUtilsNow,
+        GetDuration: dateTimeUtilsDuration
+    };
+})();
