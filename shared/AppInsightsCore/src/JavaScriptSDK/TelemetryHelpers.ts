@@ -3,13 +3,12 @@
 "use strict";
 
 import { IPlugin, ITelemetryPlugin } from '../JavaScriptSDK.Interfaces/ITelemetryPlugin';
-import { CoreUtils } from "./CoreUtils";
 import { _InternalLogMessage } from "./DiagnosticLogger";
 import { _InternalMessageId } from '../JavaScriptSDK.Enums/LoggingEnums';
 import { ProcessTelemetryContext } from './ProcessTelemetryContext';
 import { ITelemetryPluginChain } from '../JavaScriptSDK.Interfaces/ITelemetryPluginChain';
+import { arrForEach, isFunction } from './HelperFuncs';
 
-let _isFunction = CoreUtils.isFunction;
 let processTelemetry = "processTelemetry";
 let priority = "priority";
 let setNextPlugin = "setNextPlugin";
@@ -32,13 +31,13 @@ export function initializePlugins(processContext:ProcessTelemetryContext, extens
         let thePlugin = proxy.getPlugin();
         if (thePlugin) {
             if (lastPlugin &&
-                    _isFunction(lastPlugin[setNextPlugin]) &&
-                    _isFunction(thePlugin[processTelemetry])) {
+                    isFunction(lastPlugin[setNextPlugin]) &&
+                    isFunction(thePlugin[processTelemetry])) {
                 // Set this plugin as the next for the previous one
                 lastPlugin[setNextPlugin](thePlugin);
             }
 
-            if (!_isFunction(thePlugin[isInitialized]) || !thePlugin[isInitialized]()) {
+            if (!isFunction(thePlugin[isInitialized]) || !thePlugin[isInitialized]()) {
                 initPlugins.push(thePlugin);
             }
 
@@ -48,7 +47,7 @@ export function initializePlugins(processContext:ProcessTelemetryContext, extens
     }
 
     // Now initiatilize the plugins
-    CoreUtils.arrForEach(initPlugins, thePlugin => {
+    arrForEach(initPlugins, thePlugin => {
         thePlugin.initialize(
             processContext.getCfg(), 
             processContext.core(), 
@@ -61,8 +60,8 @@ export function sortPlugins(plugins:IPlugin[]) {
     // Sort by priority
     return plugins.sort((extA, extB) => {
         let result = 0;
-        let bHasProcess = _isFunction(extB[processTelemetry]);
-        if (_isFunction(extA[processTelemetry])) {
+        let bHasProcess = isFunction(extB[processTelemetry]);
+        if (isFunction(extA[processTelemetry])) {
             result = bHasProcess ? extA[priority] - extB[priority] : 1;
         } else if (bHasProcess) {
             result = -1;

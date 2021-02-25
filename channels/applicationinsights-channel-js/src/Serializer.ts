@@ -1,5 +1,7 @@
 ﻿import { Util, ISerializable, FieldType } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, CoreUtils, getJSON, objForEachKey } from '@microsoft/applicationinsights-core-js';
+import { 
+    IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, objForEachKey, isFunction, isObject
+} from '@microsoft/applicationinsights-core-js';
 import dynamicProto from '@microsoft/dynamicproto-js'
 
 export class Serializer {
@@ -15,7 +17,7 @@ export class Serializer {
                     return getJSON().stringify(output);
                 } catch (e) {
                     // if serialization fails return an empty string
-                    logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSerializeObject, (e && CoreUtils.isFunction(e.toString)) ? e.toString() : "Error serializing object", null, true);
+                    logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSerializeObject, (e && isFunction(e.toString)) ? e.toString() : "Error serializing object", null, true);
                 }
             }
 
@@ -52,7 +54,7 @@ export class Serializer {
                             output = source;
                         } catch (e) {
                             // if serialization fails return an empty string
-                            logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSerializeObject, (e && CoreUtils.isFunction(e.toString)) ? e.toString() : "Error serializing object", null, true);
+                            logger.throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CannotSerializeObject, (e && isFunction(e.toString)) ? e.toString() : "Error serializing object", null, true);
                         }
                     }
 
@@ -61,12 +63,12 @@ export class Serializer {
 
                 source[circularReferenceCheck] = true;
                 objForEachKey(source.aiDataContract, (field, contract) => {
-                    const isRequired = (CoreUtils.isFunction(contract)) ? (contract() & FieldType.Required) : (contract & FieldType.Required);
-                    const isHidden = (CoreUtils.isFunction(contract)) ? (contract() & FieldType.Hidden) : (contract & FieldType.Hidden);
+                    const isRequired = (isFunction(contract)) ? (contract() & FieldType.Required) : (contract & FieldType.Required);
+                    const isHidden = (isFunction(contract)) ? (contract() & FieldType.Hidden) : (contract & FieldType.Hidden);
                     const isArray = contract & FieldType.Array;
 
                     const isPresent = source[field] !== undefined;
-                    const isObject = CoreUtils.isObject(source[field]) && source[field] !== null;
+                    const isObj = isObject(source[field]) && source[field] !== null;
 
                     if (isRequired && !isPresent && !isArray) {
                         logger.throwInternal(
@@ -78,7 +80,7 @@ export class Serializer {
                         // If not in debug mode, continue and hope the error is permissible
                     } else if (!isHidden) {  // Don't serialize hidden fields
                         let value;
-                        if (isObject) {
+                        if (isObj) {
                             if (isArray) {
                                 // special case; recurse on each object in the source array
                                 value = _serializeArray(source[field], field);

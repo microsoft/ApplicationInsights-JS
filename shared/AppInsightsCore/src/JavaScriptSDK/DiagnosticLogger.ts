@@ -4,9 +4,9 @@
 import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration"
 import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
-import { CoreUtils } from "./CoreUtils";
 import { hasJSON, getJSON, getConsole } from "./EnvUtils";
 import dynamicProto from '@microsoft/dynamicproto-js';
+import { isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
 
 /**
  * For user non actionable traces use AI Internal prefix.
@@ -79,10 +79,6 @@ export class DiagnosticLogger implements IDiagnosticLogger {
         let _messageLogged: { [msg: number]: boolean } = {};
 
         dynamicProto(DiagnosticLogger, this, (_self) => {
-            const isNullOrUndefined = CoreUtils.isNullOrUndefined;
-            const isUndefined = CoreUtils.isUndefined;
-            const isFunction = CoreUtils.isFunction;
-
             if (isNullOrUndefined(config)) {
                 config = {};
             }
@@ -108,17 +104,18 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                 } else {
                     if (!isUndefined(message) && !!message) {
                         if (!isUndefined(message.message)) {
+                            const logLevel = _self.consoleLoggingLevel();
                             if (isUserAct) {
                                 // check if this message type was already logged to console for this page view and if so, don't log it again
                                 const messageKey: number = +message.messageId;
 
-                                if (!_messageLogged[messageKey] && _self.consoleLoggingLevel() >= LoggingSeverity.WARNING) {
+                                if (!_messageLogged[messageKey] && logLevel >= LoggingSeverity.WARNING) {
                                     _self.warnToConsole(message.message);
                                     _messageLogged[messageKey] = true;
                                 }
                             } else {
                                 // don't log internal AI traces in the console, unless the verbose logging is enabled
-                                if (_self.consoleLoggingLevel() >= LoggingSeverity.WARNING) {
+                                if (logLevel >= LoggingSeverity.WARNING) {
                                     _self.warnToConsole(message.message);
                                 }
                             }

@@ -2,6 +2,8 @@
     "name": "@microsoft/applicationinsights-properties-js",
     "version": "2.5.11",
     "description": "Microsoft Application Insights properties (Part A) plugin",
+    "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
+    "author": "Microsoft Application Insights Team",
     "main": "dist/applicationinsights-properties-js.js",
     "module": "dist-esm/applicationinsights-properties-js.js",
     "types": "types/applicationinsights-properties-js.d.ts",
@@ -11,15 +13,17 @@
         "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-properties-js"
     },
     "scripts": {
-        "build": "npm run build:esm && npm run build:browser",
+        "build": "npm run build:esm && npm run build:browser && npm run dtsgen",
         "build:esm": "grunt properties",
         "build:browser": "rollup -c",
         "test": "grunt propertiestests",
-        "lint": "tslint -p tsconfig.json"
+        "lint": "tslint -p tsconfig.json",
+        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights properties plugin\""
     },
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "@microsoft/applicationinsights-rollup-es3" : "1.1.3",
+        "@microsoft/api-extractor" : "^7.9.11",
         "typescript": "2.5.3",
         "grunt": "^1.3.0",
         "grunt-contrib-qunit": "^3.1.0",

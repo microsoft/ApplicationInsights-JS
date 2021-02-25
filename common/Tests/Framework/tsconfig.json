@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+      "sourceMap": true,
+      "inlineSources": true,
+      "noImplicitAny": true,
+      "module": "es6",
+      "moduleResolution": "node",
+      "target": "es5",
+      "forceConsistentCasingInFileNames": true,
+      "importHelpers": false,
+      "noEmitHelpers": true,
+      "alwaysStrict": true,
+      "declaration": true,
+      "outDir": "dist-esm/",
+      "rootDir": "common/Tests/Framework",
+      "suppressImplicitAnyIndexErrors": true,
+      "allowSyntheticDefaultImports": true
+    },
+    "include": [
+      "./src/**/*.ts"
+    ],
+    "exclude": [
+      "node_modules/"
+    ]
+  }
+  

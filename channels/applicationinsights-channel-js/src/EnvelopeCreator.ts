@@ -8,9 +8,8 @@ import {
     SampleRate,
 } from '@microsoft/applicationinsights-common';
 import {
-    ITelemetryItem, CoreUtils,
-    IDiagnosticLogger, LoggingSeverity, _InternalMessageId,
-    hasJSON, getJSON, objForEachKey
+    ITelemetryItem, IDiagnosticLogger, LoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey, 
+    isNullOrUndefined, isNumber, isString, toISOString, setValue, isTruthy
 } from '@microsoft/applicationinsights-core-js';
 
 // these two constants are used to filter out properties not needed when trying to extract custom properties and measurements from the incoming payload
@@ -18,16 +17,9 @@ const strBaseType = 'baseType';
 const strBaseData = 'baseData';
 const strProperties = 'properties';
 const strTrue = 'true';
-const arrForEach = CoreUtils.arrForEach;
-const isNullOrUndefined = CoreUtils.isNullOrUndefined;
 
 function _setValueIf<T>(target:T, field:keyof T, value:any) {
-    if (target && value) {
-        target[field] = value;
-        return target[field];
-    }
-
-    return null;
+    return setValue(target, field, value, isTruthy);
 }
 
 export abstract class EnvelopeCreator {
@@ -36,9 +28,9 @@ export abstract class EnvelopeCreator {
     protected static extractPropsAndMeasurements(data: { [key: string]: any }, properties: { [key: string]: any }, measurements: { [key: string]: any }) {
         if (!isNullOrUndefined(data)) {
             objForEachKey(data, (key, value) => {
-                if (CoreUtils.isNumber(value)) {
+                if (isNumber(value)) {
                     measurements[key] = value;
-                } else if (CoreUtils.isString(value)) {
+                } else if (isString(value)) {
                     properties[key] = value;
                 } else if (hasJSON()) {
                     properties[key] = getJSON().stringify(value);
@@ -53,7 +45,7 @@ export abstract class EnvelopeCreator {
 
         _setValueIf(envelope, 'sampleRate', telemetryItem[SampleRate]);
         if ((telemetryItem[strBaseData] || {}).startTime) {
-            envelope.time = CoreUtils.toISOString(telemetryItem[strBaseData].startTime);
+            envelope.time = toISOString(telemetryItem[strBaseData].startTime);
         }
         envelope.iKey = telemetryItem.iKey;
         const iKeyNoDashes = telemetryItem.iKey.replace(/-/g, "");

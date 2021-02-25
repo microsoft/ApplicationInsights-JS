@@ -2,6 +2,8 @@
     "name": "@microsoft/applicationinsights-dependencies-js",
     "version": "2.5.11",
     "description": "Microsoft Application Insights XHR dependencies plugin",
+    "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
+    "author": "Microsoft Application Insights Team",
     "main": "dist/applicationinsights-dependencies-js.js",
     "module": "dist-esm/applicationinsights-dependencies-js.js",
     "types": "types/applicationinsights-dependencies-js.d.ts",
@@ -11,11 +13,12 @@
         "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-dependencies-js"
     },
     "scripts": {
-        "build": "npm run build:esm && npm run build:browser",
+        "build": "npm run build:esm && npm run build:browser && npm run dtsgen",
         "build:esm": "grunt deps",
         "build:browser": "rollup -c",
         "test": "grunt depstest",
-        "lint": "tslint -p tsconfig.json"
+        "lint": "tslint -p tsconfig.json",
+        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights XHR dependencies plugin\""
     },
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",

@@ -9,7 +9,7 @@ import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
 import { Util } from '../Util';
-import { IDiagnosticLogger, CoreUtils } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, isNullOrUndefined, arrMap, isString } from '@microsoft/applicationinsights-core-js';
 import { IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal } from '../Interfaces/IExceptionTelemetry';
 
 const strError = "error";
@@ -80,13 +80,13 @@ export class Exception extends ExceptionData implements ISerializable {
 
             // bool/int types, use isNullOrUndefined
             this.ver = 2; // TODO: handle the CS"4.0" ==> breeze 2 conversion in a better way
-            if (!CoreUtils.isNullOrUndefined(exception.isManual)) { this.isManual = exception.isManual; }
+            if (!isNullOrUndefined(exception.isManual)) { this.isManual = exception.isManual; }
         }
     }
 
     public static CreateFromInterface(logger: IDiagnosticLogger, exception: IExceptionInternal, properties?: any, measurements?: { [key: string]: number }): Exception {
         const exceptions: _ExceptionDetails[] = exception.exceptions
-            && CoreUtils.arrMap(exception.exceptions, (ex: IExceptionDetailsInternal) => _ExceptionDetails.CreateFromInterface(logger, ex));
+            && arrMap(exception.exceptions, (ex: IExceptionDetailsInternal) => _ExceptionDetails.CreateFromInterface(logger, ex));
         const exceptionData = new Exception(logger, {...exception, exceptions}, properties, measurements);
         return exceptionData;
     }
@@ -95,7 +95,7 @@ export class Exception extends ExceptionData implements ISerializable {
         const { exceptions, properties, measurements, severityLevel, ver, problemGroup, id, isManual } = this;
 
         const exceptionDetailsInterface = exceptions instanceof Array
-            && CoreUtils.arrMap(exceptions, (exception: _ExceptionDetails) => exception.toInterface())
+            && arrMap(exceptions, (exception: _ExceptionDetails) => exception.toInterface())
             || undefined;
 
         return {
@@ -167,7 +167,7 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
 
     public toInterface(): IExceptionDetailsInternal {
         const parsedStack = this.parsedStack instanceof Array
-            && CoreUtils.arrMap(this.parsedStack, (frame: _StackFrame) => frame.toInterface());
+            && arrMap(this.parsedStack, (frame: _StackFrame) => frame.toInterface());
 
         const exceptionDetailsInterface: IExceptionDetailsInternal = {
             id: this.id,
@@ -184,7 +184,7 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
 
     public static CreateFromInterface(logger:IDiagnosticLogger, exception: IExceptionDetailsInternal): _ExceptionDetails {
         const parsedStack = (exception.parsedStack instanceof Array
-            &&CoreUtils.arrMap(exception.parsedStack, frame => _StackFrame.CreateFromInterface(frame)))
+            && arrMap(exception.parsedStack, frame => _StackFrame.CreateFromInterface(frame)))
             || exception.parsedStack;
 
         const exceptionDetails = new _ExceptionDetails(logger, {...exception, parsedStack});
@@ -194,7 +194,7 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
 
     private static parseStack(stack?:string): _StackFrame[] {
         let parsedStack: _StackFrame[];
-        if (CoreUtils.isString(stack)) {
+        if (isString(stack)) {
             const frames = stack.split('\n');
             parsedStack = [];
             let level = 0;
@@ -266,7 +266,7 @@ export class _StackFrame extends StackFrame implements ISerializable {
     constructor(sourceFrame: string | IExceptionStackFrameInternal, level: number) {
         super();
 
-        // Not converting this to CoreUtils.isString() as typescript uses this logic to "understand" the different
+        // Not converting this to isString() as typescript uses this logic to "understand" the different
         // types for the 2 different code paths
         if (typeof sourceFrame === "string") {
             const frame: string = sourceFrame;

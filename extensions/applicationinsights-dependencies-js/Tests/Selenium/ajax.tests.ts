@@ -1,7 +1,7 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 /// <reference path="../TestFramework/PollingAssert.ts" />
 import { AjaxMonitor } from "../../src/ajax";
-import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders } from "@microsoft/applicationinsights-common";
+import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders, IDependencyTelemetry } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls, _InternalMessageId,
     getPerformance, getGlobalInst, getGlobal
@@ -24,6 +24,19 @@ function hookFetch<T>(executor: (resolve: (value?: T | PromiseLike<T>) => void, 
     }
 
     return calls;
+}
+
+function hookTrackDependencyInternal(ajaxMonitor: AjaxMonitor) {
+    let orgInternalDependency: (dependency: IDependencyTelemetry, properties?: { [key: string]: any }) => void = ajaxMonitor["trackDependencyDataInternal"];
+    let dependencyArgs: IDependencyTelemetry[] = [];
+
+    ajaxMonitor["trackDependencyDataInternal"] = function (dependency: IDependencyTelemetry, properties?: { [key: string]: any }) {
+        let orgArguments = arguments;
+        dependencyArgs.push({ ...dependency});
+        orgInternalDependency.apply(ajaxMonitor, orgArguments);
+    };
+
+    return dependencyArgs;
 }
 
 export class AjaxTests extends TestClass {
@@ -52,6 +65,7 @@ export class AjaxTests extends TestClass {
             name: "Dependencies Configuration: Config can be set from root config",
             test: () => {
                 this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
                     instrumentationKey: "instrumentation_key",
@@ -83,6 +97,11 @@ export class AjaxTests extends TestClass {
                 Assert.equal(true, throwSpy.called, "We should have thrown an internal error");
                 Assert.equal(_InternalMessageId.MaxAjaxPerPVExceeded, throwSpy.args[0][1], "Reported error should be max exceeded");
                 Assert.equal(true, throwSpy.args[0][2].indexOf("ajax per page view limit") !== -1, "Reported error should be contain text describing the issue");
+
+                Assert.equal(6, dependencyFields.length, "trackDependencyDataInternal should have been called");
+                for (let lp = 0; lp < 6; lp++) {
+                    Assert.ok(dependencyFields[lp].startTime, `startTime ${lp} was specified before trackDependencyDataInternal was called`);
+                }
             }
         });
 
@@ -90,6 +109,7 @@ export class AjaxTests extends TestClass {
             name: "Dependencies Configuration: Make sure we don't fail for invalid arguments",
             test: () => {
                 this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = {
                     instrumentationKey: "instrumentation_key",
@@ -114,6 +134,10 @@ export class AjaxTests extends TestClass {
                 (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
 
                 Assert.equal(2, trackSpy.callCount, "Track has been called 2 times");
+                Assert.equal(2, dependencyFields.length, "trackDependencyDataInternal should have been called");
+                Assert.ok(dependencyFields[0].startTime, "startTime 0 was specified before trackDependencyDataInternal was called")
+                Assert.ok(dependencyFields[1].startTime, "startTime 1 was specified before trackDependencyDataInternal was called")
+
                 Assert.equal(false, throwSpy.called, "We should not have thrown an internal error -- yet");
             }
         });
@@ -400,6 +424,7 @@ export class AjaxTests extends TestClass {
                 });
 
                 this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
@@ -414,6 +439,8 @@ export class AjaxTests extends TestClass {
                     let data = fetchSpy.args[0][0].baseData;
                     Assert.equal("Fetch", data.type, "request is Fetch type");
                     Assert.ok(throwSpy.notCalled, "Make sure we didn't fail internally");
+                    Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+                    Assert.ok(dependencyFields[0].startTime, "startTime was specified before trackDependencyDataInternal was called")
                     done();
                 }, () => {
                     Assert.ok(false, "fetch failed!");
@@ -446,6 +473,7 @@ export class AjaxTests extends TestClass {
                 });
 
                 this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
                 let appInsightsCore = new AppInsightsCore();
                 let coreConfig = { instrumentationKey: "", disableFetchTracking: false };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
@@ -460,12 +488,16 @@ export class AjaxTests extends TestClass {
                     let data = fetchSpy.args[0][0].baseData;
                     Assert.equal("Fetch", data.type, "request is Fetch type");
                     Assert.equal(false, throwSpy.called, "We should not have failed internally");
+                    Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+                    Assert.ok(dependencyFields[0].startTime, "startTime was specified before trackDependencyDataInternal was called")
 
                     fetch(undefined, null).then(() => {
                         // Assert
                         Assert.ok(fetchSpy.calledTwice, "createFetchRecord called once after using fetch");
                         Assert.equal(false, throwSpy.called, "We should still not have failed internally");
-                        done();
+                        Assert.equal(2, dependencyFields.length, "trackDependencyDataInternal was called");
+                        Assert.ok(dependencyFields[1].startTime, "startTime was specified before trackDependencyDataInternal was called")
+                            done();
                     }, () => {
                         Assert.ok(false, "fetch failed!");
                         done();
@@ -516,7 +548,7 @@ export class AjaxTests extends TestClass {
                     Assert.ok(fetchSpy.calledOnce);
                     Assert.ok(headerSpy.calledOnce);
                     Assert.deepEqual(init, headerSpy.returnValue || headerSpy.returnValues[0]);
-                } catch (e) {
+            } catch (e) {
                     console && console.warn("Exception: " + e);
                     Assert.ok(false, e);
                 }

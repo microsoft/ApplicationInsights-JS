@@ -2,10 +2,15 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/rush/v5/rush.schema.json",
 
-  "npmVersion": "7.4.3",
+  "npmVersion": "7.5.4",
   "rushVersion": "5.36.2",
   "projectFolderMaxDepth": 4,
   "projects": [
+    {
+      "packageName": "@microsoft/ai-test-framework",
+      "projectFolder": "common/Tests/Framework",
+      "shouldPublish": true
+    },
     {
       "packageName": "@microsoft/applicationinsights-rollup-plugin-uglify3-js",
       "projectFolder": "tools/rollup-plugin-uglify3-js",

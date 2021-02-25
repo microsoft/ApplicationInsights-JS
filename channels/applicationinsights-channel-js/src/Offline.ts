@@ -1,4 +1,4 @@
-import { CoreUtils, EventHelper, getWindow, getDocument, getNavigator } from '@microsoft/applicationinsights-core-js';
+import { EventHelper, getWindow, getDocument, getNavigator, isUndefined, isNullOrUndefined } from '@microsoft/applicationinsights-core-js';
 import dynamicProto from '@microsoft/dynamicproto-js';
 
 /**
@@ -29,7 +29,7 @@ export class OfflineListener {
                     // Also attach to the document.body or document
                     let target:any = _document.body || _document;
     
-                    if (!CoreUtils.isUndefined(target.ononline)) {
+                    if (!isUndefined(target.ononline)) {
                         target.ononline = _setOnline;
                         target.onoffline = _setOffline
                         isListening = true;
@@ -48,7 +48,7 @@ export class OfflineListener {
                 var _navigator = getNavigator();
                 if (isListening) {
                     result = _onlineStatus
-                } else if (_navigator && !CoreUtils.isNullOrUndefined(_navigator.onLine)) { // navigator.onLine is undefined in react-native
+                } else if (_navigator && !isNullOrUndefined(_navigator.onLine)) { // navigator.onLine is undefined in react-native
                     result = _navigator.onLine;
                 }
 

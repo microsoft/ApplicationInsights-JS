@@ -183,6 +183,12 @@ module.exports = function (grunt) {
                 ],
                 out: './tools/shims/Tests/Selenium/shimstests.js'
             },
+            "tst-framework": {
+                tsconfig: './common/Tests/Framework/tsconfig.json',
+                src: [
+                    './common/Tests/Framework/src/*.ts'
+                ]
+            },
             module: {
                 // Use a different tsconfig for building module in order to not generate a declaration file for module, while keeping declaration for other modules
                 tsconfig: './tsconfigmodule.json',
@@ -465,4 +471,5 @@ module.exports = function (grunt) {
     grunt.registerTask("shimstest", ["ts:shims", "ts:shimstest", "qunit:shims"]);
     grunt.registerTask("clickanalytics", ["ts:clickanalytics"]);
     grunt.registerTask("clickanalyticstests", ["ts:clickanalytics", "ts:clickanalyticstests", "qunit:clickanalytics"]);
+    grunt.registerTask("tst-framework", ["ts:tst-framework"]);
 };

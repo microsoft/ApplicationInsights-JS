@@ -5,7 +5,7 @@ import { IPerfEvent } from '../JavaScriptSDK.Interfaces/IPerfEvent';
 import { IPerfManager, IPerfManagerProvider } from '../JavaScriptSDK.Interfaces/IPerfManager';
 
 import dynamicProto from "@microsoft/dynamicproto-js";
-import { CoreUtils } from "./CoreUtils";
+import { dateNow, isArray, isFunction, objDefineAccessors } from './HelperFuncs';
 
 const strExecutionContextKey = "ctx";
 
@@ -60,17 +60,17 @@ export class PerfEvent implements IPerfEvent {
     constructor(name: string, payloadDetails: () => any, isAsync: boolean) {
         let _self = this;
         let accessorDefined = false;
-        _self.start = CoreUtils.dateNow();
+        _self.start = dateNow();
         _self.name = name;
         _self.isAsync = isAsync;
         _self.isChildEvt = (): boolean => false;
 
-        if (CoreUtils.isFunction(payloadDetails)) {
+        if (isFunction(payloadDetails)) {
             // Create an accessor to minimize the potential performance impact of executing the payloadDetails callback
             let theDetails:any;
-            accessorDefined = CoreUtils.objDefineAccessors(_self, 'payload', () => {
+            accessorDefined = objDefineAccessors(_self, 'payload', () => {
                 // Delay the execution of the payloadDetails until needed
-                if (!theDetails && CoreUtils.isFunction(payloadDetails)) {
+                if (!theDetails && isFunction(payloadDetails)) {
                     theDetails = payloadDetails();
                     // clear it out now so the referenced objects can be garbage collected
                     payloadDetails = null;
@@ -117,7 +117,7 @@ export class PerfEvent implements IPerfEvent {
         _self.complete = () => {
             let childTime = 0;
             let childEvts = _self.getCtx(PerfEvent.ChildrenContextKey);
-            if (CoreUtils.isArray(childEvts)) {
+            if (isArray(childEvts)) {
                 for (let lp = 0; lp < childEvts.length; lp++) {
                     let childEvt: IPerfEvent = childEvts[lp];
                     if (childEvt) {
@@ -126,10 +126,10 @@ export class PerfEvent implements IPerfEvent {
                 }
             }
 
-            _self.time = CoreUtils.dateNow() - _self.start;
+            _self.time = dateNow() - _self.start;
             _self.exTime = _self.time - childTime;
             _self.complete = () => {};
-            if (!accessorDefined && CoreUtils.isFunction(payloadDetails)) {
+            if (!accessorDefined && isFunction(payloadDetails)) {
                 // If we couldn't define the property set during complete -- to minimize the perf impact until after the time
                 _self.payload = payloadDetails();
             }
@@ -228,7 +228,7 @@ const doPerfActiveKey = "CoreUtils.doPerf";
 export function doPerf<T>(mgrSource: IPerfManagerProvider | IPerfManager, getSource: () => string, func: (perfEvt?: IPerfEvent) => T, details?: () => any, isAsync?: boolean) {
     if (mgrSource) {
         let perfMgr: IPerfManager = mgrSource as IPerfManager;
-        if (perfMgr && CoreUtils.isFunction(perfMgr["getPerfMgr"])) {
+        if (perfMgr && isFunction(perfMgr["getPerfMgr"])) {
             // Looks like a perf manager provider object
             perfMgr = perfMgr["getPerfMgr"]()
         }

@@ -8,12 +8,12 @@ import { ITelemetryItem } from "../JavaScriptSDK.Interfaces/ITelemetryItem";
 import { INotificationListener } from "../JavaScriptSDK.Interfaces/INotificationListener";
 import { EventsDiscardedReason } from "../JavaScriptSDK.Enums/EventsDiscardedReason";
 import { NotificationManager } from "./NotificationManager";
-import { CoreUtils } from "./CoreUtils";
 import { doPerf } from "./PerfManager";
 import { INotificationManager } from '../JavaScriptSDK.Interfaces/INotificationManager';
 import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
 import { _InternalLogMessage, DiagnosticLogger } from "./DiagnosticLogger";
 import dynamicProto from '@microsoft/dynamicproto-js';
+import { arrForEach, isNullOrUndefined, toISOString, throwError } from "./HelperFuncs";
 
 "use strict";
 
@@ -32,7 +32,7 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
                     if (telemetryItem === null) {
                         _notifyInvalidEvent(telemetryItem);
                         // throw error
-                        throw Error("Invalid telemetry item");
+                        throwError("Invalid telemetry item");
                     }
                     
                     // do basic validation before sending it through the pipeline
@@ -78,11 +78,11 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
                 return setInterval(() => {
                     const queue: _InternalLogMessage[] = _self.logger ? _self.logger.queue : [];
         
-                    CoreUtils.arrForEach(queue, (logMessage: _InternalLogMessage) => {
+                    arrForEach(queue, (logMessage: _InternalLogMessage) => {
                         const item: ITelemetryItem = {
                             name: eventName ? eventName : "InternalMessageId: " + logMessage.messageId,
                             iKey: _self.config.instrumentationKey,
-                            time: CoreUtils.toISOString(new Date()),
+                            time: toISOString(new Date()),
                             baseType: _InternalLogMessage.dataType,
                             baseData: { message: logMessage.message }
                         };
@@ -94,7 +94,7 @@ export class AppInsightsCore extends BaseCore implements IAppInsightsCore {
             }
         
             function _validateTelemetryItem(telemetryItem: ITelemetryItem) {
-                if (CoreUtils.isNullOrUndefined(telemetryItem.name)) {
+                if (isNullOrUndefined(telemetryItem.name)) {
                     _notifyInvalidEvent(telemetryItem);
                     throw Error("telemetry name required");
                 }

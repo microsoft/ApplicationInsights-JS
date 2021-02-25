@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { ISession, Util } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity, CoreUtils, DiagnosticLogger } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity, isNullOrUndefined, DiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 
 export interface ISessionConfig {
     sessionRenewalMs?: () => number;
@@ -46,7 +46,7 @@ export class _SessionManager {
     private _storageNamePrefix: () => string;
 
     constructor(config: ISessionConfig, logger?: IDiagnosticLogger) {
-        if(CoreUtils.isNullOrUndefined(logger)) {
+        if(isNullOrUndefined(logger)) {
             this._logger = new DiagnosticLogger();
         } else {
             this._logger = logger;

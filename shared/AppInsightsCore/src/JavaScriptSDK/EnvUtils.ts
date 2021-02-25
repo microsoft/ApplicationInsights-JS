@@ -5,9 +5,10 @@
 import { 
     getGlobal as shimsGetGlobal, strShimUndefined, strShimObject, strShimPrototype, strShimFunction 
 } from "@microsoft/applicationinsights-shims";
+import { strContains } from "./HelperFuncs";
 
 /**
- * This file exists to hold environment utilities that are requied to check and
+ * This file exists to hold environment utilities that are required to check and
  * validate the current operating environment. Unless otherwise required, please
  * only defined methods (functions) in this class so that users of these 
  * functions/properties only need to include those that are used within their own modules.
@@ -29,6 +30,11 @@ const strJSON = "JSON";
 const strCrypto = "crypto";
 const strMsCrypto = "msCrypto";
 const strReactNative = "ReactNative";
+const strMsie = "msie";
+const strTrident = "trident/";
+
+let _isTrident: boolean = null;
+let _navUserAgentCheck: string = null;
 
 /**
  * Returns the current global scope object, for a normal web page this will be the current
@@ -247,4 +253,55 @@ export function isReactNative(): boolean {
     }
 
     return false;
+}
+
+/**
+ * Identifies whether the current environment appears to be IE
+ */
+export function isIE() {
+    let nav = getNavigator();
+    if (nav && nav.userAgent !== _navUserAgentCheck && _isTrident === null) {
+        // Added to support test mocking of the user agent
+        _navUserAgentCheck = nav.userAgent;
+        let userAgent = (_navUserAgentCheck || "").toLowerCase();
+        _isTrident = (strContains(userAgent, strMsie) || strContains(userAgent, strTrident));
+    }
+
+    return _isTrident;
+}
+
+/**
+ * Gets IE version returning the document emulation mode if we are running on IE, or null otherwise
+ */
+export function getIEVersion(userAgentStr: string = null): number {
+    let myNav = userAgentStr ? userAgentStr.toLowerCase() : "";
+    if (!userAgentStr) {
+        let navigator = getNavigator() || ({} as Navigator);
+        myNav = navigator ? (navigator.userAgent || "").toLowerCase() : "";
+    }
+    if (strContains(myNav, strMsie)) {
+        return parseInt(myNav.split(strMsie)[1]);
+    } else if (strContains(myNav, strTrident)) {
+        let tridentVer = parseInt(myNav.split(strTrident)[1]);
+        if (tridentVer) {
+            return tridentVer + 4;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Returns string representation of an object suitable for diagnostics logging.
+ */
+export function dumpObj(object: any): string {
+    const objectTypeDump: string = Object[strShimPrototype].toString.call(object);
+    let propertyValueDump: string = "";
+    if (objectTypeDump === "[object Error]") {
+        propertyValueDump = "{ stack: '" + object.stack + "', message: '" + object.message + "', name: '" + object.name + "'";
+    } else if (hasJSON()) {
+        propertyValueDump = getJSON().stringify(object);
+    }
+
+    return objectTypeDump + propertyValueDump;
 }
