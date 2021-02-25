@@ -376,6 +376,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         if(xhr.status == 301 || xhr.status == 308 ) {
                             if(!_checkAndUpdateEndPointUrl(xhr)) {
                                 _self._onError(payload, _formatErrorMessageXhr(xhr));
+                                return;
                             }
                         }
 
