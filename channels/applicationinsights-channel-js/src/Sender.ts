@@ -362,14 +362,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 if (xhr.readyState === 4) {
                     let response: IBackendResponse = null;
 
-                    // check if the xhr's responseURL is same as endpoint url
-                    // TODO after 10 redirects force send telemetry with'redirect=false' as query parameter. 
-                    if(xhr.responseURL !== _self._senderConfig.endpointUrl()) {
-                        const updatedUrl = xhr.responseURL;
-                        _self._senderConfig.endpointUrl = () => updatedUrl;
-                        ++_stamp_specific_redirects;
-                    }
-                    
                     if (!_self._appId) {
                         response = _parseResponse(_getResponseText(xhr) || xhr.response);
                         if (response && response.appId) {
@@ -378,9 +370,17 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     }
         
                     if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
+
+                        // Update End Point url if permanent redirect or moved permanently
+                        // Updates the end point url before retry
+                        if(xhr.status == 301 || xhr.status == 308 ) {
+                            if(!_checkAndUpdateEndPointUrl(xhr)) {
+                                _self._onError(payload, _formatErrorMessageXhr(xhr));
+                            }
+                        }
+
                         if (!_self._senderConfig.isRetryDisabled() && _isRetriable(xhr.status)) {
                             _resendPayload(payload);
-        
                             _self.diagLog().throwInternal(
                                 LoggingSeverity.WARNING,
                                 _InternalMessageId.TransmissionFailed, ". " +
@@ -399,6 +399,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                                 _InternalMessageId.TransmissionFailed, `. Offline - Response Code: ${xhr.status}. Offline status: ${Offline.isOffline()}. Will retry to send ${payload.length} items.`);
                         }
                     } else {
+
+                        // check if the xhr's responseURL is same as endpoint url
+                        // TODO after 10 redirects force send telemetry with 'redirect=false' as query parameter.
+                        _checkAndUpdateEndPointUrl(xhr);
+                        
                         if (xhr.status === 206) {
                             if (!response) {
                                 response = _parseResponse(_getResponseText(xhr) || xhr.response);
@@ -542,6 +547,24 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
             function _isSampledIn(envelope: ITelemetryItem): boolean {
                 return _self._sample.isSampledIn(envelope);
+            }
+
+            function _checkAndUpdateEndPointUrl(xhr: XMLHttpRequest) {
+                const responseUrl = xhr.responseURL;
+                // Maximum stamp specific redirects allowed(uncomment this when breeze is ready with not allowing redirects feature)
+               if(_stamp_specific_redirects >= 10) {
+               //  _self._senderConfig.endpointUrl = () => Sender._getDefaultAppInsightsChannelConfig().endpointUrl()+"/?redirect=false";
+               //  _stamp_specific_redirects = 0;
+                    return false;
+                }
+                if(!CoreUtils.isNullOrUndefined(responseUrl) && responseUrl !== '') {
+                    if(responseUrl !== _self._senderConfig.endpointUrl()) {
+                        _self._senderConfig.endpointUrl = () => responseUrl;
+                        ++_stamp_specific_redirects;
+                        return true;
+                    }
+                }
+                return false;
             }
         
             /**
