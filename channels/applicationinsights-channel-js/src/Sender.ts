@@ -557,7 +557,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                //  _stamp_specific_redirects = 0;
                     return false;
                 }
-                if(!CoreUtils.isNullOrUndefined(responseUrl) && responseUrl !== '') {
+                if(!isNullOrUndefined(responseUrl) && responseUrl !== '') {
                     if(responseUrl !== _self._senderConfig.endpointUrl()) {
                         _self._senderConfig.endpointUrl = () => responseUrl;
                         ++_stamp_specific_redirects;
