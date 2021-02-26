@@ -32,7 +32,7 @@ export class ExceptionDetails {
     /**
      * Indicates if full exception stack is provided in the exception. The stack may be trimmed, such as in the case of a StackOverflow exception.
      */
-    public hasFullStack: boolean;
+    public hasFullStack: boolean = true;
 
     /**
      * Text describing the stack. Either stack or parsedStack should have a value.
@@ -42,10 +42,5 @@ export class ExceptionDetails {
     /**
      * List of stack frames. Either stack or parsedStack should have a value.
      */
-    public parsedStack: StackFrame[];
-
-    constructor() {
-        this.hasFullStack = true;
-        this.parsedStack = [];
-    }
+    public parsedStack: StackFrame[] = [];
 }

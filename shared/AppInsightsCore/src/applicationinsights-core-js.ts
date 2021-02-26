@@ -22,12 +22,13 @@ export {
     isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, attachEvent, detachEvent, normalizeJsName, 
     objForEachKey, strEndsWith, isDate, isArray, isError, isString, isNumber, isBoolean, toISOString, arrForEach, arrIndexOf, 
     arrMap, arrReduce, strTrim, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError, strContains,
-    setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign
+    setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, createClassFromInterface
 } from './JavaScriptSDK/HelperFuncs';
 export { 
     getGlobal, getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
-    isReactNative, getConsole, dumpObj, isIE, getIEVersion, strUndefined, strObject, strPrototype, strFunction
+    isReactNative, getConsole, dumpObj, isIE, getIEVersion, strUndefined, strObject, strPrototype, strFunction,
+    setEnableEnvMocks
 } from "./JavaScriptSDK/EnvUtils";
 export {
     objCreateFn as objCreate

@@ -31,7 +31,4 @@ export class StackFrame {
      * Line number of the code implementation.
      */
     public line: number;
-
-    constructor() {
-    }
 }

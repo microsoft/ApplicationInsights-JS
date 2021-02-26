@@ -8,6 +8,8 @@ import { ILocation } from './Context/ILocation';
 import { IUserContext } from './Context/IUser';
 import { ISession } from './Context/ISession';
 import { ITelemetryTrace } from './Context/ITelemetryTrace';
+import { IOperatingSystem } from './Context/IOperatingSystem';
+import { IWeb } from './Context/IWeb';
 
 export interface ITelemetryContext {
     /**
@@ -44,6 +46,16 @@ export interface ITelemetryContext {
      * The object describing a session tracked by this object.
      */
     session: ISession;
+
+    /**
+     * The object describing os details tracked by this object.
+     */
+    os?: IOperatingSystem;
+
+    /**
+     * The object describing we details tracked by this object.
+     */
+    web?: IWeb;
 
     /**
      * application id obtained from breeze responses. Is used if appId is not specified by root config

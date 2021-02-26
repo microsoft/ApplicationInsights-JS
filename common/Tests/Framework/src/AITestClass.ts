@@ -1,7 +1,7 @@
 /// <reference path="../../External/qunit.d.ts" />
 
 import dynamicProto from '@microsoft/dynamicproto-js';
-import { SinonSandbox, SinonSpy, SinonStub, SinonMock, SinonSandboxConfig, SinonFakeTimers, SinonFakeXMLHttpRequest } from 'sinon';
+import { SinonSandbox, SinonSpy, SinonStub, SinonMock, SinonFakeXMLHttpRequest } from 'sinon';
 import * as sinon from 'sinon';
 import { Assert } from "./Assert";
 import { ITestContext, StepResult, TestCase, TestCaseAsync } from './TestCase';
@@ -13,6 +13,15 @@ export interface FakeXMLHttpRequest extends XMLHttpRequest {
     method?: string;
     requestHeaders?: any;
     respond: (status: number, headers: any, body: string) => void;
+}
+
+function _getObjName(target:any, unknownValue?:string) {
+    if (target.hasOwnProperty("prototype")) {
+        // Look like a prototype
+        return target.name || unknownValue || ""
+    }
+
+    return (((target || {})["constructor"]) || {}).name || unknownValue || "";
 }
 
 export class AITestClass {
@@ -39,6 +48,7 @@ export class AITestClass {
     public isEmulatingEs3: boolean;
 
     protected _orgCrypto: Crypto | null;
+    protected _orgLocation: Location | null;
 
     /** Turns on/off sinon's fake implementation of XMLHttpRequest. On by default. */
     private _useFakeServer: boolean = true;
@@ -55,7 +65,7 @@ export class AITestClass {
     private _orgFetch: any = null;
 
     constructor(name?: string, emulateEs3?: boolean) {
-        this._moduleName = (emulateEs3 ? "(ES3) " : "") + name;
+        this._moduleName = (emulateEs3 ? "(ES3) " : "") + (name || _getObjName(this, ""));
         this.isEmulatingEs3 = emulateEs3
         QUnit.module(this._moduleName);
         this.sandboxConfig.injectIntoThis = true;
@@ -504,6 +514,64 @@ export class AITestClass {
             });
     }
     
+    private _mockLocation() {
+        if (!this._orgLocation) {
+            this._orgLocation = window.location;
+            let newLocation = <any>{
+                // The fields that we want to be able to mock
+                href: this._orgLocation.href
+            };
+
+            try {
+                // Just Blindly copy the properties over
+                // tslint:disable-next-line: forin
+                for (let name in this._orgLocation) {
+                    if (!newLocation.hasOwnProperty(name)) {
+                        newLocation[name] = this._orgLocation[name];
+                        if (!newLocation.hasOwnProperty(name)) {
+                            // if it couldn't be set directly try and pretend
+                            Object.defineProperty(newLocation, name,
+                            {
+                                configurable: true,
+                                get: function () {
+                                    return this._orgLocation[name];
+                                }
+                            });
+                        }
+                    }
+                }
+            } catch (e) {
+                QUnit.assert.ok(false, "Creating navigator copy failed - " + e);
+                throw e;
+            }
+
+            this.setLocation(newLocation);
+        }
+    }
+
+    protected setLocationHref(href: string) {
+        this._mockLocation();
+        (window as any).__mockLocation.href = href;
+    }
+
+    protected setLocation(newLocation: Location | null) {
+        try {
+            if (newLocation) {
+                Object.defineProperty(window, '__mockLocation',
+                {
+                    configurable: true,
+                    enumerable: true,
+                    value: newLocation
+                });
+            } else {
+                delete (window as any).__mockLocation;
+            }
+        } catch (e) {
+            QUnit.assert.ok(true, "Set Location failed - " + e);
+            sinon.stub(window, "location").returns(newLocation);
+        }
+    }
+
     protected _getXhrRequests(url?: string): FakeXMLHttpRequest[] {
         let requests: FakeXMLHttpRequest[] = [];
 
@@ -596,8 +664,14 @@ export class AITestClass {
             this.clock = null;
         }
 
+
         if (this._orgCrypto && window.crypto !== this._orgCrypto) {
             this.setCrypto(this._orgCrypto);
+        }
+
+        if (this._orgLocation && window.location !== this._orgLocation) {
+            this.setLocation(null);
+            this._orgLocation = null;
         }
 
         if (this._orgNavigator) {

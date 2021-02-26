@@ -4,7 +4,7 @@
 import { 
     IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, 
     IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign,
-    arrForEach, isString, isFunction, isNullOrUndefined, addEventHandler
+    arrForEach, isString, isFunction, isNullOrUndefined, addEventHandler, isArray, IPlugin
  } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -416,7 +416,7 @@ export class Initialization implements IApplicationInsights {
 
         // call functions that were queued before the main script was loaded
         try {
-            if (Util.isArray(_self.snippet.queue)) {
+            if (isArray(_self.snippet.queue)) {
                 // note: do not check length in the for-loop conditional in case something goes wrong and the stub methods are not overridden.
                 const length = _self.snippet.queue.length;
                 for (let i = 0; i < length; i++) {
@@ -463,10 +463,14 @@ export class Initialization implements IApplicationInsights {
 
                 // Back up the current session to local storage
                 // This lets us close expired sessions after the cookies themselves expire
-                const ext = appInsightsInstance.appInsights.core['_extensions'][PropertiesPluginIdentifier];
-                if (ext && ext.context && ext.context._sessionManager) {
-                    ext.context._sessionManager.backup();
-                }
+                arrForEach(appInsightsInstance.appInsights.core['_extensions'], (ext: any) => {
+                    if (ext.identifier === PropertiesPluginIdentifier) {
+                        if (ext && ext.context && ext.context._sessionManager) {
+                            ext.context._sessionManager.backup();
+                        }
+                        return -1;
+                    }
+                });
             };
 
             if (!appInsightsInstance.appInsights.config.disableFlushOnBeforeUnload) {

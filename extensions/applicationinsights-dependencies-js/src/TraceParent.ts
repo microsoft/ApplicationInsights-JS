@@ -1,4 +1,4 @@
-import { Util } from '@microsoft/applicationinsights-common';
+import { generateW3CId } from '@microsoft/applicationinsights-core-js';
 
 export class Traceparent {
 
@@ -24,12 +24,12 @@ export class Traceparent {
         if (traceId && Traceparent.isValidTraceId(traceId)) {
             self.traceId = traceId;
         } else {
-            self.traceId = Util.generateW3CId();
+            self.traceId = generateW3CId();
         }
         if (spanId && Traceparent.isValidSpanId(spanId)) {
             self.spanId = spanId;
         } else {
-            self.spanId = Util.generateW3CId().substr(0, 16);
+            self.spanId = generateW3CId().substr(0, 16);
         }
     }
 

@@ -1,5 +1,5 @@
 ﻿import { Util } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, arrForEach, isFunction, arrIndexOf, isString } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, arrForEach, isFunction, arrIndexOf, isString, dumpObj, isArray, getExceptionName } from '@microsoft/applicationinsights-core-js';
 import { ISenderConfig } from './Interfaces';
 import dynamicProto from '@microsoft/dynamicproto-js';
 
@@ -253,15 +253,15 @@ export class SessionStorageSendBuffer implements ISendBuffer {
                             buffer = getJSON().parse(buffer as any);
                         }
         
-                        if (buffer && Util.isArray(buffer)) {
+                        if (buffer && isArray(buffer)) {
                             return buffer;
                         }
                     }
                 } catch (e) {
                     logger.throwInternal(LoggingSeverity.CRITICAL,
                         _InternalMessageId.FailedToRestoreStorageBuffer,
-                        " storage key: " + prefixedKey + ", " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) });
+                        " storage key: " + prefixedKey + ", " + getExceptionName(e),
+                        { exception: dumpObj(e) });
                 }
         
                 return [];
@@ -280,8 +280,8 @@ export class SessionStorageSendBuffer implements ISendBuffer {
         
                     logger.throwInternal(LoggingSeverity.WARNING,
                         _InternalMessageId.FailedToSetStorageBuffer,
-                        " storage key: " + prefixedKey + ", " + Util.getExceptionName(e) + ". Buffer cleared",
-                        { exception: Util.dump(e) });
+                        " storage key: " + prefixedKey + ", " + getExceptionName(e) + ". Buffer cleared",
+                        { exception: dumpObj(e) });
                 }
             }
         });

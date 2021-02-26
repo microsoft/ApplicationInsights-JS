@@ -16,6 +16,11 @@ export interface ITelemetryTrace {
      * Trace state
      */
     traceState?: ITraceState;
+
+    /**
+     * Name
+     */
+    name?: string;
 }
 
 export interface ITraceState {
