@@ -1,3 +1,4 @@
+> Note: Angular Plugin is moved to its own repo [here](https://github.com/microsoft/applicationinsights-angularplugin-js). Please refer to the new repo for usage instructions, and open issues there.
 # Microsoft Application Insights JavaScript SDK - Angular Plugin
 
 [![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
