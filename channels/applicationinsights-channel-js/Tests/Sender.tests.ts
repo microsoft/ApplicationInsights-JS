@@ -445,7 +445,7 @@ export class SenderTests extends TestClass {
 
                 // Assert baseData
                 QUnit.assert.ok(baseData.name);
-                QUnit.assert.equal("Some name given", baseData.data);
+                QUnit.assert.equal("some data", baseData.data);
                 QUnit.assert.equal("some id", baseData.id);
                 QUnit.assert.equal(true, baseData.success);
                 QUnit.assert.equal(200, baseData.resultCode);
@@ -524,7 +524,7 @@ export class SenderTests extends TestClass {
                 // Assert baseData
                 QUnit.assert.ok(baseData.name);
                 QUnit.assert.equal("GET /test/name", baseData.name); // retrieved from target
-                QUnit.assert.equal("/test/name", baseData.data);
+                QUnit.assert.equal("some data", baseData.data);
 
                 // Assert sdkVersion
                 QUnit.assert.equal("1234", appInsightsEnvelope.tags["ai.internal.sdkVersion"])

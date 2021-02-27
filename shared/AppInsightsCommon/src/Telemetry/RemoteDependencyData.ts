@@ -41,7 +41,7 @@ export class RemoteDependencyData extends GeneratedRemoteDependencyData implemen
     /**
      * Constructs a new instance of the RemoteDependencyData object
      */
-    constructor(logger: IDiagnosticLogger, id: string, absoluteUrl: string, commandName: string, value: number, success: boolean, resultCode: number, method?: string, requestAPI: string = "Ajax", correlationContext?: string, properties?: Object, measurements?: Object) {
+    constructor(logger: IDiagnosticLogger, id: string, absoluteUrl: string, commandName: string, value: number, success: boolean, resultCode: number, method?: string, requestAPI: string = "Ajax", correlationContext?: string, properties?: Object, measurements?: Object, data?: string, ) {
         super();
 
         this.id = id;
@@ -52,8 +52,8 @@ export class RemoteDependencyData extends GeneratedRemoteDependencyData implemen
 
         this.type = DataSanitizer.sanitizeString(logger, requestAPI);
 
-        const dependencyFields = AjaxHelper.ParseDependencyPath(logger, absoluteUrl, method, commandName);
-        this.data = DataSanitizer.sanitizeUrl(logger, commandName) || dependencyFields.data; // get a value from hosturl if commandName not available
+        const dependencyFields = AjaxHelper.ParseDependencyPath(logger, absoluteUrl, method, commandName, data);
+        this.data = DataSanitizer.sanitizeUrl(logger, data) || dependencyFields.data; // get a value from hosturl if commandName not available
         this.target = DataSanitizer.sanitizeString(logger, dependencyFields.target);
         if (correlationContext) {
             this.target = `${this.target} | ${correlationContext}`;
