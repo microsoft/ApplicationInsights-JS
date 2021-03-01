@@ -7,9 +7,11 @@ import {
     BaseTelemetryPlugin, isNullOrUndefined, ITelemetryItem,
     IProcessTelemetryContext, ITelemetryPluginChain,
     _InternalMessageId, ICustomProperties, 
-    LoggingSeverity
+    LoggingSeverity,
+    dumpObj,
+    getExceptionName
 } from "@microsoft/applicationinsights-core-js";
-import { IConfig, Util } from "@microsoft/applicationinsights-common";
+import { IConfig } from "@microsoft/applicationinsights-common";
 import { 
     IClickAnalyticsConfiguration, IContentHandler, 
     IAutoCaptureHandler, IPageActionTelemetry 
@@ -70,8 +72,8 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
             this.diagLog().throwInternal(
                 LoggingSeverity.CRITICAL,
                 _ExtendedInternalMessageId.TrackPageActionEventFailed,
-                "trackPageAction failed, page action event will not be collected: " + Util.getExceptionName(e),
-                { exception: Util.dump(e) });
+                "trackPageAction failed, page action event will not be collected: " + getExceptionName(e),
+                { exception: dumpObj(e) });
         }
     }
 }

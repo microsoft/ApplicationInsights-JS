@@ -12,7 +12,7 @@ export class PageViewData extends EventData {
     /**
      * Schema version
      */
-    public ver: number;
+    public ver: number = 2;
 
     /**
      * Request URL with all query string parameters
@@ -37,18 +37,14 @@ export class PageViewData extends EventData {
     /**
      * Collection of custom properties.
      */
-    public properties: any;
+    public properties: any = {};
 
     /**
      * Collection of custom measurements.
      */
-    public measurements: any;
+    public measurements: any = {};
 
     constructor() {
         super();
-
-        this.ver = 2;
-        this.properties = {};
-        this.measurements = {};
     }
 }

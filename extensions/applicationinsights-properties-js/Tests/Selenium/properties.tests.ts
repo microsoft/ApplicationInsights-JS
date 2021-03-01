@@ -65,7 +65,7 @@ export class PropertiesTests extends TestClass {
                         }
                     }
                 }, this.core, []);
-                const config: ITelemetryConfig = this.properties['_extensionConfig'];
+                const config: ITelemetryConfig = this.properties['_extConfig'];
                 Assert.equal(15, config.samplingPercentage(), 'Extension configs can be set via root config (number)');
                 Assert.equal('abc', config.accountId(), 'Extension configs can be set via root config (string)');
                 Assert.equal(88888, config.sessionExpirationMs(), 'Root config does not override extensionConfig field when both are present')
@@ -513,7 +513,7 @@ export class PropertiesTests extends TestClass {
                 // setup
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
-                let context = new TelemetryContext(this.core.logger, this.getTelemetryConfig());
+                let context = new TelemetryContext(this.core, this.getTelemetryConfig());
                 context.web = <IWeb> {
                     domain: "www.bing.com",
                     userConsent: true,
@@ -598,7 +598,7 @@ export class PropertiesTests extends TestClass {
                 }
 
                 // act
-                const telemetrycontext = new TelemetryContext(this.core.logger, this.getTelemetryConfig());
+                const telemetrycontext = new TelemetryContext(this.core, this.getTelemetryConfig());
                 telemetrycontext.cleanUp(telemetyItem);
 
                 // verify

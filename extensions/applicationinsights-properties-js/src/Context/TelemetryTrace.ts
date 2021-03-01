@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Util, ITelemetryTrace, ITraceState, DataSanitizer  } from '@microsoft/applicationinsights-common';
-import { getLocation, IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
+import { ITelemetryTrace, ITraceState, DataSanitizer  } from '@microsoft/applicationinsights-common';
+import { generateW3CId, getLocation, IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 
 export class TelemetryTrace implements ITelemetryTrace {
 
@@ -12,13 +12,15 @@ export class TelemetryTrace implements ITelemetryTrace {
     public name: string;
 
     constructor(id?: string, parentId?: string, name?: string, logger?: IDiagnosticLogger) {
-        this.traceID = id || Util.generateW3CId();
-        this.parentID = parentId;
-        this.name = name;
+        const _self = this;
+        _self.traceID = id || generateW3CId();
+        _self.parentID = parentId;
+        _self.name = name;
         let location = getLocation();
         if (!name && location && location.pathname) {
-            this.name = location.pathname;
+            _self.name = location.pathname;
         }
-        this.name = DataSanitizer.sanitizeString(logger, this.name);
+
+        _self.name = DataSanitizer.sanitizeString(logger, _self.name);
     }
 }

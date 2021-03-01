@@ -1,7 +1,7 @@
 import { ISenderConfig, XDomainRequest as IXDomainRequest, IBackendResponse } from './Interfaces';
 import { ISendBuffer, SessionStorageSendBuffer, ArraySendBuffer } from './SendBuffer';
 import {
-    EnvelopeCreator, DependencyEnvelopeCreator, EventEnvelopeCreator,
+    DependencyEnvelopeCreator, EventEnvelopeCreator,
     ExceptionEnvelopeCreator, MetricEnvelopeCreator, PageViewEnvelopeCreator,
     PageViewPerformanceEnvelopeCreator, TraceEnvelopeCreator
 } from './EnvelopeCreator';
@@ -21,7 +21,7 @@ import {
     ITelemetryItem, IProcessTelemetryContext, IConfiguration,
     _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
     getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain, INotificationManager,
-    SendRequestReason, getGlobalInst, objForEachKey, isNullOrUndefined, arrForEach, dateNow
+    SendRequestReason, getGlobalInst, objForEachKey, isNullOrUndefined, arrForEach, dateNow, dumpObj, getExceptionName, getIEVersion
 } from '@microsoft/applicationinsights-core-js';
 import { Offline } from './Offline';
 import { Sample } from './TelemetryProcessors/Sample'
@@ -183,8 +183,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 } catch (e) {
                     _self.diagLog().throwInternal(LoggingSeverity.CRITICAL,
                         _InternalMessageId.FlushFailed,
-                        "flush failed, telemetry will not be collected: " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) });
+                        "flush failed, telemetry will not be collected: " + getExceptionName(e),
+                        { exception: dumpObj(e) });
                 }
             };
         
@@ -195,8 +195,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     } catch (e) {
                         _self.diagLog().throwInternal(LoggingSeverity.CRITICAL,
                             _InternalMessageId.FailedToSendQueuedTelemetry,
-                            "failed to flush with beacon sender on page unload, telemetry will not be collected: " + Util.getExceptionName(e),
-                            { exception: Util.dump(e) });
+                            "failed to flush with beacon sender on page unload, telemetry will not be collected: " + getExceptionName(e),
+                            { exception: dumpObj(e) });
                     }
                 } else {
                     _self.flush();
@@ -311,8 +311,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                                 // log error but dont stop executing rest of the telemetry initializers
                                 // doNotSendItem = true;
                                 itemCtx.diagLog().throwInternal(
-                                    LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + Util.getExceptionName(e),
-                                    { exception: Util.dump(e) }, true);
+                                    LoggingSeverity.CRITICAL, _InternalMessageId.TelemetryInitializerFailed, "One of telemetry initializers failed, telemetry item will not be sent: " + getExceptionName(e),
+                                    { exception: dumpObj(e) }, true);
                             }
                         });
         
@@ -343,8 +343,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     itemCtx.diagLog().throwInternal(
                         LoggingSeverity.WARNING,
                         _InternalMessageId.FailedAddingTelemetryToBuffer,
-                        "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + Util.getExceptionName(e),
-                        { exception: Util.dump(e) });
+                        "Failed adding telemetry to the sender's buffer, some telemetry will be lost: " + getExceptionName(e),
+                        { exception: dumpObj(e) });
                 }
         
                 // hand off the telemetry item to the next plugin
@@ -438,13 +438,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     _retryAt = null;
                 } catch (e) {
                     /* Ignore this error for IE under v10 */
-                    let ieVer = Util.getIEVersion();
+                    let ieVer = getIEVersion();
                     if (!ieVer || ieVer > 9) {
                         _self.diagLog().throwInternal(
                             LoggingSeverity.CRITICAL,
                             _InternalMessageId.TransmissionFailed,
-                            "Telemetry transmission failed, some telemetry will be lost: " + Util.getExceptionName(e),
-                            { exception: Util.dump(e) });
+                            "Telemetry transmission failed, some telemetry will be lost: " + getExceptionName(e),
+                            { exception: dumpObj(e) });
                     }
                 }
             };
@@ -609,7 +609,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     _self.diagLog().throwInternal(
                         LoggingSeverity.CRITICAL,
                         _InternalMessageId.InvalidBackendResponse,
-                        "Cannot parse the response. " + Util.getExceptionName(e),
+                        "Cannot parse the response. " + getExceptionName(e),
                         {
                             response
                         });
@@ -763,8 +763,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     } catch (e) {
                         _self.diagLog().throwInternal(LoggingSeverity.CRITICAL,
                             _InternalMessageId.NotificationException,
-                            "send request notification failed: " + Util.getExceptionName(e),
-                            { exception: Util.dump(e) });
+                            "send request notification failed: " + getExceptionName(e),
+                            { exception: dumpObj(e) });
                     }
                 }
             }

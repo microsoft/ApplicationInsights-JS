@@ -31,7 +31,7 @@ export { Data } from './Telemetry/Common/Data';
 export { SeverityLevel } from './Interfaces/Contracts/Generated/SeverityLevel';
 export { IConfig, ConfigurationManager } from './Interfaces/IConfig';
 export { IChannelControlsAI } from './Interfaces/IChannelControlsAI';
-export { ContextTagKeys } from './Interfaces/Contracts/Generated/ContextTagKeys';
+export { IContextTagKeys, ContextTagKeys } from './Interfaces/Contracts/Generated/ContextTagKeys';
 export { DataSanitizer } from './Telemetry/Common/DataSanitizer';
 export { TelemetryItemCreator } from './TelemetryItemCreator';
 export { ICorrelationConfig } from './Interfaces/ICorrelationConfig';

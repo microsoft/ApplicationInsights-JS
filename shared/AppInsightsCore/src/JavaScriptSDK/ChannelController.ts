@@ -49,7 +49,7 @@ export class ChannelController extends BaseTelemetryPlugin {
                     });
                 }
             };
-        
+
             _self.getChannelControls = (): IChannelControls[][] => {
                 return _channelQueue;
             };
@@ -59,13 +59,13 @@ export class ChannelController extends BaseTelemetryPlugin {
                     // already initialized
                     return;
                 }
-        
+
                 _base.initialize(config, core, extensions);
-        
+
                 if ((config as any).isCookieUseDisabled) {
                     disableCookies();
                 }
-                
+
                 _createChannelQueues((config||{}).channels, extensions);
         
                 // Initialize the Queues

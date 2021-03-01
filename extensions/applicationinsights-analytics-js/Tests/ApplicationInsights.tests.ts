@@ -1,15 +1,15 @@
-/// <reference path="./TestFramework/Common.ts" />
-
-import { Util, Exception, SeverityLevel, Trace, PageViewPerformance, IConfig, IExceptionInternal } from "@microsoft/applicationinsights-common";
-import {
-    ITelemetryItem, AppInsightsCore,
-    IPlugin, IConfiguration
-} from "@microsoft/applicationinsights-core-js";
+import { Assert, AITestClass } from "@microsoft/ai-test-framework";
+import { SinonStub } from 'sinon';
+import { Util, Exception, SeverityLevel, Trace, PageViewPerformance, IConfig, IExceptionInternal, AnalyticsPluginIdentifier } from "@microsoft/applicationinsights-common";
+import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj } from "@microsoft/applicationinsights-core-js";
+import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { ApplicationInsights } from "../src/JavaScriptSDK/ApplicationInsights";
 
-export class ApplicationInsightsTests extends TestClass {
+export class ApplicationInsightsTests extends AITestClass {
     public testInitialize() {
-        this.clock.reset();
+        setEnableEnvMocks(false);
+        super.testInitialize();
+
         Util.setCookie(undefined, 'ai_session', "");
         Util.setCookie(undefined, 'ai_user', "");
         if (Util.canUseLocalStorage()) {
@@ -18,6 +18,7 @@ export class ApplicationInsightsTests extends TestClass {
     }
 
     public testCleanup() {
+        super.testCleanup();
         Util.setCookie(undefined, 'ai_session', "");
         Util.setCookie(undefined, 'ai_user', "");
         if (Util.canUseLocalStorage()) {
@@ -51,50 +52,62 @@ export class ApplicationInsightsTests extends TestClass {
 
         this.testCase({
             name: 'enableAutoRouteTracking: route changes trigger a new pageview',
+            useFakeTimers: true,
             test: () => {
+                // Current URL will be the test page
+                setEnableEnvMocks(true);
+                this.setLocationHref("firstUri");
+
                 // Setup
                 const appInsights = new ApplicationInsights();
                 appInsights.autoRoutePVDelay = 500;
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
-                appInsights['_properties'] = ({
-                    context: { telemetryTrace: { traceID: 'not set', name: 'name not set' } }
-                } as any)
-                appInsights['_prevUri'] = "firstUri";
-                appInsights['_currUri'] = "secondUri";
+                const properties = new PropertiesPlugin();
+                properties.context = { telemetryTrace: { traceID: 'not set', name: 'name not set' } } as any;
                 const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
 
                 // Act
                 core.initialize({
                     instrumentationKey: '',
                     enableAutoRouteTracking: true
-                } as IConfig & IConfiguration, [appInsights, channel]);
+                } as IConfig & IConfiguration, [appInsights, channel, properties]);
+                this.setLocationHref("secondUri");
+                window.dispatchEvent(Util.createDomEvent('locationchange'));
+                this.clock.tick(500);
+
+                this.setLocationHref("thirdUri");
                 window.dispatchEvent(Util.createDomEvent('locationchange'));
                 this.clock.tick(500);
 
                 // Assert
-                Assert.ok(trackPageViewStub.calledOnce);
-                Assert.ok(appInsights['_properties'].context.telemetryTrace.traceID);
-                Assert.ok(appInsights['_properties'].context.telemetryTrace.name);
-                Assert.notEqual(appInsights['_properties'].context.telemetryTrace.traceID, 'not set', 'current operation id is updated after route change');
-                Assert.notEqual(appInsights['_properties'].context.telemetryTrace.name, 'name not set', 'current operation name is updated after route change');
-                Assert.equal(appInsights['_prevUri'], 'secondUri', "the previous uri is stored on variable _prevUri");
-                Assert.equal(appInsights['_currUri'], window.location.href, "the current uri is stored on variable _currUri");
-                Assert.equal(appInsights['_prevUri'], trackPageViewStub.args[0][0].refUri, "previous uri is assigned to refUri and send as an argument of trackPageview method");
+                Assert.equal(2, trackPageViewStub.callCount);
+                Assert.ok(properties.context.telemetryTrace.traceID);
+                Assert.ok(properties.context.telemetryTrace.name);
+                Assert.notEqual(properties.context.telemetryTrace.traceID, 'not set', 'current operation id is updated after route change');
+                Assert.notEqual(properties.context.telemetryTrace.name, 'name not set', 'current operation name is updated after route change');
+                // Assert.equal(appInsights['_prevUri'], 'secondUri', "the previous uri is stored on variable _prevUri");
+                // Assert.equal(appInsights['_currUri'], window.location.href, "the current uri is stored on variable _currUri");
+
+                Assert.equal("firstUri", trackPageViewStub.args[0][0].refUri, "previous uri is assigned to refUri as firstUri, and send as an argument of trackPageview method");
+                Assert.equal("secondUri", trackPageViewStub.args[1][0].refUri, "previous uri is assigned to refUri as secondUri and send as an argument of trackPageview method");
             }
         });
 
         this.testCase({
             name: 'enableAutoRouteTracking: route changes trigger a new pageview with correct refUri when route changes happening before the timer autoRoutePVDelay stops',
+            useFakeTimers: true,
             test: () => {
                 // Setup
+                setEnableEnvMocks(true);
+                this.setLocationHref("firstUri");
+
                 const appInsights = new ApplicationInsights();
                 appInsights.autoRoutePVDelay = 500;
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
-                appInsights['_properties'] = ({
-                    context: { telemetryTrace: { traceID: 'not set', name: 'name not set' } }
-                } as any)
+                const properties = new PropertiesPlugin();
+                properties.context = { telemetryTrace: { traceID: 'not set', name: 'name not set' } } as any;
                 appInsights['_prevUri'] = "firstUri";
                 const trackPageViewStub = this.sandbox.stub(appInsights, 'trackPageView');
 
@@ -102,7 +115,7 @@ export class ApplicationInsightsTests extends TestClass {
                 core.initialize({
                     instrumentationKey: '',
                     enableAutoRouteTracking: true
-                } as IConfig & IConfiguration, [appInsights, channel]);
+                } as IConfig & IConfiguration, [appInsights, channel, properties]);
                 window.dispatchEvent(Util.createDomEvent('locationchange'));
                 this.clock.tick(200);
 
@@ -112,16 +125,16 @@ export class ApplicationInsightsTests extends TestClass {
 
 
                 // Assert
-                Assert.ok(trackPageViewStub.calledTwice);
-                Assert.ok(appInsights['_properties'].context.telemetryTrace.traceID);
-                Assert.ok(appInsights['_properties'].context.telemetryTrace.name);
-                Assert.notEqual(appInsights['_properties'].context.telemetryTrace.traceID, 'not set', 'current operation id is updated after route change');
-                Assert.notEqual(appInsights['_properties'].context.telemetryTrace.name, 'name not set', 'current operation name is updated after route change');
+                Assert.equal(2, trackPageViewStub.callCount);
+                Assert.ok(properties.context.telemetryTrace.traceID);
+                Assert.ok(properties.context.telemetryTrace.name);
+                Assert.notEqual(properties.context.telemetryTrace.traceID, 'not set', 'current operation id is updated after route change');
+                Assert.notEqual(properties.context.telemetryTrace.name, 'name not set', 'current operation name is updated after route change');
                 // first trackPageView event
                 Assert.equal(trackPageViewStub.args[0][0].refUri, 'firstUri', "first trackPageview event: refUri grabs the value of existing _prevUri");
-                Assert.equal(appInsights['_currUri'], window.location.href, "first trackPageview event: the current uri is stored on variable _currUri");
+                // Assert.equal(appInsights['_currUri'], getLocation(true).href, "first trackPageview event: the current uri is stored on variable _currUri");
                 // second trackPageView event
-                Assert.equal(trackPageViewStub.args[1][0].refUri, window.location.href, "second trackPageview event: refUri grabs the value of updated _prevUri, which is the first pageView event's _currUri");
+                Assert.equal(trackPageViewStub.args[1][0].refUri, getLocation(true).href, "second trackPageview event: refUri grabs the value of updated _prevUri, which is the first pageView event's _currUri");
             }
         });
 
@@ -136,9 +149,8 @@ export class ApplicationInsightsTests extends TestClass {
                 const appInsights = new ApplicationInsights();
                 const core = new AppInsightsCore();
                 const channel = new ChannelPlugin();
-                appInsights['_properties'] = ({
-                    context: { telemetryTrace: { traceID: 'not set'}}
-                } as any)
+                const properties = new PropertiesPlugin();
+                properties.context = { telemetryTrace: { traceID: 'not set', parentID: undefined} } as any;
                 this.sandbox.stub(appInsights, 'trackPageView');
 
                 // Act
@@ -217,7 +229,10 @@ export class ApplicationInsightsTests extends TestClass {
             name: 'AppInsightsTests: config can be set from root',
             test: () => {
                 // Setup
-                const appInsights: ApplicationInsights = new ApplicationInsights();
+                const appInsights = new ApplicationInsights();
+                const core = new AppInsightsCore();
+                const channel = new ChannelPlugin();
+                const properties = new PropertiesPlugin();
 
                 // Act
                 const config = {
@@ -230,13 +245,26 @@ export class ApplicationInsightsTests extends TestClass {
                         }
                     }
                 };
-                appInsights.initialize(config, new AppInsightsCore(), []);
+
+                // Initialize
+                core.initialize(config, [appInsights, channel, properties]);
 
                 // Assert
                 Assert.equal(12, appInsights.config.samplingPercentage);
                 Assert.notEqual('aaa', appInsights.config.accountId);
                 Assert.equal('def', appInsights.config.accountId);
-                Assert.equal('instrumentation_key', appInsights['_globalconfig'].instrumentationKey);
+                Assert.equal(undefined, (appInsights['config'] as IConfiguration).instrumentationKey);
+                Assert.equal(30 * 60 * 1000, appInsights.config.sessionRenewalMs);
+                Assert.equal(24 * 60 * 60 * 1000, appInsights.config.sessionExpirationMs);
+
+                let extConfig = (core.config as IConfiguration).extensionConfig[AnalyticsPluginIdentifier] as IConfig;
+                Assert.equal('instrumentation_key', core.config.instrumentationKey);
+                Assert.equal(12, extConfig.samplingPercentage);
+                Assert.notEqual('aaa', extConfig.accountId);
+                Assert.equal('def', extConfig.accountId);
+                Assert.equal(undefined, (extConfig as any).instrumentationKey);
+                Assert.equal(30 * 60 * 1000, extConfig.sessionRenewalMs);
+                Assert.equal(24 * 60 * 60 * 1000, extConfig.sessionExpirationMs);
             }
         });
 
@@ -319,6 +347,7 @@ export class ApplicationInsightsTests extends TestClass {
 
         this.testCase({
             name: 'AppInsightsGenericTests: public APIs call track',
+            useFakeTimers: true,
             test: () => {
                 // setup
                 const plugin = new ChannelPlugin();
@@ -411,14 +440,19 @@ export class ApplicationInsightsTests extends TestClass {
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
 
                 const unexpectedError = new Error();
-                const dumpSpy = this.sandbox.stub(Util, "dump");
+                const expectedString = dumpObj(unexpectedError);
+                const throwSpy = this.sandbox.spy(core.logger, "throwInternal");
                 this.sandbox.stub(appInsights, "trackException").throws(unexpectedError);
 
                 // Act
                 appInsights._onerror({message: "msg", url: "some://url", lineNumber: 123, columnNumber: 456, error: unexpectedError});
 
                 // Assert
-                Assert.ok(dumpSpy.calledWith(unexpectedError))
+                Assert.equal(1, throwSpy.callCount);
+                // Check Message
+                Assert.ok(throwSpy.args[0][2].indexOf("_onError threw exception while logging error,") !== -1, "Message should indicate that _onError failed");
+                // Check Exception contains the exception details
+                Assert.ok(throwSpy.args[0][3].exception.indexOf(expectedString) !== -1, "Expected error to contain - " + expectedString);
             }
         });
 
@@ -434,17 +468,18 @@ export class ApplicationInsightsTests extends TestClass {
                 );
                 const appInsights = new ApplicationInsights();
                 appInsights.initialize({ instrumentationKey: "ikey"}, core, []);
-                const dumpSpy = this.sandbox.spy(Util, "dump")
                 const unexpectedError = new Error("some message");
+                const throwSpy = this.sandbox.spy(core.logger, "throwInternal");
                 const stub = this.sandbox.stub(appInsights, "trackException").throws(unexpectedError);
 
                 // Act
                 appInsights._onerror({message: "any message", url: "any://url", lineNumber: 123, columnNumber: 456, error: unexpectedError});
 
                 // Test
-                Assert.ok(dumpSpy.returnValues[0].indexOf("stack: ") != -1);
-                Assert.ok(dumpSpy.returnValues[0].indexOf(`message: '${unexpectedError.message}'`) !== -1);
-                Assert.ok(dumpSpy.returnValues[0].indexOf("name: 'Error'") !== -1);
+                const dumpExMsg = throwSpy.args[0][3].exception;
+                Assert.ok(dumpExMsg.indexOf("stack: ") != -1);
+                Assert.ok(dumpExMsg.indexOf(`message: '${unexpectedError.message}'`) !== -1);
+                Assert.ok(dumpExMsg.indexOf("name: 'Error'") !== -1);
             }
         });
 
@@ -464,8 +499,8 @@ export class ApplicationInsightsTests extends TestClass {
                 const throwInternal = this.sandbox.spy(appInsights.core.logger, "throwInternal");
                 const nameStub = this.sandbox.stub(Util, "getExceptionName");
 
-                this.sandbox.stub(appInsights, "trackException").throws(new Error());
-                const expectedErrorName: string = "test error";
+                this.sandbox.stub(appInsights, "trackException").throws(new CustomTestError("Simulated Error"));
+                const expectedErrorName: string = "CustomTestError";
 
                 nameStub.returns(expectedErrorName);
 
@@ -473,7 +508,7 @@ export class ApplicationInsightsTests extends TestClass {
 
                 Assert.ok(throwInternal.calledOnce, "throwInternal called once");
                 const logMessage: string = throwInternal.getCall(0).args[2];
-                Assert.notEqual(-1, logMessage.indexOf(expectedErrorName));
+                Assert.notEqual(-1, logMessage.indexOf(expectedErrorName), "expected: " + logMessage);
             }
         });
 
@@ -541,6 +576,7 @@ export class ApplicationInsightsTests extends TestClass {
 
         this.testCase({
             name: "Timing Tests: Start/StopPageView pass correct duration",
+            useFakeTimers: true,
             test: () => {
                 // setup
                 const plugin = new ChannelPlugin();
@@ -576,10 +612,11 @@ export class ApplicationInsightsTests extends TestClass {
         });
         this.testCase({
             name: "Timing Tests: Start/StopPageView tracks single page view with no parameters",
+            useFakeTimers: true,
             test: () => {
                 // setup
                 const core = new AppInsightsCore();
-                this.sandbox.stub(core, "getTransmissionControl");
+                this.sandbox.stub(core, "getTransmissionControls");
                 const appInsights = new ApplicationInsights();
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
@@ -600,10 +637,11 @@ export class ApplicationInsightsTests extends TestClass {
 
         this.testCase({
             name: "Timing Tests: Multiple Start/StopPageView track single pages view ",
+            useFakeTimers: true,
             test: () => {
                 // setup
                 const core = new AppInsightsCore();
-                this.sandbox.stub(core, "getTransmissionControl");
+                this.sandbox.stub(core, "getTransmissionControls");
                 const appInsights = new ApplicationInsights();
                 appInsights.initialize({ "instrumentationKey": "ikey" }, core, []);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
@@ -688,7 +726,8 @@ export class ApplicationInsightsTests extends TestClass {
 
     private addTrackMetricTests() {
         this.testCase({
-            name: 'TrackMetricTests: treackMetric batches metrics sent in a hot loop',
+            name: 'TrackMetricTests: trackMetric batches metrics sent in a hot loop',
+            useFakeTimers: true,
             test: () => {
                 // Setup
                 const plugin = new ChannelPlugin();
@@ -725,6 +764,7 @@ export class ApplicationInsightsTests extends TestClass {
     private addTelemetryInitializerTests(): void {
         this.testCase({
             name: "TelemetryContext: onBeforeSendTelemetry is called within track() and gets the envelope as an argument",
+            useFakeTimers: true,
             test: () => {
                 // Setup
                 const plugin = new ChannelPlugin();
@@ -756,6 +796,7 @@ export class ApplicationInsightsTests extends TestClass {
 
         this.testCase({
             name: "TelemetryContext: onBeforeSendTelemetry changes the envelope props and sender gets them",
+            useFakeTimers: true,
             test: () => {
                 // Setup
                 const plugin = new ChannelPlugin();
@@ -1158,10 +1199,18 @@ class ChannelPlugin implements IPlugin {
         // no next setup
     }
 
-    public initialize = (config: IConfiguration, core: AppInsightsCore, plugin: IPlugin[]) => {
+    public initialize = (config: IConfiguration, core: IAppInsightsCore, plugin: IPlugin[]) => {
     }
 
     private _processTelemetry(env: ITelemetryItem) {
 
     }
 }
+
+class CustomTestError extends Error {
+    constructor(message = "", ...args) {
+      super(message, ...args);
+      this.name = "CustomTestError";
+      this.message = message + " -- test error.";
+    }
+  }

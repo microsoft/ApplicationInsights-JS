@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import {
-    RequestHeaders, Util, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
+    RequestHeaders, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
     RemoteDependencyData, dateTimeUtilsNow, DisabledPropertyName, IDependencyTelemetry,
     IConfig, ITelemetryContext, PropertiesPluginIdentifier, DistributedTracingModes
 } from '@microsoft/applicationinsights-common';
@@ -10,7 +10,7 @@ import {
     isNullOrUndefined, arrForEach, isString, strTrim, isFunction, LoggingSeverity, _InternalMessageId,
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
     getLocation, getGlobal, strUndefined, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
-    IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey
+    IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey, generateW3CId, getIEVersion, dumpObj
 } from '@microsoft/applicationinsights-core-js';
 import { ajaxRecord, IAjaxRecordResponse } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
@@ -55,7 +55,7 @@ function _supportsAjaxMonitoring(ajaxMonitorInstance:AjaxMonitor): boolean {
             !isNullOrUndefined(proto.abort);
     }
 
-    let ieVer = Util.getIEVersion();
+    let ieVer = getIEVersion();
     if (ieVer && ieVer < 9) {
         result = false;
     }
@@ -76,7 +76,7 @@ function _supportsAjaxMonitoring(ajaxMonitorInstance:AjaxMonitor): boolean {
                 _InternalMessageId.FailedMonitorAjaxOpen,
                 "Failed to enable XMLHttpRequest monitoring, extension is not supported",
                 {
-                    exception: Util.dump(e)
+                    exception: dumpObj(e)
                 });
         }
     }
@@ -117,7 +117,7 @@ function _createErrorCallbackFunc(ajaxMonitorInstance:AjaxMonitor, internalMessa
             message,
             {
                 ajaxDiagnosticsMessage: _getFailedAjaxDiagnosticsMessage(args.inst),
-                exception: Util.dump(args.err)
+                exception: dumpObj(args.err)
             });
     };
 }
@@ -581,8 +581,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             }
 
             function _openHandler(xhr: XMLHttpRequestInstrumented, method: string, url: string, async: boolean) {
-                const traceID = (_context && _context.telemetryTrace && _context.telemetryTrace.traceID) || Util.generateW3CId();
-                const spanID = Util.generateW3CId().substr(0, 16);
+                const traceID = (_context && _context.telemetryTrace && _context.telemetryTrace.traceID) || generateW3CId();
+                const spanID = generateW3CId().substr(0, 16);
 
                 const ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog]());
                 ajaxData.method = method;
@@ -602,7 +602,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             _onAjaxComplete(xhr);
                         }
                     } catch (e) {
-                        const exceptionText = Util.dump(e);
+                        const exceptionText = dumpObj(e);
 
                         // ignore messages with c00c023f, as this a known IE9 XHR abort issue
                         if (!exceptionText || _indexOf(exceptionText.toLowerCase(), "c00c023f") === -1) {
@@ -641,7 +641,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     let errorProps = failedProps||{};
                     errorProps["ajaxDiagnosticsMessage"] = _getFailedAjaxDiagnosticsMessage(xhr);
                     if (e) {
-                        errorProps["exception"]  = Util.dump(e);
+                        errorProps["exception"]  = dumpObj(e);
                     }
 
                     _throwInternalWarning(_self,
@@ -721,7 +721,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         "Failed to get Request-Context correlation header as it may be not included in the response or not accessible.",
                         {
                             ajaxDiagnosticsMessage: _getFailedAjaxDiagnosticsMessage(xhr),
-                            exception: Util.dump(e)
+                            exception: dumpObj(e)
                         });
                 }
             }
@@ -805,8 +805,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             }
 
             function _createFetchRecord(input?: Request | string, init?: RequestInit): ajaxRecord {
-                const traceID = (_context && _context.telemetryTrace && _context.telemetryTrace.traceID) || Util.generateW3CId();
-                const spanID = Util.generateW3CId().substr(0, 16);
+                const traceID = (_context && _context.telemetryTrace && _context.telemetryTrace.traceID) || generateW3CId();
+                const spanID = generateW3CId().substr(0, 16);
 
                 const ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog]());
                 ajaxData.requestSentTime = dateTimeUtilsNow();
@@ -854,7 +854,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _throwInternalCritical(_self,
                         _InternalMessageId.FailedMonitorAjaxOpen,
                         "Failed to grab failed fetch diagnostics message",
-                        { exception: Util.dump(e) }
+                        { exception: dumpObj(e) }
                     );
                 }
                 return result;
@@ -869,7 +869,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     let errorProps = failedProps||{};
                     errorProps["fetchDiagnosticsMessage"] = _getFailedFetchDiagnosticsMessage(input);
                     if (e) {
-                        errorProps["exception"]  = Util.dump(e);
+                        errorProps["exception"]  = dumpObj(e);
                     }
 
                     _throwInternalWarning(_self,
@@ -908,7 +908,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             "Failed to get Request-Context correlation header as it may be not included in the response or not accessible.",
                             {
                                 fetchDiagnosticsMessage: _getFailedFetchDiagnosticsMessage(response),
-                                exception: Util.dump(e)
+                                exception: dumpObj(e)
                             });
                     }
                 }
