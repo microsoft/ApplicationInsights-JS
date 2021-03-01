@@ -743,8 +743,8 @@ export class CorrelationIdHelper {
 }
 
 export class AjaxHelper {
-    public static ParseDependencyPath(logger: IDiagnosticLogger, absoluteUrl: string, method: string, commandName: string, customData: string) {
-        let target, name = commandName, data = customData || commandName;
+    public static ParseDependencyPath(logger: IDiagnosticLogger, absoluteUrl: string, method: string, commandName: string) {
+        let target, name = commandName, data = commandName;
 
         if (absoluteUrl && absoluteUrl.length > 0) {
             const parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)

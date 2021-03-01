@@ -129,7 +129,7 @@ Parameter | Type | Description
 `startTime?` | Date | **Optional**<br>Dependency start timestamp.
 `correlationContext?` | string | **Optional**<br>correlation context from the server.
 `type?` | string | **Optional**<br>Dependency type name.
-`data?` | string | **Optional**<br>Command initiated by this dependency call.
+`data?` | string | **Internal**<br>Command initiated by this dependency call. This is not a user settable field. `data` is automatically set based on the dependency name (if available). Please include additional custom properties as part of the `properties` value below.
 `target?` | string | **Optional**<br>Target site of a dependency call.
 `properties?` | dictionary | **Optional**<br>Map of string to any: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
