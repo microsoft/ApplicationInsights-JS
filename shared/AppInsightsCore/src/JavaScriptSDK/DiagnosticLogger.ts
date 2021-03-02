@@ -102,26 +102,24 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                 if (_self.enableDebugExceptions()) {
                     throw message;
                 } else {
-                    if (!isUndefined(message) && !!message) {
-                        if (!isUndefined(message.message)) {
-                            const logLevel = _self.consoleLoggingLevel();
-                            if (isUserAct) {
-                                // check if this message type was already logged to console for this page view and if so, don't log it again
-                                const messageKey: number = +message.messageId;
+                    if (!isUndefined(message) && !!message && !isUndefined(message.message)) {
+                        const logLevel = _self.consoleLoggingLevel();
+                        if (isUserAct) {
+                            // check if this message type was already logged to console for this page view and if so, don't log it again
+                            const messageKey: number = +message.messageId;
 
-                                if (!_messageLogged[messageKey] && logLevel >= LoggingSeverity.WARNING) {
-                                    _self.warnToConsole(message.message);
-                                    _messageLogged[messageKey] = true;
-                                }
-                            } else {
-                                // don't log internal AI traces in the console, unless the verbose logging is enabled
-                                if (logLevel >= LoggingSeverity.WARNING) {
-                                    _self.warnToConsole(message.message);
-                                }
+                            if (!_messageLogged[messageKey] && logLevel >= LoggingSeverity.WARNING) {
+                                _self.warnToConsole(message.message);
+                                _messageLogged[messageKey] = true;
                             }
-
-                            _self.logInternalMessage(severity, message);
+                        } else {
+                            // don't log internal AI traces in the console, unless the verbose logging is enabled
+                            if (logLevel >= LoggingSeverity.WARNING) {
+                                _self.warnToConsole(message.message);
+                            }
                         }
+
+                        _self.logInternalMessage(severity, message);
                     }
                 }
             }

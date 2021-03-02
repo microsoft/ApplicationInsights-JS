@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import {  strShimUndefined, strShimObject, strShimPrototype, strShimFunction } from "@microsoft/applicationinsights-shims";
+import {  strShimUndefined, strShimObject, strShimPrototype, strShimFunction, objCreateFn } from "@microsoft/applicationinsights-shims";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
 
@@ -534,4 +534,21 @@ export function proxyAssign(target: any, source: any, chkSet?: (name: string, is
     }
 
     return target;
+}
+
+/**
+ * Simpler helper to create a dynamic class that implements the interface and populates the values with the defaults.
+ * Only instance properties (hasOwnProperty) values are copied from the defaults to the new instance
+ * @param defaults Simple helper 
+ */
+export function createClassFromInterface<T>(defaults?: T) {
+    return class {
+        constructor() {
+            if (defaults) {
+                objForEachKey(defaults, (field, value) => {
+                    (this as any)[field] = value;
+                });
+            }
+        }
+    } as new () => T;
 }

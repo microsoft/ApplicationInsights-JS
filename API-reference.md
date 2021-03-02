@@ -122,12 +122,15 @@ The `IDependencyTelemetry` interface is described below
 Parameter | Type | Description
 ---|---|---
 `id` | string | **Required**<br>Unique id, this is used by the backend to correlate server requests.
-`responseCode` | number | **Required**<br>Response code returned by the dependency request (e.g., `200` for a success)
-`absoluteUrl?` | string | **Optional**<br>Absolute url used to make the dependency request
-`success?` | boolean | **Optional**<br>Whether or not the request was successful or not (e.g., `responseCode` in the range 200-299)
-`commandName?` | string| **Optional**<br>Command used to make the dependency request
+`responseCode` | number | **Required**<br>Response code returned by the dependency request (e.g., `200` for a success).
+`name?` | string | **Optional**<br>Name of the command initiated with this dependency call.
 `duration?` | number | **Optional**<br>Elapsed time of request & reply
-`method?` | string | **Optional**<br>Represents request verb (GET, POST, etc.)
+`success?` | boolean | **Optional**<br>Whether or not the request was successful or not (e.g., `responseCode` in the range 200-299)
+`startTime?` | Date | **Optional**<br>Dependency start timestamp.
+`correlationContext?` | string | **Optional**<br>correlation context from the server.
+`type?` | string | **Optional**<br>Dependency type name.
+`data?` | string | **Internal**<br>Command initiated by this dependency call. This is not a user settable field. `data` is automatically set based on the dependency name (if available). Please include additional custom properties as part of the `properties` value below.
+`target?` | string | **Optional**<br>Target site of a dependency call.
 `properties?` | dictionary | **Optional**<br>Map of string to any: Additional data used to [filter pages](https://azure.microsoft.com/documentation/articles/app-insights-api-custom-events-metrics/#properties) in the portal. Defaults to empty.
 
 ### trackEvent

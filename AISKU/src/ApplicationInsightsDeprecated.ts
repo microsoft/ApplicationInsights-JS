@@ -1,7 +1,9 @@
-import { IConfig, PageViewPerformance, SeverityLevel, Util,
+import {
+    IConfig, SeverityLevel, stringToBoolOrDefault,
     IPageViewTelemetry, ITraceTelemetry, IMetricTelemetry,
     IAutoExceptionTelemetry, IDependencyTelemetry, IExceptionTelemetry,
-    IEventTelemetry, IEnvelope, ProcessLegacy, HttpMethod, ITelemetryContext as Common_ITelemetryContext } from "@microsoft/applicationinsights-common";
+    IEventTelemetry, IEnvelope, ProcessLegacy
+} from "@microsoft/applicationinsights-common";
 import { Snippet, Initialization as ApplicationInsights } from "./Initialization";
 import { ITelemetryItem, IDiagnosticLogger, IConfiguration, proxyAssign } from "@microsoft/applicationinsights-core-js";
 
@@ -18,8 +20,6 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
         if (!config) {
             config = ({} as any);
         }
-
-        let stringToBoolOrDefault = Util.stringToBoolOrDefault;
 
         // set default values
         config.endpointUrl = config.endpointUrl || "https://dc.services.visualstudio.com/v2/track";
@@ -291,12 +291,12 @@ export interface IAppInsightsDeprecated {
 
     /**
      * Log a dependency call
-     * @param id    unique id, this is used by the backend o correlate server requests. Use Util.newId() to generate a unique Id.
+     * @param id    unique id, this is used by the backend to correlate server requests. Use newId() to generate a unique Id.
      * @param method    represents request verb (GET, POST, etc.)
      * @param absoluteUrl   absolute url used to make the dependency request
      * @param pathName  the path part of the absolute url
      * @param totalTime total request time
-     * @param success   indicates if the request was sessessful
+     * @param success   indicates if the request was successful
      * @param resultCode    response code returned by the dependency request
      */
     trackDependency(id: string, method: string, absoluteUrl: string, pathName: string, totalTime: number, success: boolean, resultCode: number): void;

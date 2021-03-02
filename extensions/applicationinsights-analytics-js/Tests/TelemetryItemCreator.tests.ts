@@ -1,5 +1,4 @@
-/// <reference path="./TestFramework/Common.ts" />
-
+import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import {
     PageViewPerformance,
     PageView,
@@ -14,7 +13,7 @@ import {
 } from '@microsoft/applicationinsights-core-js';
 
 
-export class TelemetryItemCreatorTests extends TestClass {
+export class TelemetryItemCreatorTests extends AITestClass {
     private _core: IAppInsightsCore;
     private _appInsights: ApplicationInsights;
 

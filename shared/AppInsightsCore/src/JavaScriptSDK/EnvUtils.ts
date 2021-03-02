@@ -35,6 +35,15 @@ const strTrident = "trident/";
 
 let _isTrident: boolean = null;
 let _navUserAgentCheck: string = null;
+let _enableMocks = false;
+
+/**
+ * Enable the lookup of test mock objects if requested
+ * @param enabled 
+ */
+export function setEnableEnvMocks(enabled: boolean) {
+    _enableMocks = enabled;
+}
 
 /**
  * Returns the current global scope object, for a normal web page this will be the current
@@ -172,7 +181,14 @@ export function getHistory(): History | null {
  * This helper is used to access the location object without causing an exception
  * "Uncaught ReferenceError: location is not defined"
  */
-export function getLocation(): Location | null {
+export function getLocation(checkForMock?: boolean): Location | null {
+    if (checkForMock && _enableMocks) {
+        let mockLocation = getGlobalInst("__mockLocation") as Location;
+        if (mockLocation) {
+            return mockLocation;
+        }
+    }
+
     if (typeof location === strObject && location) {
         return location;
     }

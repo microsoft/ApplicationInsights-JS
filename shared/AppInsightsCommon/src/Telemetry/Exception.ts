@@ -9,7 +9,7 @@ import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
 import { Util } from '../Util';
-import { IDiagnosticLogger, isNullOrUndefined, arrMap, isString } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, isNullOrUndefined, arrMap, isString, strTrim, isArray, isError } from '@microsoft/applicationinsights-core-js';
 import { IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal } from '../Interfaces/IExceptionTelemetry';
 
 const strError = "error";
@@ -146,7 +146,7 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
 
         if (!_isExceptionDetailsInternal(exception)) {
             let error = exception as any;
-            if (!Util.isError(error)) {
+            if (!isError(error)) {
                 error = error[strError] || error.evt || error;
             }
 
@@ -155,7 +155,7 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
             const stack = exception.stack;
             this.parsedStack = _ExceptionDetails.parseStack(stack);
             this.stack = DataSanitizer.sanitizeException(logger, stack);
-            this.hasFullStack = Util.isArray(this.parsedStack) && this.parsedStack.length > 0;
+            this.hasFullStack = isArray(this.parsedStack) && this.parsedStack.length > 0;
         } else {
             this.typeName = exception.typeName;
             this.message = exception.message;
@@ -272,13 +272,13 @@ export class _StackFrame extends StackFrame implements ISerializable {
             const frame: string = sourceFrame;
             this.level = level;
             this.method = "<no_method>";
-            this.assembly = Util.trim(frame);
+            this.assembly = strTrim(frame);
             this.fileName = "";
             this.line = 0;
             const matches = frame.match(_StackFrame.regex);
             if (matches && matches.length >= 5) {
-                this.method = Util.trim(matches[2]) || this.method;
-                this.fileName = Util.trim(matches[4]);
+                this.method = strTrim(matches[2]) || this.method;
+                this.fileName = strTrim(matches[4]);
                 this.line = parseInt(matches[5]) || 0;
             }
         } else {

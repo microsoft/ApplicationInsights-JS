@@ -19,6 +19,60 @@ import { stringToBoolOrDefault, msToTimeSpan } from "./HelperFuncs";
 let _navigator = getNavigator();
 let _uaDisallowsSameSiteNone: boolean = null;
 
+/**
+ * Gets the localStorage object if available
+ * @return {Storage} - Returns the storage object if available else returns null
+ */
+function _getLocalStorageObject(): Storage {
+    if (Util.canUseLocalStorage()) {
+        return _getVerifiedStorageObject(StorageType.LocalStorage);
+    }
+
+    return null;
+}
+
+/**
+ * Tests storage object (localStorage or sessionStorage) to verify that it is usable
+ * More details here: https://mathiasbynens.be/notes/localstorage-pattern
+ * @param storageType Type of storage
+ * @return {Storage} Returns storage object verified that it is usable
+ */
+function _getVerifiedStorageObject(storageType: StorageType): Storage {
+    let storage: Storage = null;
+    let fail: boolean;
+    let uid: Date;
+    try {
+        if (isNullOrUndefined(getGlobal())) {
+            return null;
+        }
+        uid = new Date;
+        storage = storageType === StorageType.LocalStorage ? getGlobalInst("localStorage") : getGlobalInst("sessionStorage");
+        storage.setItem(uid.toString(), uid.toString());
+        fail = storage.getItem(uid.toString()) !== uid.toString();
+        storage.removeItem(uid.toString());
+        if (fail) {
+            storage = null;
+        }
+    } catch (exception) {
+        storage = null;
+    }
+
+    return storage;
+}
+
+/**
+ * Gets the sessionStorage object if available
+ * @return {Storage} - Returns the storage object if available else returns null
+ */
+function _getSessionStorageObject(): Storage {
+    if (Util.canUseSessionStorage()) {
+        return _getVerifiedStorageObject(StorageType.SessionStorage);
+    }
+
+    return null;
+}
+
+
 export class Util {
     private static document: any = getDocument() || {};
     private static _canUseLocalStorage: boolean = undefined;
@@ -42,47 +96,6 @@ export class Util {
     }
 
     /**
-     * Gets the localStorage object if available
-     * @return {Storage} - Returns the storage object if available else returns null
-     */
-    private static _getLocalStorageObject(): Storage {
-        if (Util.canUseLocalStorage()) {
-            return Util._getVerifiedStorageObject(StorageType.LocalStorage);
-        }
-
-        return null;
-    }
-
-    /**
-     * Tests storage object (localStorage or sessionStorage) to verify that it is usable
-     * More details here: https://mathiasbynens.be/notes/localstorage-pattern
-     * @param storageType Type of storage
-     * @return {Storage} Returns storage object verified that it is usable
-     */
-    private static _getVerifiedStorageObject(storageType: StorageType): Storage {
-        let storage: Storage = null;
-        let fail: boolean;
-        let uid: Date;
-        try {
-            if (isNullOrUndefined(getGlobal())) {
-                return null;
-            }
-            uid = new Date;
-            storage = storageType === StorageType.LocalStorage ? getGlobalInst("localStorage") : getGlobalInst("sessionStorage");
-            storage.setItem(uid.toString(), uid.toString());
-            fail = storage.getItem(uid.toString()) !== uid.toString();
-            storage.removeItem(uid.toString());
-            if (fail) {
-                storage = null;
-            }
-        } catch (exception) {
-            storage = null;
-        }
-
-        return storage;
-    }
-
-    /**
      *  Checks if endpoint URL is application insights internal injestion service URL.
      *
      *  @param endpointUrl Endpoint URL to check.
@@ -99,7 +112,7 @@ export class Util {
      */
     public static canUseLocalStorage(): boolean {
         if (Util._canUseLocalStorage === undefined) {
-            Util._canUseLocalStorage = !!Util._getVerifiedStorageObject(StorageType.LocalStorage);
+            Util._canUseLocalStorage = !!_getVerifiedStorageObject(StorageType.LocalStorage);
         }
 
         return Util._canUseLocalStorage;
@@ -112,7 +125,7 @@ export class Util {
      *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
      */
     public static getStorage(logger: IDiagnosticLogger, name: string): string {
-        const storage = Util._getLocalStorageObject();
+        const storage = _getLocalStorageObject();
         if (storage !== null) {
             try {
                 return storage.getItem(name);
@@ -137,7 +150,7 @@ export class Util {
      *  @returns {boolean} True if the storage object could be written.
      */
     public static setStorage(logger: IDiagnosticLogger, name: string, data: string): boolean {
-        const storage = Util._getLocalStorageObject();
+        const storage = _getLocalStorageObject();
         if (storage !== null) {
             try {
                 storage.setItem(name, data);
@@ -162,7 +175,7 @@ export class Util {
      *  @returns {boolean} True if the storage object could be removed.
      */
     public static removeStorage(logger: IDiagnosticLogger, name: string): boolean {
-        const storage = Util._getLocalStorageObject();
+        const storage = _getLocalStorageObject();
         if (storage !== null) {
             try {
                 storage.removeItem(name);
@@ -181,25 +194,13 @@ export class Util {
     }
 
     /**
-     * Gets the sessionStorage object if available
-     * @return {Storage} - Returns the storage object if available else returns null
-     */
-    private static _getSessionStorageObject(): Storage {
-        if (Util.canUseSessionStorage()) {
-            return Util._getVerifiedStorageObject(StorageType.SessionStorage);
-        }
-
-        return null;
-    }
-
-    /**
      *  Check if the browser supports session storage.
      *
      *  @returns {boolean} True if session storage is supported.
      */
     public static canUseSessionStorage(): boolean {
         if (Util._canUseSessionStorage === undefined) {
-            Util._canUseSessionStorage = !!Util._getVerifiedStorageObject(StorageType.SessionStorage);
+            Util._canUseSessionStorage = !!_getVerifiedStorageObject(StorageType.SessionStorage);
         }
 
         return Util._canUseSessionStorage;
@@ -229,7 +230,7 @@ export class Util {
      *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
      */
     public static getSessionStorage(logger: IDiagnosticLogger, name: string): string {
-        const storage = Util._getSessionStorageObject();
+        const storage = _getSessionStorageObject();
         if (storage !== null) {
             try {
                 return storage.getItem(name);
@@ -254,7 +255,7 @@ export class Util {
      *  @returns {boolean} True if the storage object could be written.
      */
     public static setSessionStorage(logger: IDiagnosticLogger, name: string, data: string): boolean {
-        const storage = Util._getSessionStorageObject();
+        const storage = _getSessionStorageObject();
         if (storage !== null) {
             try {
                 storage.setItem(name, data);
@@ -279,7 +280,7 @@ export class Util {
      *  @returns {boolean} True if the storage object could be removed.
      */
     public static removeSessionStorage(logger: IDiagnosticLogger, name: string): boolean {
-        const storage = Util._getSessionStorageObject();
+        const storage = _getSessionStorageObject();
         if (storage !== null) {
             try {
                 storage.removeItem(name);
@@ -533,16 +534,14 @@ export class Util {
         return ('sendBeacon' in _navigator && (_navigator as any).sendBeacon);
     }
 
-    public static getExtension(extensions: IPlugin[], identifier: string) {
-        let extension = null;
-        let extIx = 0;
-
-        while (!extension && extIx < extensions.length) {
-            if (extensions[extIx] && extensions[extIx].identifier === identifier) {
-                extension = extensions[extIx];
+    public static getExtension(extensions: IPlugin[], identifier: string): IPlugin | null {
+        let extension: IPlugin = null;
+        arrForEach(extensions, (value) => {
+            if (value.identifier === identifier) {
+                extension = value;
+                return -1;
             }
-            extIx++;
-        }
+        });
 
         return extension;
     }

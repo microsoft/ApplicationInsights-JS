@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 
 import {
-    dateTimeUtilsDuration, Util, IPageViewTelemetry, IPageViewTelemetryInternal, IPageViewPerformanceTelemetryInternal
+    dateTimeUtilsDuration, IPageViewTelemetry, IPageViewTelemetryInternal, IPageViewPerformanceTelemetryInternal
 } from '@microsoft/applicationinsights-common';
 import {
     IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
-    _InternalMessageId, IChannelControls, getDocument, getLocation,
-    arrForEach, isNullOrUndefined
+    _InternalMessageId, getDocument, getLocation, arrForEach, isNullOrUndefined, getExceptionName, dumpObj
 } from '@microsoft/applicationinsights-core-js';
 import { PageViewPerformanceManager } from './PageViewPerformanceManager';
 import dynamicProto from "@microsoft/dynamicproto-js";
@@ -202,8 +201,8 @@ export class PageViewManager {
                         _logger.throwInternal(
                             LoggingSeverity.CRITICAL,
                             _InternalMessageId.TrackPVFailedCalc,
-                            "trackPageView failed on page load calculation: " + Util.getExceptionName(e),
-                            { exception: Util.dump(e) });
+                            "trackPageView failed on page load calculation: " + getExceptionName(e),
+                            { exception: dumpObj(e) });
                     }
         
                     return processed;

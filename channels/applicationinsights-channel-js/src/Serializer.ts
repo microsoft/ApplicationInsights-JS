@@ -1,6 +1,6 @@
-﻿import { Util, ISerializable, FieldType } from '@microsoft/applicationinsights-common';
+﻿import { ISerializable, FieldType } from '@microsoft/applicationinsights-common';
 import { 
-    IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, objForEachKey, isFunction, isObject
+    IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, objForEachKey, isFunction, isObject, isArray
 } from '@microsoft/applicationinsights-core-js';
 import dynamicProto from '@microsoft/dynamicproto-js'
 
@@ -43,7 +43,7 @@ export class Serializer {
                         output = _serializeStringMap(source, "string", name);
                     } else if (name === "tags") {
                         output = _serializeStringMap(source, "string", name);
-                    } else if (Util.isArray(source)) {
+                    } else if (isArray(source)) {
                         output = _serializeArray(source as any, name);
                     } else {
                         logger.throwInternal(LoggingSeverity.WARNING, _InternalMessageId.CannotSerializeObjectNonSerializable, "Attempting to serialize an object which does not implement ISerializable", { name }, true);
@@ -108,7 +108,7 @@ export class Serializer {
                 let output;
 
                 if (!!sources) {
-                    if (!Util.isArray(sources)) {
+                    if (!isArray(sources)) {
                         logger.throwInternal(
                             LoggingSeverity.CRITICAL,
                             _InternalMessageId.ItemNotInArray,
