@@ -2,7 +2,7 @@ import nodeResolve from "rollup-plugin-node-resolve";
 import {uglify} from "rollup-plugin-uglify";
 import replace from "rollup-plugin-replace";
 import commonjs from "rollup-plugin-commonjs";
-import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
+import { es3Poly, importCheck } from "@microsoft/applicationinsights-rollup-es3";
 
 const version = require("./package.json").version;
 const outputName = "applicationinsights-react-js";
@@ -55,8 +55,7 @@ const browserRollupConfigFactory = isProduction => {
           "node_modules/react-dom/index.js": ["render"]
         }
       }),
-      es3Poly(),
-      es3Check()
+      es3Poly()
     ]
   };
 
@@ -109,8 +108,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
           "node_modules/react-dom/index.js": ["render"]
         }
       }),
-      es3Poly(),
-      es3Check()
+      es3Poly()
     ]
   };
 
