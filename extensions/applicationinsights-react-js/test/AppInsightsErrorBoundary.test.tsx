@@ -1,13 +1,10 @@
 import React from "react";
 import ReactPlugin from "../src/ReactPlugin";
 import AppInsightsErrorBoundary from "../src/AppInsightsErrorBoundary";
-import * as Enzyme from "enzyme";
-import Adapter from "enzyme-adapter-react-16";
 import { TestComponent, ErrorTestComponent } from "./TestComponent";
+import { render} from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect';
 
-Enzyme.configure({
-  adapter: new Adapter()
-});
 let reactPlugin: ReactPlugin;
 let trackExceptionSpy;
 
@@ -18,7 +15,7 @@ describe("<AppInsightsErrorBoundary />", () => {
   });
 
   it("should render a non-erroring component", () => {
-    const component = Enzyme.mount(
+    const aiErrorBoundry = render(
       <AppInsightsErrorBoundary
         appInsights={reactPlugin}
         onError={() => <div></div>}
@@ -26,13 +23,13 @@ describe("<AppInsightsErrorBoundary />", () => {
         <TestComponent />
       </AppInsightsErrorBoundary>
     );
-    expect(component.html()).toEqual(Enzyme.shallow(<TestComponent />).html());
+    const testComponent = render(<TestComponent />);
+    expect(aiErrorBoundry.container).toEqual(testComponent.container);
   });
 
   it("should catch the error and render the alternative component", () => {
     const ErrorDisplay = () => <div>Error</div>;
-
-    const component = Enzyme.mount(
+    const aiErrorBoundry = render(
       <AppInsightsErrorBoundary
         appInsights={reactPlugin}
         onError={ErrorDisplay}
@@ -40,13 +37,13 @@ describe("<AppInsightsErrorBoundary />", () => {
         <ErrorTestComponent />
       </AppInsightsErrorBoundary>
     );
-    expect(component.html()).toEqual(Enzyme.shallow(<ErrorDisplay />).html());
+    const errorDisplay = render(<ErrorDisplay />);
+    expect(aiErrorBoundry.container).toEqual(errorDisplay.container);
   });
 
   it("should catch the error and track exception", () => {
     const ErrorDisplay = () => <div>Error</div>;
-
-    const component = Enzyme.mount(
+    const aiErrorBoundry = render(
       <AppInsightsErrorBoundary
         appInsights={reactPlugin}
         onError={ErrorDisplay}

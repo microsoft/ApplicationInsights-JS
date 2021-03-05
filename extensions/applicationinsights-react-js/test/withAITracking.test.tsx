@@ -3,15 +3,13 @@ import * as React from "react";
 import ReactPlugin from "../src/ReactPlugin";
 import withAITracking from "../src/withAITracking";
 import { TestComponent } from "./TestComponent";
-import * as Enzyme from 'enzyme'
-import Adapter from 'enzyme-adapter-react-16'
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom/extend-expect';
 
-Enzyme.configure({
-  adapter: new Adapter(),
-});
 let reactPlugin: ReactPlugin;
 let TestComponentWithTracking;
-let trackedTestComponentWrapper;
+let trackedTestComponentUnmount;
 let trackMetricSpy;
 
 describe("withAITracking(TestComponent)", () => {
@@ -19,26 +17,24 @@ describe("withAITracking(TestComponent)", () => {
   beforeEach(() => {
     reactPlugin = new ReactPlugin();
     TestComponentWithTracking = withAITracking(reactPlugin, TestComponent);
-    trackedTestComponentWrapper = () => Enzyme.shallow(<TestComponentWithTracking />);
+    const testComponentWithTracking = render(<TestComponentWithTracking />);
+    trackedTestComponentUnmount = testComponentWithTracking.unmount;
     trackMetricSpy = reactPlugin.trackMetric = jest.fn();
   });
 
   it("should wrap <TestComponent />", () => {
-    const component = trackedTestComponentWrapper();
-    expect(component.find(TestComponent).length).toBe(1);
+    expect(screen.getByText('TestComponent')).toBeInTheDocument();
   });
 
-  it("shouldn't call trackMetric if there's no user interaction", () => {
-    const component = trackedTestComponentWrapper();
-    component.unmount();
+ it("shouldn't call trackMetric if there's no user interaction", () => {
+    trackedTestComponentUnmount();
     expect(trackMetricSpy).toHaveBeenCalledTimes(0);
   });
 
+  
   it("should call trackMetric if there is user interaction", () => {
-    const component = trackedTestComponentWrapper();
-    component.simulate("keydown");
-    component.unmount();
-
+    userEvent.click(screen.getByText('TestComponent'));
+    trackedTestComponentUnmount();
     expect(trackMetricSpy).toHaveBeenCalledTimes(1);
     const metricTelemetry: IMetricTelemetry & IPageViewTelemetry = {
       average: expect.any(Number),
@@ -49,10 +45,11 @@ describe("withAITracking(TestComponent)", () => {
   });
 
   it("should use the passed component name in trackMetric", () => {
+    trackedTestComponentUnmount();
     const TestComponentWithTrackingCustomName = withAITracking(reactPlugin, TestComponent, "MyCustomName");
-    const component = Enzyme.shallow(<TestComponentWithTrackingCustomName />);
-    component.simulate("mousemove");
-    component.unmount();
+    const { container, unmount } = render(<TestComponentWithTrackingCustomName />);
+    userEvent.click(screen.getByText('TestComponent'));
+    unmount();
 
     expect(trackMetricSpy).toHaveBeenCalledTimes(1);
     const metricTelemetry: IMetricTelemetry & IPageViewTelemetry = {

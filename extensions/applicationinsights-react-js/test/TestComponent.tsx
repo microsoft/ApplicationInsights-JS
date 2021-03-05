@@ -13,6 +13,7 @@ export class TestComponent extends React.Component<ITestComponentProps> {
     const { prop1, prop2 } = this.props;
     return (
       <div>
+        <h1>TestComponent</h1>
         prop1: {prop1}, prop2: {prop2}
       </div>
     );
