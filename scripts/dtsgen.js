@@ -103,7 +103,7 @@ fs.readFile(theArgs.dtsFile, (err, data) => {
 
 function processFile(dtsContents) {
     console.log("File...");
-    console.log(dtsContents);
+    // console.log(dtsContents);
 
     // Read the generated dts file and append to the new content
     var lastLine = ""
@@ -111,7 +111,7 @@ function processFile(dtsContents) {
     // Prefix every line with 4 spaces (indenting the lines)
     var lines = dtsContents.split("\n");
     console.log(`Lines: ${lines.length}`);
-    console.log(dtsContents);
+    // console.log(dtsContents);
 
     lines.forEach((line) => {
         // Trim whitespace from the end of the string

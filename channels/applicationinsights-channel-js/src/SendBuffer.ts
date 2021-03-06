@@ -1,4 +1,4 @@
-﻿import { Util } from '@microsoft/applicationinsights-common';
+﻿import { utlGetSessionStorage, utlSetSessionStorage } from '@microsoft/applicationinsights-common';
 import { IDiagnosticLogger, LoggingSeverity, _InternalMessageId, getJSON, arrForEach, isFunction, arrIndexOf, isString, dumpObj, isArray, getExceptionName } from '@microsoft/applicationinsights-core-js';
 import { ISenderConfig } from './Interfaces';
 import dynamicProto from '@microsoft/dynamicproto-js';
@@ -245,7 +245,7 @@ export class SessionStorageSendBuffer implements ISendBuffer {
                 let prefixedKey = key;
                 try {
                     prefixedKey = config.namePrefix && config.namePrefix() ? config.namePrefix() + "_" + prefixedKey : prefixedKey;
-                    const bufferJson = Util.getSessionStorage(logger, prefixedKey);
+                    const bufferJson = utlGetSessionStorage(logger, prefixedKey);
                     if (bufferJson) {
                         let buffer: string[] = getJSON().parse(bufferJson);
                         if (isString(buffer)) {
@@ -272,11 +272,11 @@ export class SessionStorageSendBuffer implements ISendBuffer {
                 try {
                     prefixedKey = config.namePrefix && config.namePrefix() ? config.namePrefix() + "_" + prefixedKey : prefixedKey;
                     const bufferJson = JSON.stringify(buffer);
-                    Util.setSessionStorage(logger, prefixedKey, bufferJson);
+                    utlSetSessionStorage(logger, prefixedKey, bufferJson);
                 } catch (e) {
                     // if there was an error, clear the buffer
                     // telemetry is stored in the _buffer array so we won't loose any items
-                    Util.setSessionStorage(logger, prefixedKey, JSON.stringify([]));
+                    utlSetSessionStorage(logger, prefixedKey, JSON.stringify([]));
         
                     logger.throwInternal(LoggingSeverity.WARNING,
                         _InternalMessageId.FailedToSetStorageBuffer,

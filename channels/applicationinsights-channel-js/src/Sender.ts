@@ -7,15 +7,10 @@ import {
 } from './EnvelopeCreator';
 import { Serializer } from './Serializer'; // todo move to channel
 import {
-    DisabledPropertyName, RequestHeaders, Util,
-    IEnvelope, PageView, Event,
-    Trace, Exception, Metric,
-    PageViewPerformance, RemoteDependencyData,
-    IChannelControlsAI,
-    IConfig,
-    ProcessLegacy,
-    BreezeChannelIdentifier,
-    SampleRate
+    DisabledPropertyName, RequestHeaders, IEnvelope, PageView, Event,
+    Trace, Exception, Metric, PageViewPerformance, RemoteDependencyData,
+    IChannelControlsAI, IConfig, ProcessLegacy, BreezeChannelIdentifier,
+    SampleRate, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, isBeaconApiSupported
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, IProcessTelemetryContext, IConfiguration,
@@ -191,7 +186,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             };
         
             _self.onunloadFlush = () => {
-                if ((_self._senderConfig.onunloadDisableBeacon() === false || _self._senderConfig.isBeaconApiDisabled() === false) && Util.IsBeaconApiSupported()) {
+                if ((_self._senderConfig.onunloadDisableBeacon() === false || _self._senderConfig.isBeaconApiDisabled() === false) && isBeaconApiSupported()) {
                     try {
                         _self.triggerSend(true, _beaconSender, SendRequestReason.Unload);
                     } catch (e) {
@@ -224,7 +219,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     _self._senderConfig[field] = () => ctx.getConfig(identifier, field, value());
                 });
         
-                _self._buffer = (_self._senderConfig.enableSessionStorageBuffer() && Util.canUseSessionStorage())
+                _self._buffer = (_self._senderConfig.enableSessionStorageBuffer() && utlCanUseSessionStorage())
                     ? new SessionStorageSendBuffer(_self.diagLog(), _self._senderConfig) : new ArraySendBuffer(_self._senderConfig);
                     _self._sample = new Sample(_self._senderConfig.samplingPercentage(), _self.diagLog());
                 
@@ -234,7 +229,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         _InternalMessageId.InvalidInstrumentationKey, "Invalid Instrumentation key "+config.instrumentationKey);
                 }
 
-                if (!_self._senderConfig.isBeaconApiDisabled() && Util.IsBeaconApiSupported()) {
+                if (!_self._senderConfig.isBeaconApiDisabled() && isBeaconApiSupported()) {
                     _self._sender = _beaconSender;
                 } else {
                     if (typeof XMLHttpRequest !== undefined) {
@@ -296,7 +291,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     }
         
                     // construct an envelope that Application Insights endpoint can understand
-                    const aiEnvelope = Sender.constructEnvelope(telemetryItem, _self._senderConfig.instrumentationKey(), itemCtx.diagLog());
+                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, _self._senderConfig.instrumentationKey(), itemCtx.diagLog());
                     if (!aiEnvelope) {
                         itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
                         return;
@@ -614,7 +609,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 xhr.setRequestHeader("Content-type", "application/json");
         
                 // append Sdk-Context request header only in case of breeze endpoint
-                if (Util.isInternalApplicationInsightsEndpoint(endPointUrl)) {
+                if (isInternalApplicationInsightsEndpoint(endPointUrl)) {
                     xhr.setRequestHeader(RequestHeaders.sdkContextHeader, RequestHeaders.sdkContextHeaderAppIdRequest);
                 }
         

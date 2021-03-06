@@ -15,7 +15,6 @@ import { BaseTelemetryPlugin } from './BaseTelemetryPlugin';
 import { ProcessTelemetryContext } from './ProcessTelemetryContext';
 import { initializePlugins } from './TelemetryHelpers';
 import { arrForEach, objDefineAccessors, throwError } from "./HelperFuncs";
-import { disableCookies } from './CoreUtils';
 
 const ChannelControllerPriority = 500;
 const ChannelValidationMessage = "Channel has invalid priority";
@@ -61,10 +60,6 @@ export class ChannelController extends BaseTelemetryPlugin {
                 }
 
                 _base.initialize(config, core, extensions);
-
-                if ((config as any).isCookieUseDisabled) {
-                    disableCookies();
-                }
 
                 _createChannelQueues((config||{}).channels, extensions);
         
@@ -132,8 +127,9 @@ export class ChannelController extends BaseTelemetryPlugin {
      */
     // tslint:disable-next-line
     private static _staticInit = (() => {
+        let proto = ChannelController.prototype;
         // Dynamically create get/set property accessors
-        objDefineAccessors(ChannelController.prototype, "ChannelControls", ChannelController.prototype.getChannelControls);
-        objDefineAccessors(ChannelController.prototype, "channelQueue", ChannelController.prototype.getChannelControls);
+        objDefineAccessors(proto, "ChannelControls", proto.getChannelControls);
+        objDefineAccessors(proto, "channelQueue", proto.getChannelControls);
     })();
 }

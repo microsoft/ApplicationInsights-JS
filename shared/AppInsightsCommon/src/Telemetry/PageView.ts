@@ -5,8 +5,9 @@ import { PageViewData } from '../Interfaces/Contracts/Generated/PageViewData';
 import { DataSanitizer } from './Common/DataSanitizer';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { FieldType } from '../Enums';
-import { Util } from '../Util';
 import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
+import { msToTimeSpan } from '../HelperFuncs';
+import { strNotSpecified } from '../Constants';
 
 export class PageView extends PageViewData implements ISerializable {
 
@@ -31,9 +32,9 @@ export class PageView extends PageViewData implements ISerializable {
 
         this.id = DataSanitizer.sanitizeId(logger, id);
         this.url = DataSanitizer.sanitizeUrl(logger, url);
-        this.name = DataSanitizer.sanitizeString(logger, name) || Util.NotSpecified;
+        this.name = DataSanitizer.sanitizeString(logger, name) || strNotSpecified;
         if (!isNaN(durationMs)) {
-            this.duration = Util.msToTimeSpan(durationMs);
+            this.duration = msToTimeSpan(durationMs);
         }
         this.properties = DataSanitizer.sanitizeProperties(logger, properties);
         this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);

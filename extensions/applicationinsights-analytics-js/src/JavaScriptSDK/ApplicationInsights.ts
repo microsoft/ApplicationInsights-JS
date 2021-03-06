@@ -4,11 +4,12 @@
  */
 
 import {
-    IConfig, Util, PageViewPerformance, IAppInsights, PageView, RemoteDependencyData, Event as EventTelemetry, IEventTelemetry,
+    IConfig, PageViewPerformance, IAppInsights, PageView, RemoteDependencyData, Event as EventTelemetry, IEventTelemetry,
     TelemetryItemCreator, Metric, Exception, SeverityLevel, Trace, IDependencyTelemetry,
     IExceptionTelemetry, ITraceTelemetry, IMetricTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetryInternal, IPageViewTelemetry, IPageViewPerformanceTelemetry, IPageViewPerformanceTelemetryInternal,
-    dateTimeUtilsDuration, IExceptionInternal, PropertiesPluginIdentifier, AnalyticsPluginIdentifier, stringToBoolOrDefault
+    dateTimeUtilsDuration, IExceptionInternal, PropertiesPluginIdentifier, AnalyticsPluginIdentifier, stringToBoolOrDefault, createDomEvent,
+    strNotSpecified, isCrossOriginError, utlDisableStorage
 } from "@microsoft/applicationinsights-common";
 
 import {
@@ -395,7 +396,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
             _self.sendExceptionInternal = (exception: IExceptionTelemetry, customProperties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) => {
                 const exceptionPartB = new Exception(
                     _self.diagLog(),
-                    exception.exception || new Error(Util.NotSpecified),
+                    exception.exception || new Error(strNotSpecified),
                     exception.properties,
                     exception.measurements,
                     exception.severityLevel,
@@ -448,7 +449,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                         message: exception.message
                     };
         
-                    if (Util.isCrossOriginError(exception.message, exception.url, exception.lineNumber, exception.columnNumber, exception.error)) {
+                    if (isCrossOriginError(exception.message, exception.url, exception.lineNumber, exception.columnNumber, exception.error)) {
                         _sendCORSException(properties.url);
                     } else {
                         if (!isError(exception.error)) {
@@ -506,13 +507,8 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                 }
 
                 // Todo: move this out of static state
-                if (this.config.isCookieUseDisabled) {
-                    Util.disableCookies();
-                }
-
-                // Todo: move this out of static state
                 if (_self.config.isStorageUseDisabled) {
-                    Util.disableStorage();
+                    utlDisableStorage();
                 }
 
                 const configGetters: ITelemetryConfig = {
@@ -521,7 +517,6 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                     sessionRenewalMs: () => _self.config.sessionRenewalMs || config.sessionRenewalMs,
                     sessionExpirationMs: () => _self.config.sessionExpirationMs || config.sessionExpirationMs,
                     sampleRate: () => _self.config.samplingPercentage || config.samplingPercentage,
-                    cookieDomain: () => this.config.cookieDomain || config.cookieDomain,
                     sdkExtension: () => _self.config.sdkExtension || config.sdkExtension,
                     isBrowserLinkTrackingEnabled: () => _self.config.isBrowserLinkTrackingEnabled || config.isBrowserLinkTrackingEnabled,
                     appId: () => _self.config.appId || config.appId
@@ -632,21 +627,21 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
 
                     _history.pushState = ( f => function pushState() {
                         const ret = f.apply(this, arguments);
-                        _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "pushState"));
-                        _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "locationchange"));
+                        _dispatchEvent(_window, createDomEvent(_self.config.namePrefix + "pushState"));
+                        _dispatchEvent(_window, createDomEvent(_self.config.namePrefix + "locationchange"));
                         return ret;
                     })(_history.pushState);
 
                     _history.replaceState = ( f => function replaceState(){
                         const ret = f.apply(this, arguments);
-                        _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "replaceState"));
-                        _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "locationchange"));
+                        _dispatchEvent(_window, createDomEvent(_self.config.namePrefix + "replaceState"));
+                        _dispatchEvent(_window, createDomEvent(_self.config.namePrefix + "locationchange"));
                         return ret;
                     })(_history.replaceState);
 
                     if (_window.addEventListener) {
                         _window.addEventListener(_self.config.namePrefix + "popstate",()=>{
-                            _dispatchEvent(_window, Util.createDomEvent(_self.config.namePrefix + "locationchange"));
+                            _dispatchEvent(_window, createDomEvent(_self.config.namePrefix + "locationchange"));
                         });
 
                         _window.addEventListener(_self.config.namePrefix + "locationchange", () => {

@@ -1,9 +1,10 @@
 import nodeResolve from "@rollup/plugin-node-resolve";
 import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js";
 import replace from "@rollup/plugin-replace";
-import commonjs from '@rollup/plugin-commonjs';
+import cleanup from "rollup-plugin-cleanup";
 import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
 import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/node/removedynamic";
+import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
 const outputName = "applicationinsights-debugplugin-js";
@@ -14,9 +15,24 @@ const banner = [
   " */"
 ].join("\n");
 
+const replaceValues = {
+  "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
+  "// Licensed under the MIT License.": ""
+};
+
 const verParts = version.split(".")
 if (verParts.length != 3) {
   throw "Invalid Version! [" + version + "]"
+}
+
+function doCleanup() {
+  return cleanup({
+    comments: [
+      'some', 
+      /^.\s*@DynamicProtoStub/i,
+      /^\*\*\s*@class\s*$/
+    ]
+  })
 }
 
 const browserRollupConfigFactory = (isProduction, libVersion) => {
@@ -34,17 +50,16 @@ const browserRollupConfigFactory = (isProduction, libVersion) => {
     plugins: [
       dynamicRemove(),
       replace({
+        preventAssignment: true,
         delimiters: ["", ""],
-        values: {
-          "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
-          "// Licensed under the MIT License.": ""
-        }
+        values: replaceValues
       }),
       importCheck({ exclude: [ "applicationinsights-debugplugin-js" ] }),
       nodeResolve({
         browser: false,
         preferBuiltins: false
       }),
+      doCleanup(),
       es3Poly(),
       es3Check()
     ]
@@ -86,14 +101,13 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
     plugins: [
       dynamicRemove(),
       replace({
+        preventAssignment: true,
         delimiters: ["", ""],
-        values: {
-          "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
-          "// Licensed under the MIT License.": ""
-        }
+        values: replaceValues
       }),
       importCheck({ exclude: [ "applicationinsights-debugplugin-js" ] }),
       nodeResolve(),
+      doCleanup(),
       es3Poly(),
       es3Check()
     ]
@@ -119,6 +133,8 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
 
   return nodeRollupConfig;
 };
+
+updateDistEsmFiles(replaceValues, banner);
 
 export default [
   browserRollupConfigFactory(true, version),

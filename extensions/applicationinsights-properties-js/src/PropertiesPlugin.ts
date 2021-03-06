@@ -10,7 +10,7 @@ import {
     ITelemetryPluginChain, objForEachKey, getSetValue
 } from '@microsoft/applicationinsights-core-js';
 import { TelemetryContext } from './TelemetryContext';
-import { PageView, IConfig, BreezeChannelIdentifier, PropertiesPluginIdentifier, IPropertiesPlugin, Util } from '@microsoft/applicationinsights-common';
+import { PageView, IConfig, BreezeChannelIdentifier, PropertiesPluginIdentifier, IPropertiesPlugin, getExtensionByName } from '@microsoft/applicationinsights-common';
 import { ITelemetryConfig } from './Interfaces/ITelemetryConfig';
 import { IPropTelemetryContext } from './Interfaces/IPropTelemetryContext';
 
@@ -28,8 +28,10 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
             isBrowserLinkTrackingEnabled: () => false,
             appId: () => null,
             namePrefix: () => undefined,
-            idLength: () => 22
-        }
+            idLength: () => 22,
+            getNewId: () => null
+        };
+        
         return defaultConfig;
     }
 
@@ -57,7 +59,7 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 });
     
                 _self.context = new TelemetryContext(core, _extensionConfig);
-                _breezeChannel = Util.getExtension(extensions, BreezeChannelIdentifier);
+                _breezeChannel = getExtensionByName(extensions, BreezeChannelIdentifier);
                 _self.context.appId = () => _breezeChannel ? _breezeChannel["_appId"] : null;
 
                 // Test hook to allow accessing the internal values -- explicitly not defined as an available property on the class
@@ -112,7 +114,7 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                 ctx.applyUserContext(evt, itemCtx);
                 ctx.applyOperatingSystemContxt(evt, itemCtx);
                 ctx.applyWebContext(evt, itemCtx);
-    
+
                 ctx.applyLocationContext(evt, itemCtx); // legacy tags
                 ctx.applyInternalContext(evt, itemCtx); // legacy tags
                 ctx.cleanUp(evt, itemCtx);

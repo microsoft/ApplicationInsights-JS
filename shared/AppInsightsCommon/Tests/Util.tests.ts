@@ -2,12 +2,15 @@
 
 import { UrlHelper, CorrelationIdHelper, Util } from "../src/Util";
 import { ICorrelationConfig } from "../src/Interfaces/ICorrelationConfig";
+import { strStartsWith } from "@microsoft/applicationinsights-core-js";
 
 export class UtilTests extends TestClass {
     private testRegexLists = (config: ICorrelationConfig, exp: boolean, host: string) => {
-        const stub = sinon.stub(UrlHelper, "parseUrl", (str: string) => ({host: str}));
-        Assert.equal(exp, CorrelationIdHelper.canIncludeCorrelationHeader(config, host, "not used"), host);
-        stub.restore();
+        let requestUrl = host;
+        if (!strStartsWith(host, "http")) {
+            requestUrl = "https://" + host;
+        }
+        Assert.equal(exp, CorrelationIdHelper.canIncludeCorrelationHeader(config, requestUrl, "not used"), host);
     };
 
     public testInitialize() {

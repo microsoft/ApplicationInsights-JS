@@ -6,7 +6,7 @@ import { EventData } from '../Interfaces/Contracts/Generated/EventData';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
-import { Util } from '../Util';
+import { strNotSpecified } from '../Constants';
 
 export class Event extends EventData implements ISerializable {
 
@@ -27,7 +27,7 @@ export class Event extends EventData implements ISerializable {
 
         super();
 
-        this.name = DataSanitizer.sanitizeString(logger, name) || Util.NotSpecified;
+        this.name = DataSanitizer.sanitizeString(logger, name) || strNotSpecified;
         this.properties = DataSanitizer.sanitizeProperties(logger, properties);
         this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
     }

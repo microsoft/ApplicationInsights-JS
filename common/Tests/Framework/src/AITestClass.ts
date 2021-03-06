@@ -178,7 +178,7 @@ export class AITestClass {
                 };
 
                 if (testInfo.timeOut !== undefined) {
-                    timeOutTimer = orgSetTimeout(() => {
+                    timeOutTimer = AITestClass.orgSetTimeout(() => {
                         QUnit.assert.ok(false, "Test case timed out!");
                         testComplete = true;
                         done();
@@ -191,7 +191,7 @@ export class AITestClass {
                 const trigger = () => {
                     // The callback which activates the next test step. 
                     let nextTestStepTrigger = () => {
-                        orgSetTimeout(() => {
+                        AITestClass.orgSetTimeout(() => {
                             trigger();
                         }, testInfo.stepDelay);
                     };
@@ -327,17 +327,17 @@ export class AITestClass {
                     let promiseTimeout: any = null;
                     if (testInfo.skipTimeout !== true) {
                         let timeout = testInfo.timeout || 5000;
-                        promiseTimeout = setTimeout(() => {
+                        promiseTimeout = AITestClass.orgSetTimeout(() => {
                             QUnit.assert.ok(false, "Timeout: Aborting as the Promise returned from the test method did not resolve within " + timeout + " ms");
                             _testFinished(true);
                         }, timeout);
                     }
                     result.then(() => {
-                        promiseTimeout && clearTimeout(promiseTimeout);
+                        promiseTimeout && orgClearTimeout(promiseTimeout);
                         _testFinished();
                     },
                     (reason: any) => {
-                        promiseTimeout && clearTimeout(promiseTimeout);
+                        promiseTimeout && orgClearTimeout(promiseTimeout);
                         QUnit.assert.ok(false, "Returned Promise rejected: " + reason);
                         _testFinished(true);
                     });
@@ -426,7 +426,7 @@ export class AITestClass {
         this.hookSendBeacon(null);
 
         try {
-            Object.defineProperty(window.navigator, 'userAgent',
+            AITestClass.orgObjectDefineProperty(window.navigator, 'userAgent',
             {
                 configurable: true,
                 get () {
@@ -468,7 +468,7 @@ export class AITestClass {
                         newNavigator[name] = navigator[name];
                         if (!newNavigator.hasOwnProperty(name)) {
                             // if it couldn't be set directly try and pretend
-                            Object.defineProperty(newNavigator, name,
+                            AITestClass.orgObjectDefineProperty(newNavigator, name,
                             {
                                 configurable: true,
                                 get: function () {
@@ -491,7 +491,7 @@ export class AITestClass {
 
     protected setNavigator(newNavigator: any) {
         try {
-            Object.defineProperty(window, 'navigator',
+            AITestClass.orgObjectDefineProperty(window, 'navigator',
             {
                 configurable: true,
                 get: function () {
@@ -505,7 +505,7 @@ export class AITestClass {
     }
 
     protected setCrypto(crypto: Crypto | null) {
-        Object.defineProperty(window, 'crypto',
+        AITestClass.orgObjectDefineProperty(window, 'crypto',
             {
                 configurable: true,
                 get () {
@@ -530,7 +530,7 @@ export class AITestClass {
                         newLocation[name] = this._orgLocation[name];
                         if (!newLocation.hasOwnProperty(name)) {
                             // if it couldn't be set directly try and pretend
-                            Object.defineProperty(newLocation, name,
+                            AITestClass.orgObjectDefineProperty(newLocation, name,
                             {
                                 configurable: true,
                                 get: function () {
@@ -557,7 +557,7 @@ export class AITestClass {
     protected setLocation(newLocation: Location | null) {
         try {
             if (newLocation) {
-                Object.defineProperty(window, '__mockLocation',
+                AITestClass.orgObjectDefineProperty(window, '__mockLocation',
                 {
                     configurable: true,
                     enumerable: true,

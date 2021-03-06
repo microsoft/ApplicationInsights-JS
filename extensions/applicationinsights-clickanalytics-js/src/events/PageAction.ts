@@ -7,7 +7,7 @@ import * as DataCollector from '../DataCollector';
 import { ITelemetryItem, getPerformance, ICustomProperties, LoggingSeverity, objForEachKey } from "@microsoft/applicationinsights-core-js"
 import { IPageActionOverrideValues, IPageActionTelemetry } from '../Interfaces/Datamodel';
 import { extractFieldFromObject, bracketIt, isValueAssigned, extend, _ExtendedInternalMessageId } from '../common/Utils';
-import { Util as CommonUtil } from '@microsoft/applicationinsights-common';
+import { strNotSpecified } from '@microsoft/applicationinsights-common';
 
 export class PageAction extends WebEvent {
     
@@ -96,8 +96,8 @@ export class PageAction extends WebEvent {
                 )
             }
         }
-        pageActionEvent.name = elementContent.id || elementContent.contentName || CommonUtil.NotSpecified;
-        pageActionEvent.parentId = elementContent.parentid || elementContent.parentName || CommonUtil.NotSpecified;
+        pageActionEvent.name = elementContent.id || elementContent.contentName || strNotSpecified;
+        pageActionEvent.parentId = elementContent.parentid || elementContent.parentName || strNotSpecified;
 
         if (isValueAssigned(overrideValues.actionType)) {
             pageActionEvent.actionType = overrideValues.actionType;
@@ -149,8 +149,8 @@ export class PageAction extends WebEvent {
 
     private _isUndefinedEvent(pageActionEvent: IPageActionTelemetry) {
         if(this._config.dropInvalidEvents) {
-            if(pageActionEvent.name === CommonUtil.NotSpecified 
-                && pageActionEvent.parentId === CommonUtil.NotSpecified
+            if(pageActionEvent.name === strNotSpecified 
+                && pageActionEvent.parentId === strNotSpecified
                 && pageActionEvent.content === "[{}]") 
                 return true;
         }

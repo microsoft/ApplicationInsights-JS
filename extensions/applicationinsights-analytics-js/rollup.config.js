@@ -1,6 +1,7 @@
 import nodeResolve from "@rollup/plugin-node-resolve";
 import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js";
 import replace from "@rollup/plugin-replace";
+import cleanup from "rollup-plugin-cleanup";
 import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/node/removedynamic";
 import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
@@ -19,6 +20,16 @@ const replaceValues = {
   "// Licensed under the MIT License.": ""
 };
 
+function doCleanup() {
+  return cleanup({
+    comments: [
+      'some', 
+      /^.\s*@DynamicProtoStub/i,
+      /^\*\*\s*@class\s*$/
+    ]
+  })
+}
+
 const browserRollupConfigFactory = isProduction => {
   const browserRollupConfig = {
     input: `dist-esm/${outputName}.js`,
@@ -34,6 +45,7 @@ const browserRollupConfigFactory = isProduction => {
     plugins: [
       dynamicRemove(),
       replace({
+        preventAssignment: true,
         delimiters: ["", ""],
         values: replaceValues
       }),
@@ -42,6 +54,7 @@ const browserRollupConfigFactory = isProduction => {
         browser: false,
         preferBuiltins: false
       }),
+      doCleanup(),
       es3Poly(),
       es3Check()
     ]
@@ -83,11 +96,13 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
     plugins: [
       dynamicRemove(),
       replace({
+        preventAssignment: true,
         delimiters: ["", ""],
         values: replaceValues
       }),
       importCheck({ exclude: [ "applicationinsights-analytics-js" ] }),
       nodeResolve(),
+      doCleanup(),
       es3Poly(),
       es3Check()
     ]

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { DataSanitizer, UrlHelper, dateTimeUtilsDuration, IDependencyTelemetry, Util } from '@microsoft/applicationinsights-common';
+import { DataSanitizer, dateTimeUtilsDuration, IDependencyTelemetry, urlGetAbsoluteUrl, urlGetCompleteUrl, msToTimeSpan } from '@microsoft/applicationinsights-common';
 import { IDiagnosticLogger, objKeys, arrForEach, isNumber, isString, normalizeJsName, objForEachKey } from '@microsoft/applicationinsights-core-js';
 import dynamicProto from "@microsoft/dynamicproto-js";
 
@@ -33,7 +33,7 @@ function _setPerfDuration(props:any, name:string, resourceEntry:PerformanceResou
     let result = 0;
     let value = _calcPerfDuration(resourceEntry, start, end);
     if (value) {
-        result = _setPerfValue(props, name, Util.msToTimeSpan(value));
+        result = _setPerfValue(props, name, msToTimeSpan(value));
     }
 
     return result;
@@ -268,11 +268,11 @@ export class ajaxRecord {
 
         dynamicProto(ajaxRecord, self, (self) => {
             self.getAbsoluteUrl= () => {
-                return self.requestUrl ? UrlHelper.getAbsoluteUrl(self.requestUrl) : null;
+                return self.requestUrl ? urlGetAbsoluteUrl(self.requestUrl) : null;
             }
         
             self.getPathName = () => {
-                return self.requestUrl ? DataSanitizer.sanitizeUrl(_logger, UrlHelper.getCompleteUrl(self.method, self.requestUrl)) : null;
+                return self.requestUrl ? DataSanitizer.sanitizeUrl(_logger, urlGetCompleteUrl(self.method, self.requestUrl)) : null;
             }
         
             self.CreateTrackItem = (ajaxType:string, enableRequestHeaderTracking:boolean, getResponse:() => IAjaxRecordResponse):IDependencyTelemetry => {
@@ -287,6 +287,7 @@ export class ajaxRecord {
                     target: self.getAbsoluteUrl(),
                     name: self.getPathName(),
                     type: ajaxType,
+                    startTime: null,
                     duration: self.ajaxTotalDuration,
                     success: (+(self.status)) >= 200 && (+(self.status)) < 400,
                     responseCode: (+(self.status)),

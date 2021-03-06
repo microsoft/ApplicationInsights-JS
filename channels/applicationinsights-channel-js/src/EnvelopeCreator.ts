@@ -9,7 +9,7 @@ import {
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, IDiagnosticLogger, LoggingSeverity, _InternalMessageId, hasJSON, getJSON, objForEachKey, 
-    isNullOrUndefined, isNumber, isString, toISOString, setValue, isTruthy
+    isNullOrUndefined, isNumber, isString, toISOString, setValue, isTruthy, optimizeObject
 } from '@microsoft/applicationinsights-core-js';
 
 // these two constants are used to filter out properties not needed when trying to extract custom properties and measurements from the incoming payload
@@ -57,7 +57,7 @@ export abstract class EnvelopeCreator {
         // loop through the envelope tags (extension of Part A) and pick out the ones that should go in outgoing envelope tags
         telemetryItem.tags = telemetryItem.tags || [];
 
-        return envelope;
+        return optimizeObject(envelope);
     }
 
     /*
@@ -151,11 +151,13 @@ export abstract class EnvelopeCreator {
             tgs[tg] = value;
         });
 
-        env.tags = { ...envTags, ...tgs };
-        if(!env.tags[CtxTagKeys.internalSdkVersion]) {
+        let theTags = { ...envTags, ...tgs };
+        if(!theTags[CtxTagKeys.internalSdkVersion]) {
             // Append a version in case it is not already set
-            env.tags[CtxTagKeys.internalSdkVersion] = `javascript:${EnvelopeCreator.Version}`;
+            theTags[CtxTagKeys.internalSdkVersion] = `javascript:${EnvelopeCreator.Version}`;
         }
+        
+        env.tags = optimizeObject(theTags);
     }
 
     protected _logger: IDiagnosticLogger;

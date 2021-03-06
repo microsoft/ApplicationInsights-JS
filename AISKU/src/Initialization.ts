@@ -4,21 +4,21 @@
 import { 
     IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, 
     IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign,
-    arrForEach, isString, isFunction, isNullOrUndefined, addEventHandler, isArray, IPlugin
+    arrForEach, isString, isFunction, isNullOrUndefined, addEventHandler, isArray
  } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
 import { 
-    Util, CorrelationIdHelper, UrlHelper, IDateTimeUtils, DateTimeUtils, ConnectionStringParser, FieldType, RequestHeaders,
-    DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, AIData, AIBase,
+    IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper, IUrlHelper, UrlHelper, IDateTimeUtils, DateTimeUtils, ConnectionStringParser, FieldType, 
+    IRequestHeaders, RequestHeaders, DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, AIData, AIBase,
     Envelope, Event, Exception, Metric, PageView, PageViewData, RemoteDependencyData, IEventTelemetry,
     ITraceTelemetry, IMetricTelemetry, IDependencyTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetry, IPageViewPerformanceTelemetry, Trace, PageViewPerformance, Data, SeverityLevel,
     IConfig, ConfigurationManager, ContextTagKeys, DataSanitizer, TelemetryItemCreator, IAppInsights, CtxTagKeys, Extensions,
     IPropertiesPlugin, DistributedTracingModes, PropertiesPluginIdentifier, BreezeChannelIdentifier, AnalyticsPluginIdentifier, 
-    ITelemetryContext as Common_ITelemetryContext
+    ITelemetryContext as Common_ITelemetryContext, parseConnectionString
 } from "@microsoft/applicationinsights-common"
 
 "use strict";
@@ -121,7 +121,7 @@ export class Initialization implements IApplicationInsights {
         let config: IConfiguration & IConfig = snippet.config || ({} as any);
 
         if (config.connectionString) {
-            const cs = ConnectionStringParser.parse(config.connectionString);
+            const cs = parseConnectionString(config.connectionString);
             const ingest = cs.ingestionendpoint;
             config.endpointUrl = ingest ? `${ingest}/v2/track` : config.endpointUrl; // only add /v2/track when from connectionstring
             config.instrumentationKey = cs.instrumentationkey || config.instrumentationKey;

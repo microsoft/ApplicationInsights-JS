@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import {
-    Util, IPageViewPerformanceTelemetryInternal, dateTimeUtilsDuration
+    IPageViewPerformanceTelemetryInternal, dateTimeUtilsDuration, msToTimeSpan
 } from '@microsoft/applicationinsights-common';
 import {
     IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
@@ -81,11 +81,11 @@ export class PageViewPerformanceManager {
             } else {
                 pageViewPerformance.durationMs = total;
                 // // convert to timespans
-                pageViewPerformance.perfTotal = pageViewPerformance.duration = Util.msToTimeSpan(total);
-                pageViewPerformance.networkConnect = Util.msToTimeSpan(network);
-                pageViewPerformance.sentRequest = Util.msToTimeSpan(request);
-                pageViewPerformance.receivedResponse = Util.msToTimeSpan(response);
-                pageViewPerformance.domProcessing = Util.msToTimeSpan(dom);
+                pageViewPerformance.perfTotal = pageViewPerformance.duration = msToTimeSpan(total);
+                pageViewPerformance.networkConnect = msToTimeSpan(network);
+                pageViewPerformance.sentRequest = msToTimeSpan(request);
+                pageViewPerformance.receivedResponse = msToTimeSpan(response);
+                pageViewPerformance.domProcessing = msToTimeSpan(dom);
                 pageViewPerformance.isValid = true;
             }
         }

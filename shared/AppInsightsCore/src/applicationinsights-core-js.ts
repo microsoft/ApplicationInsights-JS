@@ -17,12 +17,13 @@ export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseCore } from './JavaScriptSDK/BaseCore';
 export { BaseTelemetryPlugin } from './JavaScriptSDK/BaseTelemetryPlugin';
 export { randomValue, random32, mwcRandomSeed, mwcRandom32 } from './JavaScriptSDK/RandomHelper';
-export { CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, addEventHandler, disableCookies, newGuid, perfNow, newId, generateW3CId } from "./JavaScriptSDK/CoreUtils";
+export { CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, addEventHandler, newGuid, perfNow, newId, generateW3CId } from "./JavaScriptSDK/CoreUtils";
 export {
     isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, attachEvent, detachEvent, normalizeJsName, 
-    objForEachKey, strEndsWith, isDate, isArray, isError, isString, isNumber, isBoolean, toISOString, arrForEach, arrIndexOf, 
+    objForEachKey, strEndsWith, strStartsWith, isDate, isArray, isError, isString, isNumber, isBoolean, toISOString, arrForEach, arrIndexOf, 
     arrMap, arrReduce, strTrim, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError, strContains,
-    setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, createClassFromInterface
+    setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, createClassFromInterface, optimizeObject, isNotUndefined, isNotNullOrUndefined,
+    objFreeze, objSeal
 } from './JavaScriptSDK/HelperFuncs';
 export { 
     getGlobal, getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
@@ -43,4 +44,9 @@ export { ProcessTelemetryContext } from './JavaScriptSDK/ProcessTelemetryContext
 export { initializePlugins, sortPlugins } from "./JavaScriptSDK/TelemetryHelpers";
 export { _InternalMessageId, LoggingSeverity } from './JavaScriptSDK.Enums/LoggingEnums';
 export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs } from "./JavaScriptSDK/InstrumentHooks";
+export { ICookieMgr, ICookieMgrConfig } from './JavaScriptSDK.Interfaces/ICookieMgr';
+export { 
+    createCookieMgr, safeGetCookieMgr, uaDisallowsSameSiteNone, areCookiesSupported, disableCookies,
+    canUseCookies, getCookie, setCookie, deleteCookie, _legacyCookieMgr
+} from './JavaScriptSDK/CookieMgr';
 export { strIKey, strExtensionConfig } from './JavaScriptSDK/Constants';

@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 "use strict";
 import { objCreateFn, strShimUndefined } from "@microsoft/applicationinsights-shims";
+import { disableCookies } from "./CookieMgr";
 import { getWindow, getDocument, getPerformance, isIE }  from "./EnvUtils";
 import { 
     arrForEach, arrIndexOf, arrMap, arrReduce, attachEvent, dateNow, detachEvent, hasOwnProperty, 
     isArray, isBoolean, isDate, isError, isFunction, isNullOrUndefined, isNumber, isObject, isString, isTypeof, 
-    isUndefined, objDefineAccessors, objKeys, strTrim, toISOString
+    isUndefined, objDefineAccessors, objFreeze, objKeys, strTrim, toISOString
 } from "./HelperFuncs";
 import { randomValue, random32, mwcRandomSeed, mwcRandom32 } from "./RandomHelper";
 
@@ -33,10 +34,6 @@ export function addEventHandler(eventName: string, callback: any): boolean {
     }
 
     return result;
-}
-
-export function disableCookies() {
-    CoreUtils._canUseCookies = false;
 }
 
 export function newGuid(): string {
@@ -139,7 +136,6 @@ export function generateW3CId(): string {
  * in your resulting code.
  */
 export interface ICoreUtils {
-
     /**
      * Internal - Do not use directly.
      * @deprecated Direct usage of this property is not recommend
@@ -181,7 +177,7 @@ export interface ICoreUtils {
     /**
      * Check if an object is of type Error
      */
-    isError: (obj: any) => boolean;
+    isError: (obj: any) => obj is Error;
 
     /**
      * Checks if the type of value is a string.
@@ -359,50 +355,45 @@ export interface ICoreUtils {
 /**
  * Provides a collection of utility functions, included for backward compatibility with previous releases.
  * @deprecated Marking this instance as deprecated in favor of direct usage of the helper functions
- * as direct usage provides better tree-shaking and minification by avoiding the inclusion of the unused items 
+ * as direct usage provides better tree-shaking and minification by avoiding the inclusion of the unused items
  * in your resulting code.
  */
-export const CoreUtils: ICoreUtils = (function() {
-
-    const coreUtils: ICoreUtils = {
-        _canUseCookies: undefined,
-        isTypeof: isTypeof,
-        isUndefined: isUndefined,
-        isNullOrUndefined: isNullOrUndefined,
-        hasOwnProperty: hasOwnProperty,
-        isFunction: isFunction,
-        isObject: isObject,
-        isDate: isDate,
-        isArray: isArray,
-        isError: isError,
-        isString: isString,
-        isNumber: isNumber,
-        isBoolean: isBoolean,
-        toISOString: toISOString,
-        arrForEach: arrForEach,
-        arrIndexOf: arrIndexOf,
-        arrMap: arrMap,
-        arrReduce: arrReduce,
-        strTrim: strTrim,
-        objCreate: objCreateFn,
-        objKeys: objKeys,
-        objDefineAccessors: objDefineAccessors,
-        addEventHandler: addEventHandler,
-        dateNow: dateNow,
-        isIE: isIE,
-        disableCookies: disableCookies,
-        newGuid: newGuid,
-        perfNow: perfNow,
-        newId: newId,
-        randomValue: randomValue,
-        random32: random32,
-        mwcRandomSeed: mwcRandomSeed,
-        mwcRandom32: mwcRandom32,
-        generateW3CId: generateW3CId
-    };
-
-    return coreUtils;
-})();
+export const CoreUtils: ICoreUtils = {
+    _canUseCookies: undefined,
+    isTypeof: isTypeof,
+    isUndefined: isUndefined,
+    isNullOrUndefined: isNullOrUndefined,
+    hasOwnProperty: hasOwnProperty,
+    isFunction: isFunction,
+    isObject: isObject,
+    isDate: isDate,
+    isArray: isArray,
+    isError: isError,
+    isString: isString,
+    isNumber: isNumber,
+    isBoolean: isBoolean,
+    toISOString: toISOString,
+    arrForEach: arrForEach,
+    arrIndexOf: arrIndexOf,
+    arrMap: arrMap,
+    arrReduce: arrReduce,
+    strTrim: strTrim,
+    objCreate: objCreateFn,
+    objKeys: objKeys,
+    objDefineAccessors: objDefineAccessors,
+    addEventHandler: addEventHandler,
+    dateNow: dateNow,
+    isIE: isIE,
+    disableCookies: disableCookies,
+    newGuid: newGuid,
+    perfNow: perfNow,
+    newId: newId,
+    randomValue: randomValue,
+    random32: random32,
+    mwcRandomSeed: mwcRandomSeed,
+    mwcRandom32: mwcRandom32,
+    generateW3CId: generateW3CId
+};
 
 const GuidRegex = /[xy]/g;
 
@@ -444,12 +435,9 @@ export interface IEventHelper {
     DetachEvent: (obj: any, eventNameWithoutOn: string, handlerRef: any) => void;
 }
 
-export const EventHelper: IEventHelper = (function() {
-    return {
-        Attach: attachEvent,
-        AttachEvent: attachEvent,
-        Detach: detachEvent,
-        DetachEvent: detachEvent
-    };
-})();
-
+export const EventHelper: IEventHelper = {
+    Attach: attachEvent,
+    AttachEvent: attachEvent,
+    Detach: detachEvent,
+    DetachEvent: detachEvent
+};
