@@ -47,9 +47,18 @@ export interface ICookieMgr {
     purge(name: string, path?: string): void;
 }
 
+/**
+ * Configuration definition for instance based cookie management configuration
+ */
 export interface ICookieMgrConfig {
+    /** Defaults to true, A boolean that indicates whether the use of cookies by  the SDK is enabled by the current instance.
+     * If false, the instance of the SDK initialized by this configuration will not store or read any data from cookies
+     */
     enabled?: boolean;
 
+    /**
+     * Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains.
+     */
     domain?: string;
 
     /**

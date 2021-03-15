@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { utlCanUseSessionStorage, utlGetSessionStorage, utlRemoveSessionStorage, utlSetSessionStorage } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, hasJSON, getJSON, dateNow, dumpObj } from '@microsoft/applicationinsights-core-js';
+import { IDiagnosticLogger, hasJSON, getJSON, dateNow, dumpObj, throwError } from '@microsoft/applicationinsights-core-js';
 
 /**
  * Used to track page visit durations
@@ -69,7 +69,7 @@ export class PageVisitTimeManager {
         try {
             if (utlCanUseSessionStorage()) {
                 if (utlGetSessionStorage(this._logger, this.prevPageVisitDataKeyName) != null) {
-                    throw new Error("Cannot call startPageVisit consecutively without first calling stopPageVisit");
+                    throwError("Cannot call startPageVisit consecutively without first calling stopPageVisit");
                 }
 
                 const currPageVisitData = new PageVisitData(pageName, pageUrl);

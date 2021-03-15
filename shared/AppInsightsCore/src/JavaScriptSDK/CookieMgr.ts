@@ -8,10 +8,9 @@ import {
     arrForEach, dateNow, getExceptionName, isFunction, isNotNullOrUndefined, isNullOrUndefined, isString, isTruthy, isUndefined,
     objForEachKey, setValue, strContains, strEndsWith, strTrim
 } from "./HelperFuncs";
-import { _listenCoreUtilsCanUseCookies } from '././BackCompatUtils';
-import { IAppInsightsCore, IConfiguration } from '../applicationinsights-core-js';
+import { IConfiguration } from '../JavaScriptSDK.Interfaces/IConfiguration';
+import { IAppInsightsCore } from '../JavaScriptSDK.Interfaces/IAppInsightsCore';
 
-const strSetEnabled = "setEnabled";
 const strToGMTString = "toGMTString";
 const strToUTCString = "toUTCString";
 const strCookie = "cookie";
@@ -29,33 +28,15 @@ let _cookieCache = {};
 let _globalCookieConfig = {};
 
 /**
- * Helper to support backward compatibility for users that use the legacy cookie handling functions and the use the internal
- * CoreUtils._canUseCookies global flag to enable/disable cookies usage.
- * Note: This has the following deliberate side-effects
- * - Creates the global (legacy) cookie manager if it does not already exist
- * - Attempts to add "listeners" to the CoreUtils._canUseCookies property to support the legacy usage
- * @param config 
- * @param logger 
- * @returns 
- */
-export function _legacyCookieMgr(config?: IConfiguration, logger?: IDiagnosticLogger): ICookieMgr {
-    let cookieMgr = _gblCookieMgr(config, logger);
-
-    _listenCoreUtilsCanUseCookies(cookieMgr);
-
-    return cookieMgr;
-}
-
-/**
  * @ignore
- * DO NOT USE or export, this is exposed as public to support backward compatibility of previous static utility methods only.
+ * DO NOT USE or export from the module, this is exposed as public to support backward compatibility of previous static utility methods only.
  * If you want to manager cookies either use the ICookieMgr available from the core instance via getCookieMgr() or create
  * your own instance of the CookieMgr and use that.
  * Using this directly for enabling / disabling cookie handling will not only affect your usage but EVERY user of cookies.
  * Example, if you are using a shared component that is also using Application Insights you will affect their cookie handling.
  * @param logger - The DiagnosticLogger to use for reporting errors.
  */
-function _gblCookieMgr(config?: IConfiguration, logger?: IDiagnosticLogger): ICookieMgr {
+export function _gblCookieMgr(config?: IConfiguration, logger?: IDiagnosticLogger): ICookieMgr {
     // Stash the global instance against the BaseCookieMgr class
     let inst = createCookieMgr[strConfigCookieMgr] || _globalCookieConfig[strConfigCookieMgr];
     if (!inst) {
@@ -237,14 +218,6 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
     return cookieMgr
 }
 
-/**
- * @deprecated - Use the core.getCookieMgr().disable()
- * Force the SDK not to store and read any data from cookies.
- */
-export function disableCookies() {
-    _legacyCookieMgr()[strSetEnabled](false);
-}
-
 /*
 * Helper method to tell if document.cookie object is supported by the runtime
 */
@@ -265,39 +238,6 @@ export function areCookiesSupported(logger?: IDiagnosticLogger): any {
     }
 
     return _supportsCookies;
-}
-
-/**
- * @deprecated - Use the core.getCookieMgr().isEnabled()
- * Helper method to tell if document.cookie object is available and whether it can be used.
- */
-export function canUseCookies(logger: IDiagnosticLogger): any {
-    return _legacyCookieMgr(null, logger).isEnabled();
-}
-
-/**
- * @deprecated - Use the core.getCookieMgr().get()
- * helper method to access userId and sessionId cookie
- */
-export function getCookie(logger: IDiagnosticLogger, name: string) {
-    return _legacyCookieMgr(null, logger).get(name);
-}
-
-/**
- * @deprecated - Use the core.getCookieMgr().set()
- * helper method to set userId and sessionId cookie
- */
-export function setCookie(logger: IDiagnosticLogger, name: string, value: string, domain?: string) {
-    _legacyCookieMgr(null, logger).set(name, value, null, domain);
-}
-
-/**
- * @deprecated - Use the core.getCookieMgr().del()
- * Deletes a cookie by setting it's expiration time in the past.
- * @param name - The name of the cookie to delete.
- */
-export function deleteCookie(logger: IDiagnosticLogger, name: string) {
-    return _legacyCookieMgr(null, logger).del(name);
 }
 
 function _extractParts(theValue: string) {

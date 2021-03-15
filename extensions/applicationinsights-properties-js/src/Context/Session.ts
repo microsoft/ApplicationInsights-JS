@@ -5,7 +5,7 @@ import dynamicProto from '@microsoft/dynamicproto-js';
 import { ISession, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage } from '@microsoft/applicationinsights-common';
 import { 
     IDiagnosticLogger, _InternalMessageId, LoggingSeverity, DiagnosticLogger, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, isFunction, 
-    newId, dumpObj, getExceptionName, dateNow
+    newId, dumpObj, getExceptionName, dateNow, safeGetLogger
 } from '@microsoft/applicationinsights-core-js';
 
 const cookieNameConst = 'ai_session';
@@ -55,7 +55,7 @@ export class _SessionManager {
         let self = this;
         let _storageNamePrefix: () => string;
         let _cookieUpdatedTimestamp: number;
-        let _logger: IDiagnosticLogger = (core || {} as IAppInsightsCore).logger || new DiagnosticLogger();
+        let _logger: IDiagnosticLogger = safeGetLogger(core);
         let _cookieManager: ICookieMgr = safeGetCookieMgr(core);
 
         dynamicProto(_SessionManager, self, (_self) => {

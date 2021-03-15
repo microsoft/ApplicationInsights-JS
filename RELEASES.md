@@ -1,5 +1,14 @@
 # Releases
 
+## 2.6.0 (Placeholder)
+
+### Changelog
+
+- #1076 Multiple Treeshaking enhancements, [see recommendations](TreeShakingRecommendations.md)
+- #1091 Enable cookie support after the SDK has been initialized
+- #1125 Disable Cookies
+- #1434 Ability to specify cookie Path so that AI works behind App Gateway
+
 ## 2.5.11 (January 15th, 2021)
 
 ### Changelog

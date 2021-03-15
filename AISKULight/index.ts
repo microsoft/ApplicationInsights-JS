@@ -10,7 +10,8 @@ import {
     isNullOrUndefined,
     arrForEach,
     ITelemetryItem,
-    SendRequestReason
+    SendRequestReason,
+    throwError
 } from "@microsoft/applicationinsights-core-js";
 import { IConfig } from "@microsoft/applicationinsights-common";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -36,7 +37,7 @@ export class ApplicationInsights {
             isNullOrUndefined(config) ||
             isNullOrUndefined(config.instrumentationKey)
         ) {
-            throw new Error("Invalid input configuration");
+            throwError("Invalid input configuration");
         }
         this.config = config;
         this.getSKUDefaults();

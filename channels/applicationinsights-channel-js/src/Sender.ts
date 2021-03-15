@@ -16,7 +16,7 @@ import {
     ITelemetryItem, IProcessTelemetryContext, IConfiguration,
     _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
     getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain, INotificationManager,
-    SendRequestReason, getGlobalInst, objForEachKey, isNullOrUndefined, arrForEach, dateNow, dumpObj, getExceptionName, getIEVersion
+    SendRequestReason, getGlobalInst, objForEachKey, isNullOrUndefined, arrForEach, dateNow, dumpObj, getExceptionName, getIEVersion, throwError
 } from '@microsoft/applicationinsights-core-js';
 import { Offline } from './Offline';
 import { Sample } from './TelemetryProcessors/Sample'
@@ -167,7 +167,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
         dynamicProto(Sender, this, (_self, _base) => {
             function _notImplemented() {
-                throw new Error("Method not implemented.");
+                throwError("Method not implemented.");
             }
 
             _self.pause = _notImplemented;

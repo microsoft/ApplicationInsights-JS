@@ -4,7 +4,7 @@
 import { 
     IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, 
     IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign,
-    arrForEach, isString, isFunction, isNullOrUndefined, addEventHandler, isArray
+    arrForEach, isString, isFunction, isNullOrUndefined, addEventHandler, isArray, throwError
  } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -363,7 +363,7 @@ export class Initialization implements IApplicationInsights {
 
         // dont allow additional channels/other extensions for legacy mode; legacy mode is only to allow users to switch with no code changes!
         if (legacyMode && _self.config.extensions && _self.config.extensions.length > 0) {
-            throw new Error("Extensions not allowed in legacy mode");
+            throwError("Extensions not allowed in legacy mode");
         }
 
         doPerf(_self.core, () => "AISKU.loadAppInsights", () => {

@@ -4,7 +4,7 @@
 import dynamicProto from "@microsoft/dynamicproto-js";
 import { ITelemetryConfig } from '../Interfaces/ITelemetryConfig';
 import { utlRemoveStorage, IUserContext, CtxTagKeys } from '@microsoft/applicationinsights-common';
-import { _InternalMessageId, LoggingSeverity, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, DiagnosticLogger, newId, toISOString } from '@microsoft/applicationinsights-core-js';
+import { _InternalMessageId, LoggingSeverity, IAppInsightsCore, ICookieMgr, safeGetCookieMgr, safeGetLogger, newId, toISOString } from '@microsoft/applicationinsights-core-js';
 
 
 function _validateUserInput(id: string): boolean {
@@ -59,7 +59,7 @@ export class User implements IUserContext {
     public isNewUser = false;
 
     constructor(config: ITelemetryConfig, core: IAppInsightsCore) {
-        let _logger = (core || {} as IAppInsightsCore).logger || new DiagnosticLogger();
+        let _logger = safeGetLogger(core);
         let _cookieManager: ICookieMgr = safeGetCookieMgr(core);
 
         dynamicProto(User, this, (_self) => {

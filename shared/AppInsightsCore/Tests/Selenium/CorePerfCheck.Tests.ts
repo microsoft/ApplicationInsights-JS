@@ -3,6 +3,7 @@ import { ITestContext, StepResult } from "@microsoft/ai-test-framework/dist-esm/
 import { _InternalMessageId, LoggingSeverity } from "../../src/JavaScriptSDK.Enums/LoggingEnums";
 import { _InternalLogMessage, DiagnosticLogger } from "../../src/JavaScriptSDK/DiagnosticLogger";
 import { isObject, objForEachKey, objForEachKey as objKeys, optimizeObject, setValue } from "../../src/JavaScriptSDK/HelperFuncs";
+import { isNotNullOrUndefined } from "../../types/applicationinsights-core-js";
 
 interface PerfMeasurements {
     duration: number;
@@ -166,7 +167,7 @@ export class CorePerfCheckTests extends AITestClass {
                         objForEachKey(optTestObject, (name, value) => {
                             checks++;
                         });
-                    }, 300, iterations, 0.003).then((optDuration1) => {
+                    }, 300, iterations, 0.003, baseDuration).then((optDuration1) => {
                         Assert.equal(iterations * objectFields * optDuration1.attempts, checks, "Make sure we hit all of them");
                         this._checkRun(baseDuration, optDuration1);
                     });
@@ -201,7 +202,7 @@ export class CorePerfCheckTests extends AITestClass {
                         objForEachKey(optTestObject, (name, value) => {
                             checks++;
                         });
-                    }, 200, iterations, 0.001).then((optDuration) => {
+                    }, 200, iterations, 0.001, baseDuration).then((optDuration) => {
                         Assert.equal(iterations * objectFields * optDuration.attempts, checks, "Make sure we hit all of them");
     
                         this._checkRun(baseDuration, optDuration);
@@ -237,7 +238,7 @@ export class CorePerfCheckTests extends AITestClass {
                         objForEachKey(optTestObject, (name, value) => {
                             checks++;
                         });
-                    }, 200, iterations, 0.002).then((optDuration) => {
+                    }, 200, iterations, 0.002, baseDuration).then((optDuration) => {
                         Assert.equal(iterations * objectFields * optDuration.attempts, checks, "Make sure we hit all of them");
     
                         this._checkRun(baseDuration, optDuration);
@@ -275,7 +276,7 @@ export class CorePerfCheckTests extends AITestClass {
                         objForEachKey(optTestObject, (name, value) => {
                             checks++;
                         });
-                    }, 200, iterations, 0.001).then((optDuration) => {
+                    }, 200, iterations, 0.001, baseDuration).then((optDuration) => {
                         Assert.equal(iterations * objectFields * optDuration.attempts, checks, "Make sure we hit all of them");
     
                         this._checkRun(baseDuration, optDuration);
@@ -313,7 +314,7 @@ export class CorePerfCheckTests extends AITestClass {
                         objForEachKey(optTestObject, (name, value) => {
                             checks++;
                         });
-                    }, 200, iterations, 0.0015).then((optDuration) => {
+                    }, 200, iterations, 0.0015, baseDuration).then((optDuration) => {
                         Assert.equal(iterations * objectFields * optDuration.attempts, checks, "Make sure we hit all of them");
     
                         this._checkRun(baseDuration, optDuration);
@@ -411,7 +412,7 @@ export class CorePerfCheckTests extends AITestClass {
                     checks = 0;
                     return this._runPerfTestAsync("optTestObject", () => {
                         JSON.stringify(optTestObject);
-                    }, 150, iterations, 0.015).then((optDuration) => {
+                    }, 150, iterations, 0.015, baseDuration).then((optDuration) => {
                         this._checkRun(baseDuration, optDuration);
                     });
                 });
@@ -439,7 +440,7 @@ export class CorePerfCheckTests extends AITestClass {
                     checks = 0;
                     return this._runPerfTestAsync("optTestObject", () => {
                         JSON.stringify(optTestObject);
-                    }, 50, iterations, 0.005).then((optDuration) => {
+                    }, 50, iterations, 0.005, baseDuration).then((optDuration) => {
                         this._checkRun(baseDuration, optDuration);
                     });
                 });
@@ -469,7 +470,7 @@ export class CorePerfCheckTests extends AITestClass {
                 }, 50, iterations, 0.005).then((baseDuration) => {
                     return this._runPerfTestAsync("optTestObject", () => {
                         JSON.stringify(optTestObject);
-                    }, 50, iterations, 0.003).then((optDuration) => {
+                    }, 50, iterations, 0.003, baseDuration).then((optDuration) => {
                         this._checkRun(baseDuration, optDuration);
                     });
                 });
@@ -497,7 +498,7 @@ export class CorePerfCheckTests extends AITestClass {
                 }, 100, iterations, 0.01).then((baseDuration) => {
                     return this._runPerfTestAsync("optTestObject", () => {
                         JSON.stringify(optTestObject);
-                    }, 100, iterations, 0.01).then((optDuration) => {
+                    }, 100, iterations, 0.01, baseDuration).then((optDuration) => {
                         this._checkRun(baseDuration, optDuration);
                     });
                 });
@@ -530,7 +531,7 @@ export class CorePerfCheckTests extends AITestClass {
                         objKeys(optTestObject, (name) => {
                             checks++;
                         });
-                    }, 300, iterations, 0.001).then((optDuration) => {
+                    }, 300, iterations, 0.001, baseDuration).then((optDuration) => {
                         Assert.equal(iterations * objectFields * optDuration.attempts, checks, "Make sure we hit all of them");
     
                         this._checkRun(baseDuration, optDuration);
@@ -567,7 +568,7 @@ export class CorePerfCheckTests extends AITestClass {
                         objKeys(optTestObject, (name, value) => {
                             checks++;
                         });
-                    }, 150, iterations, 0.0015).then((optDuration) => {
+                    }, 150, iterations, 0.0015, baseDuration).then((optDuration) => {
                         Assert.equal(iterations * objectFields * optDuration.attempts, checks, "Make sure we hit all of them");
     
                         this._checkRun(baseDuration, optDuration);
@@ -601,7 +602,7 @@ export class CorePerfCheckTests extends AITestClass {
                         objKeys(optTestObject, (name, value) => {
                             checks++;
                         });
-                    }, 200, iterations, 0.0015).then((optDuration) => {
+                    }, 200, iterations, 0.0015, baseDuration).then((optDuration) => {
                         Assert.equal(iterations * objectFields * optDuration.attempts, checks, "Make sure we hit all of them");
     
                         this._checkRun(baseDuration, optDuration);
@@ -707,7 +708,7 @@ export class CorePerfCheckTests extends AITestClass {
         return theDuration;
     }
 
-    private _runPerfTest(testName: string, theTest: () => void, maxTime: number, iterations: number, maxIteration: number, maxAttempts = 25): PerfMeasurements {
+    private _runPerfTest(testName: string, theTest: () => void, maxTime: number, iterations: number, maxIteration: number, baseMeasurements?: PerfMeasurements, maxAttempts = 25): PerfMeasurements {
         let theDuration: PerfMeasurements = {} as PerfMeasurements;
 
         let retryCount = 0;
@@ -718,7 +719,9 @@ export class CorePerfCheckTests extends AITestClass {
             let devAllowance = (theDuration.deviation / 2);
             if ((theDuration.duration + devAllowance) <= maxTime && (theDuration.iteration < maxIteration || (theDuration.avgIteration - devAllowance) < maxIteration)) {
                 // Good run
-                break;
+                if (!baseMeasurements || theDuration.deviation < baseMeasurements.deviation * 3) {
+                    break;
+                }
             }
         }
 
@@ -730,7 +733,7 @@ export class CorePerfCheckTests extends AITestClass {
         return theDuration;
     }
 
-    private _runPerfTestAsync(testName: string, theTest: () => void, maxTime: number, iterations: number, maxIteration: number, maxAttempts = 25): Promise<PerfMeasurements> {
+    private _runPerfTestAsync(testName: string, theTest: () => void, maxTime: number, iterations: number, maxIteration: number, baseMeasurements?: PerfMeasurements, maxAttempts = 25): Promise<PerfMeasurements> {
         let _self = this;
         
         return new Promise<PerfMeasurements>((runComplete, runReject) => {
@@ -755,13 +758,15 @@ export class CorePerfCheckTests extends AITestClass {
                     let devAllowance = (theDuration.deviation / 2);
                     if (retryCount >= 5 || ((theDuration.duration + devAllowance) <= maxTime && (theDuration.iteration < maxIteration || (theDuration.avgIteration - devAllowance) < maxIteration))) {
                         // Last Retry or Good run
-                        Assert.ok(theDuration.duration <= maxTime, 
-                            `${testName}: Check min total time for <= ${maxTime}ms from ${iterations} iterations.  Min: ${theDuration.duration}ms Avg: ${theDuration.avgDuration}ms Max: ${theDuration.maxDuration}ms Total: ${theDuration.total}ms Deviation: ${theDuration.deviation}ms`);
-                        Assert.ok(theDuration.iteration < maxIteration || (theDuration.avgIteration - (theDuration.deviation / 2)) < maxIteration, 
-                            `${testName}: Check Average iteration. Avg: ${theDuration.avgIteration}ms Min: ${theDuration.iteration}`);
-        
-                        runComplete(theDuration);
-                        return;
+                        if (!baseMeasurements || theDuration.deviation < baseMeasurements.deviation * 3) {
+                            Assert.ok(theDuration.duration <= maxTime, 
+                                `${testName}: Check min total time for <= ${maxTime}ms from ${iterations} iterations.  Min: ${theDuration.duration}ms Avg: ${theDuration.avgDuration}ms Max: ${theDuration.maxDuration}ms Total: ${theDuration.total}ms Deviation: ${theDuration.deviation}ms`);
+                            Assert.ok(theDuration.iteration < maxIteration || (theDuration.avgIteration - (theDuration.deviation / 2)) < maxIteration, 
+                                `${testName}: Check Average iteration. Avg: ${theDuration.avgIteration}ms Min: ${theDuration.iteration}`);
+            
+                            runComplete(theDuration);
+                            return;
+                        }
                     }
     
                     Assert.ok(true, 

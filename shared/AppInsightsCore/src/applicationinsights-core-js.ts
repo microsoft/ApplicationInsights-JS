@@ -17,7 +17,10 @@ export { AppInsightsCore } from "./JavaScriptSDK/AppInsightsCore";
 export { BaseCore } from './JavaScriptSDK/BaseCore';
 export { BaseTelemetryPlugin } from './JavaScriptSDK/BaseTelemetryPlugin';
 export { randomValue, random32, mwcRandomSeed, mwcRandom32 } from './JavaScriptSDK/RandomHelper';
-export { CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, addEventHandler, newGuid, perfNow, newId, generateW3CId } from "./JavaScriptSDK/CoreUtils";
+export { 
+    CoreUtils, ICoreUtils, EventHelper, IEventHelper, Undefined, addEventHandler, newGuid, perfNow, newId, generateW3CId,
+    disableCookies, canUseCookies, getCookie, setCookie, deleteCookie, _legacyCookieMgr
+} from "./JavaScriptSDK/CoreUtils";
 export {
     isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, attachEvent, detachEvent, normalizeJsName, 
     objForEachKey, strEndsWith, strStartsWith, isDate, isArray, isError, isString, isNumber, isBoolean, toISOString, arrForEach, arrIndexOf, 
@@ -39,14 +42,13 @@ export { INotificationManager } from "./JavaScriptSDK.Interfaces/INotificationMa
 export { IPerfEvent } from './JavaScriptSDK.Interfaces/IPerfEvent';
 export { IPerfManager, IPerfManagerProvider } from './JavaScriptSDK.Interfaces/IPerfManager';
 export { PerfEvent, PerfManager, doPerf } from './JavaScriptSDK/PerfManager';
-export { DiagnosticLogger, _InternalLogMessage } from './JavaScriptSDK/DiagnosticLogger';
+export { safeGetLogger, DiagnosticLogger, _InternalLogMessage } from './JavaScriptSDK/DiagnosticLogger';
 export { ProcessTelemetryContext } from './JavaScriptSDK/ProcessTelemetryContext';
 export { initializePlugins, sortPlugins } from "./JavaScriptSDK/TelemetryHelpers";
 export { _InternalMessageId, LoggingSeverity } from './JavaScriptSDK.Enums/LoggingEnums';
 export { InstrumentProto, InstrumentProtos, InstrumentFunc, InstrumentFuncs } from "./JavaScriptSDK/InstrumentHooks";
 export { ICookieMgr, ICookieMgrConfig } from './JavaScriptSDK.Interfaces/ICookieMgr';
 export { 
-    createCookieMgr, safeGetCookieMgr, uaDisallowsSameSiteNone, areCookiesSupported, disableCookies,
-    canUseCookies, getCookie, setCookie, deleteCookie, _legacyCookieMgr
+    createCookieMgr, safeGetCookieMgr, uaDisallowsSameSiteNone, areCookiesSupported
 } from './JavaScriptSDK/CookieMgr';
 export { strIKey, strExtensionConfig } from './JavaScriptSDK/Constants';

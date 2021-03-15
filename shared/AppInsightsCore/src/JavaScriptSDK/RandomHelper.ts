@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { getCrypto, getMsCrypto, isIE }  from "./EnvUtils";
+import { dateNow } from "./HelperFuncs";
 
 const UInt32Mask = 0x100000000;
 const MaxUInt32 = 0xffffffff;
@@ -25,7 +26,12 @@ function _mwcSeed(seedValue: number) {
 function _autoSeedMwc() {
     // Simple initialization using default Math.random() - So we inherit any entropy from the browser
     // and bitwise XOR with the current milliseconds
-    _mwcSeed((Math.random() * UInt32Mask) ^ new Date().getTime());
+    try {
+        const now = dateNow() & 0x7fffffff;
+        _mwcSeed(((Math.random() * UInt32Mask) ^ now) + now);
+    } catch (e) {
+        // Don't crash if something goes wrong
+    }
 }
 
 /**

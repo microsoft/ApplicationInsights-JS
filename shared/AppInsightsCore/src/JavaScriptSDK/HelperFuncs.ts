@@ -565,7 +565,7 @@ export function isTruthy(value: any) {
     return !!value;
 }
 
-export function throwError(message: string) {
+export function throwError(message: string): never {
     throw new Error(message);
 }
 

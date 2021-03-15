@@ -19,9 +19,9 @@ import { initializePlugins, sortPlugins } from './TelemetryHelpers';
 import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
 import { PerfManager } from "./PerfManager";
-import { ICookieMgr, ICookieMgrConfig } from "../JavaScriptSDK.Interfaces/ICookieMgr";
+import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { createCookieMgr } from "./CookieMgr";
-import { arrForEach, isNullOrUndefined, isUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy, isNotNullOrUndefined } from "./HelperFuncs";
+import { arrForEach, isNullOrUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy } from "./HelperFuncs";
 import { strExtensionConfig, strIKey } from "./Constants";
 
 const validationError = "Extensions must provide callback to initialize";
