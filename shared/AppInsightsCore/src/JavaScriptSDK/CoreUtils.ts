@@ -2,13 +2,20 @@
 // Licensed under the MIT License.
 "use strict";
 import { objCreateFn, strShimUndefined } from "@microsoft/applicationinsights-shims";
+import { IConfiguration } from "../JavaScriptSDK.Interfaces/IConfiguration";
+import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
+import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger";
+import { _gblCookieMgr } from "./CookieMgr";
 import { getWindow, getDocument, getPerformance, isIE }  from "./EnvUtils";
 import { 
     arrForEach, arrIndexOf, arrMap, arrReduce, attachEvent, dateNow, detachEvent, hasOwnProperty, 
     isArray, isBoolean, isDate, isError, isFunction, isNullOrUndefined, isNumber, isObject, isString, isTypeof, 
-    isUndefined, objDefineAccessors, objKeys, strTrim, toISOString
+    isUndefined, objDefineAccessors, objFreeze, objKeys, strTrim, toISOString
 } from "./HelperFuncs";
 import { randomValue, random32, mwcRandomSeed, mwcRandom32 } from "./RandomHelper";
+
+let _cookieMgrs: ICookieMgr[] = null;
+let _canUseCookies: boolean;    // legacy supported config
 
 // Added to help with minfication
 export const Undefined = strShimUndefined;
@@ -33,10 +40,6 @@ export function addEventHandler(eventName: string, callback: any): boolean {
     }
 
     return result;
-}
-
-export function disableCookies() {
-    CoreUtils._canUseCookies = false;
 }
 
 export function newGuid(): string {
@@ -139,7 +142,6 @@ export function generateW3CId(): string {
  * in your resulting code.
  */
 export interface ICoreUtils {
-
     /**
      * Internal - Do not use directly.
      * @deprecated Direct usage of this property is not recommend
@@ -181,7 +183,7 @@ export interface ICoreUtils {
     /**
      * Check if an object is of type Error
      */
-    isError: (obj: any) => boolean;
+    isError: (obj: any) => obj is Error;
 
     /**
      * Checks if the type of value is a string.
@@ -359,50 +361,45 @@ export interface ICoreUtils {
 /**
  * Provides a collection of utility functions, included for backward compatibility with previous releases.
  * @deprecated Marking this instance as deprecated in favor of direct usage of the helper functions
- * as direct usage provides better tree-shaking and minification by avoiding the inclusion of the unused items 
+ * as direct usage provides better tree-shaking and minification by avoiding the inclusion of the unused items
  * in your resulting code.
  */
-export const CoreUtils: ICoreUtils = (function() {
-
-    const coreUtils: ICoreUtils = {
-        _canUseCookies: undefined,
-        isTypeof: isTypeof,
-        isUndefined: isUndefined,
-        isNullOrUndefined: isNullOrUndefined,
-        hasOwnProperty: hasOwnProperty,
-        isFunction: isFunction,
-        isObject: isObject,
-        isDate: isDate,
-        isArray: isArray,
-        isError: isError,
-        isString: isString,
-        isNumber: isNumber,
-        isBoolean: isBoolean,
-        toISOString: toISOString,
-        arrForEach: arrForEach,
-        arrIndexOf: arrIndexOf,
-        arrMap: arrMap,
-        arrReduce: arrReduce,
-        strTrim: strTrim,
-        objCreate: objCreateFn,
-        objKeys: objKeys,
-        objDefineAccessors: objDefineAccessors,
-        addEventHandler: addEventHandler,
-        dateNow: dateNow,
-        isIE: isIE,
-        disableCookies: disableCookies,
-        newGuid: newGuid,
-        perfNow: perfNow,
-        newId: newId,
-        randomValue: randomValue,
-        random32: random32,
-        mwcRandomSeed: mwcRandomSeed,
-        mwcRandom32: mwcRandom32,
-        generateW3CId: generateW3CId
-    };
-
-    return coreUtils;
-})();
+export const CoreUtils: ICoreUtils = {
+    _canUseCookies: undefined,
+    isTypeof: isTypeof,
+    isUndefined: isUndefined,
+    isNullOrUndefined: isNullOrUndefined,
+    hasOwnProperty: hasOwnProperty,
+    isFunction: isFunction,
+    isObject: isObject,
+    isDate: isDate,
+    isArray: isArray,
+    isError: isError,
+    isString: isString,
+    isNumber: isNumber,
+    isBoolean: isBoolean,
+    toISOString: toISOString,
+    arrForEach: arrForEach,
+    arrIndexOf: arrIndexOf,
+    arrMap: arrMap,
+    arrReduce: arrReduce,
+    strTrim: strTrim,
+    objCreate: objCreateFn,
+    objKeys: objKeys,
+    objDefineAccessors: objDefineAccessors,
+    addEventHandler: addEventHandler,
+    dateNow: dateNow,
+    isIE: isIE,
+    disableCookies: disableCookies,
+    newGuid: newGuid,
+    perfNow: perfNow,
+    newId: newId,
+    randomValue: randomValue,
+    random32: random32,
+    mwcRandomSeed: mwcRandomSeed,
+    mwcRandom32: mwcRandom32,
+    generateW3CId: generateW3CId
+};
 
 const GuidRegex = /[xy]/g;
 
@@ -444,12 +441,97 @@ export interface IEventHelper {
     DetachEvent: (obj: any, eventNameWithoutOn: string, handlerRef: any) => void;
 }
 
-export const EventHelper: IEventHelper = (function() {
-    return {
-        Attach: attachEvent,
-        AttachEvent: attachEvent,
-        Detach: detachEvent,
-        DetachEvent: detachEvent
-    };
-})();
+export const EventHelper: IEventHelper = {
+    Attach: attachEvent,
+    AttachEvent: attachEvent,
+    Detach: detachEvent,
+    DetachEvent: detachEvent
+};
 
+/**
+ * Helper to support backward compatibility for users that use the legacy cookie handling functions and the use the internal
+ * CoreUtils._canUseCookies global flag to enable/disable cookies usage.
+ * Note: This has the following deliberate side-effects
+ * - Creates the global (legacy) cookie manager if it does not already exist
+ * - Attempts to add "listeners" to the CoreUtils._canUseCookies property to support the legacy usage
+ * @param config 
+ * @param logger 
+ * @returns 
+ */
+ export function _legacyCookieMgr(config?: IConfiguration, logger?: IDiagnosticLogger): ICookieMgr {
+    let cookieMgr = _gblCookieMgr(config, logger);
+    let legacyCanUseCookies = (CoreUtils as any)._canUseCookies;
+
+    if (_cookieMgrs === null) {
+        _cookieMgrs = [];
+        _canUseCookies = legacyCanUseCookies;
+
+        // Dynamically create get/set property accessors for backward compatibility for enabling / disabling cookies
+        // this WILL NOT work for ES3 browsers (< IE8)
+        objDefineAccessors<boolean>(CoreUtils, "_canUseCookies", 
+            () => {
+                return _canUseCookies;
+            }, 
+            (value) => {
+                _canUseCookies = value;
+                arrForEach(_cookieMgrs, (mgr) => {
+                    mgr.setEnabled(value);
+                });
+            });   
+    }
+
+    if (arrIndexOf(_cookieMgrs, cookieMgr) === -1) {
+        _cookieMgrs.push(cookieMgr);
+    }
+
+    if (isBoolean(legacyCanUseCookies)) {
+        cookieMgr.setEnabled(legacyCanUseCookies);
+    }
+
+    if (isBoolean(_canUseCookies)) {
+        cookieMgr.setEnabled(_canUseCookies);
+    }
+
+    return cookieMgr;
+}
+
+/**
+ * @deprecated - Use the core.getCookieMgr().disable()
+ * Force the SDK not to store and read any data from cookies.
+ */
+export function disableCookies() {
+    _legacyCookieMgr().setEnabled(false);
+}
+
+/**
+ * @deprecated - Use the core.getCookieMgr().isEnabled()
+ * Helper method to tell if document.cookie object is available and whether it can be used.
+ */
+export function canUseCookies(logger: IDiagnosticLogger): any {
+    return _legacyCookieMgr(null, logger).isEnabled();
+}
+
+/**
+ * @deprecated - Use the core.getCookieMgr().get()
+ * helper method to access userId and sessionId cookie
+ */
+export function getCookie(logger: IDiagnosticLogger, name: string) {
+    return _legacyCookieMgr(null, logger).get(name);
+}
+
+/**
+ * @deprecated - Use the core.getCookieMgr().set()
+ * helper method to set userId and sessionId cookie
+ */
+export function setCookie(logger: IDiagnosticLogger, name: string, value: string, domain?: string) {
+    _legacyCookieMgr(null, logger).set(name, value, null, domain);
+}
+
+/**
+ * @deprecated - Use the core.getCookieMgr().del()
+ * Deletes a cookie by setting it's expiration time in the past.
+ * @param name - The name of the cookie to delete.
+ */
+export function deleteCookie(logger: IDiagnosticLogger, name: string) {
+    return _legacyCookieMgr(null, logger).del(name);
+}

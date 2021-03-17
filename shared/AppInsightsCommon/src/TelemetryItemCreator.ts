@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Util } from "./Util";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
 import { ITelemetryItem, IDiagnosticLogger, objForEachKey, isNullOrUndefined, toISOString } from "@microsoft/applicationinsights-core-js";
+import { strNotSpecified } from "./Constants";
 
 export class TelemetryItemCreator {
 
@@ -24,7 +24,7 @@ export class TelemetryItemCreator {
         customProperties?: { [key: string]: any },
         systemProperties?: { [key: string]: any }): ITelemetryItem {
 
-        envelopeName = DataSanitizer.sanitizeString(logger, envelopeName) || Util.NotSpecified;
+        envelopeName = DataSanitizer.sanitizeString(logger, envelopeName) || strNotSpecified;
 
         if (isNullOrUndefined(item) ||
             isNullOrUndefined(baseType) ||

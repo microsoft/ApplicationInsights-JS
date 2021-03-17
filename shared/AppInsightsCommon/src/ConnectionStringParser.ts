@@ -7,41 +7,43 @@ import { ConnectionString, ConnectionStringKey } from "./Interfaces/ConnectionSt
 import { DEFAULT_BREEZE_ENDPOINT } from "./Constants";
 import { arrReduce, objKeys } from "@microsoft/applicationinsights-core-js";
 
-export class ConnectionStringParser {
-    private static _FIELDS_SEPARATOR = ";";
-    private static _FIELD_KEY_VALUE_SEPARATOR = "=";
+const _FIELDS_SEPARATOR = ";";
+const _FIELD_KEY_VALUE_SEPARATOR = "=";
 
-    public static parse(connectionString?: string): ConnectionString {
-        if (!connectionString) {
-            return {};
-        }
-
-        const kvPairs = connectionString.split(ConnectionStringParser._FIELDS_SEPARATOR);
-
-        const result: ConnectionString = arrReduce(kvPairs, (fields: ConnectionString, kv: string) => {
-            const kvParts = kv.split(ConnectionStringParser._FIELD_KEY_VALUE_SEPARATOR);
-
-            if (kvParts.length === 2) { // only save fields with valid formats
-                const key = kvParts[0].toLowerCase() as ConnectionStringKey;
-                const value = kvParts[1];
-                fields[key] = value as string;
-            }
-            return fields;
-        }, {});
-
-        if (objKeys(result).length > 0) {
-            // this is a valid connection string, so parse the results
-
-            if (result.endpointsuffix) {
-                // use endpoint suffix where overrides are not provided
-                const locationPrefix = result.location ? result.location + "." : "";
-                result.ingestionendpoint = result.ingestionendpoint || ("https://" + locationPrefix + "dc." + result.endpointsuffix);
-            }
-
-            // apply the default endpoints
-            result.ingestionendpoint = result.ingestionendpoint || DEFAULT_BREEZE_ENDPOINT;
-        }
-
-        return result;
+export function parseConnectionString(connectionString?: string): ConnectionString {
+    if (!connectionString) {
+        return {};
     }
+
+    const kvPairs = connectionString.split(_FIELDS_SEPARATOR);
+
+    const result: ConnectionString = arrReduce(kvPairs, (fields: ConnectionString, kv: string) => {
+        const kvParts = kv.split(_FIELD_KEY_VALUE_SEPARATOR);
+
+        if (kvParts.length === 2) { // only save fields with valid formats
+            const key = kvParts[0].toLowerCase() as ConnectionStringKey;
+            const value = kvParts[1];
+            fields[key] = value as string;
+        }
+        return fields;
+    }, {});
+
+    if (objKeys(result).length > 0) {
+        // this is a valid connection string, so parse the results
+
+        if (result.endpointsuffix) {
+            // use endpoint suffix where overrides are not provided
+            const locationPrefix = result.location ? result.location + "." : "";
+            result.ingestionendpoint = result.ingestionendpoint || ("https://" + locationPrefix + "dc." + result.endpointsuffix);
+        }
+
+        // apply the default endpoints
+        result.ingestionendpoint = result.ingestionendpoint || DEFAULT_BREEZE_ENDPOINT;
+    }
+
+    return result;
 }
+
+export const ConnectionStringParser = {
+    parse: parseConnectionString
+};

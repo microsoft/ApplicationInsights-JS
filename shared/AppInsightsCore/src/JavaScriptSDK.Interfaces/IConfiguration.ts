@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
 import { IChannelControls } from "./IChannelControls";
+import { ICookieMgrConfig } from "./ICookieMgr";
 
 "use strict";
 
@@ -107,4 +108,35 @@ export interface IConfiguration {
      * Defaults to 22, previous default value was 5, if you need to keep the previous maximum length you should set this value to 5.
      */
     idLength?: number;
+
+    /**
+     * @description Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. It 
+     * can be set here or as part of the cookieCfg.domain, the cookieCfg takes precedence if both are specified.
+     * @type {string}
+     * @memberof IConfig
+     * @defaultValue ""
+     */
+    cookieDomain?: string;
+
+    /**
+     * @description Custom cookie path. This is helpful if you want to share Application Insights cookies behind an application 
+     * gateway. It can be set here or as part of the cookieCfg.domain, the cookieCfg takes precedence if both are specified.
+     * @type {string}
+     * @memberof IConfig
+     * @defaultValue ""
+     */
+    cookiePath?: string;
+
+    /**
+     * [Optional] A boolean that indicated whether to disable the use of cookies by the SDK. If true, the SDK will not store or
+     * read any data from cookies. Cookie usage can be re-enabled after initialization via the core.getCookieMgr().enable().
+     */
+    disableCookiesUsage?: boolean;
+
+    /**
+     * [Optional] A Cookie Manager configuration which includes hooks to allow interception of the get, set and delete cookie 
+     * operations. If this configuration is specified any specified enabled and domain properties will take precedence over the
+     * cookieDomain and disableCookiesUsage values.
+     */
+    cookieCfg?: ICookieMgrConfig;
 }

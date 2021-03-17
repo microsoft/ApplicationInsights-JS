@@ -172,7 +172,7 @@ export class Es3RollupTests extends TestClass {
                     null,
                     "Rectangle.prototype = Object.create(Shape.prototype, propsObj);",
                     "Invalid ES3 function [Object.create(] found on line [1], column [23], position [22] during renderChunk - test.js\n" +
-                    "[Object.create] is not supported in an ES3 environment, use the helper function CoreUtils.objCreate() or add an explicit existence check\n" +
+                    "[Object.create] is not supported in an ES3 environment, use the helper function objCreate() or add an explicit existence check\n" +
                     "\n" +
                     "--------------------=([Object.create(])=--------------------\n"
                     );
@@ -275,7 +275,7 @@ export class Es3RollupTests extends TestClass {
                     "dt.toISOString ();\n" +
                     "Can.toISOString();\n",
                     "Invalid ES3 function [dt.toISOString (] found on line [3], column [1], position [22] during renderChunk - test.js\n" +
-                    "[dt.toISOString (] is not supported in an ES3 environment, use CoreUtils.toISOString()\n" +
+                    "[dt.toISOString (] is not supported in an ES3 environment, use getISOString()\n" +
                     "1   :var dt = new Date();\n" +
                     "2   :\n" +
                     "3   :dt.toISOString ();\n" +
@@ -284,7 +284,7 @@ export class Es3RollupTests extends TestClass {
                     "\n" +
                     "--------------------=([dt.toISOString (])=--------------------\n" +
                     "Invalid ES3 function [Can.toISOString(] found on line [4], column [1], position [41] during renderChunk - test.js\n" +
-                    "[Can.toISOString(] is not supported in an ES3 environment, use CoreUtils.toISOString()\n" +
+                    "[Can.toISOString(] is not supported in an ES3 environment, use getISOString()\n" +
                     "1   :var dt = new Date();\n" +
                     "2   :\n" +
                     "3   :dt.toISOString ();\n" +
@@ -301,7 +301,7 @@ export class Es3RollupTests extends TestClass {
                     "\n" +
                     "arr.forEach(function (value, name) { });\n",
                     "Invalid ES3 function [arr.forEach(] found on line [3], column [1], position [15] during renderChunk - test.js\n" +
-                    "[arr.forEach(] is not a supported array method in an ES3 environment, use CoreUtils.arrForEach().\n" +
+                    "[arr.forEach(] is not a supported array method in an ES3 environment, use arrForEach().\n" +
                     "1   :var arr = [];\n" +
                     "2   :\n" +
                     "3   :arr.forEach(function (value, name) { });\n" +

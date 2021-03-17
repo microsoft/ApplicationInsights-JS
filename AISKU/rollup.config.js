@@ -1,6 +1,7 @@
 import nodeResolve from "@rollup/plugin-node-resolve";
 import { uglify } from "@microsoft/applicationinsights-rollup-plugin-uglify3-js";
 import replace from "@rollup/plugin-replace";
+import cleanup from "rollup-plugin-cleanup";
 import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/node/removedynamic";
 import { es3Poly, es3Check, importCheck } from "@microsoft/applicationinsights-rollup-es3";
 import { updateDistEsmFiles } from "../tools/updateDistEsm/updateDistEsm";
@@ -22,6 +23,16 @@ const replaceValues = {
 
 const majorVersion = version.split('.')[0];
 
+function doCleanup() {
+  return cleanup({
+    comments: [
+      'some', 
+      /^.\s*@DynamicProtoStub/i,
+      /^\*\*\s*@class\s*$/
+    ]
+  })
+}
+
 const browserRollupConfigFactory = (isProduction, libVersion = '2', format = 'umd', postfix = '') => {
   const browserRollupConfig = {
     input: "dist-esm/Init.js",
@@ -37,6 +48,7 @@ const browserRollupConfigFactory = (isProduction, libVersion = '2', format = 'um
     plugins: [
       dynamicRemove(),
       replace({
+        preventAssignment: true,
         delimiters: ["", ""],
         values: replaceValues
       }),
@@ -45,6 +57,7 @@ const browserRollupConfigFactory = (isProduction, libVersion = '2', format = 'um
         browser: false,
         preferBuiltins: false
       }),
+      doCleanup(),
       es3Poly(),
       es3Check()
     ]
@@ -81,16 +94,18 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
       name: "Microsoft.ApplicationInsights",
       extend: true,
       freeze: false,
-      sourcemap: true
+      sourcemap: true,
     },
     plugins: [
       dynamicRemove(),
       replace({
+        preventAssignment: true,
         delimiters: ["", ""],
         values: replaceValues
       }),
       importCheck({ exclude: [ "applicationinsights-web" ] }),
       nodeResolve(),
+      doCleanup(),
       es3Poly(),
       es3Check()
     ]

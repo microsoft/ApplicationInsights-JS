@@ -1,6 +1,6 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 
-import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, createCookieMgr, newId, strTrim } from "@microsoft/applicationinsights-core-js";
 import PropertiesPlugin from "../../src/PropertiesPlugin";
 import { ITelemetryConfig } from "../../src/Interfaces/ITelemetryConfig";
 import { Util, IWeb } from "@microsoft/applicationinsights-common";
@@ -11,11 +11,21 @@ import { TelemetryTrace } from "../../src/Context/TelemetryTrace";
 export class PropertiesTests extends TestClass {
     private properties: PropertiesPlugin;
     private core: AppInsightsCore;
+    private _cookies: { [name: string ]: string } = {};
 
     public testInitialize() {
-        this.core = new AppInsightsCore();
-        this.core.logger = new DiagnosticLogger();
-        this.properties = new PropertiesPlugin();
+        let _self = this;
+        _self._cookies = {};
+        _self.core = new AppInsightsCore();
+        _self.core.logger = new DiagnosticLogger();
+        _self.core.setCookieMgr(createCookieMgr({
+            cookieCfg: {
+                setCookie: (name: string, value: string) => _self._setCookie(name, value),
+                getCookie: (name: string) => _self._getCookie(name),
+                delCookie: (name: string) => _self._delCookie(name)
+            }
+        }, _self.core.logger))
+        _self.properties = new PropertiesPlugin();
     }
 
     public testCleanup() {
@@ -28,6 +38,24 @@ export class PropertiesTests extends TestClass {
         this.addUserTests();
         this.addDeviceTests();
         this.addTelemetryTraceTests();
+    }
+
+    private _setCookie(name: string, value: string) {
+        this._cookies[name] = value;
+    }
+
+    private _getCookie(name: string) {
+        return this._cookies[name] || "";
+    }
+    
+    private _delCookie(name: string) {
+        if (this._cookies.hasOwnProperty(name)) {
+            delete this._cookies[name];
+        }
+    }
+
+    private _getNewId(idLength?: number) {
+        return newId(idLength);
     }
 
     private addTelemetryTraceTests() {
@@ -101,7 +129,7 @@ export class PropertiesTests extends TestClass {
             test: () => {
                 // setup
                 const id = "someUserId";
-                var cookieStub = this.sandbox.stub(Util, "getCookie", () => id + "||||");
+                var cookieStub = this.sandbox.stub(this, "_getCookie", () => id + "||||");
 
                 // Act
                 Assert.ok(cookieStub.notCalled, 'Cookie not yet grabbed');
@@ -117,7 +145,7 @@ export class PropertiesTests extends TestClass {
             name: 'User: track is triggered if user context is first time initialized',
             test: () => {
                 // setup
-                var setCookieStub = this.sandbox.stub(Util, "setCookie", () => {});
+                var setCookieStub = this.sandbox.stub(this, "_setCookie", () => {});
                 var loggingStub = this.sandbox.stub(this.core.logger, "logInternalMessage");
 
                 // Act
@@ -142,74 +170,30 @@ export class PropertiesTests extends TestClass {
                 // setup
                 var actualCookieName: string;
                 var actualCookieValue: string;
-                let newIdPrev = Util.newId;
-                try {
-                    // Not using sinon stub as it's not restoring the previous version properly (getting newId is not a function for tests run after this one)
-                    Util.newId = () => "newId";
-                    var getCookieStub = this.sandbox.stub(Util, "getCookie", () => "");
-                    var setCookieStub = this.sandbox.stub(Util, "setCookie", (logger, cookieName, cookieValue) => {
-                        actualCookieName = cookieName;
-                        actualCookieValue = cookieValue;
-                    });
 
-                    // act
-                    this.properties.initialize(this.getEmptyConfig(), this.core, []);
+                var newIdStub = this.sandbox.stub(this, "_getNewId", () => "newId");
+                var getCookieStub = this.sandbox.stub(this, "_getCookie", () => "");
+                var setCookieStub = this.sandbox.stub(this, "_setCookie", (cookieName, cookieValue) => {
+                    actualCookieName = cookieName;
+                    actualCookieValue = cookieValue;
+                });
 
-                    // verify
-                    Assert.equal("ai_user", actualCookieName, "ai_user cookie is set");
-                    var cookieValueParts = actualCookieValue.split(';');
+                // act
+                this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
-                    Assert.equal(2, cookieValueParts.length, "ai_user cookie value should have actual value and expiration");
-                    Assert.equal(2, cookieValueParts[0].split('|').length, "ai_user cookie value before expiration should include user id and acq date");
-                    Assert.equal("newId", cookieValueParts[0].split('|')[0], "First part of ai_user cookie value should be new user id guid");
-                    Assert.equal(new Date().toString(), (new Date(cookieValueParts[0].split('|')[1])).toString(), "Second part of ai_user cookie should be parsable as date");
+                // verify
+                Assert.equal("ai_user", actualCookieName, "ai_user cookie is set");
+                var cookieValueParts = actualCookieValue.split(';');
 
-                    var expiration = cookieValueParts[1];
-                    Assert.equal(true, expiration.substr(0, "expires=".length) === "expires=", "ai_user cookie expiration part should start with expires=");
-                    var expirationDate = new Date(expiration.substr("expires=".length));
-                    Assert.equal(true, expirationDate > (new Date), "ai_user cookie expiration should be in the future");
-                } finally {
-                    Util.newId = newIdPrev;
-                }
-            }
-        });
+                Assert.equal(4, cookieValueParts.length, "ai_user cookie value should have actual value and expiration");
+                Assert.equal(2, cookieValueParts[0].split('|').length, "ai_user cookie value before expiration should include user id and acq date");
+                Assert.equal("newId", cookieValueParts[0].split('|')[0], "First part of ai_user cookie value should be new user id guid");
+                Assert.equal(new Date().toString(), (new Date(cookieValueParts[0].split('|')[1])).toString(), "Second part of ai_user cookie should be parsable as date");
 
-        this.testCase({
-            name: "ai_user cookie is set with acq date and year expiration",
-            test: () => {
-                // setup
-                var id = "userId"
-                var actualCookieName: string;
-                var actualCookieValue: string;
-                let newIdPrev = Util.newId;
-                try {
-                    // Not using sinon stub as it's not restoring the previous version properly (getting newId is not a function for tests run after this one)
-                    Util.newId = () => "newId";
-                    var getCookieStub = this.sandbox.stub(Util, "getCookie", () => "");
-                    var setCookieStub = this.sandbox.stub(Util, "setCookie", (logger, cookieName, cookieValue) => {
-                        actualCookieName = cookieName;
-                        actualCookieValue = cookieValue;
-                    });
-    
-                    // act
-                    this.properties.initialize(this.getEmptyConfig(), this.core, []);
-    
-                    // verify
-                    Assert.equal("ai_user", actualCookieName, "ai_user cookie is set");
-                    var cookieValueParts = actualCookieValue.split(';');
-    
-                    Assert.equal(2, cookieValueParts.length, "ai_user cookie value should have actual value and expiration");
-                    Assert.equal(2, cookieValueParts[0].split('|').length, "ai_user cookie value before expiration should include user id and acq date");
-                    Assert.equal("newId", cookieValueParts[0].split('|')[0], "First part of ai_user cookie value should be new user id guid");
-                    Assert.equal(new Date().toString(), (new Date(cookieValueParts[0].split('|')[1])).toString(), "Second part of ai_user cookie should be parsable as date");
-    
-                    var expiration = cookieValueParts[1];
-                    Assert.equal(true, expiration.substr(0, "expires=".length) === "expires=", "ai_user cookie expiration part should start with expires=");
-                    var expirationDate = new Date(expiration.substr("expires=".length));
-                    Assert.equal(true, expirationDate > (new Date), "ai_user cookie expiration should be in the future");
-                } finally {
-                    Util.newId = newIdPrev;
-                }
+                var expiration = strTrim(cookieValueParts[1]);
+                Assert.equal(true, expiration.substr(0, "expires=".length) === "expires=", "ai_user cookie expiration part should start with expires=");
+                var expirationDate = new Date(expiration.substr("expires=".length));
+                Assert.equal(true, expirationDate > (new Date), "ai_user cookie expiration should be in the future");
             }
         });
 
@@ -220,7 +204,7 @@ export class PropertiesTests extends TestClass {
                 var authId = "bla@bla.com";
                 var accountId = "Contoso";
 
-                var cookieStub = this.sandbox.stub(Util, "getCookie", () => authId + "|" + accountId);
+                var cookieStub = this.sandbox.stub(this, "_getCookie", () => authId + "|" + accountId);
 
                 // act
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
@@ -236,7 +220,7 @@ export class PropertiesTests extends TestClass {
             test: () => {
                 // setup
                 var authId = "bla@bla.com";
-                var cookieStub = this.sandbox.stub(Util, "getCookie", () => authId);
+                var cookieStub = this.sandbox.stub(this, "_getCookie", () => authId);
 
                 // act
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
@@ -250,7 +234,7 @@ export class PropertiesTests extends TestClass {
             name: "Ctor: auth user context handles empty cookie",
             test: () => {
                 // setup
-                var cookieStub = this.sandbox.stub(Util, "getCookie", () => "");
+                var cookieStub = this.sandbox.stub(this, "_getCookie", () => "");
 
                 // act
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
@@ -268,7 +252,7 @@ export class PropertiesTests extends TestClass {
                 var config = this.getEmptyConfig();
                 config.extensionConfig.AppInsightsPropertiesPlugin.accountId = "account17";
 
-                var cookieStub = this.sandbox.stub(Util, "getCookie", () => null);
+                var cookieStub = this.sandbox.stub(this, "_getCookie", () => null);
 
                 // act
                 this.properties.initialize(config, this.core, []);
@@ -284,7 +268,7 @@ export class PropertiesTests extends TestClass {
                 // setup
                 var authAndAccountId = ['bla@bla.com', 'contoso'];
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
-                var cookieStub = this.sandbox.stub(Util, "setCookie");
+                var cookieStub = this.sandbox.stub(this, "_setCookie");
 
                 // act
                 this.properties.context.user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
@@ -301,7 +285,7 @@ export class PropertiesTests extends TestClass {
             test: () => {
                 // setup
                 var authAndAccountId = ["bla@bla.com"];
-                var cookieStub = this.sandbox.stub(Util, "setCookie");
+                var cookieStub = this.sandbox.stub(this, "_setCookie");
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
                 // act
@@ -309,7 +293,7 @@ export class PropertiesTests extends TestClass {
 
                 // verify
                 Assert.equal(authAndAccountId[0], this.properties.context.user.authenticatedId, "user auth id was set");
-                Assert.equal(cookieStub.calledWithExactly(this.core.logger, 'ai_authUser', encodeURI(authAndAccountId.join('|')), null), true, "user auth id and account id cookie was set");
+                Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId.join('|')) + "; path=/"), true, "user auth id and account id cookie was set");
             }
         });
 
@@ -318,7 +302,7 @@ export class PropertiesTests extends TestClass {
             test: () => {
                 // setup
                 var authAndAccountId = ['bla@bla.com', 'contoso'];
-                var cookieStub = this.sandbox.stub(Util, "setCookie");
+                var cookieStub = this.sandbox.stub(this, "_setCookie");
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
                 // act
@@ -326,7 +310,7 @@ export class PropertiesTests extends TestClass {
 
                 // verify
                 Assert.equal(authAndAccountId[0], this.properties.context.user.authenticatedId, "user auth id was set");
-                Assert.equal(cookieStub.calledWithExactly(this.core.logger, 'ai_authUser', encodeURI(authAndAccountId.join('|')), null), true, "user auth id cookie was set");
+                Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId.join('|')) + "; path=/"), true, "user auth id cookie was set");
             }
         });
 
@@ -335,7 +319,7 @@ export class PropertiesTests extends TestClass {
             test: () => {
                 // setup
                 var authAndAccountId = ['bla@bla.com'];
-                var cookieStub = this.sandbox.stub(Util, "setCookie");
+                var cookieStub = this.sandbox.stub(this, "_setCookie");
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
                 // act
@@ -344,7 +328,7 @@ export class PropertiesTests extends TestClass {
                 // verify
                 Assert.equal(authAndAccountId[0], this.properties.context.user.authenticatedId, "user auth id was set");
                 Assert.equal(null, this.properties.context.user.accountId, "user account id was not set");
-                Assert.equal(cookieStub.calledWithExactly(this.core.logger, 'ai_authUser', encodeURI(authAndAccountId[0]), null), true, "user auth id cookie was set");
+                Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId[0]) + "; path=/"), true, "user auth id cookie was set");
             }
         });
 
@@ -352,7 +336,7 @@ export class PropertiesTests extends TestClass {
             name: "setAuthenticatedUserContext: handles null correctly",
             test: () => {
                 // setup
-                var cookieStub = this.sandbox.stub(Util, "setCookie");
+                var cookieStub = this.sandbox.stub(this, "_setCookie");
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
                 cookieStub.reset();
@@ -373,7 +357,7 @@ export class PropertiesTests extends TestClass {
             name: "setAuthenticatedUserContext: handles undefined correctly",
             test: () => {
                 // setup
-                var cookieStub = this.sandbox.stub(Util, "setCookie");
+                var cookieStub = this.sandbox.stub(this, "_setCookie");
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
                 cookieStub.reset();
@@ -394,7 +378,7 @@ export class PropertiesTests extends TestClass {
             name: "setAuthenticatedUserContext: handles only accountID correctly",
             test: () => {
                 // setup
-                var cookieStub = this.sandbox.stub(Util, "setCookie");
+                var cookieStub = this.sandbox.stub(this, "_setCookie");
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
                 cookieStub.reset();
@@ -417,7 +401,7 @@ export class PropertiesTests extends TestClass {
                 // setup
                 var authAndAccountId = ['my|||special;id', '1234'];
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
-                var cookieStub = this.sandbox.stub(Util, "setCookie");
+                var cookieStub = this.sandbox.stub(this, "_setCookie");
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
 
                 // act
@@ -438,7 +422,7 @@ export class PropertiesTests extends TestClass {
                 var authAndAccountId = ['myid', '1234 5678'];
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
                 this.properties.context.user.clearAuthenticatedUserContext();
-                var cookieStub = this.sandbox.stub(Util, "setCookie");
+                var cookieStub = this.sandbox.stub(this, "_setCookie");
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
 
                 // act
@@ -458,7 +442,7 @@ export class PropertiesTests extends TestClass {
                 // setup
                 var authAndAccountId = ["\u05D0", "\u05D1"]; // Hebrew characters
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
-                var cookieStub = this.sandbox.stub(Util, "setCookie");
+                var cookieStub = this.sandbox.stub(this, "_setCookie");
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
 
                 // act
@@ -467,7 +451,7 @@ export class PropertiesTests extends TestClass {
                 // verify
                 Assert.equal(authAndAccountId[0], this.properties.context.user.authenticatedId, "user auth id was set");
                 Assert.equal(authAndAccountId[1], this.properties.context.user.accountId, "user account id was set");
-                Assert.equal(cookieStub.calledWithExactly(this.core.logger, 'ai_authUser', encodeURI(authAndAccountId.join('|')), null), true, "user auth id cookie was set");
+                Assert.equal(cookieStub.calledWithExactly('ai_authUser', encodeURI(authAndAccountId.join('|')) + "; path=/"), true, "user auth id cookie was set");
                 Assert.equal(loggingStub.notCalled, true, "No warnings");
             }
         });
@@ -478,7 +462,7 @@ export class PropertiesTests extends TestClass {
                 // setup
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
                 this.properties.context.user.setAuthenticatedUserContext("bla", "123");
-                var cookieStub = this.sandbox.stub(Util, "deleteCookie");
+                var cookieStub = this.sandbox.stub(this, "_delCookie");
 
                 // act
                 this.properties.context.user.clearAuthenticatedUserContext();
@@ -486,7 +470,7 @@ export class PropertiesTests extends TestClass {
                 // verify
                 Assert.equal(undefined, this.properties.context.user.authenticatedId, "user auth id was cleared");
                 Assert.equal(undefined, this.properties.context.user.accountId, "user account id was cleared");
-                Assert.equal(cookieStub.calledWithExactly(this.core.logger, 'ai_authUser'), true, "cookie was deleted");
+                Assert.equal(cookieStub.calledWithExactly('ai_authUser'), true, "cookie was deleted");
             }
         });
 
@@ -495,7 +479,7 @@ export class PropertiesTests extends TestClass {
             test: () => {
                 // setup
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
-                var cookieStub = this.sandbox.stub(Util, "deleteCookie");
+                var cookieStub = this.sandbox.stub(this, "_delCookie");
 
                 // act
                 this.properties.context.user.clearAuthenticatedUserContext();
@@ -503,7 +487,7 @@ export class PropertiesTests extends TestClass {
                 // verify
                 Assert.equal(undefined, this.properties.context.user.authenticatedId, "user auth id was cleared");
                 Assert.equal(undefined, this.properties.context.user.accountId, "user account id was cleared");
-                Assert.equal(cookieStub.calledWithExactly(this.core.logger, 'ai_authUser'), true, "cookie was deleted");
+                Assert.equal(cookieStub.calledWithExactly('ai_authUser'), true, "cookie was deleted");
             }
         });
 
@@ -621,17 +605,17 @@ export class PropertiesTests extends TestClass {
                 };
                 // Setup
                 let cookie = "";
-                const cookieStub: SinonStub = this.sandbox.stub(Util, 'setCookie', (logger, cookieName, value, domain) => {
+                const cookieStub: SinonStub = this.sandbox.stub(this.core.getCookieMgr(), 'set', (cookieName, value, maxAge, domain, path) => {
                     cookie = cookieName;
                 });
 
                 // Act
-                const sessionManager = new _SessionManager(config);
+                const sessionManager = new _SessionManager(config, this.core);
                 sessionManager.update();
 
                 // Test
                 Assert.ok(cookieStub.called, 'cookie set');
-                Assert.equal('ai_session' + sessionPrefix, cookie, 'Correct cookie name when name prefix is provided');
+                Assert.equal('ai_session' + sessionPrefix, cookie, 'Correct cookie name when name prefix is provided - [' + cookie + ']');
             }
         });
     }
@@ -657,9 +641,10 @@ export class PropertiesTests extends TestClass {
                     isBeaconApiDisabled: null,
                     sdkExtension: null,
                     isBrowserLinkTrackingEnabled: null,
-                    appId: null
+                    appId: null,
+                    getNewId: (idLength?: number) => this._getNewId(idLength)
                 }
-            },
+            }
         };
     }
 
@@ -670,12 +655,13 @@ export class PropertiesTests extends TestClass {
             sessionRenewalMs: () => 1000,
             samplingPercentage: () => 0,
             sessionExpirationMs: () => 1000,
-            cookieDomain: () => "",
+            cookieDomain: () => null,
             sdkExtension: () => "",
             isBrowserLinkTrackingEnabled: () => true,
             appId: () => "",
             namePrefix: () => "",
-            idLength: () => 22
+            idLength: () => 22,
+            getNewId: () => this._getNewId
         }
     }
 }

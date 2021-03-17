@@ -10,9 +10,18 @@ const strAttachEvent = "attachEvent";
 const strAddEventHelper = "addEventListener";
 const strDetachEvent = "detachEvent";
 const strRemoveEventListener = "removeEventListener";
+const strHasOwnProperty = "hasOwnProperty";
+
+const ObjClass = Object;
+const ObjProto = ObjClass[strShimPrototype];
+const _objHasOwnProperty = ObjProto[strHasOwnProperty];
+const _objDefineProperty = ObjClass["defineProperty"];
+const _objAssign = ObjClass["assign"];
+const _objFreeze = ObjClass["freeze"];
+const _objSeal = ObjClass["seal"];
 
 export function objToString(obj: any) {
-    return Object[strShimPrototype].toString.call(obj);
+    return ObjProto.toString.call(obj);
 }
 
 export function isTypeof(value: any, theType: string): boolean {
@@ -20,23 +29,33 @@ export function isTypeof(value: any, theType: string): boolean {
 };
 
 export function isUndefined(value: any): boolean {
-    return isTypeof(value, strShimUndefined) || value === undefined;
+    return value === undefined || typeof value === strShimUndefined;
 };
 
+export function isNotUndefined(value: any): boolean {
+    return !isUndefined(value);
+}
+
 export function isNullOrUndefined(value: any): boolean {
-    return (isUndefined(value) || value === null);
+    return (value === null || isUndefined(value));
+}
+
+export function isNotNullOrUndefined(value: any): boolean {
+    return !isNullOrUndefined(value);
 }
 
 export function hasOwnProperty(obj: any, prop: string): boolean {
-    return obj && Object[strShimPrototype].hasOwnProperty.call(obj, prop);
+    return obj && _objHasOwnProperty.call(obj, prop);
 };
 
 export function isObject(value: any): boolean {
-    return isTypeof(value, strShimObject);
+    // Changing to inline for performance
+    return typeof value === strShimObject;
 };
 
 export function isFunction(value: any): value is Function {
-    return isTypeof(value, strShimFunction);
+    // Changing to inline for performance
+    return typeof value === strShimFunction;
 };
 
 /**
@@ -113,9 +132,9 @@ export function normalizeJsName(name: string): string {
  * @param callbackfn The function to call with the details
  */
 export function objForEachKey(target: any, callbackfn: (name: string, value: any) => void) {
-    if (target && isObject(target)) {
+    if (target) {
         for (let prop in target) {
-            if (hasOwnProperty(target, prop)) {
+            if (_objHasOwnProperty.call(target, prop)) {
                 callbackfn.call(target, prop, target[prop]);
             }
         }
@@ -130,13 +149,51 @@ export function objForEachKey(target: any, callbackfn: (name: string, value: any
  */
 export function strEndsWith(value: string, search: string) {
     if (value && search) {
-        let len = value.length;
-        let start = len - search.length;
-        return value.substring(start >= 0 ? start : 0, len) === search;
+        let searchLen = search.length;
+        let valLen = value.length;
+        if (value === search) {
+            return true;
+        } else if (valLen >= searchLen) {
+            let pos = valLen - 1;
+            for (let lp = searchLen - 1; lp >= 0; lp--) {
+                if (value[pos] != search[lp]) {
+                    return false;
+                }
+                pos--;
+            }
+
+            return true;
+        }
     }
 
     return false;
 }    
+
+/**
+ * The strStartsWith() method determines whether a string starts with the characters of the specified string, returning true or false as appropriate.
+ * @param value - The value to check whether it ends with the search value.
+ * @param checkValue - The characters to be searched for at the start of the value.
+  * @returns true if the given search value is found at the start of the string, otherwise false.
+*/
+export function strStartsWith(value: string, checkValue: string) {
+    // Using helper for performance and because string startsWith() is not available on IE
+    let result = false;
+    if (value && checkValue) {
+        let chkLen = checkValue.length;
+        if (value === checkValue) {
+            return true;
+        } else if (value.length >= chkLen) {
+            for (let lp = 0; lp < chkLen; lp++) {
+                if (value[lp] !== checkValue[lp]) {
+                    return false;
+                }
+            }
+            result = true;
+        }
+    }
+
+    return result;
+}
 
 /**
  * A simple wrapper (for minification support) to check if the value contains the search string.
@@ -168,7 +225,7 @@ export function isArray(obj: any): boolean {
 /**
  * Check if an object is of type Error
  */
-export function isError(obj: any): boolean {
+export function isError(obj: any): obj is Error {
     return objToString(obj) === "[object Error]";
 }
 
@@ -178,7 +235,8 @@ export function isError(obj: any): boolean {
  * @return {boolean} True if the value is a string, false otherwise.
  */
 export function isString(value: any): value is string {
-    return isTypeof(value, "string");
+    // Changing to inline for performance
+    return typeof value === "string";
 }
 
 /**
@@ -187,7 +245,8 @@ export function isString(value: any): value is string {
  * @return {boolean} True if the value is a number, false otherwise.
  */
 export function isNumber(value: any): value is number {
-    return isTypeof(value, "number");
+    // Changing to inline for performance
+    return typeof value === "number";
 }
 
 /**
@@ -196,7 +255,8 @@ export function isNumber(value: any): value is number {
  * @return {boolean} True if the value is a boolean, false otherwise.
  */
 export function isBoolean(value: any): value is boolean {
-    return isTypeof(value, "boolean");
+    // Changing to inline for performance
+    return typeof value === "boolean";
 }
 
 /**
@@ -323,12 +383,23 @@ export function arrReduce<T, R>(arr: T[], callbackfn: (previousValue: T | R, cur
  * helper method to trim strings (IE8 does not implement String.prototype.trim)
  */
 export function strTrim(str: any): string {
-    if (!isString(str)) {
+    if (typeof str !== "string") {
         return str;
     }
 
     return str.replace(/^\s+|\s+$/g, "");
 }
+
+let _objKeysHasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString');
+let _objKeysDontEnums = [
+    'toString',
+    'toLocaleString',
+    'valueOf',
+    'hasOwnProperty',
+    'isPrototypeOf',
+    'propertyIsEnumerable',
+    'constructor'
+];
 
 /**
  * Returns the names of the enumerable string properties and methods of an object. This helper exists to avoid adding a polyfil for older browsers 
@@ -337,35 +408,26 @@ export function strTrim(str: any): string {
  * @param obj Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
  */
 export function objKeys(obj: {}): string[] {
-    var hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString');
+    var objType = typeof obj;
 
-    if (!isFunction(obj) && (!isObject(obj) || obj === null)) {
+    if (objType !== strShimFunction && (objType !== strShimObject || obj === null)) {
         throw new TypeError('objKeys called on non-object');
     }
 
     let result: string[] = [];
 
     for (let prop in obj) {
-        if (hasOwnProperty(obj, prop)) {
+        if (obj && _objHasOwnProperty.call(obj, prop)) {
             result.push(prop);
         }
     }
 
-    if (hasDontEnumBug) {
-        let dontEnums = [
-            'toString',
-            'toLocaleString',
-            'valueOf',
-            'hasOwnProperty',
-            'isPrototypeOf',
-            'propertyIsEnumerable',
-            'constructor'
-        ];
-        let dontEnumsLength = dontEnums.length;
+    if (_objKeysHasDontEnumBug) {
+        let dontEnumsLength = _objKeysDontEnums.length;
 
         for (let lp = 0; lp < dontEnumsLength; lp++) {
-            if (hasOwnProperty(obj, dontEnums[lp])) {
-                result.push(dontEnums[lp]);
+            if (obj && _objHasOwnProperty.call(obj, _objKeysDontEnums[lp])) {
+                result.push(_objKeysDontEnums[lp]);
             }
         }
     }
@@ -384,8 +446,7 @@ export function objKeys(obj: {}): string[] {
  * @returns True if it was able to create the accessors otherwise false
  */
 export function objDefineAccessors<T>(target: any, prop: string, getProp?: () => T, setProp?: (v: T) => void): boolean {
-    let defineProp = Object["defineProperty"];
-    if (defineProp) {
+    if (_objDefineProperty) {
         try {
             let descriptor: PropertyDescriptor = {
                 enumerable: true,
@@ -399,7 +460,7 @@ export function objDefineAccessors<T>(target: any, prop: string, getProp?: () =>
                 descriptor.set = setProp;
             }
 
-            defineProp(target, prop, descriptor);
+            _objDefineProperty(target, prop, descriptor);
             return true;
         } catch (e) {
             // IE8 Defines a defineProperty on Object but it's only supported for DOM elements so it will throw
@@ -408,6 +469,22 @@ export function objDefineAccessors<T>(target: any, prop: string, getProp?: () =>
     }
 
     return false;
+}
+
+export function objFreeze<T>(value: T): T {
+    if (_objFreeze) {
+        value = _objFreeze(value) as T;
+    }
+
+    return value;
+}
+
+export function objSeal<T>(value: T): T {
+    if (_objSeal) {
+        value = _objSeal(value) as T;
+    }
+
+    return value;
 }
 
 /**
@@ -464,7 +541,20 @@ export function setValue<T, K extends keyof T>(target: T, field: K, value: T[K],
  * @param defValue - [Optional] The value to set if not already present, when not provided a empty object will be added
  */
 export function getSetValue<T, K extends keyof T>(target: T, field: K, defValue?: T[K]): T[K] {
-    return setValue(target, field, !isUndefined(defValue) ? defValue : {} as any, null, isNullOrUndefined);
+    let theValue;
+    if (target) {
+        theValue = target[field];
+        if (!theValue && isNullOrUndefined(theValue)) {
+            // Supports having the default as null
+            theValue = !isUndefined(defValue) ? defValue : {} as any;
+            target[field] = theValue;
+        }
+    } else {
+        // Expanded for performance so we only check defValue if required
+        theValue = !isUndefined(defValue) ? defValue : {} as any;
+    }
+
+    return theValue;
 }
 
 export function isNotTruthy(value: any) {
@@ -475,7 +565,7 @@ export function isTruthy(value: any) {
     return !!value;
 }
 
-export function throwError(message: string) {
+export function throwError(message: string): never {
     throw new Error(message);
 }
 
@@ -551,4 +641,21 @@ export function createClassFromInterface<T>(defaults?: T) {
             }
         }
     } as new () => T;
+}
+
+/**
+ * A helper function to assist with JIT performance for objects that have properties added / removed dynamically
+ * this is primarily for chromium based browsers and has limited effects on Firefox and none of IE. Only call this
+ * function after you have finished "updating" the object, calling this within loops reduces or defeats the benefits.
+ * This helps when iterating using for..in, objKeys() and objForEach()
+ * @param theObject - The object to be optimized if possible
+ */
+export function optimizeObject<T>(theObject: T): T {
+    // V8 Optimization to cause the JIT compiler to create a new optimized object for looking up the own properties
+    // primarily for object with <= 19 properties for >= 20 the effect is reduced or non-existent
+    if (theObject) {
+        theObject = ObjClass(_objAssign ? _objAssign({}, theObject) : theObject);
+    }
+
+    return theObject;
 }

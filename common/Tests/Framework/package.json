@@ -45,6 +45,6 @@
         "sinon": "^7.3.1"
     },
     "dependencies": {
-        "@microsoft/dynamicproto-js": "^1.1.0"
+        "@microsoft/dynamicproto-js": "^1.1.1"
     }
 }

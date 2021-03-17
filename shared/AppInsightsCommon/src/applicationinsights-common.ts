@@ -2,11 +2,15 @@
 // Licensed under the MIT License.
 
 import '@microsoft/applicationinsights-shims';
-export { Util, CorrelationIdHelper, UrlHelper, IDateTimeUtils, DateTimeUtils, dateTimeUtilsNow, dateTimeUtilsDuration } from './Util';
-export { ConnectionStringParser } from './ConnectionStringParser';
+export { 
+    IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper,
+    IDateTimeUtils, DateTimeUtils, dateTimeUtilsNow, dateTimeUtilsDuration,
+    IUrlHelper, UrlHelper, isInternalApplicationInsightsEndpoint
+} from './Util';
+export { parseConnectionString, ConnectionStringParser } from './ConnectionStringParser';
 export { FieldType } from './Enums';
-export { RequestHeaders } from './RequestResponseHeaders';
-export { DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT } from './Constants';
+export { IRequestHeaders, RequestHeaders } from './RequestResponseHeaders';
+export { DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, strNotSpecified } from './Constants';
 export { Data as AIData } from './Interfaces/Contracts/Generated/Data';
 export { Base as AIBase } from './Interfaces/Contracts/Generated/Base';
 export { ISerializable } from './Interfaces/Telemetry/ISerializable';
@@ -50,8 +54,13 @@ export { IPropertiesPlugin } from './Interfaces/IPropertiesPlugin';
 export { IUser, IUserContext } from './Interfaces/Context/IUser';
 export { ITelemetryTrace, ITraceState } from './Interfaces/Context/ITelemetryTrace';
 export { DistributedTracingModes } from './Enums';
-export { stringToBoolOrDefault, msToTimeSpan } from './HelperFuncs';
+export { stringToBoolOrDefault, msToTimeSpan, isBeaconApiSupported, getExtensionByName, isCrossOriginError } from './HelperFuncs';
 export { createDomEvent } from './DomHelperFuncs';
+export { 
+    utlDisableStorage, utlCanUseLocalStorage, utlGetLocalStorage, utlSetLocalStorage, utlRemoveStorage, 
+    utlCanUseSessionStorage, utlGetSessionStorageKeys, utlGetSessionStorage, utlSetSessionStorage, utlRemoveSessionStorage
+} from './StorageHelperFuncs';
+export { urlParseUrl, urlGetAbsoluteUrl, urlGetPathName, urlGetCompleteUrl, urlParseHost, urlParseFullHost } from './UrlHelperFuncs';
 export const PropertiesPluginIdentifier = "AppInsightsPropertiesPlugin";
 export const BreezeChannelIdentifier = "AppInsightsChannelPlugin";
 export const AnalyticsPluginIdentifier = "ApplicationInsightsAnalytics";

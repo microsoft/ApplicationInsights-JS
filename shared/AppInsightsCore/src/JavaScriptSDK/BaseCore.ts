@@ -19,7 +19,9 @@ import { initializePlugins, sortPlugins } from './TelemetryHelpers';
 import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
 import { PerfManager } from "./PerfManager";
-import { arrForEach, isNullOrUndefined, isUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy } from "./HelperFuncs";
+import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
+import { createCookieMgr } from "./CookieMgr";
+import { arrForEach, isNullOrUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy } from "./HelperFuncs";
 import { strExtensionConfig, strIKey } from "./Constants";
 
 const validationError = "Extensions must provide callback to initialize";
@@ -40,6 +42,7 @@ export class BaseCore implements IAppInsightsCore {
         let _channelController: ChannelController;
         let _notificationManager: INotificationManager;
         let _perfManager: IPerfManager;
+        let _cookieManager: ICookieMgr;
     
         dynamicProto(BaseCore, this, (_self) => {
             _self._extensions = new Array<IPlugin>();
@@ -67,7 +70,6 @@ export class BaseCore implements IAppInsightsCore {
 
                 // For backward compatibility only
                 _self[strNotificationManager] = notificationManager;
-               
                 _self.config = config || {};
 
                 config.extensions = isNullOrUndefined(config.extensions) ? [] : config.extensions;
@@ -199,6 +201,18 @@ export class BaseCore implements IAppInsightsCore {
                 return _notificationManager;
             };
         
+            _self.getCookieMgr = (): ICookieMgr => {
+                if (!_cookieManager) {
+                    _cookieManager = createCookieMgr(_self.config, _self.logger);
+                }
+
+                return _cookieManager;
+            };
+
+            _self.setCookieMgr = (cookieMgr: ICookieMgr) => {
+                _cookieManager = cookieMgr;
+            };
+
             _self.getPerfMgr = (): IPerfManager => {
                 if (!_perfManager) {
                     if (_self.config &&  _self.config.enablePerfMgr) {
@@ -250,6 +264,22 @@ export class BaseCore implements IAppInsightsCore {
     public getNotifyMgr(): INotificationManager {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
+    }
+
+    /**
+     * Get the current cookie manager for this instance
+     */
+    public getCookieMgr(): ICookieMgr {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+
+    /**
+     * Set the current cookie manager for this instance
+     * @param cookieMgr - The manager, if set to null/undefined will cause the default to be created
+     */
+    public setCookieMgr(cookieMgr: ICookieMgr) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     public getPerfMgr(): IPerfManager {

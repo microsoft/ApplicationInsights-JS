@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IConfiguration, isNullOrUndefined } from '@microsoft/applicationinsights-core-js';
+import { IConfiguration, ICookieMgrConfig, isNullOrUndefined } from '@microsoft/applicationinsights-core-js';
 import { DistributedTracingModes } from '../Enums';
 
 /**
@@ -189,12 +189,23 @@ export interface IConfig {
     enableSessionStorageBuffer?: boolean;
 
     /**
-     * @description If true, the SDK will not store or read any data from cookies. Default is false.
+     * @deprecated Use either disableCookiesUsage or specify a cookieMgrCfg with the enabled value set.
+     * If true, the SDK will not store or read any data from cookies. Default is false. As this field is being deprecated, when both 
+     * isCookieUseDisabled and disableCookiesUsage are used disableCookiesUsage will take precedent.
      * @type {boolean}
      * @memberof IConfig
      * @defaultValue false
      */
     isCookieUseDisabled?: boolean;
+
+    /**
+     * If true, the SDK will not store or read any data from cookies. Default is false.
+     * If you have also specified a cookieMgrCfg then enabled property (if specified) will take precedent over this value.
+     * @type {boolean}
+     * @memberof IConfig
+     * @defaultValue false
+     */
+    disableCookiesUsage?: boolean;
 
     /**
      * @description Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains.
@@ -203,6 +214,21 @@ export interface IConfig {
      * @defaultValue ""
      */
     cookieDomain?: string;
+
+    /**
+     * @description Custom cookie path. This is helpful if you want to share Application Insights cookies behind an application gateway.
+     * @type {string}
+     * @memberof IConfig
+     * @defaultValue ""
+     */
+    cookiePath?: string;
+
+    /**
+     * [Optional] A Cookie Manager configuration which includes hooks to allow interception of the get, set and delete cookie 
+     * operations. If this configuration is specified any specified enabled and domain properties will take precedence over the
+     * cookieDomain and disableCookiesUsage values.
+     */
+    cookieMgrCfg?: ICookieMgrConfig;
 
     /** 
      * Default false. If false, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error), 503 (service unavailable), and 0 (offline, only if detected)

@@ -7,6 +7,7 @@ import { IDiagnosticLogger } from "../JavaScriptSDK.Interfaces/IDiagnosticLogger
 import { hasJSON, getJSON, getConsole } from "./EnvUtils";
 import dynamicProto from '@microsoft/dynamicproto-js';
 import { isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
+import { IAppInsightsCore } from "../JavaScriptSDK.Interfaces/IAppInsightsCore";
 
 /**
  * For user non actionable traces use AI Internal prefix.
@@ -57,6 +58,10 @@ export class _InternalLogMessage{
 
         _self.message += diagnosticText;
     }
+}
+
+export function safeGetLogger(core: IAppInsightsCore, config?: IConfiguration): IDiagnosticLogger {
+    return (core || {} as any).logger || new DiagnosticLogger(config);
 }
 
 export class DiagnosticLogger implements IDiagnosticLogger {

@@ -5,7 +5,7 @@ import {
     IEventTelemetry, IEnvelope, ProcessLegacy
 } from "@microsoft/applicationinsights-common";
 import { Snippet, Initialization as ApplicationInsights } from "./Initialization";
-import { ITelemetryItem, IDiagnosticLogger, IConfiguration, proxyAssign } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, IDiagnosticLogger, IConfiguration, proxyAssign, throwError } from "@microsoft/applicationinsights-core-js";
 
 // This is an exclude list of properties that should not be updated during initialization
 // They include a combination of private and internal property names
@@ -172,7 +172,7 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
     }
 
     downloadAndSetup?(config: IConfig): void {
-        throw new Error("downloadAndSetup not implemented in web SKU");
+        throwError("downloadAndSetup not implemented in web SKU");
     }
 
     public updateSnippetDefinitions(snippet: Snippet) {

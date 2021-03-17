@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Util } from '@microsoft/applicationinsights-common';
-import { IDiagnosticLogger, hasJSON, getJSON, dateNow, dumpObj } from '@microsoft/applicationinsights-core-js';
+import { utlCanUseSessionStorage, utlGetSessionStorage, utlRemoveSessionStorage, utlSetSessionStorage } from '@microsoft/applicationinsights-common';
+import { IDiagnosticLogger, hasJSON, getJSON, dateNow, dumpObj, throwError } from '@microsoft/applicationinsights-core-js';
 
 /**
  * Used to track page visit durations
@@ -67,14 +67,14 @@ export class PageVisitTimeManager {
      */
     public startPageVisitTimer(pageName: string, pageUrl: string) {
         try {
-            if (Util.canUseSessionStorage()) {
-                if (Util.getSessionStorage(this._logger, this.prevPageVisitDataKeyName) != null) {
-                    throw new Error("Cannot call startPageVisit consecutively without first calling stopPageVisit");
+            if (utlCanUseSessionStorage()) {
+                if (utlGetSessionStorage(this._logger, this.prevPageVisitDataKeyName) != null) {
+                    throwError("Cannot call startPageVisit consecutively without first calling stopPageVisit");
                 }
 
                 const currPageVisitData = new PageVisitData(pageName, pageUrl);
                 const currPageVisitDataStr = getJSON().stringify(currPageVisitData);
-                Util.setSessionStorage(this._logger, this.prevPageVisitDataKeyName, currPageVisitDataStr);
+                utlSetSessionStorage(this._logger, this.prevPageVisitDataKeyName, currPageVisitDataStr);
             }
         } catch (e) {
             // TODO: Remove this catch in next phase, since if start is called twice in a row the exception needs to be propagated out
@@ -88,13 +88,13 @@ export class PageVisitTimeManager {
      */
     public stopPageVisitTimer() {
         try {
-            if (Util.canUseSessionStorage()) {
+            if (utlCanUseSessionStorage()) {
 
                 // Define end time of page's visit
                 const pageVisitEndTime = dateNow();
 
                 // Try to retrieve  page name and start time from session storage
-                const pageVisitDataJsonStr = Util.getSessionStorage(this._logger, this.prevPageVisitDataKeyName);
+                const pageVisitDataJsonStr = utlGetSessionStorage(this._logger, this.prevPageVisitDataKeyName);
                 if (pageVisitDataJsonStr && hasJSON()) {
 
                     // if previous page data exists, set end time of visit
@@ -102,7 +102,7 @@ export class PageVisitTimeManager {
                     prevPageVisitData.pageVisitTime = pageVisitEndTime - prevPageVisitData.pageVisitStartTime;
 
                     // Remove data from storage since we already used it
-                    Util.removeSessionStorage(this._logger, this.prevPageVisitDataKeyName);
+                    utlRemoveSessionStorage(this._logger, this.prevPageVisitDataKeyName);
 
                     // Return page visit data
                     return prevPageVisitData;

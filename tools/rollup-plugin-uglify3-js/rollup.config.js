@@ -31,6 +31,7 @@ const nodeUmdRollupConfigFactory = () => {
     },
     plugins: [
       replace({
+        preventAssignment: true,
         delimiters: ["", ""],
         values: {
           "// Copyright (c) Microsoft Corporation. All rights reserved.": "",
@@ -63,6 +64,7 @@ const moduleRollupConfigFactory = (format) => {
     },
     plugins: [
       replace({
+        preventAssignment: true,
         delimiters: ["", ""],
         values: {
           "// Copyright (c) Microsoft Corporation. All rights reserved.": "",

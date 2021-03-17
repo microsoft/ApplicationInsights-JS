@@ -3,97 +3,44 @@
 
 import { StorageType } from "./Enums";
 import {
-    _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin, CoreUtils,
-    getGlobal, getGlobalInst, getDocument, getNavigator, getPerformance, getLocation,
-    getExceptionName as coreGetExceptionName, dumpObj, objForEachKey, strEndsWith,
-    isString, isNullOrUndefined, disableCookies as coreDisableCookies, strTrim, 
-    random32, isArray, isError, isDate, newId, generateW3CId, toISOString, arrForEach, getIEVersion,
-    attachEvent, dateNow
+    _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IPlugin,
+    getGlobal, getGlobalInst, getDocument, getNavigator, getPerformance,
+    getExceptionName as coreGetExceptionName, dumpObj, objForEachKey,
+    isString, isNullOrUndefined, strTrim, random32, isArray, isError, isDate,
+    newId, generateW3CId, toISOString, arrForEach, getIEVersion, attachEvent, 
+    dateNow, uaDisallowsSameSiteNone, disableCookies as coreDisableCookies,
+    canUseCookies as coreCanUseCookies, getCookie as coreGetCookie,
+    setCookie as coreSetCookie, deleteCookie as coreDeleteCookie
 } from "@microsoft/applicationinsights-core-js";
 import { RequestHeaders } from "./RequestResponseHeaders";
 import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 import { createDomEvent } from './DomHelperFuncs';
-import { stringToBoolOrDefault, msToTimeSpan } from "./HelperFuncs";
+import { stringToBoolOrDefault, msToTimeSpan, isBeaconApiSupported, isCrossOriginError, getExtensionByName } from "./HelperFuncs";
+import { strNotSpecified } from "./Constants";
+import { utlCanUseLocalStorage, utlCanUseSessionStorage, utlDisableStorage, utlGetSessionStorage, utlGetSessionStorageKeys, utlGetLocalStorage, utlRemoveSessionStorage, utlRemoveStorage, utlSetSessionStorage, utlSetLocalStorage } from "./StorageHelperFuncs";
+import { urlGetAbsoluteUrl, urlGetCompleteUrl, urlGetPathName, urlParseFullHost, urlParseHost, urlParseUrl } from "./UrlHelperFuncs";
 
-let _navigator = getNavigator();
-let _uaDisallowsSameSiteNone: boolean = null;
+// listing only non-geo specific locations
+const _internalEndpoints: string[] = [
+    "https://dc.services.visualstudio.com/v2/track",
+    "https://breeze.aimon.applicationinsights.io/v2/track",
+    "https://dc-int.services.visualstudio.com/v2/track"
+];
 
-/**
- * Gets the localStorage object if available
- * @return {Storage} - Returns the storage object if available else returns null
- */
-function _getLocalStorageObject(): Storage {
-    if (Util.canUseLocalStorage()) {
-        return _getVerifiedStorageObject(StorageType.LocalStorage);
-    }
-
-    return null;
+export function isInternalApplicationInsightsEndpoint(endpointUrl: string): boolean {
+    return _internalEndpoints.indexOf(endpointUrl.toLowerCase()) !== -1;
 }
 
-/**
- * Tests storage object (localStorage or sessionStorage) to verify that it is usable
- * More details here: https://mathiasbynens.be/notes/localstorage-pattern
- * @param storageType Type of storage
- * @return {Storage} Returns storage object verified that it is usable
- */
-function _getVerifiedStorageObject(storageType: StorageType): Storage {
-    let storage: Storage = null;
-    let fail: boolean;
-    let uid: Date;
-    try {
-        if (isNullOrUndefined(getGlobal())) {
-            return null;
-        }
-        uid = new Date;
-        storage = storageType === StorageType.LocalStorage ? getGlobalInst("localStorage") : getGlobalInst("sessionStorage");
-        storage.setItem(uid.toString(), uid.toString());
-        fail = storage.getItem(uid.toString()) !== uid.toString();
-        storage.removeItem(uid.toString());
-        if (fail) {
-            storage = null;
-        }
-    } catch (exception) {
-        storage = null;
-    }
+export interface IUtil {
+    NotSpecified: string,
 
-    return storage;
-}
-
-/**
- * Gets the sessionStorage object if available
- * @return {Storage} - Returns the storage object if available else returns null
- */
-function _getSessionStorageObject(): Storage {
-    if (Util.canUseSessionStorage()) {
-        return _getVerifiedStorageObject(StorageType.SessionStorage);
-    }
-
-    return null;
-}
-
-
-export class Util {
-    private static document: any = getDocument() || {};
-    private static _canUseLocalStorage: boolean = undefined;
-    private static _canUseSessionStorage: boolean = undefined;
-    // listing only non-geo specific locations
-    private static _internalEndpoints: string[] = [
-        "https://dc.services.visualstudio.com/v2/track",
-        "https://breeze.aimon.applicationinsights.io/v2/track",
-        "https://dc-int.services.visualstudio.com/v2/track"
-    ];
-    public static NotSpecified = "not_specified";
-
-    public static createDomEvent = createDomEvent;
+    createDomEvent: (eventName: string) => Event,
 
     /*
      * Force the SDK not to use local and session storage
     */
-    public static disableStorage() {
-        Util._canUseLocalStorage = false;
-        Util._canUseSessionStorage = false;
-    }
+    disableStorage: () => void,
 
     /**
      *  Checks if endpoint URL is application insights internal injestion service URL.
@@ -101,22 +48,14 @@ export class Util {
      *  @param endpointUrl Endpoint URL to check.
      *  @returns {boolean} True if if endpoint URL is application insights internal injestion service URL.
      */
-    public static isInternalApplicationInsightsEndpoint(endpointUrl: string): boolean {
-        return Util._internalEndpoints.indexOf(endpointUrl.toLowerCase()) !== -1;
-    }
+    isInternalApplicationInsightsEndpoint: (endpointUrl: string) => boolean,
 
     /**
      *  Check if the browser supports local storage.
      *
      *  @returns {boolean} True if local storage is supported.
      */
-    public static canUseLocalStorage(): boolean {
-        if (Util._canUseLocalStorage === undefined) {
-            Util._canUseLocalStorage = !!_getVerifiedStorageObject(StorageType.LocalStorage);
-        }
-
-        return Util._canUseLocalStorage;
-    }
+    canUseLocalStorage: () => boolean,
 
     /**
      *  Get an object from the browser's local storage
@@ -124,23 +63,7 @@ export class Util {
      *  @param {string} name - the name of the object to get from storage
      *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
      */
-    public static getStorage(logger: IDiagnosticLogger, name: string): string {
-        const storage = _getLocalStorageObject();
-        if (storage !== null) {
-            try {
-                return storage.getItem(name);
-            } catch (e) {
-                Util._canUseLocalStorage = false;
-
-                logger.throwInternal(
-                    LoggingSeverity.WARNING,
-                    _InternalMessageId.BrowserCannotReadLocalStorage,
-                    "Browser failed read of local storage. " + coreGetExceptionName(e),
-                    { exception: dumpObj(e) });
-            }
-        }
-        return null;
-    }
+    getStorage: (logger: IDiagnosticLogger, name: string) => string,
 
     /**
      *  Set the contents of an object in the browser's local storage
@@ -149,24 +72,7 @@ export class Util {
      *  @param {string} data - the contents of the object to set in storage
      *  @returns {boolean} True if the storage object could be written.
      */
-    public static setStorage(logger: IDiagnosticLogger, name: string, data: string): boolean {
-        const storage = _getLocalStorageObject();
-        if (storage !== null) {
-            try {
-                storage.setItem(name, data);
-                return true;
-            } catch (e) {
-                Util._canUseLocalStorage = false;
-
-                logger.throwInternal(
-                    LoggingSeverity.WARNING,
-                    _InternalMessageId.BrowserCannotWriteLocalStorage,
-                    "Browser failed write to local storage. " + coreGetExceptionName(e),
-                    { exception: dumpObj(e) });
-            }
-        }
-        return false;
-    }
+    setStorage: (logger: IDiagnosticLogger, name: string, data: string) => boolean,
 
     /**
      *  Remove an object from the browser's local storage
@@ -174,54 +80,21 @@ export class Util {
      *  @param {string} name - the name of the object to remove from storage
      *  @returns {boolean} True if the storage object could be removed.
      */
-    public static removeStorage(logger: IDiagnosticLogger, name: string): boolean {
-        const storage = _getLocalStorageObject();
-        if (storage !== null) {
-            try {
-                storage.removeItem(name);
-                return true;
-            } catch (e) {
-                Util._canUseLocalStorage = false;
-
-                logger.throwInternal(
-                    LoggingSeverity.WARNING,
-                    _InternalMessageId.BrowserFailedRemovalFromLocalStorage,
-                    "Browser failed removal of local storage item. " + coreGetExceptionName(e),
-                    { exception: dumpObj(e) });
-            }
-        }
-        return false;
-    }
+    removeStorage: (logger: IDiagnosticLogger, name: string) => boolean,
 
     /**
      *  Check if the browser supports session storage.
      *
      *  @returns {boolean} True if session storage is supported.
      */
-    public static canUseSessionStorage(): boolean {
-        if (Util._canUseSessionStorage === undefined) {
-            Util._canUseSessionStorage = !!_getVerifiedStorageObject(StorageType.SessionStorage);
-        }
-
-        return Util._canUseSessionStorage;
-    }
+    canUseSessionStorage: () => boolean,
 
     /**
      *  Gets the list of session storage keys
      *
      *  @returns {string[]} List of session storage keys
      */
-    public static getSessionStorageKeys(): string[] {
-        const keys: string[] = [];
-
-        if (Util.canUseSessionStorage()) {
-            objForEachKey(getGlobalInst<any>("sessionStorage"), (key) => {
-                keys.push(key);
-            });
-        }
-
-        return keys;
-    }
+    getSessionStorageKeys: () => string[],
 
     /**
      *  Get an object from the browser's session storage
@@ -229,23 +102,7 @@ export class Util {
      *  @param {string} name - the name of the object to get from storage
      *  @returns {string} The contents of the storage object with the given name. Null if storage is not supported.
      */
-    public static getSessionStorage(logger: IDiagnosticLogger, name: string): string {
-        const storage = _getSessionStorageObject();
-        if (storage !== null) {
-            try {
-                return storage.getItem(name);
-            } catch (e) {
-                Util._canUseSessionStorage = false;
-
-                logger.throwInternal(
-                    LoggingSeverity.WARNING,
-                    _InternalMessageId.BrowserCannotReadSessionStorage,
-                    "Browser failed read of session storage. " + coreGetExceptionName(e),
-                    { exception: dumpObj(e) });
-            }
-        }
-        return null;
-    }
+    getSessionStorage: (logger: IDiagnosticLogger, name: string) => string,
 
     /**
      *  Set the contents of an object in the browser's session storage
@@ -254,24 +111,7 @@ export class Util {
      *  @param {string} data - the contents of the object to set in storage
      *  @returns {boolean} True if the storage object could be written.
      */
-    public static setSessionStorage(logger: IDiagnosticLogger, name: string, data: string): boolean {
-        const storage = _getSessionStorageObject();
-        if (storage !== null) {
-            try {
-                storage.setItem(name, data);
-                return true;
-            } catch (e) {
-                Util._canUseSessionStorage = false;
-
-                logger.throwInternal(
-                    LoggingSeverity.WARNING,
-                    _InternalMessageId.BrowserCannotWriteSessionStorage,
-                    "Browser failed write to session storage. " + coreGetExceptionName(e),
-                    { exception: dumpObj(e) });
-            }
-        }
-        return false;
-    }
+    setSessionStorage: (logger: IDiagnosticLogger, name: string, data: string) => boolean,
 
     /**
      *  Remove an object from the browser's session storage
@@ -279,245 +119,106 @@ export class Util {
      *  @param {string} name - the name of the object to remove from storage
      *  @returns {boolean} True if the storage object could be removed.
      */
-    public static removeSessionStorage(logger: IDiagnosticLogger, name: string): boolean {
-        const storage = _getSessionStorageObject();
-        if (storage !== null) {
-            try {
-                storage.removeItem(name);
-                return true;
-            } catch (e) {
-                Util._canUseSessionStorage = false;
-
-                logger.throwInternal(
-                    LoggingSeverity.WARNING,
-                    _InternalMessageId.BrowserFailedRemovalFromSessionStorage,
-                    "Browser failed removal of session storage item. " + coreGetExceptionName(e),
-                    { exception: dumpObj(e) });
-            }
-        }
-        return false;
-    }
-
-    /*
-     * Force the SDK not to store and read any data from cookies
-     */
-    public static disableCookies() {
-        coreDisableCookies();
-    }
-
-    /*
-     * helper method to tell if document.cookie object is available
-     */
-    public static canUseCookies(logger: IDiagnosticLogger): any {
-        if (CoreUtils._canUseCookies === undefined) {
-            CoreUtils._canUseCookies = false;
-
-            try {
-                CoreUtils._canUseCookies = Util.document.cookie !== undefined;
-            } catch (e) {
-                logger.throwInternal(
-                    LoggingSeverity.WARNING,
-                    _InternalMessageId.CannotAccessCookie,
-                    "Cannot access document.cookie - " + Util.getExceptionName(e),
-                    { exception: Util.dump(e) });
-            };
-        }
-
-        return CoreUtils._canUseCookies;
-    }
-
-    public static disallowsSameSiteNone(userAgent: string) {
-        if (!isString(userAgent)) {
-            return false;
-        }
-
-        // Cover all iOS based browsers here. This includes:
-        // - Safari on iOS 12 for iPhone, iPod Touch, iPad
-        // - WkWebview on iOS 12 for iPhone, iPod Touch, iPad
-        // - Chrome on iOS 12 for iPhone, iPod Touch, iPad
-        // All of which are broken by SameSite=None, because they use the iOS networking stack
-        if (userAgent.indexOf("CPU iPhone OS 12") !== -1 || userAgent.indexOf("iPad; CPU OS 12") !== -1) {
-            return true;
-        }
-
-        // Cover Mac OS X based browsers that use the Mac OS networking stack. This includes:
-        // - Safari on Mac OS X
-        // This does not include:
-        // - Internal browser on Mac OS X
-        // - Chrome on Mac OS X
-        // - Chromium on Mac OS X
-        // Because they do not use the Mac OS networking stack.
-        if (userAgent.indexOf("Macintosh; Intel Mac OS X 10_14") !== -1 && userAgent.indexOf("Version/") !== -1 && userAgent.indexOf("Safari") !== -1) {
-            return true;
-        }
-
-        // Cover Mac OS X internal browsers that use the Mac OS networking stack. This includes:
-        // - Internal browser on Mac OS X
-        // This does not include:
-        // - Safari on Mac OS X
-        // - Chrome on Mac OS X
-        // - Chromium on Mac OS X
-        // Because they do not use the Mac OS networking stack.
-        if (userAgent.indexOf("Macintosh; Intel Mac OS X 10_14") !== -1 && strEndsWith(userAgent, "AppleWebKit/605.1.15 (KHTML, like Gecko)")) {
-            return true;
-        }
-
-        // Cover Chrome 50-69, because some versions are broken by SameSite=None, and none in this range require it.
-        // Note: this covers some pre-Chromium Edge versions, but pre-Chromim Edge does not require SameSite=None, so this is fine.
-        // Note: this regex applies to Windows, Mac OS X, and Linux, deliberately.
-        if (userAgent.indexOf("Chrome/5") !== -1 || userAgent.indexOf("Chrome/6") !== -1) {
-            return true;
-        }
-
-        // Unreal Engine runs Chromium 59, but does not advertise as Chrome until 4.23. Treat versions of Unreal
-        // that don't specify their Chrome version as lacking support for SameSite=None.
-        if (userAgent.indexOf("UnrealEngine") !== -1 && userAgent.indexOf("Chrome") === -1) {
-            return true;
-        }
-
-        // UCBrowser < 12.13.2 ignores Set-Cookie headers with SameSite=None
-        // NB: this rule isn't complete - you need regex to make a complete rule.
-        // See: https://www.chromium.org/updates/same-site/incompatible-clients
-        if (userAgent.indexOf("UCBrowser/12") !== -1 || userAgent.indexOf("UCBrowser/11") !== -1) {
-            return true;
-        }
-
-        return false;
-    }
+    removeSessionStorage: (logger: IDiagnosticLogger, name: string) => boolean,
 
     /**
+     * @deprecated - Use the core.getCookieMgr().disable()
+     * Force the SDK not to store and read any data from cookies.
+     */
+    disableCookies: () => void,
+
+    /**
+     * @deprecated - Use the core.getCookieMgr().isEnabled()
+     * Helper method to tell if document.cookie object is available and whether it can be used.
+     */
+    canUseCookies: (logger: IDiagnosticLogger) => any,
+
+    disallowsSameSiteNone: (userAgent: string) => boolean,
+
+    /**
+     * @deprecated - Use the core.getCookieMgr().set()
      * helper method to set userId and sessionId cookie
      */
-    public static setCookie(logger: IDiagnosticLogger, name: string, value: string, domain?: string) {
-        if (Util.canUseCookies(logger)) {
-            let domainAttrib = "";
-            let secureAttrib = "";
+    setCookie: (logger: IDiagnosticLogger, name: string, value: string, domain?: string) => void,
 
-            if (domain) {
-                domainAttrib = ";domain=" + domain;
-            }
-
-            let location = getLocation();
-            if (location && location.protocol === "https:") {
-                secureAttrib = ";secure";
-                if (_uaDisallowsSameSiteNone === null) {
-                    _uaDisallowsSameSiteNone = Util.disallowsSameSiteNone((getNavigator() || {} as Navigator).userAgent);
-                }
-
-                if (!_uaDisallowsSameSiteNone) {
-                    value = value + ";SameSite=None"; // SameSite can only be set on secure pages
-                }
-            }
-
-            Util.document.cookie = name + "=" + value + domainAttrib + ";path=/" + secureAttrib;
-        }
-    }
-
-    public static stringToBoolOrDefault = stringToBoolOrDefault;
+    stringToBoolOrDefault: (str: any, defaultValue?: boolean) => boolean,
 
     /**
+     * @deprecated - Use the core.getCookieMgr().get()
      * helper method to access userId and sessionId cookie
      */
-    public static getCookie(logger: IDiagnosticLogger, name: string) {
-        if (!Util.canUseCookies(logger)) {
-            return;
-        }
-
-        let value = "";
-        if (name && name.length) {
-            const cookieName = name + "=";
-            const cookies = Util.document.cookie.split(";");
-            for (let i = 0; i < cookies.length; i++) {
-                let cookie = cookies[i];
-                cookie = Util.trim(cookie);
-                if (cookie && cookie.indexOf(cookieName) === 0) {
-                    value = cookie.substring(cookieName.length, cookies[i].length);
-                    break;
-                }
-            }
-        }
-
-        return value;
-    }
+    getCookie: (logger: IDiagnosticLogger, name: string) => string,
 
     /**
+     * @deprecated - Use the core.getCookieMgr().del()
      * Deletes a cookie by setting it's expiration time in the past.
      * @param name - The name of the cookie to delete.
      */
-    public static deleteCookie(logger: IDiagnosticLogger, name: string) {
-        if (Util.canUseCookies(logger)) {
-            // Setting the expiration date in the past immediately removes the cookie
-            Util.document.cookie = name + "=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-        }
-    }
+    deleteCookie: (logger: IDiagnosticLogger, name: string) => void,
 
     /**
      * helper method to trim strings (IE8 does not implement String.prototype.trim)
      */
-    public static trim = strTrim;
+    trim: (str: any) => string,
 
     /**
      * generate random id string
      */
-    public static newId = newId;
+    newId: () => string,
 
     /**
      * generate a random 32bit number (-0x80000000..0x7FFFFFFF).
      */
-    public static random32() {
-        return random32(true);
-    }
+    random32: () => number,
 
     /**
      * generate W3C trace id
      */
-    public static generateW3CId = generateW3CId;
+    generateW3CId: () => string,
 
     /**
      * Check if an object is of type Array
      */
-    public static isArray = isArray;
+    isArray: (obj: any) => boolean,
 
     /**
      * Check if an object is of type Error
      */
-    public static isError = isError;
+    isError: (obj: any) => obj is Error,
 
     /**
      * Check if an object is of type Date
      */
-    public static isDate = isDate;
+    isDate: (obj: any) => obj is Date,
 
     // Keeping this name for backward compatibility (for now)
-    public static toISOStringForIE8 = toISOString;
+    toISOStringForIE8: (date: Date) => string,
 
     /**
      * Gets IE version returning the document emulation mode if we are running on IE, or null otherwise
      */
-    public static getIEVersion = getIEVersion;
+    getIEVersion: (userAgentStr?: string) => number,
 
     /**
      * Convert ms to c# time span format
      */
-    public static msToTimeSpan = msToTimeSpan;
+    msToTimeSpan: (totalms: number) => string,
 
     /**
      * Checks if error has no meaningful data inside. Ususally such errors are received by window.onerror when error
      * happens in a script from other domain (cross origin, CORS).
      */
-    public static isCrossOriginError(message: string|Event, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
-        return !error && isString(message) && (message === "Script error." || message === "Script error");
-    }
+    isCrossOriginError: (message: string|Event, url: string, lineNumber: number, columnNumber: number, error: Error) => boolean,
 
     /**
      * Returns string representation of an object suitable for diagnostics logging.
      */
-    public static dump = dumpObj;
+    dump: (object: any) => string,
 
     /**
      * Returns the name of object if it's an Error. Otherwise, returns empty string.
      */
-    public static getExceptionName = coreGetExceptionName;
+    getExceptionName: (object: any) => string,
 
     /**
      * Adds an event handler for the specified event to the window
@@ -525,132 +226,84 @@ export class Util {
      * @param callback {any} - The callback function that needs to be executed for the given event
      * @return {boolean} - true if the handler was successfully added
      */
-    public static addEventHandler = attachEvent;
+    addEventHandler: (obj: any, eventNameWithoutOn: string, handlerRef: any, useCapture: boolean) => boolean,
 
     /**
      * Tells if a browser supports a Beacon API
      */
-    public static IsBeaconApiSupported(): boolean {
-        return ('sendBeacon' in _navigator && (_navigator as any).sendBeacon);
-    }
+    IsBeaconApiSupported: () => boolean,
 
-    public static getExtension(extensions: IPlugin[], identifier: string): IPlugin | null {
-        let extension: IPlugin = null;
-        arrForEach(extensions, (value) => {
-            if (value.identifier === identifier) {
-                extension = value;
-                return -1;
-            }
-        });
-
-        return extension;
-    }
+    getExtension: (extensions: IPlugin[], identifier: string) => IPlugin | null
 }
 
-export class UrlHelper {
-    private static document: any = getDocument() || {};
+export const Util: IUtil = {
+    NotSpecified: strNotSpecified,
+    createDomEvent: createDomEvent,
+    disableStorage: utlDisableStorage,
+    isInternalApplicationInsightsEndpoint: isInternalApplicationInsightsEndpoint,
+    canUseLocalStorage: utlCanUseLocalStorage,
+    getStorage: utlGetLocalStorage,
+    setStorage: utlSetLocalStorage,
+    removeStorage: utlRemoveStorage,
+    canUseSessionStorage: utlCanUseSessionStorage,
+    getSessionStorageKeys: utlGetSessionStorageKeys,
+    getSessionStorage: utlGetSessionStorage,
+    setSessionStorage: utlSetSessionStorage,
+    removeSessionStorage: utlRemoveSessionStorage,
+    disableCookies: coreDisableCookies,
+    canUseCookies: coreCanUseCookies,
+    disallowsSameSiteNone: uaDisallowsSameSiteNone,
+    setCookie: coreSetCookie,
+    stringToBoolOrDefault: stringToBoolOrDefault,
+    getCookie: coreGetCookie,
+    deleteCookie: coreDeleteCookie,
+    trim: strTrim,
+    newId: newId,
+    random32: function() {
+        return random32(true);
+    },
+    generateW3CId: generateW3CId,
+    isArray: isArray,
+    isError: isError,
+    isDate: isDate,
+    toISOStringForIE8: toISOString,
+    getIEVersion: getIEVersion,
+    msToTimeSpan: msToTimeSpan,
+    isCrossOriginError: isCrossOriginError,
+    dump: dumpObj,
+    getExceptionName: coreGetExceptionName,
+    addEventHandler: attachEvent,
+    IsBeaconApiSupported: isBeaconApiSupported,
+    getExtension: getExtensionByName
+};
 
-    private static _htmlAnchorIdx: number = 0;
-    // Use an array of temporary values as it's possible for multiple calls to parseUrl() will be called with different URLs
-    // Using a cache size of 5 for now as it current depth usage is at least 2, so adding a minor buffer to handle future updates
-    private static _htmlAnchorElement: HTMLAnchorElement[] = [null, null, null, null, null];
+export interface IUrlHelper {
 
-    public static parseUrl(url: string): HTMLAnchorElement {
-        let anchorIdx = UrlHelper._htmlAnchorIdx;
-        let anchorCache = UrlHelper._htmlAnchorElement;
-        let tempAnchor = anchorCache[anchorIdx];
-        if (!UrlHelper.document.createElement) {
-            // Always create the temp instance if createElement is not available
-            tempAnchor = { host: UrlHelper.parseHost(url, true) } as HTMLAnchorElement;
-        } else if (!anchorCache[anchorIdx]) {
-            // Create and cache the unattached anchor instance 
-            tempAnchor = anchorCache[anchorIdx] = UrlHelper.document.createElement('a');
-        }
-
-        tempAnchor.href = url;
-
-        // Move the cache index forward
-        anchorIdx++;
-        if (anchorIdx >= anchorCache.length) {
-            anchorIdx = 0;
-        }
-
-        UrlHelper._htmlAnchorIdx = anchorIdx;
-
-        return tempAnchor;
-    }
-
-    public static getAbsoluteUrl(url: string): string {
-        let result: string;
-        const a = UrlHelper.parseUrl(url);
-        if (a) {
-            result = a.href;
-        }
-
-        return result;
-    }
-
-    public static getPathName(url: string): string {
-        let result: string;
-        const a = UrlHelper.parseUrl(url);
-        if (a) {
-            result = a.pathname;
-        }
-
-        return result;
-    }
-
-    public static getCompleteUrl(method: string, absoluteUrl: string) {
-        if (method) {
-            return method.toUpperCase() + " " + absoluteUrl;
-        } else {
-            return absoluteUrl;
-        }
-    }
+    parseUrl: (url: string) => HTMLAnchorElement,
+    getAbsoluteUrl: (url: string) => string,
+    getPathName: (url: string) => string,
+    getCompleteUrl: (method: string, absoluteUrl: string) => string,
 
     // Fallback method to grab host from url if document.createElement method is not available
-    public static parseHost(url: string, inclPort?: boolean) {
-        let fullHost = UrlHelper.parseFullHost(url, inclPort);
-        if (fullHost) {
-            const match = fullHost.match(/(www[0-9]?\.)?(.[^/:]+)(\:[\d]+)?/i);
-            if (match != null && match.length > 3 && isString(match[2]) && match[2].length > 0) {
-                return match[2] + (match[3] || "");
-            }
-        }
-
-        return fullHost;
-    }
+    parseHost: (url: string, inclPort?: boolean) => string,
 
     /**
      * Get the full host from the url, optionally including the port
      */
-    public static parseFullHost(url: string, inclPort?: boolean) {
-        let result = null;
-        if (url) {
-            const match = url.match(/(\w*):\/\/(.[^/:]+)(\:[\d]+)?/i);
-            if (match != null && match.length > 2 && isString(match[2]) && match[2].length > 0) {
-                result = match[2] || "";
-                if (inclPort && match.length > 2) {
-                    const protocol = (match[1] || "").toLowerCase();
-                    let port = match[3] || "";
-                    // IE includes the standard port so pass it off if it's the same as the protocol
-                    if (protocol === "http" && port === ":80") {
-                        port = "";
-                    } else if (protocol === "https" && port === ":443") {
-                        port = "";
-                    }
+    parseFullHost: (url: string, inclPort?: boolean) => string
+};
 
-                    result += port;
-                }
-            }
-        }
+export const UrlHelper: IUrlHelper = {
+    parseUrl: urlParseUrl,
+    getAbsoluteUrl: urlGetAbsoluteUrl,
+    getPathName: urlGetPathName,
+    getCompleteUrl: urlGetCompleteUrl,
+    parseHost: urlParseHost,
+    parseFullHost: urlParseFullHost
+};
 
-        return result;
-    }
-}
-
-export class CorrelationIdHelper {
-    public static correlationIdPrefix = "cid-v1:";
+export interface ICorrelationIdHelper {
+    correlationIdPrefix: string;
 
     /**
      * Checks if a request url is not on a excluded domain list and if it is safe to add correlation headers.
@@ -659,7 +312,30 @@ export class CorrelationIdHelper {
      * Some environments don't give information on currentHost via window.location.host (e.g. Cordova). In these cases, the user must
      * manually supply domains to include correlation headers on. Else, no headers will be included at all.
      */
-    public static canIncludeCorrelationHeader(config: ICorrelationConfig, requestUrl: string, currentHost?: string) {
+    canIncludeCorrelationHeader(config: ICorrelationConfig, requestUrl: string, currentHost?: string): boolean;
+
+    /**
+     * Combines target appId and target role name from response header.
+     */
+    getCorrelationContext(responseHeader: string): string | undefined;
+
+    /**
+     * Gets key from correlation response header
+     */
+    getCorrelationContextValue(responseHeader: string, key: string): string | undefined;
+}
+
+export const CorrelationIdHelper: ICorrelationIdHelper = {
+    correlationIdPrefix: "cid-v1:",
+
+    /**
+     * Checks if a request url is not on a excluded domain list and if it is safe to add correlation headers.
+     * Headers are always included if the current domain matches the request domain. If they do not match (CORS),
+     * they are regex-ed across correlationHeaderDomains and correlationHeaderExcludedDomains to determine if headers are included.
+     * Some environments don't give information on currentHost via window.location.host (e.g. Cordova). In these cases, the user must
+     * manually supply domains to include correlation headers on. Else, no headers will be included at all.
+     */
+    canIncludeCorrelationHeader: function(config: ICorrelationConfig, requestUrl: string, currentHost?: string) {
         if (!requestUrl || (config && config.disableCorrelationHeaders)) {
             return false;
         }
@@ -672,11 +348,11 @@ export class CorrelationIdHelper {
             }
         }
 
-        let requestHost = UrlHelper.parseUrl(requestUrl).host.toLowerCase();
+        let requestHost = urlParseUrl(requestUrl).host.toLowerCase();
         if (requestHost && (requestHost.indexOf(":443") !== -1 || requestHost.indexOf(":80") !== -1)) {
             // [Bug #1260] IE can include the port even for http and https URLs so if present 
             // try and parse it to remove if it matches the default protocol port
-            requestHost = (UrlHelper.parseFullHost(requestUrl, true) || "").toLowerCase();
+            requestHost = (urlParseFullHost(requestUrl, true) || "").toLowerCase();
         }
 
         if ((!config || !config.enableCorsCorrelation) && requestHost !== currentHost) {
@@ -711,24 +387,24 @@ export class CorrelationIdHelper {
         // if we don't know anything about the requestHost, require the user to use included/excludedDomains.
         // Previously we always returned false for a falsy requestHost
         return requestHost && requestHost.length > 0;
-    }
+    },
 
     /**
      * Combines target appId and target role name from response header.
      */
-    public static getCorrelationContext(responseHeader: string) {
+    getCorrelationContext: function(responseHeader: string) {
         if (responseHeader) {
             const correlationId = CorrelationIdHelper.getCorrelationContextValue(responseHeader, RequestHeaders.requestContextTargetKey);
             if (correlationId && correlationId !== CorrelationIdHelper.correlationIdPrefix) {
                 return correlationId;
             }
         }
-    }
+    },
 
     /**
      * Gets key from correlation response header
      */
-    public static getCorrelationContextValue(responseHeader: string, key: string) {
+    getCorrelationContextValue: function(responseHeader: string, key: string) {
         if (responseHeader) {
             const keyValues = responseHeader.split(",");
             for (let i = 0; i < keyValues.length; ++i) {
@@ -739,40 +415,37 @@ export class CorrelationIdHelper {
             }
         }
     }
-}
+};
 
-export class AjaxHelper {
-    public static ParseDependencyPath(logger: IDiagnosticLogger, absoluteUrl: string, method: string, commandName: string) {
-        let target, name = commandName, data = commandName;
+export function AjaxHelperParseDependencyPath(logger: IDiagnosticLogger, absoluteUrl: string, method: string, commandName: string) {
+    let target, name = commandName, data = commandName;
 
-        if (absoluteUrl && absoluteUrl.length > 0) {
-            const parsedUrl: HTMLAnchorElement = UrlHelper.parseUrl(absoluteUrl)
-            target = parsedUrl.host;
-            if (!name) {
-                if (parsedUrl.pathname != null) {
-                    let pathName: string = (parsedUrl.pathname.length === 0) ? "/" : parsedUrl.pathname;
-                    if (pathName.charAt(0) !== '/') {
-                        pathName = "/" + pathName;
-                    }
-                    data = parsedUrl.pathname;
-                    name = DataSanitizer.sanitizeString(logger, method ? method + " " + pathName : pathName);
-                } else {
-                    name = DataSanitizer.sanitizeString(logger, absoluteUrl);
+    if (absoluteUrl && absoluteUrl.length > 0) {
+        const parsedUrl: HTMLAnchorElement = urlParseUrl(absoluteUrl)
+        target = parsedUrl.host;
+        if (!name) {
+            if (parsedUrl.pathname != null) {
+                let pathName: string = (parsedUrl.pathname.length === 0) ? "/" : parsedUrl.pathname;
+                if (pathName.charAt(0) !== '/') {
+                    pathName = "/" + pathName;
                 }
+                data = parsedUrl.pathname;
+                name = DataSanitizer.sanitizeString(logger, method ? method + " " + pathName : pathName);
+            } else {
+                name = DataSanitizer.sanitizeString(logger, absoluteUrl);
             }
-        } else {
-            target = commandName;
-            name = commandName;
         }
-
-        return {
-            target,
-            name,
-            data
-        };
+    } else {
+        target = commandName;
+        name = commandName;
     }
-}
 
+    return {
+        target,
+        name,
+        data
+    };
+}
 
 export function dateTimeUtilsNow() {
     // returns the window or webworker performance object
@@ -812,9 +485,7 @@ export interface IDateTimeUtils {
 /**
  * A utility class that helps getting time related parameters
  */
-export const DateTimeUtils: IDateTimeUtils = (function() {
-    return {
-        Now: dateTimeUtilsNow,
-        GetDuration: dateTimeUtilsDuration
-    };
-})();
+export const DateTimeUtils: IDateTimeUtils = {
+    Now: dateTimeUtilsNow,
+    GetDuration: dateTimeUtilsDuration
+};

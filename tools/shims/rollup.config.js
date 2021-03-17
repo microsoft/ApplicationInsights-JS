@@ -34,6 +34,7 @@ const browserUmdRollupConfigFactory = (isProduction) => {
     },
     plugins: [
       replace({
+        preventAssignment: true,
         delimiters: ["", ""],
         values: replaceValues
       }),
@@ -75,6 +76,7 @@ const moduleRollupConfigFactory = (format, isProduction) => {
     },
     plugins: [
       replace({
+        preventAssignment: true,
         delimiters: ["", ""],
         values: replaceValues
       }),

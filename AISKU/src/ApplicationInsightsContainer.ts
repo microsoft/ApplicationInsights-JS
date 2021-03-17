@@ -1,11 +1,16 @@
 import { IAppInsightsDeprecated, AppInsightsDeprecated } from "./ApplicationInsightsDeprecated";
 import { Initialization as ApplicationInsights, Snippet, IApplicationInsights } from "./Initialization";
+import { _legacyCookieMgr } from "@microsoft/applicationinsights-core-js";
 
 export class ApplicationInsightsContainer {
 
     public static getAppInsights(snippet: Snippet, version: number) : IApplicationInsights | IAppInsightsDeprecated {
         const initialization = new ApplicationInsights(snippet);
         const legacyMode = version !== 2.0 ? true : false;
+        
+        // Side effect is to create, initialize and listen to the CoreUtils._canUseCookies changes
+        // Called here to support backward compatibility
+        _legacyCookieMgr();
 
         // Two target scenarios:
         // 1. Customer runs v1 snippet + runtime. If customer updates just cdn location to new SDK, it will run in compat mode so old apis work

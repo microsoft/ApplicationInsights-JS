@@ -8,9 +8,9 @@ import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
-import { Util } from '../Util';
 import { IDiagnosticLogger, isNullOrUndefined, arrMap, isString, strTrim, isArray, isError } from '@microsoft/applicationinsights-core-js';
 import { IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal } from '../Interfaces/IExceptionTelemetry';
+import { strNotSpecified } from '../Constants';
 
 const strError = "error";
 
@@ -150,8 +150,8 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
                 error = error[strError] || error.evt || error;
             }
 
-            this.typeName = DataSanitizer.sanitizeString(logger, _getErrorType(error)) || Util.NotSpecified;
-            this.message = DataSanitizer.sanitizeMessage(logger, exception.message) || Util.NotSpecified;
+            this.typeName = DataSanitizer.sanitizeString(logger, _getErrorType(error)) || strNotSpecified;
+            this.message = DataSanitizer.sanitizeMessage(logger, exception.message) || strNotSpecified;
             const stack = exception.stack;
             this.parsedStack = _ExceptionDetails.parseStack(stack);
             this.stack = DataSanitizer.sanitizeException(logger, stack);

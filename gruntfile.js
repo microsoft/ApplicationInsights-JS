@@ -314,8 +314,8 @@ module.exports = function (grunt) {
                         './shared/AppInsightsCore/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
-                    console: false,
-                    summaryOnly: true,
+                    console: true,
+                    summaryOnly: false,
                     '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
             },

@@ -9,7 +9,7 @@ import { ITelemetryItem } from '../JavaScriptSDK.Interfaces/ITelemetryItem';
 import { IPlugin, ITelemetryPlugin } from '../JavaScriptSDK.Interfaces/ITelemetryPlugin';
 import { IProcessTelemetryContext } from "../JavaScriptSDK.Interfaces/IProcessTelemetryContext";
 import { ITelemetryPluginChain } from '../JavaScriptSDK.Interfaces/ITelemetryPluginChain';
-import { DiagnosticLogger } from "./DiagnosticLogger";
+import { DiagnosticLogger, safeGetLogger } from "./DiagnosticLogger";
 import { TelemetryPluginChain } from "./TelemetryPluginChain";
 import { arrForEach, isFunction, isNullOrUndefined, isUndefined } from "./HelperFuncs";
 
@@ -168,13 +168,7 @@ export class ProcessTelemetryContext implements IProcessTelemetryContext {
         };
         
         _self.diagLog = () => {
-            let logger: IDiagnosticLogger = (core||{} as IAppInsightsCore).logger;
-            if (!logger) {
-                // Fallback so we always have a logger
-                logger = new DiagnosticLogger(config||{});
-            }
-
-            return logger;
+            return safeGetLogger(core, config);
         };
 
         _self.getCfg = () => {

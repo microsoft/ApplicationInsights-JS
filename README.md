@@ -253,62 +253,97 @@ appInsights.addTelemetryInitializer(() => false); // Nothing is sent after this 
 appInsights.trackTrace({message: 'this message will not be sent'}); // Not sent
 ```
 
-
 ## Configuration
 
 Most configuration fields are named such that they can be defaulted to falsey. All fields are optional except for `instrumentationKey`.
 
-| Name | Default | Description |
-|------|---------|-------------|
-| instrumentationKey | null | **Required**<br>Instrumentation key that you obtained from the Azure Portal. |
-| accountId | null | An optional account id, if your app groups users into accounts. No spaces, commas, semicolons, equals, or vertical bars |
-| sessionRenewalMs | 1800000 | A session is logged if the user is inactive for this amount of time in milliseconds. Default is 30 minutes |
-| sessionExpirationMs | 86400000 | A session is logged if it has continued for this amount of time in milliseconds. Default is 24 hours |
-| maxBatchSizeInBytes | 10000 | Max size of telemetry batch. If a batch exceeds this limit, it is immediately sent and a new batch is started |
-| maxBatchInterval | 15000 | How long to batch telemetry for before sending (milliseconds) |
-| disableExceptionTracking | false | If true, exceptions are not autocollected. Default is false. |
-| disableTelemetry | false | If true, telemetry is not collected or sent. Default is false. |
-| enableDebug | false | If true, **internal** debugging data is thrown as an exception **instead** of being logged, regardless of SDK logging settings. Default is false. <br>***Note:*** Enabling this setting will result in dropped telemetry whenever an internal error occurs. This can be useful for quickly identifying issues with your configuration or usage of the SDK. If you do not want to lose telemetry while debugging, consider using `loggingLevelConsole` or `loggingLevelTelemetry` instead of `enableDebug`. |
-| loggingLevelConsole | 0 | Logs **internal** Application Insights errors to console. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
-| loggingLevelTelemetry | 1 | Sends **internal** Application Insights errors as telemetry. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
-| diagnosticLogInterval | 10000 | (internal) Polling interval (in ms) for internal logging queue |
-| samplingPercentage | 100 | Percentage of events that will be sent. Default is 100, meaning all events are sent. Set this if you wish to preserve your datacap for large-scale applications. |
-| autoTrackPageVisitTime | false | If true, on a pageview,the previous instrumented page's view time is tracked and sent as telemetry and a new timer is started for the current pageview. Default is false. |
-| disableAjaxTracking | false | If true, Ajax calls are not autocollected. Default is false. |
-| disableFetchTracking | true | If true, Fetch requests are not autocollected. Default is true |
-| overridePageViewDuration | false | If true, default behavior of trackPageView is changed to record end of page view duration interval when trackPageView is called. If false and no custom duration is provided to trackPageView, the page view performance is calculated using the navigation timing API. Default is false. |
-| maxAjaxCallsPerView | 500 | Default 500 - controls how many ajax calls will be monitored per page view. Set to -1 to monitor all (unlimited) ajax calls on the page. |
-| disableDataLossAnalysis | true | If false, internal telemetry sender buffers will be checked at startup for items not yet sent. |
-| disableCorrelationHeaders | false | If false, the SDK will add two headers ('Request-Id' and 'Request-Context') to all dependency requests to correlate them with corresponding requests on the server side. Default is false. |
-| correlationHeaderExcludedDomains |  | Disable correlation headers for specific domains |
-| correlationHeaderExcludePatterns | | Disable correlation headers using regular expressions |
-| correlationHeaderDomains |  | Enable correlation headers for specific domains |
-| disableFlushOnBeforeUnload | false | Default false. If true, flush method will not be called when onBeforeUnload event triggers |
-| enableSessionStorageBuffer | true | Default true. If true, the buffer with all unsent telemetry is stored in session storage. The buffer is restored on page load |
-| isCookieUseDisabled | false | Default false. If true, the SDK will not store or read any data from cookies.|
-| cookieDomain | null | Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. |
-| isRetryDisabled | false | Default false. If false, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error), 503 (service unavailable), and 0 (offline, only if detected) |
-| isStorageUseDisabled | false | If true, the SDK will not store or read any data from local and session storage. Default is false. |
-| isBeaconApiDisabled | true | If false, the SDK will send all telemetry using the [Beacon API](https://www.w3.org/TR/beacon) |
-| onunloadDisableBeacon | false | Default false. when tab is closed, the SDK will send all remaining telemetry using the [Beacon API](https://www.w3.org/TR/beacon) |
-| sdkExtension | null | Sets the sdk extension name. Only alphabetic characters are allowed. The extension name is added as a prefix to the 'ai.internal.sdkVersion' tag (e.g. 'ext_javascript:2.0.0'). Default is null. |
-| isBrowserLinkTrackingEnabled | false | Default is false. If true, the SDK will track all [Browser Link](https://docs.microsoft.com/en-us/aspnet/core/client-side/using-browserlink) requests. |
-| appId | null | AppId is used for the correlation between AJAX dependencies happening on the client-side with the server-side requests. When Beacon API is enabled, it cannot be used automatically, but can be set manually in the configuration. Default is null |
-| enableCorsCorrelation | false | If true, the SDK will add two headers ('Request-Id' and 'Request-Context') to all CORS requests to correlate outgoing AJAX dependencies with corresponding requests on the server side. Default is false |
-| namePrefix | undefined | An optional value that will be used as name postfix for localStorage and cookie name.
-| enableAutoRouteTracking | false | Automatically track route changes in Single Page Applications (SPA). If true, each route change will send a new Pageview to Application Insights. Hash route changes changes (`example.com/foo#bar`) are also recorded as new page views.
-| enableRequestHeaderTracking | false | If true, AJAX & Fetch request headers is tracked, default is false.
-| enableResponseHeaderTracking | false | If true, AJAX & Fetch request's response headers is tracked, default is false.
-| enableAjaxErrorStatusText | false | Default false. If true, include response error data text in dependency event on failed AJAX requests.
-| enableAjaxPerfTracking | false | Default false. Flag to enable looking up and including additional browser window.performance timings in the reported ajax (XHR and fetch) reported metrics.
-| maxAjaxPerfLookupAttempts | 3 | Defaults to 3. The maximum number of times to look for the window.performance timings (if available), this is required as not all browsers populate the window.performance before reporting the end of the XHR request and for fetch requests this is added after its complete.
-| ajaxPerfLookupDelay | 25 | Defaults to 25ms. The amount of time to wait before re-attempting to find the windows.performance timings for an ajax request, time is in milliseconds and is passed directly to setTimeout().
-| distributedTracingMode | `DistributedTracingModes.AI` | Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests. AI_AND_W3C is provided for back-compatibility with any legacy Application Insights instrumented services.
-| enableUnhandledPromiseRejectionTracking | false | If true, unhandled promise rejections will be autocollected and reported as a javascript error. When disableExceptionTracking is true (dont track exceptions) the config value will be ignored and unhandled promise rejections will not be reported.
-| disableInstrumentationKeyValidation | false | If true, instrumentation key validation check is bypassed. Default value is false.
-| enablePerfMgr | false | [Optional] When enabled (true) this will create local perfEvents for code that has been instrumented to emit perfEvents (via the doPerf() helper). This can be used to identify performance issues within the SDK based on your usage or optionally within your own instrumented code. [More details are available by the basic documentation](./docs/PerformanceMonitoring.md). Since v2.5.7
-| perfEvtsSendAll | false | [Optional] When _enablePerfMgr_ is enabled and the [IPerfManager](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IPerfManager.ts) fires a [INotificationManager](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/INotificationManager.ts).perfEvent() this flag determines whether an event is fired (and sent to all listeners) for all events (true) or only for 'parent' events (false &lt;default&gt;).<br />A parent [IPerfEvent](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IPerfEvent.ts) is an event where no other IPerfEvent is still running at the point of this event being created and it's _parent_ property is not null or undefined. Since v2.5.7
-| idLength | 22 | [Optional] Identifies the default length used to generate new random session and user id's. Defaults to 22, previous default value was 5 (v2.5.8 or less), if you need to keep the previous maximum length you should set this value to 5.
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| instrumentationKey | string<br>[**Required**]| null | Instrumentation key that you obtained from the Azure Portal. |
+| accountId | string | null | An optional account id, if your app groups users into accounts. No spaces, commas, semicolons, equals, or vertical bars |
+| sessionRenewalMs | numeric | 1800000 | A session is logged if the user is inactive for this amount of time in milliseconds. Default is 30 minutes |
+| sessionExpirationMs | numeric | 86400000 | A session is logged if it has continued for this amount of time in milliseconds. Default is 24 hours |
+| maxBatchSizeInBytes | numberic | 10000 | Max size of telemetry batch. If a batch exceeds this limit, it is immediately sent and a new batch is started |
+| maxBatchInterval | numeric | 15000 | How long to batch telemetry for before sending (milliseconds) |
+| disableExceptionTracking | boolean || false | If true, exceptions are not autocollected. Default is false. |
+| disableTelemetry | boolean | false | If true, telemetry is not collected or sent. Default is false. |
+| enableDebug | boolean | false | If true, **internal** debugging data is thrown as an exception **instead** of being logged, regardless of SDK logging settings. Default is false. <br>***Note:*** Enabling this setting will result in dropped telemetry whenever an internal error occurs. This can be useful for quickly identifying issues with your configuration or usage of the SDK. If you do not want to lose telemetry while debugging, consider using `loggingLevelConsole` or `loggingLevelTelemetry` instead of `enableDebug`. |
+| loggingLevelConsole | numeric | 0 | Logs **internal** Application Insights errors to console. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
+| loggingLevelTelemetry | numeric | 1 | Sends **internal** Application Insights errors as telemetry. <br>0: off, <br>1: Critical errors only, <br>2: Everything (errors & warnings) |
+| diagnosticLogInterval | numeric | 10000 | (internal) Polling interval (in ms) for internal logging queue |
+| samplingPercentage | numeric | 100 | Percentage of events that will be sent. Default is 100, meaning all events are sent. Set this if you wish to preserve your datacap for large-scale applications. |
+| autoTrackPageVisitTime | boolean | false | If true, on a pageview,the previous instrumented page's view time is tracked and sent as telemetry and a new timer is started for the current pageview. Default is false. |
+| disableAjaxTracking | boolean | false | If true, Ajax calls are not autocollected. Default is false. |
+| disableFetchTracking | boolean | true | If true, Fetch requests are not autocollected. Default is true |
+| overridePageViewDuration | boolean | false | If true, default behavior of trackPageView is changed to record end of page view duration interval when trackPageView is called. If false and no custom duration is provided to trackPageView, the page view performance is calculated using the navigation timing API. Default is false. |
+| maxAjaxCallsPerView | numeric | 500 | Default 500 - controls how many ajax calls will be monitored per page view. Set to -1 to monitor all (unlimited) ajax calls on the page. |
+| disableDataLossAnalysis | boolean | true | If false, internal telemetry sender buffers will be checked at startup for items not yet sent. |
+| disableCorrelationHeaders | boolean | false | If false, the SDK will add two headers ('Request-Id' and 'Request-Context') to all dependency requests to correlate them with corresponding requests on the server side. Default is false. |
+| correlationHeaderExcludedDomains | string[] | undefined | Disable correlation headers for specific domains |
+| correlationHeaderExcludePatterns | regex[] | undefined | Disable correlation headers using regular expressions |
+| correlationHeaderDomains | string[] | undefined | Enable correlation headers for specific domains |
+| disableFlushOnBeforeUnload | boolean | false | Default false. If true, flush method will not be called when onBeforeUnload event triggers |
+| enableSessionStorageBuffer | boolean | true | Default true. If true, the buffer with all unsent telemetry is stored in session storage. The buffer is restored on page load |
+| cookieCfg | [ICookieCfgConfig](#ICookieMgrConfig)<br>[Optional]<br>(Since 2.6.0) | undefined | Defaults to cookie usage enabled see [ICookieCfgConfig](#ICookieMgrConfig) settings for full defaults. |
+| ~~isCookieUseDisabled~~<br>disableCookiesUsage | alias for [`cookieCfg.enabled`](#ICookieMgrConfig)<br>[Optional] | false | Default false. A boolean that indicates whether to disable the use of cookies by the SDK. If true, the SDK will not store or read any data from cookies. isCookieUseDisable is deprecated in favor of disableCookiesUsage, when both are provided disableCookiesUsage take precedence.<br>(Since v2.6.0) If `cookieCfg.enabled` is defined it will take precedence over these values, Cookie usage can be re-enabled after initialization via the core.getCookieMgr().setEnabled(true). |
+| cookieDomain | alias for [`cookieCfg.domain`](#ICookieMgrConfig)<br>[Optional] | null | Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains.<br>(Since v2.6.0) If `cookieCfg.domain` is defined it will take precedence over this value. |
+| cookiePath | alias for [`cookieCfg.path`](#ICookieMgrConfig)<br>[Optional]<br>(Since 2.6.0) | null | Custom cookie path. This is helpful if you want to share Application Insights cookies behind an application gateway.<br>If `cookieCfg.path` is defined it will take precedence over this value.  |
+| isRetryDisabled | boolean | false | Default false. If false, retry on 206 (partial success), 408 (timeout), 429 (too many requests), 500 (internal server error), 503 (service unavailable), and 0 (offline, only if detected) |
+| isStorageUseDisabled | boolean | false | If true, the SDK will not store or read any data from local and session storage. Default is false. |
+| isBeaconApiDisabled | boolean | true | If false, the SDK will send all telemetry using the [Beacon API](https://www.w3.org/TR/beacon) |
+| onunloadDisableBeacon | boolean | false | Default false. when tab is closed, the SDK will send all remaining telemetry using the [Beacon API](https://www.w3.org/TR/beacon) |
+| sdkExtension | string | null | Sets the sdk extension name. Only alphabetic characters are allowed. The extension name is added as a prefix to the 'ai.internal.sdkVersion' tag (e.g. 'ext_javascript:2.0.0'). Default is null. |
+| isBrowserLinkTrackingEnabled | boolean | false | Default is false. If true, the SDK will track all [Browser Link](https://docs.microsoft.com/en-us/aspnet/core/client-side/using-browserlink) requests. |
+| appId | string | null | AppId is used for the correlation between AJAX dependencies happening on the client-side with the server-side requests. When Beacon API is enabled, it cannot be used automatically, but can be set manually in the configuration. Default is null |
+| enableCorsCorrelation | boolean | false | If true, the SDK will add two headers ('Request-Id' and 'Request-Context') to all CORS requests to correlate outgoing AJAX dependencies with corresponding requests on the server side. Default is false |
+| namePrefix | string | undefined | An optional value that will be used as name postfix for localStorage and cookie name.
+| enableAutoRouteTracking | boolean | false | Automatically track route changes in Single Page Applications (SPA). If true, each route change will send a new Pageview to Application Insights. Hash route changes changes (`example.com/foo#bar`) are also recorded as new page views.
+| enableRequestHeaderTracking | boolean | false | If true, AJAX & Fetch request headers is tracked, default is false.
+| enableResponseHeaderTracking | boolean | false | If true, AJAX & Fetch request's response headers is tracked, default is false.
+| enableAjaxErrorStatusText | boolean | false | Default false. If true, include response error data text | boolean in dependency event on failed AJAX requests.
+| enableAjaxPerfTracking | boolean | false | Default false. Flag to enable looking up and including additional browser window.performance timings in the reported ajax (XHR and fetch) reported metrics.
+| maxAjaxPerfLookupAttempts | numeric | 3 | Defaults to 3. The maximum number of times to look for the window.performance timings (if available), this is required as not all browsers populate the window.performance before reporting the end of the XHR request and for fetch requests this is added after its complete.
+| ajaxPerfLookupDelay | numeric | 25 | Defaults to 25ms. The amount of time to wait before re-attempting to find the windows.performance timings for an ajax request, time is in milliseconds and is passed directly to setTimeout().
+| distributedTracingMode | numeric or `DistributedTracingModes` | `DistributedTracingModes.AI` | Sets the distributed tracing mode. If AI_AND_W3C mode or W3C mode is set, W3C trace context headers (traceparent/tracestate) will be generated and included in all outgoing requests. AI_AND_W3C is provided for back-compatibility with any legacy Application Insights instrumented services.
+| enableUnhandledPromiseRejectionTracking | boolean | false | If true, unhandled promise rejections will be autocollected and reported as a javascript error. When disableExceptionTracking is true (dont track exceptions) the config value will be ignored and unhandled promise rejections will not be reported.
+| disableInstrumentationKeyValidation | boolean | false | If true, instrumentation key validation check is bypassed. Default value is false.
+| enablePerfMgr | boolean | false | [Optional] When enabled (true) this will create local perfEvents for code that has been instrumented to emit perfEvents (via the doPerf() helper). This can be used to identify performance issues within the SDK based on your usage or optionally within your own instrumented code. [More details are available by the basic documentation](./docs/PerformanceMonitoring.md). Since v2.5.7
+| perfEvtsSendAll | boolean | false | [Optional] When _enablePerfMgr_ is enabled and the [IPerfManager](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IPerfManager.ts) fires a [INotificationManager](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/INotificationManager.ts).perfEvent() this flag determines whether an event is fired (and sent to all listeners) for all events (true) or only for 'parent' events (false &lt;default&gt;).<br />A parent [IPerfEvent](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/IPerfEvent.ts) is an event where no other IPerfEvent is still running at the point of this event being created and it's _parent_ property is not null or undefined. Since v2.5.7
+| idLength | numeric | 22 | [Optional] Identifies the default length used to generate new random session and user id's. Defaults to 22, previous default value was 5 (v2.5.8 or less), if you need to keep the previous maximum length you should set this value to 5.
+
+### ICookieMgrConfig
+
+Cookie Configuration for instance based cookie management added in version 2.6.0.
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| enabled | boolean | true | A boolean that indicates whether the use of cookies by  the SDK is enabled by the current instance. If false, the instance of the SDK initialized by this configuration will not store or read any data from cookies |
+| domain | string | null | Custom cookie domain. This is helpful if you want to share Application Insights cookies across subdomains. If not provided uses the value from root `cookieDomain` value. |
+| path | string | / | Specifies the path to use for the cookie, if not provided it will use any value from the root `cookiePath` value. |
+| getCookie | `(name: string) => string` | null | Function to fetch the named cookie value, if not provided it will use the internal cookie parsing / caching. | 
+| setCookie | `(name: string, value: string) => void` | null | Function to set the named cookie with the specified value, only called when adding or updating a cookie. |
+| delCookie | `(name: string, value: string) => void` | null | Function to delete the named cookie with the specified value, separated from setCookie to avoid the need to parse the value to determine whether the cookie is being added or removed.if not provided it will use the internal cookie parsing / caching. |
+
+## Cookie Handling
+
+From version 2.6.0, cookie management is now available directly from the instance and can be disabled and re-enabled after initialization.
+
+If disabled during initialization via the `disableCookiesUsage` or `cookieCfg.enabled` configurations, you can now re-enable via the [ICookieMgr](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ICookieMgr.ts) `setEnabled` function.
+
+The instance based cookie management also replaces the previous CoreUtils global functions of `disableCookies()`, `setCookie(...)`, `getCookie(...)` and `deleteCookie(...)`. And to benefit from the tree-shaking enhancements also introduced as part of version 2.6.0 you should no longer uses the global functions.
+
+### Simplified Usage of new instance Cookie Manager
+
+- appInsights.[getCookieMgr()](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ICookieMgr.ts).setEnabled(true/false)
+- appInsights.[getCookieMgr()](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ICookieMgr.ts).set("MyCookie", "thevalue");
+- appInsights.[getCookieMgr()](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ICookieMgr.ts).get("MyCookie");
+- appInsights.[getCookieMgr()](https://github.com/microsoft/ApplicationInsights-JS/blob/master/shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ICookieMgr.ts).del("MyCookie");
+
+## Tree-Shaking Support and enhancements
+
+As part of changes being introduced in version 2.6.0 we are deprecating and removing the *internal* usages of the static helper classes `CoreUtils`, `EventHelper`, `Util`, `UrlHelper`, `DateTimeUtils` and `ConnectionStringParser` to provide better support for tree-shaking algorithms so that unused code can be safely dropped when using NPM packages.
+
+[See Tree-Shaking Recommendations](TreeShakingRecommendations.md)
 
 ## Single Page Applications
 

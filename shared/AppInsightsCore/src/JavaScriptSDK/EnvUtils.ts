@@ -276,7 +276,7 @@ export function isReactNative(): boolean {
  */
 export function isIE() {
     let nav = getNavigator();
-    if (nav && nav.userAgent !== _navUserAgentCheck && _isTrident === null) {
+    if (nav && (nav.userAgent !== _navUserAgentCheck || _isTrident === null)) {
         // Added to support test mocking of the user agent
         _navUserAgentCheck = nav.userAgent;
         let userAgent = (_navUserAgentCheck || "").toLowerCase();

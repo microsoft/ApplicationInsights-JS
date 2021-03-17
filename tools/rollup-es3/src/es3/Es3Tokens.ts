@@ -44,7 +44,7 @@ export const defaultEs3Tokens:IEs3Keyword[] = [
     },
     {
         funcNames: [/Object\.create[\s]*\(/g ],
-        errorMsg: "[Object.create] is not supported in an ES3 environment, use the helper function CoreUtils.objCreate() or add an explicit existence check",
+        errorMsg: "[Object.create] is not supported in an ES3 environment, use the helper function objCreate() or add an explicit existence check",
         // We are only supporting the version that takes a single argument
         extract: /(Object)\.(create)[\s]*\(([^,\)]*)\)([;]?)/g,
         checkGroups: [ 2 ],
@@ -154,7 +154,7 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
     },
     {
         funcNames: [ /([\w0-9\$]*)\.toISOString[\s]*\(/g ],
-        errorMsg: "[%funcName%] is not supported in an ES3 environment, use CoreUtils.toISOString()",
+        errorMsg: "[%funcName%] is not supported in an ES3 environment, use getISOString()",
         ignoreFuncMatch: [ 
             /CoreUtils(\$[\d]+)+\.toISOString/,     // Make sure this isn't a reference to CoreUtils.isISOString(); CoreUtils$1.isISOString();
             "Utils.toISOString"                     // or if it's a reference to Utils.isISOString()
@@ -177,7 +177,7 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
     },
     {
         funcNames: [ /([\w0-9]*)\.(forEach)[\s]*\(/g ],
-        errorMsg: "[%funcName%] is not a supported array method in an ES3 environment, use CoreUtils.arrForEach().",
+        errorMsg: "[%funcName%] is not a supported array method in an ES3 environment, use arrForEach().",
         ignoreFuncMatch: [ 
             "headers.forEach"               // Ignore patterns that look like the response headers processing
         ],
@@ -193,15 +193,27 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
     },
     {
         funcNames: [ /([\w0-9]*)\.(trim)[\s]*\(/g ],
-        errorMsg: "[%funcName%] is not a supported string method in an ES3 environment, use CoreUtils.strTrim().",
+        errorMsg: "[%funcName%] is not a supported string method in an ES3 environment, use strTrim().",
         ignoreFuncMatch: [ 
             "Util.trim",                            // Make sure this isn't a reference to Util.trim()
             "DataSanitizer.trim"                    // Make sure this isn't a reference to Util.trim()
         ]
     },
     {
+        funcNames: [ /([\w0-9]*)\.(startsWith)[\s]*\(/g ],
+        errorMsg: "[%funcName%] is not a supported string method in an ES3 environment, use strStartsWith().",
+        ignoreFuncMatch: [ 
+        ]
+    },
+    {
+        funcNames: [ /([\w0-9]*)\.(endsWith)[\s]*\(/g ],
+        errorMsg: "[%funcName%] is not a supported string method in an ES3 environment, use strEndsWith().",
+        ignoreFuncMatch: [ 
+        ]
+    },
+    {
         funcNames: [ /([\w0-9\$]*)(\(\))?\.now[\s]*\(\)/g ],
-        errorMsg: "[%funcName%] is not supported in an ES3 environment, use CoreUtils.dateNow() or CoreUtils.perfNow()",
+        errorMsg: "[%funcName%] is not supported in an ES3 environment, use dateNow() or perfNow()",
         ignoreFuncMatch: [
             "perf.now()",                           // This assume a pre-check that now actually exists
             "dt.now()"                              // This assume a pre-check that now actually exists

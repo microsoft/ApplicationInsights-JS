@@ -36,10 +36,10 @@ export {
     IProcessTelemetryContext,
     Tags,
     BaseCore,
-    CoreUtils
+    CoreUtils, ICoreUtils
 } from "@microsoft/applicationinsights-core-js";
 export {
-    Util,
+    Util, IUtil,
     IConfig,
     IDependencyTelemetry,
     IPageViewPerformanceTelemetry,
@@ -58,7 +58,8 @@ export {
     PageViewPerformance,
     RemoteDependencyData,
     Trace,
-    DistributedTracingModes
+    DistributedTracingModes,
+    ICorrelationIdHelper, IUrlHelper, IDateTimeUtils, IRequestHeaders
 } from "@microsoft/applicationinsights-common";
 export { Sender } from "@microsoft/applicationinsights-channel-js";
 export { ApplicationInsights as ApplicationAnalytics, IAppInsightsInternal } from "@microsoft/applicationinsights-analytics-js";

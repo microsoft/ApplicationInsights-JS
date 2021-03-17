@@ -31,6 +31,7 @@
         "rollup-plugin-node-resolve": "^3.4.0",
         "rollup-plugin-replace": "^2.1.0",
         "rollup-plugin-uglify": "^6.0.4",
+        "rollup-plugin-cleanup": "3.2.1",
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
         "typescript": "^3.9.7"
@@ -39,7 +40,7 @@
         "@microsoft/applicationinsights-common": "^2.5.10",
         "@microsoft/applicationinsights-core-js": "^2.5.10",
         "@microsoft/applicationinsights-shims": "^1.0.3",
-        "@microsoft/dynamicproto-js": "^1.1.0"
+        "@microsoft/dynamicproto-js": "^1.1.1"
     },
     "peerDependencies": {
         "react-native": "*",

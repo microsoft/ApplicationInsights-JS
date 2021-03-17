@@ -4,9 +4,10 @@
 import { DataSanitizer } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
-import { Util, AjaxHelper} from '../Util';
+import { AjaxHelperParseDependencyPath} from '../Util';
 import { RemoteDependencyData as GeneratedRemoteDependencyData } from '../Interfaces/Contracts/Generated/RemoteDependencyData';
 import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
+import { msToTimeSpan } from '../HelperFuncs';
 
 export class RemoteDependencyData extends GeneratedRemoteDependencyData implements ISerializable {
 
@@ -46,13 +47,13 @@ export class RemoteDependencyData extends GeneratedRemoteDependencyData implemen
 
         this.id = id;
 
-        this.duration = Util.msToTimeSpan(value);
+        this.duration = msToTimeSpan(value);
         this.success = success;
         this.resultCode = resultCode + "";
 
         this.type = DataSanitizer.sanitizeString(logger, requestAPI);
 
-        const dependencyFields = AjaxHelper.ParseDependencyPath(logger, absoluteUrl, method, commandName);
+        const dependencyFields = AjaxHelperParseDependencyPath(logger, absoluteUrl, method, commandName);
         this.data = DataSanitizer.sanitizeUrl(logger, commandName) || dependencyFields.data; // get a value from hosturl if commandName not available
         this.target = DataSanitizer.sanitizeString(logger, dependencyFields.target);
         if (correlationContext) {

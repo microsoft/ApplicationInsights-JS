@@ -5,9 +5,9 @@ import { PageViewPerfData } from '../Interfaces/Contracts/Generated/PageViewPerf
 import { FieldType } from '../Enums';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { DataSanitizer } from './Common/DataSanitizer';
-import { Util } from '../Util';
 import { IDiagnosticLogger, _InternalMessageId, LoggingSeverity } from '@microsoft/applicationinsights-core-js';
 import { IPageViewPerformanceTelemetry } from '../Interfaces/IPageViewPerformanceTelemetry';
+import { strNotSpecified } from '../Constants';
 
 
 export class PageViewPerformance extends PageViewPerfData implements ISerializable {
@@ -35,7 +35,7 @@ export class PageViewPerformance extends PageViewPerfData implements ISerializab
     constructor(logger: IDiagnosticLogger, name: string, url: string, unused: number, properties?: { [key: string]: string }, measurements?: { [key: string]: number }, cs4BaseData?: IPageViewPerformanceTelemetry) {
         super();
         this.url = DataSanitizer.sanitizeUrl(logger, url);
-        this.name = DataSanitizer.sanitizeString(logger, name) || Util.NotSpecified;
+        this.name = DataSanitizer.sanitizeString(logger, name) || strNotSpecified;
 
         this.properties = DataSanitizer.sanitizeProperties(logger, properties);
         this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
