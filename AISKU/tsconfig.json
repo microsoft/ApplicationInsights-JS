@@ -13,7 +13,7 @@
     "noEmitHelpers": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "declarationDir": "AISKU/dist-esm",
+    "declarationDir": "AISKU/types",
     "outDir": "dist-esm",
     "rootDir": "./AISKU/src"
   },

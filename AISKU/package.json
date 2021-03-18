@@ -6,7 +6,7 @@
     "author": "Microsoft Application Insights Team",
     "main": "dist/applicationinsights-web.js",
     "module": "dist-esm/applicationinsights-web.js",
-    "types": "dist-esm/applicationinsights-web.d.ts",
+    "types": "types/applicationinsights-web.d.ts",
     "sideEffects": false,
     "repository": {
         "type": "git",
