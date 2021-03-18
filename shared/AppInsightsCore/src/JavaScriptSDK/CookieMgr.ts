@@ -19,6 +19,7 @@ const strEnabled = "enabled";
 const strIsCookieUseDisabled = "isCookieUseDisabled";
 const strDisableCookiesUsage = "disableCookiesUsage";
 const strConfigCookieMgr = "_ckMgr";
+const strEmpty = "";
 
 let _supportsCookies: boolean = null;
 let _allowUaSameSite: boolean = null;
@@ -136,7 +137,13 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
         },
         set: (name: string, value: string, maxAgeSec?: number, domain?: string, path?: string) => {
             if (_isMgrEnabled(cookieMgr)) {
-                let values = _extractParts(value);
+                let values: any = {};
+                let theValue = strTrim(value || strEmpty);
+                let idx = theValue.indexOf(";")
+                if (idx !== -1) {
+                    theValue = strTrim(value.substring(0, idx));
+                    values = _extractParts(value.substring(idx + 1));
+                }
 
                 // Only update domain if not already present (isUndefined) and the value is truthy (not null, undefined or empty string)
                 setValue(values, "domain",  domain || _domain, isTruthy, isUndefined);
@@ -153,14 +160,14 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                             let expiry = new Date();
                             expiry.setTime(expireMs);
                             setValue(values, strExpires, 
-                                _formatDate(expiry, !_isIE ? strToUTCString : strToGMTString) || _formatDate(expiry, _isIE ? strToGMTString : strToUTCString) || "",
+                                _formatDate(expiry, !_isIE ? strToUTCString : strToGMTString) || _formatDate(expiry, _isIE ? strToGMTString : strToUTCString) || strEmpty,
                                 isTruthy);
                         }
                     }
             
-                    if (!_isIE && maxAgeSec >= 0) {
-                        // Max age must be non-negative
-                        setValue(values, "max-age", "" + maxAgeSec, null, isUndefined);
+                    if (!_isIE) {
+                        // Only replace if not already present
+                        setValue(values, "max-age", strEmpty + maxAgeSec, null, isUndefined);
                     }
                 }
             
@@ -181,11 +188,11 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                 setValue(values, "path", path || _path, null, isUndefined);
             
                 let setCookieFn = cookieMgrConfig.setCookie || _setCookieValue;
-                setCookieFn(name, _formatCookieValue(values));
+                setCookieFn(name, _formatCookieValue(theValue, values));
             }
         },
         get: (name: string): string => {
-            let value = ""
+            let value = strEmpty
             if (_isMgrEnabled(cookieMgr)) {
                 value = (cookieMgrConfig.getCookie || _getCookieValue)(name);
             }
@@ -206,8 +213,13 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
                     [strExpires]: "Thu, 01 Jan 1970 00:00:01 GMT"
                 }
 
+                if (!isIE()) {
+                    // Set max age to expire now
+                    values["max-age"] = "0"
+                }
+
                 let delCookie = cookieMgrConfig.delCookie || _setCookieValue;
-                delCookie(name, _formatCookieValue(values));
+                delCookie(name, _formatCookieValue(strEmpty, values));
             }
         }
     };
@@ -245,7 +257,7 @@ function _extractParts(theValue: string) {
     if (theValue && theValue.length) {
         let parts = strTrim(theValue).split(";");
         arrForEach(parts, (thePart) => {
-            thePart = strTrim(thePart || "");
+            thePart = strTrim(thePart || strEmpty);
             if (thePart) {
                 let idx = thePart.indexOf("=");
                 if (idx === -1) {
@@ -268,29 +280,25 @@ function _formatDate(theDate: Date, func: string) {
     return null;
 }
 
-function _formatCookieValue(values: any) {
-    let cookieValue = "";
+function _formatCookieValue(value: string, values: any) {
+    let cookieValue = value || strEmpty;
     objForEachKey(values, (name, theValue) => {
-        if (cookieValue) {
-            cookieValue += "; "
-        }
-        
-        cookieValue += !isNullOrUndefined(theValue) ? name + "=" + theValue : name;
+        cookieValue += "; " + name + (!isNullOrUndefined(theValue) ? "=" + theValue : strEmpty);
     });
 
     return cookieValue;
 }
 
 function _getCookieValue(name: string) {
-    let cookieValue = "";
+    let cookieValue = strEmpty;
     if (_doc) {
-        let theCookie = _doc[strCookie] || "";
+        let theCookie = _doc[strCookie] || strEmpty;
         if (_parsedCookieValue !== theCookie) {
             _cookieCache = _extractParts(theCookie);
             _parsedCookieValue = theCookie;
         }
 
-        cookieValue = strTrim(_cookieCache[name] || "");
+        cookieValue = strTrim(_cookieCache[name] || strEmpty);
     }
 
     return cookieValue;

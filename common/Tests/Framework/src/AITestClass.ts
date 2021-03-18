@@ -335,8 +335,8 @@ export class AITestClass {
                     result.then(() => {
                         promiseTimeout && orgClearTimeout(promiseTimeout);
                         _testFinished();
-                    },
-                    (reason: any) => {
+                    });
+                    result.catch && result.catch((reason: any) => {
                         promiseTimeout && orgClearTimeout(promiseTimeout);
                         QUnit.assert.ok(false, "Returned Promise rejected: " + reason);
                         _testFinished(true);
