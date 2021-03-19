@@ -155,7 +155,7 @@ export interface IConfig {
      * AI_AND_W3C is provided for back-compatibility with any legacy Application Insights instrumented services
      * @type {enum}
      * @memberof IConfig
-     * @defaultValue AI
+     * @defaultValue AI_AND_W3C
      */
     distributedTracingMode?: DistributedTracingModes;
 

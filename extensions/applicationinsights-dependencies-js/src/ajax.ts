@@ -156,7 +156,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             disableAjaxTracking: false,
             disableFetchTracking: true,
             disableCorrelationHeaders: false,
-            distributedTracingMode: DistributedTracingModes.AI,
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
             correlationHeaderExcludedDomains: [
                 "*.blob.core.windows.net",
                 "*.blob.core.chinacloudapi.cn",
