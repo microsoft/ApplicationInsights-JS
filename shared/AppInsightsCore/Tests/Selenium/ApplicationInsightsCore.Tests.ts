@@ -593,6 +593,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
         this.testCase({
             name: 'newId check randomness',
+            timeout: 15000,
             test: () => {
                 let map = {};
 
@@ -620,6 +621,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
         this.testCase({
             name: 'newId check randomness -- emulating IE',
+            timeout: 15000,
             test: () => {
                 let map = {};
 
@@ -653,6 +655,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
         this.testCase({
             name: 'Test CoreUtils.randomValue() randomness and distribution',
+            timeout: 15000,
             test: () => {
                 let numBuckets = 100;
                 let buckets: number[] = _createBuckets(100);
@@ -693,6 +696,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
         this.testCase({
             name: 'Test CoreUtils.random32() randomness and distribution',
+            timeout: 15000,
             test: () => {
                 let numBuckets = 100;
                 let buckets: number[] = _createBuckets(100);
@@ -734,6 +738,7 @@ export class ApplicationInsightsCoreTests extends AITestClass {
 
         this.testCase({
             name: 'Test CoreUtils.mwcRandom32() randomness and distribution',
+            timeout: 15000,
             test: () => {
                 let numBuckets = 100;
                 let buckets: number[] = _createBuckets(100);
