@@ -1,19 +1,36 @@
 # Releases
 
-## 2.6.0 (Placeholder)
+## 2.6.0 (March 23rd, 2021)
+
+### Version bump is due to the following major changes
+
+A large amount of [Tree-Shaking improvements](https://github.com/microsoft/ApplicationInsights-JS#tree-shaking-support-and-enhancements) have been included in this version, please [see the recommendations](TreeShakingRecommendations.md) you may need to apply to your code to take complete advantage of these changes to reduce the overall module sizes (when using NPM packages)
+
+Also includes major changes to the cookie management, please [see the readme cookie configuration section](https://github.com/microsoft/ApplicationInsights-JS#icookiemgrconfig) and [cookie handling changes](https://github.com/microsoft/ApplicationInsights-JS#cookie-handling).
 
 ### Changelog
 
+- General Performance improvements / optimizations
+- #1059 Enable W3C distributed tracing on by default with backward compatibility
 - #1076 Multiple Treeshaking enhancements, [see recommendations](TreeShakingRecommendations.md)
 - #1091 Enable cookie support after the SDK has been initialized
 - #1125 Disable Cookies
+- #1276 [BUG] Does not work with Closure Compiler (possible fix, now generates `applicationinsights-web.d.ts` (This version is namespaced) and `applicationinsights-web.rollup.d.ts` in the dist folder
 - #1434 Ability to specify cookie Path so that AI works behind App Gateway
+- #1473 [BUG] New dts gneration doesn't work when the environment doesn't have powershell (introduced for #1276)
+- #1474 Add initial stamp endpoint redirection logic
+- #1478 [Bug] Ajax tracking for XHR and fetch is not always setting the start time correctly
+- #1496 [BUG] applicationinsights-web npm package does not have types or a types folder.
+- #1498 [BUG][ES6] TypeError: xxx is not a function or TypeError: DynamicProto [XXXX] is not in class heirarchy of [Object] #28
+- #1503 [BUG] New Perf tests are randomly failing when the build environment is busy (tests added as part of #1076 and #1091)
+- Some documentation updates
 
 ## 2.5.11 (January 15th, 2021)
 
 ### Changelog
 
 - #1452 [BUG] v2.5.10 Snippet Initialization fails to redirect proxied functions -- causing terminal exception
+- #1433 Typo in 'disableInstrumentaionKeyValidation' config property.
 
 ### Update Click Analytics plugin to v2.5.11
 

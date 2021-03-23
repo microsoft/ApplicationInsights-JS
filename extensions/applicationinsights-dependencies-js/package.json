@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-dependencies-js",
-    "version": "2.5.11",
+    "version": "2.6.0",
     "description": "Microsoft Application Insights XHR dependencies plugin",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -41,8 +41,8 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^1.1.1",
         "@microsoft/applicationinsights-shims" : "1.0.3",
-        "@microsoft/applicationinsights-core-js": "2.5.11",
-        "@microsoft/applicationinsights-common": "2.5.11"
+        "@microsoft/applicationinsights-core-js": "2.6.0",
+        "@microsoft/applicationinsights-common": "2.6.0"
     },
     "license": "MIT"
 }
