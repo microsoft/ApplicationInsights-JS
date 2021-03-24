@@ -1,5 +1,18 @@
-> Note: Angular Plugin is moved to its own repo [here](https://github.com/microsoft/applicationinsights-angularplugin-js). Please refer to the new repo for usage instructions, and open issues there.
-# Microsoft Application Insights JavaScript SDK - Angular Plugin
+# Microsoft Application Insights JavaScript SDK - Angular Plugin (&lt; 2.5.10)
+
+*******************
+
+:exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation:
+
+# The current development repo location of the [Angular Plugin Repo has moved here](https://github.com/microsoft/applicationinsights-angularplugin-js) - (for v2.5.11 or greater) 
+
+## Please refer to the new repo for usage instructions, and open issues there.
+
+### This repo folder is no longer compiled and tested as part of the PR and merge validation, thus it WILL go stale
+
+:exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation: :exclamation:
+
+*******************
 
 [![Build Status](https://travis-ci.org/microsoft/ApplicationInsights-JS.svg?branch=master)](https://travis-ci.org/microsoft/ApplicationInsights-JS)
 [![npm version](https://badge.fury.io/js/%40microsoft%2Fapplicationinsights-analytics-js.svg)]()

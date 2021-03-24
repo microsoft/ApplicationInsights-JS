@@ -25,6 +25,15 @@ Also includes major changes to the cookie management, please [see the readme coo
 - #1503 [BUG] New Perf tests are randomly failing when the build environment is busy (tests added as part of #1076 and #1091)
 - Some documentation updates
 
+### Update React plugin to v3.1.0
+
+- Update Core dependency to ^2.6.0 Core changes
+- #1470 Update applicationinsights-react-js to react 17
+
+### Update React Native plugin to v2.3.0
+
+- Update Core dependency to ^2.6.0 Core changes
+
 ## 2.5.11 (January 15th, 2021)
 
 ### Changelog
