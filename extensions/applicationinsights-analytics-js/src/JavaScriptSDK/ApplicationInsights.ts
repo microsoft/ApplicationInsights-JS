@@ -647,7 +647,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                         _window.addEventListener(_self.config.namePrefix + "locationchange", () => {
                             if (_properties && _properties.context && _properties.context.telemetryTrace) {
                                 _properties.context.telemetryTrace.traceID = generateW3CId();
-                                _properties.context.telemetryTrace.name = _location && _location.pathname || "_unknown_";
+                                _properties.context.telemetryTrace.name = (_location && _location.pathname).concat(_location.hash) || "_unknown_";
                             }
                             if (_currUri) {
                                 _prevUri = _currUri;
