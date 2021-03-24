@@ -8,8 +8,6 @@ jobs:
   include:
     - script: ./.travis/test_rush.sh
       name: "Tests"
-    - script: ./.travis/test_angular.sh
-      name: "Angular Tests"
     - script: ./.travis/test_legacy.sh
       name: "Legacy Tests"
     - script: ./.travis/test_react_native.sh
