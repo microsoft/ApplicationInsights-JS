@@ -7,9 +7,15 @@ import { IExceptionTelemetry, IAutoExceptionTelemetry } from './IExceptionTeleme
 import { ITraceTelemetry } from './ITraceTelemetry';
 import { IMetricTelemetry } from  './IMetricTelemetry';
 import { IPageViewPerformanceTelemetry } from './IPageViewPerformanceTelemetry';
-import { ITelemetryItem } from '@microsoft/applicationinsights-core-js';
+import { ICookieMgr, ITelemetryItem } from '@microsoft/applicationinsights-core-js';
 
 export interface IAppInsights {
+
+    /**
+     * Get the current cookie manager for this instance
+     */
+    getCookieMgr(): ICookieMgr;
+
     trackEvent(event: IEventTelemetry, customProperties?: {[key: string]: any}): void;
     trackPageView(pageView: IPageViewTelemetry, customProperties?: { [key: string]: any }): void;
     trackException(exception: IExceptionTelemetry, customProperties?: {[key: string]: any}): void;

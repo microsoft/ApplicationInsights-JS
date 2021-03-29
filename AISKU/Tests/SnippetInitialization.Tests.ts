@@ -7,15 +7,19 @@ import { Assert } from "./TestFramework/Assert";
 import { PollingAssert } from "./TestFramework/PollingAssert";
 import { TestClass } from "./TestFramework/TestClass";
 import { createSnippetV5 } from "./testSnippet";
-import { ITelemetryItem, objForEachKey } from "@microsoft/applicationinsights-core-js";
-import { ContextTagKeys, DistributedTracingModes, IDependencyTelemetry, RequestHeaders, Util } from "@microsoft/applicationinsights-common";
+import { hasOwnProperty, isNotNullOrUndefined, ITelemetryItem, objForEachKey } from "@microsoft/applicationinsights-core-js";
+import { ContextTagKeys, DistributedTracingModes, IConfig, IDependencyTelemetry, RequestHeaders, Util } from "@microsoft/applicationinsights-common";
 import { getGlobal } from "@microsoft/applicationinsights-shims";
 import { TelemetryContext } from "@microsoft/applicationinsights-properties-js";
 
 const TestInstrumentationKey = 'b7170927-2d1c-44f1-acec-59f4e1751c11';
 
-const _expectedProperties = [
+const _expectedBeforeProperties = [
     "config",
+    "cookie"
+];
+
+const _expectedAfterProperties = [
     "appInsights",
     "core",
     "context"
@@ -37,6 +41,10 @@ const _expectedTrackMethods = [
     "flush"
 ];
 
+const _expectedMethodsAfterInitialization = [
+    "getCookieMgr"
+];
+
 function getSnippetConfig(sessionPrefix: string) {
     return {
         src: "",
@@ -52,7 +60,7 @@ function getSnippetConfig(sessionPrefix: string) {
             enableCorsCorrelation: true,
             distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
             samplingPercentage: 50
-        }
+        } as IConfig
     };
 };
 
@@ -137,6 +145,23 @@ export class SnippetInitializationTests extends TestClass {
                             Assert.ok(funcSpy.called, "Function [" + method + "] of the appInsights should have been called")
                         }
                     });
+
+                    _expectedMethodsAfterInitialization.forEach(method => {
+                        Assert.ok(theSnippet[method], `${method} exists`);
+                        Assert.equal('function', typeof theSnippet[method], `${method} is a function`);
+
+                        let funcSpy = this.sandbox.spy(theSnippet.appInsights, method);
+
+                        try {
+                            theSnippet[method]();
+                        } catch(e) {
+                            // Do nothing
+                        }
+    
+                        if (funcSpy) {
+                            Assert.ok(funcSpy.called, "Function [" + method + "] of the appInsights should have been called")
+                        }
+                    });
                 }, PollingAssert.createPollingAssert(() => {
                     try {
                         Assert.ok(true, "* waiting for scheduled actions to send events " + new Date().toISOString());
@@ -164,11 +189,66 @@ export class SnippetInitializationTests extends TestClass {
             this.testCase({
                 name: "Check properties exist",
                 test: () => {
-                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix))) as any;
-                    _expectedProperties.forEach(property => {
-                        Assert.ok(theSnippet[property], `${property} exists`);
+                    let preSnippet = snippetCreator(getSnippetConfig(this.sessionPrefix));
+                    _expectedBeforeProperties.forEach(property => {
+                        Assert.ok(hasOwnProperty(preSnippet, property), `${property} has property`);
+                        Assert.ok(isNotNullOrUndefined(preSnippet[property]), `${property} exists`);
+                    });
+                    _expectedAfterProperties.forEach(property => {
+                        Assert.ok(!hasOwnProperty(preSnippet, property), `${property} does not exist`);
+                    });
+
+                    let theSnippet = this._initializeSnippet(preSnippet) as any;
+                    _expectedAfterProperties.forEach(property => {
+                        Assert.ok(hasOwnProperty(theSnippet, property) , `${property} exists`);
                         Assert.notEqual('function', typeof theSnippet[property], `${property} is not a function`);
                     });
+
+                    Assert.ok(isNotNullOrUndefined(theSnippet.core), "Make sure the core is set");
+                    Assert.ok(isNotNullOrUndefined(theSnippet.appInsights.core), "Make sure the appInsights core is set");
+                    Assert.equal(theSnippet.core, theSnippet.appInsights.core, "Make sure the core instances are actually the same");
+                }
+            });
+
+            this.testCase({
+                name: "Check cookie manager access",
+                test: () => {
+                    let theSnippet = this._initializeSnippet(snippetCreator(getSnippetConfig(this.sessionPrefix))) as any;
+
+                    let coreCookieMgr = theSnippet.core.getCookieMgr();
+                    Assert.ok(isNotNullOrUndefined(coreCookieMgr), "Make sure the cookie manager is returned");
+                    Assert.equal(true, coreCookieMgr.isEnabled(), "Cookies should be enabled")
+                    Assert.equal(coreCookieMgr, theSnippet.getCookieMgr(), "Make sure the cookie manager is returned");    
+
+                    let appInsightsCookieMgr = theSnippet.appInsights.core.getCookieMgr();
+                    Assert.ok(isNotNullOrUndefined(appInsightsCookieMgr), "Make sure the cookie manager is returned");
+                    Assert.equal(true, appInsightsCookieMgr.isEnabled(), "Cookies should be enabled")
+                    Assert.equal(appInsightsCookieMgr, theSnippet.getCookieMgr(), "Make sure the cookie manager is returned");
+                    Assert.equal(coreCookieMgr, appInsightsCookieMgr, "Make sure the cookie managers are the same");
+
+                    Assert.equal(true, theSnippet.getCookieMgr().isEnabled(), "Cookies should be enabled")
+                }
+            });
+
+            this.testCase({
+                name: "Check cookie manager access as disabled",
+                test: () => {
+                    let theConfig = getSnippetConfig(this.sessionPrefix);
+                    theConfig.cfg.disableCookiesUsage = true;
+                    let theSnippet = this._initializeSnippet(snippetCreator(theConfig)) as any;
+
+                    let coreCookieMgr = theSnippet.core.getCookieMgr();
+                    Assert.ok(isNotNullOrUndefined(coreCookieMgr), "Make sure the cookie manager is returned");
+                    Assert.equal(false, coreCookieMgr.isEnabled(), "Cookies should be disabled")
+                    Assert.equal(coreCookieMgr, theSnippet.getCookieMgr(), "Make sure the cookie manager is returned");              
+
+                    let appInsightsCookieMgr = theSnippet.appInsights.core.getCookieMgr();
+                    Assert.ok(isNotNullOrUndefined(appInsightsCookieMgr), "Make sure the cookie manager is returned");
+                    Assert.equal(false, appInsightsCookieMgr.isEnabled(), "Cookies should be disabled")
+                    Assert.equal(appInsightsCookieMgr, theSnippet.getCookieMgr(), "Make sure the cookie manager is returned");
+                    Assert.equal(coreCookieMgr, appInsightsCookieMgr, "Make sure the cookie managers are the same");
+
+                    Assert.equal(false, theSnippet.getCookieMgr().isEnabled(), "Cookies should be disabled")
                 }
             });
 
@@ -188,7 +268,11 @@ export class SnippetInitializationTests extends TestClass {
                     Assert.ok(theSnippet[method], `${method} exists`);
                     Assert.equal('function', typeof theSnippet[method], `${method} is a function`);
                 });
-        }
+                _expectedMethodsAfterInitialization.forEach(method => {
+                    Assert.ok(theSnippet[method], `${method} does exists`);
+                    Assert.equal('function', typeof theSnippet[method], `${method} is a function`);
+                });
+            }
         });
     }
 
