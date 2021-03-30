@@ -9,7 +9,7 @@ import {
 import {
     IPlugin, IConfiguration, IAppInsightsCore, IDiagnosticLogger,
     ITelemetryPlugin, BaseTelemetryPlugin, CoreUtils, ITelemetryItem, IProcessTelemetryContext,
-    ITelemetryPluginChain, _InternalMessageId, LoggingSeverity, ICustomProperties
+    ITelemetryPluginChain, _InternalMessageId, LoggingSeverity, ICustomProperties, safeGetCookieMgr, ICookieMgr
 } from "@microsoft/applicationinsights-core-js";
 import { IReactExtensionConfig } from './Interfaces/IReactExtensionConfig';
 import { History, LocationListener, Location, Action } from "history";
@@ -41,6 +41,13 @@ export default class ReactPlugin extends BaseTelemetryPlugin {
             };
             this.trackPageView(pageViewTelemetry);
         }
+    }
+
+    /**
+     * Get the current cookie manager for this instance
+     */
+    getCookieMgr(): ICookieMgr {
+        return safeGetCookieMgr(this.core);
     }
 
     /**

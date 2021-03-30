@@ -17,7 +17,7 @@ import {
     BaseTelemetryPlugin, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
     IDiagnosticLogger, LoggingSeverity, _InternalMessageId, ICustomProperties,
     getWindow, getDocument, getHistory, getLocation, doPerf, objForEachKey, 
-    isString, isFunction, isNullOrUndefined, arrForEach, generateW3CId, dumpObj, getExceptionName, isError
+    isString, isFunction, isNullOrUndefined, arrForEach, generateW3CId, dumpObj, getExceptionName, isError, ICookieMgr, safeGetCookieMgr
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
 import { PageVisitTimeManager } from "./Telemetry/PageVisitTimeManager";
@@ -52,7 +52,7 @@ function _formatMessage(message: any) {
 }
 
 export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
-    public static Version = "2.6.0"; // Not currently used anywhere
+    public static Version = "2.6.1"; // Not currently used anywhere
 
     public static getDefaultConfig(config?: IConfig): IConfig {
         if (!config) {
@@ -71,7 +71,6 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
             config.samplingPercentage = 100;
         }
 
-        config.isCookieUseDisabled = stringToBoolOrDefault(config.isCookieUseDisabled);
         config.isStorageUseDisabled = stringToBoolOrDefault(config.isStorageUseDisabled);
         config.isBrowserLinkTrackingEnabled = stringToBoolOrDefault(config.isBrowserLinkTrackingEnabled);
         config.enableAutoRouteTracking = stringToBoolOrDefault(config.enableAutoRouteTracking);
@@ -111,6 +110,10 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
         dynamicProto(ApplicationInsights, this, (_self, _base) => {
             let location = getLocation(true);
             _prevUri = location && location.href || "";
+
+            _self.getCookieMgr = () => {
+                return safeGetCookieMgr(_self.core);
+            };
 
             _self.processTelemetry = (env: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 doPerf(_self.core, () => _self.identifier + ":processTelemetry", () => {
@@ -731,6 +734,14 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
         });
     }
 
+    /**
+     * Get the current cookie manager for this instance
+     */
+    public getCookieMgr(): ICookieMgr {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return null;
+    }
+    
     public processTelemetry(env: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }

@@ -1,5 +1,12 @@
 # Releases
 
+## 2.6.1 (Hotfix - March 30th, 2021)
+
+### Changelog
+
+- #1518 P1 - [BUG] v2.6.0 is not re-hydrating the automatic session id correctly for each request
+- #1512 Expose the getCookieMgr() on the snippet proxy and analytics web instances
+
 ## 2.6.0 (March 23rd, 2021)
 
 ### Version bump is due to the following major changes

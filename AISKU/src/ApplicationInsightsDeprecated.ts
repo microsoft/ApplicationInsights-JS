@@ -5,7 +5,7 @@ import {
     IEventTelemetry, IEnvelope, ProcessLegacy
 } from "@microsoft/applicationinsights-common";
 import { Snippet, Initialization as ApplicationInsights } from "./Initialization";
-import { ITelemetryItem, IDiagnosticLogger, IConfiguration, proxyAssign, throwError } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, IDiagnosticLogger, IConfiguration, proxyAssign, throwError, ICookieMgr } from "@microsoft/applicationinsights-core-js";
 
 // This is an exclude list of properties that should not be updated during initialization
 // They include a combination of private and internal property names
@@ -93,6 +93,13 @@ export class AppInsightsDeprecated implements IAppInsightsDeprecated {
         }
 
         this._queue.push(callBack);
+    }
+
+    /**
+     * Get the current cookie manager for this instance
+     */
+    public getCookieMgr(): ICookieMgr {
+        return this.appInsightsNew.getCookieMgr();
     }
 
     startTrackPage(name?: string) {
@@ -239,10 +246,15 @@ export interface IAppInsightsDeprecated {
     */
     queue: Array<() => void>;
 
+    /**
+     * Get the current cookie manager for this instance
+     */
+     getCookieMgr(): ICookieMgr;
+
    /**
     * Starts timing how long the user views a page or other item. Call this when the page opens.
     * This method doesn't send any telemetry. Call `stopTrackPage` to log the page when it closes.
-    * @param   name  A string that idenfities this item, unique within this HTML document. Defaults to the document title.
+    * @param   name  A string that identifies this item, unique within this HTML document. Defaults to the document title.
     */
     startTrackPage(name?: string): void;
 

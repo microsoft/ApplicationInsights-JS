@@ -4,7 +4,7 @@
 import { 
     IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, 
     IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign,
-    arrForEach, isString, isFunction, isNullOrUndefined, addEventHandler, isArray, throwError
+    arrForEach, isString, isFunction, isNullOrUndefined, addEventHandler, isArray, throwError, ICookieMgr, safeGetCookieMgr
  } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
@@ -139,6 +139,14 @@ export class Initialization implements IApplicationInsights {
     }
 
     // Analytics Plugin
+
+    /**
+     * Get the current cookie manager for this instance
+     */
+     public getCookieMgr(): ICookieMgr {
+        return this.appInsights.getCookieMgr();
+    };
+
     /**
      * Log a user action or other occurrence.
      * @param {IEventTelemetry} event
