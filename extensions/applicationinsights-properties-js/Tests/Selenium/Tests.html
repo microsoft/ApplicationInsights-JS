@@ -25,6 +25,9 @@
 
         loadFetchModule(modules, "whatwg-fetch");
 
+        // Load and define the app insights test framework module
+        modules.add("@microsoft/ai-test-framework", "./node_modules/@microsoft/ai-test-framework/dist/ai-test-framework");
+
         // Load and define the app insights Shims module
         modules.add("@microsoft/applicationinsights-shims", "./node_modules/@microsoft/applicationinsights-shims/browser/applicationinsights-shims");
 
@@ -37,7 +40,7 @@
         // Load Common
         modules.add("@microsoft/applicationinsights-common", "./node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common");
 
-        var testModule = modules.add("Tests/Selenium/properties.tests", "./properties.tests.js")
+        var testModule = modules.add("Tests/Selenium/prop.tests", "./prop.tests.js")
         testModule.run = function (tests) {
             console && console.log("Starting tests");
             QUnit.start();

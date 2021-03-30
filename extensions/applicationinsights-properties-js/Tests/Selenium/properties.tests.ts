@@ -1,14 +1,11 @@
-﻿/// <reference path="../TestFramework/TestClass.ts" />
-
+﻿import { Assert, AITestClass } from "@microsoft/ai-test-framework";
 import { AppInsightsCore, IConfiguration, DiagnosticLogger, ITelemetryItem, createCookieMgr, newId, strTrim } from "@microsoft/applicationinsights-core-js";
 import PropertiesPlugin from "../../src/PropertiesPlugin";
 import { ITelemetryConfig } from "../../src/Interfaces/ITelemetryConfig";
-import { Util, IWeb } from "@microsoft/applicationinsights-common";
 import { TelemetryContext } from "../../src/TelemetryContext";
-import { _SessionManager } from "../../src/Context/Session";
 import { TelemetryTrace } from "../../src/Context/TelemetryTrace";
 
-export class PropertiesTests extends TestClass {
+export class PropertiesTests extends AITestClass {
     private properties: PropertiesPlugin;
     private core: AppInsightsCore;
     private _cookies: { [name: string ]: string } = {};
@@ -45,7 +42,9 @@ export class PropertiesTests extends TestClass {
     }
 
     private _getCookie(name: string) {
-        return this._cookies[name] || "";
+        let cookieValue = this._cookies[name] || "";
+        // Remove any cookie attributes added to the cookie
+        return cookieValue.split(";")[0];
     }
     
     private _delCookie(name: string) {
@@ -129,7 +128,7 @@ export class PropertiesTests extends TestClass {
             test: () => {
                 // setup
                 const id = "someUserId";
-                var cookieStub = this.sandbox.stub(this, "_getCookie", () => id + "||||");
+                var cookieStub = this.sandbox.stub(this as any, "_getCookie").callsFake(() => id + "||||");
 
                 // Act
                 Assert.ok(cookieStub.notCalled, 'Cookie not yet grabbed');
@@ -145,7 +144,7 @@ export class PropertiesTests extends TestClass {
             name: 'User: track is triggered if user context is first time initialized',
             test: () => {
                 // setup
-                var setCookieStub = this.sandbox.stub(this, "_setCookie", () => {});
+                var setCookieStub = this.sandbox.stub(this as any, "_setCookie").callsFake(() => {});
                 var loggingStub = this.sandbox.stub(this.core.logger, "logInternalMessage");
 
                 // Act
@@ -171,9 +170,9 @@ export class PropertiesTests extends TestClass {
                 var actualCookieName: string;
                 var actualCookieValue: string;
 
-                var newIdStub = this.sandbox.stub(this, "_getNewId", () => "newId");
-                var getCookieStub = this.sandbox.stub(this, "_getCookie", () => "");
-                var setCookieStub = this.sandbox.stub(this, "_setCookie", (cookieName, cookieValue) => {
+                var newIdStub = this.sandbox.stub(this as any, "_getNewId").callsFake(() => "newId");
+                var getCookieStub = this.sandbox.stub(this as any, "_getCookie").callsFake(() =>"");
+                var setCookieStub = this.sandbox.stub(this as any, "_setCookie").callsFake((cookieName, cookieValue) => {
                     actualCookieName = cookieName;
                     actualCookieValue = cookieValue;
                 });
@@ -204,7 +203,7 @@ export class PropertiesTests extends TestClass {
                 var authId = "bla@bla.com";
                 var accountId = "Contoso";
 
-                var cookieStub = this.sandbox.stub(this, "_getCookie", () => authId + "|" + accountId);
+                var cookieStub = this.sandbox.stub(this as any, "_getCookie").callsFake(() => authId + "|" + accountId);
 
                 // act
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
@@ -220,7 +219,7 @@ export class PropertiesTests extends TestClass {
             test: () => {
                 // setup
                 var authId = "bla@bla.com";
-                var cookieStub = this.sandbox.stub(this, "_getCookie", () => authId);
+                var cookieStub = this.sandbox.stub(this as any, "_getCookie").callsFake(() => authId);
 
                 // act
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
@@ -234,7 +233,7 @@ export class PropertiesTests extends TestClass {
             name: "Ctor: auth user context handles empty cookie",
             test: () => {
                 // setup
-                var cookieStub = this.sandbox.stub(this, "_getCookie", () => "");
+                var cookieStub = this.sandbox.stub(this as any, "_getCookie").callsFake(() => "");
 
                 // act
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
@@ -252,7 +251,7 @@ export class PropertiesTests extends TestClass {
                 var config = this.getEmptyConfig();
                 config.extensionConfig.AppInsightsPropertiesPlugin.accountId = "account17";
 
-                var cookieStub = this.sandbox.stub(this, "_getCookie", () => null);
+                var cookieStub = this.sandbox.stub(this as any, "_getCookie").callsFake(() => null);
 
                 // act
                 this.properties.initialize(config, this.core, []);
@@ -268,7 +267,7 @@ export class PropertiesTests extends TestClass {
                 // setup
                 var authAndAccountId = ['bla@bla.com', 'contoso'];
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
-                var cookieStub = this.sandbox.stub(this, "_setCookie");
+                var cookieStub = this.sandbox.stub(this as any, "_setCookie");
 
                 // act
                 this.properties.context.user.setAuthenticatedUserContext(authAndAccountId[0], authAndAccountId[1]);
@@ -285,7 +284,7 @@ export class PropertiesTests extends TestClass {
             test: () => {
                 // setup
                 var authAndAccountId = ["bla@bla.com"];
-                var cookieStub = this.sandbox.stub(this, "_setCookie");
+                var cookieStub = this.sandbox.stub(this as any, "_setCookie");
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
                 // act
@@ -302,7 +301,7 @@ export class PropertiesTests extends TestClass {
             test: () => {
                 // setup
                 var authAndAccountId = ['bla@bla.com', 'contoso'];
-                var cookieStub = this.sandbox.stub(this, "_setCookie");
+                var cookieStub = this.sandbox.stub(this as any, "_setCookie");
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
                 // act
@@ -319,7 +318,7 @@ export class PropertiesTests extends TestClass {
             test: () => {
                 // setup
                 var authAndAccountId = ['bla@bla.com'];
-                var cookieStub = this.sandbox.stub(this, "_setCookie");
+                var cookieStub = this.sandbox.stub(this as any, "_setCookie");
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
                 // act
@@ -336,7 +335,7 @@ export class PropertiesTests extends TestClass {
             name: "setAuthenticatedUserContext: handles null correctly",
             test: () => {
                 // setup
-                var cookieStub = this.sandbox.stub(this, "_setCookie");
+                var cookieStub = this.sandbox.stub(this as any, "_setCookie");
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
                 cookieStub.reset();
@@ -357,7 +356,7 @@ export class PropertiesTests extends TestClass {
             name: "setAuthenticatedUserContext: handles undefined correctly",
             test: () => {
                 // setup
-                var cookieStub = this.sandbox.stub(this, "_setCookie");
+                var cookieStub = this.sandbox.stub(this as any, "_setCookie");
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
                 cookieStub.reset();
@@ -378,7 +377,7 @@ export class PropertiesTests extends TestClass {
             name: "setAuthenticatedUserContext: handles only accountID correctly",
             test: () => {
                 // setup
-                var cookieStub = this.sandbox.stub(this, "_setCookie");
+                var cookieStub = this.sandbox.stub(this as any, "_setCookie");
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
                 cookieStub.reset();
@@ -401,7 +400,7 @@ export class PropertiesTests extends TestClass {
                 // setup
                 var authAndAccountId = ['my|||special;id', '1234'];
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
-                var cookieStub = this.sandbox.stub(this, "_setCookie");
+                var cookieStub = this.sandbox.stub(this as any, "_setCookie");
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
 
                 // act
@@ -422,7 +421,7 @@ export class PropertiesTests extends TestClass {
                 var authAndAccountId = ['myid', '1234 5678'];
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
                 this.properties.context.user.clearAuthenticatedUserContext();
-                var cookieStub = this.sandbox.stub(this, "_setCookie");
+                var cookieStub = this.sandbox.stub(this as any, "_setCookie");
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
 
                 // act
@@ -442,7 +441,7 @@ export class PropertiesTests extends TestClass {
                 // setup
                 var authAndAccountId = ["\u05D0", "\u05D1"]; // Hebrew characters
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
-                var cookieStub = this.sandbox.stub(this, "_setCookie");
+                var cookieStub = this.sandbox.stub(this as any, "_setCookie");
                 var loggingStub = this.sandbox.stub(this.core.logger, "throwInternal");
 
                 // act
@@ -462,7 +461,7 @@ export class PropertiesTests extends TestClass {
                 // setup
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
                 this.properties.context.user.setAuthenticatedUserContext("bla", "123");
-                var cookieStub = this.sandbox.stub(this, "_delCookie");
+                var cookieStub = this.sandbox.stub(this as any, "_delCookie");
 
                 // act
                 this.properties.context.user.clearAuthenticatedUserContext();
@@ -479,7 +478,7 @@ export class PropertiesTests extends TestClass {
             test: () => {
                 // setup
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
-                var cookieStub = this.sandbox.stub(this, "_delCookie");
+                var cookieStub = this.sandbox.stub(this as any, "_delCookie");
 
                 // act
                 this.properties.context.user.clearAuthenticatedUserContext();
@@ -498,7 +497,7 @@ export class PropertiesTests extends TestClass {
                 this.properties.initialize(this.getEmptyConfig(), this.core, []);
 
                 let context = new TelemetryContext(this.core, this.getTelemetryConfig());
-                context.web = <IWeb> {
+                context.web = {
                     domain: "www.bing.com",
                     userConsent: true,
                     screenRes: "1024x768",
@@ -590,34 +589,6 @@ export class PropertiesTests extends TestClass {
                 Assert.notEqual(undefined, telemetyItem.ext.user, "user was not cleared");
             }
         });
-
-        this.testCase({
-            name: 'Session uses name prefix for cookie storage',
-            test: () => {
-
-                var sessionPrefix = Util.newId();
-                var config = {
-                    namePrefix: () => sessionPrefix,
-                    sessionExpirationMs: () => undefined,
-                    sessionRenewalMs: () => undefined,
-                    cookieDomain: () => undefined
-
-                };
-                // Setup
-                let cookie = "";
-                const cookieStub: SinonStub = this.sandbox.stub(this.core.getCookieMgr(), 'set', (cookieName, value, maxAge, domain, path) => {
-                    cookie = cookieName;
-                });
-
-                // Act
-                const sessionManager = new _SessionManager(config, this.core);
-                sessionManager.update();
-
-                // Test
-                Assert.ok(cookieStub.called, 'cookie set');
-                Assert.equal('ai_session' + sessionPrefix, cookie, 'Correct cookie name when name prefix is provided - [' + cookie + ']');
-            }
-        });
     }
 
     private getEmptyConfig(): IConfiguration {
@@ -664,8 +635,4 @@ export class PropertiesTests extends TestClass {
             getNewId: () => this._getNewId
         }
     }
-}
-
-export function runTests() {
-    new PropertiesTests().registerTests();
 }

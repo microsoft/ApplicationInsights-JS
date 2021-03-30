@@ -109,7 +109,7 @@ module.exports = function (grunt) {
             propertiestests: {
                 tsconfig: './extensions/applicationinsights-properties-js/Tests/tsconfig.json',
                 src: './extensions/applicationinsights-properties-js/Tests/**/*.ts',
-                out: './extensions/applicationinsights-properties-js/Tests/Selenium/properties.tests.js'
+                out: './extensions/applicationinsights-properties-js/Tests/Selenium/prop.tests.js'
             },
             reactnative: {
                 tsconfig: './extensions/applicationinsights-react-native/tsconfig.json',
