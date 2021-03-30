@@ -169,9 +169,8 @@ export class _SessionManager {
                             _logger.throwInternal(LoggingSeverity.WARNING,
                                 _InternalMessageId.SessionRenewalDateIsZero,
                                 "AI session renewal date is 0" + sessionReset);
-                        } else if (session.id) {
-                            // If we don't have an id then considered it to be expired
-                            // Only assign the values if everything looks good
+                        } else if (tokens[0]) {
+                            // Everything looks valid so set the values
                             session.id = tokens[0];
                             session.acquisitionDate = acqMs;
                             session.renewalDate = renewalMs;

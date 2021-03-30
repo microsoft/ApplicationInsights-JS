@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-channel-js",
-    "version": "2.6.0",
+    "version": "2.6.1",
     "description": "Microsoft Application Insights JavaScript SDK Channel",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -43,8 +43,8 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^1.1.1",
         "@microsoft/applicationinsights-shims" : "1.0.3",
-        "@microsoft/applicationinsights-core-js": "2.6.0",
-        "@microsoft/applicationinsights-common": "2.6.0"
+        "@microsoft/applicationinsights-core-js": "2.6.1",
+        "@microsoft/applicationinsights-common": "2.6.1"
     },
     "license": "MIT"
 }

@@ -52,7 +52,7 @@ function _formatMessage(message: any) {
 }
 
 export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
-    public static Version = "2.6.0"; // Not currently used anywhere
+    public static Version = "2.6.1"; // Not currently used anywhere
 
     public static getDefaultConfig(config?: IConfig): IConfig {
         if (!config) {

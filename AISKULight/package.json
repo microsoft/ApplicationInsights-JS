@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web-basic",
-    "version": "2.6.0",
+    "version": "2.6.1",
     "description": "Microsoft Application Insights Javascript SDK core and channel",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -38,9 +38,9 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^1.1.1",
         "@microsoft/applicationinsights-shims" : "1.0.3",
-        "@microsoft/applicationinsights-common": "2.6.0",
-        "@microsoft/applicationinsights-channel-js": "2.6.0",
-        "@microsoft/applicationinsights-core-js": "2.6.0"
+        "@microsoft/applicationinsights-common": "2.6.1",
+        "@microsoft/applicationinsights-channel-js": "2.6.1",
+        "@microsoft/applicationinsights-core-js": "2.6.1"
     },
     "peerDependencies": {
     },
