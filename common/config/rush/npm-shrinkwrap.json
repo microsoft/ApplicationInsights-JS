@@ -479,7 +479,7 @@
     "node_modules/@rush-temp/applicationinsights-properties-js": {
       "version": "0.0.0",
       "resolved": "file:projects/applicationinsights-properties-js.tgz",
-      "integrity": "sha512-WPbL7pKQwua+G4qdzhyUjsfSOxN08E+ix8g3FIQnHpANpoanAyAgM9Bxcz8yBTKamSvE2WQQC+jV0doXLO7DVQ==",
+      "integrity": "sha512-qrcDgSF2Z711HeSajVXUBDlerBAX0kqOZ8ixH6sDMPxjdZvWSWn+1sFbPESC1T3hbl8CyDD1A6KLFxYM9Awxqg==",
       "dependencies": {
         "@microsoft/api-extractor": "^7.9.11",
         "@microsoft/dynamicproto-js": "^1.1.1",
@@ -491,8 +491,10 @@
         "grunt-contrib-qunit": "^3.1.0",
         "grunt-run": "^0.8.1",
         "grunt-ts": "^6.0.0-beta.22",
+        "qunit": "^2.9.1",
         "rollup": "^2.32.0",
         "rollup-plugin-cleanup": "3.2.1",
+        "sinon": "^7.3.1",
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
         "typescript": "2.5.3"
@@ -5861,7 +5863,7 @@
     },
     "@rush-temp/applicationinsights-properties-js": {
       "version": "file:projects\\applicationinsights-properties-js.tgz",
-      "integrity": "sha512-WPbL7pKQwua+G4qdzhyUjsfSOxN08E+ix8g3FIQnHpANpoanAyAgM9Bxcz8yBTKamSvE2WQQC+jV0doXLO7DVQ==",
+      "integrity": "sha512-qrcDgSF2Z711HeSajVXUBDlerBAX0kqOZ8ixH6sDMPxjdZvWSWn+1sFbPESC1T3hbl8CyDD1A6KLFxYM9Awxqg==",
       "requires": {
         "@microsoft/api-extractor": "^7.9.11",
         "@microsoft/dynamicproto-js": "^1.1.1",
@@ -5873,8 +5875,10 @@
         "grunt-contrib-qunit": "^3.1.0",
         "grunt-run": "^0.8.1",
         "grunt-ts": "^6.0.0-beta.22",
+        "qunit": "^2.9.1",
         "rollup": "^2.32.0",
         "rollup-plugin-cleanup": "3.2.1",
+        "sinon": "^7.3.1",
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
         "typescript": "2.5.3"
