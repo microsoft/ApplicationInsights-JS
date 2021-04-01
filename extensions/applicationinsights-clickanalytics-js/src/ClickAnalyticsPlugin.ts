@@ -9,7 +9,7 @@ import {
     _InternalMessageId, ICustomProperties, 
     LoggingSeverity, arrForEach, dumpObj, getExceptionName
 } from "@microsoft/applicationinsights-core-js";
-import { IConfig, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-common";
+import { IConfig, IPropertiesPlugin, PropertiesPluginIdentifier } from "@microsoft/applicationinsights-common";
 import { 
     IClickAnalyticsConfiguration, IContentHandler, 
     IAutoCaptureHandler, IPageActionTelemetry 
@@ -21,7 +21,7 @@ import {
 import { PageAction } from './events/PageAction';
 import { AutoCaptureHandler } from "./handlers/AutoCaptureHandler";
 import { DomContentHandler } from "./handlers/DomContentHandler";
-import * as properties from "@microsoft/applicationinsights-properties-js";
+import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 export { BehaviorMapValidator, BehaviorValueValidator, BehaviorEnumValidator }
 
 export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
@@ -52,10 +52,10 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
             this._autoCaptureHandler.click();
         }
         // Find the properties plugin
-        let _propertiesExtension:properties.PropertiesPlugin;
+        let _propertiesExtension:IPropertiesPlugin;
         arrForEach(extensions, extension => {
             if (extension.identifier === PropertiesPluginIdentifier) {
-                _propertiesExtension = extension as properties.PropertiesPlugin;
+                _propertiesExtension = extension as PropertiesPlugin;
             }
         });
         // Append Click Analytics Plugin Version to SDK version
