@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import '@microsoft/applicationinsights-shims';
 export { 
     IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper,
     IDateTimeUtils, DateTimeUtils, dateTimeUtilsNow, dateTimeUtilsDuration,
