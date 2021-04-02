@@ -51,14 +51,14 @@ export class ClickAnalyticsPlugin extends BaseTelemetryPlugin {
         if (this._config.autoCapture) {
             this._autoCaptureHandler.click();
         }
-        // Find the properties plugin
+        // Find the properties plugin.
         let _propertiesExtension:IPropertiesPlugin;
         arrForEach(extensions, extension => {
             if (extension.identifier === PropertiesPluginIdentifier) {
                 _propertiesExtension = extension as PropertiesPlugin;
             }
         });
-        // Append Click Analytics Plugin Version to SDK version
+        // Append Click Analytics Plugin Version to SDK version.
         if (_propertiesExtension && _propertiesExtension.context && 
             _propertiesExtension.context.internal && _propertiesExtension.context.internal.sdkVersion) {
                 _propertiesExtension.context.internal.sdkVersion += "_ClickPlugin"+ ClickAnalyticsPlugin.Version;
