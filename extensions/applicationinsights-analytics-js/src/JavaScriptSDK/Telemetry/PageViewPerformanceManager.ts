@@ -37,22 +37,36 @@ export class PageViewPerformanceManager {
          *  |             ||             |              |         |-loadEventEnd
          *  |---network---||---request---|---response---|---dom---|
          *  |--------------------------total----------------------|
+         * 
+         *  total = The difference between the load event of the current document is completed and the first recorded timestamp of the performance entry : https://developer.mozilla.org/en-US/docs/Web/Performance/Navigation_and_resource_timings#duration
+         *  network = Redirect time + App Cache + DNS lookup time + TCP connection time 
+         *  request = Request time : https://developer.mozilla.org/en-US/docs/Web/Performance/Navigation_and_resource_timings#request_time
+         *  response = Response time
+         *  dom = Document load time : https://html.spec.whatwg.org/multipage/dom.html#document-load-timing-info
+         *      = Document processing time : https://developers.google.com/web/fundamentals/performance/navigation-and-resource-timing/#document_processing
+         *      + Loading time : https://developers.google.com/web/fundamentals/performance/navigation-and-resource-timing/#loading
          */
         const navigationTiming = this.getPerformanceNavigationTiming();
         const timing = this.getPerformanceTiming();
+        let total = 0;
+        let network = 0;
+        let request = 0;
+        let response = 0;
+        let dom = 0;
+
         if (navigationTiming || timing) {
             if (navigationTiming) {
-                var total = navigationTiming.duration;
-                var network = dateTimeUtilsDuration(navigationTiming.startTime, navigationTiming.connectEnd);
-                var request = dateTimeUtilsDuration(navigationTiming.requestStart, navigationTiming.responseStart);
-                var response = dateTimeUtilsDuration(navigationTiming.responseStart, navigationTiming.responseEnd);
-                var dom = dateTimeUtilsDuration(navigationTiming.responseEnd, navigationTiming.loadEventEnd);
+                total = navigationTiming.duration;
+                network = total - dateTimeUtilsDuration(navigationTiming.connectEnd, navigationTiming.loadEventEnd);
+                request = dateTimeUtilsDuration(navigationTiming.requestStart, navigationTiming.responseStart);
+                response = dateTimeUtilsDuration(navigationTiming.responseStart, navigationTiming.responseEnd);
+                dom = dateTimeUtilsDuration(navigationTiming.responseEnd, navigationTiming.loadEventEnd);
             } else {
-                var total = dateTimeUtilsDuration(timing.navigationStart, timing.loadEventEnd);
-                var network = dateTimeUtilsDuration(timing.navigationStart, timing.connectEnd);
-                var request = dateTimeUtilsDuration(timing.requestStart, timing.responseStart);
-                var response = dateTimeUtilsDuration(timing.responseStart, timing.responseEnd);
-                var dom = dateTimeUtilsDuration(timing.responseEnd, timing.loadEventEnd);
+                total = dateTimeUtilsDuration(timing.navigationStart, timing.loadEventEnd);
+                network = dateTimeUtilsDuration(timing.navigationStart, timing.connectEnd);
+                request = dateTimeUtilsDuration(timing.requestStart, timing.responseStart);
+                response = dateTimeUtilsDuration(timing.responseStart, timing.responseEnd);
+                dom = dateTimeUtilsDuration(timing.responseEnd, timing.loadEventEnd);
             }
 
             if (total === 0) {
