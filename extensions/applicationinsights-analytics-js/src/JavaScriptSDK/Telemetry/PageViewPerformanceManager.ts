@@ -57,10 +57,12 @@ export class PageViewPerformanceManager {
         if (navigationTiming || timing) {
             if (navigationTiming) {
                 total = navigationTiming.duration;
-                let afterNetwork = dateTimeUtilsDuration(navigationTiming.connectEnd, navigationTiming.loadEventEnd);
-                if (!isNotNullOrUndefined(afterNetwork)) {
-                    network = total - afterNetwork;
-                }
+                /**
+                 * support both cases:
+                 * - startTime is always zero: https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming
+                 * - for older browsers where the startTime is not zero
+                 */
+                network = navigationTiming.startTime === 0 ? navigationTiming.connectEnd : dateTimeUtilsDuration(navigationTiming.startTime, navigationTiming.connectEnd);
                 request = dateTimeUtilsDuration(navigationTiming.requestStart, navigationTiming.responseStart);
                 response = dateTimeUtilsDuration(navigationTiming.responseStart, navigationTiming.responseEnd);
                 dom = dateTimeUtilsDuration(navigationTiming.responseEnd, navigationTiming.loadEventEnd);
