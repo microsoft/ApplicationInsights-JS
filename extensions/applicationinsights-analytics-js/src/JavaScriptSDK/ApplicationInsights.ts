@@ -76,21 +76,9 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
         config.enableAutoRouteTracking = stringToBoolOrDefault(config.enableAutoRouteTracking);
         config.namePrefix = config.namePrefix || "";
 
-        config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 102400; // 100kb
-        config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
         config.enableDebug = stringToBoolOrDefault(config.enableDebug);
-        config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
-        config.isBeaconApiDisabled = stringToBoolOrDefault(config.isBeaconApiDisabled, true);
-        config.disableCorrelationHeaders = stringToBoolOrDefault(config.disableCorrelationHeaders);
-        config.enableSessionStorageBuffer = stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
-        config.isRetryDisabled = stringToBoolOrDefault(config.isRetryDisabled);
-        config.enableCorsCorrelation = stringToBoolOrDefault(config.enableCorsCorrelation);
-        config.correlationHeaderExcludedDomains = config.correlationHeaderExcludedDomains;
-        config.disableTelemetry = stringToBoolOrDefault(config.disableTelemetry);
         config.disableFlushOnBeforeUnload = stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
         config.disableFlushOnUnload = stringToBoolOrDefault(config.disableFlushOnUnload, config.disableFlushOnBeforeUnload);
-        config.disableAjaxTracking = stringToBoolOrDefault(config.disableAjaxTracking);
-        config.disableCookiesUsage = stringToBoolOrDefault(config.disableCookiesUsage);
 
         return config;
     }
@@ -514,7 +502,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                 _self.config = ctx.getExtCfg<IConfig>(identifier);
 
                 // load default values if specified
-                const defaults: IConfig = ApplicationInsights.getDefaultConfig();
+                const defaults: IConfig = ApplicationInsights.getDefaultConfig(config);
                 if (defaults !== undefined) {
                     objForEachKey(defaults, (field, value) => {
                         // for each unspecified field, set the default value
