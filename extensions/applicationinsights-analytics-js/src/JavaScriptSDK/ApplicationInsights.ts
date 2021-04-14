@@ -76,6 +76,22 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
         config.enableAutoRouteTracking = stringToBoolOrDefault(config.enableAutoRouteTracking);
         config.namePrefix = config.namePrefix || "";
 
+        config.maxBatchSizeInBytes = config.maxBatchSizeInBytes > 0 ? config.maxBatchSizeInBytes : 102400; // 100kb
+        config.maxBatchInterval = !isNaN(config.maxBatchInterval) ? config.maxBatchInterval : 15000;
+        config.enableDebug = stringToBoolOrDefault(config.enableDebug);
+        config.maxAjaxCallsPerView = !isNaN(config.maxAjaxCallsPerView) ? config.maxAjaxCallsPerView : 500;
+        config.isBeaconApiDisabled = stringToBoolOrDefault(config.isBeaconApiDisabled, true);
+        config.disableCorrelationHeaders = stringToBoolOrDefault(config.disableCorrelationHeaders);
+        config.enableSessionStorageBuffer = stringToBoolOrDefault(config.enableSessionStorageBuffer, true);
+        config.isRetryDisabled = stringToBoolOrDefault(config.isRetryDisabled);
+        config.enableCorsCorrelation = stringToBoolOrDefault(config.enableCorsCorrelation);
+        config.correlationHeaderExcludedDomains = config.correlationHeaderExcludedDomains;
+        config.disableTelemetry = stringToBoolOrDefault(config.disableTelemetry);
+        config.disableFlushOnBeforeUnload = stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
+        config.disableFlushOnUnload = stringToBoolOrDefault(config.disableFlushOnUnload, config.disableFlushOnBeforeUnload);
+        config.disableAjaxTracking = stringToBoolOrDefault(config.disableAjaxTracking);
+        config.disableCookiesUsage = stringToBoolOrDefault(config.disableCookiesUsage);
+
         return config;
     }
 
@@ -915,7 +931,7 @@ class Timing {
             if (typeof _events[name] !== "undefined") {
                 logger.throwInternal(
                     LoggingSeverity.WARNING, _InternalMessageId.StartCalledMoreThanOnce, "start was called more than once for this event without calling stop.",
-                    { name: name, key: name }, true);
+                    { name, key: name }, true);
             }
     
             _events[name] = +new Date;
@@ -926,7 +942,7 @@ class Timing {
             if (isNaN(start)) {
                 logger.throwInternal(
                     LoggingSeverity.WARNING, _InternalMessageId.StopCalledWithoutStart, "stop was called without a corresponding start.",
-                    { name: name, key: name }, true);
+                    { name, key: name }, true);
             } else {
                 const end = +new Date;
                 const duration = dateTimeUtilsDuration(start, end);
