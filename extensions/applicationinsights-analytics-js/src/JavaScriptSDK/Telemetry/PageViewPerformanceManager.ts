@@ -6,7 +6,7 @@ import {
 } from '@microsoft/applicationinsights-common';
 import {
     IAppInsightsCore, IDiagnosticLogger, LoggingSeverity,
-    _InternalMessageId, getNavigator, getPerformance
+    _InternalMessageId, getNavigator, getPerformance, isNotNullOrUndefined
 } from '@microsoft/applicationinsights-core-js';
 
 /**
@@ -57,7 +57,10 @@ export class PageViewPerformanceManager {
         if (navigationTiming || timing) {
             if (navigationTiming) {
                 total = navigationTiming.duration;
-                network = total - dateTimeUtilsDuration(navigationTiming.connectEnd, navigationTiming.loadEventEnd);
+                let afterNetwork = dateTimeUtilsDuration(navigationTiming.connectEnd, navigationTiming.loadEventEnd);
+                if (!isNotNullOrUndefined(afterNetwork)) {
+                    network = total - afterNetwork;
+                }
                 request = dateTimeUtilsDuration(navigationTiming.requestStart, navigationTiming.responseStart);
                 response = dateTimeUtilsDuration(navigationTiming.responseStart, navigationTiming.responseEnd);
                 dom = dateTimeUtilsDuration(navigationTiming.responseEnd, navigationTiming.loadEventEnd);
