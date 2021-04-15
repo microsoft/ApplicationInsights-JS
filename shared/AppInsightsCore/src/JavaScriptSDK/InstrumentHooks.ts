@@ -4,9 +4,7 @@
 import {
     IInstrumentHooksCallbacks, IInstrumentHooks, IInstrumentHook, IInstrumentCallDetails, InstrumentorHooksCallback
 } from "../JavaScriptSDK.Interfaces/IInstrumentHooks";
-import {
-    strFunction, strPrototype
-} from "./EnvUtils"
+import { strShimFunction, strShimPrototype } from "@microsoft/applicationinsights-shims";
 import { hasOwnProperty } from "./HelperFuncs";
 
 const aiInstrumentHooks = "_aiHooks";
@@ -159,7 +157,7 @@ function _getObjProto(target:any) {
         }
 
         // target[Constructor] May break if the constructor has been changed or removed
-        let newProto = target[str__Proto] || target[strPrototype] || target[strConstructor];
+        let newProto = target[str__Proto] || target[strShimPrototype] || target[strConstructor];
         if(newProto) {
             return newProto;
         }
@@ -190,7 +188,7 @@ function _getOwner(target:any, name:string, checkPrototype:boolean): any {
  */
 export function InstrumentProto(target:any, funcName:string, callbacks: IInstrumentHooksCallbacks): IInstrumentHook {
     if (target) {
-        return InstrumentFunc(target[strPrototype], funcName, callbacks, false);
+        return InstrumentFunc(target[strShimPrototype], funcName, callbacks, false);
     }
 
     return null;
@@ -204,7 +202,7 @@ export function InstrumentProto(target:any, funcName:string, callbacks: IInstrum
  */
 export function InstrumentProtos(target:any, funcNames:string[], callbacks: IInstrumentHooksCallbacks): IInstrumentHook[] {
     if (target) {
-        return InstrumentFuncs(target[strPrototype], funcNames, callbacks, false);
+        return InstrumentFuncs(target[strShimPrototype], funcNames, callbacks, false);
     }
 
     return null;
@@ -222,7 +220,7 @@ export function InstrumentFunc(target:any, funcName:string, callbacks: IInstrume
         let owner = _getOwner(target, funcName, checkPrototype);
         if (owner) {
             let fn = owner[funcName]
-            if (typeof fn === strFunction) {
+            if (typeof fn === strShimFunction) {
                 let aiHook:IInstrumentHooks = fn[aiInstrumentHooks];
                 if (!aiHook) {
                     // Only hook the function once
