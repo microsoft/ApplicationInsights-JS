@@ -36,7 +36,8 @@
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
         "tslint-microsoft-contrib": "^5.2.1",
-        "typescript": "2.5.3"
+        "typescript": "2.5.3",
+        "tslib": "^1.13.0"
     },
     "dependencies": {
         "uglify-js": "^3.11.0"

@@ -9,8 +9,20 @@ This project exists to break the dependency on the version of tslib that is used
 mostly due to several breaking changes that have reduced our ability to publish fixes.
 
 While the Application Insights JS SDK will use the stubs defined in this packaging for the browser instances (those that are
-uploaded to the CDN) they are built using the polyfill pattern, so if a global implementation of __extend() and __assign() already exist
+uploaded to the CDN) they are built using the polyfill pattern, so if a global implementation of __extends() and __assign() already exist
 those versions will be used.
+
+## Global _extends() and __assign() changes - v2.0.0 or greater
+
+From v2.0.0 or greater the globally defined ```__extends()``` and ```__assign()``` methods are no longer exposed as global by default.
+
+If you need to expose the TsLib helpers globally (which occurred by default for v1.x.x) you now will need to import and call the ```__exposeGlobalTsLib()``` function.
+
+```javascript
+import { __exposeGlobalTsLib } from "@microsoft/applicationinsights-shims";
+
+__exposeGlobalTsLib();
+```
 
 ## Build:
 ```

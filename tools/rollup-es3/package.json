@@ -45,7 +45,8 @@
         "tslint-config-prettier": "^1.18.0",
         "tslint-microsoft-contrib": "^5.2.1",
         "typescript": "2.5.3",
-        "magic-string": "^0.25.5"
+        "tslib": "^1.13.0",
+        "magic-string": "^0.25.7"
     },
     "dependencies": {
     }

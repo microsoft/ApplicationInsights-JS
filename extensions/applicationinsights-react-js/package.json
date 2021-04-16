@@ -46,7 +46,8 @@
         "ts-jest": "^24.0.2",
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
-        "typescript": "^3.9.3"
+        "typescript": "^3.9.3",
+        "tslib": "^2.0.0"
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims": "^1.0.3",
