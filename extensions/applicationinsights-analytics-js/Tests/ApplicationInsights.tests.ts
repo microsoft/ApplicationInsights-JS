@@ -262,7 +262,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(12, extConfig.samplingPercentage);
                 Assert.notEqual('aaa', extConfig.accountId);
                 Assert.equal('def', extConfig.accountId);
-                Assert.equal(undefined, (extConfig as any).instrumentationKey);
+                Assert.equal('instrumentation_key', (extConfig as any).instrumentationKey);
                 Assert.equal(30 * 60 * 1000, extConfig.sessionRenewalMs);
                 Assert.equal(24 * 60 * 60 * 1000, extConfig.sessionExpirationMs);
             }

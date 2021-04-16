@@ -163,6 +163,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 "*.blob.core.cloudapi.de",
                 "*.blob.core.usgovcloudapi.net"],
             correlationHeaderDomains: undefined,
+            correlationHeaderExcludePatterns: undefined,
             appId: undefined,
             enableCorsCorrelation: false,
             enableRequestHeaderTracking: false,
