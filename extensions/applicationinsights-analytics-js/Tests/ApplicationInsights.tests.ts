@@ -253,7 +253,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(12, appInsights.config.samplingPercentage);
                 Assert.notEqual('aaa', appInsights.config.accountId);
                 Assert.equal('def', appInsights.config.accountId);
-                Assert.equal(undefined, (appInsights['config'] as IConfiguration).instrumentationKey);
+                Assert.equal('instrumentation_key', (appInsights['config'] as IConfiguration).instrumentationKey);
                 Assert.equal(30 * 60 * 1000, appInsights.config.sessionRenewalMs);
                 Assert.equal(24 * 60 * 60 * 1000, appInsights.config.sessionExpirationMs);
 
