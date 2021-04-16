@@ -3,7 +3,7 @@
 "use strict";
 
 import { 
-    getGlobal as shimsGetGlobal, strShimUndefined, strShimObject, strShimPrototype, strShimFunction 
+    getGlobal, strShimUndefined, strShimObject, strShimPrototype, strShimFunction 
 } from "@microsoft/applicationinsights-shims";
 import { strContains } from "./HelperFuncs";
 
@@ -13,11 +13,6 @@ import { strContains } from "./HelperFuncs";
  * only defined methods (functions) in this class so that users of these 
  * functions/properties only need to include those that are used within their own modules.
  */
-
-export const strUndefined = strShimUndefined;
-export const strObject = strShimObject;
-export const strPrototype = strShimPrototype;
-export const strFunction = strShimFunction;
 
 const strWindow = "window";
 const strDocument = "document";
@@ -46,20 +41,6 @@ export function setEnableEnvMocks(enabled: boolean) {
 }
 
 /**
- * Returns the current global scope object, for a normal web page this will be the current
- * window, for a Web Worker this will be current worker global scope via "self". The internal 
- * implementation returns the first available instance object in the following order
- * - globalThis (New standard)
- * - self (Will return the current window instance for supported browsers)
- * - window (fallback for older browser implementations)
- * - global (NodeJS standard)
- * - <null> (When all else fails)
- * While the return type is a Window for the normal case, not all environments will support all
- * of the properties or functions.
- */
-export const getGlobal:() => Window = shimsGetGlobal;
-
-/**
  * Return the named global object if available, will return null if the object is not available.
  * @param name The globally named object
  */
@@ -86,7 +67,7 @@ export function getGlobalInst<T>(name:string): T {
  * Defined as a function to support lazy / late binding environments.
  */
 export function hasWindow(): boolean {
-    return Boolean(typeof window === strObject && window);
+    return Boolean(typeof window === strShimObject && window);
 }
 
 /**
@@ -111,7 +92,7 @@ export function getWindow(): Window | null {
  * Defined as a function to support lazy / late binding environments.
  */
 export function hasDocument(): boolean {
-    return Boolean(typeof document === strObject && document);
+    return Boolean(typeof document === strShimObject && document);
 }
 
 /**
@@ -136,7 +117,7 @@ export function getDocument(): Document | null {
  * Defined as a function to support lazy / late binding environments.
  */
 export function hasNavigator(): boolean {
-    return Boolean(typeof navigator === strObject && navigator);
+    return Boolean(typeof navigator === strShimObject && navigator);
 }
 
 /**
@@ -160,7 +141,7 @@ export function getNavigator(): Navigator | null {
  * Defined as a function to support lazy / late binding environments.
  */
 export function hasHistory(): boolean {
-    return Boolean(typeof history === strObject && history);
+    return Boolean(typeof history === strShimObject && history);
 }
 
 /**
@@ -189,7 +170,7 @@ export function getLocation(checkForMock?: boolean): Location | null {
         }
     }
 
-    if (typeof location === strObject && location) {
+    if (typeof location === strShimObject && location) {
         return location;
     }
 
@@ -200,7 +181,7 @@ export function getLocation(checkForMock?: boolean): Location | null {
  * Returns the global console object
  */
 export function getConsole(): Console | null {
-    if (typeof console !== strUndefined) {
+    if (typeof console !== strShimUndefined) {
         return console;
     }
 
@@ -224,7 +205,7 @@ export function getPerformance(): Performance | null {
  * Defined as a function to support lazy / late binding environments.
  */
 export function hasJSON(): boolean {
-    return Boolean((typeof JSON === strObject && JSON) || getGlobalInst(strJSON) !== null);
+    return Boolean((typeof JSON === strShimObject && JSON) || getGlobalInst(strJSON) !== null);
 }
 
 /**

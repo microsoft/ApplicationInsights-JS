@@ -7,14 +7,14 @@
       "moduleResolution": "node",
       "target": "es5",
       "forceConsistentCasingInFileNames": true,
-      "importHelpers": true,
+      "importHelpers": false,
+      "noEmitHelpers": false,
       "alwaysStrict": true,
       "declaration": true,
       "outDir": "./out",
       "rootDir": "tools/rollup-plugin-uglify3-js",
       "suppressImplicitAnyIndexErrors": true,
-      "allowSyntheticDefaultImports": true,
-      "skipLibCheck": true
+      "allowSyntheticDefaultImports": true
     },
     "files": [
     ]

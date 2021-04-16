@@ -34,7 +34,8 @@
         "rollup-plugin-cleanup": "3.2.1",
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
-        "typescript": "^3.9.7"
+        "typescript": "^3.9.7",
+        "tslib": "^2.0.0"
     },
     "dependencies": {
         "@microsoft/applicationinsights-common": "^2.6.0",

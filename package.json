@@ -37,6 +37,7 @@
         "tslint-microsoft-contrib": "^5.2.1",
         "tslint-config-prettier": "^1.18.0",
         "typescript": "2.5.3",
-        "whatwg-fetch": "^3.0.0"
+        "whatwg-fetch": "^3.0.0",
+        "typedoc": "^0.16.9"
     }
 }

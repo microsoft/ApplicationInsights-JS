@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import '@microsoft/applicationinsights-shims';
 export { IConfiguration } from "./JavaScriptSDK.Interfaces/IConfiguration";
 export { IChannelControls, MinChannelPriorty } from "./JavaScriptSDK.Interfaces/IChannelControls";
 export { ITelemetryPlugin, IPlugin } from "./JavaScriptSDK.Interfaces/ITelemetryPlugin";
@@ -29,13 +28,18 @@ export {
     objFreeze, objSeal
 } from './JavaScriptSDK/HelperFuncs';
 export { 
-    getGlobal, getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
+    getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
-    isReactNative, getConsole, dumpObj, isIE, getIEVersion, strUndefined, strObject, strPrototype, strFunction,
+    isReactNative, getConsole, dumpObj, isIE, getIEVersion,
     setEnableEnvMocks
 } from "./JavaScriptSDK/EnvUtils";
 export {
-    objCreateFn as objCreate
+    getGlobal,
+    objCreateFn as objCreate,
+    strShimPrototype as strPrototype,
+    strShimFunction as strFunction,
+    strShimUndefined as strUndefined,
+    strShimObject as strObject
 } from '@microsoft/applicationinsights-shims';
 export { NotificationManager } from "./JavaScriptSDK/NotificationManager";
 export { INotificationManager } from "./JavaScriptSDK.Interfaces/INotificationManager";
