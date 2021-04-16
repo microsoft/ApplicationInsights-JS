@@ -1,4 +1,5 @@
 import nodeResolve from "@rollup/plugin-node-resolve";
+import { updateDistEsmFiles } from "../../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
 const outputName = "ai-test-framework";
@@ -28,6 +29,8 @@ const nodeUmdRollupConfigFactory = () => {
 
   return nodeRollupConfig;
 }
+
+updateDistEsmFiles({}, banner);
 
 export default [
   nodeUmdRollupConfigFactory(),

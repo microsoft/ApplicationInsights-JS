@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import {  strShimUndefined, strShimObject, strShimPrototype, strShimFunction, objCreateFn } from "@microsoft/applicationinsights-shims";
+import {  
+    strShimUndefined, strShimObject, strShimFunction, throwTypeError,
+    ObjClass, ObjProto, ObjAssign, ObjHasOwnProperty, ObjDefineProperty
+} from "@microsoft/applicationinsights-shims";
 
 // RESTRICT and AVOID circular dependencies you should not import other contained modules or export the contents of this file directly
 
@@ -10,13 +13,8 @@ const strAttachEvent = "attachEvent";
 const strAddEventHelper = "addEventListener";
 const strDetachEvent = "detachEvent";
 const strRemoveEventListener = "removeEventListener";
-const strHasOwnProperty = "hasOwnProperty";
 
-const ObjClass = Object;
-const ObjProto = ObjClass[strShimPrototype];
-const _objHasOwnProperty = ObjProto[strHasOwnProperty];
-const _objDefineProperty = ObjClass["defineProperty"];
-const _objAssign = ObjClass["assign"];
+const _objDefineProperty = ObjDefineProperty;
 const _objFreeze = ObjClass["freeze"];
 const _objSeal = ObjClass["seal"];
 
@@ -45,7 +43,7 @@ export function isNotNullOrUndefined(value: any): boolean {
 }
 
 export function hasOwnProperty(obj: any, prop: string): boolean {
-    return obj && _objHasOwnProperty.call(obj, prop);
+    return obj && ObjHasOwnProperty.call(obj, prop);
 };
 
 export function isObject(value: any): boolean {
@@ -134,7 +132,7 @@ export function normalizeJsName(name: string): string {
 export function objForEachKey(target: any, callbackfn: (name: string, value: any) => void) {
     if (target) {
         for (let prop in target) {
-            if (_objHasOwnProperty.call(target, prop)) {
+            if (ObjHasOwnProperty.call(target, prop)) {
                 callbackfn.call(target, prop, target[prop]);
             }
         }
@@ -411,13 +409,13 @@ export function objKeys(obj: {}): string[] {
     var objType = typeof obj;
 
     if (objType !== strShimFunction && (objType !== strShimObject || obj === null)) {
-        throw new TypeError('objKeys called on non-object');
+        throwTypeError('objKeys called on non-object');
     }
 
     let result: string[] = [];
 
     for (let prop in obj) {
-        if (obj && _objHasOwnProperty.call(obj, prop)) {
+        if (obj && ObjHasOwnProperty.call(obj, prop)) {
             result.push(prop);
         }
     }
@@ -426,7 +424,7 @@ export function objKeys(obj: {}): string[] {
         let dontEnumsLength = _objKeysDontEnums.length;
 
         for (let lp = 0; lp < dontEnumsLength; lp++) {
-            if (obj && _objHasOwnProperty.call(obj, _objKeysDontEnums[lp])) {
+            if (obj && ObjHasOwnProperty.call(obj, _objKeysDontEnums[lp])) {
                 result.push(_objKeysDontEnums[lp]);
             }
         }
@@ -654,7 +652,7 @@ export function optimizeObject<T>(theObject: T): T {
     // V8 Optimization to cause the JIT compiler to create a new optimized object for looking up the own properties
     // primarily for object with <= 19 properties for >= 20 the effect is reduced or non-existent
     if (theObject) {
-        theObject = ObjClass(_objAssign ? _objAssign({}, theObject) : theObject);
+        theObject = ObjClass(ObjAssign ? ObjAssign({}, theObject) : theObject);
     }
 
     return theObject;
