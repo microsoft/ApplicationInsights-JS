@@ -1491,7 +1491,46 @@ export class AjaxTests extends TestClass {
                 Assert.equal("|", id[0]);
                 Assert.equal(".", id[id.length - 1]);
             }
-        })
+        });
+
+        this.testCase({
+            name: "Ajax: should not create and pass a traceparent header if correlationHeaderExcludePatterns set to exclude all",
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
+                    correlationHeaderExcludePatterns: [/.*/],
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                var trackStub = this.sandbox.stub(appInsightsCore, "track");
+
+                // Use test hook to simulate the correct url location
+                this._ajax["_currentWindowHost"] = "www.example.com";
+
+                // Act
+                var xhr = new XMLHttpRequest();
+                var stub = this.sandbox.stub(xhr, "setRequestHeader");
+                xhr.open("GET", "http://www.example.com");
+                xhr.send();
+
+                // Assert that both headers are not sent
+                Assert.equal(false, stub.calledWith(RequestHeaders.requestIdHeader)); // AI
+                Assert.equal(false, stub.calledWith(RequestHeaders.traceParentHeader)); // W3C
+
+                // Emulate response so perf monitoring is cleaned up
+                (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
+                var id = trackStub.args[0][0].baseData.id;
+                Assert.equal("|", id[0]);
+                Assert.equal(".", id[id.length - 1]);
+            }
+        });
 
         this.testCase({
             name: "Ajax: should create and only pass a traceparent header if w3c is enabled",
@@ -2096,6 +2135,90 @@ export class AjaxPerfTests extends TestClass {
                 return false;
             }, 'response received', 600, 1000) as any)
         });
+
+        this.testCaseAsync({
+            name: "Fetch: should not create and pass correlation header if correlationHeaderExcludePatterns set to exclude all.",
+            stepDelay: 10,
+            timeOut: 10000,
+            steps: [ (done) => {
+                let fetchCalls = hookFetch((resolve) => {
+                    TestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = {
+                    instrumentationKey: "instrumentationKey",
+                    disableFetchTracking: false,
+                    disableAjaxTracking: false,
+                    correlationHeaderExcludePatterns: [/.*/],
+                    extensionConfig: {
+                        "AjaxDependencyPlugin": {
+                            appId: "appId",
+                            distributedTracingMode: DistributedTracingModes.AI_AND_W3C
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let trackSpy = this.sandbox.spy(appInsightsCore, "track")
+                this._context["trackStub"] = trackSpy;
+
+                // Use test hook to simulate the correct url location
+                this._ajax["_currentWindowHost"] = "httpbin.org";
+
+                // Setup
+                let headers = new Headers();
+                headers.append('My-Header', 'Header field');
+                let init = {
+                    method: 'get',
+                    headers
+                };
+                const url = 'https://httpbin.org/status/200';
+
+                // Act
+                Assert.ok(trackSpy.notCalled, "No fetch called yet");
+                fetch(url, init).then(() => {
+                    // Assert
+                    Assert.ok(trackSpy.called, "The request was not tracked");
+                    Assert.equal(1, fetchCalls.length);
+                    Assert.notEqual(undefined, fetchCalls[0].init, "Has init param");
+                    let headers:Headers = fetchCalls[0].init.headers as Headers;
+                    Assert.equal(true, headers.has("My-Header"), "My-Header should be present");
+                    Assert.equal(false, headers.has(RequestHeaders.requestIdHeader), "Correlation header - AI header should be excluded"); // AI
+                    Assert.equal(false, headers.has(RequestHeaders.traceParentHeader), "Correlation header - W3c header should be excluded"); // W3C
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    done();
+                });
+            }]
+            .concat(PollingAssert.createPollingAssert(() => {
+                let trackStub = this._context["trackStub"] as SinonStub;
+                if (trackStub.called) {
+                    Assert.ok(trackStub.calledOnce, "track is called");
+                    let data = trackStub.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fatch type");
+                    var id = data.id;
+                    Assert.equal("|", id[0]);
+                    Assert.equal(".", id[id.length - 1]);
+                    return true;
+                }
+
+                return false;
+            }, 'response received', 60, 1000) as any)
+        })
     }
 }
 

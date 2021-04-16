@@ -76,6 +76,10 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
         config.enableAutoRouteTracking = stringToBoolOrDefault(config.enableAutoRouteTracking);
         config.namePrefix = config.namePrefix || "";
 
+        config.enableDebug = stringToBoolOrDefault(config.enableDebug);
+        config.disableFlushOnBeforeUnload = stringToBoolOrDefault(config.disableFlushOnBeforeUnload);
+        config.disableFlushOnUnload = stringToBoolOrDefault(config.disableFlushOnUnload, config.disableFlushOnBeforeUnload);
+
         return config;
     }
 
@@ -498,7 +502,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                 _self.config = ctx.getExtCfg<IConfig>(identifier);
 
                 // load default values if specified
-                const defaults: IConfig = ApplicationInsights.getDefaultConfig();
+                const defaults: IConfig = ApplicationInsights.getDefaultConfig(config);
                 if (defaults !== undefined) {
                     objForEachKey(defaults, (field, value) => {
                         // for each unspecified field, set the default value
@@ -915,7 +919,7 @@ class Timing {
             if (typeof _events[name] !== "undefined") {
                 logger.throwInternal(
                     LoggingSeverity.WARNING, _InternalMessageId.StartCalledMoreThanOnce, "start was called more than once for this event without calling stop.",
-                    { name: name, key: name }, true);
+                    { name, key: name }, true);
             }
     
             _events[name] = +new Date;
@@ -926,7 +930,7 @@ class Timing {
             if (isNaN(start)) {
                 logger.throwInternal(
                     LoggingSeverity.WARNING, _InternalMessageId.StopCalledWithoutStart, "stop was called without a corresponding start.",
-                    { name: name, key: name }, true);
+                    { name, key: name }, true);
             } else {
                 const end = +new Date;
                 const duration = dateTimeUtilsDuration(start, end);
