@@ -8,6 +8,10 @@ import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
 const outputName = "applicationinsights-clickanalytics-js";
+const verParts = version.split(".")
+if (verParts.length != 3) {
+  throw "Invalid Version! [" + version + "]"
+}
 const banner = [
   "/*!",
   ` * Application Insights JavaScript SDK - Click Analytics, ${version}`,
@@ -30,11 +34,11 @@ function doCleanup() {
   })
 }
 
-const browserRollupConfigFactory = isProduction => {
+const browserRollupConfigFactory = (isProduction, libVersion) => {
   const browserRollupConfig = {
     input: `dist-esm/${outputName}.js`,
     output: {
-      file: `browser/${outputName}.js`,
+      file: `browser/ai.clck.${libVersion}.js`,
       banner: banner,
       format: "umd",
       name: "Microsoft.ApplicationInsights",
@@ -61,7 +65,7 @@ const browserRollupConfigFactory = isProduction => {
   };
 
   if (isProduction) {
-    browserRollupConfig.output.file = `browser/${outputName}.min.js`;
+    browserRollupConfig.output.file = `browser/ai.clck.${libVersion}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
         ie8: true,
@@ -132,8 +136,10 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
 updateDistEsmFiles(replaceValues, banner);
 
 export default [
+  browserRollupConfigFactory(true, version),
+  browserRollupConfigFactory(false, version),
+  browserRollupConfigFactory(true, verParts[0]),
+  browserRollupConfigFactory(false, verParts[0]),
   nodeUmdRollupConfigFactory(true),
-  nodeUmdRollupConfigFactory(false),
-  browserRollupConfigFactory(true),
-  browserRollupConfigFactory(false)
+  nodeUmdRollupConfigFactory(false)
 ];
