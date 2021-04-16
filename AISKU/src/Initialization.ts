@@ -485,6 +485,7 @@ export class Initialization implements IApplicationInsights {
                 // Hook the unload event for the document, window and body to ensure that the client events are flushed to the server
                 // As just hooking the window does not always fire (on chrome) for page navigations.
                 let added = addEventHandler('beforeunload', performHousekeeping);
+                added = addEventHandler('unload', performHousekeeping) || added;
                 added = addEventHandler('pagehide', performHousekeeping) || added;
 
                 // A reactNative app may not have a window and therefore the beforeunload/pagehide events -- so don't
