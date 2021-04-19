@@ -373,7 +373,7 @@ Function ValidateAccess
 Function GetVersion(
     [string] $name
 ) {
-    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+\.\d+\.\d+(-[^\.]+)?)(\.(?:js|min\.js)(?:\.map)?)$'
+    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+\.\d+\.\d+(-[^\.]+)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js)(?:\.map)?)$'
     $match = ($name | select-string $regMatch -AllMatches).matches
 
     if ($null -eq $match) {
