@@ -13,7 +13,8 @@
         "build": "node common/scripts/install-run-rush-silent.js rebuild --verbose",
         "test": "node common/scripts/install-run-rush.js test --verbose",
         "lint": "node common/scripts/install-run-rush.js lint --verbose",
-        "rollupes3": "grunt rollupes3"
+        "rollupes3": "grunt rollupes3",
+        "rupdate": "node common/scripts/install-run-rush.js update --recheck --purge --full"
     },
     "repository": {
         "type": "git",

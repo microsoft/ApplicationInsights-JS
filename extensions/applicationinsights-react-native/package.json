@@ -38,10 +38,10 @@
         "tslib": "^2.0.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-common": "^2.6.0",
-        "@microsoft/applicationinsights-core-js": "^2.6.0",
+        "@microsoft/applicationinsights-common": "^2.6.1",
+        "@microsoft/applicationinsights-core-js": "^2.6.1",
         "@microsoft/applicationinsights-shims": "^1.0.3",
-        "@microsoft/dynamicproto-js": "^1.1.1"
+        "@microsoft/dynamicproto-js": "^1.1.2"
     },
     "peerDependencies": {
         "react-native": "*",
