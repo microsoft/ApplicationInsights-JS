@@ -26,7 +26,7 @@ import { ITelemetryConfig } from "../JavaScriptSDK.Interfaces/ITelemetryConfig";
 import dynamicProto from "@microsoft/dynamicproto-js";
 
 // For types only
-import * as properties from "@microsoft/applicationinsights-properties-js";
+import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 
 "use strict";
 
@@ -98,7 +98,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
         super();
         let _eventTracking: Timing;
         let _pageTracking: Timing;
-        let _properties: properties.PropertiesPlugin;
+        let _properties: PropertiesPlugin;
     
         // Counts number of trackAjax invocations.
         // By default we only monitor X ajax call per view to avoid too much load.
@@ -628,7 +628,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                     // Find the properties plugin
                     arrForEach(extensions, extension => {
                         if (extension.identifier === PropertiesPluginIdentifier) {
-                            _properties = extension as properties.PropertiesPlugin;
+                            _properties = extension as PropertiesPlugin;
                         }
                     });
 
