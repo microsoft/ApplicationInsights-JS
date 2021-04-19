@@ -1,14 +1,13 @@
-[CmdletBinding()]
 param (
-    [string] $container = "",                           # The container to update
-    [string] $activeVersion = "",                       # The version to copy as the active version
+    [string] $container = $null,                        # Identify the container that you want to check blank == all
     [string] $storeContainer = "cdn",                   # Identifies the destination storage account container
     [string] $cdnStorePath = "cdnstoragename",          # Identifies the target Azure Storage account (by name)
     [string] $subscriptionId = $null,                   # Identifies the target Azure Subscription Id (if not encoded in the cdnStorePath)
     [string] $resourceGroup = $null,                    # Identifies the target Azure Subscription Resource Group (if not encoded in the cdnStorePath)
     [string] $sasToken = $null,                         # The SAS Token to use rather than using or attempting to login
     [string] $logPath = $null,                          # The location where logs should be written
-    [switch] $minorOnly = $false,                       # Only set the active minor version (v2.x) and not the major version (v2)
+    [switch] $showFiles = $false,                       # Show the individual files with details as well
+    [switch] $activeOnly = $false,                      # Only show the active (deployed) versions
     [switch] $testOnly = $false,                        # Uploads to a "tst" test container on the storage account
     [switch] $cdn = $false                              # (No longer used -- kept for now for backward compatibility)
 )
@@ -26,11 +25,11 @@ $global:storageContext = $null
 Function Log-Params 
 {
     Log "Container         : $container"
-    Log "Version           : $activeVersion"
     Log "Storage Container : $storeContainer"
     Log "Store Path        : $cdnStorePath"
-    Log "Test Mode         : $testOnly"
     Log "Log Path          : $logDir"
+    Log "Show Files        : $showFiles"
+    Log "Test Mode         : $testOnly"
     
     if ([string]::IsNullOrWhiteSpace($global:sasToken) -eq $true) {
         Log "Mode      : User-Credentials"
@@ -373,7 +372,7 @@ Function ValidateAccess
 Function GetVersion(
     [string] $name
 ) {
-    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+\.\d+\.\d+(-[^\.]+)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js)(?:\.map)?)$'
+    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[^\.]+)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js)(?:\.map)?)$'
     $match = ($name | select-string $regMatch -AllMatches).matches
 
     if ($null -eq $match) {
@@ -384,8 +383,8 @@ Function GetVersion(
     $return.path = $match.groups[1].value
     $return.prefix = $match.groups[2].value
     $return.ver = $match.groups[3].value
-    $return.verType = $match.groups[4].value
-    $return.ext = $match.groups[5].value
+    $return.verType = $match.groups[5].value
+    $return.ext = $match.groups[6].value
 
     return $return
 }
@@ -422,9 +421,9 @@ Function GetContainerContext(
     }
 
     if ($storeContainer.Length -gt 0) {
-        $blobPrefix = $storageContainer + "/" + $blobPrefix
-        $storageContainer = $storeContainer
-   }
+         $blobPrefix = $storageContainer + "/" + $blobPrefix
+         $storageContainer = $storeContainer
+    }
 
     Log "Container  : $storageContainer Prefix: $blobPrefix"
 
@@ -434,22 +433,20 @@ Function GetContainerContext(
         # Use the Sas token
         $azureContext = New-AzureStorageContext -StorageAccountName $global:storeName -Sastoken $global:sasToken -ErrorAction SilentlyContinue
     }
-    
-    $container = Get-AzureStorageContainer -Name $storageContainer -Context $azureContext -ErrorAction SilentlyContinue
-    Log-Errors
+
+    $azContainer = Get-AzureStorageContainer -Name $storageContainer -Context $azureContext -ErrorAction SilentlyContinue
+    if ($null -eq $azContainer) {
+        Log "Container [$storageContainer] does not exist"
+        return
+    }
 
     if ($global:hasErrors -eq $true) {
         exit 3
     }
 
-    if ($null -eq $container) {
-        Log "Container [$storageContainer] does not exist"
-        exit 4
-    }
-
     [hashtable]$return = @{}
     $return.azureContext = $azureContext
-    $return.container = $container
+    $return.container = $azContainer
     $return.storageContainer = $storageContainer
     $return.blobPrefix = $blobPrefix
 
@@ -461,16 +458,17 @@ Function GetVersionFiles(
     [string] $storagePath,
     [string] $filePrefix
 ) {
-    $context = GetContainerContext $storagePath
 
-    $blobs = Get-AzureStorageBlob -Container $context.storageContainer -Context $context.azureContext -Prefix "$($context.blobPrefix)$filePrefix$activeVersion" -ErrorAction SilentlyContinue
+    $context = GetContainerContext $storagePath
+    if ($null -eq $context) {
+        return
+    }
+
+    $blobs = Get-AzureStorageBlob -Container $context.storageContainer -Context $context.azureContext -Prefix "$($context.blobPrefix)$filePrefix" -ErrorAction SilentlyContinue
     foreach ($blob in $blobs) {
-        $parts = $blob.Name.Split("/")
-        $name = $parts[$parts.Length-1]
-        $version = GetVersion $name
-        if ($null -ne $version -and [string]::IsNullOrWhiteSpace($version.ver) -ne $true -and 
-                $version.prefix -eq $filePrefix -and
-                $version.ver -eq $activeVersion) {
+        $version = GetVersion $blob.Name
+
+        if ($null -ne $version -and [string]::IsNullOrWhiteSpace($version.ver) -ne $true -and $version.prefix -eq $filePrefix) {
             $fileList = $null
             if ($files.ContainsKey($version.ver) -ne $true) {
                 $fileList = New-Object 'system.collections.generic.list[hashtable]'
@@ -479,158 +477,129 @@ Function GetVersionFiles(
                 $fileList = $files[$version.ver]
             }
 
-            Log $("  - {0,-40} {1,6:N1} Kb  {2:yyyy-MM-dd HH:mm:ss}" -f $($blob.ICloudBlob.Container.Name + "/" + $blob.Name),($blob.Length/1kb),$blob.LastModified)
             $theBlob = [hashtable]@{}
+            $theBlob.path = "$($context.storageContainer)/$($version.path)"
             $theBlob.blob = $blob
-            $theBlob.context = $context
             $fileList.Add($theBlob)
         }
     }
 }
 
-Function RemoveMetadata(
-    $cloudBlob,
-    [string] $dataKey
-) {
-    # Removing and adding the attribute to avoid duplication of values when the key case is different
-    $changed = $true
-    while ($changed -eq $true) {
-        $changed = $false
-        foreach ($dstKey in $cloudBlob.Metadata.Keys) {
-            if ($dstKey -ieq $dataKey) {
-                $cloudBlob.Metadata.Remove($dstKey) | Out-Null
-                $changed = $true
-                break
-            }
-        }
-    } 
-}
-
-Function CopyBlob(
-    $blobContext,
+Function HasMetaTag(
     $blob,
-    $destContext,
-    $destName
+    [string] $metaKey
 ) {
-    Log-Errors
-
-    # Don't perform any copyies if if any errors have been logged as we want to make sure the attributes have been set
-    if ($global:hasErrors -eq $true) {
-        exit 2
-    }
-
-    Log "       - $($blob.Name) ==> $destName"
-
-    $srcCloudBlob = $blob.ICloudBlob.FetchAttributes()
-
-    $blobResult = Start-AzureStorageBlobCopy -Context $blobContext -CloudBlob $blob.ICloudBlob -DestContext $destContext.azureContext -DestContainer "$($destContext.storageContainer)" -DestBlob $destName -Force
-    Log-Errors
-
-    # Don't try and publish anything if any errors have been logged
-    if ($global:hasErrors -eq $true) {
-        exit 2
-    }
-    
-    $status = $blobResult | Get-AzureStorageBlobCopyState
-    while ($status.Status -eq "Pending") {
-        $status = $blobResult | Get-AzureStorageBlobCopyState
-        Log $status
-        Start-Sleep 10
-    }
-
-    # Don't try and publish anything if any errors have been logged
-    if ($global:hasErrors -eq $true) {
-        exit 2
-    }
-
-    # Make sure the metadata and properties are set correctly
-    # - When destination did not exist then the properties and metadata are set correctly
-    # - But when overwriting an existing blob the properties and metadata are not updated
-    $newBlob = Get-AzureStorageBlob -Context $destContext.azureContext -Container "$($destContext.storageContainer)" -Blob $destName
-    $cloudBlob = $newBlob.ICloudBlob
-    $cloudBlob.FetchAttributes()
-    $cloudBlob.Properties.CacheControl = $blob.ICloudBlob.Properties.CacheControl
     foreach ($dataKey in $blob.ICloudBlob.Metadata.Keys) {
-        RemoveMetadata $cloudBlob $dataKey
-        $cloudBlob.Metadata.Add($dataKey, $blob.ICloudBlob.Metadata[$dataKey]) | Out-Null
+        if ($dataKey -ieq $metaKey) {
+            return $true
+        }
     }
 
-    $cloudBlob.SetProperties()
-    $cloudBlob.SetMetadata()
+    return $false
 }
 
-Function SetProperties(
-    $stagedBlob,
-    $srcName,
-    $ver
+Function GetMetaTagValue(
+    $blob,
+    [string] $metaKey
 ) {
-    $cloudBlob = $stagedBlob.ICloudBlob
-    $cloudBlob.FetchAttributes()
-    $cloudBlob.Properties.CacheControl = $cacheControl30Min
-    RemoveMetadata $cloudBlob $metaSdkSrc
-    $cloudBlob.Metadata.Add($metaSdkSrc, $srcName) | Out-Null
+    $value = ""
 
-    # Make sure the version metadata is set
-    if ($cloudBlob.Metadata.ContainsKey($metaSdkVer) -eq $false -or 
-            [string]::IsNullOrWhiteSpace($cloudBlob.Metadata[$metaSdkVer]) -eq $true) {
-        RemoveMetadata $cloudBlob $metaSdkVer
-        $cloudBlob.Metadata.Add($metaSdkVer, $ver) | Out-Null
+    foreach ($dataKey in $blob.ICloudBlob.Metadata.Keys) {
+        if ($dataKey -ieq $metaKey) {
+            $value = $blob.ICloudBlob.Metadata[$dataKey]
+            break
+        }
     }
-    $cloudBlob.SetProperties()
-    $cloudBlob.SetMetadata()
 
-    Log-Errors
-    # Don't try and publish anything if any errors have been logged
-    if ($global:hasErrors -eq $true) {
-        exit 2
-    }
+    return $value
 }
 
-Function SetActiveVersion(
-   [system.collections.generic.list[hashtable]] $fileList,
-   [string] $storePath
+Function ListVersions(
+   [system.collections.generic.dictionary[string, system.collections.generic.list[hashtable]]] $files
 ) {
 
-    $destContext = GetContainerContext $storePath
+    $sortedKeys = $files.Keys | Sort-Object
+    $orderedKeys = New-Object 'system.collections.generic.list[string]'
+    foreach ($key in $sortedKeys) {
+        $verParts = $key.split(".");
+        if ($verParts.Length -eq 3) {
+            continue
+        }
+        $orderedKeys.Add($key)
+    }
 
-    Log "Storage Path : $storePath"
-    Log "Container : $($destContext.storageContainer)"
-    Log "BlobPrefix: $($destContext.blobPrefix)"
-
-    # Stage the version updates
-    foreach ($theBlob in $fileList) {
-        $blob = $theBlob.blob
-        $blobContext = $theBlob.context.azureContext
-        Log $("Copying: {0,-40} {1,6:N1} Kb  {2:yyyy-MM-dd HH:mm:ss}" -f $($blob.ICloudBlob.Container.Name + "/" + $blob.Name),($blob.Length/1kb),$blob.LastModified)
-
-        $version = GetVersion $blob.Name
-        if ($null -ne $version) {
-            $verParts = $version.ver.Split(".")
+    if ($activeOnly -ne $true) {
+        foreach ($key in $sortedKeys) {
+            $verParts = $key.split(".");
             if ($verParts.Length -ne 3) {
-                Log-Failure "ScriptError: Invalid Version! [$activeVersion]"
+                continue
             }
-        
-            # Don't try and publish anything if any errors have been logged
-            if ($global:hasErrors -eq $true) {
-                exit 2
+            $orderedKeys.Add($key)
+        }
+    }
+
+    foreach ($key in $orderedKeys) {
+        $verParts = $key.split(".");
+        if ($activeOnly -eq $true -and $verParts.Length -gt 2) {
+            continue
+        }
+
+        $fileList = $files[$key]
+        $paths = [hashtable]@{}
+        if ($showFiles -ne $true) {
+            $pathList = ""
+            foreach ($theBlob in $fileList) {
+                $thePath = $theBlob.path
+                if (HasMetaTag($theBlob, $metaSdkSrc)) {
+                    $sdkVer = GetMetaTagValue $theBlob $metaSdkSrc
+                    $version = GetVersion $sdkVer
+                    $thePath = "$($version.path)$($version.prefix)$($version.ver)"
+                }
+
+                if ($paths.ContainsKey($thePath) -ne $true) {
+                    $paths[$thePath]  = $true
+                    $value = "{0,-20}" -f $thePath
+                    $pathList = "$pathList$value  "
+                } else {
+                    $paths[$thePath] = ($paths[$thePath] + 1)
+                }
             }
+
+            foreach ($thePath in $paths.Keys | Sort-Object) {
+                Log $("  - {1,-40} ({0})" -f $paths[$thePath],$thePath)
+            }
+
+            Log $("v{0,-12} ({1,2})  -  {2}" -f $key,$($fileList.Count),$pathList.Trim())
+        } else {
+            Log $("v{0,-12} ({1,2})" -f $key,$($fileList.Count))
+            foreach ($theBlob in $fileList) {
+                $blob = $theBlob.blob
+                $blob.ICloudBlob.FetchAttributes()
+                $sdkVersion = GetMetaTagValue $blob $metaSdkVer
+                if ([string]::IsNullOrWhiteSpace($sdkVersion) -ne $true) {
+                    $sdkVersion = "v$sdkVersion"
+                } else {
+                    $sdkVersion = "---"
+                }
     
-            $stageName = "$($version.path)$($version.prefix)$($verParts[0]).$($verParts[1])$($version.ext).stage"
-            CopyBlob $blobContext $blob $destContext $stageName
-
-            $stagedBlob = Get-AzureStorageBlob -Context $destContext.azureContext -Container $destContext.storageContainer -Blob $stageName
-            SetProperties $stagedBlob "[$($destContext.storageContainer)]/$($blob.Name)" $version.ver
-
-            $minorName = "$($version.path)$($version.prefix)$($verParts[0]).$($verParts[1])$($version.ext)"
-            CopyBlob $blobContext $stagedBlob $destContext $minorName
-
-            if ($minorOnly -eq $false) {
-                $majorName = "$($version.path)$($version.prefix)$($verParts[0])$($version.ext)"
-                CopyBlob $blobContext $stagedBlob $destContext $majorName
+                $metaTags = ""
+                foreach ($dataKey in $blob.ICloudBlob.Metadata.Keys) {
+                    if ($dataKey -ine $metaSdkVer) {
+                        $metaTags = "$metaTags$dataKey=$($blob.ICloudBlob.Metadata[$dataKey]); "
+                    }
+                }
+    
+                $cacheControl = $blob.ICloudBlob.Properties.CacheControl
+                $cacheControl = $cacheControl -replace "public","pub"
+                $cacheControl = $cacheControl -replace "max-age=31536000","1yr"
+                $cacheControl = $cacheControl -replace "max-age=1800","30m"
+                $cacheControl = $cacheControl -replace "max-age=900","15m"
+                $cacheControl = $cacheControl -replace "max-age=300"," 5m"
+                $cacheControl = $cacheControl -replace "immutable","im"
+                $cacheControl = $cacheControl -replace ", "," "
+    
+                Log $("  - {0,-44}{3,-13}{1,6:N1} Kb  {2:yyyy-MM-dd HH:mm:ss}  {4,10}  {5}" -f $($blob.ICloudBlob.Container.Name + "/" + $blob.Name),($blob.Length/1kb),$blob.LastModified,$sdkVersion,$cacheControl,$metaTags)
             }
-
-            # Remove the staged files
-            $stagedBlob | Remove-AzureStorageBlob -Force
         }
     }
 }
@@ -638,28 +607,8 @@ Function SetActiveVersion(
 Function Validate-Params
 {
     # Validate parameters
-    if ("beta","next","public" -NotContains $container) {
+    if ([string]::IsNullOrWhiteSpace($container) -ne $true -and "beta","next","public" -NotContains $container) {
         Log-Failure "[$($container)] is not a valid value, must be beta, next or public"
-    }
-
-    $checkVersion = $activeVersion
-    $subParts = $checkVersion.split("-")
-    if ($subParts.Length -gt 2) {
-        Log-Failure "[$($activeVersion)] is not a valid version number"
-    } elseif ($subParts.Length -eq 2) {
-        $checkVersion = $subParts[0]
-    }
-
-    $versionParts = $checkVersion.Split(".")
-    if ($versionParts.Length -ne 3) {
-        Log-Failure "[$($activeVersion)] is not a valid version number"
-    }
-
-    foreach ($verNum in $versionParts) {
-        [int]$value = 0
-        if ([int32]::TryParse($verNum, [ref]$value) -ne $true) {
-            Log-Failure "[$($verNum)] is not a valid number within the version[$activeVersion]"
-        }
     }
 }
 
@@ -678,15 +627,12 @@ if (!(Test-Path -Path $logDir)) {
 }
 
 $fileTimeStamp = ((get-date).ToUniversalTime()).ToString("yyyyMMddThhmmss")
-$logFile = "$logDir\setActiveCdnVersionLog_$fileTimeStamp.txt"
-
-$cacheControl30Min = "public, max-age=1800, immutable";
-$contentType = "text/javascript; charset=utf-8";
+$logFile = "$logDir\listCdnVersionsLog_$fileTimeStamp.txt"
 
 Log-Params
 Validate-Params
 
-# Don't try and publish anything if any errors have been logged
+# Don't try and list anything if any errors have been logged
 if ($global:hasErrors -eq $true) {
     exit 2
 }
@@ -706,26 +652,20 @@ Log "======================================================================"
 # List the files for each container
 $files = New-Object 'system.collections.generic.dictionary[string, system.collections.generic.list[hashtable]]'
 
-$storePath = $container
-if ($container -eq "beta" -or $container -eq "next") {
-    $storePath = "$container/ext"
-    GetVersionFiles $files $storePath "ai.dbg."
-} elseif ($container -eq "public") {
-    $storePath = "scripts/b/ext"
-    GetVersionFiles $files $storePath "ai.dbg."
+# Get the beta files
+if ([string]::IsNullOrWhiteSpace($container) -eq $true -or $container -eq "beta") {
+    GetVersionFiles $files "beta/ext" "ai.clck."
 }
 
-if ($files.ContainsKey($activeVersion) -ne $true) {
-    Log-Failure "Version [$activeVersion] does not appear to be deployed to [$container]"
-} elseif ($files[$activeVersion].Count -ne 4) {
-    Log-Failure "Version [$activeVersion] does not fully deployed to [$container] -- only found [$($files[$activeVersion].Count)] file(s)"
+# Get the next files
+if ([string]::IsNullOrWhiteSpace($container) -eq $true -or $container -eq "next") {
+    GetVersionFiles $files "next/ext" "ai.clck."
 }
 
-# Don't try and publish anything if any errors have been logged
-if ($global:hasErrors -eq $true) {
-    exit 2
+# Get the public files (scripts/b)
+if ([string]::IsNullOrWhiteSpace($container) -eq $true -or $container -eq "public") {
+    GetVersionFiles $files "scripts/b/ext" "ai.clck."
 }
 
-SetActiveVersion $files[$activeVersion] $storePath
-
+ListVersions $files
 Log "======================================================================"
