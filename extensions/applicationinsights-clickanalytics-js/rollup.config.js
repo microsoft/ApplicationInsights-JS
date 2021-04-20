@@ -8,6 +8,12 @@ import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
 const outputName = "applicationinsights-clickanalytics-js";
+const verParts = version.split(".")
+if (verParts.length != 3) {
+  throw "Invalid Version! [" + version + "]"
+}
+const majorVersion = verParts[0]
+
 const banner = [
   "/*!",
   ` * Application Insights JavaScript SDK - Click Analytics, ${version}`,
@@ -30,13 +36,13 @@ function doCleanup() {
   })
 }
 
-const browserRollupConfigFactory = isProduction => {
+const browserRollupConfigFactory = (isProduction, libVersion, format = 'umd', postfix = '') => {
   const browserRollupConfig = {
     input: `dist-esm/${outputName}.js`,
     output: {
-      file: `browser/${outputName}.js`,
+      file: `browser/ai.clck.${libVersion}${postfix}.js`,
       banner: banner,
-      format: "umd",
+      format: format,
       name: "Microsoft.ApplicationInsights",
       extend: true,
       freeze: false,
@@ -61,7 +67,7 @@ const browserRollupConfigFactory = isProduction => {
   };
 
   if (isProduction) {
-    browserRollupConfig.output.file = `browser/${outputName}.min.js`;
+    browserRollupConfig.output.file = `browser/ai.clck.${libVersion}${postfix}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
         ie8: true,
@@ -132,8 +138,18 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
 updateDistEsmFiles(replaceValues, banner);
 
 export default [
+  browserRollupConfigFactory(true, version),
+  browserRollupConfigFactory(false, version),
+  browserRollupConfigFactory(true, majorVersion),
+  browserRollupConfigFactory(false, majorVersion),
+  browserRollupConfigFactory(true, majorVersion, 'cjs', '.cjs'),
+  browserRollupConfigFactory(false, majorVersion, 'cjs', '.cjs'),
+  browserRollupConfigFactory(true, version, 'cjs', '.cjs'),
+  browserRollupConfigFactory(false, version, 'cjs', '.cjs'),
+  browserRollupConfigFactory(true, majorVersion, 'iife', '.gbl'),
+  browserRollupConfigFactory(false, majorVersion, 'iife', '.gbl'),
+  browserRollupConfigFactory(true, version, 'iife', '.gbl'),
+  browserRollupConfigFactory(false, version, 'iife', '.gbl'),
   nodeUmdRollupConfigFactory(true),
-  nodeUmdRollupConfigFactory(false),
-  browserRollupConfigFactory(true),
-  browserRollupConfigFactory(false)
+  nodeUmdRollupConfigFactory(false)
 ];
