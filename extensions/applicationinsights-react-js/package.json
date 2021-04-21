@@ -51,8 +51,8 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims": "^1.0.3",
-        "@microsoft/applicationinsights-core-js": "^2.6.0",
-        "@microsoft/applicationinsights-common": "^2.6.0",
+        "@microsoft/applicationinsights-core-js": "^2.6.1",
+        "@microsoft/applicationinsights-common": "^2.6.1",
         "history": "^4.10.1"
     },
     "peerDependencies": {

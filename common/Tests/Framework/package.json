@@ -49,6 +49,6 @@
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims" : "2.0.0",
-        "@microsoft/dynamicproto-js": "^1.1.1"
+        "@microsoft/dynamicproto-js": "^1.1.2"
     }
 }
