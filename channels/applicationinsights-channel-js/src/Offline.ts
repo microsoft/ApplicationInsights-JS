@@ -33,6 +33,15 @@ export class OfflineListener {
                         target.ononline = _setOnline;
                         target.onoffline = _setOffline
                         isListening = true;
+
+                    }
+                }
+
+                if (isListening) {
+                    // We are listening to events so lets set the current status rather than assuming we are online #1538
+                    var _navigator = getNavigator();        // Gets the window.navigator or workerNavigator depending on the global
+                    if (_navigator && !isNullOrUndefined(_navigator.onLine)) { // navigator.onLine is undefined in react-native
+                        _onlineStatus = _navigator.onLine;
                     }
                 }
             } catch (e) {
