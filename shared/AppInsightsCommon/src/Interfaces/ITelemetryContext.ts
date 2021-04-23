@@ -40,7 +40,7 @@ export interface ITelemetryContext {
     /**
      * The object describing a user tracked by this object.
      */
-    user: IUserContext;
+    readonly user: IUserContext;
 
     /**
      * The object describing a session tracked by this object.
