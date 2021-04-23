@@ -1,5 +1,25 @@
 # Releases
 
+## 2.6.2 (April 22nd, 2021)
+
+### Changelog
+
+- #1536 Update DynamicProto version 1.1.2 (Fixes IE7 mode issue originally reported in #1534)
+- #1280 Investigate removing the globals __extends() and __assign() populated by applicationinsights-shims
+- #1523 Remove exposing global instances of __extends() and __assign() and update sideEffects usage (by removing globals)
+- #1538 [BUG] Telemetry Buffer Getting Cleared in Offline Mode - Online Status Incorrectly Initialized in Offline Listener
+- #1528 [BUG] correlationHeaderExcludePatterns is not honored in Ajax calls
+- #1516 [BUG] App insight library will flush telemetry using beforeUnload event but this event is cancellable
+- #1509 [BUG] Investigate changing the sideEffects: false to list only the files that include the shims module from the all AI modules so that webpack can evaluate correctly
+- #1517 [BUG] addHousekeepingBeforeUnload should also be listening to the 'unload' event
+- #1524 [BUG] Config items are not functional for current snippet disableFlushOnBeforeUnload, disableFlushOnBeforeUnload and maybe others
+- #1440 [BUG] PageViewPerformanceManager.populatePageViewPerformanceEvent() is always returning zero for the network time
+- #1393 [BUG] enableAutoRouteTracking should also update the Operation Name with the hashroute
+- [BUG] Add test coverage for #1518
+- #1510 Update PageView operation name to include the hash
+- #1522 add click plugin version to sdkversion tag
+- #1535 add click plugin js to cdn
+
 ## 2.6.1 (Hotfix - March 30th, 2021)
 
 ### Changelog
