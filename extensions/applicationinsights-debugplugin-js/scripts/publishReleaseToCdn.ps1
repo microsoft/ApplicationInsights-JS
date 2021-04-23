@@ -276,6 +276,14 @@ Function GetReleaseFiles
     AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.js.map"
     AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.min.js"
     AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.min.js.map"
+    AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.cjs.js"
+    AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.cjs.js.map"
+    AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.cjs.min.js"
+    AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.cjs.min.js.map"
+    AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.gbl.js"
+    AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.gbl.js.map"
+    AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.gbl.min.js"
+    AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.gbl.min.js.map"
 
     return $files
 }
