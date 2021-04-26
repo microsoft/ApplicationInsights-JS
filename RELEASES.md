@@ -20,6 +20,18 @@
 - #1522 add click plugin version to sdkversion tag
 - #1535 add click plugin js to cdn
 
+### Update React plugin to v3.1.1 (April 26th, 2021)
+
+- Update Core dependency to ^2.6.2 Core changes
+- Update Shims dependency to ^2.0.0 (to address the __extends() and __assign()) issue
+- #1536 Update DynamicProto version 1.1.2 (Fixes IE7 mode issue originally reported in #1534)
+
+### Update React Native plugin to v2.3.1
+
+- Update Core dependency to ^2.6.2 Core changes
+- Update Shims dependency to ^2.0.0 (to address the __extends() and __assign()) issue
+- #1536 Update DynamicProto version 1.1.2 (Fixes IE7 mode issue originally reported in #1534)
+
 ## 2.6.1 (Hotfix - March 30th, 2021)
 
 ### Changelog
