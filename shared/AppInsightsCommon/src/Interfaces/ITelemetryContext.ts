@@ -15,27 +15,27 @@ export interface ITelemetryContext {
     /**
      * The object describing a component tracked by this object.
      */
-    application: IApplication;
+    readonly application: IApplication;
 
     /**
      * The object describing a device tracked by this object.
      */
-    device: IDevice;
+    readonly device: IDevice;
 
     /**
      * The object describing internal settings.
      */
-    internal: IInternal;
+    readonly internal: IInternal;
 
     /**
      * The object describing a location tracked by this object.
      */
-    location: ILocation;
+    readonly location: ILocation;
 
     /**
      * The object describing a operation tracked by this object.
      */
-    telemetryTrace: ITelemetryTrace;
+    readonly telemetryTrace: ITelemetryTrace;
 
     /**
      * The object describing a user tracked by this object.
@@ -45,17 +45,17 @@ export interface ITelemetryContext {
     /**
      * The object describing a session tracked by this object.
      */
-    session: ISession;
+    readonly session: ISession;
 
     /**
      * The object describing os details tracked by this object.
      */
-    os?: IOperatingSystem;
+    readonly os?: IOperatingSystem;
 
     /**
      * The object describing we details tracked by this object.
      */
-    web?: IWeb;
+    readonly web?: IWeb;
 
     /**
      * application id obtained from breeze responses. Is used if appId is not specified by root config

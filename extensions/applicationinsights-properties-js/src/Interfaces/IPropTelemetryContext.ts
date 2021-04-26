@@ -6,7 +6,7 @@ import { IProcessTelemetryContext, ITelemetryItem } from "@microsoft/application
 import { _SessionManager } from "../Context/Session";
 
 export interface IPropTelemetryContext extends ITelemetryContext {
-    sessionManager: _SessionManager; // The session manager that manages session on the base of cookies.
+    readonly sessionManager: _SessionManager; // The session manager that manages session on the base of cookies.
 
     applySessionContext(evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext): void;
     applyOperatingSystemContxt(event: ITelemetryItem, itemCtx?: IProcessTelemetryContext): void;
