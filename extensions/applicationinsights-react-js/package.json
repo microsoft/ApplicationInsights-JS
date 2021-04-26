@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-react-js",
-    "version": "3.1.1",
+    "version": "3.1.2",
     "description": "Microsoft Application Insights React plugin",
     "main": "dist/applicationinsights-react-js.js",
     "module": "dist-esm/applicationinsights-react-js.js",
@@ -37,22 +37,26 @@
         "jest": "^24.7.1",
         "react": "^17.0.1",
         "react-dom": "^17.0.1",
-        "rollup": "^0.66.0",
-        "rollup-plugin-commonjs": "^9.3.4",
-        "rollup-plugin-node-resolve": "^3.4.0",
-        "rollup-plugin-replace": "^2.1.0",
-        "rollup-plugin-uglify": "^6.0.0",
+        "globby": "^11.0.0",
+        "magic-string": "^0.25.7",
+        "@rollup/plugin-commonjs": "^18.0.0",
+        "@rollup/plugin-node-resolve": "^11.2.1",
+        "@rollup/plugin-replace": "^2.3.3",
         "rollup-plugin-cleanup": "3.2.1",
+        "rollup-plugin-peer-deps-external": "^2.2.4",
+        "rollup": "^2.32.0",
         "ts-jest": "^24.0.2",
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
         "typescript": "^3.9.3",
-        "tslib": "^2.0.0"
+        "tslib": "^2.0.0",
+        "uglify-js": "^3.11.0"
     },
     "dependencies": {
         "@microsoft/applicationinsights-shims": "^2.0.0",
         "@microsoft/applicationinsights-core-js": "^2.6.2",
         "@microsoft/applicationinsights-common": "^2.6.2",
+        "@microsoft/dynamicproto-js": "^1.1.2",
         "history": "^4.10.1"
     },
     "peerDependencies": {
