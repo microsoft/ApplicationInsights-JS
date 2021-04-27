@@ -16,7 +16,7 @@ import {
     ITelemetryItem, IProcessTelemetryContext, IConfiguration,
     _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
     getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain, INotificationManager,
-    SendRequestReason, getGlobalInst, objForEachKey, isNullOrUndefined, arrForEach, dateNow, dumpObj, getExceptionName, getIEVersion, throwError
+    SendRequestReason, getGlobalInst, objForEachKey, isNullOrUndefined, arrForEach, dateNow, dumpObj, getExceptionName, getIEVersion, throwError, objKeys
 } from '@microsoft/applicationinsights-core-js';
 import { Offline } from './Offline';
 import { Sample } from './TelemetryProcessors/Sample'
@@ -87,7 +87,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             onunloadDisableBeacon: () => false,
             instrumentationKey: () => undefined,  // Channel doesn't need iKey, it should be set already
             namePrefix: () => undefined,
-            samplingPercentage: () => 100
+            samplingPercentage: () => 100,
+            customHeaders: () => undefined
         }
     }
 
@@ -104,7 +105,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             onunloadDisableBeacon: undefined,
             instrumentationKey: undefined,
             namePrefix: undefined,
-            samplingPercentage: undefined
+            samplingPercentage: undefined,
+            customHeaders: undefined
         };
     }
     
@@ -165,6 +167,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
         let _stamp_specific_redirects: number;
 
+        let _headers: { [name: string]: string } = {};
+
         dynamicProto(Sender, this, (_self, _base) => {
             function _notImplemented() {
                 throwError("Method not implemented.");
@@ -201,6 +205,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             };
 
             _self.teardown = _notImplemented;
+
+            _self.addHeader = (name: string, value: string) => {
+                _headers[name] = value;
+            }
         
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain): void => {
                 _base.initialize(config, core, extensions, pluginChain);
@@ -229,11 +237,17 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         _InternalMessageId.InvalidInstrumentationKey, "Invalid Instrumentation key "+config.instrumentationKey);
                 }
 
+                if (!isInternalApplicationInsightsEndpoint(_self._senderConfig.endpointUrl()) && _self._senderConfig.customHeaders() && _self._senderConfig.customHeaders().length > 0) {
+                    arrForEach(_self._senderConfig.customHeaders(), customHeader => {
+                        this.addHeader(customHeader.header, customHeader.value);
+                    });
+                }
+
                 if (!_self._senderConfig.isBeaconApiDisabled() && isBeaconApiSupported()) {
                     _self._sender = _beaconSender;
                 } else {
-                    if (typeof XMLHttpRequest !== undefined) {
-                        const xhr:any = getGlobalInst("XMLHttpRequest");
+                    if (typeof XMLHttpRequest !== "undefined") {
+                        const xhr: any = getGlobalInst("XMLHttpRequest");
                         if(xhr) {
                             const testXhr = new xhr();
                             if ("withCredentials" in testXhr) {
@@ -242,6 +256,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                             } else if (typeof XDomainRequest !== undefined) {
                                 _self._sender = _xdrSender; // IE 8 and 9
                             }
+                        }
+                    } else {
+                        const fetch: any = getGlobalInst("fetch");
+                        if (fetch) {
+                            _self._sender = _fetchSender;
                         }
                     }
                 }
@@ -355,66 +374,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              */
             _self._xhrReadyStateChange = (xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) => {
                 if (xhr.readyState === 4) {
-                    let response: IBackendResponse = null;
-
-                    if (!_self._appId) {
-                        response = _parseResponse(_getResponseText(xhr) || xhr.response);
-                        if (response && response.appId) {
-                            _self._appId = response.appId;
-                        }
-                    }
-        
-                    if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 0) {
-
-                        // Update End Point url if permanent redirect or moved permanently
-                        // Updates the end point url before retry
-                        if(xhr.status == 301 || xhr.status == 308 ) {
-                            if(!_checkAndUpdateEndPointUrl(xhr)) {
-                                _self._onError(payload, _formatErrorMessageXhr(xhr));
-                                return;
-                            }
-                        }
-
-                        if (!_self._senderConfig.isRetryDisabled() && _isRetriable(xhr.status)) {
-                            _resendPayload(payload);
-                            _self.diagLog().throwInternal(
-                                LoggingSeverity.WARNING,
-                                _InternalMessageId.TransmissionFailed, ". " +
-                                "Response code " + xhr.status + ". Will retry to send " + payload.length + " items.");
-                        } else {
-                            _self._onError(payload, _formatErrorMessageXhr(xhr));
-                        }
-                    } else if (Offline.isOffline()) { // offline
-                        // Note: Don't check for status == 0, since adblock gives this code
-                        if (!_self._senderConfig.isRetryDisabled()) {
-                            const offlineBackOffMultiplier = 10; // arbritrary number
-                            _resendPayload(payload, offlineBackOffMultiplier);
-        
-                            _self.diagLog().throwInternal(
-                                LoggingSeverity.WARNING,
-                                _InternalMessageId.TransmissionFailed, `. Offline - Response Code: ${xhr.status}. Offline status: ${Offline.isOffline()}. Will retry to send ${payload.length} items.`);
-                        }
-                    } else {
-
-                        // check if the xhr's responseURL is same as endpoint url
-                        // TODO after 10 redirects force send telemetry with 'redirect=false' as query parameter.
-                        _checkAndUpdateEndPointUrl(xhr);
-                        
-                        if (xhr.status === 206) {
-                            if (!response) {
-                                response = _parseResponse(_getResponseText(xhr) || xhr.response);
-                            }
-        
-                            if (response && !_self._senderConfig.isRetryDisabled()) {
-                                _self._onPartialSuccess(payload, response);
-                            } else {
-                                _self._onError(payload, _formatErrorMessageXhr(xhr));
-                            }
-                        } else {
-                            _consecutiveErrors = 0;
-                            _self._onSuccess(payload, countOfItemsInPayload);
-                        }
-                    }
+                    _checkResponsStatus(xhr.status, payload, xhr.responseURL, countOfItemsInPayload, _formatErrorMessageXhr(xhr), _getResponseText(xhr) || xhr.response);
                 }
             };
         
@@ -545,8 +505,71 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 return _self._sample.isSampledIn(envelope);
             }
 
-            function _checkAndUpdateEndPointUrl(xhr: XMLHttpRequest) {
-                const responseUrl = xhr.responseURL;
+            function _checkResponsStatus(status: number, payload: string[], responseUrl: string, countOfItemsInPayload: number, errorMessage: string, res: any) {
+                let response: IBackendResponse = null;
+
+                if (!_self._appId) {
+                    response = _parseResponse(res);
+                    if (response && response.appId) {
+                        _self._appId = response.appId;
+                    }
+                }
+    
+                if ((status < 200 || status >= 300) && status !== 0) {
+
+                    // Update End Point url if permanent redirect or moved permanently
+                    // Updates the end point url before retry
+                    if(status === 301 || status === 308 ) {
+                        if(!_checkAndUpdateEndPointUrl(responseUrl)) {
+                            _self._onError(payload, errorMessage);
+                            return;
+                        }
+                    }
+
+                    if (!_self._senderConfig.isRetryDisabled() && _isRetriable(status)) {
+                        _resendPayload(payload);
+                        _self.diagLog().throwInternal(
+                            LoggingSeverity.WARNING,
+                            _InternalMessageId.TransmissionFailed, ". " +
+                            "Response code " + status + ". Will retry to send " + payload.length + " items.");
+                    } else {
+                        _self._onError(payload, errorMessage);
+                    }
+                } else if (Offline.isOffline()) { // offline
+                    // Note: Don't check for status == 0, since adblock gives this code
+                    if (!_self._senderConfig.isRetryDisabled()) {
+                        const offlineBackOffMultiplier = 10; // arbritrary number
+                        _resendPayload(payload, offlineBackOffMultiplier);
+    
+                        _self.diagLog().throwInternal(
+                            LoggingSeverity.WARNING,
+                            _InternalMessageId.TransmissionFailed, `. Offline - Response Code: ${status}. Offline status: ${Offline.isOffline()}. Will retry to send ${payload.length} items.`);
+                    }
+                } else {
+
+                    // check if the xhr's responseURL is same as endpoint url
+                    // TODO after 10 redirects force send telemetry with 'redirect=false' as query parameter.
+                    _checkAndUpdateEndPointUrl(responseUrl);
+                    
+                    if (status === 206) {
+                        if (!response) {
+                            response = _parseResponse(res);
+                        }
+    
+                        if (response && !_self._senderConfig.isRetryDisabled()) {
+                            _self._onPartialSuccess(payload, response);
+                        } else {
+                            _self._onError(payload, errorMessage);
+                        }
+                    } else {
+                        _consecutiveErrors = 0;
+                        _self._onSuccess(payload, countOfItemsInPayload);
+                    }
+                }
+            }
+
+            function _checkAndUpdateEndPointUrl(responseURL: string) {
+                const responseUrl = responseURL;
                 // Maximum stamp specific redirects allowed(uncomment this when breeze is ready with not allowing redirects feature)
                if(_stamp_specific_redirects >= 10) {
                //  _self._senderConfig.endpointUrl = () => Sender._getDefaultAppInsightsChannelConfig().endpointUrl()+"/?redirect=false";
@@ -612,6 +635,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 if (isInternalApplicationInsightsEndpoint(endPointUrl)) {
                     xhr.setRequestHeader(RequestHeaders.sdkContextHeader, RequestHeaders.sdkContextHeaderAppIdRequest);
                 }
+
+                arrForEach(objKeys(_headers), (headerName) => {
+                    xhr.setRequestHeader(headerName, _headers[headerName]);
+                });
         
                 xhr.onreadystatechange = () => _self._xhrReadyStateChange(xhr, payload, payload.length);
                 xhr.onerror = (event: ErrorEvent|any) => _self._onError(payload, _formatErrorMessageXhr(xhr), event);
@@ -621,6 +648,49 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 xhr.send(batch);
         
                 _self._buffer.markAsSent(payload);
+            }
+
+            /**
+             * Send fetch API request
+             * @param payload {string} - The data payload to be sent.
+             * @param isAsync {boolean} - not used
+             */
+             function _fetchSender(payload: string[], isAsync: boolean) {
+                const endPointUrl = _self._senderConfig.endpointUrl();
+                const batch = _self._buffer.batchPayloads(payload);
+                const plainTextBatch = new Blob([batch], { type: 'text/plain;charset=UTF-8' });
+                let requestHeaders = new Headers();
+                // append Sdk-Context request header only in case of breeze endpoint
+                if (isInternalApplicationInsightsEndpoint(endPointUrl)) {
+                    requestHeaders.append(RequestHeaders.sdkContextHeader, RequestHeaders.sdkContextHeaderAppIdRequest);
+                }
+                arrForEach(objKeys(_headers), (headerName) => {
+                    requestHeaders.append(headerName, _headers[headerName]);
+                });
+                const init = {
+                    method: "POST",
+                    headers: requestHeaders,
+                    body: plainTextBatch
+                }
+                const request = new Request(endPointUrl, init);
+
+                fetch(request).then(response => {
+                    /**
+                     * The Promise returned from fetch() won’t reject on HTTP error status even if the response is an HTTP 404 or 500. 
+                     * Instead, it will resolve normally (with ok status set to false), and it will only reject on network failure 
+                     * or if anything prevented the request from completing.
+                     */
+                    if (!response.ok) {
+                        throw Error(response.statusText);
+                    } else {
+                        response.text().then(text => {
+                            _checkResponsStatus(response.status, payload, response.url, payload.length, response.statusText, text);
+                        });
+                        _self._buffer.markAsSent(payload);
+                    }
+                }).catch((error: Error) => {
+                    _self._onError(payload, error.message)
+                });
             }
         
             /**
@@ -888,5 +958,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
      */
     public _xdrOnLoad(xdr: IXDomainRequest, payload: string[]) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    /**
+     * Add header to request
+     * @param name   - Header name.
+     * @param value  - Header value.
+     */
+     public addHeader(name: string, value: string) {
+        // @DynamicProtoStub - DO NOT add any code as this will be removed during packaging
     }
 }

@@ -47,6 +47,7 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
     appInsights: ApplicationInsights;
     flush: (async?: boolean) => void;
     onunloadFlush: (async?: boolean) => void;
+    getSender: () => Sender;
 };
 
 // Re-exposing the Common classes as Telemetry, the list was taken by reviewing the generated code for the build while using
@@ -110,6 +111,7 @@ export class Initialization implements IApplicationInsights {
 
     private dependencies: DependenciesPlugin;
     private properties: PropertiesPlugin;
+    private sender: Sender;
     private _snippetVersion: string;
 
     constructor(snippet: Snippet) {
@@ -132,6 +134,7 @@ export class Initialization implements IApplicationInsights {
         _self.properties = new PropertiesPlugin();
         _self.dependencies = new DependenciesPlugin();
         _self.core = new AppInsightsCore();
+        _self.sender = new Sender();
 
         _self.snippet = snippet;
         _self.config = config;
@@ -376,9 +379,8 @@ export class Initialization implements IApplicationInsights {
 
         doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
             const extensions = [];
-            const appInsightsChannel: Sender = new Sender();
     
-            extensions.push(appInsightsChannel);
+            extensions.push(_self.sender);
             extensions.push(_self.properties);
             extensions.push(_self.dependencies);
             extensions.push(_self.appInsights);
@@ -504,6 +506,11 @@ export class Initialization implements IApplicationInsights {
                 addEventHandler('pagehide', performHousekeeping);
             }
         }
+    }
+
+    public getSender(): Sender {
+        let _self = this;
+        return _self.sender;
     }
 
     private getSKUDefaults() {

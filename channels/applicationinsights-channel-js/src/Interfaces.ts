@@ -51,6 +51,11 @@ export interface ISenderConfig {
     namePrefix: () => string;
 
     samplingPercentage: () => number;
+
+    /**
+     * (Opetional) The ability for the user to provide extra headers
+     */
+    customHeaders: () => [{header: string, value: string}]
 }
 
 export interface IBackendResponse {
