@@ -8,19 +8,23 @@ import {
     ITelemetryItem,
     IPlugin,
     IAppInsightsCore, 
-    CoreUtils,
     LoggingSeverity,
     _InternalMessageId,
     BaseTelemetryPlugin,
-    IProcessTelemetryContext//,
-    // objForEachKey
+    IProcessTelemetryContext,//,
+    arrForEach,
+    dumpObj,
+    getExceptionName,
+    isObject,
+    hasOwnProperty,
+    isUndefined
 } from '@microsoft/applicationinsights-core-js';
 import { ConfigurationManager, IDevice, IExceptionTelemetry, IAppInsights, SeverityLevel, AnalyticsPluginIdentifier  } from '@microsoft/applicationinsights-common';
 import DeviceInfo from 'react-native-device-info';
 
 import { INativeDevice, IReactNativePluginConfig } from './Interfaces';
 import dynamicProto from '@microsoft/dynamicproto-js';
-
+import { getGlobal, strShimUndefined } from '@microsoft/applicationinsights-shims';
 
 /**
  * This is a helper function for the equivalent of arForEach(objKeys(target), callbackFn), this is a 
@@ -28,22 +32,24 @@ import dynamicProto from '@microsoft/dynamicproto-js';
  * @param target The target object to find and process the keys
  * @param callbackfn The function to call with the details
  */
-export function objForEachKey(target: any, callbackfn: (name: string, value: any) => void) {
-    if (target && CoreUtils.isObject(target)) {
+ export function objForEachKey(target: any, callbackfn: (name: string, value: any) => void) {
+    if (target && isObject(target)) {
         for (let prop in target) {
-            if (CoreUtils.hasOwnProperty(target, prop)) {
+            if (hasOwnProperty(target, prop)) {
                 callbackfn.call(target, prop, target[prop]);
             }
         }
     }
 }
 
-
 export class ReactNativePlugin extends BaseTelemetryPlugin {
 
     identifier: string = 'AppInsightsReactNativePlugin';
     priority: number = 140;
     _nextPlugin?: ITelemetryPlugin;
+
+    private _setExceptionHandler: () => void;
+    private _collectDeviceInfo: () => void;
 
     constructor(config?: IReactNativePluginConfig) {
         super();
@@ -69,16 +75,16 @@ export class ReactNativePlugin extends BaseTelemetryPlugin {
                             inConfig as any,
                             option,
                             _self.identifier,
-                            value
+                            !isUndefined(_config[option]) ? _config[option] : value
                         );
                     });
         
                     if (!_config.disableDeviceCollection) {
-                        _collectDeviceInfo();
+                        _self._collectDeviceInfo();
                     }
         
                     if (extensions) {
-                        CoreUtils.arrForEach(extensions, ext => {
+                        arrForEach(extensions, ext => {
                             const identifier = (ext as ITelemetryPlugin).identifier;
                             if (identifier === AnalyticsPluginIdentifier) {
                                 _analyticsPlugin = (ext as any) as IAppInsights;
@@ -87,7 +93,7 @@ export class ReactNativePlugin extends BaseTelemetryPlugin {
                     }
         
                     if (!_config.disableExceptionCollection) {
-                        _setExceptionHandler();
+                        _self._setExceptionHandler();
                     }
                 }
             };
@@ -108,15 +114,18 @@ export class ReactNativePlugin extends BaseTelemetryPlugin {
             _self.setDeviceType = (newType: string) => {
                 _device.deviceClass = newType;
             };
-        
             
             /**
              * Automatically collects native device info for this device
              */
-            function _collectDeviceInfo() {
-                _device.deviceClass = DeviceInfo.getDeviceType();
-                _device.id = DeviceInfo.getUniqueId(); // Installation ID
-                _device.model = DeviceInfo.getModel();
+            _self._collectDeviceInfo = () => {
+                try {
+                    _device.deviceClass = DeviceInfo.getDeviceType();
+                    _device.id = DeviceInfo.getUniqueId(); // Installation ID
+                    _device.model = DeviceInfo.getModel();
+                } catch (e) {
+                    _self.diagLog().warnToConsole("Failed to get DeviceInfo: " + getExceptionName(e) + " - " + dumpObj(e));
+                }
             }
 
             function _applyDeviceContext(item: ITelemetryItem) {
@@ -135,8 +144,16 @@ export class ReactNativePlugin extends BaseTelemetryPlugin {
                 }
             }
 
-            function _setExceptionHandler() {
-                const _global = global as any;
+            function _getGlobal(): any {
+                if (typeof global !== strShimUndefined && global) {
+                    return global as any;
+                }
+
+                return getGlobal() as any;
+            }
+
+            _self._setExceptionHandler = () => {
+                const _global = _getGlobal();
                 if (_global && _global.ErrorUtils) {
                     // intercept react-native error handling
                     _defaultHandler = (typeof _global.ErrorUtils.getGlobalHandler === 'function' && _global.ErrorUtils.getGlobalHandler()) || _global.ErrorUtils._globalHandler;
@@ -159,6 +176,12 @@ export class ReactNativePlugin extends BaseTelemetryPlugin {
                 if (_defaultHandler) {
                     _defaultHandler.call(global, e, isFatal);
                 }
+            }
+
+            // Test Hooks
+            (_self as any)._config = _config;
+            (_self as any)._getDbgPlgTargets = () => {
+                return [_device];
             }
         });
 
