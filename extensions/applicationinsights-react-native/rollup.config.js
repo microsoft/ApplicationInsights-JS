@@ -4,15 +4,16 @@ import replace from "@rollup/plugin-replace";
 import cleanup from "rollup-plugin-cleanup";
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import { uglify } from "../../tools/rollup-plugin-uglify3-js/dist/esm/rollup-plugin-uglify3-js";
-import { es3Poly, importCheck } from "@microsoft/applicationinsights-rollup-es3";
+import { importCheck } from "@microsoft/applicationinsights-rollup-es3";
 import dynamicRemove from "@microsoft/dynamicproto-js/tools/rollup/node/removedynamic";
 import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
-const outputName = "applicationinsights-react-js";
+const inputName = "index"
+const outputName = "applicationinsights-react-native";
 const banner = [
   "/*!",
-  ` * Application Insights JavaScript SDK - React Plugin, ${version}`,
+  ` * Application Insights JavaScript SDK - React Native Plugin, ${version}`,
   " * Copyright (c) Microsoft and contributors. All rights reserved.",
   " */"
 ].join("\n");
@@ -34,7 +35,7 @@ function doCleanup() {
 
 const browserRollupConfigFactory = isProduction => {
   const browserRollupConfig = {
-    input: `dist-esm/${outputName}.js`,
+    input: `dist-esm/${inputName}.js`,
     output: {
       file: `browser/${outputName}.js`,
       banner: banner,
@@ -51,7 +52,7 @@ const browserRollupConfigFactory = isProduction => {
         delimiters: ["", ""],
         values: replaceValues
       }),
-      importCheck({ exclude: [ "applicationinsights-react-js" ] }),
+      importCheck({ exclude: [ "applicationinsights-react-native" ] }),
       peerDepsExternal(),
       nodeResolve({
         browser: true,
@@ -60,11 +61,10 @@ const browserRollupConfigFactory = isProduction => {
       }),
       commonjs(),
       doCleanup(),
-      es3Poly()
     ]
   };
 
-   if (isProduction) {
+  if (isProduction) {
     browserRollupConfig.output.file = `browser/${outputName}.min.js`;
     browserRollupConfig.plugins.push(
       uglify({
@@ -87,7 +87,7 @@ const browserRollupConfigFactory = isProduction => {
 
 const nodeUmdRollupConfigFactory = (isProduction) => {
   const nodeRollupConfig = {
-    input: `dist-esm/${outputName}.js`,
+    input: `dist-esm/${inputName}.js`,
     output: {
       file: `dist/${outputName}.js`,
       banner: banner,
@@ -104,7 +104,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
         delimiters: ["", ""],
         values: replaceValues
       }),
-      importCheck({ exclude: [ "applicationinsights-react-js" ] }),
+      importCheck({ exclude: [ "applicationinsights-react-native" ] }),
       peerDepsExternal(),
       nodeResolve({
         browser: true,
@@ -112,8 +112,7 @@ const nodeUmdRollupConfigFactory = (isProduction) => {
         dedupe: [ "react", "react-dom" ]
       }),
       commonjs(),
-      doCleanup(),
-      es3Poly()
+      doCleanup()
     ]
   };
 
