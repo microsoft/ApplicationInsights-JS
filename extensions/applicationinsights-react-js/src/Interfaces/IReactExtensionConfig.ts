@@ -13,5 +13,5 @@ export interface IReactExtensionConfig {
    * @type {History}
    * @memberof IReactAISettings
    */
-  history?: History;
+  readonly history?: History;
 }

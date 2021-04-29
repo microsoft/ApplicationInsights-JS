@@ -1,15 +1,18 @@
 ﻿/// <reference path="../TestFramework/TestClass.ts" />
 
-import { AppInsightsCore, DiagnosticLogger, ITelemetryItem } from "@microsoft/applicationinsights-core-js";
+import { AppInsightsCore, DiagnosticLogger, ITelemetryItem, objForEachKey } from "@microsoft/applicationinsights-core-js";
 import { ReactNativePlugin, INativeDevice, IReactNativePluginConfig } from '../../src';
+import dynamicProto from '@microsoft/dynamicproto-js';
 
 export class ReactNativePluginTests extends TestClass {
     private plugin: ReactNativePlugin;
     private core: AppInsightsCore;
     private config: IReactNativePluginConfig;
     private item: ITelemetryItem;
+    private _dynProtoOpts: any = null;
 
     public testInitialize() {
+        this._disableDynProtoBaseFuncs();
         this.core = new AppInsightsCore();
         this.core.logger = new DiagnosticLogger();
         this.plugin = new ReactNativePlugin();
@@ -46,11 +49,13 @@ export class ReactNativePluginTests extends TestClass {
                     name: 'a name'
                 };
                 this.plugin['_initialized'] = true;
-                (this.plugin['_device'] as INativeDevice) = {
+                objForEachKey({
                     id: 'some id',
                     model: 'some model',
                     deviceClass: 'some type'
-                };
+                }, (name, value) => {
+                    this._getDevice(this.plugin)[name] = value;
+                });
                 Assert.notDeepEqual(expectation, actual, 'Telemetry items are not equal yet');
                 this.plugin.processTelemetry(actual);
                 Assert.deepEqual(expectation, actual, 'Telemetry items are equal');
@@ -63,9 +68,9 @@ export class ReactNativePluginTests extends TestClass {
             name: `setDeviceId sets this device's id`,
             test: () => {
                 const expectation = 'something';
-                Assert.notEqual(expectation, this.plugin['_device'].id, 'Initial not set');
+                Assert.notEqual(expectation, this._getDevice(this.plugin).id, 'Initial not set');
                 this.plugin.setDeviceId(expectation);
-                Assert.equal(expectation, this.plugin['_device'].id, 'Value set');
+                Assert.equal(expectation, this._getDevice(this.plugin).id, 'Value set');
             }
         });
 
@@ -73,9 +78,9 @@ export class ReactNativePluginTests extends TestClass {
             name: `setDeviceModel sets this device's model`,
             test: () => {
                 const expectation = 'something';
-                Assert.notEqual(expectation, this.plugin['_device'].model, 'Initial not set');
+                Assert.notEqual(expectation, this._getDevice(this.plugin).model, 'Initial not set');
                 this.plugin.setDeviceModel(expectation);
-                Assert.equal(expectation, this.plugin['_device'].model, 'Value set');
+                Assert.equal(expectation, this._getDevice(this.plugin).model, 'Value set');
             }
         });
 
@@ -83,9 +88,9 @@ export class ReactNativePluginTests extends TestClass {
             name: `setDeviceType sets this device's type`,
             test: () => {
                 const expectation = 'something';
-                Assert.notEqual(expectation, this.plugin['_device'].deviceClass, 'Initial not set');
+                Assert.notEqual(expectation, this._getDevice(this.plugin).deviceClass, 'Initial not set');
                 this.plugin.setDeviceType(expectation);
-                Assert.equal(expectation, this.plugin['_device'].deviceClass, 'Value set');
+                Assert.equal(expectation, this._getDevice(this.plugin).deviceClass, 'Value set');
             }
         });
     }
@@ -166,6 +171,25 @@ export class ReactNativePluginTests extends TestClass {
             }
         });
     }
+
+    private _getDevice(plugin: any): any {
+        return plugin._getDbgPlgTargets()[0];
+    }
+
+    protected _disableDynProtoBaseFuncs() {
+        let defOpts = dynamicProto['_dfOpts'];
+        if (defOpts) {
+            if (!this._dynProtoOpts) {
+                // Save the current settings so we can restore them
+                this._dynProtoOpts = {};
+                Object.keys(defOpts).forEach((key) => {
+                    this._dynProtoOpts[key] = defOpts[key];
+                });
+            }
+
+            defOpts.useBaseInst = false;
+        }
+    }    
 }
 
 export function runTests() {
