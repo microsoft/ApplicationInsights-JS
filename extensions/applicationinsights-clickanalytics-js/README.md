@@ -94,7 +94,9 @@ appInsights.loadAppInsights();
   // Click Analytics configuration
   var clickPluginConfig = {
     autoCapture : true,
-    useDefaultContentNameOrId: true,
+    dataTags: {
+      useDefaultContentNameOrId: true
+    }
   }
   // Application Insights Configuration
   var configObj = {
