@@ -545,7 +545,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     }
                 } else {
 
-                    // check if the xhr's responseURL is same as endpoint url
+                    // check if the xhr's responseURL or fetch's response.url is same as endpoint url
                     // TODO after 10 redirects force send telemetry with 'redirect=false' as query parameter.
                     _checkAndUpdateEndPointUrl(responseUrl);
                     
