@@ -15,7 +15,8 @@
         var modules = new ModuleLoader({
             baseUrl: '../../',
             paths: {
-                qunit: "../../common/Tests/External/qunit-1.23.1"
+                qunit: "../../common/Tests/External/qunit-1.23.1",
+                "react-native": "./Tests/External/DummyReactNative"
             }
         });
 
@@ -25,15 +26,20 @@
         // Load and define the app insights Shims module
         modules.add("@microsoft/applicationinsights-shims", "./node_modules/@microsoft/applicationinsights-shims/browser/applicationinsights-shims");
 
+        // Load DynamicProto
+        modules.add("@microsoft/dynamicproto-js", "./node_modules/@microsoft/dynamicproto-js/lib/dist/umd/dynamicproto-js", true);
+
         // Load Core
         modules.add("@microsoft/applicationinsights-core-js", "./node_modules/@microsoft/applicationinsights-core-js/browser/applicationinsights-core-js");
 
         // Load Common
         modules.add("@microsoft/applicationinsights-common", "./node_modules/@microsoft/applicationinsights-common/browser/applicationinsights-common");
 
-        // Load React native device info
-        modules.add("react-native-device-info", "./node_modules/react-native-device-info/web/index");
+        modules.add("react-native");
 
+        // Load React native device info
+        modules.add("react-native-device-info", "./node_modules/react-native-device-info/lib/commonjs/web/index");
+        
         var testModule = modules.add("Tests/Selenium/reactnativeplugin.tests", "./reactnativeplugin.tests.js")
         testModule.run = function (tests) {
             console && console.log("Starting tests");

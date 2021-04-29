@@ -31,7 +31,7 @@ export interface ITelemetryPlugin extends IPlugin {
     /**
      * Priority of the extension
      */
-    priority: number;
+    readonly priority: number;
 }
 
 export interface IPlugin {
@@ -60,10 +60,10 @@ export interface IPlugin {
     /**
      * Extension name
      */
-    identifier: string;
+    readonly identifier: string;
 
     /**
      * Plugin version (available in data.properties.version in common schema)
      */
-    version?: string;
+    readonly version?: string;
 }

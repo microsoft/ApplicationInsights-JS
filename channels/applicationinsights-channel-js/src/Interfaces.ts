@@ -62,32 +62,32 @@ export interface IBackendResponse {
     /**
      * Number of items received by the backend
      */
-    itemsReceived: number;
+    readonly itemsReceived: number;
 
     /**
      * Number of items succesfuly accepted by the backend
      */
-    itemsAccepted: number;
+    readonly itemsAccepted: number;
 
     /**
      * List of errors for items which were not accepted
      */
-    errors: IResponseError[];
+    readonly errors: IResponseError[];
 
     /**
      * App id returned by the backend - not necessary returned, but we don't need it with each response.
      */
-    appId?: string;
+    readonly appId?: string;
 }
 
 export interface XDomainRequest extends XMLHttpRequestEventTarget {
-    responseText: string;
+    readonly responseText: string;
     send(payload: string): void;
     open(method: string, url: string): void;
 }
 
 export interface IResponseError {
-    index: number;
-    statusCode: number;
-    message: string;
+    readonly index: number;
+    readonly statusCode: number;
+    readonly message: string;
 }

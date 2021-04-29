@@ -3,15 +3,54 @@
 Click Analytics Plugin for the Application Insights Javascript SDK, enables automatic tracking of the click events on web pages based on `data-*` meta tags.
 This plugin uses the `data-*` global attributes to capture the click events and populate telemetry data.
 
-## Some insights to effectively use the plugin
+## How to effectively use the plugin
 
-1.  If the clicked HTML element doesn't have the `data-*` attribute and if the `useDefaultContentNameOrId` flag is set to true, the plugin captures the `id` and the standard HTML attribute for contentName.
-2.  `customDataPrefix` provided by user should always start with `data-`, for example `data-sample-`. The reasoning behind this is that, in HTML the `data-*` global attributes form a class of attributes called custom data attributes, that allow proprietary information to be exchanged between the HTML and its DOM representation by scripts. Also, older browsers (IE, Safari) will drop attributes that it doesn't understand on the floor, unless they start with `data-`.
-    The `*` in `data-*` may be replaced by any name following the [production rule of XML names](https://www.w3.org/TR/REC-xml/#NT-Name) with the following restrictions:
+1. Telemetry data generated from the click events are stored as `customEvents` in the Application Insights section of the Azure portal.
+2. The `name` of the customEvent is populated based on the following rules:
+    1.  The `id` provided in the `data-*-id` will be used as the customEvent name. For example, if the clicked HTML element has the attribute "data-sample-id"="button1", then "button1" will be the customEvent name.
+    2. If no such attribute exists and if the `useDefaultContentNameOrId` is set to `true` in the configuration, then the clicked element's HTML attribute `id` or content name of the element will be used as the customEvent name. If both `id` and content name are present, precedence is given to `id`.
+    3. If `useDefaultContentNameOrId` is false, then the customEvent name will be "not_specified".
 
-        - the name must not start with xml, whatever case is used for these letters;
-        - the name must not contain any semicolon (U+003A);
-        - the name must not contain capital letters.
+    > [!TIP]
+    > Our recommendations is to set `useDefaultContentNameOrId` to true for generating meaningful data.  
+3. `parentDataTag` does two things:
+    1. If this tag is present, the plugin will fetch the `data-*` attributes and values from all the parent HTML elements of the clicked element.
+    2. To improve efficiency, the plugin uses this tag as a flag, when encountered it will stop itself from further processing the DOM (Document Object Model) upwards.
+    
+    > [!CAUTION]
+    > Once `parentDataTag` is used, the SDK will begin looking for parent tags across your entire application and not just the HTML element where you used it.
+4. `customDataPrefix` provided by the user should always start with `data-`, for example `data-sample-`. In HTML the `data-*` global attributes form a class of attributes called custom data attributes, that allow proprietary information to be exchanged between the HTML and its DOM representation by scripts. Older browsers (Internet Explorer, Safari) will drop attributes that it doesn't understand, unless they start with `data-`.
+
+    The `*` in `data-*`  may be replaced by any name following the [production rule of XML names](https://www.w3.org/TR/REC-xml/#NT-Name) with the following restrictions:
+    - The name must not start with "xml", whatever case is used for these letters.
+    - The name must not contain any semicolon (U+003A).
+    - The name must not contain capital letters.
+
+## What data does the plugin collect
+
+The following are some of the key properties captured by default when the plugin is enabled:
+
+### Custom Event Properties
+| Name                  | Description                            | Sample          |
+| --------------------- | ---------------------------------------|-----------------|
+| name                  | The `name` of the customEvent. More info on how this is populated is shown [here](#how-to-effectively-use-the-plugin).| About              |
+| itemType              | Type of event.                                      | customEvent      |
+|sdkVersion             | version of Application Insights SDK along with click plugin|javascript:2.6.2_ClickPlugin2.6.2|
+
+### Custom Dimensions
+| Name                  | Description                            | Sample          |
+| --------------------- | ---------------------------------------|-----------------|
+| actionType            | Action type that caused the click event. Can be left-click or right-click. | CL              |
+| baseTypeSource        | Base Type source of the custom event.                                      | ClickEvent      |
+| clickCoordinates      | Coordinates where the click event is triggered.                            | 659X47          |
+| content               | Placeholder to store additional `data-*` attributes and values.            | [{sample1:value1, sample2:value2}] |
+| pageName              | Title of the page where the click event is triggered.                      | Sample Title    |
+| parentId              | Id or name of the parent element                                           | navbarContainer |
+
+### Custom Measurements
+| Name                  | Description                            | Sample          |
+| --------------------- | ---------------------------------------|-----------------|
+| timeToAction          | Time taken in millisecs for the user to click the element since initial page load | 87407              |
 
 ## Getting Started
 
@@ -46,51 +85,81 @@ const appInsights = new ApplicationInsights({ config: configObj });
 appInsights.loadAppInsights();
 ```
 
+## Snippet Setup (ignore if using NPM setup)
+
+```html
+<script type="text/javascript" src="https://js.monitor.azure.com/scripts/b/ext/ai.clck.2.6.2.min.js"></script>
+<script type="text/javascript">
+  var clickPluginInstance = new Microsoft.ApplicationInsights.ClickAnalyticsPlugin();
+  // Click Analytics configuration
+  var clickPluginConfig = {
+    autoCapture : true,
+    useDefaultContentNameOrId: true,
+  }
+  // Application Insights Configuration
+  var configObj = {
+    instrumentationKey: "YOUR INSTRUMENTATION KEY",
+    extensions: [
+      clickPluginInstance
+    ],
+    extensionConfig: {
+      [clickPluginInstance.identifier] : clickPluginConfig
+    },
+  };
+  // Application Insights Snippet code
+  !function(T,l,y){<!-- Removed the Snippet code for brevity -->}(window,document,{
+    src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js",
+    crossOrigin: "anonymous",
+    cfg: configObj
+  });
+</script>
+```
+
 ## Configuration
 
-| Name                  | Type               | Default | Description                                                                                                                              |
-| --------------------- | ------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| autoCapture           | boolean            | true    | Automatic capture configuration.                                                                                                         |
-| callback              | IValueCallback     | null    | Callbacks configuration                                                                                                                  |
-| pageTags              | string             | null    | Page tags                                                                                                                                |
-| dataTags              | ICustomDataTags    | null    | Custom Data Tags provided to ovverride default tags used to capture click data.                                                          |
-| urlCollectHash        | boolean            | false   | Enables the logging of values after a "#" character of the URL.                                                                          |
-| urlCollectQuery       | boolean            | false   | Enables the logging of the query string of the URL.                                                                                      |
-| behaviorValidator     | Function           | null    | Callback function to use for the `data-*-bhvr` value validation. For more information click [here](#behaviorValidator)                  |
-| defaultRightClickBhvr | string (or) number | ''      | Default Behavior value when Right Click event has occured. This value will be overriden if the element has the `data-*-bhvr` attribute. |
-| dropInvalidEvents | boolean | false      | Flag to drop events that donot have useful click data.|
+| Name                  | Type                               | Default | Description                                                                                                                              |
+| --------------------- | -----------------------------------| --------| ---------------------------------------------------------------------------------------------------------------------------------------- |
+| autoCapture           | boolean                            | true    | Automatic capture configuration.                                |
+| callback              | [IValueCallback](#ivaluecallback)  | null    | Callbacks configuration.                               |
+| pageTags              | string                             | null    | Page tags.                                             |
+| dataTags              | [ICustomDataTags](#icustomdatatags)| null    | Custom Data Tags provided to override default tags used to capture click data. |
+| urlCollectHash        | boolean                            | false   | Enables the logging of values after a "#" character of the URL.                |
+| urlCollectQuery       | boolean                            | false   | Enables the logging of the query string of the URL.                            |
+| behaviorValidator     | Function                           | null  | Callback function to use for the `data-*-bhvr` value validation. For more information, go to [behaviorValidator section](#behaviorvalidator).|
+| defaultRightClickBhvr | string (or) number                 | ''      | Default Behavior value when Right Click event has occurred. This value will be overridden if the element has the `data-*-bhvr` attribute. |
+| dropInvalidEvents     | boolean                            | false   | Flag to drop events that do not have useful click data.                                                                                   |
 
-## IValueCallback
+### IValueCallback
 
 | Name               | Type     | Default | Description                                                                             |
 | ------------------ | -------- | ------- | --------------------------------------------------------------------------------------- |
 | pageName           | Function | null    | Function to override the default pageName capturing behavior.                           |
-| pageActionPageTags | Function | null    | A callback function to augument the default pageTags collected during pageAction event. |
+| pageActionPageTags | Function | null    | A callback function to augment the default pageTags collected during pageAction event.  |
 | contentName        | Function | null    | A callback function to populate customized contentName.                                 |
 
-## ICustomDataTags
+### ICustomDataTags
 
-| Name                      | Type    | Default   | Description                                                                                                                                                                              |
-| ------------------------- | ------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| useDefaultContentNameOrId     | boolean | false     | When a particular element is not tagged with default customDataPrefix or customDataPrefix is not provided by user, this flag is used to collect standard HTML attribute for contentName. |
-| customDataPrefix          | string  | `data-`   | Automatic capture content name and value of elements which are tagged with provided prefix.                                                                                              |
-| aiBlobAttributeTag        | string  | `ai-blob` | Plugin supports a JSON blob content meta data tagging instead of individual `data-\*` attributes.                                                                                        |
-| metaDataPrefix            | string  | null      | Automatic capture HTML Head's meta element name and content with provided prefix.                                                                                                        |
-| captureAllMetaDataContent | string  | null      | Automatic capture all HTML Head's meta element names and content. Default is false. If enabled this will override provided metaDataPrefix.                                               |
-| parentDataTag             | string  | null      | Stop traversing up the DOM to capture content name and value of elements when encountered with this tag.                                                                                 |
-| dntDataTag                | string  | `ai-dnt`  | HTML elements with this attribute will be ignored by the plugin for capturing telemetry data.                                                                                            |
+| Name                      | Type    | Default   | Default Tag to Use in HTML |   Description                                                                                |
+|---------------------------|---------|-----------|-------------|----------------------------------------------------------------------------------------------|
+| useDefaultContentNameOrId | boolean | false     | N/A         |Collects standard HTML attribute for contentName when a particular element is not tagged with default customDataPrefix or when customDataPrefix is not provided by user. |
+| customDataPrefix          | string  | `data-`   | `data-*`| Automatic capture content name and value of elements that are tagged with provided prefix. For example, `data-*-id`, `data-<yourcustomattribute>` can be used in the HTML tags.   |
+| aiBlobAttributeTag        | string  | `ai-blob` |  `data-ai-blob`| Plugin supports a JSON blob attribute instead of individual `data-*` attributes. |
+| metaDataPrefix            | string  | null      | N/A  | Automatic capture HTML Head's meta element name and content with provided prefix when capture. For example, `custom-` can be used in the HTML meta tag. |
+| captureAllMetaDataContent | boolean | false     | N/A   | Automatic capture all HTML Head's meta element names and content. Default is false. If enabled this will override provided metaDataPrefix. |
+| parentDataTag             | string  | null      |  N/A  | Stops traversing up the DOM to capture content name and value of elements when encountered with this tag. For example, `data-<yourparentDataTag>` can be used in the HTML tags.|
+| dntDataTag                | string  | `ai-dnt`  |  `data-ai-dnt`| HTML elements with this attribute will be ignored by the plugin for capturing telemetry data.|
 
-## behaviorValidator
+### behaviorValidator
 
-There are three different behaviorValidator callback functions exposed as part of this extension. Users can also bring their own callback functions if the exposed functions do not solve your requirements. The basic idea is to bring your own behaviors datastructure and plugin uses this validator function while extracting the behaviors from the data tags.
+The behaviorValidator functions automatically checks that tagged behaviors in code conform to a pre-defined list. This ensures tagged behaviors are consistent with your enterprise's established taxonomy. It is not required or expected that most Azure Monitor customers will use this, but it's available for advanced scenarios. There are three different behaviorValidator callback functions exposed as part of this extension. However, users can use their own callback functions if the exposed functions do not solve your requirement. The intent is to bring your own behaviors data structure, the plugin uses this validator function while extracting the behaviors from the data tags.
 
-| Name                   | Description                                                                         |
-| ---------------------- | ----------------------------------------------------------------------------------- |
-| BehaviorValueValidator | Use this callback function if your behaviours datastructure is an array of strings. |
-| BehaviorMapValidator   | Use this callback function if your behaviours datastructure is a dictionary.        |
-| BehaviorEnumValidator  | Use this callback function if your behaviours datastructure is an Enum.             |
+| Name                   | Description                                                                        |
+| ---------------------- | -----------------------------------------------------------------------------------|
+| BehaviorValueValidator | Use this callback function if your behaviors data structure is an array of strings.|
+| BehaviorMapValidator   | Use this callback function if your behaviors data structure is a dictionary.       |
+| BehaviorEnumValidator  | Use this callback function if your behaviors data structure is an Enum.            |
 
-### Sample Usage with behaviorValidator
+#### Sample usage with behaviorValidator
 
 ```js
 var clickPlugin = Microsoft.ApplicationInsights.ClickAnalyticsPlugin;
@@ -275,9 +344,9 @@ var appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({
 appInsights.loadAppInsights();
 ```
 
-## Sample App
+## Sample app
 
-[Simple Web App with Click Analytics Plugin Enabled](https://github.com/kryalama/application-insights-clickanalytics-demo)
+[Simple web app with Click Analytics Auto-collection Plugin enabled](https://go.microsoft.com/fwlink/?linkid=2152871).
 
 ## Contributing
 

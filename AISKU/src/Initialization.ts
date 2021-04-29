@@ -48,6 +48,8 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
     flush: (async?: boolean) => void;
     onunloadFlush: (async?: boolean) => void;
     getSender: () => Sender;
+    setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean): void;
+    clearAuthenticatedUserContext(): void;
 };
 
 // Re-exposing the Common classes as Telemetry, the list was taken by reviewing the generated code for the build while using
