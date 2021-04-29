@@ -196,6 +196,22 @@ Adds a telemetry initializer to the collection. Telemetry initializers will be c
 before the telemetry item is pushed for sending.
 If one of the telemetry initializers returns false or throws an error, then the telemetry item will not be sent.
 
+### getSender
+
+```ts
+applicationInsights.getSender() => Sender
+```
+
+Get the sender to configure and set the custom headers when using a custom endpoint.
+
+### addHeader
+
+```ts
+public addHeader(name: string, value: string)
+```
+
+Add header to request.
+
 ### Custom extension
 
 A custom plugin can be loaded by the SDK through config.extensions. All plugins must implement [`ITelemetryPlugin`](./shared/AppInsightsCore/src/JavaScriptSDK.Interfaces/ITelemetryPlugin.ts) interface. These provide the capability of inspecting and updating data as it leaves the system, but also provides additional functionality to for one time initialization of extension state and pass in custom configuration through SKU configuration etc.
