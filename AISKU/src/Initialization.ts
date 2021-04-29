@@ -113,7 +113,7 @@ export class Initialization implements IApplicationInsights {
 
     private dependencies: DependenciesPlugin;
     private properties: PropertiesPlugin;
-    private sender: Sender;
+    private _sender: Sender;
     private _snippetVersion: string;
 
     constructor(snippet: Snippet) {
@@ -136,7 +136,7 @@ export class Initialization implements IApplicationInsights {
         _self.properties = new PropertiesPlugin();
         _self.dependencies = new DependenciesPlugin();
         _self.core = new AppInsightsCore();
-        _self.sender = new Sender();
+        _self._sender = new Sender();
 
         _self.snippet = snippet;
         _self.config = config;
@@ -382,7 +382,7 @@ export class Initialization implements IApplicationInsights {
         doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
             const extensions = [];
     
-            extensions.push(_self.sender);
+            extensions.push(_self._sender);
             extensions.push(_self.properties);
             extensions.push(_self.dependencies);
             extensions.push(_self.appInsights);
@@ -511,8 +511,7 @@ export class Initialization implements IApplicationInsights {
     }
 
     public getSender(): Sender {
-        let _self = this;
-        return _self.sender;
+        return this._sender;
     }
 
     private getSKUDefaults() {

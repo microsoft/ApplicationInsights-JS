@@ -246,16 +246,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 if (!_self._senderConfig.isBeaconApiDisabled() && isBeaconApiSupported()) {
                     _self._sender = _beaconSender;
                 } else {
-                    if (typeof XMLHttpRequest !== "undefined") {
-                        const xhr: any = getGlobalInst("XMLHttpRequest");
-                        if(xhr) {
-                            const testXhr = new xhr();
-                            if ("withCredentials" in testXhr) {
-                                _self._sender = _xhrSender;
-                                _self._XMLHttpRequestSupported = true;
-                            } else if (typeof XDomainRequest !== undefined) {
-                                _self._sender = _xdrSender; // IE 8 and 9
-                            }
+                    const xhr: any = getGlobalInst("XMLHttpRequest");
+                    if(xhr) {
+                        const testXhr = new xhr();
+                        if ("withCredentials" in testXhr) {
+                            _self._sender = _xhrSender;
+                            _self._XMLHttpRequestSupported = true;
+                        } else if (typeof XDomainRequest !== undefined) {
+                            _self._sender = _xdrSender; // IE 8 and 9
                         }
                     } else {
                         const fetch: any = getGlobalInst("fetch");
@@ -568,8 +566,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
             }
 
-            function _checkAndUpdateEndPointUrl(responseURL: string) {
-                const responseUrl = responseURL;
+            function _checkAndUpdateEndPointUrl(responseUrl: string) {
                 // Maximum stamp specific redirects allowed(uncomment this when breeze is ready with not allowing redirects feature)
                if(_stamp_specific_redirects >= 10) {
                //  _self._senderConfig.endpointUrl = () => Sender._getDefaultAppInsightsChannelConfig().endpointUrl()+"/?redirect=false";
