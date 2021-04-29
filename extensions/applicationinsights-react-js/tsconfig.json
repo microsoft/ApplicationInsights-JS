@@ -10,7 +10,7 @@
     "alwaysStrict": true,
     "suppressImplicitAnyIndexErrors": true,
     "allowSyntheticDefaultImports": true,
-    "importHelpers": false,
+    "importHelpers": true,
     "noEmitHelpers": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,

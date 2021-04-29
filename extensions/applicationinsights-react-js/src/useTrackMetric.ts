@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { CoreUtils } from "@microsoft/applicationinsights-core-js";
+import { dateNow } from "@microsoft/applicationinsights-core-js";
 import ReactPlugin from "./ReactPlugin";
 
 interface ITrackedData {
@@ -14,7 +14,7 @@ interface ITrackedData {
 
 function getEngagementTimeSeconds(trackedData: ITrackedData) {
   return (
-    (CoreUtils.dateNow() -
+    (dateNow() -
       trackedData.firstActiveTimestamp -
       trackedData.totalIdleTime -
       trackedData.idleCount * trackedData.idleTimeout) /
@@ -27,7 +27,7 @@ const useComponentTracking = (
   componentName: string
 ) => {
   const tracking = useRef<ITrackedData>({
-    hookTimestamp: CoreUtils.dateNow(),
+    hookTimestamp: dateNow(),
     firstActiveTimestamp: 0,
     totalIdleTime: 0,
     lastActiveTimestamp: 0,
@@ -42,9 +42,9 @@ const useComponentTracking = (
     if (
       trackedData.lastActiveTimestamp > 0 &&
       trackedData.idleStartTimestamp === 0 &&
-      CoreUtils.dateNow() - trackedData.lastActiveTimestamp >= trackedData.idleTimeout
+      dateNow() - trackedData.lastActiveTimestamp >= trackedData.idleTimeout
     ) {
-      trackedData.idleStartTimestamp = CoreUtils.dateNow();
+      trackedData.idleStartTimestamp = dateNow();
       trackedData.idleCount++;
     }
   };
@@ -84,10 +84,10 @@ const useComponentTracking = (
   const trackActivity = () => {
     let trackedData = tracking.current;
     if (trackedData.firstActiveTimestamp === 0) {
-      trackedData.firstActiveTimestamp = CoreUtils.dateNow();
+      trackedData.firstActiveTimestamp = dateNow();
       trackedData.lastActiveTimestamp = trackedData.firstActiveTimestamp;
     } else {
-      trackedData.lastActiveTimestamp = CoreUtils.dateNow();
+      trackedData.lastActiveTimestamp = dateNow();
     }
 
     if (trackedData.idleStartTimestamp > 0) {

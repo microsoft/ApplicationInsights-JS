@@ -8,8 +8,8 @@ import {
 } from "@microsoft/applicationinsights-common";
 import {
     IPlugin, IConfiguration, IAppInsightsCore, IDiagnosticLogger,
-    ITelemetryPlugin, BaseTelemetryPlugin, CoreUtils, ITelemetryItem, IProcessTelemetryContext,
-    ITelemetryPluginChain, _InternalMessageId, LoggingSeverity, ICustomProperties, safeGetCookieMgr, ICookieMgr
+    ITelemetryPlugin, BaseTelemetryPlugin, ITelemetryItem, IProcessTelemetryContext,
+    ITelemetryPluginChain, _InternalMessageId, LoggingSeverity, ICustomProperties, safeGetCookieMgr, ICookieMgr, arrForEach
 } from "@microsoft/applicationinsights-core-js";
 import { IReactExtensionConfig } from './Interfaces/IReactExtensionConfig';
 import { History, LocationListener, Location, Action } from "history";
@@ -28,7 +28,7 @@ export default class ReactPlugin extends BaseTelemetryPlugin {
                 ? (config.extensionConfig[this.identifier] as IReactExtensionConfig)
                 : { history: null };
 
-        CoreUtils.arrForEach(extensions, ext => {
+        arrForEach(extensions, ext => {
             const identifier = (ext as ITelemetryPlugin).identifier;
             if (identifier === 'ApplicationInsightsAnalytics') {
                 this._analyticsPlugin = (ext as any) as IAppInsights;
