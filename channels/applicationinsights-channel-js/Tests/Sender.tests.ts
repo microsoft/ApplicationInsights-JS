@@ -3,7 +3,7 @@ import { Sender } from "../src/Sender";
 import { Offline } from '../src/Offline';
 import { EnvelopeCreator } from '../src/EnvelopeCreator';
 import { Exception, CtxTagKeys, Util } from "@microsoft/applicationinsights-common";
-import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _InternalMessageId, LoggingSeverity } from "@microsoft/applicationinsights-core-js";
+import { ITelemetryItem, AppInsightsCore, ITelemetryPlugin, DiagnosticLogger, NotificationManager, SendRequestReason, _InternalMessageId, LoggingSeverity, getGlobalInst, getGlobal } from "@microsoft/applicationinsights-core-js";
 
 export class SenderTests extends TestClass {
     private _sender: Sender;
@@ -244,6 +244,179 @@ export class SenderTests extends TestClass {
 
                 QUnit.assert.equal(true, sendBeaconCalled, "Beacon API is enabled but payload is over size, Beacon API is called");
                 QUnit.assert.ok(this._getXhrRequests().length > 0, "xhr sender is called when payload is over size");
+            }
+        });
+
+        this.testCase({
+            name: 'FetchAPI is used when isBeaconApiDisabled flag is true and XMLHttpRequest is not supported, use fetch sender.',
+            test: () => {
+                let window = getGlobalInst("window");
+                let fakeXMLHttpRequest = (window as any).XMLHttpRequest;
+                (window as any).XMLHttpRequest = undefined;
+                let fetchstub = this.sandbox.stub((window as any), "fetch");
+
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return false;
+                });
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+
+                sender.initialize({
+                    instrumentationKey: 'abc',
+                    isBeaconApiDisabled: true
+                }, cr, []);
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                QUnit.assert.ok(Util.IsBeaconApiSupported(), "Beacon API is supported");
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API was not called before");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender was not called before");
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.flush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(false, sendBeaconCalled, "Beacon API is disabled, Beacon API is not called");
+                QUnit.assert.equal(0, this._getXhrRequests().length, "xhr sender is not called");
+                QUnit.assert.ok(fetchstub.called, "fetch sender is called");
+                // store it back
+                (window as any).XMLHttpRequest = fakeXMLHttpRequest;
+            }
+        });
+
+        this.testCase({
+            name: 'Users are not allowed to add customHeaders when endpointUrl is Breeze.',
+            test: () => {
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return true;
+                });
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+
+                sender.initialize({
+                    instrumentationKey: 'abc',
+                    isBeaconApiDisabled: true,
+                    customHeaders: [
+                        {
+                            header: 'testHeader',
+                            value: 'testValue'
+                        }
+                    ]
+                }, cr, []);
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.flush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
+                QUnit.assert.notOk(this._getXhrRequests()[0].requestHeaders.hasOwnProperty('testHeader'));
+            }
+        });
+
+        this.testCase({
+            name: 'Users are allowed to add customHeaders when endpointUrl is not Breeze.',
+            test: () => {
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return true;
+                });
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+
+                sender.initialize({
+                    instrumentationKey: 'abc',
+                    isBeaconApiDisabled: true,
+                    endpointUrl: 'https://example.com',
+                    customHeaders: [
+                        {
+                            header: 'testHeader',
+                            value: 'testValue'
+                        }
+                    ]
+                }, cr, []);
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.flush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
+                QUnit.assert.ok(this._getXhrRequests()[0].requestHeaders.hasOwnProperty('testHeader'));
+                QUnit.assert.equal(this._getXhrRequests()[0].requestHeaders.testHeader, 'testValue');
+            }
+        });
+
+        this.testCase({
+            name: 'Users are allowed to add customHeaders via addHeader method.',
+            test: () => {
+                let sendBeaconCalled = false;
+                this.hookSendBeacon((url: string) => {
+                    sendBeaconCalled = true;
+                    return true;
+                });
+
+                const sender = new Sender();
+                const cr = new AppInsightsCore();
+
+                sender.addHeader('testHeader', 'testValue');
+
+                sender.initialize({
+                    instrumentationKey: 'abc',
+                    isBeaconApiDisabled: true
+                }, cr, []);
+
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: 'iKey',
+                    baseType: 'some type',
+                    baseData: {}
+                };
+
+                try {
+                    sender.processTelemetry(telemetryItem, null);
+                    sender.flush();
+                } catch(e) {
+                    QUnit.assert.ok(false);
+                }
+
+                QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
+                QUnit.assert.ok(this._getXhrRequests()[0].requestHeaders.hasOwnProperty('testHeader'));
+                QUnit.assert.equal(this._getXhrRequests()[0].requestHeaders.testHeader, 'testValue');
             }
         });
 

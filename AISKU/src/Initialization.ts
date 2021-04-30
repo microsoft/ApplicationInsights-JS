@@ -47,6 +47,7 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
     appInsights: ApplicationInsights;
     flush: (async?: boolean) => void;
     onunloadFlush: (async?: boolean) => void;
+    getSender: () => Sender;
     setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean): void;
     clearAuthenticatedUserContext(): void;
 };
@@ -112,6 +113,7 @@ export class Initialization implements IApplicationInsights {
 
     private dependencies: DependenciesPlugin;
     private properties: PropertiesPlugin;
+    private _sender: Sender;
     private _snippetVersion: string;
 
     constructor(snippet: Snippet) {
@@ -134,6 +136,7 @@ export class Initialization implements IApplicationInsights {
         _self.properties = new PropertiesPlugin();
         _self.dependencies = new DependenciesPlugin();
         _self.core = new AppInsightsCore();
+        _self._sender = new Sender();
 
         _self.snippet = snippet;
         _self.config = config;
@@ -378,9 +381,8 @@ export class Initialization implements IApplicationInsights {
 
         doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
             const extensions = [];
-            const appInsightsChannel: Sender = new Sender();
     
-            extensions.push(appInsightsChannel);
+            extensions.push(_self._sender);
             extensions.push(_self.properties);
             extensions.push(_self.dependencies);
             extensions.push(_self.appInsights);
@@ -506,6 +508,10 @@ export class Initialization implements IApplicationInsights {
                 addEventHandler('pagehide', performHousekeeping);
             }
         }
+    }
+
+    public getSender(): Sender {
+        return this._sender;
     }
 
     private getSKUDefaults() {

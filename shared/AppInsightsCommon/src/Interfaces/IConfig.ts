@@ -390,6 +390,12 @@ export interface IConfig {
      * @type {RegExp[]}
      */
     correlationHeaderExcludePatterns?: RegExp[];
+
+    /**
+     * @description The ability for the user to provide extra headers
+     * @type [{header: string, value: string}]
+     */
+    customHeaders?: [{header: string, value: string}];
 }
 
 export class ConfigurationManager {
