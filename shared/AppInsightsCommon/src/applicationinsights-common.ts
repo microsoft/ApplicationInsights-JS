@@ -35,7 +35,12 @@ export { SeverityLevel } from './Interfaces/Contracts/Generated/SeverityLevel';
 export { IConfig, ConfigurationManager } from './Interfaces/IConfig';
 export { IChannelControlsAI } from './Interfaces/IChannelControlsAI';
 export { IContextTagKeys, ContextTagKeys } from './Interfaces/Contracts/Generated/ContextTagKeys';
-export { DataSanitizer } from './Telemetry/Common/DataSanitizer';
+export {
+    DataSanitizerValues, IDataSanitizer, DataSanitizer,
+    dataSanitizeKeyAndAddUniqueness, dataSanitizeKey, dataSanitizeString, dataSanitizeUrl, dataSanitizeMessage, 
+    dataSanitizeException, dataSanitizeProperties, dataSanitizeMeasurements, dataSanitizeId, dataSanitizeInput,
+    dsPadNumber
+} from './Telemetry/Common/DataSanitizer';
 export { TelemetryItemCreator } from './TelemetryItemCreator';
 export { ICorrelationConfig } from './Interfaces/ICorrelationConfig';
 export { IAppInsights } from './Interfaces/IAppInsights';

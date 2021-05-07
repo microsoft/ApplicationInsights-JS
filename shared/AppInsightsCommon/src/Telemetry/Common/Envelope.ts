@@ -4,7 +4,7 @@
 import { Envelope as AIEnvelope } from '../../Interfaces/Contracts/Generated/Envelope';
 import { Base } from '../../Interfaces/Contracts/Generated/Base';
 import { IEnvelope } from '../../Interfaces/Telemetry/IEnvelope';
-import { DataSanitizer } from './DataSanitizer';
+import { dataSanitizeString } from './DataSanitizer';
 import { FieldType } from '../../Enums';
 import { IDiagnosticLogger, toISOString } from '@microsoft/applicationinsights-core-js';
 import { strNotSpecified } from '../../Constants';
@@ -22,7 +22,7 @@ export class Envelope extends AIEnvelope implements IEnvelope {
     constructor(logger: IDiagnosticLogger, data: Base, name: string) {
         super();
 
-        this.name = DataSanitizer.sanitizeString(logger, name) || strNotSpecified;
+        this.name = dataSanitizeString(logger, name) || strNotSpecified;
         this.data = data;
         this.time = toISOString(new Date());
 

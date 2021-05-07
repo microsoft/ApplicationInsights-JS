@@ -400,9 +400,11 @@ export class AITestClass {
         if (spy.called && spy.args && spy.args.length > 0) {
             spy.args.forEach(call => {
                 call[0].forEach((message: string) => {
-                    // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
-                    if (includeInit || message.indexOf("AI (Internal): 72 ") === -1) {
-                        resultPayload.push(message);
+                    if (message) {
+                        // Ignore the internal SendBrowserInfoOnUserInit message (Only occurs when running tests in a browser)
+                        if (includeInit || message.indexOf("AI (Internal): 72 ") === -1) {
+                            resultPayload.push(message);
+                        }
                     }
                 })
             });
@@ -590,9 +592,11 @@ export class AITestClass {
 
         for (var i = 0; i < cookies.length; i++) {
             var cookie = cookies[i];
-            var eqPos = cookie.indexOf("=");
-            var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-            document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+            if (cookie) {
+                var eqPos = cookie.indexOf("=");
+                var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+            }
         }
     }
 

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ITelemetryTrace, ITraceState, DataSanitizer  } from '@microsoft/applicationinsights-common';
+import { ITelemetryTrace, ITraceState, dataSanitizeString  } from '@microsoft/applicationinsights-common';
 import { generateW3CId, getLocation, IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 
 export class TelemetryTrace implements ITelemetryTrace {
@@ -21,6 +21,6 @@ export class TelemetryTrace implements ITelemetryTrace {
             _self.name = location.pathname;
         }
 
-        _self.name = DataSanitizer.sanitizeString(logger, _self.name);
+        _self.name = dataSanitizeString(logger, _self.name);
     }
 }

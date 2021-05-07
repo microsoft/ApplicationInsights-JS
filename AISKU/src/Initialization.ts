@@ -16,7 +16,7 @@ import {
     Envelope, Event, Exception, Metric, PageView, PageViewData, RemoteDependencyData, IEventTelemetry,
     ITraceTelemetry, IMetricTelemetry, IDependencyTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetry, IPageViewPerformanceTelemetry, Trace, PageViewPerformance, Data, SeverityLevel,
-    IConfig, ConfigurationManager, ContextTagKeys, DataSanitizer, TelemetryItemCreator, IAppInsights, CtxTagKeys, Extensions,
+    IConfig, ConfigurationManager, ContextTagKeys, IDataSanitizer, DataSanitizer, TelemetryItemCreator, IAppInsights, CtxTagKeys, Extensions,
     IPropertiesPlugin, DistributedTracingModes, PropertiesPluginIdentifier, BreezeChannelIdentifier, AnalyticsPluginIdentifier, 
     ITelemetryContext as Common_ITelemetryContext, parseConnectionString
 } from "@microsoft/applicationinsights-common"
@@ -57,6 +57,13 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
 // import * as Common from "@microsoft/applicationinsights-common"
 // export const Telemetry = Common;
 
+let fieldType = {
+    Default: FieldType.Default, 
+    Required: FieldType.Required, 
+    Array: FieldType.Array, 
+    Hidden: FieldType.Hidden
+};
+
 /**
  * Telemetry type classes, e.g. PageView, Exception, etc
  */
@@ -70,7 +77,7 @@ export const Telemetry = {
     UrlHelper,
     DateTimeUtils,
     ConnectionStringParser,
-    FieldType,
+    FieldType : fieldType,
     RequestHeaders,
     DisabledPropertyName,
     ProcessLegacy,
@@ -92,7 +99,7 @@ export const Telemetry = {
     SeverityLevel,
     ConfigurationManager,
     ContextTagKeys,
-    DataSanitizer,
+    DataSanitizer: DataSanitizer as IDataSanitizer,
     TelemetryItemCreator,
     CtxTagKeys,
     Extensions,

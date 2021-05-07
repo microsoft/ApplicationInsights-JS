@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { PageViewData } from '../Interfaces/Contracts/Generated/PageViewData';
-import { DataSanitizer } from './Common/DataSanitizer';
+import { dataSanitizeId, dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl } from './Common/DataSanitizer';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { FieldType } from '../Enums';
 import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
@@ -30,13 +30,13 @@ export class PageView extends PageViewData implements ISerializable {
     constructor(logger: IDiagnosticLogger, name?: string, url?: string, durationMs?: number, properties?: {[key: string]: string}, measurements?: {[key: string]: number}, id?: string) {
         super();
 
-        this.id = DataSanitizer.sanitizeId(logger, id);
-        this.url = DataSanitizer.sanitizeUrl(logger, url);
-        this.name = DataSanitizer.sanitizeString(logger, name) || strNotSpecified;
+        this.id = dataSanitizeId(logger, id);
+        this.url = dataSanitizeUrl(logger, url);
+        this.name = dataSanitizeString(logger, name) || strNotSpecified;
         if (!isNaN(durationMs)) {
             this.duration = msToTimeSpan(durationMs);
         }
-        this.properties = DataSanitizer.sanitizeProperties(logger, properties);
-        this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
+        this.properties = dataSanitizeProperties(logger, properties);
+        this.measurements = dataSanitizeMeasurements(logger, measurements);
     }
 }

@@ -171,8 +171,8 @@ export function strEndsWith(value: string, search: string) {
  * The strStartsWith() method determines whether a string starts with the characters of the specified string, returning true or false as appropriate.
  * @param value - The value to check whether it ends with the search value.
  * @param checkValue - The characters to be searched for at the start of the value.
-  * @returns true if the given search value is found at the start of the string, otherwise false.
-*/
+ * @returns true if the given search value is found at the start of the string, otherwise false.
+ */
 export function strStartsWith(value: string, checkValue: string) {
     // Using helper for performance and because string startsWith() is not available on IE
     let result = false;

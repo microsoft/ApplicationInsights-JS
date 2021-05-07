@@ -16,7 +16,7 @@ import {
     IPlugin, IConfiguration, IAppInsightsCore,
     BaseTelemetryPlugin, ITelemetryItem, IProcessTelemetryContext, ITelemetryPluginChain,
     IDiagnosticLogger, LoggingSeverity, _InternalMessageId, ICustomProperties,
-    getWindow, getDocument, getHistory, getLocation, doPerf, objForEachKey, 
+    getWindow, getDocument, getHistory, getLocation, doPerf, objForEachKey,
     isString, isFunction, isNullOrUndefined, arrForEach, generateW3CId, dumpObj, getExceptionName, isError, ICookieMgr, safeGetCookieMgr
 } from "@microsoft/applicationinsights-core-js";
 import { PageViewManager, IAppInsightsInternal } from "./Telemetry/PageViewManager";
@@ -31,24 +31,12 @@ import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 "use strict";
 
 const durationProperty: string = "duration";
+const strEvent = "event";
 
 function _dispatchEvent(target:EventTarget, evnt: Event) {
     if (target && target.dispatchEvent && evnt) {
         target.dispatchEvent(evnt);
     }
-}
-
-function _formatMessage(message: any) {
-    if (message && !isString(message)) {
-        // tslint:disable-next-line: prefer-conditional-expression
-        if (isFunction(message.toString)) {
-            message = message.toString();
-        } else {
-            message = JSON.stringify(message);
-        }
-    }
-    
-    return message;
 }
 
 export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
@@ -401,10 +389,11 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
             * @param systemProperties
             */
             _self.sendExceptionInternal = (exception: IExceptionTelemetry, customProperties?: { [key: string]: any }, systemProperties?: { [key: string]: any }) => {
+                const theError = exception.exception || exception.error || new Error(strNotSpecified);
                 const exceptionPartB = new Exception(
                     _self.diagLog(),
-                    exception.exception || new Error(strNotSpecified),
-                    exception.properties,
+                    theError,
+                    exception.properties || customProperties,
                     exception.measurements,
                     exception.severityLevel,
                     exception.id
@@ -448,28 +437,46 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
              * @memberof ApplicationInsights
              */
             _self._onerror = (exception: IAutoExceptionTelemetry): void => {
+                let error = exception && exception.error;
+                let evt = exception && exception.evt;
+
                 try {
+                    if (!evt) {
+                        let _window = getWindow();
+                        if (_window) {
+                            evt = _window[strEvent];
+                        }
+                    }
+                    const url = (exception && exception.url) || (getDocument() || {} as any).URL;
+                    // If no error source is provided assume the default window.onerror handler
+                    const errorSrc = exception.errorSrc || "window.onerror@" + url + ":" + (exception.lineNumber || 0) + ":" + (exception.columnNumber || 0);
                     const properties = {
-                        url: (exception && exception.url) || (getDocument()||{} as any).URL,
-                        lineNumber: exception.lineNumber,
-                        columnNumber: exception.columnNumber,
+                        errorSrc,
+                        url,
+                        lineNumber: exception.lineNumber || 0,
+                        columnNumber: exception.columnNumber || 0,
                         message: exception.message
                     };
-        
+    
                     if (isCrossOriginError(exception.message, exception.url, exception.lineNumber, exception.columnNumber, exception.error)) {
-                        _sendCORSException(properties.url);
+                        _sendCORSException(Exception.CreateAutoException(
+                            "Script error: The browser's same-origin policy prevents us from getting the details of this exception. Consider using the 'crossorigin' attribute.",
+                            url,
+                            exception.lineNumber || 0,
+                            exception.columnNumber || 0,
+                            error,
+                            evt,
+                            null,
+                            errorSrc
+                        ), properties);
                     } else {
-                        if (!isError(exception.error)) {
-                            const stack = "window.onerror@" + properties.url + ":" + exception.lineNumber + ":" + (exception.columnNumber || 0);
-                            exception.error = new Error(exception.message);
-                            exception.error.stack = stack;
+                        if (!exception.errorSrc) {
+                            exception.errorSrc = errorSrc;
                         }
-                        _self.trackException({ exception: exception.error, severityLevel: SeverityLevel.Error }, properties);
+                        _self.trackException({ exception, severityLevel: SeverityLevel.Error }, properties);
                     }
                 } catch (e) {
-                    const errorString = exception.error ?
-                        (exception.error.name + ", " + exception.error.message)
-                        : "null";
+                    const errorString = error ? (error.name + ", " + error.message) : "null";
         
                     _self.diagLog().throwInternal(
                         LoggingSeverity.CRITICAL,
@@ -578,15 +585,17 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                     const onerror = "onerror";
                     const originalOnError = _window[onerror];
                     _window.onerror = (message, url, lineNumber, columnNumber, error) => {
+                        const evt = _window[strEvent];
                         const handled = originalOnError && (originalOnError(message, url, lineNumber, columnNumber, error) as any);
                         if (handled !== true) { // handled could be typeof function
-                            instance._onerror({
-                                message: _formatMessage(message),
+                            instance._onerror(Exception.CreateAutoException(
+                                message,
                                 url,
                                 lineNumber,
                                 columnNumber,
-                                error
-                            });
+                                error,
+                                evt
+                            ));
                         }
 
                         return handled;
@@ -601,15 +610,17 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                     const onunhandledrejection = "onunhandledrejection";
                     const originalOnUnhandledRejection = _window[onunhandledrejection];
                     _window[onunhandledrejection] = (error: PromiseRejectionEvent) => {
+                        const evt = _window[strEvent];
                         const handled = originalOnUnhandledRejection && (originalOnUnhandledRejection.call(_window, error) as any);
                         if (handled !== true) { // handled could be typeof function
-                            instance._onerror({
-                                message: error.reason.toString(),
-                                error: error.reason instanceof Error ? error.reason : new Error(error.reason.toString()),
-                                url: _location ? _location.href : "",
-                                lineNumber: 0,
-                                columnNumber: 0
-                            });
+                            instance._onerror(Exception.CreateAutoException(
+                                error.reason.toString(),
+                                _location ? _location.href : "",
+                                0,
+                                0,
+                                error,
+                                evt
+                            ));
                         }
 
                         return handled;
@@ -720,20 +731,13 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                 _self._telemetryInitializers.push(telemetryInitializer);
             }
 
-            function _sendCORSException(url: string) {
-                const exception: IAutoExceptionTelemetry = {
-                    message: "Script error: The browser's same-origin policy prevents us from getting the details of this exception. Consider using the 'crossorigin' attribute.",
-                    url,
-                    lineNumber: 0,
-                    columnNumber: 0,
-                    error: undefined
-                };
+            function _sendCORSException(exception: IAutoExceptionTelemetry, properties?: ICustomProperties) {
                 const telemetryItem: ITelemetryItem = TelemetryItemCreator.create<IAutoExceptionTelemetry>(
                     exception,
                     Exception.dataType,
                     Exception.envelopeType,
                     _self.diagLog(),
-                    { url }
+                    properties
                 );
 
                 _self.core.track(telemetryItem);

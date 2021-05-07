@@ -3,7 +3,7 @@
 
 import { MessageData } from '../Interfaces/Contracts/Generated/MessageData';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
-import { DataSanitizer } from './Common/DataSanitizer';
+import { dataSanitizeMessage, dataSanitizeProperties, dataSanitizeMeasurements } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
 import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
@@ -27,9 +27,9 @@ export class Trace extends MessageData implements ISerializable {
     constructor(logger: IDiagnosticLogger, message: string, severityLevel?: SeverityLevel, properties?: any, measurements?: { [key: string]: number }) {
         super();
         message = message || strNotSpecified;
-        this.message = DataSanitizer.sanitizeMessage(logger, message);
-        this.properties = DataSanitizer.sanitizeProperties(logger, properties);
-        this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
+        this.message = dataSanitizeMessage(logger, message);
+        this.properties = dataSanitizeProperties(logger, properties);
+        this.measurements = dataSanitizeMeasurements(logger, measurements);
 
         if (severityLevel) {
             this.severityLevel = severityLevel;

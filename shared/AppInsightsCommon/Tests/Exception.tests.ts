@@ -40,20 +40,26 @@ export class ExceptionTests extends TestClass {
         this.testCase({
             name: "ExceptionDetails: ExceptionDetails can be exported to interface format",
             test: () => {
-                const exceptionDetails = new _ExceptionDetails(this.logger, new Error("test error"));
-                Assert.ok(exceptionDetails, "ExceptionDetails instance is created");
-
-                const exceptionDetailsInterface: IExceptionDetailsInternal = exceptionDetails.toInterface();
-                Assert.deepEqual(exceptionDetails.id, exceptionDetailsInterface.id);
-                Assert.deepEqual(exceptionDetails.outerId, exceptionDetailsInterface.outerId);
-                Assert.deepEqual(exceptionDetails.typeName, exceptionDetailsInterface.typeName);
-                Assert.deepEqual(exceptionDetails.message, exceptionDetailsInterface.message);
-                Assert.deepEqual(exceptionDetails.hasFullStack, exceptionDetailsInterface.hasFullStack);
-                Assert.deepEqual(exceptionDetails.stack, exceptionDetailsInterface.stack);
-                Assert.deepEqual(exceptionDetails.parsedStack && exceptionDetails.parsedStack.map((frame: _StackFrame) => frame.toInterface()), exceptionDetailsInterface.parsedStack);
-
-                const exceptionDetailsConverted = _ExceptionDetails.CreateFromInterface(this.logger, exceptionDetailsInterface);
-                Assert.deepEqual(exceptionDetails, exceptionDetailsConverted);
+                try {
+                    const exceptionDetails = new _ExceptionDetails(this.logger, new Error("test error"));
+                    Assert.ok(exceptionDetails, "ExceptionDetails instance is created");
+    
+                    const exceptionDetailsInterface: IExceptionDetailsInternal = exceptionDetails.toInterface();
+                    Assert.deepEqual(exceptionDetails.id, exceptionDetailsInterface.id);
+                    Assert.deepEqual(exceptionDetails.outerId, exceptionDetailsInterface.outerId);
+                    Assert.deepEqual(exceptionDetails.typeName, exceptionDetailsInterface.typeName);
+                    Assert.deepEqual(exceptionDetails.message, exceptionDetailsInterface.message);
+                    Assert.deepEqual(exceptionDetails.hasFullStack, exceptionDetailsInterface.hasFullStack);
+                    Assert.deepEqual(exceptionDetails.stack, exceptionDetailsInterface.stack);
+                    Assert.deepEqual(exceptionDetails.parsedStack && exceptionDetails.parsedStack.map((frame: _StackFrame) => frame.toInterface()), exceptionDetailsInterface.parsedStack);
+    
+                    const exceptionDetailsConverted = _ExceptionDetails.CreateFromInterface(this.logger, exceptionDetailsInterface);
+                    Assert.deepEqual(exceptionDetails, exceptionDetailsConverted);
+                } catch (e) {
+                    console.log(e.stack);
+                    console.log(e.toString());
+                    Assert.ok(false, e.toString());
+                }
             }
         });
 

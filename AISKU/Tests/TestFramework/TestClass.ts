@@ -21,12 +21,12 @@ export class TestClass {
     /** The instance of the currently running suite. */
     public static currentTestClass: TestClass;
     public static currentTestInfo: TestCase|TestCaseAsync;
+    public static orgSetTimeout: (handler: Function, timeout?: number) => number;
+    public static orgClearTimeout: (handle?: number) => void;
 
     /** Turns on/off sinon's fake implementation of XMLHttpRequest. On by default. */
     public sandboxConfig: any = {};
 
-    public static orgSetTimeout: (handler: Function, timeout?: number) => number;
-    public static orgClearTimeout: (handle?: number) => void;
     public static orgObjectDefineProperty = Object.defineProperty;
 
     protected _xhrRequests: FakeXMLHttpRequest[] = [];
@@ -95,6 +95,9 @@ export class TestClass {
 
         if (!testInfo.steps) {
             throw new Error("Must specify 'steps' to take asynchronously");
+        }
+        if (testInfo.autoComplete === undefined) {
+            testInfo.autoComplete = true;
         }
 
         if (testInfo.autoComplete === undefined) {
@@ -219,9 +222,10 @@ export class TestClass {
                         } catch (e) {
                             console.error("Failed: Unexpected Exception: " + e);
                             Assert.ok(false, e.toString());
-
+                            this._testCompleted(true);
                             // done is QUnit callback indicating the end of the test
-                            testDone();
+                            done();
+
                             return;
                         }
                     } else if (!testComplete) {
@@ -267,7 +271,6 @@ export class TestClass {
             // Save off the instance of the currently running suite.
             TestClass.currentTestClass = this;
             TestClass.currentTestInfo = testInfo;
-
             function _testFinished(failed?: boolean) {
                 TestClass.currentTestClass._testCompleted(failed);
                 done();
@@ -302,6 +305,16 @@ export class TestClass {
                 this._emulateEs3();
             }
 
+            let failed = false;
+
+            TestClass.orgSetTimeout = (handler:Function, timeout?:number) => {
+                return orgSetTimeout(handler, timeout);
+            }
+
+            TestClass.orgClearTimeout = (handler:number) => {
+                orgClearTimeout(handler);
+            }
+
             // Run the test.
             try {
                 this._testStarting();
@@ -320,8 +333,7 @@ export class TestClass {
                     result.then(() => {
                         promiseTimeout && clearTimeout(promiseTimeout);
                         _testFinished();
-                    },
-                    (reason) => {
+                    }).catch((reason) => {
                         promiseTimeout && clearTimeout(promiseTimeout);
                         QUnit.assert.ok(false, "Returned Promise rejected: " + reason);
                         _testFinished(true);
@@ -329,8 +341,7 @@ export class TestClass {
                 } else {
                     _testFinished();
                 }
-            }
-            catch (ex) {
+            } catch (ex) {
                 console.error("Failed: Unexpected Exception: " + ex);
                 Assert.ok(false, "Unexpected Exception: " + ex);
                 _testFinished(true);
@@ -375,6 +386,7 @@ export class TestClass {
 
         if (_self.isEmulatingEs3) {
             // As we removed Object.define we need to temporarily restore this for each sandbox call
+            // tslint:disable-next-line:forin
             for (var field in _self.sandbox) {
                 var value = _self.sandbox[field];
                 if (CoreUtils.isFunction(value)) {
@@ -397,7 +409,6 @@ export class TestClass {
 
                             // Restore the Object properties/functions
                             _self._restoreObject(saveObjectProps);
-
                             return result;
                         }
                     })(value);

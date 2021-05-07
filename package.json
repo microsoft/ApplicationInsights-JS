@@ -14,7 +14,8 @@
         "test": "node common/scripts/install-run-rush.js test --verbose",
         "lint": "node common/scripts/install-run-rush.js lint --verbose",
         "rollupes3": "grunt rollupes3",
-        "rupdate": "node common/scripts/install-run-rush.js update --recheck --purge --full"
+        "rupdate": "node common/scripts/install-run-rush.js update --recheck --purge --full",
+        "serve": "grunt serve"
     },
     "repository": {
         "type": "git",
@@ -29,6 +30,7 @@
     "devDependencies": {
         "grunt": "^1.0.1",
         "grunt-cli": "^1.3.2",
+        "grunt-contrib-connect": "^3.0.0",
         "grunt-contrib-qunit": "^3.1.0",
         "grunt-contrib-uglify": "^3.1.0",
         "grunt-run": "^0.8.1",
@@ -39,6 +41,7 @@
         "tslint-config-prettier": "^1.18.0",
         "typescript": "2.5.3",
         "whatwg-fetch": "^3.0.0",
-        "typedoc": "^0.16.9"
+        "typedoc": "^0.16.9",
+        "connect": "^3.7.0"
     }
 }

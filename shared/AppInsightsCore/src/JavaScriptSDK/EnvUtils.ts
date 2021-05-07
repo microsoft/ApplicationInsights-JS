@@ -5,7 +5,7 @@
 import { 
     getGlobal, strShimUndefined, strShimObject, strShimPrototype, strShimFunction 
 } from "@microsoft/applicationinsights-shims";
-import { strContains } from "./HelperFuncs";
+import { isString, strContains } from "./HelperFuncs";
 
 /**
  * This file exists to hold environment utilities that are required to check and
@@ -271,15 +271,16 @@ export function isIE() {
  * Gets IE version returning the document emulation mode if we are running on IE, or null otherwise
  */
 export function getIEVersion(userAgentStr: string = null): number {
-    let myNav = userAgentStr ? userAgentStr.toLowerCase() : "";
     if (!userAgentStr) {
         let navigator = getNavigator() || ({} as Navigator);
-        myNav = navigator ? (navigator.userAgent || "").toLowerCase() : "";
+        userAgentStr = navigator ? (navigator.userAgent || "").toLowerCase() : "";
     }
-    if (strContains(myNav, strMsie)) {
-        return parseInt(myNav.split(strMsie)[1]);
-    } else if (strContains(myNav, strTrident)) {
-        let tridentVer = parseInt(myNav.split(strTrident)[1]);
+
+    var ua = (userAgentStr || "").toLowerCase();
+    if (strContains(ua, strMsie)) {
+        return parseInt(ua.split(strMsie)[1]);
+    } else if (strContains(ua, strTrident)) {
+        let tridentVer = parseInt(ua.split(strTrident)[1]);
         if (tridentVer) {
             return tridentVer + 4;
         }
@@ -301,4 +302,14 @@ export function dumpObj(object: any): string {
     }
 
     return objectTypeDump + propertyValueDump;
+}
+
+export function isSafari(userAgentStr ?: string) {
+    if (!userAgentStr || !isString(userAgentStr)) {
+        let navigator = getNavigator() || ({} as Navigator);
+        userAgentStr = navigator ? (navigator.userAgent || "").toLowerCase() : "";
+    }    
+
+    var ua = (userAgentStr || "").toLowerCase();
+    return (ua.indexOf('safari') >= 0);
 }

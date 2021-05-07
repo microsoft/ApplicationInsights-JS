@@ -5,21 +5,244 @@ import { StackFrame } from '../Interfaces/Contracts/Generated/StackFrame';
 import { ExceptionData } from '../Interfaces/Contracts/Generated/ExceptionData';
 import { ExceptionDetails } from '../Interfaces/Contracts/Generated/ExceptionDetails';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
-import { DataSanitizer } from './Common/DataSanitizer';
+import { dataSanitizeException, dataSanitizeMeasurements, dataSanitizeMessage, dataSanitizeProperties, dataSanitizeString } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { SeverityLevel } from '../Interfaces/Contracts/Generated/SeverityLevel';
-import { IDiagnosticLogger, isNullOrUndefined, arrMap, isString, strTrim, isArray, isError } from '@microsoft/applicationinsights-core-js';
-import { IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal } from '../Interfaces/IExceptionTelemetry';
+import { IDiagnosticLogger, isNullOrUndefined, arrMap, isString, strTrim, isArray, isError, arrForEach, isObject, isFunction, getSetValue } from '@microsoft/applicationinsights-core-js';
+import {
+    IExceptionInternal, IExceptionDetailsInternal, IExceptionStackFrameInternal, IAutoExceptionTelemetry, IStackDetails
+} from '../Interfaces/IExceptionTelemetry';
 import { strNotSpecified } from '../Constants';
 
+const NoMethod = "<no_method>";
 const strError = "error";
+const strStack = "stack";
+const strStackDetails = "stackDetails";
+const strErrorSrc = "errorSrc";
+const strMessage = "message";
+const strDescription = "description";
+
+function _stringify(value: any, convertToString: boolean) {
+    let result = value;
+    if (result && !isString(result)) {
+        if (JSON && JSON.stringify) {
+            result = JSON.stringify(value);
+            if (convertToString && (!result || result === "{}")) {
+                if (isFunction(value.toString)) {
+                    result = value.toString();
+                } else {
+                    result = "" + value;
+                }
+            }
+        } else {
+            result = "" + value + " - (Missing JSON.stringify)";
+        }
+    }
+
+    return result || "";
+}
+
+function _formatMessage(theEvent: any, errorType: string) {
+    let evtMessage = theEvent;
+    if (theEvent) {
+        evtMessage = theEvent[strMessage] || theEvent[strDescription] || "";
+        // Make sure the message is a string
+        if (evtMessage && !isString(evtMessage)) {
+            // tslint:disable-next-line: prefer-conditional-expression
+            evtMessage = _stringify(evtMessage, true);
+        }
+
+        if (theEvent["filename"]) {
+            // Looks like an event object with filename
+            evtMessage = evtMessage + " @" + (theEvent["filename"] || "") + ":" + (theEvent["lineno"] || "?") + ":" + (theEvent["colno"] || "?");
+        }
+    }
+    
+    // Automatically add the error type to the message if it does already appear to be present
+    if (errorType && errorType !== "String" && errorType !== "Object" && errorType !== "Error" && (evtMessage || "").indexOf(errorType) === -1) {
+        evtMessage = errorType + ": " + evtMessage;
+    }
+
+    return evtMessage || "";
+}
 
 function _isExceptionDetailsInternal(value:any): value is IExceptionDetailsInternal {
-    return "hasFullStack" in value && "typeName" in value;
+    if (isObject(value)) {
+        return "hasFullStack" in value && "typeName" in value;
+    }
+
+    return false;
 }
 
 function _isExceptionInternal(value:any): value is IExceptionInternal {
-    return ("ver" in value && "exceptions" in value && "properties" in value);
+    if (isObject(value)) {
+        return ("ver" in value && "exceptions" in value && "properties" in value);
+    }
+
+    return false;
+}
+
+function _isStackDetails(details:any): details is IStackDetails {
+    return details && details.src && isString(details.src) && details.obj && isArray(details.obj);
+}
+
+function _convertStackObj(errorStack:string): IStackDetails {
+    let src = errorStack || "";
+    if (!isString(src)) {
+        if (isString(src[strStack])) {
+            src = src[strStack];
+        } else {
+            src = "" + src;
+        }
+    }
+
+    let items = src.split("\n");
+    return {
+        src,
+        obj: items
+    };
+}
+
+function _getOperaStack(errorMessage:string): IStackDetails {
+    var stack: string[] = [];
+    var lines = errorMessage.split("\n");
+    for (var lp = 0; lp < lines.length; lp++) {
+        var entry = lines[lp];
+        if (lines[lp + 1]) {
+            entry += "@" + lines[lp + 1];
+            lp++;
+        }
+
+        stack.push(entry);
+    }
+
+    return {
+        src: errorMessage,
+        obj: stack
+    };
+}
+
+function _getStackFromErrorObj(errorObj:any): IStackDetails {
+    let details = null;
+    if (errorObj) {
+        try {
+            /* Using bracket notation is support older browsers (IE 7/8 -- dont remember the version) that throw when using dot 
+            notation for undefined objects and we don't want to loose the error from being reported */
+            if (errorObj[strStack]) {
+                // Chrome/Firefox
+                details = _convertStackObj(errorObj[strStack]);
+            } else if (errorObj[strError] && errorObj[strError][strStack]) {
+                // Edge error event provides the stack and error object
+                details = _convertStackObj(errorObj[strError][strStack]);
+            } else if (errorObj['exception'] && errorObj.exception[strStack]) {
+                details = _convertStackObj(errorObj.exception[strStack]);
+            } else if (_isStackDetails(errorObj)) {
+                details = errorObj;
+            } else if (_isStackDetails(errorObj[strStackDetails])) {
+                details = errorObj[strStackDetails];
+            } else if (window['opera'] && errorObj[strMessage]) {
+                // Opera
+                details = _getOperaStack(errorObj.message);
+            } else if (isString(errorObj)) {
+                details = _convertStackObj(errorObj);
+            } else {
+                let evtMessage = errorObj[strMessage] || errorObj[strDescription] || "";
+
+                if (isString(errorObj[strErrorSrc])) {
+                    if (evtMessage) {
+                        evtMessage += "\n";
+                    }
+
+                    evtMessage += " from " + errorObj[strErrorSrc];
+                }
+
+                if (evtMessage) {
+                    details = _convertStackObj(evtMessage);
+                }
+            }
+        } catch (e) {
+            // something unexpected happened so to avoid failing to report any error lets swallow the exception 
+            // and fallback to the callee/caller method
+            details = _convertStackObj(e);
+        }
+    }
+
+    return details || {
+        src: "",
+        obj: null
+    };
+}
+
+function _formatStackTrace(stackDetails: IStackDetails) {
+    let stack = "";
+
+    if (stackDetails) {
+        if (stackDetails.obj) {
+            arrForEach(stackDetails.obj, (entry) => {
+                stack += entry + "\n";
+            });
+        } else {
+            stack = stackDetails.src || "";
+        }
+    
+    }
+
+    return stack;
+}
+
+function _parseStack(stack:IStackDetails): _StackFrame[] {
+    let parsedStack: _StackFrame[];
+    let frames = stack.obj;
+    if (frames && frames.length > 0) {
+        parsedStack = [];
+        let level = 0;
+
+        let totalSizeInBytes = 0;
+
+        arrForEach(frames, (frame) => {
+            let theFrame = frame.toString();
+            if (_StackFrame.regex.test(theFrame)) {
+                const parsedFrame = new _StackFrame(theFrame, level++);
+                totalSizeInBytes += parsedFrame.sizeInBytes;
+                parsedStack.push(parsedFrame);
+            }
+        });
+
+        // DP Constraint - exception parsed stack must be < 32KB
+        // remove frames from the middle to meet the threshold
+        const exceptionParsedStackThreshold = 32 * 1024;
+        if (totalSizeInBytes > exceptionParsedStackThreshold) {
+            let left = 0;
+            let right = parsedStack.length - 1;
+            let size = 0;
+            let acceptedLeft = left;
+            let acceptedRight = right;
+
+            while (left < right) {
+                // check size
+                const lSize = parsedStack[left].sizeInBytes;
+                const rSize = parsedStack[right].sizeInBytes;
+                size += lSize + rSize;
+
+                if (size > exceptionParsedStackThreshold) {
+
+                    // remove extra frames from the middle
+                    const howMany = acceptedRight - acceptedLeft + 1;
+                    parsedStack.splice(acceptedLeft, howMany);
+                    break;
+                }
+
+                // update pointers
+                acceptedLeft = left;
+                acceptedRight = right;
+
+                left++;
+                right--;
+            }
+        }
+    }
+
+    return parsedStack;
 }
 
 function _getErrorType(errorType: any) {
@@ -39,6 +262,40 @@ function _getErrorType(errorType: any) {
     }
 
     return typeName;
+}
+
+/**
+ * Formats the provided errorObj for display and reporting, it may be a String, Object, integer or undefined depending on the browser.
+ * @param errorObj The supplied errorObj
+ */
+export function _formatErrorCode(errorObj:any) {
+    if (errorObj) {
+        try {
+            if (!isString(errorObj)) {
+                var errorType = _getErrorType(errorObj);
+                var result = _stringify(errorObj, false);
+                if (!result || result === "{}") {
+                    if (errorObj[strError]) {
+                        // Looks like an MS Error Event
+                        errorObj = errorObj[strError];
+                        errorType = _getErrorType(errorObj);
+                    }
+
+                    result = _stringify(errorObj, true);
+                }
+
+                if (result.indexOf(errorType) !== 0 && errorType !== "String") {
+                    return errorType + ":" + result;
+                }
+
+                return result;
+            }
+        } catch (e) {
+        }
+    }
+
+    // Fallback to just letting the object format itself into a string
+    return "" + (errorObj || "");
 }
 
 export class Exception extends ExceptionData implements ISerializable {
@@ -61,13 +318,17 @@ export class Exception extends ExceptionData implements ISerializable {
     /**
      * Constructs a new instance of the ExceptionTelemetry object
      */
-    constructor(logger: IDiagnosticLogger, exception: Error | IExceptionInternal, properties?: {[key: string]: any}, measurements?: {[key: string]: number}, severityLevel?: SeverityLevel, id?: string) {
+    constructor(logger: IDiagnosticLogger, exception: Error | IExceptionInternal | IAutoExceptionTelemetry, properties?: {[key: string]: any}, measurements?: {[key: string]: number}, severityLevel?: SeverityLevel, id?: string) {
         super();
 
         if (!_isExceptionInternal(exception)) {
-            this.exceptions = [new _ExceptionDetails(logger, exception)];
-            this.properties = DataSanitizer.sanitizeProperties(logger, properties) || {};
-            this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
+            if (!properties) {
+                properties = { };
+            }
+            
+            this.exceptions = [new _ExceptionDetails(logger, exception, properties)];
+            this.properties = dataSanitizeProperties(logger, properties);
+            this.measurements = dataSanitizeMeasurements(logger, measurements);
             if (severityLevel) { this.severityLevel = severityLevel; }
             if (id) { this.id = id; }
         } else {
@@ -81,6 +342,32 @@ export class Exception extends ExceptionData implements ISerializable {
             // bool/int types, use isNullOrUndefined
             this.ver = 2; // TODO: handle the CS"4.0" ==> breeze 2 conversion in a better way
             if (!isNullOrUndefined(exception.isManual)) { this.isManual = exception.isManual; }
+        }
+    }
+
+    public static CreateAutoException(
+            message: string | Event,
+            url: string,
+            lineNumber: number,
+            columnNumber: number,
+            error: any,
+            evt?: Event|string,
+            stack?: string,
+            errorSrc?: string
+        ): IAutoExceptionTelemetry {
+
+        let errorType = _getErrorType(error || evt || message);
+
+        return {
+            message: _formatMessage(message, errorType),
+            url,
+            lineNumber,
+            columnNumber,
+            error: _formatErrorCode(error || evt || message),
+            evt: _formatErrorCode(evt || message),
+            typeName: errorType,
+            stackDetails: _getStackFromErrorObj(stack || error || evt),
+            errorSrc
         }
     }
 
@@ -122,11 +409,13 @@ export class Exception extends ExceptionData implements ISerializable {
                     hasFullStack: true,
                     message,
                     stack: details,
-                    typeName
+                    typeName,
                 } as ExceptionDetails
             ]
         } as Exception;
     }
+
+    public static formatError = _formatErrorCode;
 }
 
 export class _ExceptionDetails extends ExceptionDetails implements ISerializable {
@@ -141,25 +430,30 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
         parsedStack: FieldType.Array
     };
 
-    constructor(logger: IDiagnosticLogger, exception: Error | IExceptionDetailsInternal) {
+    constructor(logger: IDiagnosticLogger, exception: Error | IExceptionDetailsInternal | IAutoExceptionTelemetry, properties?: {[key: string]: any}) {
         super();
 
         if (!_isExceptionDetailsInternal(exception)) {
             let error = exception as any;
+            let evt = error && error.evt;
             if (!isError(error)) {
-                error = error[strError] || error.evt || error;
+                error = error[strError] || evt || error;
             }
 
-            this.typeName = DataSanitizer.sanitizeString(logger, _getErrorType(error)) || strNotSpecified;
-            this.message = DataSanitizer.sanitizeMessage(logger, exception.message) || strNotSpecified;
-            const stack = exception.stack;
-            this.parsedStack = _ExceptionDetails.parseStack(stack);
-            this.stack = DataSanitizer.sanitizeException(logger, stack);
+            this.typeName = dataSanitizeString(logger, _getErrorType(error)) || strNotSpecified;
+            this.message = dataSanitizeMessage(logger, _formatMessage(exception || error, this.typeName)) || strNotSpecified;
+            const stack = exception[strStackDetails] || _getStackFromErrorObj(exception);
+            this.parsedStack = _parseStack(stack);
+            this[strStack] = dataSanitizeException(logger, _formatStackTrace(stack));
             this.hasFullStack = isArray(this.parsedStack) && this.parsedStack.length > 0;
+
+            if (properties) {
+                properties.typeName = properties.typeName || this.typeName;
+            }
         } else {
             this.typeName = exception.typeName;
             this.message = exception.message;
-            this.stack = exception.stack;
+            this[strStack] = exception[strStack];
             this.parsedStack = exception.parsedStack
             this.hasFullStack = exception.hasFullStack
         }
@@ -175,7 +469,7 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
             typeName: this.typeName,
             message: this.message,
             hasFullStack: this.hasFullStack,
-            stack: this.stack,
+            stack: this[strStack],
             parsedStack: parsedStack || undefined
         };
 
@@ -191,67 +485,13 @@ export class _ExceptionDetails extends ExceptionDetails implements ISerializable
 
         return exceptionDetails;
     }
-
-    private static parseStack(stack?:string): _StackFrame[] {
-        let parsedStack: _StackFrame[];
-        if (isString(stack)) {
-            const frames = stack.split('\n');
-            parsedStack = [];
-            let level = 0;
-
-            let totalSizeInBytes = 0;
-            for (let i = 0; i <= frames.length; i++) {
-                const frame = frames[i];
-                if (_StackFrame.regex.test(frame)) {
-                    const parsedFrame = new _StackFrame(frames[i], level++);
-                    totalSizeInBytes += parsedFrame.sizeInBytes;
-                    parsedStack.push(parsedFrame);
-                }
-            }
-
-            // DP Constraint - exception parsed stack must be < 32KB
-            // remove frames from the middle to meet the threshold
-            const exceptionParsedStackThreshold = 32 * 1024;
-            if (totalSizeInBytes > exceptionParsedStackThreshold) {
-                let left = 0;
-                let right = parsedStack.length - 1;
-                let size = 0;
-                let acceptedLeft = left;
-                let acceptedRight = right;
-
-                while (left < right) {
-                    // check size
-                    const lSize = parsedStack[left].sizeInBytes;
-                    const rSize = parsedStack[right].sizeInBytes;
-                    size += lSize + rSize;
-
-                    if (size > exceptionParsedStackThreshold) {
-
-                        // remove extra frames from the middle
-                        const howMany = acceptedRight - acceptedLeft + 1;
-                        parsedStack.splice(acceptedLeft, howMany);
-                        break;
-                    }
-
-                    // update pointers
-                    acceptedLeft = left;
-                    acceptedRight = right;
-
-                    left++;
-                    right--;
-                }
-            }
-        }
-
-        return parsedStack;
-    }
 }
 
 export class _StackFrame extends StackFrame implements ISerializable {
 
     // regex to match stack frames from ie/chrome/ff
     // methodName=$2, fileName=$4, lineNo=$5, column=$6
-    public static regex = /^([\s]+at)?(.*?)(\@|\s\(|\s)([^\(\@\n]+):([0-9]+):([0-9]+)(\)?)$/;
+    public static regex = /^([\s]+at)?[\s]*([^\@\()]+?)[\s]*(\@|\()([^\(\n]+):([0-9]+):([0-9]+)(\)?)$/;
     public static baseSize = 58; // '{"method":"","level":,"assembly":"","fileName":"","line":}'.length
     public sizeInBytes = 0;
 
@@ -271,7 +511,7 @@ export class _StackFrame extends StackFrame implements ISerializable {
         if (typeof sourceFrame === "string") {
             const frame: string = sourceFrame;
             this.level = level;
-            this.method = "<no_method>";
+            this.method = NoMethod;
             this.assembly = strTrim(frame);
             this.fileName = "";
             this.line = 0;

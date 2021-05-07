@@ -13,7 +13,7 @@ import {
     setCookie as coreSetCookie, deleteCookie as coreDeleteCookie
 } from "@microsoft/applicationinsights-core-js";
 import { RequestHeaders } from "./RequestResponseHeaders";
-import { DataSanitizer } from "./Telemetry/Common/DataSanitizer";
+import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
 import { ICorrelationConfig } from "./Interfaces/ICorrelationConfig";
 import { createDomEvent } from './DomHelperFuncs';
 import { stringToBoolOrDefault, msToTimeSpan, isBeaconApiSupported, isCrossOriginError, getExtensionByName } from "./HelperFuncs";
@@ -430,9 +430,9 @@ export function AjaxHelperParseDependencyPath(logger: IDiagnosticLogger, absolut
                     pathName = "/" + pathName;
                 }
                 data = parsedUrl.pathname;
-                name = DataSanitizer.sanitizeString(logger, method ? method + " " + pathName : pathName);
+                name = dataSanitizeString(logger, method ? method + " " + pathName : pathName);
             } else {
-                name = DataSanitizer.sanitizeString(logger, absoluteUrl);
+                name = dataSanitizeString(logger, absoluteUrl);
             }
         }
     } else {
