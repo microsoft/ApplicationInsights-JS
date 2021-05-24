@@ -28,7 +28,7 @@ export interface IExceptionTelemetry extends IPartC {
      * @memberof IExceptionTelemetry
      * @description Error Object(s)
      */
-    exception?: Error;
+    exception?: Error | IAutoExceptionTelemetry;
 
     /**
      * @description Specified severity of exception for use with
@@ -75,10 +75,38 @@ export interface IAutoExceptionTelemetry {
 
     /**
      * @description Error Object (object)
-     * @type {Error}
+     * @type {any}
      * @memberof IAutoExceptionTelemetry
      */
-    error: Error;
+    error: any;
+    
+    /**
+     * @description The event at the time of the exception (object)
+     * @type {Event|string}
+     * @memberof IAutoExceptionTelemetry
+     */
+    evt?: Event|string;
+
+    /**
+     * @description The provided stack for the error
+     * @type {IStackDetails}
+     * @memberof IAutoExceptionTelemetry
+     */
+    stackDetails?: IStackDetails;
+
+    /**
+     * @description The calculated type of the error
+     * @type {string}
+     * @memberof IAutoExceptionTelemetry
+     */
+    typeName?: string;
+
+    /**
+     * @description The descriptive source of the error
+     * @type {string}
+     * @memberof IAutoExceptionTelemetry
+     */
+    errorSrc?: string;
 }
 
 export interface IExceptionInternal extends IPartC {
@@ -107,4 +135,9 @@ export interface IExceptionStackFrameInternal {
     fileName: string;
     line: number;
     pos?: number;
+}
+
+export interface IStackDetails {
+    src: string,
+    obj: string[],
 }

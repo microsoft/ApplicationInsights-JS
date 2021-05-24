@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { DataSanitizer, dateTimeUtilsDuration, IDependencyTelemetry, urlGetAbsoluteUrl, urlGetCompleteUrl, msToTimeSpan } from '@microsoft/applicationinsights-common';
+import { dataSanitizeUrl, dateTimeUtilsDuration, IDependencyTelemetry, urlGetAbsoluteUrl, urlGetCompleteUrl, msToTimeSpan } from '@microsoft/applicationinsights-common';
 import { IDiagnosticLogger, objKeys, arrForEach, isNumber, isString, normalizeJsName, objForEachKey } from '@microsoft/applicationinsights-core-js';
 import dynamicProto from "@microsoft/dynamicproto-js";
 
@@ -272,7 +272,7 @@ export class ajaxRecord {
             }
         
             self.getPathName = () => {
-                return self.requestUrl ? DataSanitizer.sanitizeUrl(_logger, urlGetCompleteUrl(self.method, self.requestUrl)) : null;
+                return self.requestUrl ? dataSanitizeUrl(_logger, urlGetCompleteUrl(self.method, self.requestUrl)) : null;
             }
         
             self.CreateTrackItem = (ajaxType:string, enableRequestHeaderTracking:boolean, getResponse:() => IAjaxRecordResponse):IDependencyTelemetry => {

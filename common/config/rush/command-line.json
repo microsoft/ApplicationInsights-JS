@@ -7,7 +7,7 @@
           "summary": "Run all tests for all packages",
           "description": "Runs tests for all projects",
           "safeForSimultaneousRushProcesses": false,
-          "enableParallelism": true,
+          "enableParallelism": false,
           "ignoreMissingScript": false
         },
         {

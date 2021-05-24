@@ -311,7 +311,7 @@ module.exports = function (grunt) {
             core: {
                 options: {
                     urls: [
-                        './shared/AppInsightsCore/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/shared/AppInsightsCore/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: true,
@@ -322,18 +322,18 @@ module.exports = function (grunt) {
             common: {
                 options: {
                     urls: [
-                        './shared/AppInsightsCommon/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/shared/AppInsightsCommon/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
-                    console: false,
-                    summaryOnly: true,
+                    console: true,
+                    summaryOnly: false,
                     '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
             },
             aitests: {
                 options: {
                     urls: [
-                        './extensions/applicationinsights-analytics-js/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/extensions/applicationinsights-analytics-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: true,
@@ -344,7 +344,7 @@ module.exports = function (grunt) {
             deps: {
                 options: {
                     urls: [
-                        './extensions/applicationinsights-dependencies-js/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/extensions/applicationinsights-dependencies-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: true,
@@ -355,7 +355,7 @@ module.exports = function (grunt) {
             properties: {
                 options: {
                     urls: [
-                        './extensions/applicationinsights-properties-js/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/extensions/applicationinsights-properties-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 5 * 60 * 1000, // 5 min
                     console: false,
@@ -366,7 +366,7 @@ module.exports = function (grunt) {
             reactnative: {
                 options: {
                     urls: [
-                        './extensions/applicationinsights-react-native/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/extensions/applicationinsights-react-native/Tests/Selenium/Tests.html'
                     ],
                     timeout: 5 * 60 * 1000, // 5 min
                     console: true,
@@ -377,18 +377,18 @@ module.exports = function (grunt) {
             aisku: {
                 options: {
                     urls: [
-                        './AISKU/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/AISKU/Tests/Selenium/Tests.html'
                     ],
                     timeout: 5 * 60 * 1000, // 5 min
-                    console: false,
-                    summaryOnly: true,
+                    console: true,
+                    summaryOnly: false,
                     '--web-security': 'false'
                 }
             },
             aichannel: {
                 options: {
                     urls: [
-                        './channels/applicationinsights-channel-js/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/channels/applicationinsights-channel-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -421,7 +421,7 @@ module.exports = function (grunt) {
             clickanalytics: {
                 options: {
                     urls: [
-                        './extensions/applicationinsights-clickanalytics-js/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/extensions/applicationinsights-clickanalytics-js/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: true,
@@ -429,6 +429,14 @@ module.exports = function (grunt) {
                     '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
             },
+        },
+        connect: {
+            server: {
+                options: {
+                    port: 9001,
+                    base: '.'
+                }
+            }        
         }
     });
 
@@ -440,36 +448,38 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-tslint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
+    grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-run');
     grunt.registerTask("default", ["ts:rollupuglify", "ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3", "ts:shims", "ts:shimstest", "qunit:shims", "ts:default", "uglify:ai", "uglify:snippet"]);
     grunt.registerTask("core", ["ts:core"]);
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("ai", ["ts:appinsights"]);
-    grunt.registerTask("aitests", ["ts:appinsightstests", "qunit:aitests"]);
+    grunt.registerTask("aitests", ["connect", "ts:appinsightstests", "qunit:aitests"]);
     grunt.registerTask("aisku", ["ts:aisku"]);
     grunt.registerTask("aiskulite", ["ts:aiskulite"]);
     grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
-    grunt.registerTask("aiskutests", ["ts:aiskutests", "qunit:aisku"]);
-    grunt.registerTask("test", ["ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
+    grunt.registerTask("aiskutests", ["connect", "ts:aiskutests", "qunit:aisku"]);
+    grunt.registerTask("test", ["connect", "ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
     grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests", "reacttests"]);
-    grunt.registerTask("coretest", ["ts:coretest", "qunit:core"]);
-    grunt.registerTask("commontest", ["ts:common", "ts:commontest", "qunit:common"]);
+    grunt.registerTask("coretest", ["connect", "ts:coretest", "qunit:core"]);
+    grunt.registerTask("commontest", ["connect", "ts:common", "ts:commontest", "qunit:common"]);
     grunt.registerTask("properties", ["ts:properties"]);
-    grunt.registerTask("propertiestests", ["ts:propertiestests", "qunit:properties"]);
+    grunt.registerTask("propertiestests", ["connect", "ts:propertiestests", "qunit:properties"]);
     grunt.registerTask("reactnative", ["ts:reactnative"]);
-    grunt.registerTask("reactnativetests", ["qunit:reactnative"]);
+    grunt.registerTask("reactnativetests", ["connect", "qunit:reactnative"]);
     grunt.registerTask("deps", ["ts:deps"]);
-    grunt.registerTask("depstest", ["ts:depstest", "qunit:deps"]);
+    grunt.registerTask("depstest", [ "connect", "ts:depstest","qunit:deps"]);
     grunt.registerTask("debugplugin", ["ts:debugplugin"]);
     grunt.registerTask("aichannel", ["ts:aichannel"]);
-    grunt.registerTask("aichanneltest", ["ts:aichanneltest", "qunit:aichannel"]);
+    grunt.registerTask("aichanneltest", ["connect", "ts:aichanneltest", "qunit:aichannel"]);
     grunt.registerTask("rollupuglify", ["ts:rollupuglify"]);
     grunt.registerTask("rollupes3", ["ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3"]);
     grunt.registerTask("rollupes3test", ["ts:rollupes3test", "qunit:rollupes3"]);
     grunt.registerTask("shims", ["ts:shims", "ts:shimstest", "qunit:shims"]);
     grunt.registerTask("shimstest", ["ts:shimstest", "qunit:shims"]);
     grunt.registerTask("clickanalytics", ["ts:clickanalytics"]);
-    grunt.registerTask("clickanalyticstests", ["ts:clickanalyticstests", "qunit:clickanalytics"]);
+    grunt.registerTask("clickanalyticstests", ["connect", "ts:clickanalyticstests", "qunit:clickanalytics"]);
     grunt.registerTask("tst-framework", ["ts:tst-framework"]);
+    grunt.registerTask("serve", ["connect:server:keepalive"]);
 };

@@ -4,7 +4,7 @@
 import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
 import { EventData } from '../Interfaces/Contracts/Generated/EventData';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
-import { DataSanitizer } from './Common/DataSanitizer';
+import { dataSanitizeString, dataSanitizeProperties, dataSanitizeMeasurements } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { strNotSpecified } from '../Constants';
 
@@ -27,8 +27,8 @@ export class Event extends EventData implements ISerializable {
 
         super();
 
-        this.name = DataSanitizer.sanitizeString(logger, name) || strNotSpecified;
-        this.properties = DataSanitizer.sanitizeProperties(logger, properties);
-        this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
+        this.name = dataSanitizeString(logger, name) || strNotSpecified;
+        this.properties = dataSanitizeProperties(logger, properties);
+        this.measurements = dataSanitizeMeasurements(logger, measurements);
     }
 }

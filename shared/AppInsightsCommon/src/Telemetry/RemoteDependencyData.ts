@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { DataSanitizer } from './Common/DataSanitizer';
+import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString, dataSanitizeUrl } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
 import { AjaxHelperParseDependencyPath} from '../Util';
@@ -51,17 +51,17 @@ export class RemoteDependencyData extends GeneratedRemoteDependencyData implemen
         this.success = success;
         this.resultCode = resultCode + "";
 
-        this.type = DataSanitizer.sanitizeString(logger, requestAPI);
+        this.type = dataSanitizeString(logger, requestAPI);
 
         const dependencyFields = AjaxHelperParseDependencyPath(logger, absoluteUrl, method, commandName);
-        this.data = DataSanitizer.sanitizeUrl(logger, commandName) || dependencyFields.data; // get a value from hosturl if commandName not available
-        this.target = DataSanitizer.sanitizeString(logger, dependencyFields.target);
+        this.data = dataSanitizeUrl(logger, commandName) || dependencyFields.data; // get a value from hosturl if commandName not available
+        this.target = dataSanitizeString(logger, dependencyFields.target);
         if (correlationContext) {
             this.target = `${this.target} | ${correlationContext}`;
         }
-        this.name = DataSanitizer.sanitizeString(logger, dependencyFields.name);
+        this.name = dataSanitizeString(logger, dependencyFields.name);
 
-        this.properties = DataSanitizer.sanitizeProperties(logger, properties);
-        this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
+        this.properties = dataSanitizeProperties(logger, properties);
+        this.measurements = dataSanitizeMeasurements(logger, measurements);
     }
 }

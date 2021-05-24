@@ -52,6 +52,6 @@ export function getExtensionByName(extensions: IPlugin[], identifier: string): I
     return extension;
 }
 
-export function isCrossOriginError(message: string|Event, url: string, lineNumber: number, columnNumber: number, error: Error): boolean {
+export function isCrossOriginError(message: string|Event, url: string, lineNumber: number, columnNumber: number, error: Error | Event): boolean {
     return !error && isString(message) && (message === "Script error." || message === "Script error");
 }

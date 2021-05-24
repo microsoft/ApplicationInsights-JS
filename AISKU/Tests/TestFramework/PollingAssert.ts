@@ -23,14 +23,14 @@ export class PollingAssert {
                         Assert.ok(false, "assert didn't succeed for " + timeout + " seconds: " + assertDescription + "[" + (TestClass.currentTestInfo ? TestClass.currentTestInfo.name : "<null>") + "]");
                         nextTestStep();
                     } else {
-                        setTimeout(polling, pollIntervalMs);
+                        TestClass.orgSetTimeout(polling, pollIntervalMs);
                     }
                 } catch (e) {
                     Assert.ok(true, "Polling exception - " + e);
-                    setTimeout(polling, pollIntervalMs);
+                    TestClass.orgSetTimeout(polling, pollIntervalMs);
                 }
             }
-            setTimeout(polling, pollIntervalMs);
+            TestClass.orgSetTimeout(polling, pollIntervalMs);
         }
 
         pollingAssert[TestClass.isPollingStepFlag] = true;

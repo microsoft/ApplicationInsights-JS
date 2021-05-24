@@ -1,15 +1,37 @@
-import { Assert, AITestClass } from "@microsoft/ai-test-framework";
-import { SinonStub } from 'sinon';
-import { Util, Exception, SeverityLevel, Trace, PageViewPerformance, IConfig, IExceptionInternal, AnalyticsPluginIdentifier } from "@microsoft/applicationinsights-common";
+import { 
+    Assert, AITestClass, PollingAssert, EventValidator, TraceValidator, ExceptionValidator, 
+    MetricValidator, PageViewPerformanceValidator, PageViewValidator, RemoteDepdencyValidator
+} from "@microsoft/ai-test-framework";
+import { SinonStub, SinonSpy } from 'sinon';
+import { 
+    Exception, SeverityLevel, Event, Trace, PageViewPerformance, IConfig, IExceptionInternal, 
+    AnalyticsPluginIdentifier, Util, IAppInsights, Metric, PageView, RemoteDependencyData 
+} from "@microsoft/applicationinsights-common";
 import { ITelemetryItem, AppInsightsCore, IPlugin, IConfiguration, IAppInsightsCore, setEnableEnvMocks, getLocation, dumpObj } from "@microsoft/applicationinsights-core-js";
+import { Sender } from "@microsoft/applicationinsights-channel-js"
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { ApplicationInsights } from "../src/JavaScriptSDK/ApplicationInsights";
 
+declare class ExceptionHelper {
+    capture: (appInsights:IAppInsights) => void;
+    captureStrict: (appInsights:IAppInsights) => void;
+    throw: (value:any) => void;
+    throwCors: () => void;
+    throwStrict: (value:any) => void;
+    throwRuntimeException: (timeoutFunc: VoidFunction) => void;
+    throwStrictRuntimeException: (timeoutFunc: VoidFunction) => void;
+};
+
 export class ApplicationInsightsTests extends AITestClass {
+    private _onerror:any = null;
+    private trackSpy:SinonSpy;
+    private throwInternalSpy:SinonSpy;
+    private exceptionHelper: any = new ExceptionHelper();
+
     public testInitialize() {
+        this._onerror = window.onerror;
         setEnableEnvMocks(false);
         super.testInitialize();
-
         Util.setCookie(undefined, 'ai_session', "");
         Util.setCookie(undefined, 'ai_user', "");
         if (Util.canUseLocalStorage()) {
@@ -24,6 +46,13 @@ export class ApplicationInsightsTests extends AITestClass {
         if (Util.canUseLocalStorage()) {
             window.localStorage.clear();
         }
+        window.onerror = this._onerror;
+    }
+
+    public causeException(cb:Function) {
+        AITestClass.orgSetTimeout(() => {
+            cb();
+        }, 0);
     }
 
     public registerTests() {
@@ -323,7 +352,7 @@ export class ApplicationInsightsTests extends AITestClass {
                 const appInsights = new ApplicationInsights();
                 appInsights.initialize({instrumentationKey: core.config.instrumentationKey}, core, []);
                 const trackStub = this.sandbox.stub(appInsights.core, "track");
-
+    
                 let envelope: ITelemetryItem;
                 const test = (action, expectedEnvelopeType, expectedDataType, test?: () => void) => {
                     action();
@@ -497,12 +526,9 @@ export class ApplicationInsightsTests extends AITestClass {
                 appInsights.initialize({ instrumentationKey: "key" }, core, []);
 
                 const throwInternal = this.sandbox.spy(appInsights.core.logger, "throwInternal");
-                const nameStub = this.sandbox.stub(Util, "getExceptionName");
 
                 this.sandbox.stub(appInsights, "trackException").throws(new CustomTestError("Simulated Error"));
                 const expectedErrorName: string = "CustomTestError";
-
-                nameStub.returns(expectedErrorName);
 
                 appInsights._onerror({message: "some message", url: "some://url", lineNumber: 1234, columnNumber: 5678, error: new Error()});
 
@@ -557,6 +583,350 @@ export class ApplicationInsightsTests extends AITestClass {
                 Assert.equal(document.URL, trackExceptionSpy.args[0][1].url);
             }
         });
+
+        this.testCase({
+            name: "OnErrorTests: _onerror logs name of unexpected error thrown by trackException for diagnostics",
+            test: () => {
+                // setup
+                const plugin = new ChannelPlugin();
+                const core = new AppInsightsCore();
+                core.initialize(
+                    {instrumentationKey: "key"},
+                    [plugin]
+                );
+                const appInsights = new ApplicationInsights();
+                appInsights.initialize({ instrumentationKey: "key" }, core, []);
+
+                const throwInternal = this.sandbox.spy(appInsights.core.logger, "throwInternal");
+
+                // Internal code does call this anymore!
+                const expectedErrorName: string = "test error";
+
+                let theError = new Error();
+                theError.name = expectedErrorName;
+                this.sandbox.stub(appInsights, "trackException").throws(theError);
+
+
+                appInsights._onerror({message: "some message", url: "some://url", lineNumber: 1234, columnNumber: 5678, error: "the error message"});
+
+                Assert.ok(throwInternal.calledOnce, "throwInternal called once");
+                const logMessage: string = throwInternal.getCall(0).args[2];
+                Assert.notEqual(-1, logMessage.indexOf(expectedErrorName), "logMessage: " + logMessage);
+            }
+        });
+
+
+        this.testCaseAsync({
+            name: "OnErrorTests: _onerror logs name of unexpected error thrown by trackException for diagnostics",
+            stepDelay: 1,
+            useFakeTimers: true,
+            steps: [() => {
+                // setup
+                const sender: Sender = new Sender();
+                const core = new AppInsightsCore();
+                core.initialize(
+                    {
+                        instrumentationKey: "key",
+                        extensionConfig: {
+                            [sender.identifier]: {
+                                enableSessionStorageBuffer: false,
+                                maxBatchInterval: 1
+                            }
+                        }                
+                    },
+                    [sender]
+                );
+                const appInsights = new ApplicationInsights();
+                appInsights.initialize({ instrumentationKey: "key" }, core, []);
+                appInsights.addTelemetryInitializer((item: ITelemetryItem) => {
+                    Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
+                });
+
+                this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
+                sender._sender = (payload:string[], isAsync:boolean) => {
+                    sender._onSuccess(payload, payload.length);
+                };
+                this.sandbox.spy()
+                this.trackSpy = this.sandbox.spy(sender, "_onSuccess");
+
+                this.exceptionHelper.capture(appInsights);
+
+                this.causeException(() => {
+                    this.exceptionHelper.throwRuntimeException(AITestClass.orgSetTimeout);
+                });
+
+                Assert.ok(!this.trackSpy.calledOnce, "track not called yet");
+                Assert.ok(!this.throwInternalSpy.called, "No internal errors");
+            }].concat(this.waitForException(1))
+            .concat(() => {
+
+                let isLocal = window.location.protocol === "file:";
+                let exp = this.trackSpy.args[0];
+                const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
+                if (payloadStr.length > 0) {
+                    const payload = JSON.parse(payloadStr[0]);
+                    const data = payload.data;
+                    Assert.ok(data, "Has Data");
+                    if (data) {
+                        Assert.ok(data.baseData, "Has BaseData");
+                        let baseData = data.baseData;
+                        if (baseData) {
+                            const ex = baseData.exceptions[0];
+                            if (isLocal) {
+                                Assert.ok(ex.message.indexOf("Script error:") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                Assert.equal("String", ex.typeName, "Got the correct typename [" + ex.typeName + "]");
+                            } else {
+                                Assert.ok(ex.message.indexOf("ug is not a function") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                Assert.equal("TypeError", ex.typeName, "Got the correct typename [" + ex.typeName + "]");
+                                Assert.ok(baseData.properties["columnNumber"], "has column number");
+                                Assert.ok(baseData.properties["lineNumber"], "has Line number");
+                            }
+
+                            Assert.ok(ex.stack.length > 0, "Has stack");
+                            Assert.ok(ex.parsedStack, "Stack was parsed");
+                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                            Assert.ok(baseData.properties["url"], "has Url");
+                            Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
+                        }
+                    }
+                }
+            })
+
+        });
+
+        this.testCaseAsync({
+            name: "OnErrorTests: _onerror logs name of unexpected error thrown by trackException for diagnostics with a text exception",
+            stepDelay: 1,
+            useFakeTimers: true,
+            steps: [() => {
+                // setup
+                const sender: Sender = new Sender();
+                const core = new AppInsightsCore();
+                core.initialize(
+                    {
+                        instrumentationKey: "key",
+                        extensionConfig: {
+                            [sender.identifier]: {
+                                enableSessionStorageBuffer: false,
+                                maxBatchInterval: 1
+                            }
+                        }                
+                    },
+                    [sender]
+                );
+                const appInsights = new ApplicationInsights();
+                appInsights.initialize({ instrumentationKey: "key" }, core, []);
+                appInsights.addTelemetryInitializer((item: ITelemetryItem) => {
+                    Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
+                });
+
+                this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
+                sender._sender = (payload:string[], isAsync:boolean) => {
+                    sender._onSuccess(payload, payload.length);
+                };
+                this.sandbox.spy()
+                this.trackSpy = this.sandbox.spy(sender, "_onSuccess");
+
+                this.exceptionHelper.capture(appInsights);
+                this.causeException(() => {
+                    this.exceptionHelper.throw("Test Text Error!");
+                });
+
+                Assert.ok(!this.trackSpy.calledOnce, "track not called yet");
+                Assert.ok(!this.throwInternalSpy.called, "No internal errors");
+            }].concat(this.waitForException(1))
+            .concat(() => {
+
+                let exp = this.trackSpy.args[0];
+                const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
+                if (payloadStr.length > 0) {
+                    const payload = JSON.parse(payloadStr[0]);
+                    const data = payload.data;
+                    Assert.ok(data, "Has Data");
+                    if (data) {
+                        Assert.ok(data.baseData, "Has BaseData");
+                        let baseData = data.baseData;
+                        if (baseData) {
+                            const ex = baseData.exceptions[0];
+                            Assert.ok(ex.message.indexOf("Test Text Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                            Assert.ok(baseData.properties["columnNumber"], "has column number");
+                            Assert.ok(baseData.properties["lineNumber"], "has Line number");
+                            Assert.equal("String", ex.typeName, "Got the correct typename");
+                            Assert.ok(ex.stack.length > 0, "Has stack");
+                            Assert.ok(ex.parsedStack, "Stack was parsed");
+                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                            Assert.ok(baseData.properties["url"], "has Url");
+                            Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
+                        }
+                    }
+                }
+            })
+        });
+
+        this.testCaseAsync({
+            name: "OnErrorTests: _onerror logs name of unexpected error thrown by trackException for diagnostics with a custom direct exception",
+            stepDelay: 1,
+            useFakeTimers: true,
+            steps: [() => {
+                // setup
+                const sender: Sender = new Sender();
+                const core = new AppInsightsCore();
+                core.initialize(
+                    {
+                        instrumentationKey: "key",
+                        extensionConfig: {
+                            [sender.identifier]: {
+                                enableSessionStorageBuffer: false,
+                                maxBatchInterval: 1
+                            }
+                        }                
+                    },
+                    [sender]
+                );
+                const appInsights = new ApplicationInsights();
+                appInsights.initialize({ instrumentationKey: "key" }, core, []);
+                appInsights.addTelemetryInitializer((item: ITelemetryItem) => {
+                    Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
+                });
+
+                this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
+                sender._sender = (payload:string[], isAsync:boolean) => {
+                    sender._onSuccess(payload, payload.length);
+                };
+                this.sandbox.spy()
+                this.trackSpy = this.sandbox.spy(sender, "_onSuccess");
+
+                this.exceptionHelper.capture(appInsights);
+                this.causeException(() => {
+                    this.exceptionHelper.throw(new CustomTestError("Test Text Error!"));
+                });
+
+                Assert.ok(!this.trackSpy.calledOnce, "track not called yet");
+                Assert.ok(!this.throwInternalSpy.called, "No internal errors");
+            }].concat(this.waitForException(1))
+            .concat(() => {
+
+                let isLocal = window.location.protocol === "file:";
+                let exp = this.trackSpy.args[0];
+                const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
+                if (payloadStr.length > 0) {
+                    const payload = JSON.parse(payloadStr[0]);
+                    const data = payload.data;
+                    Assert.ok(data, "Has Data");
+                    if (data) {
+                        Assert.ok(data.baseData, "Has BaseData");
+                        let baseData = data.baseData;
+                        if (baseData) {
+                            const ex = baseData.exceptions[0];
+                            if (isLocal) {
+                                Assert.ok(ex.message.indexOf("Script error:") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                Assert.equal("String", ex.typeName, "Got the correct typename");
+                            } else {
+                                Assert.ok(ex.message.indexOf("Test Text Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
+                                Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
+                                Assert.ok(baseData.properties["columnNumber"], "has column number");
+                                Assert.ok(baseData.properties["lineNumber"], "has Line number");
+                            }
+
+                            Assert.ok(ex.stack.length > 0, "Has stack");
+                            Assert.ok(ex.parsedStack, "Stack was parsed");
+                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                            Assert.ok(baseData.properties["url"], "has Url");
+                            Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
+                        }
+                    }
+                }
+            })
+        });
+
+        this.testCaseAsync({
+            name: "OnErrorTests: _onerror logs name of unexpected error thrown by trackException for diagnostics with a strict custom direct exception",
+            stepDelay: 1,
+            useFakeTimers: true,
+            steps: [() => {
+                // setup
+                const sender: Sender = new Sender();
+                const core = new AppInsightsCore();
+                core.initialize(
+                    {
+                        instrumentationKey: "key",
+                        extensionConfig: {
+                            [sender.identifier]: {
+                                enableSessionStorageBuffer: false,
+                                maxBatchInterval: 1
+                            }
+                        }                
+                    },
+                    [sender]
+                );
+                const appInsights = new ApplicationInsights();
+                appInsights.initialize({ instrumentationKey: "key" }, core, []);
+                appInsights.addTelemetryInitializer((item: ITelemetryItem) => {
+                    Assert.equal("4.0", item.ver, "Telemetry items inside telemetry initializers should be in CS4.0 format");
+                });
+
+                this.throwInternalSpy = this.sandbox.spy(appInsights.core.logger, "throwInternal");
+                sender._sender = (payload:string[], isAsync:boolean) => {
+                    sender._onSuccess(payload, payload.length);
+                };
+                this.sandbox.spy()
+                this.trackSpy = this.sandbox.spy(sender, "_onSuccess");
+
+                this.exceptionHelper.capture(appInsights);
+                this.causeException(() => {
+                    this.exceptionHelper.throwStrict(new CustomTestError("Test Text Error!"));
+                });
+
+                Assert.ok(!this.trackSpy.calledOnce, "track not called yet");
+                Assert.ok(!this.throwInternalSpy.called, "No internal errors");
+            }].concat(this.waitForException(1))
+            .concat(() => {
+
+                let isLocal = window.location.protocol === "file:";
+                let exp = this.trackSpy.args[0];
+                const payloadStr: string[] = this.getPayloadMessages(this.trackSpy);
+                if (payloadStr.length > 0) {
+                    const payload = JSON.parse(payloadStr[0]);
+                    const data = payload.data;
+                    Assert.ok(data, "Has Data");
+                    if (data) {
+                        Assert.ok(data.baseData, "Has BaseData");
+                        let baseData = data.baseData;
+                        if (baseData) {
+                            const ex = baseData.exceptions[0];
+                            if (isLocal) {
+                                Assert.ok(ex.message.indexOf("Script error:") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                Assert.equal("String", ex.typeName, "Got the correct typename");
+                            } else {
+                                Assert.ok(ex.message.indexOf("Test Text Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                                Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
+                                Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
+                                Assert.ok(baseData.properties["columnNumber"], "has column number");
+                                Assert.ok(baseData.properties["lineNumber"], "has Line number");
+                            }
+
+                            Assert.ok(ex.stack.length > 0, "Has stack");
+                            Assert.ok(ex.parsedStack, "Stack was parsed");
+                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                            Assert.ok(baseData.properties["url"], "has Url");
+                            Assert.ok(baseData.properties["errorSrc"].indexOf("window.onerror@") !== -1, "has source");
+                        }
+                    }
+                }
+            })
+        });
+    }
+
+    private throwStrictRuntimeException() {
+        "use strict";
+        function doThrow() {
+            var ug: any = "Hello";
+            // This should throw
+            ug();
+        }
+
+        doThrow();
     }
 
     private addStartStopTrackPageTests() {
@@ -1158,6 +1528,67 @@ export class ApplicationInsightsTests extends AITestClass {
         Assert.ok(trackStub.args && trackStub.args[index] && trackStub.args[index][0], "track was called for: " + action);
         return trackStub.args[index][0] as ITelemetryItem;
     }
+
+    private checkNoInternalErrors() {
+        if (this.throwInternalSpy) {
+            Assert.ok(this.throwInternalSpy.notCalled, "Check no internal errors");
+            if (this.throwInternalSpy.called) {
+                Assert.ok(false, JSON.stringify(this.throwInternalSpy.args[0]));
+            }
+        }
+    }
+
+    private waitForException: any = (expectedCount:number, action: string = "", includeInit:boolean = false) => [
+        () => {
+            const message = "polling: " + new Date().toISOString() + " " + action;
+            Assert.ok(true, message);
+            console.log(message);
+            this.checkNoInternalErrors();
+            this.clock.tick(500);
+        },
+        (PollingAssert.createPollingAssert(() => {
+            this.checkNoInternalErrors();
+            let argCount = 0;
+            if (this.trackSpy.called) {
+                this.trackSpy.args.forEach(call => {
+                    argCount += call.length;
+                });
+            }
+    
+            Assert.ok(true, "* [" + argCount + " of " + expectedCount + "] checking spy " + new Date().toISOString());
+
+            try {
+                if (argCount >= expectedCount) {
+                    const payload = JSON.parse(this.trackSpy.args[0][0]);
+                    const baseType = payload.data.baseType;
+                    // call the appropriate Validate depending on the baseType
+                    switch (baseType) {
+                        case Event.dataType:
+                            return EventValidator.EventValidator.Validate(payload, baseType);
+                        case Trace.dataType:
+                            return TraceValidator.TraceValidator.Validate(payload, baseType);
+                        case Exception.dataType:
+                            return ExceptionValidator.ExceptionValidator.Validate(payload, baseType);
+                        case Metric.dataType:
+                            return MetricValidator.MetricValidator.Validate(payload, baseType);
+                        case PageView.dataType:
+                            return PageViewValidator.PageViewValidator.Validate(payload, baseType);
+                        case PageViewPerformance.dataType:
+                            return PageViewPerformanceValidator.PageViewPerformanceValidator.Validate(payload, baseType);
+                        case RemoteDependencyData.dataType:
+                            return RemoteDepdencyValidator.RemoteDepdencyValidator.Validate(payload, baseType);
+    
+                        default:
+                            return EventValidator.EventValidator.Validate(payload, baseType);
+                    }
+                }
+            } finally {
+                this.clock.tick(500);
+            }
+            
+            return false;
+        }, "sender succeeded", 10, 1000))
+    ];
 }
 
 class ChannelPlugin implements IPlugin {
@@ -1213,4 +1644,4 @@ class CustomTestError extends Error {
       this.name = "CustomTestError";
       this.message = message + " -- test error.";
     }
-  }
+}

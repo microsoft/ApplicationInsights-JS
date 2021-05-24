@@ -285,7 +285,8 @@
                         url: url,
                         lineNumber: lineNumber,
                         columnNumber: columnNumber,
-                        error: error
+                        error: error,
+                        evt: win.event
                     });
                 }
     

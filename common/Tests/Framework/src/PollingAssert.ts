@@ -22,14 +22,14 @@ export class PollingAssert {
                         Assert.ok(false, "assert didn't succeed for " + timeout + " seconds: " + assertDescription + "[" + (AITestClass.currentTestInfo ? AITestClass.currentTestInfo.name : "<null>") + "]");
                         nextTestStep();
                     } else {
-                        setTimeout(polling, pollIntervalMs);
+                        AITestClass.orgSetTimeout(polling, pollIntervalMs);
                     }
                 } catch (e) {
                     Assert.ok(true, "Polling exception - " + e);
-                    setTimeout(polling, pollIntervalMs);
+                    AITestClass.orgSetTimeout(polling, pollIntervalMs);
                 }
             }
-            setTimeout(polling, pollIntervalMs);
+            AITestClass.orgSetTimeout(polling, pollIntervalMs);
         }
 
         pollingAssert[AITestClass.isPollingStepFlag] = true;

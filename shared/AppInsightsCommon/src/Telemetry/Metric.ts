@@ -3,7 +3,7 @@
 
 import { MetricData } from '../Interfaces/Contracts/Generated/MetricData';
 import { ISerializable } from '../Interfaces/Telemetry/ISerializable';
-import { DataSanitizer } from './Common/DataSanitizer';
+import { dataSanitizeMeasurements, dataSanitizeProperties, dataSanitizeString } from './Common/DataSanitizer';
 import { FieldType } from '../Enums';
 import { DataPoint } from './Common/DataPoint';
 import { IDiagnosticLogger } from '@microsoft/applicationinsights-core-js';
@@ -30,11 +30,11 @@ export class Metric extends MetricData implements ISerializable {
         dataPoint.count = count > 0 ? count : undefined;
         dataPoint.max = isNaN(max) || max === null ? undefined : max;
         dataPoint.min = isNaN(min) || min === null ? undefined : min;
-        dataPoint.name = DataSanitizer.sanitizeString(logger, name) || strNotSpecified;
+        dataPoint.name = dataSanitizeString(logger, name) || strNotSpecified;
         dataPoint.value = value;
 
         this.metrics = [dataPoint];
-        this.properties = DataSanitizer.sanitizeProperties(logger, properties);
-        this.measurements = DataSanitizer.sanitizeMeasurements(logger, measurements);
+        this.properties = dataSanitizeProperties(logger, properties);
+        this.measurements = dataSanitizeMeasurements(logger, measurements);
     }
 }
