@@ -10,7 +10,7 @@ import {
     isNullOrUndefined, arrForEach, isString, strTrim, isFunction, LoggingSeverity, _InternalMessageId,
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
     getLocation, getGlobal, strUndefined, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
-    IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey, generateW3CId, getIEVersion, dumpObj
+    IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey, generateW3CId, getIEVersion, dumpObj,objKeys
 } from '@microsoft/applicationinsights-core-js';
 import { ajaxRecord, IAjaxRecordResponse } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
@@ -171,7 +171,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             enableAjaxErrorStatusText: false,
             enableAjaxPerfTracking: false,
             maxAjaxPerfLookupAttempts: 3,
-            ajaxPerfLookupDelay: 25
+            ajaxPerfLookupDelay: 25,
+            ignoreHeaders:["Authorization"]
         }
         return config;
     }
@@ -372,6 +373,20 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 ++_trackAjaxAttempts;
             }
 
+            // discard the header if it's defined as ignoreHeaders in ICorrelationConfig
+            function _canIncludeHeaders(header: string) {
+                let rlt = true;
+                if (header || _config.ignoreHeaders) {
+                    arrForEach(_config.ignoreHeaders,(key => {
+                        if (key.toLowerCase() === header.toLowerCase()) {
+                            rlt = false;
+                            return -1;
+                        }
+                    }))
+                }
+                return rlt;
+            }
+
             // Fetch Stuff
             function _instrumentFetch(): void {
                 let fetch = _supportsFetch();
@@ -414,7 +429,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                         if (_enableResponseHeaderTracking) {
                                             const responseHeaderMap = {};
                                             response.headers.forEach((value: string, name: string) => {
-                                                responseHeaderMap[name] = value;
+                                                if (_canIncludeHeaders(name)) { responseHeaderMap[name] = value; }
                                             });
 
                                             ajaxResponse.headerMap = responseHeaderMap;
@@ -514,7 +529,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         _hookProto(XMLHttpRequest, "setRequestHeader", {
                             req: (args: IInstrumentCallDetails, header: string, value: string) => {
                                 let xhr = args.inst as XMLHttpRequestInstrumented;
-                                if (_isMonitoredXhrInstance(xhr)) {
+                                if (_isMonitoredXhrInstance(xhr) && _canIncludeHeaders(header)) {
                                     xhr[strAjaxData].requestHeaders[header] = value;
                                 }
                             },
@@ -675,7 +690,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                         const parts = line.split(': ');
                                         const header = parts.shift();
                                         const value = parts.join(': ');
-                                        responseHeaderMap[header] = value;
+                                        if(_canIncludeHeaders(header)) { responseHeaderMap[header] = value; }
                                     });
 
                                     ajaxResponse.headerMap = responseHeaderMap;
@@ -830,7 +845,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 if (_enableRequestHeaderTracking) {
                     let headers = new Headers((init ? init.headers : 0) || (input instanceof Request ? (input.headers || {}) : {}));
                     headers.forEach((value, key) => {
-                        requestHeaders[key] = value;
+                        if (_canIncludeHeaders(key)) { requestHeaders[key] = value; }
                     });
                 }
 

@@ -223,6 +223,7 @@ export class AjaxTests extends TestClass {
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "http://microsoft.com");
                 xhr.setRequestHeader("header name", "header value");
+                xhr.setRequestHeader("Authorization", "Authorization");
                 xhr.send();
 
                 // Emulate response
@@ -233,6 +234,7 @@ export class AjaxTests extends TestClass {
                 let data = trackStub.args[0][0].baseData;
                 Assert.equal("Ajax", data.type, "request is Ajax type");
                 Assert.notEqual(undefined, data.properties.requestHeaders, "xhr request's request header is stored");
+                Assert.equal(undefined, data.properties.requestHeaders["Authorization"], "xhr request's request header is not ignored when the header is in ignoreHeaders");
                 Assert.equal(undefined, data.properties.responseHeaders, "xhr request's reponse header is not stored when enableResponseHeaderTracking flag is not set, default is false");
             }
         });
@@ -253,7 +255,7 @@ export class AjaxTests extends TestClass {
                 xhr.send();
 
                 // Emulate response
-                (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*"}, "");
+                (<any>xhr).respond(200, {"Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*","Authorization":"Authorization"}, "");
 
                 // assert
                 Assert.ok(trackStub.calledOnce, "track is called");
@@ -261,6 +263,7 @@ export class AjaxTests extends TestClass {
                 Assert.equal("Ajax", data.type, "request is Ajax type");
                 Assert.equal(undefined, data.properties.requestHeaders, "xhr request's request header is not stored when enableRequestHeaderTracking flag is not set, default is false");
                 Assert.notEqual(undefined, data.properties.responseHeaders, "xhr request's reponse header is stored");
+                Assert.equal(undefined, data.properties.responseHeaders["Authorization"], "xhr request's reponse header is not ignored when the header is in ignoreHeader");
             }
         });
 
@@ -1088,6 +1091,7 @@ export class AjaxTests extends TestClass {
                 // Setup
                 let headers = new Headers();
                 headers.append('My-Header', 'Header field');
+                headers.append("Authorization","Authorization");
                 let init = {
                     method: 'get',
                     headers: headers
@@ -1130,7 +1134,9 @@ export class AjaxTests extends TestClass {
                                 // All headers should be added to the init (2nd param) as this overrides
                                 // any headers on any request object
                                 Assert.equal(true, headers.has("My-Header"), "My-Header should be present");
+                                Assert.equal(true, headers.has("Authorization"), "Authorization should be present");
                                 Assert.equal("Header field", trackHeaders["my-header"], "my-header present in outbound event");
+                                Assert.equal(undefined, trackHeaders["Authorization"],"Authorization header should be ignored")
                                 break;
                         }
 
