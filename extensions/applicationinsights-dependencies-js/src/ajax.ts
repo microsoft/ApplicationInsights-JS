@@ -172,7 +172,10 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             enableAjaxPerfTracking: false,
             maxAjaxPerfLookupAttempts: 3,
             ajaxPerfLookupDelay: 25,
-            ignoreHeaders:["Authorization"]
+            ignoreHeaders:[
+                "Authorization", 
+                "X-API-Key",
+                "WWW-Authenticate"]
         }
         return config;
     }
