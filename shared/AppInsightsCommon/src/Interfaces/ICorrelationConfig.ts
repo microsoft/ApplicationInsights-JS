@@ -39,5 +39,10 @@ export interface ICorrelationConfig {
      */
     ajaxPerfLookupDelay?: number;
 
-    correlationHeaderDomains?: string[]
+    correlationHeaderDomains?: string[];
+
+    /**
+     * Response and request headers to be excluded from ajax tracking data.
+     */
+    ignoreHeaders?: string[];
 }
