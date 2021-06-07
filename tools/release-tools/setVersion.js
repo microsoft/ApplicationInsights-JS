@@ -313,7 +313,7 @@ function updateDependencies(target, orgVersion, newVersion) {
 
 function updateVersion(src, orgVersion, newVersion) {
     if (src) {
-        src = src.replace("\"javascript:" + orgVersion, "\"javascript:" + newVersion + "\"");
+        src = src.replace("\"javascript:" + orgVersion + "\"", "\"javascript:" + newVersion + "\"");
         src = src.replace("\"" + orgVersion + "\"", "\"" + newVersion + "\"");
         src = src.replace("\"#version#\"", "\"" + newVersion + "\"");
     }
