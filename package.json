@@ -1,6 +1,7 @@
 {
     "name": "@microsoft/applicationinsights-web",
     "description": "Microsoft Application Insights JavaScript SDK",
+    "version": "2.6.3",
     "keywords": [
         "browser performance monitoring",
         "script errors",
@@ -15,7 +16,8 @@
         "lint": "node common/scripts/install-run-rush.js lint --verbose",
         "rollupes3": "grunt rollupes3",
         "rupdate": "node common/scripts/install-run-rush.js update --recheck --purge --full",
-        "serve": "grunt serve"
+        "serve": "grunt serve",
+        "setVersion": "node ./tools/release-tools/setVersion.js"
     },
     "repository": {
         "type": "git",
@@ -28,7 +30,7 @@
     },
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "devDependencies": {
-        "grunt": "^1.0.1",
+        "grunt": "^1.3.0",
         "grunt-cli": "^1.3.2",
         "grunt-contrib-connect": "^3.0.0",
         "grunt-contrib-qunit": "^3.1.0",
