@@ -1,5 +1,20 @@
 # Releases
 
+## 2.6.3 (June 8th, 2021)
+
+### Changelog
+
+- #1268 Investigate and add a sender that uses fetch when XMLHttpRequest is not available
+- #1545 Cannot modify the request headers and cookies when using a custom endpoint
+- #1546 [Typings] Update the TypeScript typings to identify the readonly properties/fields and dynamic values of the snippet
+- #1541 ITelemetryContext.user is sometimes null - setAuthenticatedUserContext throws
+- #1569 [BUG] Authorization header included when enableRequestHeaderTracking is enabled
+  - As part of this change the ["Authorization", "X-API-Key", "WWW-Authenticate"] headers will NO longer be logged when ```enableRequestHeaderTracking``` is enabled, if you want these headers to be sent to AzureMonitor you will need to override the default ```ignoreHeaders``` config which excludes them (See the [Configuration settings](https://github.com/Microsoft/ApplicationInsights-JS#configuration)).
+- #1558 [BUG] Durations reported as zero (00:00:00.000) in Angular SPA for router changes
+- #363 Script error: Browser exception message not providing information type and method
+- #1568 Add VSCode specific exclusions
+- #1572 Task 9901543: Remediate security vulnerabilities
+
 ## 2.6.2 (April 22nd, 2021)
 
 ### Changelog
