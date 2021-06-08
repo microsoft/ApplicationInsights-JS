@@ -2,10 +2,15 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/rush/v5/rush.schema.json",
 
-  "npmVersion": "7.10.0",
+  "npmVersion": "7.16.0",
   "rushVersion": "5.44.0",
   "projectFolderMaxDepth": 4,
   "projects": [
+    {
+      "packageName": "applicationinsights-js-release-tools",
+      "projectFolder": "tools/release-tools",
+      "shouldPublish": false
+    },
     {
       "packageName": "@microsoft/ai-test-framework",
       "projectFolder": "common/Tests/Framework",
