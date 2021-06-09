@@ -15,6 +15,17 @@
 - #1568 Add VSCode specific exclusions
 - #1572 Task 9901543: Remediate security vulnerabilities
 
+### Update React plugin to v3.1.3
+
+- Update Core dependency to ^2.6.3 Core changes
+- Update DynamicProto version 1.1.4 (Removes unnecessary dependencies)
+
+### Update React Native plugin to v2.3.3
+
+- Update to React-Native 0.64.2
+- Update Core dependency to ^2.6.3 Core changes
+- Update DynamicProto version 1.1.4 (Removes unnecessary dependencies)
+
 ## 2.6.2 (April 22nd, 2021)
 
 ### Changelog
