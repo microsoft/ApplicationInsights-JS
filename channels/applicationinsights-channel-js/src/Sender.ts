@@ -517,7 +517,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
                     // Update End Point url if permanent redirect or moved permanently
                     // Updates the end point url before retry
-                    if(status === 301 || status === 308 ) {
+                    if(status === 301 || status === 307 || status === 308) {
                         if(!_checkAndUpdateEndPointUrl(responseUrl)) {
                             _self._onError(payload, errorMessage);
                             return;
