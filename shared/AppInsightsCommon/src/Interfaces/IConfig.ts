@@ -89,7 +89,7 @@ export interface IConfig {
     samplingPercentage?: number;
 
     /**
-     * @description If true, on a pageview,the previous instrumented page's view time is tracked and sent as telemetry and a new timer is started for the current pageview. Default is false.
+     * @description If true, on a pageview, the previous instrumented page's view time is tracked and sent as telemetry and a new timer is started for the current pageview. It is sent as a custom metric named PageVisitTime in milliseconds and is calculated via the Date now() function (if available) and falls back to (new Date()).getTime() if now() is unavailable (IE8 or less). Default is false.
      * @type {boolean}
      * @memberof IConfig
      */
