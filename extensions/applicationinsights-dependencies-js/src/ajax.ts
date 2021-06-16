@@ -155,7 +155,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             maxAjaxCallsPerView: 500,
             disableAjaxTracking: false,
             disableFetchTracking: true,
-            excludeRequestFromAutoTrackingRegex: undefined,
+            excludeRequestFromAutoTrackingPatterns: undefined,
             disableCorrelationHeaders: false,
             distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
             correlationHeaderExcludedDomains: [
@@ -213,7 +213,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let _enableResponseHeaderTracking:boolean = false;
         let _hooks:IInstrumentHook[] = [];
         let _disabledUrls:any = {};
-        let _excludeRequestFromAutoTrackingRegex: string[] | RegExp[];
+        let _excludeRequestFromAutoTrackingPatterns: string[] | RegExp[];
 
         dynamicProto(AjaxMonitor, this, (_self, base) => {
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
@@ -230,7 +230,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _enableAjaxPerfTracking = _config.enableAjaxPerfTracking;
                     _maxAjaxCallsPerView = _config.maxAjaxCallsPerView;
                     _enableResponseHeaderTracking = _config.enableResponseHeaderTracking;
-                    _excludeRequestFromAutoTrackingRegex = _config.excludeRequestFromAutoTrackingRegex;
+                    _excludeRequestFromAutoTrackingPatterns = _config.excludeRequestFromAutoTrackingPatterns;
 
                     _isUsingAIHeaders = distributedTracingMode === DistributedTracingModes.AI || distributedTracingMode === DistributedTracingModes.AI_AND_W3C;
                     _isUsingW3CHeaders = distributedTracingMode === DistributedTracingModes.AI_AND_W3C || distributedTracingMode === DistributedTracingModes.W3C;
@@ -552,11 +552,23 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 let isDisabled = false;
                 let theUrl:string = ((!isString(request) ? ((request ||{}) as Request).url || "" : request as string) ||"").toLowerCase();
 
-                // check excludeRequestFromAutoTrackingRegex before stripping off any query string
-                arrForEach(_excludeRequestFromAutoTrackingRegex, (regex: string | RegExp) => {
+                // check excludeRequestFromAutoTrackingPatterns before stripping off any query string
+                arrForEach(_excludeRequestFromAutoTrackingPatterns, (regex: string | RegExp) => {
+                    let isRegExp = false;
+                    if (!isString(regex)) {
+                        isRegExp = true;
+                        const regexObj = {flags: (regex as any).flags, source: (regex as any).source};
+                        regex = JSON.stringify(regexObj);
+                    }
                     if (!isDisabled) {
-                        const regexp = new RegExp(regex);
-                        isDisabled = regexp.test(theUrl);
+                        if (isRegExp) {
+                            const revertRegexObj = JSON.parse(regex as string);
+                            const regexp = new RegExp(revertRegexObj.source, revertRegexObj.flags);
+                            isDisabled = regexp.test(theUrl);
+                        } else {
+                            const regexp = new RegExp(regex);
+                            isDisabled = regexp.test(theUrl);
+                        }
                     }
                 });
 

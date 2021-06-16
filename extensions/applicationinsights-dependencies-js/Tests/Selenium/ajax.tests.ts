@@ -215,7 +215,7 @@ export class AjaxTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 const ExcludeRequestRegex = ["microsoft"];
-                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: true, excludeRequestFromAutoTrackingRegex: ExcludeRequestRegex };
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: true, excludeRequestFromAutoTrackingPatterns: ExcludeRequestRegex };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
 
                 // act
@@ -459,7 +459,7 @@ export class AjaxTests extends TestClass {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
                 const ExcludeRequestRegex = ["bin"];
-                let coreConfig = { instrumentationKey: "", disableFetchTracking: false, excludeRequestFromAutoTrackingRegex: ExcludeRequestRegex };
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false, excludeRequestFromAutoTrackingPatterns: ExcludeRequestRegex };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
 
