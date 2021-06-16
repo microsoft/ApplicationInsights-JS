@@ -119,6 +119,14 @@ export interface IConfig {
     disableFetchTracking?: boolean;
 
     /**
+     * @description Provide a way to exclude specific route from automatic tracking for XMLHttpRequest or Fetch request. For an ajax / fetch request that the request url matches with the regex patterns, auto tracking is turned off.
+     * @type {string[] | RegExp[]}
+     * @memberof IConfig
+     * @defaultValue undefined.
+     */
+     excludeRequestFromAutoTrackingPatterns?: string[] | RegExp[];
+
+    /**
      * @description If true, default behavior of trackPageView is changed to record end of page view duration interval when trackPageView is called. If false and no custom duration is provided to trackPageView, the page view performance is calculated using the navigation timing API. Default is false
      * @type {boolean}
      * @memberof IConfig
