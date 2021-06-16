@@ -554,21 +554,13 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                 // check excludeRequestFromAutoTrackingPatterns before stripping off any query string
                 arrForEach(_excludeRequestFromAutoTrackingPatterns, (regex: string | RegExp) => {
-                    let isRegExp = false;
-                    if (!isString(regex)) {
-                        isRegExp = true;
-                        const regexObj = {flags: (regex as any).flags, source: (regex as any).source};
-                        regex = JSON.stringify(regexObj);
+                    let theRegex = regex;
+                    if (isString(regex)) {
+                        theRegex = new RegExp(regex);
                     }
+
                     if (!isDisabled) {
-                        if (isRegExp) {
-                            const revertRegexObj = JSON.parse(regex as string);
-                            const regexp = new RegExp(revertRegexObj.source, revertRegexObj.flags);
-                            isDisabled = regexp.test(theUrl);
-                        } else {
-                            const regexp = new RegExp(regex);
-                            isDisabled = regexp.test(theUrl);
-                        }
+                        isDisabled = (theRegex as RegExp).test(theUrl);
                     }
                 });
 
