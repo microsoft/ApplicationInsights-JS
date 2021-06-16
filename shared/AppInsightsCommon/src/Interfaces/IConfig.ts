@@ -119,7 +119,7 @@ export interface IConfig {
     disableFetchTracking?: boolean;
 
     /**
-     * @description Provide a way to exclude specific route from automatic tracking for XMLHttpRequest or Fetch request.
+     * @description Provide a way to exclude specific route from automatic tracking for XMLHttpRequest or Fetch request. For an ajax / fetch request that the request url matches with the regex patterns, auto tracking is turned off.
      * @type {string[] | RegExp[]}
      * @memberof IConfig
      * @defaultValue undefined.
