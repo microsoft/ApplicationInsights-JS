@@ -214,13 +214,12 @@ export class AjaxTests extends TestClass {
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                const ExcludeRequestPropertyName = "testExclude";
-                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: true, excludeRequestFromAutoTrackingPropertyName: ExcludeRequestPropertyName };
+                const ExcludeRequestRegex = ["microsoft"];
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: true, excludeRequestFromAutoTrackingRegex: ExcludeRequestRegex };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
 
                 // act
                 var xhr = new XMLHttpRequest();
-                xhr[ExcludeRequestPropertyName] = true;
                 xhr.open("GET", "http://microsoft.com");
 
                 // assert
@@ -435,7 +434,7 @@ export class AjaxTests extends TestClass {
         });
 
         this.testCaseAsync({
-            name: "Fetch: fetch with disabled flag false and with exclude request name isn't tracked and any followup request to the same URL event without the disabled flag are also not tracked",
+            name: "Fetch: fetch with disabled flag false and with exclude request regex pattern isn't tracked and any followup request to the same URL event without the disabled flag are also not tracked",
             stepDelay: 10,
             autoComplete: false,
             timeOut: 10000,
@@ -459,14 +458,14 @@ export class AjaxTests extends TestClass {
 
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
-                const ExcludeRequestPropertyName = "testExclude";
-                let coreConfig = { instrumentationKey: "", disableFetchTracking: false, excludeRequestFromAutoTrackingPropertyName: ExcludeRequestPropertyName };
+                const ExcludeRequestRegex = ["bin"];
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false, excludeRequestFromAutoTrackingRegex: ExcludeRequestRegex };
                 appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
                 let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
 
                 // Act
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
-                fetch("https://httpbin.org/status/200", {method: "post", [ExcludeRequestPropertyName]: true}).then(() => {
+                fetch("https://httpbin.org/status/200", {method: "post"}).then(() => {
                     // Assert
                     Assert.ok(fetchSpy.notCalled, "The initial request was not tracked");
 

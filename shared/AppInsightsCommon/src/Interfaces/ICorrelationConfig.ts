@@ -48,8 +48,8 @@ export interface ICorrelationConfig {
 
     /**
      * Provide a way to exclude specific route from automatic tracking for XMLHttpRequest or Fetch request.
-     * Add a user defined disable property name to your request.
+     * For an ajax / fetch request that the request url matches with the regex pattern, auto tracking is turned off.
      * Default is undefined.
      */
-    excludeRequestFromAutoTrackingPropertyName?: string;
+     excludeRequestFromAutoTrackingRegex?: string[] | RegExp[];
 }

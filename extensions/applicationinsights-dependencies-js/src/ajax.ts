@@ -155,7 +155,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             maxAjaxCallsPerView: 500,
             disableAjaxTracking: false,
             disableFetchTracking: true,
-            excludeRequestFromAutoTrackingPropertyName: undefined,
+            excludeRequestFromAutoTrackingRegex: undefined,
             disableCorrelationHeaders: false,
             distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
             correlationHeaderExcludedDomains: [
@@ -213,7 +213,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let _enableResponseHeaderTracking:boolean = false;
         let _hooks:IInstrumentHook[] = [];
         let _disabledUrls:any = {};
-        let _excludeRequestFromAutoTrackingPropertyName: string;
+        let _excludeRequestFromAutoTrackingRegex: string[] | RegExp[];
 
         dynamicProto(AjaxMonitor, this, (_self, base) => {
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
@@ -230,7 +230,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _enableAjaxPerfTracking = _config.enableAjaxPerfTracking;
                     _maxAjaxCallsPerView = _config.maxAjaxCallsPerView;
                     _enableResponseHeaderTracking = _config.enableResponseHeaderTracking;
-                    _excludeRequestFromAutoTrackingPropertyName = _config.excludeRequestFromAutoTrackingPropertyName;
+                    _excludeRequestFromAutoTrackingRegex = _config.excludeRequestFromAutoTrackingRegex;
 
                     _isUsingAIHeaders = distributedTracingMode === DistributedTracingModes.AI || distributedTracingMode === DistributedTracingModes.AI_AND_W3C;
                     _isUsingW3CHeaders = distributedTracingMode === DistributedTracingModes.AI_AND_W3C || distributedTracingMode === DistributedTracingModes.W3C;
@@ -551,6 +551,20 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             function _isDisabledRequest(xhr?: XMLHttpRequestInstrumented, request?: Request | string, init?: RequestInit) {
                 let isDisabled = false;
                 let theUrl:string = ((!isString(request) ? ((request ||{}) as Request).url || "" : request as string) ||"").toLowerCase();
+
+                // check excludeRequestFromAutoTrackingRegex before stripping off any query string
+                arrForEach(_excludeRequestFromAutoTrackingRegex, (regex: string | RegExp) => {
+                    if (!isDisabled) {
+                        const regexp = new RegExp(regex);
+                        isDisabled = regexp.test(theUrl);
+                    }
+                });
+
+                // if request url matches with exclude regex pattern, return true and no need to check for headers
+                if (isDisabled) {
+                    return isDisabled;
+                }
+
                 let idx = _indexOf(theUrl, "?");
                 let idx2 = _indexOf(theUrl, "#");
                 if (idx === -1 || (idx2 !== -1 && idx2 < idx)) {
@@ -564,11 +578,11 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 // check that this instance is not not used by ajax call performed inside client side monitoring to send data to collector
                 if (!isNullOrUndefined(xhr)) {
                     // Look on the XMLHttpRequest of the URL string value
-                    isDisabled = xhr[DisabledPropertyName] === true || theUrl[DisabledPropertyName] === true || xhr[_excludeRequestFromAutoTrackingPropertyName] === true || theUrl[_excludeRequestFromAutoTrackingPropertyName] === true;
+                    isDisabled = xhr[DisabledPropertyName] === true || theUrl[DisabledPropertyName] === true;
                 } else if (!isNullOrUndefined(request)) { // fetch
                     // Look for DisabledPropertyName in either Request or RequestInit
-                    isDisabled = (typeof request === 'object' ? request[DisabledPropertyName] === true || request[_excludeRequestFromAutoTrackingPropertyName] === true : false) ||
-                            (init ? init[DisabledPropertyName] === true || init[_excludeRequestFromAutoTrackingPropertyName] === true : false);
+                    isDisabled = (typeof request === 'object' ? request[DisabledPropertyName] === true : false) ||
+                            (init ? init[DisabledPropertyName] === true : false);
                 }
 
                 if (isDisabled) {

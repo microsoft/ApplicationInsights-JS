@@ -119,11 +119,12 @@ export interface IConfig {
     disableFetchTracking?: boolean;
 
     /**
-     * Provide a way to exclude specific route from automatic tracking for XMLHttpRequest or Fetch request.
-     * Add a user defined disable property name to your request.
-     * Default is undefined.
+     * @description Provide a way to exclude specific route from automatic tracking for XMLHttpRequest or Fetch request.
+     * @type {string[] | RegExp[]}
+     * @memberof IConfig
+     * @defaultValue undefined.
      */
-     excludeRequestFromAutoTrackingPropertyName?: string;
+     excludeRequestFromAutoTrackingRegex?: string[] | RegExp[];
 
     /**
      * @description If true, default behavior of trackPageView is changed to record end of page view duration interval when trackPageView is called. If false and no custom duration is provided to trackPageView, the page view performance is calculated using the navigation timing API. Default is false
