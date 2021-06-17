@@ -238,9 +238,9 @@ export interface IUtil {
 
 export const Util: IUtil = {
     NotSpecified: strNotSpecified,
-    createDomEvent: createDomEvent,
+    createDomEvent,
     disableStorage: utlDisableStorage,
-    isInternalApplicationInsightsEndpoint: isInternalApplicationInsightsEndpoint,
+    isInternalApplicationInsightsEndpoint,
     canUseLocalStorage: utlCanUseLocalStorage,
     getStorage: utlGetLocalStorage,
     setStorage: utlSetLocalStorage,
@@ -254,22 +254,22 @@ export const Util: IUtil = {
     canUseCookies: coreCanUseCookies,
     disallowsSameSiteNone: uaDisallowsSameSiteNone,
     setCookie: coreSetCookie,
-    stringToBoolOrDefault: stringToBoolOrDefault,
+    stringToBoolOrDefault,
     getCookie: coreGetCookie,
     deleteCookie: coreDeleteCookie,
     trim: strTrim,
-    newId: newId,
-    random32: function() {
+    newId,
+    random32() {
         return random32(true);
     },
-    generateW3CId: generateW3CId,
-    isArray: isArray,
-    isError: isError,
-    isDate: isDate,
+    generateW3CId,
+    isArray,
+    isError,
+    isDate,
     toISOStringForIE8: toISOString,
-    getIEVersion: getIEVersion,
-    msToTimeSpan: msToTimeSpan,
-    isCrossOriginError: isCrossOriginError,
+    getIEVersion,
+    msToTimeSpan,
+    isCrossOriginError,
     dump: dumpObj,
     getExceptionName: coreGetExceptionName,
     addEventHandler: attachEvent,
@@ -335,7 +335,7 @@ export const CorrelationIdHelper: ICorrelationIdHelper = {
      * Some environments don't give information on currentHost via window.location.host (e.g. Cordova). In these cases, the user must
      * manually supply domains to include correlation headers on. Else, no headers will be included at all.
      */
-    canIncludeCorrelationHeader: function(config: ICorrelationConfig, requestUrl: string, currentHost?: string) {
+    canIncludeCorrelationHeader(config: ICorrelationConfig, requestUrl: string, currentHost?: string) {
         if (!requestUrl || (config && config.disableCorrelationHeaders)) {
             return false;
         }
@@ -355,7 +355,7 @@ export const CorrelationIdHelper: ICorrelationIdHelper = {
             requestHost = (urlParseFullHost(requestUrl, true) || "").toLowerCase();
         }
 
-        if ((!config || !config.enableCorsCorrelation) && requestHost !== currentHost) {
+        if ((!config || !config.enableCorsCorrelation) && (requestHost && requestHost !== currentHost)) {
             return false;
         }
 
@@ -392,7 +392,7 @@ export const CorrelationIdHelper: ICorrelationIdHelper = {
     /**
      * Combines target appId and target role name from response header.
      */
-    getCorrelationContext: function(responseHeader: string) {
+    getCorrelationContext(responseHeader: string) {
         if (responseHeader) {
             const correlationId = CorrelationIdHelper.getCorrelationContextValue(responseHeader, RequestHeaders.requestContextTargetKey);
             if (correlationId && correlationId !== CorrelationIdHelper.correlationIdPrefix) {
@@ -404,7 +404,7 @@ export const CorrelationIdHelper: ICorrelationIdHelper = {
     /**
      * Gets key from correlation response header
      */
-    getCorrelationContextValue: function(responseHeader: string, key: string) {
+    getCorrelationContextValue(responseHeader: string, key: string) {
         if (responseHeader) {
             const keyValues = responseHeader.split(",");
             for (let i = 0; i < keyValues.length; ++i) {
