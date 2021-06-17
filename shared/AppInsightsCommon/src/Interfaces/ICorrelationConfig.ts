@@ -45,4 +45,11 @@ export interface ICorrelationConfig {
      * Response and request headers to be excluded from ajax tracking data.
      */
     ignoreHeaders?: string[];
+
+    /**
+     * Provide a way to exclude specific route from automatic tracking for XMLHttpRequest or Fetch request.
+     * For an ajax / fetch request that the request url matches with the regex patterns, auto tracking is turned off.
+     * Default is undefined.
+     */
+    excludeRequestFromAutoTrackingPatterns?: string[] | RegExp[];
 }

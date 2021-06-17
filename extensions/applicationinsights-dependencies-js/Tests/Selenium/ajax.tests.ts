@@ -210,6 +210,36 @@ export class AjaxTests extends TestClass {
         });
 
         this.testCase({
+            name: "Ajax: xhr without disabled flag but with exclude string configured are not tracked",
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                const ExcludeRequestRegex = ["microsoft"];
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "", disableAjaxTracking: true, excludeRequestFromAutoTrackingPatterns: ExcludeRequestRegex };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+
+                // assert
+                Assert.equal(undefined, (<any>xhr).ajaxData, "RequestUrl is collected correctly");
+
+                xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+
+                // assert
+                Assert.equal(undefined, (<any>xhr).ajaxData, "Follow up GET Request was not instrumented");
+
+                xhr = new XMLHttpRequest();
+                xhr.open("POST", "http://microsoft.com");
+
+                // assert
+                Assert.equal(undefined, (<any>xhr).ajaxData, "Follow up POST Request was not instrumented");
+            }
+        });
+
+        this.testCase({
             name: "Ajax: xhr request header is tracked as part C data when enableRequestHeaderTracking flag is true",
             test: () => {
                 this._ajax = new AjaxMonitor();
@@ -385,6 +415,57 @@ export class AjaxTests extends TestClass {
                 // Act
                 Assert.ok(fetchSpy.notCalled, "No fetch called yet");
                 fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: true}).then(() => {
+                    // Assert
+                    Assert.ok(fetchSpy.notCalled, "The initial request was not tracked");
+
+                    fetch("https://httpbin.org/status/200", {method: "post" }).then(() => {
+                        // Assert
+                        Assert.ok(fetchSpy.notCalled, "The follow up request should also not have been tracked");
+                        done();
+                    }, () => {
+                        Assert.ok(false, "fetch failed!");
+                        done();
+                    });
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    done();
+                });
+            }]
+        });
+
+        this.testCaseAsync({
+            name: "Fetch: fetch with disabled flag false and with exclude request regex pattern isn't tracked and any followup request to the same URL event without the disabled flag are also not tracked",
+            stepDelay: 10,
+            autoComplete: false,
+            timeOut: 10000,
+            steps: [ (done) => {
+                hookFetch((resolve) => {
+                    TestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                const ExcludeRequestRegex = ["bin"];
+                let coreConfig = { instrumentationKey: "", disableFetchTracking: false, excludeRequestFromAutoTrackingPatterns: ExcludeRequestRegex };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+
+                // Act
+                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                fetch("https://httpbin.org/status/200", {method: "post"}).then(() => {
                     // Assert
                     Assert.ok(fetchSpy.notCalled, "The initial request was not tracked");
 
