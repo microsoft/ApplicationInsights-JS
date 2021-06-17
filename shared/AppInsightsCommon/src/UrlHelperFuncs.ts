@@ -65,7 +65,7 @@ export function urlGetCompleteUrl(method: string, absoluteUrl: string) {
 
 // Fallback method to grab host from url if document.createElement method is not available
 export function urlParseHost(url: string, inclPort?: boolean) {
-    let fullHost = urlParseFullHost(url, inclPort);
+    let fullHost = urlParseFullHost(url, inclPort) || "";
     if (fullHost) {
         const match = fullHost.match(/(www[0-9]?\.)?(.[^/:]+)(\:[\d]+)?/i);
         if (match != null && match.length > 3 && isString(match[2]) && match[2].length > 0) {
