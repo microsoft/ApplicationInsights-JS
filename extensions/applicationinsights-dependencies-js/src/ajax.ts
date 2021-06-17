@@ -155,6 +155,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             maxAjaxCallsPerView: 500,
             disableAjaxTracking: false,
             disableFetchTracking: true,
+            excludeRequestFromAutoTrackingPatterns: undefined,
             disableCorrelationHeaders: false,
             distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
             correlationHeaderExcludedDomains: [
@@ -212,6 +213,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let _enableResponseHeaderTracking:boolean = false;
         let _hooks:IInstrumentHook[] = [];
         let _disabledUrls:any = {};
+        let _excludeRequestFromAutoTrackingPatterns: string[] | RegExp[];
 
         dynamicProto(AjaxMonitor, this, (_self, base) => {
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
@@ -228,6 +230,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _enableAjaxPerfTracking = _config.enableAjaxPerfTracking;
                     _maxAjaxCallsPerView = _config.maxAjaxCallsPerView;
                     _enableResponseHeaderTracking = _config.enableResponseHeaderTracking;
+                    _excludeRequestFromAutoTrackingPatterns = _config.excludeRequestFromAutoTrackingPatterns;
 
                     _isUsingAIHeaders = distributedTracingMode === DistributedTracingModes.AI || distributedTracingMode === DistributedTracingModes.AI_AND_W3C;
                     _isUsingW3CHeaders = distributedTracingMode === DistributedTracingModes.AI_AND_W3C || distributedTracingMode === DistributedTracingModes.W3C;
@@ -548,6 +551,24 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             function _isDisabledRequest(xhr?: XMLHttpRequestInstrumented, request?: Request | string, init?: RequestInit) {
                 let isDisabled = false;
                 let theUrl:string = ((!isString(request) ? ((request ||{}) as Request).url || "" : request as string) ||"").toLowerCase();
+
+                // check excludeRequestFromAutoTrackingPatterns before stripping off any query string
+                arrForEach(_excludeRequestFromAutoTrackingPatterns, (regex: string | RegExp) => {
+                    let theRegex = regex;
+                    if (isString(regex)) {
+                        theRegex = new RegExp(regex);
+                    }
+
+                    if (!isDisabled) {
+                        isDisabled = (theRegex as RegExp).test(theUrl);
+                    }
+                });
+
+                // if request url matches with exclude regex pattern, return true and no need to check for headers
+                if (isDisabled) {
+                    return isDisabled;
+                }
+
                 let idx = _indexOf(theUrl, "?");
                 let idx2 = _indexOf(theUrl, "#");
                 if (idx === -1 || (idx2 !== -1 && idx2 < idx)) {
