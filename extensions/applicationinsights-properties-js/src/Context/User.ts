@@ -65,7 +65,8 @@ export class User implements IUserContext {
 
         dynamicProto(User, this, (_self) => {
             _self.config = config;
-            _storageNamePrefix = () => _self.config.namePrefix && _self.config.namePrefix() ? User.userCookieName + _self.config.namePrefix() : User.userCookieName;
+            const userCookiePostfix = (_self.config.userCookiePostfix && _self.config.userCookiePostfix()) ? _self.config.userCookiePostfix() : "";
+            _storageNamePrefix = () => User.userCookieName + userCookiePostfix;
             
             // get userId or create new one if none exists
             const cookie = _cookieManager.get(_storageNamePrefix());

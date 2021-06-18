@@ -88,6 +88,35 @@ export class SessionManagerTests extends AITestClass {
         });
 
         this.testCase({
+            name: 'Session uses sessionCookiePostfix over namePrefix for cookie storage if both are configured.',
+            test: () => {
+
+                var sessionPrefix = newId();
+                var config = {
+                    namePrefix: () => sessionPrefix,
+                    sessionCookiePostfix: () => "testSessionCookieNamePostfix",
+                    sessionExpirationMs: () => undefined,
+                    sessionRenewalMs: () => undefined,
+                    cookieDomain: () => undefined
+
+                };
+                // Setup
+                let cookie = "";
+                const cookieStub: SinonStub = this.sandbox.stub(this.core.getCookieMgr(), 'set').callsFake((cookieName, value, maxAge, domain, path) => {
+                    cookie = cookieName;
+                });
+
+                // Act
+                const sessionManager = new _SessionManager(config, this.core);
+                sessionManager.update();
+
+                // Test
+                Assert.ok(cookieStub.called, 'cookie set');
+                Assert.equal('ai_session' + 'testSessionCookieNamePostfix', cookie, 'Correct cookie name when session cookie postfix is provided - [' + cookie + ']');
+            }
+        });
+
+        this.testCase({
             name: 'Validate Session default re-hydration within expiry period',
             useFakeTimers: true,
             test: () => {

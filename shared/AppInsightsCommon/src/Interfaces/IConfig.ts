@@ -312,6 +312,22 @@ export interface IConfig {
     namePrefix?: string;
 
     /**
+     * @description An optional value that will be used as name postfix for session cookie name.
+     * @type {string}
+     * @memberof IConfig
+     * @defaultValue null
+     */
+    sessionCookiePostfix?: string;
+
+    /**
+     * @description An optional value that will be used as name postfix for user cookie name.
+     * @type {string}
+     * @memberof IConfig
+     * @defaultValue null
+     */
+    userCookiePostfix?: string;
+
+    /**
      * @description An optional value that will track Request Header through trackDependency function.
      * @type {boolean}
      * @memberof IConfig

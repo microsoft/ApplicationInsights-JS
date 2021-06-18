@@ -14,6 +14,7 @@ export interface ISessionConfig {
     sessionRenewalMs?: () => number;
     sessionExpirationMs?: () => number;
     namePrefix?: () => string;
+    sessionCookiePostfix?: () => string;
     idLength?: () => number;
     getNewId?: () => (idLength?: number) => string;
 
@@ -73,7 +74,12 @@ export class _SessionManager {
             }
     
             _self.config = config;
-            _storageNamePrefix = () => _self.config.namePrefix && _self.config.namePrefix() ? cookieNameConst + _self.config.namePrefix() : cookieNameConst;
+            // sessionCookiePostfix takes the preference if it is configured, otherwise takes namePrefix if configured.
+            const sessionCookiePostfix = (_self.config.sessionCookiePostfix && _self.config.sessionCookiePostfix()) ? 
+                                            _self.config.sessionCookiePostfix() :
+                                            ((_self.config.namePrefix && _self.config.namePrefix()) ? _self.config.namePrefix() : "");
+
+            _storageNamePrefix = () => cookieNameConst + sessionCookiePostfix;
     
             _self.automaticSession = new Session();
 

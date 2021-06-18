@@ -198,7 +198,7 @@ export class PropertiesTests extends AITestClass {
         });
 
         this.testCase({
-            name: "ai_user cookie uses name prefix for cookie storage",
+            name: "ai_user cookie uses userCookiePostfix for cookie storage",
             test: () => {
                 // setup
                 var actualCookieName: string;
@@ -213,11 +213,11 @@ export class PropertiesTests extends AITestClass {
 
                 // act
                 let config: IConfig & IConfiguration = this.getEmptyConfig();
-                config.namePrefix = 'testNamePrefix';
+                config.userCookiePostfix = 'testUserCookieNamePostfix';
                 this.properties.initialize(config, this.core, []);
 
                 // verify
-                Assert.equal("ai_usertestNamePrefix", actualCookieName, "ai_user cookie is set");
+                Assert.equal("ai_usertestUserCookieNamePostfix", actualCookieName, "ai_user cookie is set");
             }
         });
 
@@ -656,6 +656,8 @@ export class PropertiesTests extends AITestClass {
             isBrowserLinkTrackingEnabled: () => true,
             appId: () => "",
             namePrefix: () => "",
+            sessionCookiePostfix: () => "",
+            userCookiePostfix: () => "",
             idLength: () => 22,
             getNewId: () => this._getNewId
         }
