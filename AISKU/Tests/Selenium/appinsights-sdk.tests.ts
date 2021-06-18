@@ -1,3 +1,4 @@
+import { AISKUSizeCheck } from "../AISKUSize.Tests";
 import { ApplicationInsightsTests } from '../applicationinsights.e2e.tests';
 import { SanitizerE2ETests } from '../sanitizer.e2e.tests';
 import { ValidateE2ETests } from '../validate.e2e.tests';
@@ -6,6 +7,8 @@ import { ApplicationInsightsDeprecatedTests } from '../ApplicationInsightsDeprec
 import { SnippetLegacyInitializationTests } from '../SnippetLegacyInitialization.Tests';
 import { SnippetInitializationTests } from '../SnippetInitialization.Tests';
 
+
+new AISKUSizeCheck().registerTests();
 new ApplicationInsightsTests().registerTests();
 new ApplicationInsightsDeprecatedTests().registerTests();
 new SanitizerE2ETests().registerTests();

@@ -29,6 +29,7 @@
         // Load qunit here instead of with tests, otherwise will not work
         modules.add("qunit");
         modules.add("sinon");
+        modules.add("pako","./node_modules/pako/dist/pako");
 
         loadFetchModule(modules, "whatwg-fetch");
 
