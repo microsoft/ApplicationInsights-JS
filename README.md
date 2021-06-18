@@ -297,7 +297,9 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | isBrowserLinkTrackingEnabled | boolean | false | Default is false. If true, the SDK will track all [Browser Link](https://docs.microsoft.com/en-us/aspnet/core/client-side/using-browserlink) requests. |
 | appId | string | null | AppId is used for the correlation between AJAX dependencies happening on the client-side with the server-side requests. When Beacon API is enabled, it cannot be used automatically, but can be set manually in the configuration. Default is null |
 | enableCorsCorrelation | boolean | false | If true, the SDK will add two headers ('Request-Id' and 'Request-Context') to all CORS requests to correlate outgoing AJAX dependencies with corresponding requests on the server side. Default is false |
-| namePrefix | string | undefined | An optional value that will be used as name postfix for localStorage and cookie name.
+| namePrefix | string | undefined | An optional value that will be used as name postfix for localStorage and session cookie name.
+| sessionCookiePostfix | string | undefined | An optional value that will be used as name postfix for session cookie name. If undefined, namePrefix is used as name postfix for session cookie name.
+| userCookiePostfix | string | undefined | An optional value that will be used as name postfix for user cookie name. If undefined, no postfix is added on user cookie name.
 | enableAutoRouteTracking | boolean | false | Automatically track route changes in Single Page Applications (SPA). If true, each route change will send a new Pageview to Application Insights. Hash route changes changes (`example.com/foo#bar`) are also recorded as new page views.
 | enableRequestHeaderTracking | boolean | false | If true, AJAX & Fetch request headers is tracked, default is false. If ignoreHeaders is not configured, Authorization and X-API-Key headers are not logged.
 | enableResponseHeaderTracking | boolean | false | If true, AJAX & Fetch request's response headers is tracked, default is false. If ignoreHeaders is not configured, WWW-Authenticate header is not logged.

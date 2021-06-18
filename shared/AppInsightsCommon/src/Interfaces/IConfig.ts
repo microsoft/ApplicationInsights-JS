@@ -304,7 +304,7 @@ export interface IConfig {
     enableCorsCorrelation?: boolean;
 
     /**
-     * @description An optional value that will be used as name postfix for localStorage and cookie name.
+     * @description An optional value that will be used as name postfix for localStorage and session cookie name.
      * @type {string}
      * @memberof IConfig
      * @defaultValue null
@@ -312,7 +312,7 @@ export interface IConfig {
     namePrefix?: string;
 
     /**
-     * @description An optional value that will be used as name postfix for session cookie name.
+     * @description An optional value that will be used as name postfix for session cookie name. If undefined, namePrefix is used as name postfix for session cookie name.
      * @type {string}
      * @memberof IConfig
      * @defaultValue null
@@ -320,7 +320,7 @@ export interface IConfig {
     sessionCookiePostfix?: string;
 
     /**
-     * @description An optional value that will be used as name postfix for user cookie name.
+     * @description An optional value that will be used as name postfix for user cookie name. If undefined, no postfix is added on user cookie name.
      * @type {string}
      * @memberof IConfig
      * @defaultValue null
