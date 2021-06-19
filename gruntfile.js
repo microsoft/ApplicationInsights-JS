@@ -20,15 +20,11 @@ module.exports = function (grunt) {
         },
         ts: {
             options: {
-                comments: true
+                comments: true,
+                debug: true
             },
             default: {
                 tsconfig: './tsconfig.json',
-                src: [
-                    'legacy/JavaScript/JavaScriptSDK.Interfaces/*.ts',
-                    'legacy/JavaScript/JavaScriptSDK/*.ts',
-                ],
-                out: 'legacy/bundle/ai.js',
             },
             core: {
                 tsconfig: './shared/AppInsightsCore/tsconfig.json'
@@ -108,7 +104,7 @@ module.exports = function (grunt) {
             },
             propertiestests: {
                 tsconfig: './extensions/applicationinsights-properties-js/Tests/tsconfig.json',
-                src: './extensions/applicationinsights-properties-js/Tests/**/*.ts',
+                src: [ './extensions/applicationinsights-properties-js/Tests/**/*.ts' ],
                 out: './extensions/applicationinsights-properties-js/Tests/Selenium/prop.tests.js'
             },
             reactnative: {
@@ -119,7 +115,7 @@ module.exports = function (grunt) {
             },
             reactnativetests: {
                 tsconfig: './extensions/applicationinsights-react-native/Tests/tsconfig.json',
-                src: './extensions/applicationinsights-react-native/Tests/**/*.ts',
+                src: [ './extensions/applicationinsights-react-native/Tests/**/*.ts' ],
                 out: './extensions/applicationinsights-react-native/Tests/Selenium/reactnativeplugin.tests.js'
             },
             deps: {
@@ -189,89 +185,8 @@ module.exports = function (grunt) {
                     './common/Tests/Framework/src/*.ts'
                 ]
             },
-            module: {
-                // Use a different tsconfig for building module in order to not generate a declaration file for module, while keeping declaration for other modules
-                tsconfig: './tsconfigmodule.json',
-                src: [
-                    'legacy/JavaScript/JavaScriptSDK.Interfaces/*.ts',
-                    'legacy/JavaScript/JavaScriptSDK.Module/*.ts',
-                ],
-                out: 'legacy/bundle/ai.module.js'
-            },
-            types: {
-                tsconfig: './tsconfig.json',
-                src: [
-                    'legacy/JavaScript/JavaScriptSDK.Tests/DefinitionTypes/*.ts'
-                ],
-                out: 'legacy/bundle/test/ai.types.js'
-            },
-            test: {
-                tsconfig: './tsconfig.json',
-                src: [
-                    'legacy/JavaScript/JavaScriptSDK.Tests/Selenium/*.ts'
-                ],
-                out: 'legacy/JavaScript/JavaScriptSDK.Tests/Selenium/ai.tests.js'
-            },
-            testSchema: {
-                tsconfig: './tsconfig.json',
-                src: [
-                    'legacy/JavaScript/JavaScriptSDK.Tests/Contracts/Generated/*.ts'
-                ],
-                out: 'legacy/bundle/test/ai.schema.tests.js'
-            },
-            testE2E: {
-                tsconfig: './tsconfig.json',
-                files: [
-                    {
-                        src: 'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/DisableTelemetry.tests.ts',
-                        dest: 'legacy/bundle/test/e2e/DisableTelemetry.tests.js'
-                    },
-                    {
-                        src: 'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/PublicApi.tests.ts',
-                        dest: 'legacy/bundle/test/e2e/PublicApiTests.tests.js'
-                    },
-                    {
-                        src: 'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/SanitizerE2E.tests.ts',
-                        dest: 'legacy/bundle/test/e2e/SanitizerE2E.tests.js'
-                    },
-                    {
-                        src: 'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/SenderE2E.tests.ts',
-                        dest: 'legacy/bundle/test/e2e/SenderE2E.tests.js'
-                    },
-                    {
-                        src: 'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/Snippet.tests.ts',
-                        dest: 'legacy/bundle/test/e2e/Snippet.tests.js'
-                    },
-                    {
-                        src: 'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/ValidateApi.tests.ts',
-                        dest: 'legacy/bundle/test/e2e/ValidateApi.tests.js'
-                    }
-                ],
-                outDir: 'legacy/bundle/test/e2e'
-            }
         },
         uglify: {
-            ai: {
-                files: {
-                    'legacy/bundle/ai.0.js': ['legacy/bundle/ai.js'],
-                },
-                options: {
-                    sourceMap: true,
-                    sourceMapIncludeSources: true,
-                    sourceMapIn: 'legacy/bundle/ai.js.map',
-                    compress: {
-                        ie8: true
-                    },
-                    mangle: {
-                        ie8: true
-                    }
-                },
-            },
-            snippet: {
-                files: {
-                    'legacy/bundle/snippet/snippet.min.js': ['legacy/JavaScript/JavaScriptSDK/snippet.js']
-                }
-            },
             snippetvNext: {
                 files: {
                     'AISKU/snippet/snippet.min.js': ['AISKU/snippet/snippet.js']
@@ -292,20 +207,6 @@ module.exports = function (grunt) {
         qunit: {
             all: {
                 options: {
-                    urls: [
-                        'legacy/JavaScript/JavaScriptSDK.Tests/Selenium/Tests.html',
-                        'legacy/JavaScript/JavaScriptSDK.Tests/Contracts/Schema.tests.htm',
-                        'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.DisableTelemetry.tests.htm',
-                        'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.PublicApi.tests.htm',
-                        'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.SanitizerE2E.tests.htm',
-                        'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.Sender.tests.htm',
-                        'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.snippetTests.htm',
-                        'legacy/JavaScript/JavaScriptSDK.Tests/E2ETests/E2E.ValidateApi.tests.htm'
-                    ],
-                    timeout: 300 * 1000, // 5 min
-                    console: false,
-                    summaryOnly: true,
-                    '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
                 }
             },
             core: {
@@ -444,7 +345,7 @@ module.exports = function (grunt) {
         grunt.log.ok('Running test: ' + name);
     });
 
-    grunt.loadNpmTasks("grunt-ts");
+    grunt.loadNpmTasks("@nevware21/grunt-ts-plugin");
     grunt.loadNpmTasks('grunt-tslint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-qunit');
