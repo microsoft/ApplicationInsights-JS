@@ -28,6 +28,8 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
             isBrowserLinkTrackingEnabled: () => false,
             appId: () => null,
             namePrefix: () => undefined,
+            sessionCookiePostfix: () => undefined,
+            userCookiePostfix: () => undefined,
             idLength: () => 22,
             getNewId: () => null
         };

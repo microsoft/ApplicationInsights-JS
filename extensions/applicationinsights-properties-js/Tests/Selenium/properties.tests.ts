@@ -4,6 +4,7 @@ import PropertiesPlugin from "../../src/PropertiesPlugin";
 import { ITelemetryConfig } from "../../src/Interfaces/ITelemetryConfig";
 import { TelemetryContext } from "../../src/TelemetryContext";
 import { TelemetryTrace } from "../../src/Context/TelemetryTrace";
+import { IConfig } from "@microsoft/applicationinsights-common";
 
 export class PropertiesTests extends AITestClass {
     private properties: PropertiesPlugin;
@@ -193,6 +194,30 @@ export class PropertiesTests extends AITestClass {
                 Assert.equal(true, expiration.substr(0, "expires=".length) === "expires=", "ai_user cookie expiration part should start with expires=");
                 var expirationDate = new Date(expiration.substr("expires=".length));
                 Assert.equal(true, expirationDate > (new Date), "ai_user cookie expiration should be in the future");
+            }
+        });
+
+        this.testCase({
+            name: "ai_user cookie uses userCookiePostfix for cookie storage",
+            test: () => {
+                // setup
+                var actualCookieName: string;
+                var actualCookieValue: string;
+
+                var newIdStub = this.sandbox.stub(this as any, "_getNewId").callsFake(() => "newId");
+                var getCookieStub = this.sandbox.stub(this as any, "_getCookie").callsFake(() =>"");
+                var setCookieStub = this.sandbox.stub(this as any, "_setCookie").callsFake((cookieName, cookieValue) => {
+                    actualCookieName = cookieName;
+                    actualCookieValue = cookieValue;
+                });
+
+                // act
+                let config: IConfig & IConfiguration = this.getEmptyConfig();
+                config.userCookiePostfix = 'testUserCookieNamePostfix';
+                this.properties.initialize(config, this.core, []);
+
+                // verify
+                Assert.equal("ai_usertestUserCookieNamePostfix", actualCookieName, "ai_user cookie is set");
             }
         });
 
@@ -631,6 +656,8 @@ export class PropertiesTests extends AITestClass {
             isBrowserLinkTrackingEnabled: () => true,
             appId: () => "",
             namePrefix: () => "",
+            sessionCookiePostfix: () => "",
+            userCookiePostfix: () => "",
             idLength: () => 22,
             getNewId: () => this._getNewId
         }

@@ -61,10 +61,15 @@ export class User implements IUserContext {
     constructor(config: ITelemetryConfig, core: IAppInsightsCore) {
         let _logger = safeGetLogger(core);
         let _cookieManager: ICookieMgr = safeGetCookieMgr(core);
+        let _storageNamePrefix: () => string;
 
         dynamicProto(User, this, (_self) => {
+            _self.config = config;
+            const userCookiePostfix = (_self.config.userCookiePostfix && _self.config.userCookiePostfix()) ? _self.config.userCookiePostfix() : "";
+            _storageNamePrefix = () => User.userCookieName + userCookiePostfix;
+            
             // get userId or create new one if none exists
-            const cookie = _cookieManager.get(User.userCookieName);
+            const cookie = _cookieManager.get(_storageNamePrefix());
             if (cookie) {
                 _self.isNewUser = false;
                 const params = cookie.split(User.cookieSeparator);
@@ -72,8 +77,6 @@ export class User implements IUserContext {
                     _self.id = params[0];
                 }
             }
-
-            _self.config = config;
 
             if (!_self.id) {
                 let theConfig = (config || {}) as ITelemetryConfig;
@@ -88,7 +91,7 @@ export class User implements IUserContext {
                 _self.isNewUser = true;
                 const newCookie = [_self.id, acqStr];
 
-                _cookieManager.set(User.userCookieName, newCookie.join(User.cookieSeparator), oneYear);
+                _cookieManager.set(_storageNamePrefix(), newCookie.join(User.cookieSeparator), oneYear);
 
                 // If we have an config.namePrefix() + ai_session in local storage this means the user actively removed our cookies.
                 // We should respect their wishes and clear ourselves from local storage
