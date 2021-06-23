@@ -11,5 +11,8 @@
         "importHelpers": false,
         "noEmitHelpers": true
     },
-    "files": []
+    "files": [],
+    "exclude": [
+        "**/*.d.ts"
+    ]
 }

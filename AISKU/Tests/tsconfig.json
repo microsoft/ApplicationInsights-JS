@@ -8,7 +8,6 @@
         "target": "es5",
         "alwaysStrict": true,
         "declaration": true,
-        "rootDir": "AISKU",
         "out": "Tests/Selenium/appinsights-sdk.tests.js"
     },
     "include": [
