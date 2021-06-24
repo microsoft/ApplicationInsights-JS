@@ -157,8 +157,7 @@ function calculateVersion(rootVersion) {
         parts = ["0", "0", "0"];
     }
 
-    // Set the default version to the current
-    newVersion = preRelParts[0];
+    let newVersion;
 
     if (newVer) {
         newVersion = newVer;

@@ -61,9 +61,9 @@ export function traverseAndReplace(target: Object, maxDepth: number, currentDept
 
 function _sanitizeText(value: string) {
     if (value) {
-        value = value.replace('&', '&amp;');
-        value = value.replace('>', '&gt;');
-        value = value.replace('<', '&lt;');
+        value = value.replace(/&/g, '&amp;');
+        value = value.replace(/>/g, '&gt;');
+        value = value.replace(/</g, '&lt;');
     }
 
     return value;

@@ -1,0 +1,11 @@
+name: "CodeQL config"
+
+queries:
+  - uses: security-and-quality
+
+paths-ignore:
+  - '**/test/'
+  - '**/Tests/'
+  - '**/dist-history/'
+  - '**/rollup.config.js'
+  - '/extensions/applicationinsights-angularplugin-js/'

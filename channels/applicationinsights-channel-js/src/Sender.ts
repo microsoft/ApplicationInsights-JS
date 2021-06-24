@@ -16,7 +16,7 @@ import {
     ITelemetryItem, IProcessTelemetryContext, IConfiguration,
     _InternalMessageId, LoggingSeverity, IDiagnosticLogger, IAppInsightsCore, IPlugin,
     getWindow, getNavigator, getJSON, BaseTelemetryPlugin, ITelemetryPluginChain, INotificationManager,
-    SendRequestReason, getGlobalInst, objForEachKey, isNullOrUndefined, arrForEach, dateNow, dumpObj, getExceptionName, getIEVersion, throwError, objKeys
+    SendRequestReason, getGlobalInst, objForEachKey, isNullOrUndefined, arrForEach, dateNow, dumpObj, getExceptionName, getIEVersion, throwError, objKeys, strUndefined
 } from '@microsoft/applicationinsights-core-js';
 import { Offline } from './Offline';
 import { Sample } from './TelemetryProcessors/Sample'
@@ -252,7 +252,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         if ("withCredentials" in testXhr) {
                             _self._sender = _xhrSender;
                             _self._XMLHttpRequestSupported = true;
-                        } else if (typeof XDomainRequest !== undefined) {
+                        } else if (typeof XDomainRequest !== strUndefined) {
                             _self._sender = _xdrSender; // IE 8 and 9
                         }
                     } else {

@@ -107,7 +107,7 @@ export class DiagnosticLogger implements IDiagnosticLogger {
                 if (_self.enableDebugExceptions()) {
                     throw message;
                 } else {
-                    if (!isUndefined(message) && !!message && !isUndefined(message.message)) {
+                    if (!isUndefined(message.message)) {
                         const logLevel = _self.consoleLoggingLevel();
                         if (isUserAct) {
                             // check if this message type was already logged to console for this page view and if so, don't log it again

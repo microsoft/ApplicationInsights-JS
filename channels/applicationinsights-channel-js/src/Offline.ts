@@ -31,7 +31,7 @@ export class OfflineListener {
     
                     if (!isUndefined(target.ononline)) {
                         target.ononline = _setOnline;
-                        target.onoffline = _setOffline
+                        target.onoffline = _setOffline;
                         isListening = true;
 
                     }
