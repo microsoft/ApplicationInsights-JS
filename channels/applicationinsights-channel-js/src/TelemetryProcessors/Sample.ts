@@ -21,7 +21,7 @@ export class Sample implements ISample {
                 _InternalMessageId.SampleRateOutOfRange,
                 "Sampling rate is out of range (0..100). Sampling will be disabled, you may be sending too much data which may affect your AI service level.",
                 { samplingRate: sampleRate }, true);
-            this.sampleRate = 100;
+            sampleRate = 100;
         }
 
         this.sampleRate = sampleRate;

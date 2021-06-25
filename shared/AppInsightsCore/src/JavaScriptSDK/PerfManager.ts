@@ -228,7 +228,7 @@ const doPerfActiveKey = "CoreUtils.doPerf";
 export function doPerf<T>(mgrSource: IPerfManagerProvider | IPerfManager, getSource: () => string, func: (perfEvt?: IPerfEvent) => T, details?: () => any, isAsync?: boolean) {
     if (mgrSource) {
         let perfMgr: IPerfManager = mgrSource as IPerfManager;
-        if (perfMgr && isFunction(perfMgr["getPerfMgr"])) {
+        if (isFunction(perfMgr["getPerfMgr"])) {
             // Looks like a perf manager provider object
             perfMgr = perfMgr["getPerfMgr"]()
         }

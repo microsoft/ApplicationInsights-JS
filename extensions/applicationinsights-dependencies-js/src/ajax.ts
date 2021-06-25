@@ -508,7 +508,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             if (_isMonitoredXhrInstance(xhr) && !ajaxData.xhrMonitoringState.sendDone) {
                                 _createMarkId("xhr", ajaxData);
                                 ajaxData.requestSentTime = dateTimeUtilsNow();
-                                xhr = _self.includeCorrelationHeaders(ajaxData, undefined, undefined, xhr);
+                                _self.includeCorrelationHeaders(ajaxData, undefined, undefined, xhr);
                                 ajaxData.xhrMonitoringState.sendDone = true;
                             }
                         },

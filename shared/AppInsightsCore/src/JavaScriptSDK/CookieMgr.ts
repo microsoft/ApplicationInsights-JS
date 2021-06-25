@@ -92,8 +92,8 @@ export function safeGetCookieMgr(core: IAppInsightsCore, config?: IConfiguration
     if (core) {
         // Always returns an instance
         cookieMgr = core.getCookieMgr();
-    } else if(config) {
-        let cookieCfg = (config ||{}).cookieCfg;
+    } else if (config) {
+        let cookieCfg = config.cookieCfg;
         if (cookieCfg[strConfigCookieMgr]) {
             cookieMgr = cookieCfg[strConfigCookieMgr];
         } else {

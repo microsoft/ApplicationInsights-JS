@@ -363,7 +363,7 @@ export const CorrelationIdHelper: ICorrelationIdHelper = {
         if (includedDomains) {
             let matchExists: boolean;
             arrForEach(includedDomains, (domain) => {
-                const regex = new RegExp(domain.toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
+                const regex = new RegExp(domain.toLowerCase().replace(/\\/g, "\\\\").replace(/\./g, "\\.").replace(/\*/g, ".*"));
                 matchExists = matchExists || regex.test(requestHost);
             });
 
@@ -378,7 +378,7 @@ export const CorrelationIdHelper: ICorrelationIdHelper = {
         }
 
         for (let i = 0; i < excludedDomains.length; i++) {
-            const regex = new RegExp(excludedDomains[i].toLowerCase().replace(/\./g, "\.").replace(/\*/g, ".*"));
+            const regex = new RegExp(excludedDomains[i].toLowerCase().replace(/\\/g, "\\\\").replace(/\./g, "\\.").replace(/\*/g, ".*"));
             if (regex.test(requestHost)) {
                 return false;
             }
