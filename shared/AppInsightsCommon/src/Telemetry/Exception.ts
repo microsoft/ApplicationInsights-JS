@@ -252,11 +252,11 @@ function _getErrorType(errorType: any) {
         typeName = errorType.typeName || errorType.name || "";
         if (!typeName) {
             try {
-                var funcNameRegex = /function (.{1,})\(/;
+                var funcNameRegex = /function (.{1,200})\(/;
                 var results = (funcNameRegex).exec((errorType).constructor.toString());
                 typeName = (results && results.length > 1) ? results[1] : "";
             } catch (e) {
-                // Ignore
+                // eslint-disable-next-line no-empty -- Ignoring any failures as nothing we can do
             }
         }
     }
@@ -291,6 +291,7 @@ export function _formatErrorCode(errorObj:any) {
                 return result;
             }
         } catch (e) {
+            // eslint-disable-next-line no-empty -- Ignoring any failures as nothing we can do
         }
     }
 
@@ -491,7 +492,7 @@ export class _StackFrame extends StackFrame implements ISerializable {
 
     // regex to match stack frames from ie/chrome/ff
     // methodName=$2, fileName=$4, lineNo=$5, column=$6
-    public static regex = /^([\s]+at)?[\s]*([^\@\()]+?)[\s]*(\@|\()([^\(\n]+):([0-9]+):([0-9]+)(\)?)$/;
+    public static regex = /^([\s]+at)?[\s]{0,50}([^\@\()]+?)[\s]{0,50}(\@|\()([^\(\n]+):([0-9]+):([0-9]+)(\)?)$/;
     public static baseSize = 58; // '{"method":"","level":,"assembly":"","fileName":"","line":}'.length
     public sizeInBytes = 0;
 

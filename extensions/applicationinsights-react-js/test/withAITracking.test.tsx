@@ -11,15 +11,25 @@ let reactPlugin: ReactPlugin;
 let TestComponentWithTracking;
 let trackedTestComponentUnmount;
 let trackMetricSpy;
+let orgWarn = console && console.warn;
 
 describe("withAITracking(TestComponent)", () => {
 
   beforeEach(() => {
+    if (orgWarn) {
+      console.warn = (msg) => { /* Swallow */ }
+    }
     reactPlugin = new ReactPlugin();
     TestComponentWithTracking = withAITracking(reactPlugin, TestComponent);
     const testComponentWithTracking = render(<TestComponentWithTracking />);
     trackedTestComponentUnmount = testComponentWithTracking.unmount;
     trackMetricSpy = reactPlugin.trackMetric = jest.fn();
+  });
+
+  afterEach(() => {
+    if (orgWarn) {
+      console.warn = orgWarn;
+    }
   });
 
   it("should wrap <TestComponent />", () => {

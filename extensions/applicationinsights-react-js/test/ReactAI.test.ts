@@ -6,8 +6,21 @@ import { createBrowserHistory } from "history";
 
 let reactPlugin: ReactPlugin;
 let core: AppInsightsCore;
+let orgWarn = console && console.warn;
 
 describe("ReactAI", () => {
+
+  beforeEach(() => {
+    if (orgWarn) {
+      console.warn = (msg) => { /* Swallow */ }
+    }
+  });
+
+  afterEach(() => {
+    if (orgWarn) {
+      console.warn = orgWarn;
+    }
+  });
 
   function init() {
     core = new AppInsightsCore();

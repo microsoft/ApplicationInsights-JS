@@ -4,10 +4,11 @@ import { IImportCheckRollupOptions, IEs3CheckRollupOptions } from "./es3/Interfa
 import { es3Check } from "./es3/Es3Check";
 
 function _escapeRegEx(str:string) {
-    return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+    return str.replace(/([.*+?^=!:${}()|[\]/\\])/g, "\\$1");
 }
 
 function _replaceAll(str:string, value:string, newValue: string) {
+    // eslint-disable-next-line security/detect-non-literal-regexp
     return str.replace(new RegExp(_escapeRegEx(value), "g"), newValue);
 }
 
@@ -19,6 +20,7 @@ export function importCheck(options:IImportCheckRollupOptions = {}) {
 
     for (let lp = 0; lp < ((options.exclude)||[]).length; lp++) {
         checkOptions.keywords.push({
+            // eslint-disable-next-line security/detect-non-literal-regexp
             funcNames: [ new RegExp("import[\\s]*(\\*|\\{[^\\}]*\\})[\\s]*from[\\s]*[\\'\\\"][^\\'\\\"]*" + _escapeRegEx(options.exclude[lp]) + "[\\'\\\"]", "gi") ],
             errorMsg: "Importing from this module has been blocked, you should be importing directly from the source file and not the main module index definition - [%funcName%]",
             errorTitle: "Invalid Import detected"

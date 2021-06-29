@@ -11,10 +11,11 @@ import MagicString from 'magic-string';
 let tempIndex = ((new Date()).getTime() & 0xFFFFFF);
 
 function _escapeRegEx(str:string) {
-    return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+    return str.replace(/([.*+?^=!:${}()|[\]/\\])/g, "\\$1");
 }
 
 function _replaceAll(str:string, value:string, newValue: string) {
+    // eslint-disable-next-line security/detect-non-literal-regexp
     return str.replace(new RegExp(_escapeRegEx(value), "g"), newValue);
 }
 
