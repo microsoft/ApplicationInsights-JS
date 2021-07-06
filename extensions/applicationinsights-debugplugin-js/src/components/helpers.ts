@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { arrForEach, arrIndexOf, hasOwnProperty, isFunction, isObject, isString, objKeys } from '@microsoft/applicationinsights-core-js';
+import { arrForEach, arrIndexOf, hasOwnProperty, isFunction, isObject, isString, isSymbol, objKeys } from '@microsoft/applicationinsights-core-js';
 import { Util } from '@microsoft/applicationinsights-common';
 import { strShimPrototype } from '@microsoft/applicationinsights-shims';
 
@@ -38,20 +38,25 @@ export function traverseAndReplace(target: Object, maxDepth: number, currentDept
     }
     if (isObject(target)) {
         for (const key of getTargetKeys(target, excludedKeys, includeFunctions)) {
-            if (target[key] !== null && arrIndexOf(thingsReferenced, target[key]) !== -1) {
-                out[key] = `<circular (${key} - "${getTargetName(target[key])}")>`;
+            let targetValue = target[key];
+            if (isSymbol(targetValue)) {
+                targetValue = targetValue.toString();
             }
-            else if (target[key] !== null && isObject(target[key])) {
+
+            if (targetValue !== null && arrIndexOf(thingsReferenced, targetValue) !== -1) {
+                out[key] = `<circular (${key} - "${getTargetName(targetValue)}")>`;
+            }
+            else if (targetValue !== null && isObject(targetValue)) {
                 if (currentDepth >= maxDepth) {
                     out[key] = '<max allowed depth reached>';
                 } else {
                     thingsReferenced.push(target);
-                    out[key] = traverseAndReplace(target[key], maxDepth, currentDepth + 1, thingsReferenced, excludedKeys, includeFunctions);
+                    out[key] = traverseAndReplace(targetValue, maxDepth, currentDepth + 1, thingsReferenced, excludedKeys, includeFunctions);
                     thingsReferenced.pop();
                 }
             }
             else {
-                out[key] = target[key];
+                out[key] = targetValue;
             }
         }
     }
@@ -184,8 +189,24 @@ export function getTargetName(target: any) {
             // Look like a prototype
             return target.name || "";
         }
-        
+
         return ((target[strConstructor]) || {}).name || "";
+    }
+
+    return "";
+}
+
+function _toString(value: any) {
+    if (isString(value)) {
+        return value;
+    }
+
+    if (isSymbol(value)) {
+        return value.toString();
+    }
+
+    if (isFunction(value["toString"])) {
+        return (value["toString"] as any)() || "";
     }
 
     return "";
@@ -201,10 +222,11 @@ export function getTargetKeys(target: any, excludedKeys: string[], includeFuncti
                 let propKeys = Object[strGetOwnPropertyNames](target);
                 if (propKeys) {
                     arrForEach(propKeys, (key) => {
-                        if (keys.indexOf(key) === -1) {
+                        const theKey = _toString(key);
+                        if (theKey && keys.indexOf(theKey) === -1) {
                             keys.push(key);
                         }
-                    })
+                    });
                 }
             }
         } catch (ex) {
@@ -215,12 +237,14 @@ export function getTargetKeys(target: any, excludedKeys: string[], includeFuncti
 
     let theKeys: string[] = [];
     arrForEach(keys, (key) => {
+
         if (!includeFunctions && isFunction(target[key])) {
             return;
         }
 
-        if (excludedKeys.indexOf(key) === -1) {
-            theKeys.push(key);
+        const theKey = _toString(key);
+        if (theKey && excludedKeys.indexOf(theKey) === -1) {
+            theKeys.push(theKey);
         }
     });
 
@@ -270,6 +294,12 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
         if (excludeKeys.indexOf(key) !== -1) {
             continue;
         }
+
+        let targetValue = target[key];
+        if (isSymbol(targetValue)) {
+            targetValue = targetValue.toString();
+        }
+
         if (key === '<maxdepth>') {
             const builder = document.createElement("div");
             builder.className = 'empty';
@@ -283,15 +313,15 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
             builder.innerText = '<empty>';
             children.push(builder);
         }
-        else if (target[key] !== null && arrIndexOf(thingsReferenced, target[key]) !== -1) {
+        else if (targetValue !== null && arrIndexOf(thingsReferenced, targetValue) !== -1) {
             const builder = document.createElement("div");
             builder.className = 'empty';
-            builder.innerText = `<circular (${key}) - "${getTargetName(target[key])}">`;
+            builder.innerText = `<circular (${key}) - "${getTargetName(targetValue)}">`;
             children.push(builder);
         }
-        else if (target[key] !== null && (isObject(target[key]) || Util.isError(target[key]))) {
+        else if (targetValue !== null && (isObject(targetValue) || Util.isError(targetValue))) {
             thingsReferenced.push(target);
-            let formatted = formatLogElements(target[key], null, key, level + 1, textFilter, excludeKeys, thingsReferenced, includeFunctions);
+            let formatted = formatLogElements(targetValue, null, key, level + 1, textFilter, excludeKeys, thingsReferenced, includeFunctions);
             thingsReferenced.pop();
             if (formatted.matched) {
                 childOpened = true;
@@ -328,16 +358,16 @@ export function formatLogElements(target: Object, tmLabel: string, key: string, 
             outerSpan.appendChild(keySpan);
 
             const valueSpan = document.createElement("span");
-            if (isFunction(target[key])) {
-                const fnStr = target[key].toString();
+            if (isFunction(targetValue)) {
+                const fnStr = targetValue.toString();
                 const fnHead = fnStr.match(/^([^{]+)/)[1];
                 valueSpan.textContent = `${fnHead}{...}`;
             } else {
-                if (_setInnerText(valueSpan, `${target[key]}`, textFilter)) {
+                if (_setInnerText(valueSpan, `${targetValue}`, textFilter)) {
                     childOpened = true;
                 }
             }
-            valueSpan.className = `${typeof target[key]}`;
+            valueSpan.className = `${typeof targetValue}`;
             outerSpan.appendChild(valueSpan);
             builder.appendChild(outerSpan);
             children.push(builder);

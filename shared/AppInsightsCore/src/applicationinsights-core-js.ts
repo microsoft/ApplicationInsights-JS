@@ -23,7 +23,7 @@ export {
 export {
     isTypeof, isUndefined, isNullOrUndefined, hasOwnProperty, isObject, isFunction, attachEvent, detachEvent, normalizeJsName, 
     objForEachKey, strEndsWith, strStartsWith, isDate, isArray, isError, isString, isNumber, isBoolean, toISOString, arrForEach, arrIndexOf, 
-    arrMap, arrReduce, strTrim, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError, strContains,
+    arrMap, arrReduce, strTrim, objKeys, objDefineAccessors, dateNow, getExceptionName, throwError, strContains, isSymbol,
     setValue, getSetValue, isNotTruthy, isTruthy, proxyAssign, createClassFromInterface, optimizeObject, isNotUndefined, isNotNullOrUndefined,
     objFreeze, objSeal
 } from './JavaScriptSDK/HelperFuncs';
