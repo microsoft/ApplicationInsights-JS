@@ -258,6 +258,16 @@ export function isBoolean(value: any): value is boolean {
 }
 
 /**
+ * Checks if the type of value is a Symbol.
+ * This only returns a boolean as returning value is Symbol will cause issues for older TypeScript consumers
+ * @param {any} value - Value to be checked.
+ * @return {boolean} True if the value is a Symbol, false otherwise.
+ */
+export function isSymbol(value: any): boolean {
+    return typeof value === "symbol";
+}
+
+/**
  * Convert a date to I.S.O. format in IE8
  */
 export function toISOString(date: Date) {
