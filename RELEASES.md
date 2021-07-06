@@ -1,5 +1,20 @@
 # Releases
 
+## 2.6.4 (July 6th, 2021)
+
+## Changelog
+
+- #1567 [BUG] Unit of "PageVisitTime" is well hidden
+- #1579 Add 307 Redirect Response
+- #1580 [BUG] URL without host fails in CanIncludeCorrelationHeader
+- #1586 [BUG] namePrefix is not getting assigned to ai_user Cookie
+  - #1587 ai_user cookie should use userCookiePostfix for user cookie storage
+- #1590 Task 9901543: Remediate security vulnerabilities (Build Dependencies)
+- #1596 Apply the eslint fixes (from Component Governance policy Checks)
+- #1597 [BUG] The Pointer Events for the DebugPlugin are getting blocked
+- #1599 Add visibilitychange event to the set of events tracked for triggering page unload
+- #1602 [BUG] DebugPlugin - helpers.js:334 Uncaught TypeError: Cannot convert a Symbol value to a string
+
 ## 2.6.3 (June 8th, 2021)
 
 ### Changelog
