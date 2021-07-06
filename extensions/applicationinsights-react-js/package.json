@@ -20,6 +20,7 @@
     },
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-es3": "1.1.3",
+        "@microsoft/api-extractor": "^7.9.11",
         "@testing-library/dom": "^7.29.6",
         "@testing-library/jest-dom": "^5.11.9",
         "@testing-library/react": "^11.2.5",
@@ -32,8 +33,8 @@
         "@types/react": "^16.9.11",
         "@types/react-dom": "^16.9.4",
         "csstype": "~2.6.7",
-        "grunt": "^1.3.0",
-        "grunt-cli": "^1.3.2",
+        "grunt": "^1.4.1",
+        "grunt-cli": "^1.4.3",
         "jest": "^24.7.1",
         "react": "^17.0.1",
         "react-dom": "^17.0.1",

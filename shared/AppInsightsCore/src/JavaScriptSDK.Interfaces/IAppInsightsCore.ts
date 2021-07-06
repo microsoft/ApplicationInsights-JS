@@ -30,7 +30,7 @@ export interface IAppInsightsCore extends IPerfManagerProvider {
     /*
     * Initialization queue. Contains functions to run when appInsights initializes
     */        
-    initialize(config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void;
+    initialize(config: IConfiguration, extensions: IPlugin[], logger?: IDiagnosticLogger, notificationManager?: INotificationManager): void;
 
     /*
     * Get transmission controls for controlling transmission behavior

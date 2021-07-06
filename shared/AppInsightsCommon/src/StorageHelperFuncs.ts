@@ -39,6 +39,7 @@ function _getVerifiedStorageObject(storageType: StorageType): Storage {
             return storage;
         }
     } catch (exception) {
+        // eslint-disable-next-line no-empty
     }
 
     return null;

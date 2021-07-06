@@ -300,7 +300,7 @@ module.exports = function (grunt) {
             rollupes3: {
                 options: {
                     urls: [
-                        './tools/rollup-es3/Tests/Selenium/Tests.html'
+                            './tools/rollup-es3/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -311,7 +311,7 @@ module.exports = function (grunt) {
             shims: {
                 options: {
                     urls: [
-                        './tools/shims/Tests/Selenium/Tests.html'
+                            './tools/shims/Tests/Selenium/Tests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -376,9 +376,9 @@ module.exports = function (grunt) {
     grunt.registerTask("aichanneltest", ["connect", "ts:aichanneltest", "qunit:aichannel"]);
     grunt.registerTask("rollupuglify", ["ts:rollupuglify"]);
     grunt.registerTask("rollupes3", ["ts:rollupes3", "ts:rollupes3test", "qunit:rollupes3"]);
-    grunt.registerTask("rollupes3test", ["ts:rollupes3test", "qunit:rollupes3"]);
+    grunt.registerTask("rollupes3test", ["connect", "ts:rollupes3test", "qunit:rollupes3"]);
     grunt.registerTask("shims", ["ts:shims", "ts:shimstest", "qunit:shims"]);
-    grunt.registerTask("shimstest", ["ts:shimstest", "qunit:shims"]);
+    grunt.registerTask("shimstest", ["connect", "ts:shimstest", "qunit:shims"]);
     grunt.registerTask("clickanalytics", ["ts:clickanalytics"]);
     grunt.registerTask("clickanalyticstests", ["connect", "ts:clickanalyticstests", "qunit:clickanalytics"]);
     grunt.registerTask("tst-framework", ["ts:tst-framework"]);

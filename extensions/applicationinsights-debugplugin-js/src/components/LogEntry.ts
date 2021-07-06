@@ -81,7 +81,7 @@ export class LogEntry {
                     ms = "0" + ms;
                 }
 
-                ms = ms.replace(/(.)(\d{3})+$/g, '$1.$2s')
+                ms = ms.replace(/(.)(\d{3}){1}$/g, '$1.$2s')
                 while (ms.length <= 9) {
                     ms = ' ' + ms;
                 }

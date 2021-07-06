@@ -26,6 +26,8 @@ import { INativeDevice, IReactNativePluginConfig } from './Interfaces';
 import dynamicProto from '@microsoft/dynamicproto-js';
 import { getGlobal, strShimUndefined } from '@microsoft/applicationinsights-shims';
 
+declare var global: Window;
+
 /**
  * This is a helper function for the equivalent of arForEach(objKeys(target), callbackFn), this is a 
  * performance optimization to avoid the creation of a new array for large objects

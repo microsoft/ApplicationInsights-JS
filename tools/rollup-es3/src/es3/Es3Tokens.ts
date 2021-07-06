@@ -6,7 +6,7 @@ export const defaultEs3Tokens:IEs3Keyword[] = [
     {
         funcNames: [ /Object\.(defineProperty)[\s]*\(/g ],
         errorMsg: "[Object.defineProperty] is not supported in an ES3 environment, use a helper function or add an explicit existence check",
-        extract: /(Object)\.(defineProperty)[\s]*\(([^\)]*)\)([;]?)/g,
+        extract: /(Object)\.(defineProperty)[\s]*\(([^)]*)\)([;]?)/g,
         checkGroups: [ 2 ],     // Identifies that this group MUST contain a value for this to token to be replaced
         namedGroups: [          // Used to simulate named RegEx groups and provide replacement token names
             { name: "src", idx: 0 },
@@ -26,7 +26,7 @@ export const defaultEs3Tokens:IEs3Keyword[] = [
     {
         funcNames: [/Object\.getOwnPropertyDescriptor[\s]*\(/g ],
         errorMsg: "[Object.getOwnPropertyDescriptor] is not supported in an ES3 environment, use a helper function or add an explicit existence check",
-        extract: /(Object)\.(getOwnPropertyDescriptor)[\s]*\(([^\)]*)\)([;]?)/g,
+        extract: /(Object)\.(getOwnPropertyDescriptor)[\s]*\(([^)]*)\)([;]?)/g,
         checkGroups: [ 2 ],
         namedGroups: [
             { name: "src", idx: 0 },
@@ -46,7 +46,7 @@ export const defaultEs3Tokens:IEs3Keyword[] = [
         funcNames: [/Object\.create[\s]*\(/g ],
         errorMsg: "[Object.create] is not supported in an ES3 environment, use the helper function objCreate() or add an explicit existence check",
         // We are only supporting the version that takes a single argument
-        extract: /(Object)\.(create)[\s]*\(([^,\)]*)\)([;]?)/g,
+        extract: /(Object)\.(create)[\s]*\(([^,)]*)\)([;]?)/g,
         checkGroups: [ 2 ],
         namedGroups: [
             { name: "src", idx: 0 },
@@ -69,7 +69,7 @@ export const defaultEs3Tokens:IEs3Keyword[] = [
     {
         funcNames: [/Object\.(freeze|seal)[\s]*\(/g ],
         errorMsg: "[Object.freeze] is not supported in an ES3 environment, use a helper or add an explicit existence check",
-        extract: /(Object)\.(freeze|seal)[\s]*\(([^\)]*)\)([;]?)/g,
+        extract: /(Object)\.(freeze|seal)[\s]*\(([^)]*)\)([;]?)/g,
         checkGroups: [ 2 ],
         namedGroups: [
             { name: "src", idx: 0 },
@@ -87,9 +87,9 @@ export const defaultEs3Tokens:IEs3Keyword[] = [
                 "})(%args%)%semi%"
     },
     {
-        funcNames: [ /[\s\(,]get[\s]+([\w]+)[\s]*\(\)[\s]*\{/g ],
+        funcNames: [ /[\s(,]get[\s]+([\w]+)[\s]*\(\)[\s]*\{/g ],
         errorMsg: "[%funcName%] is not supported in an ES3 environment.",
-        extract: /([\s\(,])get[\s]+([\w]+)[\s]*\(\)[\s]*\{[\s]*return[\s]*([^;]*);[\s]*\}/g,
+        extract: /([\s(,])get[\s]+([\w]+)[\s]*\(\)[\s]*\{[\s]*return[\s]*([^;]*);[\s]*\}/g,
         checkGroups: [2, 3],
         namedGroups: [
             { name: "src", idx: 0 },
@@ -153,11 +153,12 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
         ]  
     },
     {
-        funcNames: [ /([\w0-9\$]*)\.toISOString[\s]*\(/g ],
+        funcNames: [ /([\w0-9$]*)\.toISOString[\s]*\(/g ],
         errorMsg: "[%funcName%] is not supported in an ES3 environment, use getISOString()",
-        ignoreFuncMatch: [ 
-            /CoreUtils(\$[\d]+)+\.toISOString/,     // Make sure this isn't a reference to CoreUtils.isISOString(); CoreUtils$1.isISOString();
-            "Utils.toISOString"                     // or if it's a reference to Utils.isISOString()
+        ignoreFuncMatch: [
+            // eslint-disable-next-line security/detect-unsafe-regex
+            /CoreUtils(\$[\d]{0,5})?\.isISOString/,     // Make sure this isn't a reference to CoreUtils.isISOString(); CoreUtils$1.isISOString();
+            "Utils.toISOString"                         // or if it's a reference to Utils.isISOString()
         ]
     },
     {
@@ -171,8 +172,8 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
             "react.production.min.js",          // Don't break build if these exist in the react prod source code
             "react.development.js",             // Don't break build if these exist in the react dev source code
             "applicationinsights-react-js",     // Don't break build if these exist in the final react extension
-            "object-assign\\index.js",          // object-assign node module usage is only after checking for existance of Object.assign
-            "object-assign/index.js"            // object-assign node module usage is only after checking for existance of Object.assign
+            "object-assign\\index.js",          // object-assign node module usage is only after checking for existence of Object.assign
+            "object-assign/index.js"            // object-assign node module usage is only after checking for existence of Object.assign
         ]
     },
     {
@@ -183,12 +184,12 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
         ],
         ignoreIds: [
             "applicationinsights-react-js", // Don't break build if these exist in the final react extension
-            "object-assign\\index.js",      // object-assign node module usage is only after checking for existance of Object.assign
-            "object-assign/index.js"        // object-assign node module usage is only after checking for existance of Object.assign
+            "object-assign\\index.js",      // object-assign node module usage is only after checking for existence of Object.assign
+            "object-assign/index.js"        // object-assign node module usage is only after checking for existence of Object.assign
         ]
     },
     {
-        funcNames: [ /[\s\(,][gs]et[\s]+([\w]+)[\s]*\(\)[\s]*\{/g ],
+        funcNames: [ /[\s(,][gs]et[\s]+([\w]+)[\s]*\(\)[\s]*\{/g ],
         errorMsg: "[%funcName%] is not supported in an ES3 environment."
     },
     {
@@ -212,7 +213,7 @@ export const defaultEs3CheckTokens:IEs3CheckKeyword[] = [
         ]
     },
     {
-        funcNames: [ /([\w0-9\$]*)(\(\))?\.now[\s]*\(\)/g ],
+        funcNames: [ /([\w0-9$]*)(\(\))?\.now[\s]*\(\)/g ],
         errorMsg: "[%funcName%] is not supported in an ES3 environment, use dateNow() or perfNow()",
         ignoreFuncMatch: [
             "perf.now()",                           // This assume a pre-check that now actually exists

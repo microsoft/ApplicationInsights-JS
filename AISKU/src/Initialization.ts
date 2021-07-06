@@ -1,23 +1,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { 
-    IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties, 
-    IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign,
+import {
+    IConfiguration, AppInsightsCore, IAppInsightsCore, LoggingSeverity, _InternalMessageId, ITelemetryItem, ICustomProperties,
+    IChannelControls, hasWindow, hasDocument, isReactNative, doPerf, IDiagnosticLogger, INotificationManager, objForEachKey, proxyAssign,
     arrForEach, isString, isFunction, isNullOrUndefined, addEventHandler, isArray, throwError, ICookieMgr, safeGetCookieMgr
- } from "@microsoft/applicationinsights-core-js";
+} from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
 import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
-import { 
-    IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper, IUrlHelper, UrlHelper, IDateTimeUtils, DateTimeUtils, ConnectionStringParser, FieldType, 
+import {
+    IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper, IUrlHelper, UrlHelper, IDateTimeUtils, DateTimeUtils, ConnectionStringParser, FieldType,
     IRequestHeaders, RequestHeaders, DisabledPropertyName, ProcessLegacy, SampleRate, HttpMethod, DEFAULT_BREEZE_ENDPOINT, AIData, AIBase,
     Envelope, Event, Exception, Metric, PageView, PageViewData, RemoteDependencyData, IEventTelemetry,
     ITraceTelemetry, IMetricTelemetry, IDependencyTelemetry, IExceptionTelemetry, IAutoExceptionTelemetry,
     IPageViewTelemetry, IPageViewPerformanceTelemetry, Trace, PageViewPerformance, Data, SeverityLevel,
     IConfig, ConfigurationManager, ContextTagKeys, IDataSanitizer, DataSanitizer, TelemetryItemCreator, IAppInsights, CtxTagKeys, Extensions,
-    IPropertiesPlugin, DistributedTracingModes, PropertiesPluginIdentifier, BreezeChannelIdentifier, AnalyticsPluginIdentifier, 
+    IPropertiesPlugin, DistributedTracingModes, PropertiesPluginIdentifier, BreezeChannelIdentifier, AnalyticsPluginIdentifier,
     ITelemetryContext as Common_ITelemetryContext, parseConnectionString
 } from "@microsoft/applicationinsights-common"
 
@@ -28,7 +28,7 @@ let _internalSdkSrc: string;
 // This is an exclude list of properties that should not be updated during initialization
 // They include a combination of private and internal property names
 const _ignoreUpdateSnippetProperties = [
-    "snippet", "dependencies", "properties", "_snippetVersion", "appInsightsNew", "getSKUDefaults", 
+    "snippet", "dependencies", "properties", "_snippetVersion", "appInsightsNew", "getSKUDefaults",
 ];
 
 /**
@@ -58,9 +58,9 @@ export interface IApplicationInsights extends IAppInsights, IDependenciesPlugin,
 // export const Telemetry = Common;
 
 let fieldType = {
-    Default: FieldType.Default, 
-    Required: FieldType.Required, 
-    Array: FieldType.Array, 
+    Default: FieldType.Default,
+    Required: FieldType.Required,
+    Array: FieldType.Array,
     Hidden: FieldType.Hidden
 };
 
@@ -77,7 +77,7 @@ export const Telemetry = {
     UrlHelper,
     DateTimeUtils,
     ConnectionStringParser,
-    FieldType : fieldType,
+    FieldType: fieldType,
     RequestHeaders,
     DisabledPropertyName,
     ProcessLegacy,
@@ -155,7 +155,7 @@ export class Initialization implements IApplicationInsights {
     /**
      * Get the current cookie manager for this instance
      */
-     public getCookieMgr(): ICookieMgr {
+    public getCookieMgr(): ICookieMgr {
         return this.appInsights.getCookieMgr();
     };
 
@@ -352,7 +352,7 @@ export class Initialization implements IApplicationInsights {
      * @returns {IApplicationInsights}
      * @memberof Initialization
      */
-    public loadAppInsights(legacyMode: boolean = false, logger?: IDiagnosticLogger, notificationManager?: INotificationManager): IApplicationInsights {
+    public loadAppInsights(legacyMode: boolean = false, logger?: IDiagnosticLogger, notificationManager?: INotificationManager): IApplicationInsights {
         let _self = this;
 
         function _updateSnippetProperties(snippet: Snippet) {
@@ -388,12 +388,12 @@ export class Initialization implements IApplicationInsights {
 
         doPerf(_self.core, () => "AISKU.loadAppInsights", () => {
             const extensions = [];
-    
+
             extensions.push(_self._sender);
             extensions.push(_self.properties);
             extensions.push(_self.dependencies);
             extensions.push(_self.appInsights);
-    
+
             // initialize core
             _self.core.initialize(_self.config, extensions, logger, notificationManager);
             _self.context = _self.properties.context;
@@ -401,7 +401,7 @@ export class Initialization implements IApplicationInsights {
                 _self.context.internal.sdkSrc = _internalSdkSrc;
             }
             _updateSnippetProperties(_self.snippet);
-    
+
             // Empty queue of all api calls logged prior to sdk download
             _self.emptyQueue();
             _self.pollInternalLogs();
@@ -526,7 +526,7 @@ export class Initialization implements IApplicationInsights {
     private getSKUDefaults() {
         let _self = this;
         _self.config.diagnosticLogInterval =
-        _self.config.diagnosticLogInterval && _self.config.diagnosticLogInterval > 0 ? _self.config.diagnosticLogInterval : 10000;
+            _self.config.diagnosticLogInterval && _self.config.diagnosticLogInterval > 0 ? _self.config.diagnosticLogInterval : 10000;
     }
 }
 
@@ -542,7 +542,7 @@ export class Initialization implements IApplicationInsights {
     try {
         // Try and determine whether the sdk is being loaded from the CDN
         // currentScript is only valid during initial processing
-        let scrpt = (document ||{} as any).currentScript;
+        let scrpt = (document || {} as any).currentScript;
         if (scrpt) {
             sdkSrc = scrpt.src;
         // } else {
@@ -553,6 +553,7 @@ export class Initialization implements IApplicationInsights {
         //     isModule = true;
         }
     } catch (e) {
+        // eslint-disable-next-line no-empty
     }
 
     if (sdkSrc) {
@@ -577,6 +578,7 @@ export class Initialization implements IApplicationInsights {
                 }
             }
         } catch (e) {
+            // eslint-disable-next-line no-empty
         }
     }
 })();
