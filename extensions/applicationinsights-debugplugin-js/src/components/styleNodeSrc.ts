@@ -18,6 +18,7 @@ console.log(Util.getIEVersion());
 
 export const tempStyle = (prefix: string) => `
   .${prefix}-dbg-lgr-dashboard {
+    z-index: 1000
   }
 
   .${prefix}-dbg-lgr-dashboard .controls {
@@ -41,7 +42,7 @@ export const tempStyle = (prefix: string) => `
     display: inline-block;
     position: relative;
     padding: 3px 20px;
-    z-index: 1;
+    z-index: 1010
   }
 
   .${prefix}-dbg-lgr {
@@ -124,11 +125,6 @@ export const tempStyle = (prefix: string) => `
 
   .${prefix}-dbg-lgr div:hover > .obj-key {
     text-decoration: underline;
-  }
-
-  .${prefix}-dbg-lgr :not(div span.obj-key) {
-    font-weight: bold;
-    pointer-events: none;
   }
 
   .${prefix}-dbg-lgr .obj-time {

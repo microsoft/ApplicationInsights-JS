@@ -498,6 +498,7 @@ export class Initialization implements IApplicationInsights {
                 let added = addEventHandler('beforeunload', performHousekeeping);
                 added = addEventHandler('unload', performHousekeeping) || added;
                 added = addEventHandler('pagehide', performHousekeeping) || added;
+                added = addEventHandler('visibilitychange', performHousekeeping) || added;
 
                 // A reactNative app may not have a window and therefore the beforeunload/pagehide events -- so don't
                 // log the failure in this case
@@ -509,10 +510,11 @@ export class Initialization implements IApplicationInsights {
                 }
             }
 
-            // We also need to hook the pagehide event as not all versions of Safari support load/unload events.
+            // We also need to hook the pagehide and visibilitychange events as not all versions of Safari support load/unload events.
             if (!appInsightsInstance.appInsights.config.disableFlushOnUnload) {
                 // Not adding any telemetry as pagehide as it's not supported on all browsers
                 addEventHandler('pagehide', performHousekeeping);
+                addEventHandler('visibilitychange', performHousekeeping);
             }
         }
     }
