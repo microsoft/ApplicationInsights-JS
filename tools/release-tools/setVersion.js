@@ -232,7 +232,7 @@ function shouldProcess(name) {
         return false;
     }
 
-    if (name.indexOf("-react")) {
+    if (name.indexOf("-react") !== -1) {
         return isReact;
     }
 
@@ -321,7 +321,7 @@ function updateVersion(src, orgVersion, newVersion) {
 }
 
 const setPackageJsonRelease = () => {
-    const files = globby.sync("./**/package.json");
+    const files = globby.sync(["./**/package.json", "!**/node_modules/**"]);
     let changed = false;
     files.map(packageFile => {
         // Don't update node_modules
@@ -395,6 +395,8 @@ if (parseArgs()) {
 
         if (setPackageJsonRelease()) {
             console.log("Version updated, now run 'npm run update'");
+        } else {
+            console.warn("Nothing Changed!!!");
         }
     } else {
         console.error("Failed to identify the new version number");
