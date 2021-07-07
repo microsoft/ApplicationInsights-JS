@@ -15,6 +15,14 @@
 - #1599 Add visibilitychange event to the set of events tracked for triggering page unload
 - #1602 [BUG] DebugPlugin - helpers.js:334 Uncaught TypeError: Cannot convert a Symbol value to a string
 
+### Update React plugin to v3.1.4
+
+- Update Core dependency to ^2.6.4 Core changes
+
+### Update React Native plugin to v2.3.4
+
+- Update Core dependency to ^2.6.4 Core changes
+
 ## 2.6.3 (June 8th, 2021)
 
 ### Changelog
