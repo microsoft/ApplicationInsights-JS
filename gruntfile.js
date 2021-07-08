@@ -29,34 +29,39 @@ module.exports = function (grunt) {
             core: {
                 tsconfig: './shared/AppInsightsCore/tsconfig.json'
             },
-            coretest: {
+            coreunittest: {
                 tsconfig: './shared/AppInsightsCore/Tests/tsconfig.json',
                 src: [
-                    './shared/AppInsightsCore/Tests/Selenium/ApplicationInsightsCore.Tests.ts',
-                    './shared/AppInsightsCore/Tests/Selenium/aitests.ts'
+                    './shared/AppInsightsCore/Tests/Unit/src/**/*.ts'
                 ],
-                out: 'shared/AppInsightsCore/Tests/Selenium/aicore.tests.js'
+                out: 'shared/AppInsightsCore/Tests/Unit/dist/aicoreunit.tests.js'
+            },
+            coreperftest: {
+                tsconfig: './shared/AppInsightsCore/Tests/tsconfig.json',
+                src: [
+                    './shared/AppInsightsCore/Tests/Perf/src/**/*.ts'
+                ],
+                out: 'shared/AppInsightsCore/Tests/Perf/dist/aicoreperf.tests.js'
             },
             common: {
                 tsconfig: './shared/AppInsightsCommon/tsconfig.json'
             },
-            commontest: {
+            commonunittest: {
                 tsconfig: './shared/AppInsightsCommon/Tests/tsconfig.json',
                 src: [
-                    './shared/AppInsightsCommon/Tests/Selenium/appinsights-common.tests.ts',
+                    './shared/AppInsightsCommon/Tests/Unit/src/**/*.ts',
                 ],
-                out: 'shared/AppInsightsCommon/Tests/Selenium/aicommon.tests.js'
+                out: 'shared/AppInsightsCommon/Tests/Unit/dist/aicommon.tests.js'
             },
             appinsights: {
                 tsconfig: './extensions/applicationinsights-analytics-js/tsconfig.json',
             },
-            appinsightstests: {
+            appinsightsunittests: {
                 tsconfig: './extensions/applicationinsights-analytics-js/Tests/tsconfig.json',
                 src: [
-                    './extensions/applicationinsights-analytics-js/Tests/Selenium/*.ts',
-                    './extensions/applicationinsights-analytics-js/Tests/*.ts'
+                    './extensions/applicationinsights-analytics-js/Tests/Unit/src/**/*.ts'
                 ],
-                out: 'extensions/applicationinsights-analytics-js/Tests/Selenium/appinsights-analytics.tests.js'
+                out: 'extensions/applicationinsights-analytics-js/Tests/Unit/dist/appinsights-analytics.tests.js'
             },
             aisku: {
                 tsconfig: './AISKU/tsconfig.json',
@@ -97,15 +102,14 @@ module.exports = function (grunt) {
             clickanalyticstests: {
                 tsconfig: './extensions/applicationinsights-clickanalytics-js/Tests/tsconfig.json',
                 src: [
-                    './extensions/applicationinsights-clickanalytics-js/Tests/Selenium/*.ts',
-                    './extensions/applicationinsights-clickanalytics-js/Tests/*.ts'
+                    './extensions/applicationinsights-clickanalytics-js/Tests/Unit/src/**/*.ts'
                 ],
-                out: 'extensions/applicationinsights-clickanalytics-js/Tests/Selenium/appinsights-clickanalytics.tests.js'
+                out: 'extensions/applicationinsights-clickanalytics-js/Tests/Unit/dist/appinsights-clickanalytics.tests.js'
             },
-            propertiestests: {
+            propertiesunittests: {
                 tsconfig: './extensions/applicationinsights-properties-js/Tests/tsconfig.json',
-                src: [ './extensions/applicationinsights-properties-js/Tests/**/*.ts' ],
-                out: './extensions/applicationinsights-properties-js/Tests/Selenium/prop.tests.js'
+                src: [ './extensions/applicationinsights-properties-js/Tests/Unit/src/**/*.ts' ],
+                out: './extensions/applicationinsights-properties-js/Tests/Unit/dist/prop.tests.js'
             },
             reactnative: {
                 tsconfig: './extensions/applicationinsights-react-native/tsconfig.json',
@@ -121,13 +125,12 @@ module.exports = function (grunt) {
             deps: {
                 tsconfig: './extensions/applicationinsights-dependencies-js/tsconfig.json'
             },
-            depstest: {
+            depsunittest: {
                 tsconfig: './extensions/applicationinsights-dependencies-js/Tests/tsconfig.json',
                 src: [
-                    './extensions/applicationinsights-dependencies-js/Tests/Selenium/*.ts',
-                    './extensions/applicationinsights-dependencies-js/Tests/TestsFramework/*.ts'
+                    './extensions/applicationinsights-dependencies-js/Tests/Unit/src/**/*.ts'
                 ],
-                out: './extensions/applicationinsights-dependencies-js/Tests/Selenium/dependencies.tests.js'
+                out: './extensions/applicationinsights-dependencies-js/Tests/Unit/dist/dependencies.tests.js'
             },
             debugplugin: {
                 tsconfig: './extensions/applicationinsights-debugplugin-js/tsconfig.json',
@@ -161,9 +164,9 @@ module.exports = function (grunt) {
             rollupes3test: {
                 tsconfig: './tools/rollup-es3/Tests/tsconfig.json',
                 src: [
-                    './tools/rollup-es3/Tests/Selenium/Es3RollupTests.ts'
+                    './tools/rollup-es3/Tests/Unit/src/**/*.ts'
                 ],
-                out: './tools/rollup-es3/Tests/Selenium/es3rolluptests.js'
+                out: './tools/rollup-es3/Tests/Unit/dist/es3rolluptests.js'
             },
             shims: {
                 tsconfig: './tools/shims/tsconfig.json',
@@ -174,10 +177,9 @@ module.exports = function (grunt) {
             shimstest: {
                 tsconfig: './tools/shims/Tests/tsconfig.json',
                 src: [
-                    './tools/shims/src/*.ts',
-                    './tools/shims/Tests/**/*.ts'
+                    './tools/shims/Tests/Unit/src**/*.ts'
                 ],
-                out: './tools/shims/Tests/Selenium/shimstests.js'
+                out: './tools/shims/Tests/Unit/dist/shimstests.js'
             },
             "tst-framework": {
                 tsconfig: './common/Tests/Framework/tsconfig.json',
@@ -212,7 +214,18 @@ module.exports = function (grunt) {
             core: {
                 options: {
                     urls: [
-                        'http://localhost:9001/shared/AppInsightsCore/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/shared/AppInsightsCore/Tests/UnitTests.html'
+                    ],
+                    timeout: 300 * 1000, // 5 min
+                    console: true,
+                    summaryOnly: false,
+                    '--web-security': 'false' // we need this to allow CORS requests in PhantomJS
+                }
+            },
+            coreperf: {
+                options: {
+                    urls: [
+                        'http://localhost:9001/shared/AppInsightsCore/Tests/PerfTests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: true,
@@ -223,7 +236,7 @@ module.exports = function (grunt) {
             common: {
                 options: {
                     urls: [
-                        'http://localhost:9001/shared/AppInsightsCommon/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/shared/AppInsightsCommon/Tests/UnitTests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: true,
@@ -234,7 +247,7 @@ module.exports = function (grunt) {
             aitests: {
                 options: {
                     urls: [
-                        'http://localhost:9001/extensions/applicationinsights-analytics-js/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/extensions/applicationinsights-analytics-js/Tests/UnitTests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: true,
@@ -245,7 +258,7 @@ module.exports = function (grunt) {
             deps: {
                 options: {
                     urls: [
-                        'http://localhost:9001/extensions/applicationinsights-dependencies-js/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/extensions/applicationinsights-dependencies-js/Tests/UnitTests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: true,
@@ -256,7 +269,7 @@ module.exports = function (grunt) {
             properties: {
                 options: {
                     urls: [
-                        'http://localhost:9001/extensions/applicationinsights-properties-js/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/extensions/applicationinsights-properties-js/Tests/UnitTests.html'
                     ],
                     timeout: 5 * 60 * 1000, // 5 min
                     console: false,
@@ -300,7 +313,7 @@ module.exports = function (grunt) {
             rollupes3: {
                 options: {
                     urls: [
-                            './tools/rollup-es3/Tests/Selenium/Tests.html'
+                            './tools/rollup-es3/Tests/UnitTests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -311,7 +324,7 @@ module.exports = function (grunt) {
             shims: {
                 options: {
                     urls: [
-                            './tools/shims/Tests/Selenium/Tests.html'
+                            './tools/shims/Tests/UnitTests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: false,
@@ -322,7 +335,7 @@ module.exports = function (grunt) {
             clickanalytics: {
                 options: {
                     urls: [
-                        'http://localhost:9001/extensions/applicationinsights-clickanalytics-js/Tests/Selenium/Tests.html'
+                        'http://localhost:9001/extensions/applicationinsights-clickanalytics-js/Tests/UnitTests.html'
                     ],
                     timeout: 300 * 1000, // 5 min
                     console: true,
@@ -356,21 +369,22 @@ module.exports = function (grunt) {
     grunt.registerTask("common", ["ts:common"]);
     grunt.registerTask("module", ["ts:module"]);
     grunt.registerTask("ai", ["ts:appinsights"]);
-    grunt.registerTask("aitests", ["connect", "ts:appinsightstests", "qunit:aitests"]);
+    grunt.registerTask("aitests", ["connect", "ts:appinsightsunittests", "qunit:aitests"]);
     grunt.registerTask("aisku", ["ts:aisku"]);
     grunt.registerTask("aiskulite", ["ts:aiskulite"]);
     grunt.registerTask("snippetvnext", ["uglify:snippetvNext"]);
     grunt.registerTask("aiskutests", ["connect", "ts:aiskutests", "qunit:aisku"]);
     grunt.registerTask("test", ["connect", "ts:default", "ts:test", "ts:testSchema", "ts:testE2E", "qunit:all"]);
-    grunt.registerTask("test1ds", ["coretest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests", "reacttests"]);
-    grunt.registerTask("coretest", ["connect", "ts:coretest", "qunit:core"]);
-    grunt.registerTask("commontest", ["connect", "ts:common", "ts:commontest", "qunit:common"]);
+    grunt.registerTask("test1ds", ["coreunittest", "common", "propertiestests", "depstest", "aitests", "aiskutests", "reactnativetests", "reacttests"]);
+    grunt.registerTask("coreunittest", ["connect", "ts:coreunittest", "qunit:core"]);
+    grunt.registerTask("coreperftest", ["connect", "ts:coreperftest", "qunit:coreperf"]);
+    grunt.registerTask("commontest", ["connect", "ts:common", "ts:commonunittest", "qunit:common"]);
     grunt.registerTask("properties", ["ts:properties"]);
-    grunt.registerTask("propertiestests", ["connect", "ts:propertiestests", "qunit:properties"]);
+    grunt.registerTask("propertiestests", ["connect", "ts:propertiesunittests", "qunit:properties"]);
     grunt.registerTask("reactnative", ["ts:reactnative"]);
     grunt.registerTask("reactnativetests", ["connect", "qunit:reactnative"]);
     grunt.registerTask("deps", ["ts:deps"]);
-    grunt.registerTask("depstest", [ "connect", "ts:depstest","qunit:deps"]);
+    grunt.registerTask("depstest", [ "connect", "ts:depsunittest","qunit:deps"]);
     grunt.registerTask("debugplugin", ["ts:debugplugin"]);
     grunt.registerTask("aichannel", ["ts:aichannel"]);
     grunt.registerTask("aichanneltest", ["connect", "ts:aichanneltest", "qunit:aichannel"]);

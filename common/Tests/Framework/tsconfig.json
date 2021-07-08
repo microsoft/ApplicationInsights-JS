@@ -8,7 +8,7 @@
       "target": "es5",
       "forceConsistentCasingInFileNames": true,
       "importHelpers": true,
-      "noEmitHelpers": true,
+      "noEmitHelpers": false,
       "skipLibCheck": true,
       "alwaysStrict": true,
       "declaration": true,

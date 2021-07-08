@@ -32,6 +32,7 @@
     "license": "MIT",
     "sideEffects": false,
     "devDependencies": {
+        "@microsoft/ai-test-framework": "0.0.1",
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",
         "grunt": "^1.4.1",
         "grunt-cli": "^1.4.3",
