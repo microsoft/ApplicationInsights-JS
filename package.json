@@ -15,6 +15,7 @@
         "rebuild": "npm run build",
         "test": "node common/scripts/install-run-rush.js test --verbose",
         "lint": "node common/scripts/install-run-rush.js lint --verbose",
+        "perftest": "node common/scripts/install-run-rush.js perftest --verbose",
         "rollupes3": "grunt rollupes3",
         "rupdate": "node common/scripts/install-run-rush.js update --recheck --purge --full",
         "serve": "grunt serve",

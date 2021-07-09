@@ -22,7 +22,8 @@
         "build:esm": "grunt core",
         "build:browser": "rollup -c rollup.config.js",
         "rebuild": "npm run build",
-        "test": "grunt coretest",
+        "test": "grunt coreunittest",
+        "perftest": "grunt coreperftest",
         "lint": "tslint -p tsconfig.json",
         "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights Core Javascript SDK\""
     },

@@ -13,6 +13,16 @@
         },
         {
             "commandKind": "bulk",
+            "name": "perftest",
+            "summary": "Run all performance based tests for all packages",
+            "description": "Runs performance tests for all projects",
+            "safeForSimultaneousRushProcesses": false,
+            "enableParallelism": false,
+            "ignoreMissingScript": true,
+            "allowWarningsInSuccessfulBuild": true
+        },
+        {
+            "commandKind": "bulk",
             "name": "lint",
             "summary": "Run all tslint for all packages",
             "description": "Runs tslint for all projects",
