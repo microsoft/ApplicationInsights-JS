@@ -45,7 +45,10 @@ function _stringify(value: any, convertToString: boolean) {
 function _formatMessage(theEvent: any, errorType: string) {
     let evtMessage = theEvent;
     if (theEvent) {
-        evtMessage = theEvent[strMessage] || theEvent[strDescription] || "";
+        if (evtMessage && !isString(evtMessage)) {
+            evtMessage = theEvent[strMessage] || theEvent[strDescription] || evtMessage;
+        }
+
         // Make sure the message is a string
         if (evtMessage && !isString(evtMessage)) {
             // tslint:disable-next-line: prefer-conditional-expression
