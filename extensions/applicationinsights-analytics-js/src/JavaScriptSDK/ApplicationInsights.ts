@@ -39,6 +39,20 @@ function _dispatchEvent(target:EventTarget, evnt: Event) {
     }
 }
 
+function _getReason(error: any) {
+    if (error && error.reason) {
+        const reason = error.reason;
+        if (!isString(reason) && isFunction(reason.toString)) {
+            return reason.toString();
+        }
+
+        return dumpObj(reason);
+    }
+
+    // Pass the original object down which will eventually get evaluated for any message or description
+    return error || "";
+}
+
 export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsights, IAppInsightsInternal {
     public static Version = "2.6.4"; // Not currently used anywhere
 
@@ -614,7 +628,7 @@ export class ApplicationInsights extends BaseTelemetryPlugin implements IAppInsi
                         const handled = originalOnUnhandledRejection && (originalOnUnhandledRejection.call(_window, error) as any);
                         if (handled !== true) { // handled could be typeof function
                             instance._onerror(Exception.CreateAutoException(
-                                error.reason.toString(),
+                                _getReason(error),
                                 _location ? _location.href : "",
                                 0,
                                 0,
