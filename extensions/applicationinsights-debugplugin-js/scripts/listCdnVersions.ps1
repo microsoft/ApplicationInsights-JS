@@ -14,6 +14,12 @@ param (
 
 $metaSdkVer = "aijssdkver"
 $metaSdkSrc = "aijssdksrc"
+$jsContentType = "text/javascript; charset=utf-8";
+$contentTypeMap = @{
+    "js" = $jsContentType;
+    "map" = "application/json";
+    "json" = "application/json";
+};
 
 $global:hasErrors = $false
 $global:sasToken = $sasToken
@@ -372,12 +378,20 @@ Function ValidateAccess
 Function GetVersion(
     [string] $name
 ) {
-    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[^\.]+)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js)(?:\.map)?)$'
+    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[^\.]+)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js|integrity\.json)(?:\.map)?)$'
     $match = ($name | select-string $regMatch -AllMatches).matches
+    $contentType = $jsContentType
 
     if ($null -eq $match) {
         return $null
     }
+
+    $ext = $match.groups[6].value
+    $tokens = $ext.split(".")
+    if ($tokens.length -gt 0) {
+        $theExt = $tokens[$tokens.Count - 1]
+        $contentType = $contentTypeMap[$theExt]
+    }    
     
     [hashtable]$return = @{}
     $return.path = $match.groups[1].value
@@ -385,6 +399,7 @@ Function GetVersion(
     $return.ver = $match.groups[3].value
     $return.verType = $match.groups[5].value
     $return.ext = $match.groups[6].value
+    $return.contentType = $contentType
 
     return $return
 }
@@ -558,7 +573,7 @@ Function ListVersions(
 
                 if ($paths.ContainsKey($thePath) -ne $true) {
                     $paths[$thePath]  = $true
-                    $value = "{0,-20}" -f $thePath
+                    $value = "{0,-28}" -f $thePath
                     $pathList = "$pathList$value  "
                 } else {
                     $paths[$thePath] = ($paths[$thePath] + 1)
@@ -566,7 +581,7 @@ Function ListVersions(
             }
 
             foreach ($thePath in $paths.Keys | Sort-Object) {
-                Log $("  - {1,-40} ({0})" -f $paths[$thePath],$thePath)
+                Log $("  - {1,-48} ({0})" -f $paths[$thePath],$thePath)
             }
 
             Log $("v{0,-12} ({1,2})  -  {2}" -f $key,$($fileList.Count),$pathList.Trim())
@@ -598,7 +613,7 @@ Function ListVersions(
                 $cacheControl = $cacheControl -replace "immutable","im"
                 $cacheControl = $cacheControl -replace ", "," "
     
-                Log $("  - {0,-44}{3,-13}{1,6:N1} Kb  {2:yyyy-MM-dd HH:mm:ss}  {4,10}  {5}" -f $($blob.ICloudBlob.Container.Name + "/" + $blob.Name),($blob.Length/1kb),$blob.LastModified,$sdkVersion,$cacheControl,$metaTags)
+                Log $("  - {0,-48}{3,-13}{1,6:N1} Kb  {2:yyyy-MM-dd HH:mm:ss}  {4,10}  {5}" -f $($blob.ICloudBlob.Container.Name + "/" + $blob.Name),($blob.Length/1kb),$blob.LastModified,$sdkVersion,$cacheControl,$metaTags)
             }
         }
     }

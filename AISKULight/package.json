@@ -9,13 +9,14 @@
     "types": "types/index.d.ts",
     "sideEffects": false,
     "scripts": {
-        "build": "npm run build:esm && npm run build:browser && npm run dtsgen",
+        "build": "npm run build:esm && npm run build:browser && npm run sri && npm run dtsgen",
         "build:esm": "grunt aiskulite",
         "build:browser": "rollup -c rollup.config.js",
         "rebuild": "npm run build",
         "test": "echo 'No tests'",
         "lint": "tslint -p tsconfig.json",
-        "dtsgen": "api-extractor run --local && node ../scripts/dtsgen.js 'Microsoft.ApplicationInsights'"
+        "dtsgen": "api-extractor run --local && node ../scripts/dtsgen.js 'Microsoft.ApplicationInsights'",
+        "sri": "node ../tools/subResourceIntegrity/generateIntegrityFile.js"
     },
     "devDependencies": {
         "@microsoft/applicationinsights-rollup-plugin-uglify3-js": "1.0.0",

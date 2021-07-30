@@ -15,6 +15,13 @@ param (
 
 $metaSdkVer = "aijssdkver"
 $metaSdkSrc = "aijssdksrc"
+$cacheControl30Min = "public, max-age=1800, immutable, no-transform";
+$jsContentType = "text/javascript; charset=utf-8";
+$contentTypeMap = @{
+    "js" = $jsContentType;
+    "map" = "application/json";
+    "json" = "application/json";
+};
 
 $global:hasErrors = $false
 $global:sasToken = $sasToken
@@ -373,19 +380,28 @@ Function ValidateAccess
 Function GetVersion(
     [string] $name
 ) {
-    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+\.\d+\.\d+(-[^\.]+)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js)(?:\.map)?)$'
+    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[^\.]+)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js|integrity\.json)(?:\.map)?)$'
     $match = ($name | select-string $regMatch -AllMatches).matches
+    $contentType = $jsContentType
 
     if ($null -eq $match) {
         return $null
     }
+
+    $ext = $match.groups[6].value
+    $tokens = $ext.split(".")
+    if ($tokens.length -gt 0) {
+        $theExt = $tokens[$tokens.Count - 1]
+        $contentType = $contentTypeMap[$theExt]
+    }    
     
     [hashtable]$return = @{}
     $return.path = $match.groups[1].value
     $return.prefix = $match.groups[2].value
     $return.ver = $match.groups[3].value
-    $return.verType = $match.groups[4].value
-    $return.ext = $match.groups[5].value
+    $return.verType = $match.groups[5].value
+    $return.ext = $match.groups[6].value
+    $return.contentType = $contentType
 
     return $return
 }
@@ -680,9 +696,6 @@ if (!(Test-Path -Path $logDir)) {
 $fileTimeStamp = ((get-date).ToUniversalTime()).ToString("yyyyMMddThhmmss")
 $logFile = "$logDir\setActiveCdnVersionLog_$fileTimeStamp.txt"
 
-$cacheControl30Min = "public, max-age=1800, immutable";
-$contentType = "text/javascript; charset=utf-8";
-
 Log-Params
 Validate-Params
 
@@ -718,7 +731,9 @@ if ($files.ContainsKey($activeVersion) -ne $true) {
     Log-Failure "Version [$activeVersion] does not appear to be deployed to [$container]"
 } elseif ($files[$activeVersion].Count -ne 4 -and # Prior to 2.5.8
         $files[$activeVersion].Count -ne 8 -and   # Since 2.5.8
-        $files[$activeVersion].Count -ne 12) {    # Since 2.5.8
+        $files[$activeVersion].Count -ne 9 -and   # Since 2.6.5
+        $files[$activeVersion].Count -ne 12 -and  # Since 2.5.8
+        $files[$activeVersion].Count -ne 13) {    # Since 2.6.5
     Log-Failure "Version [$activeVersion] does not fully deployed to [$container] -- only found [$($files[$activeVersion].Count)] file(s)"
 }
 

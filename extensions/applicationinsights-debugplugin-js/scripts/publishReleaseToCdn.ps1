@@ -13,6 +13,14 @@ param (
 
 $metaSdkVer = "aijssdkver"
 
+$cacheControl1Year = "public, max-age=31536000, immutable, no-transform";
+$jsContentType = "text/javascript; charset=utf-8";
+$contentTypeMap = @{
+    "js" = $jsContentType;
+    "map" = "application/json";
+    "json" = "application/json";
+};
+
 $global:hasErrors = $false
 $global:cacheValue = $null
 $global:sasToken = $sasToken
@@ -227,13 +235,18 @@ Function CheckLogin
 Function AddReleaseFile(
     $files,
     [string] $releaseDir,
-    [string] $name
+    [string] $name,
+    [boolean] $optional = $false
 ) {
     $sourcePath = (Join-Path $releaseDir -ChildPath ($name))
 
     if (-Not (Test-Path $sourcePath)) {
-        Log-Warning "Missing expected source file '$sourcePath'";
-        exit         
+        if ($false -eq $optional) {
+            Log-Warning "Missing expected source file '$sourcePath'";
+            exit         
+        } else {
+            return
+        }
     }
 
     Log " - $sourcePath"
@@ -272,6 +285,7 @@ Function GetReleaseFiles
     $files = New-Object 'system.collections.generic.dictionary[string,string]'
 
     Log "Adding files";
+    AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.integrity.json" $true
     AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.js"
     AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.js.map"
     AddReleaseFile $files $jsSdkSrcDir "ai.dbg.$version.min.js"
@@ -291,12 +305,20 @@ Function GetReleaseFiles
 Function GetVersion(
     [string] $name
 ) {
-    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+\.\d+\.\d+(-[^\.]+)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js)(?:\.map)?)$'
+    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[^\.]+)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js|integrity\.json)(?:\.map)?)$'
     $match = ($name | select-string $regMatch -AllMatches).matches
+    $contentType = $jsContentType
 
     if ($null -eq $match) {
         return $null
     }
+
+    $ext = $match.groups[6].value
+    $tokens = $ext.split(".")
+    if ($tokens.length -gt 0) {
+        $theExt = $tokens[$tokens.Count - 1]
+        $contentType = $contentTypeMap[$theExt]
+    }    
     
     [hashtable]$return = @{}
     $return.path = $match.groups[1].value
@@ -304,6 +326,7 @@ Function GetVersion(
     $return.ver = $match.groups[3].value
     $return.verType = $match.groups[5].value
     $return.ext = $match.groups[6].value
+    $return.contentType = $contentType
 
     return $return
 }
@@ -377,6 +400,11 @@ Function PublishFiles(
         $version = GetVersion $name
         if ($null -ne $version) {
             $metadata[$metaSdkVer] = $version.ver
+        }
+
+        $contentType = $jsContentType
+        if ($null -ne $version.contentType) {
+            $contentType = $version.contentType
         }
 
         $newBlob = $null
@@ -569,9 +597,6 @@ if ([string]::IsNullOrWhiteSpace($jsSdkDir) -eq $true) {
 
 $fileTimeStamp = ((get-date).ToUniversalTime()).ToString("yyyyMMddThhmmss")
 $logFile = "$logDir\publishReleaseCdnLog_$fileTimeStamp.txt"
-
-$cacheControl1Year = "public, max-age=31536000, immutable";
-$contentType = "text/javascript; charset=utf-8";
 
 Log-Params
 

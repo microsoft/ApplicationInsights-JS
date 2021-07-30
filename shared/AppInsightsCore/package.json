@@ -18,14 +18,15 @@
     "types": "types/applicationinsights-core-js.d.ts",
     "scripts": {
         "clean": "grunt clean",
-        "build": "npm run build:esm && npm run build:browser && npm run dtsgen",
+        "build": "npm run build:esm && npm run build:browser && npm run sri && npm run dtsgen",
         "build:esm": "grunt core",
         "build:browser": "rollup -c rollup.config.js",
         "rebuild": "npm run build",
         "test": "grunt coreunittest",
         "perftest": "grunt coreperftest",
         "lint": "tslint -p tsconfig.json",
-        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights Core Javascript SDK\""
+        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights Core Javascript SDK\"",
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js"
     },
     "repository": {
         "type": "git",
