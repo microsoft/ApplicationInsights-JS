@@ -10,7 +10,7 @@ import {
     isNullOrUndefined, arrForEach, isString, strTrim, isFunction, LoggingSeverity, _InternalMessageId,
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
     getLocation, getGlobal, strUndefined, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
-    IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey, generateW3CId, getIEVersion, dumpObj,objKeys
+    IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey, generateW3CId, getIEVersion, dumpObj,objKeys, ICustomProperties
 } from '@microsoft/applicationinsights-core-js';
 import { ajaxRecord, IAjaxRecordResponse } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
@@ -176,7 +176,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             ignoreHeaders:[
                 "Authorization", 
                 "X-API-Key",
-                "WWW-Authenticate"]
+                "WWW-Authenticate"],
+            addContextOnRequests: undefined
         }
         return config;
     }
@@ -214,6 +215,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let _hooks:IInstrumentHook[] = [];
         let _disabledUrls:any = {};
         let _excludeRequestFromAutoTrackingPatterns: string[] | RegExp[];
+        let _addContextOnRequests: () => ICustomProperties;
 
         dynamicProto(AjaxMonitor, this, (_self, base) => {
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
@@ -231,6 +233,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _maxAjaxCallsPerView = _config.maxAjaxCallsPerView;
                     _enableResponseHeaderTracking = _config.enableResponseHeaderTracking;
                     _excludeRequestFromAutoTrackingPatterns = _config.excludeRequestFromAutoTrackingPatterns;
+                    _addContextOnRequests = _config.addContextOnRequests;
 
                     _isUsingAIHeaders = distributedTracingMode === DistributedTracingModes.AI || distributedTracingMode === DistributedTracingModes.AI_AND_W3C;
                     _isUsingW3CHeaders = distributedTracingMode === DistributedTracingModes.AI_AND_W3C || distributedTracingMode === DistributedTracingModes.W3C;
@@ -724,8 +727,17 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             return ajaxResponse;
                         });
 
+                        let properties;
+                        if (_addContextOnRequests !== undefined) {
+                            properties = _addContextOnRequests();
+                        }
+
                         if (dependency) {
-                            _self[strTrackDependencyDataInternal](dependency);
+                            if (properties !== undefined) {
+                                _self[strTrackDependencyDataInternal](dependency, properties);
+                            } else {
+                                _self[strTrackDependencyDataInternal](dependency);
+                            }
                         } else {
                             _reportXhrError(null, {
                                     requestSentTime: ajaxData.requestSentTime,
@@ -923,8 +935,16 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                 _findPerfResourceEntry("fetch", ajaxData, () => {
                     const dependency = ajaxData.CreateTrackItem("Fetch", _enableRequestHeaderTracking, getResponse);
+                    let properties;
+                    if (_addContextOnRequests !== undefined) {
+                        properties = _addContextOnRequests();
+                    }
                     if (dependency) {
-                        _self[strTrackDependencyDataInternal](dependency);
+                        if (properties !== undefined) {
+                            _self[strTrackDependencyDataInternal](dependency, properties);
+                        } else {
+                            _self[strTrackDependencyDataInternal](dependency);
+                        }
                     } else {
                         _reportFetchError(_InternalMessageId.FailedMonitorAjaxDur, null,
                             {
@@ -981,7 +1001,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
     }
 
     /**
-     * Protected function to allow sub classes the chance to add additional properties to the delendency event
+     * Protected function to allow sub classes the chance to add additional properties to the dependency event
      * before it's sent. This function calls track, so sub-classes must call this function after they have
      * populated their properties.
      * @param dependencyData dependency data object

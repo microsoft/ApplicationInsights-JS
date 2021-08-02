@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { ICustomProperties } from '../../../AppInsightsCore/types/applicationinsights-core-js';
 import { DistributedTracingModes } from '../Enums';
 
 export interface ICorrelationConfig {
@@ -52,4 +53,10 @@ export interface ICorrelationConfig {
      * Default is undefined.
      */
     excludeRequestFromAutoTrackingPatterns?: string[] | RegExp[];
+
+    /**
+     * Provide a way to enrich dependencies logs with context at the beginning of api call.
+     * Default is undefined.
+     */
+     addContextOnRequests?: () => ICustomProperties;
 }
