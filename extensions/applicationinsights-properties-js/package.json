@@ -13,13 +13,14 @@
         "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/extensions/applicationinsights-properties-js"
     },
     "scripts": {
-        "build": "npm run build:esm && npm run build:browser && npm run dtsgen",
+        "build": "npm run build:esm && npm run build:browser && npm run sri && npm run dtsgen",
         "build:esm": "grunt properties",
         "build:browser": "rollup -c",
         "rebuild": "npm run build",
         "test": "grunt propertiestests",
         "lint": "tslint -p tsconfig.json",
-        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights properties plugin\""
+        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights properties plugin\"",
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",

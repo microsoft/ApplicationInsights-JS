@@ -14,7 +14,7 @@
     },
     "scripts": {
         "clean": "rm -rfv browser types dist-esm",
-        "build": "npm run build:esm && npm run build:browser && npm run dtsgen",
+        "build": "npm run build:esm && npm run build:browser && npm run sri && npm run dtsgen",
         "build:esm": "grunt aisku",
         "build:browser": "rollup -c rollup.config.js",
         "build:snippet": "grunt snippetvnext",
@@ -22,6 +22,7 @@
         "test": "grunt aiskutests",
         "lint": "tslint -p tsconfig.json",
         "dtsgen": "api-extractor run --local && node ../scripts/dtsgen.js 'Microsoft.ApplicationInsights'",
+        "sri": "node ../tools/subResourceIntegrity/generateIntegrityFile.js",
         "nightwatch:chrome": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env chrome",
         "nightwatch:firefox": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env firefox",
         "nightwatch:edge": "nightwatch -c Tests/nightwatch/nightwatch.json Tests/nightwatch/run_nightwatch.js --env edge",

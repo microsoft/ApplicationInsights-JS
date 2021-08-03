@@ -34,7 +34,7 @@
     },
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "devDependencies": {
-        "@microsoft/rush": "^5.49.2",
+        "@microsoft/rush": "^5.50.0",
         "@nevware21/grunt-ts-plugin": "^0.4.3",
         "chromium": "^3.0.2",
         "connect": "^3.7.0",
@@ -45,6 +45,7 @@
         "grunt-contrib-uglify": "^5.0.1",
         "grunt-run": "^0.8.1",
         "grunt-tslint": "^5.0.2",
+        "globby": "^11.0.0",
         "puppeteer": "^10.1.0",
         "tslint": "^5.19.0",
         "tslint-config-prettier": "^1.18.0",
