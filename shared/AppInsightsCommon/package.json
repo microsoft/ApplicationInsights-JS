@@ -13,13 +13,14 @@
         "url": "https://github.com/microsoft/ApplicationInsights-JS/tree/master/shared/AppInsightsCommon"
     },
     "scripts": {
-        "build": "npm run build:esm && npm run build:browser && npm run dtsgen",
+        "build": "npm run build:esm && npm run build:browser && npm run sri && npm run dtsgen",
         "build:esm": "grunt common",
         "build:browser": "rollup -c",
         "rebuild": "npm run build",
         "test": "grunt commontest",
         "lint": "tslint -p tsconfig.json",
-        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights Common JavaScript Library\""
+        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js \"Microsoft Application Insights Common JavaScript Library\"",
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",

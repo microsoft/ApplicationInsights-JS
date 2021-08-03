@@ -178,6 +178,8 @@ dist-esm/
 browser/
 types/
 dist/
+# Don't commit the sub resource integrity generated files
+**/*.integrity.json
 
 # Grunt
 .tscache

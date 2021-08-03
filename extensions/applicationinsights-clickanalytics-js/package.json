@@ -9,13 +9,14 @@
     "types": "types/applicationinsights-clickanalytics-js.d.ts",
     "sideEffects": false,
     "scripts": {
-        "build": "npm run build:esm && npm run build:browser && npm run dtsgen",
+        "build": "npm run build:esm && npm run build:browser && npm run sri && npm run dtsgen",
         "build:esm": "grunt clickanalytics",
         "build:browser": "rollup -c",
         "rebuild": "npm run build",
         "test": "grunt clickanalyticstests",
         "lint": "tslint -p tsconfig.json",
-        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js 'Microsoft.ApplicationInsights'"
+        "dtsgen": "api-extractor run --local && node ../../scripts/dtsgen.js 'Microsoft.ApplicationInsights'",
+        "sri": "node ../../tools/subResourceIntegrity/generateIntegrityFile.js"
     },
     "devDependencies": {
         "@microsoft/ai-test-framework": "0.0.1",
