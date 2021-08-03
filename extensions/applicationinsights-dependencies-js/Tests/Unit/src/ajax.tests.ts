@@ -239,6 +239,43 @@ export class AjaxTests extends AITestClass {
         });
 
         this.testCase({
+            name: "Ajax: add context into custom dimension with call back configuration on AI initialization.",
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                var trackStub = this.sandbox.stub(appInsightsCore, "track");
+
+                let coreConfig: IConfiguration & IConfig = { 
+                    instrumentationKey: "", 
+                    disableAjaxTracking: false,
+                    addContextOnRequests: () => {
+                        return {
+                            test: "ajax context"
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.send();
+
+                // Emulate response
+                (<any>xhr).respond(200, {}, "");
+
+                Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+
+                // assert
+                Assert.ok(trackStub.calledOnce, "track is called");
+                let data = trackStub.args[0][0].baseData;
+                Assert.equal("Ajax", data.type, "request is Ajax type");
+                Assert.equal("ajax context", data.properties.test, "xhr request's request context is added when customer configures addContextOnRequests.");
+            }
+        });
+
+        this.testCase({
             name: "Ajax: xhr request header is tracked as part C data when enableRequestHeaderTracking flag is true",
             test: () => {
                 this._ajax = new AjaxMonitor();
@@ -476,6 +513,61 @@ export class AjaxTests extends AITestClass {
                         Assert.ok(false, "fetch failed!");
                         testContext.testDone();
                     });
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    testContext.testDone();
+                });
+            }]
+        });
+
+        this.testCaseAsync({
+            name: "Fetch: add context into custom dimension with call back configuration on AI initialization.",
+            stepDelay: 10,
+            autoComplete: false,
+            timeOut: 10000,
+            steps: [ (testContext) => {
+                hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { 
+                    instrumentationKey: "", 
+                    disableFetchTracking: false,
+                    addContextOnRequests: () => {
+                        return {
+                            test: "Fetch context"
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+
+                // Act
+                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                    // assert
+                    Assert.ok(fetchSpy.calledOnce, "track is called");
+                    let data = fetchSpy.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fetch type");
+                    Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+                    Assert.equal("Fetch context", data.properties.test, "Fetch request's request context is added when customer configures addContextOnRequests.");
+                    testContext.testDone();
                 }, () => {
                     Assert.ok(false, "fetch failed!");
                     testContext.testDone();

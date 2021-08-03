@@ -734,10 +734,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                         if (dependency) {
                             if (properties !== undefined) {
-                                _self[strTrackDependencyDataInternal](dependency, properties);
-                            } else {
-                                _self[strTrackDependencyDataInternal](dependency);
+                                dependency.properties = {...properties};
                             }
+                            _self[strTrackDependencyDataInternal](dependency);
                         } else {
                             _reportXhrError(null, {
                                     requestSentTime: ajaxData.requestSentTime,
@@ -941,10 +940,9 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     }
                     if (dependency) {
                         if (properties !== undefined) {
-                            _self[strTrackDependencyDataInternal](dependency, properties);
-                        } else {
-                            _self[strTrackDependencyDataInternal](dependency);
+                            dependency.properties = {...properties};
                         }
+                        _self[strTrackDependencyDataInternal](dependency);
                     } else {
                         _reportFetchError(_InternalMessageId.FailedMonitorAjaxDur, null,
                             {

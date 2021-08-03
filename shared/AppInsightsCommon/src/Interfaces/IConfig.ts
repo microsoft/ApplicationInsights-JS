@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IConfiguration, ICookieMgrConfig, isNullOrUndefined, ICustomProperties } from '@microsoft/applicationinsights-core-js';
+import { IConfiguration, ICookieMgrConfig, isNullOrUndefined } from '@microsoft/applicationinsights-core-js';
 import { DistributedTracingModes } from '../Enums';
 
 /**
@@ -130,7 +130,7 @@ export interface IConfig {
      * Provide a way to enrich dependencies logs with context at the beginning of api call.
      * Default is undefined.
      */
-    addContextOnRequests?: () => ICustomProperties;
+    addContextOnRequests?: () => {[key: string]: any};
 
     /**
      * @description If true, default behavior of trackPageView is changed to record end of page view duration interval when trackPageView is called. If false and no custom duration is provided to trackPageView, the page view performance is calculated using the navigation timing API. Default is false
