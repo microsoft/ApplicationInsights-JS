@@ -1,6 +1,22 @@
 # Releases
 
+## 2.6.5 (August 3rd, 2021)
+
+[2.6.5 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/53)
+
+## Changelog
+
+- #1608 [BUG] empty messages for unhandled promise rejections
+- #1610 [BUG] error logging an error--need to null-check reason
+- #1621 [Task] Create and publish Sub Resource Integrity (SRI) hashes for the generated scripts
+- #1607 Remove AngularPlugin code from master and direct to new repo and angularplugin-legacy branch
+- #1606 Split Tests into Unit / Perf and update all active tests to use common test project
+- #1613 Update Dependencies
+- #1617 Add Stale Issue / PR GitHub Action
+
 ## 2.6.4 (July 6th, 2021)
+
+[2.6.4 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/52)
 
 ## Changelog
 
@@ -24,6 +40,8 @@
 - Update Core dependency to ^2.6.4 Core changes
 
 ## 2.6.3 (June 8th, 2021)
+
+[2.6.3 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/50)
 
 ### Changelog
 
@@ -50,6 +68,8 @@
 - Update DynamicProto version 1.1.4 (Removes unnecessary dependencies)
 
 ## 2.6.2 (April 22nd, 2021)
+
+[2.6.2 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/49)
 
 ### Changelog
 
@@ -83,12 +103,16 @@
 
 ## 2.6.1 (Hotfix - March 30th, 2021)
 
+[2.6.1 (Hotfix) Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/48)
+
 ### Changelog
 
 - #1518 P1 - [BUG] v2.6.0 is not re-hydrating the automatic session id correctly for each request
 - #1512 Expose the getCookieMgr() on the snippet proxy and analytics web instances
 
 ## 2.6.0 (March 23rd, 2021)
+
+[2.6.0 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/47)
 
 ### Version bump is due to the following major changes
 
@@ -124,6 +148,8 @@ Also includes major changes to the cookie management, please [see the readme coo
 
 ## 2.5.11 (January 15th, 2021)
 
+[2.5.11 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/46)
+
 ### Changelog
 
 - #1452 [BUG] v2.5.10 Snippet Initialization fails to redirect proxied functions -- causing terminal exception
@@ -137,6 +163,8 @@ Also includes major changes to the cookie management, please [see the readme coo
 
 
 ## 2.5.10 (November 16th, 2020)
+
+[2.5.10 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/45)
 
 ### New extension @microsoft/applicationinsights-clickanalytics-js
 
@@ -165,6 +193,8 @@ Provides the ability to gather telemetry in Web pages to automatic track clicks 
 - Update Core dependency to ^2.5.10 Core changes
 
 ## 2.5.9 (October 5th, 2020)
+
+[2.5.9 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/44)
 
 ### Changelog
 
@@ -205,6 +235,8 @@ Provides the ability to gather telemetry in Web pages to automatic track clicks 
 
 ## 2.5.8 (August 31st, 2020)
 
+[2.5.8 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/43)
+
 ### Changelog
 
 - #1356 add documentation on how to make snippet changes
@@ -230,6 +262,8 @@ Provides the ability to gather telemetry in Web pages to automatic track clicks 
 - Update Core dependency to ^2.5.8 Core changes
 
 ## 2.5.7 (August 7th, 2020)
+
+[2.5.7 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/42)
 
 ### Changelog
 
@@ -272,6 +306,8 @@ Provides the ability to gather telemetry in Web pages to automatic track clicks 
 
 ## 2.5.6 (Jul 6th, 2020)
 
+[2.5.6 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/40)
+
 ### New (Beta) extension applicationinsights-debugplugin-js
 
 - Created the initial extension to help developers understand, track, visualize and fix issues with events
@@ -308,6 +344,8 @@ Provides the ability to gather telemetry in Web pages to automatic track clicks 
 
 ## 2.5.5 (Jun 2nd, 2020)
 
+[2.5.5 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/39)
+
 ### Updated React plugin to v3.0.0
 
 - Updated to TypeScript 3.x
@@ -338,6 +376,8 @@ Provides the ability to gather telemetry in Web pages to automatic track clicks 
 
 ## 2.5.4 (Apr 7th, 2020)
 
+[2.5.4 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/37)
+
 ### Changelog
 
 - #1242 Upgrading the tslib dependency to 1.11.1
@@ -351,6 +391,8 @@ Provides the ability to gather telemetry in Web pages to automatic track clicks 
 - #1191 [BUG] ICustomProperties does not support setting values
 
 ## 2.5.3 (Mar 25th, 2020)
+
+[2.5.3 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/38)
 
 ### Changelog
 
