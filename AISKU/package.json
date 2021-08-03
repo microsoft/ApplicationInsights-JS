@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-web",
-    "version": "2.6.4",
+    "version": "2.6.5",
     "description": "Microsoft Application Insights JavaScript SDK - Web",
     "homepage": "https://github.com/microsoft/ApplicationInsights-JS#readme",
     "author": "Microsoft Application Insights Team",
@@ -47,7 +47,7 @@
         "grunt-tslint": "^5.0.2",
         "globby": "^11.0.0",
         "magic-string": "^0.25.7",
-        "pako":"^2.0.3",
+        "pako": "^2.0.3",
         "@rollup/plugin-commonjs": "^18.0.0",
         "@rollup/plugin-node-resolve": "^11.2.1",
         "@rollup/plugin-replace": "^2.3.3",
@@ -64,12 +64,12 @@
     "dependencies": {
         "@microsoft/dynamicproto-js": "^1.1.4",
         "@microsoft/applicationinsights-shims": "2.0.0",
-        "@microsoft/applicationinsights-analytics-js": "2.6.4",
-        "@microsoft/applicationinsights-channel-js": "2.6.4",
-        "@microsoft/applicationinsights-common": "2.6.4",
-        "@microsoft/applicationinsights-core-js": "2.6.4",
-        "@microsoft/applicationinsights-dependencies-js": "2.6.4",
-        "@microsoft/applicationinsights-properties-js": "2.6.4"
+        "@microsoft/applicationinsights-analytics-js": "2.6.5",
+        "@microsoft/applicationinsights-channel-js": "2.6.5",
+        "@microsoft/applicationinsights-common": "2.6.5",
+        "@microsoft/applicationinsights-core-js": "2.6.5",
+        "@microsoft/applicationinsights-dependencies-js": "2.6.5",
+        "@microsoft/applicationinsights-properties-js": "2.6.5"
     },
     "license": "MIT"
 }
