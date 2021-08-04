@@ -313,5 +313,4 @@ export class BaseCore implements IAppInsightsCore {
     protected releaseQueue() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
-
 }

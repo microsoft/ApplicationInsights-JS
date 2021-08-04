@@ -1,11 +1,11 @@
-﻿import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
+﻿import { SinonStub } from "sinon";
+import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
 import { AjaxMonitor } from "../../../src/ajax";
 import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders, IDependencyTelemetry, IRequestContext } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls, _InternalMessageId,
     getPerformance, getGlobalInst, getGlobal
 } from "@microsoft/applicationinsights-core-js";
-import { SinonStub } from "sinon";
 
 interface IFetchArgs {
     input: RequestInfo,

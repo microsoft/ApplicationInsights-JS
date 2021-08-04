@@ -910,8 +910,8 @@ export class ApplicationInsightsTests extends TestClass {
 }
 
 class CustomTestError extends Error {
-    constructor(message = "", ...args) {
-      super(message, ...args);
+    constructor(message = "") {
+      super(message);
       this.name = "CustomTestError";
       this.message = message + " -- test error.";
     }
