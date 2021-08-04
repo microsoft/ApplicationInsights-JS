@@ -56,19 +56,26 @@ export class TelemetryContext implements IPropTelemetryContext {
                 _self.telemetryTrace = new TelemetryTrace(undefined, undefined, undefined, logger);
                 _self.session = new Session();
             }
-    
-            _self.applySessionContext = (evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
-                let session = _self.session;
-                let sessionManager = _self.sessionManager;
 
+            _self.sesId = () => {
+                let session = _self.session;
+                let sesId = null;
+                
                 // If customer set session info, apply their context; otherwise apply context automatically generated
                 if (session && isString(session.id)) {
-                    setValue(getSetValue(evt.ext, Extensions.AppExt), "sesId", session.id);
-                    this.sesId = () => session.id ;
-                } else if (sessionManager && sessionManager.automaticSession) {
-                    setValue(getSetValue(evt.ext, Extensions.AppExt), "sesId", sessionManager.automaticSession.id, isString);
-                    this.sesId = () => sessionManager.automaticSession.id;
+                    sesId = session.id;
+                } else {
+                    // Gets the automatic session if it exists or an empty object
+                    let autoSession = (_self.sessionManager || {} as _SessionManager).automaticSession;
+                
+                    sesId = autoSession && isString(autoSession.id) ? autoSession.id : null;
                 }
+
+                return sesId;
+            }
+    
+            _self.applySessionContext = (evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
+                setValue(getSetValue(evt.ext, Extensions.AppExt), "sesId", _self.sesId(), isString);
             }
 
             _self.applyOperatingSystemContxt = (evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
