@@ -61,4 +61,9 @@ export interface ITelemetryContext {
      * application id obtained from breeze responses. Is used if appId is not specified by root config
      */
     appId: () => string;
+
+    /**
+     * session id obtained from session manager.
+     */
+    sesId: () => string;
 }

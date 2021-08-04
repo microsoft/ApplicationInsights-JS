@@ -36,6 +36,7 @@ export class PropertiesTests extends AITestClass {
         this.addUserTests();
         this.addDeviceTests();
         this.addTelemetryTraceTests();
+        this.addSessionTests();
     }
 
     private _setCookie(name: string, value: string) {
@@ -616,6 +617,35 @@ export class PropertiesTests extends AITestClass {
         });
     }
 
+    private addSessionTests() {
+        this.testCase({
+            name: 'Session: automaticSession session id is stored in sesId if customer does not provide session info',
+            test: () => {
+                this.properties.initialize(this.getEmptyConfig(), this.core, []);
+
+                // Assert
+                const item: ITelemetryItem = {name: 'item'};
+                this.properties.processTelemetry(item);
+                Assert.ok(this.properties.context.sesId(), 'session id is stored in sesId');
+                Assert.equal(this.properties.context.sesId(), this.properties.context.sessionManager.automaticSession.id, 'automaticSession is stored in sesId')
+            }
+        });
+
+        this.testCase({
+            name: 'Session: customer session id is stored in sesId if customer provides session info',
+            test: () => {
+                this.properties.initialize(this.getEmptyConfig(), this.core, []);
+
+                // Assert
+                const item: ITelemetryItem = {name: 'item'};
+                this.properties.context.session.id = 'random id';
+                this.properties.processTelemetry(item);
+                Assert.ok(this.properties.context.sesId(), 'session id is stored in sesId');
+                Assert.equal(this.properties.context.sesId(), 'random id', 'automaticSession is stored in sesId')
+            }
+        });
+    }
+
     private getEmptyConfig(): IConfiguration {
         return {
             instrumentationKey: 'key',
@@ -638,6 +668,7 @@ export class PropertiesTests extends AITestClass {
                     sdkExtension: null,
                     isBrowserLinkTrackingEnabled: null,
                     appId: null,
+                    sesId: null,
                     getNewId: (idLength?: number) => this._getNewId(idLength)
                 }
             }
@@ -655,6 +686,7 @@ export class PropertiesTests extends AITestClass {
             sdkExtension: () => "",
             isBrowserLinkTrackingEnabled: () => true,
             appId: () => "",
+            sesId: () => "",
             namePrefix: () => "",
             sessionCookiePostfix: () => "",
             userCookiePostfix: () => "",

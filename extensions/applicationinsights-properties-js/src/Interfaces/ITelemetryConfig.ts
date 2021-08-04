@@ -11,6 +11,7 @@ export interface ITelemetryConfig {
     sdkExtension: () => string;
     isBrowserLinkTrackingEnabled: () => boolean;
     appId: () => string;
+    sesId: () => string;
     namePrefix: () => string;
     sessionCookiePostfix: () => string;
     userCookiePostfix: () => string;
