@@ -14,6 +14,14 @@
 - #1613 Update Dependencies
 - #1617 Add Stale Issue / PR GitHub Action
 
+### Update React plugin to v3.1.5
+
+- Update Core dependency to ^2.6.5 Core changes
+
+### Update React Native plugin to v2.3.5
+
+- Update Core dependency to ^2.6.5 Core changes
+
 ## 2.6.4 (July 6th, 2021)
 
 [2.6.4 Milestone](https://github.com/microsoft/ApplicationInsights-JS/milestone/52)
