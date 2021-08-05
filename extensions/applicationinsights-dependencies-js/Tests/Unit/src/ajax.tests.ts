@@ -1,6 +1,6 @@
 ﻿import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
 import { AjaxMonitor } from "../../../src/ajax";
-import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders, IDependencyTelemetry } from "@microsoft/applicationinsights-common";
+import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders, IDependencyTelemetry, IRequestContext } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls, _InternalMessageId,
     getPerformance, getGlobalInst, getGlobal
@@ -249,10 +249,10 @@ export class AjaxTests extends AITestClass {
                 let coreConfig: IConfiguration & IConfig = { 
                     instrumentationKey: "", 
                     disableAjaxTracking: false,
-                    addAjaxContext: (xhr?: XMLHttpRequest) => {
+                    addRequestContext: (requestContext: IRequestContext) => {
                         return {
                             test: "ajax context",
-                            xhrStatus: xhr.status
+                            xhrStatus: requestContext.status
                         }
                     }
                 };
@@ -272,7 +272,7 @@ export class AjaxTests extends AITestClass {
                 Assert.ok(trackStub.calledOnce, "track is called");
                 let data = trackStub.args[0][0].baseData;
                 Assert.equal("Ajax", data.type, "request is Ajax type");
-                Assert.equal("ajax context", data.properties.test, "xhr request's request context is added when customer configures addAjaxContext.");
+                Assert.equal("ajax context", data.properties.test, "xhr request's request context is added when customer configures addRequestContext.");
                 Assert.equal(200, data.properties.xhrStatus, "xhr object properties are captured");
             }
         });
@@ -551,10 +551,11 @@ export class AjaxTests extends AITestClass {
                 let coreConfig = { 
                     instrumentationKey: "", 
                     disableFetchTracking: false,
-                    addFetchContext: (input?: Request | Response | string) => {
+                    addRequestContext: (requestContext: IRequestContext) => {
                         return {
                             test: "Fetch context",
-                            fetchRequestUrl: (input as Request).url
+                            fetchRequestUrl: requestContext.request,
+                            fetchResponseType: (requestContext.response as Response).type
                         }
                     }
                 };
@@ -569,8 +570,10 @@ export class AjaxTests extends AITestClass {
                     let data = fetchSpy.args[0][0].baseData;
                     Assert.equal("Fetch", data.type, "request is Fetch type");
                     Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
-                    Assert.equal("Fetch context", data.properties.test, "Fetch request's request context is added when customer configures addFetchContext.");
-                    Assert.equal("https://httpbin.org/status/200", data.properties.fetchRequestUrl, "Fetch input is captured.");
+                    Assert.equal("Fetch context", data.properties.test, "Fetch request's request context is added when customer configures addRequestContext.");
+                    Assert.equal("https://httpbin.org/status/200", data.properties.fetchRequestUrl, "Fetch request is captured.");
+                    Assert.equal("basic", data.properties.fetchResponseType, "Fetch response is captured.");
+
                     testContext.testDone();
                 }, () => {
                     Assert.ok(false, "fetch failed!");

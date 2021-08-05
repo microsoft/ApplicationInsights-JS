@@ -3,6 +3,7 @@
 
 import { ICustomProperties } from '@microsoft/applicationinsights-core-js';
 import { DistributedTracingModes } from '../Enums';
+import { IRequestContext } from './IRequestContext';
 
 export interface ICorrelationConfig {
     enableCorsCorrelation: boolean;
@@ -55,14 +56,8 @@ export interface ICorrelationConfig {
     excludeRequestFromAutoTrackingPatterns?: string[] | RegExp[];
 
     /**
-     * Provide a way to enrich dependencies logs with context at the beginning of ajax call.
+     * Provide a way to enrich dependencies logs with context at the beginning of api call.
      * Default is undefined.
      */
-     addAjaxContext?: (xhr?: XMLHttpRequest) => ICustomProperties;
-
-     /**
-      * Provide a way to enrich dependencies logs with context at the beginning of fetch call.
-      * Default is undefined.
-      */
-      addFetchContext?: (input?: Request | Response | string) => ICustomProperties;
+    addRequestContext?: (requestContext?: IRequestContext) => ICustomProperties;
 }
