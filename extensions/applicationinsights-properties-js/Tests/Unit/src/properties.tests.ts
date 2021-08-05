@@ -626,8 +626,8 @@ export class PropertiesTests extends AITestClass {
                 // Assert
                 const item: ITelemetryItem = {name: 'item'};
                 this.properties.processTelemetry(item);
-                Assert.ok(this.properties.context.sesId(), 'session id is stored in sesId');
-                Assert.equal(this.properties.context.sesId(), this.properties.context.sessionManager.automaticSession.id, 'automaticSession is stored in sesId')
+                Assert.ok(this.properties.context.getSessionId(), 'session id is stored in sesId');
+                Assert.equal(this.properties.context.getSessionId(), this.properties.context.sessionManager.automaticSession.id, 'automaticSession is stored in sesId')
             }
         });
 
@@ -640,8 +640,8 @@ export class PropertiesTests extends AITestClass {
                 const item: ITelemetryItem = {name: 'item'};
                 this.properties.context.session.id = 'random id';
                 this.properties.processTelemetry(item);
-                Assert.ok(this.properties.context.sesId(), 'session id is stored in sesId');
-                Assert.equal(this.properties.context.sesId(), 'random id', 'automaticSession is stored in sesId')
+                Assert.ok(this.properties.context.getSessionId(), 'session id is stored in sesId');
+                Assert.equal(this.properties.context.getSessionId(), 'random id', 'automaticSession is stored in sesId')
             }
         });
     }

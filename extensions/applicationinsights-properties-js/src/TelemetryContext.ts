@@ -38,12 +38,12 @@ export class TelemetryContext implements IPropTelemetryContext {
     public os: IOperatingSystem;
     public web: IWeb;
     public appId: () => string;
-    public sesId: () => string;
+    public getSessionId: () => string;
 
     constructor(core: IAppInsightsCore, defaultConfig: ITelemetryConfig) {
         let logger = core.logger
         this.appId = () => null;
-        this.sesId = () => null;
+        this.getSessionId = () => null;
 
         dynamicProto(TelemetryContext, this, (_self) => {
             _self.application = new Application();
@@ -57,7 +57,7 @@ export class TelemetryContext implements IPropTelemetryContext {
                 _self.session = new Session();
             }
 
-            _self.sesId = () => {
+            _self.getSessionId = () => {
                 let session = _self.session;
                 let sesId = null;
                 
@@ -75,7 +75,7 @@ export class TelemetryContext implements IPropTelemetryContext {
             }
     
             _self.applySessionContext = (evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
-                setValue(getSetValue(evt.ext, Extensions.AppExt), "sesId", _self.sesId(), isString);
+                setValue(getSetValue(evt.ext, Extensions.AppExt), "sesId", _self.getSessionId(), isString);
             }
 
             _self.applyOperatingSystemContxt = (evt: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {

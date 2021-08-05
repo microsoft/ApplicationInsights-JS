@@ -65,5 +65,5 @@ export interface ITelemetryContext {
     /**
      * session id obtained from session manager.
      */
-    sesId: () => string;
+    getSessionId: () => string;
 }
