@@ -177,7 +177,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 "Authorization", 
                 "X-API-Key",
                 "WWW-Authenticate"],
-            addContextOnRequests: undefined
+            addAjaxContext: undefined,
+            addFetchContext: undefined
         }
         return config;
     }
@@ -215,7 +216,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let _hooks:IInstrumentHook[] = [];
         let _disabledUrls:any = {};
         let _excludeRequestFromAutoTrackingPatterns: string[] | RegExp[];
-        let _addContextOnRequests: () => ICustomProperties;
+        let _addAjaxContext: (xhr?: XMLHttpRequest) => ICustomProperties;
+        let _addFetchContext: (input?: Request | Response | string) => ICustomProperties;
 
         dynamicProto(AjaxMonitor, this, (_self, base) => {
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
@@ -233,7 +235,6 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _maxAjaxCallsPerView = _config.maxAjaxCallsPerView;
                     _enableResponseHeaderTracking = _config.enableResponseHeaderTracking;
                     _excludeRequestFromAutoTrackingPatterns = _config.excludeRequestFromAutoTrackingPatterns;
-                    _addContextOnRequests = _config.addContextOnRequests;
 
                     _isUsingAIHeaders = distributedTracingMode === DistributedTracingModes.AI || distributedTracingMode === DistributedTracingModes.AI_AND_W3C;
                     _isUsingW3CHeaders = distributedTracingMode === DistributedTracingModes.AI_AND_W3C || distributedTracingMode === DistributedTracingModes.W3C;
@@ -728,13 +729,13 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         });
 
                         let properties;
-                        if (_addContextOnRequests !== undefined) {
-                            properties = _addContextOnRequests();
+                        if (!!_addAjaxContext) {
+                            properties = _addAjaxContext(xhr);
                         }
 
                         if (dependency) {
                             if (properties !== undefined) {
-                                dependency.properties = {...properties};
+                                dependency.properties = {...dependency.properties, ...properties};
                             }
                             _self[strTrackDependencyDataInternal](dependency);
                         } else {
@@ -935,12 +936,12 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 _findPerfResourceEntry("fetch", ajaxData, () => {
                     const dependency = ajaxData.CreateTrackItem("Fetch", _enableRequestHeaderTracking, getResponse);
                     let properties;
-                    if (_addContextOnRequests !== undefined) {
-                        properties = _addContextOnRequests();
+                    if (!!_addFetchContext) {
+                        properties = _addFetchContext(input);
                     }
                     if (dependency) {
                         if (properties !== undefined) {
-                            dependency.properties = {...properties};
+                            dependency.properties = {...dependency.properties, ...properties};
                         }
                         _self[strTrackDependencyDataInternal](dependency);
                     } else {

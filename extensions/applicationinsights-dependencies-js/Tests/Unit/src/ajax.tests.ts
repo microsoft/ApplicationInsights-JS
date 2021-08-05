@@ -249,9 +249,10 @@ export class AjaxTests extends AITestClass {
                 let coreConfig: IConfiguration & IConfig = { 
                     instrumentationKey: "", 
                     disableAjaxTracking: false,
-                    addContextOnRequests: () => {
+                    addAjaxContext: (xhr?: XMLHttpRequest) => {
                         return {
-                            test: "ajax context"
+                            test: "ajax context",
+                            xhrStatus: xhr.status
                         }
                     }
                 };
@@ -271,7 +272,8 @@ export class AjaxTests extends AITestClass {
                 Assert.ok(trackStub.calledOnce, "track is called");
                 let data = trackStub.args[0][0].baseData;
                 Assert.equal("Ajax", data.type, "request is Ajax type");
-                Assert.equal("ajax context", data.properties.test, "xhr request's request context is added when customer configures addContextOnRequests.");
+                Assert.equal("ajax context", data.properties.test, "xhr request's request context is added when customer configures addAjaxContext.");
+                Assert.equal(200, data.properties.xhrStatus, "xhr object properties are captured");
             }
         });
 
@@ -549,9 +551,10 @@ export class AjaxTests extends AITestClass {
                 let coreConfig = { 
                     instrumentationKey: "", 
                     disableFetchTracking: false,
-                    addContextOnRequests: () => {
+                    addFetchContext: (input?: Request | Response | string) => {
                         return {
-                            test: "Fetch context"
+                            test: "Fetch context",
+                            fetchRequestUrl: (input as Request).url
                         }
                     }
                 };
@@ -566,7 +569,8 @@ export class AjaxTests extends AITestClass {
                     let data = fetchSpy.args[0][0].baseData;
                     Assert.equal("Fetch", data.type, "request is Fetch type");
                     Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
-                    Assert.equal("Fetch context", data.properties.test, "Fetch request's request context is added when customer configures addContextOnRequests.");
+                    Assert.equal("Fetch context", data.properties.test, "Fetch request's request context is added when customer configures addFetchContext.");
+                    Assert.equal("https://httpbin.org/status/200", data.properties.fetchRequestUrl, "Fetch input is captured.");
                     testContext.testDone();
                 }, () => {
                     Assert.ok(false, "fetch failed!");

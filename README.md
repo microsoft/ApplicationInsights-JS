@@ -276,7 +276,8 @@ Most configuration fields are named such that they can be defaulted to falsey. A
 | disableAjaxTracking | boolean | false | If true, Ajax calls are not autocollected. Default is false. |
 | disableFetchTracking | boolean | true | If true, Fetch requests are not autocollected. Default is true |
 | excludeRequestFromAutoTrackingPatterns | string[] \| RegExp[] | undefined | Provide a way to exclude specific route from automatic tracking for XMLHttpRequest or Fetch request. If defined, for an ajax / fetch request that the request url matches with the regex patterns, auto tracking is turned off. Default is undefined. |
-| addContextOnRequests | () => {[key: string]: any} | undefined | Provide a way to enrich dependencies logs with context at the beginning of api call. Default is undefined. |
+| addAjaxContext | () => {[key: string]: any} | undefined | Provide a way to enrich dependencies logs with context at the beginning of ajax call. Default is undefined. |
+| addFetchContext | () => {[key: string]: any} | undefined | Provide a way to enrich dependencies logs with context at the beginning of fetch call. Default is undefined. |
 | overridePageViewDuration | boolean | false | If true, default behavior of trackPageView is changed to record end of page view duration interval when trackPageView is called. If false and no custom duration is provided to trackPageView, the page view performance is calculated using the navigation timing API. Default is false. |
 | maxAjaxCallsPerView | numeric | 500 | Default 500 - controls how many ajax calls will be monitored per page view. Set to -1 to monitor all (unlimited) ajax calls on the page. |
 | disableDataLossAnalysis | boolean | true | If false, internal telemetry sender buffers will be checked at startup for items not yet sent. |
