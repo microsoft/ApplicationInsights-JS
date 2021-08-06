@@ -98,6 +98,7 @@ export const _InternalMessageId = {
     InvalidInstrumentationKey:100,
     CannotParseAiBlobValue: 101,
     InvalidContentBlob: 102,
-    TrackPageActionEventFailed: 103
+    TrackPageActionEventFailed: 103,
+    FailedAddingCustomDefinedRequestContext: 104
 };
 export type _InternalMessageId = number | typeof _InternalMessageId;
