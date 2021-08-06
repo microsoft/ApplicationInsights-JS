@@ -686,7 +686,7 @@ export class PropertiesTests extends AITestClass {
             sdkExtension: () => "",
             isBrowserLinkTrackingEnabled: () => true,
             appId: () => "",
-            sesId: () => "",
+            getSessionId: () => "",
             namePrefix: () => "",
             sessionCookiePostfix: () => "",
             userCookiePostfix: () => "",
