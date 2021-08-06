@@ -1,6 +1,6 @@
 ﻿import { Assert, AITestClass, PollingAssert } from "@microsoft/ai-test-framework";
 import { AjaxMonitor } from "../../../src/ajax";
-import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders, IDependencyTelemetry } from "@microsoft/applicationinsights-common";
+import { DisabledPropertyName, IConfig, DistributedTracingModes, RequestHeaders, IDependencyTelemetry, IRequestContext } from "@microsoft/applicationinsights-common";
 import {
     AppInsightsCore, IConfiguration, ITelemetryItem, ITelemetryPlugin, IChannelControls, _InternalMessageId,
     getPerformance, getGlobalInst, getGlobal
@@ -235,6 +235,45 @@ export class AjaxTests extends AITestClass {
 
                 // assert
                 Assert.equal(undefined, (<any>xhr).ajaxData, "Follow up POST Request was not instrumented");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: add context into custom dimension with call back configuration on AI initialization.",
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                var trackStub = this.sandbox.stub(appInsightsCore, "track");
+
+                let coreConfig: IConfiguration & IConfig = { 
+                    instrumentationKey: "", 
+                    disableAjaxTracking: false,
+                    addRequestContext: (requestContext: IRequestContext) => {
+                        return {
+                            test: "ajax context",
+                            xhrStatus: requestContext.status
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.send();
+
+                // Emulate response
+                (<any>xhr).respond(200, {}, "");
+
+                Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+
+                // assert
+                Assert.ok(trackStub.calledOnce, "track is called");
+                let data = trackStub.args[0][0].baseData;
+                Assert.equal("Ajax", data.type, "request is Ajax type");
+                Assert.equal("ajax context", data.properties.test, "xhr request's request context is added when customer configures addRequestContext.");
+                Assert.equal(200, data.properties.xhrStatus, "xhr object properties are captured");
             }
         });
 
@@ -476,6 +515,66 @@ export class AjaxTests extends AITestClass {
                         Assert.ok(false, "fetch failed!");
                         testContext.testDone();
                     });
+                }, () => {
+                    Assert.ok(false, "fetch failed!");
+                    testContext.testDone();
+                });
+            }]
+        });
+
+        this.testCaseAsync({
+            name: "Fetch: add context into custom dimension with call back configuration on AI initialization.",
+            stepDelay: 10,
+            autoComplete: false,
+            timeOut: 10000,
+            steps: [ (testContext) => {
+                hookFetch((resolve) => {
+                    AITestClass.orgSetTimeout(function() {
+                        resolve({
+                            headers: new Headers(),
+                            ok: true,
+                            body: null,
+                            bodyUsed: false,
+                            redirected: false,
+                            status: 200,
+                            statusText: "Hello",
+                            trailer: null,
+                            type: "basic",
+                            url: "https://httpbin.org/status/200"
+                        });
+                    }, 0);
+                });
+
+                this._ajax = new AjaxMonitor();
+                let dependencyFields = hookTrackDependencyInternal(this._ajax);
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig = { 
+                    instrumentationKey: "", 
+                    disableFetchTracking: false,
+                    addRequestContext: (requestContext: IRequestContext) => {
+                        return {
+                            test: "Fetch context",
+                            fetchRequestUrl: requestContext.request,
+                            fetchResponseType: (requestContext.response as Response).type
+                        }
+                    }
+                };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+                let fetchSpy = this.sandbox.spy(appInsightsCore, "track")
+
+                // Act
+                Assert.ok(fetchSpy.notCalled, "No fetch called yet");
+                fetch("https://httpbin.org/status/200", {method: "post", [DisabledPropertyName]: false}).then(() => {
+                    // assert
+                    Assert.ok(fetchSpy.calledOnce, "track is called");
+                    let data = fetchSpy.args[0][0].baseData;
+                    Assert.equal("Fetch", data.type, "request is Fetch type");
+                    Assert.equal(1, dependencyFields.length, "trackDependencyDataInternal was called");
+                    Assert.equal("Fetch context", data.properties.test, "Fetch request's request context is added when customer configures addRequestContext.");
+                    Assert.equal("https://httpbin.org/status/200", data.properties.fetchRequestUrl, "Fetch request is captured.");
+                    Assert.equal("basic", data.properties.fetchResponseType, "Fetch response is captured.");
+
+                    testContext.testDone();
                 }, () => {
                     Assert.ok(false, "fetch failed!");
                     testContext.testDone();

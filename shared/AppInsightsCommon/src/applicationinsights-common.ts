@@ -57,6 +57,7 @@ export { IOperatingSystem } from './Interfaces/Context/IOperatingSystem';
 export { IPropertiesPlugin } from './Interfaces/IPropertiesPlugin';
 export { IUser, IUserContext } from './Interfaces/Context/IUser';
 export { ITelemetryTrace, ITraceState } from './Interfaces/Context/ITelemetryTrace';
+export { IRequestContext } from './Interfaces/IRequestContext';
 export { DistributedTracingModes } from './Enums';
 export { stringToBoolOrDefault, msToTimeSpan, isBeaconApiSupported, getExtensionByName, isCrossOriginError } from './HelperFuncs';
 export { createDomEvent } from './DomHelperFuncs';

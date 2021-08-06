@@ -4,13 +4,13 @@
 import {
     RequestHeaders, CorrelationIdHelper, TelemetryItemCreator, ICorrelationConfig,
     RemoteDependencyData, dateTimeUtilsNow, DisabledPropertyName, IDependencyTelemetry,
-    IConfig, ITelemetryContext, PropertiesPluginIdentifier, DistributedTracingModes
+    IConfig, ITelemetryContext, PropertiesPluginIdentifier, DistributedTracingModes, IRequestContext
 } from '@microsoft/applicationinsights-common';
 import {
     isNullOrUndefined, arrForEach, isString, strTrim, isFunction, LoggingSeverity, _InternalMessageId,
     IAppInsightsCore, BaseTelemetryPlugin, ITelemetryPluginChain, IConfiguration, IPlugin, ITelemetryItem, IProcessTelemetryContext,
     getLocation, getGlobal, strUndefined, strPrototype, IInstrumentCallDetails, InstrumentFunc, InstrumentProto, getPerformance,
-    IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey, generateW3CId, getIEVersion, dumpObj,objKeys
+    IInstrumentHooksCallbacks, IInstrumentHook, objForEachKey, generateW3CId, getIEVersion, dumpObj,objKeys, ICustomProperties
 } from '@microsoft/applicationinsights-core-js';
 import { ajaxRecord, IAjaxRecordResponse } from './ajaxRecord';
 import { EventHelper } from './ajaxUtils';
@@ -176,7 +176,8 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
             ignoreHeaders:[
                 "Authorization", 
                 "X-API-Key",
-                "WWW-Authenticate"]
+                "WWW-Authenticate"],
+            addRequestContext: undefined
         }
         return config;
     }
@@ -214,6 +215,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let _hooks:IInstrumentHook[] = [];
         let _disabledUrls:any = {};
         let _excludeRequestFromAutoTrackingPatterns: string[] | RegExp[];
+        let _addRequestContext: (requestContext?: IRequestContext) => ICustomProperties;
 
         dynamicProto(AjaxMonitor, this, (_self, base) => {
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain) => {
@@ -231,6 +233,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                     _maxAjaxCallsPerView = _config.maxAjaxCallsPerView;
                     _enableResponseHeaderTracking = _config.enableResponseHeaderTracking;
                     _excludeRequestFromAutoTrackingPatterns = _config.excludeRequestFromAutoTrackingPatterns;
+                    _addRequestContext = _config.addRequestContext;
 
                     _isUsingAIHeaders = distributedTracingMode === DistributedTracingModes.AI || distributedTracingMode === DistributedTracingModes.AI_AND_W3C;
                     _isUsingW3CHeaders = distributedTracingMode === DistributedTracingModes.AI_AND_W3C || distributedTracingMode === DistributedTracingModes.W3C;
@@ -425,7 +428,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             if (fetchData) {
                                 // Replace the result with the new promise from this code
                                 callDetails.rslt = callDetails.rslt.then((response: any) => {
-                                    _reportFetchMetrics(callDetails, (response||{}).status, response, fetchData, () => {
+                                    _reportFetchMetrics(callDetails, (response||{}).status, input, response, fetchData, () => {
                                         let ajaxResponse:IAjaxRecordResponse = {
                                             statusText: response.statusText,
                                             headerMap: null,
@@ -447,7 +450,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                                     return response;
                                 })
                                 .catch((reason: any) => {
-                                    _reportFetchMetrics(callDetails, 0, input, fetchData, null, { error: reason.message });
+                                    _reportFetchMetrics(callDetails, 0, input, null, fetchData, null, { error: reason.message });
                                     throw reason;
                                 });
                             }
@@ -724,7 +727,21 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                             return ajaxResponse;
                         });
 
+                        let properties;
+                        try {
+                            if (!!_addRequestContext) {
+                                properties = _addRequestContext({status: xhr.status, xhr});
+                            }
+                        } catch (e) {
+                            _throwInternalWarning(_self,
+                                _InternalMessageId.FailedAddingCustomDefinedRequestContext,
+                                "Failed to add custom defined request context as configured call back may missing a null check.")
+                        }
+
                         if (dependency) {
+                            if (properties !== undefined) {
+                                dependency.properties = {...dependency.properties, ...properties};
+                            }
                             _self[strTrackDependencyDataInternal](dependency);
                         } else {
                             _reportXhrError(null, {
@@ -900,7 +917,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 return result;
             }
 
-            function _reportFetchMetrics(callDetails: IInstrumentCallDetails, status: number, input: Request | Response | string, ajaxData: ajaxRecord, getResponse:() => IAjaxRecordResponse, properties?: { [key: string]: any }): void {
+            function _reportFetchMetrics(callDetails: IInstrumentCallDetails, status: number, input: Request, response: Response | string, ajaxData: ajaxRecord, getResponse:() => IAjaxRecordResponse, properties?: { [key: string]: any }): void {
                 if (!ajaxData) {
                     return;
                 }
@@ -923,7 +940,22 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                 _findPerfResourceEntry("fetch", ajaxData, () => {
                     const dependency = ajaxData.CreateTrackItem("Fetch", _enableRequestHeaderTracking, getResponse);
+                    
+                    let properties;
+                    try {
+                        if (!!_addRequestContext) {
+                            properties = _addRequestContext({status, request: input, response});
+                        }
+                    } catch (e) {
+                        _throwInternalWarning(_self,
+                            _InternalMessageId.FailedAddingCustomDefinedRequestContext,
+                            "Failed to add custom defined request context as configured call back may missing a null check.")
+                    }
+                    
                     if (dependency) {
+                        if (properties !== undefined) {
+                            dependency.properties = {...dependency.properties, ...properties};
+                        }
                         _self[strTrackDependencyDataInternal](dependency);
                     } else {
                         _reportFetchError(_InternalMessageId.FailedMonitorAjaxDur, null,
@@ -981,7 +1013,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
     }
 
     /**
-     * Protected function to allow sub classes the chance to add additional properties to the delendency event
+     * Protected function to allow sub classes the chance to add additional properties to the dependency event
      * before it's sent. This function calls track, so sub-classes must call this function after they have
      * populated their properties.
      * @param dependencyData dependency data object
