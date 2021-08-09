@@ -6,8 +6,9 @@ import { _InternalMessageId, LoggingSeverity } from '../JavaScriptSDK.Enums/Logg
 import { dumpObj, getDocument, getLocation, getNavigator, isIE } from './EnvUtils';
 import { 
     arrForEach, dateNow, getExceptionName, isFunction, isNotNullOrUndefined, isNullOrUndefined, isString, isTruthy, isUndefined,
-    objForEachKey, setValue, strContains, strEndsWith, strTrim
+    objForEachKey, setValue, strContains, strEndsWith, strTrim, toISOString
 } from "./HelperFuncs";
+import { newId } from './CoreUtils';
 import { IConfiguration } from '../JavaScriptSDK.Interfaces/IConfiguration';
 import { IAppInsightsCore } from '../JavaScriptSDK.Interfaces/IAppInsightsCore';
 
@@ -220,6 +221,22 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 
                 let delCookie = cookieMgrConfig.delCookie || _setCookieValue;
                 delCookie(name, _formatCookieValue(strEmpty, values));
+            }
+        },
+        setUserCookie: (userCookiePostfix?: () => string, idLength?: number, getNewId?: (idLength?: number) => string) => {
+            if (_isMgrEnabled(cookieMgr)) {
+                let generateNewId = (getNewId ? getNewId : null) || newId;
+                let user_id = generateNewId(idLength ? idLength : 22)
+                // without expiration, cookies expire at the end of the session
+                // set it to 365 days from now
+                // 365 * 24 * 60 * 60 = 31536000 
+                const oneYear = 31536000;
+                const acqStr = toISOString(new Date());
+                const newCookie = [user_id, acqStr];
+    
+                const userCookieName: string = 'ai_user';
+                const userCookiePostfixStr = (userCookiePostfix && userCookiePostfix()) ? userCookiePostfix() : "";
+                cookieMgr.set(userCookieName + userCookiePostfixStr, newCookie.join("|"), oneYear);
             }
         }
     };

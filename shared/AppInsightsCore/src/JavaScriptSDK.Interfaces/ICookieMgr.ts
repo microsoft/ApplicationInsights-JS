@@ -45,13 +45,19 @@ export interface ICookieMgr {
      * @param path - [optional] Path to set for the cookie, if not supplied will default to "/"
      */
     purge(name: string, path?: string): void;
+
+    /**
+     * Set the user cookie after AI is initialized. For the case that cookie usage was disabled at first then enable cookie with core.getCookieMgr().setEnabled(true).
+     */
+    setUserCookie(userCookiePostfix?: () => string, idLength?: number, getNewId?: (idLength?: number) => string): void;
 }
 
 /**
  * Configuration definition for instance based cookie management configuration
  */
 export interface ICookieMgrConfig {
-    /** Defaults to true, A boolean that indicates whether the use of cookies by  the SDK is enabled by the current instance.
+    /**
+     * Defaults to true, A boolean that indicates whether the use of cookies by the SDK is enabled by the current instance.
      * If false, the instance of the SDK initialized by this configuration will not store or read any data from cookies
      */
     enabled?: boolean;
