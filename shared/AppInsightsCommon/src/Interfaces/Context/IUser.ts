@@ -41,4 +41,5 @@ export interface IUser {
 export interface IUserContext extends IUser {
     setAuthenticatedUserContext(authenticatedUserId: string, accountId?: string, storeInCookie?: boolean): void;
     clearAuthenticatedUserContext(): void;
+    update (userId?: string): void;
 }

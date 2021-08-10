@@ -339,26 +339,6 @@ export class CookieManagerTests extends AITestClass {
         });
 
         this.testCase({
-            name: "CookieManager: disable cookies using disableCookiesUsage and re-enable user cookie with cookieMgr.setUserCookie",
-            test: () => {
-
-                let core = new AppInsightsCore();
-                core.initialize({
-                    instrumentationKey: "testiKey",
-                    disableCookiesUsage: true
-                }, [new ChannelPlugin()]);
-
-                let manager = core.getCookieMgr();
-                const userCookieName: string = 'ai_user';
-                Assert.equal("", manager.get(userCookieName));
-
-                manager.setEnabled(true);
-                manager.setUserCookie();
-                Assert.notEqual("", manager.get(userCookieName));
-            }
-        });
-
-        this.testCase({
             name: "CookieManager: set cookie path at the root config setting",
             test: () => {
 
