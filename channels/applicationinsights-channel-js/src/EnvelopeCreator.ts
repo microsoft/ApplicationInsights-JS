@@ -39,6 +39,14 @@ export abstract class EnvelopeCreator {
         }
     }
 
+    protected static convertPropsUndefinedToBlank(properties: { [key: string]: any }) {
+        if (!isNullOrUndefined(properties)) {
+            objForEachKey(properties, (key, value) => {
+                properties[key] = value || "";
+            });
+        }
+    }
+
     // TODO: Do we want this to take logger as arg or use this._logger as nonstatic?
     protected static createEnvelope<T>(logger: IDiagnosticLogger, envelopeType: string, telemetryItem: ITelemetryItem, data: Data<T>): IEnvelope {
         const envelope = new Envelope(logger, data, envelopeType);
@@ -183,6 +191,7 @@ export class DependencyEnvelopeCreator extends EnvelopeCreator {
         const customMeasurements = telemetryItem[strBaseData].measurements || {};
         const customProperties = telemetryItem[strBaseData][strProperties] || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
+        EnvelopeCreator.convertPropsUndefinedToBlank(customProperties);
         const bd = telemetryItem[strBaseData] as IDependencyTelemetry;
         if (isNullOrUndefined(bd)) {
             logger.warnToConsole("Invalid input for dependency data");
@@ -219,6 +228,7 @@ export class EventEnvelopeCreator extends EnvelopeCreator {
 
         // Extract root level properties from part C telemetryItem.data
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
+        EnvelopeCreator.convertPropsUndefinedToBlank(customProperties);
         const eventName = telemetryItem[strBaseData].name;
         const eventData = new Event(logger, eventName, customProperties, customMeasurements);
         const data = new Data<Event>(Event.dataType, eventData);
@@ -236,7 +246,7 @@ export class ExceptionEnvelopeCreator extends EnvelopeCreator {
         const customMeasurements = telemetryItem[strBaseData].measurements || {};
         const customProperties = telemetryItem[strBaseData][strProperties] || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
-
+        EnvelopeCreator.convertPropsUndefinedToBlank(customProperties);
         const bd = telemetryItem[strBaseData] as IExceptionInternal;
         const exData = Exception.CreateFromInterface(logger, bd, customProperties, customMeasurements);
         const data = new Data<Exception>(Exception.dataType, exData);
@@ -254,6 +264,7 @@ export class MetricEnvelopeCreator extends EnvelopeCreator {
         const props = baseData[strProperties] || {};
         const measurements = baseData.measurements || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, props, measurements);
+        EnvelopeCreator.convertPropsUndefinedToBlank(props);
         const baseMetricData = new Metric(logger, baseData.name, baseData.average, baseData.sampleCount, baseData.min, baseData.max, props, measurements);
         const data = new Data<Metric>(Metric.dataType, baseMetricData);
         return EnvelopeCreator.createEnvelope<Metric>(logger, Metric.envelopeType, telemetryItem, data);
@@ -318,6 +329,7 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
         }
 
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, properties, measurements);
+        EnvelopeCreator.convertPropsUndefinedToBlank(properties);
         const pageViewData = new PageView(logger, name, url, duration, properties, measurements, id);
         const data = new Data<PageView>(PageView.dataType, pageViewData);
         return EnvelopeCreator.createEnvelope<PageView>(logger, PageView.envelopeType, telemetryItem, data);
@@ -336,6 +348,7 @@ export class PageViewPerformanceEnvelopeCreator extends EnvelopeCreator {
         const properties = bd[strProperties] || {};
         const measurements = bd.measurements || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, properties, measurements);
+        EnvelopeCreator.convertPropsUndefinedToBlank(properties);
         const baseData = new PageViewPerformance(logger, name, url, undefined, properties, measurements, bd);
         const data = new Data<PageViewPerformance>(PageViewPerformance.dataType, baseData);
         return EnvelopeCreator.createEnvelope<PageViewPerformance>(logger, PageViewPerformance.envelopeType, telemetryItem, data);
@@ -353,6 +366,7 @@ export class TraceEnvelopeCreator extends EnvelopeCreator {
         const props = telemetryItem[strBaseData][strProperties] || {};
         const measurements = telemetryItem[strBaseData].measurements || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, props, measurements);
+        EnvelopeCreator.convertPropsUndefinedToBlank(props);
         const baseData = new Trace(logger, message, severityLevel, props, measurements);
         const data = new Data<Trace>(Trace.dataType, baseData);
         return EnvelopeCreator.createEnvelope<Trace>(logger, Trace.envelopeType, telemetryItem, data);
