@@ -197,7 +197,7 @@ export class User implements IUserContext {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public update() {
+    public update(userId?: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }
