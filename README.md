@@ -329,7 +329,6 @@ Cookie Configuration for instance based cookie management added in version 2.6.0
 | getCookie | `(name: string) => string` | null | Function to fetch the named cookie value, if not provided it will use the internal cookie parsing / caching. | 
 | setCookie | `(name: string, value: string) => void` | null | Function to set the named cookie with the specified value, only called when adding or updating a cookie. |
 | delCookie | `(name: string, value: string) => void` | null | Function to delete the named cookie with the specified value, separated from setCookie to avoid the need to parse the value to determine whether the cookie is being added or removed.if not provided it will use the internal cookie parsing / caching. |
-| setUserCookie | `(userCookiePostfix?: () => string, idLength?: number, getNewId?: (idLength?: number) => string): void` | null | Set the user cookie after AI is initialized. For the case that cookie usage was disabled at first then enable cookie with core.getCookieMgr().setEnabled(true). Parameters `userCookiePostfix` is customer defined user cookie postfix, an [optional] value that will be used as name postfix for user cookie name. If undefined, no postfix is added on user cookie name. `idLength` is [optional] that identifies the default length used to generate user id's. Defaults to 22, previous default value was 5, if you need to keep the previous maximum length you should set this value to 5. `getNewId` [optional] you can provide customized method to generate new user id. |
 
 ## Cookie Handling
 
