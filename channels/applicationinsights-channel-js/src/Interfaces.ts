@@ -60,7 +60,7 @@ export interface ISenderConfig {
     /**
      * (Opetional) Provide user an option to convert undefined field to user defined value.
      */
-     convertCustomDimensionUndefinedField: () => any
+     convertUndefined: () => any
 }
 
 export interface IBackendResponse {

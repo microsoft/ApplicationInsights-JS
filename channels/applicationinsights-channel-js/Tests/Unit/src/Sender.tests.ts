@@ -1262,7 +1262,7 @@ export class SenderTests extends AITestClass {
         });
 
         this.testCase({
-            name: "Channel Config: convert custom dimension undefined values to customer defined value with config convertCustomDimensionUndefinedField",
+            name: "Channel Config: convert custom dimension undefined values to customer defined value with config convertUndefined",
             test: () => {
                 const inputEnvelope: ITelemetryItem = {
                     name: "test",

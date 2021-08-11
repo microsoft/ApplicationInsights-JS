@@ -39,10 +39,10 @@ export abstract class EnvelopeCreator {
         }
     }
 
-    protected static convertPropsUndefinedToCustomDefinedValue(properties: { [key: string]: any }, customDefinedValue: any) {
+    protected static convertPropsUndefinedToCustomDefinedValue(properties: { [key: string]: any }, customUndefinedValue: any) {
         if (!isNullOrUndefined(properties)) {
             objForEachKey(properties, (key, value) => {
-                properties[key] = value || customDefinedValue;
+                properties[key] = value || customUndefinedValue;
             });
         }
     }
@@ -170,7 +170,7 @@ export abstract class EnvelopeCreator {
 
     protected _logger: IDiagnosticLogger;
 
-    abstract Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customDefinedValue?: any): IEnvelope;
+    abstract Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope;
 
     protected Init(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem) {
         this._logger = logger;
@@ -185,14 +185,14 @@ export abstract class EnvelopeCreator {
 export class DependencyEnvelopeCreator extends EnvelopeCreator {
     static DependencyEnvelopeCreator = new DependencyEnvelopeCreator();
 
-    Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customDefinedValue?: any): IEnvelope {
+    Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
         super.Init(logger, telemetryItem);
 
         const customMeasurements = telemetryItem[strBaseData].measurements || {};
         const customProperties = telemetryItem[strBaseData][strProperties] || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
-        if (!isNullOrUndefined(customDefinedValue)) {
-            EnvelopeCreator.convertPropsUndefinedToCustomDefinedValue(customProperties, customDefinedValue);
+        if (!isNullOrUndefined(customUndefinedValue)) {
+            EnvelopeCreator.convertPropsUndefinedToCustomDefinedValue(customProperties, customUndefinedValue);
         }
         const bd = telemetryItem[strBaseData] as IDependencyTelemetry;
         if (isNullOrUndefined(bd)) {
@@ -210,7 +210,7 @@ export class DependencyEnvelopeCreator extends EnvelopeCreator {
 export class EventEnvelopeCreator extends EnvelopeCreator {
     static EventEnvelopeCreator = new EventEnvelopeCreator();
 
-    Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customDefinedValue?: any): IEnvelope {
+    Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
         super.Init(logger, telemetryItem);
 
         let customProperties = {};
@@ -230,8 +230,8 @@ export class EventEnvelopeCreator extends EnvelopeCreator {
 
         // Extract root level properties from part C telemetryItem.data
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
-        if (!isNullOrUndefined(customDefinedValue)) {
-            EnvelopeCreator.convertPropsUndefinedToCustomDefinedValue(customProperties, customDefinedValue);
+        if (!isNullOrUndefined(customUndefinedValue)) {
+            EnvelopeCreator.convertPropsUndefinedToCustomDefinedValue(customProperties, customUndefinedValue);
         }
         const eventName = telemetryItem[strBaseData].name;
         const eventData = new Event(logger, eventName, customProperties, customMeasurements);
@@ -243,15 +243,15 @@ export class EventEnvelopeCreator extends EnvelopeCreator {
 export class ExceptionEnvelopeCreator extends EnvelopeCreator {
     static ExceptionEnvelopeCreator = new ExceptionEnvelopeCreator();
 
-    Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customDefinedValue?: any): IEnvelope {
+    Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
         super.Init(logger, telemetryItem);
 
         // Extract root level properties from part C telemetryItem.data
         const customMeasurements = telemetryItem[strBaseData].measurements || {};
         const customProperties = telemetryItem[strBaseData][strProperties] || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, customProperties, customMeasurements);
-        if (!isNullOrUndefined(customDefinedValue)) {
-            EnvelopeCreator.convertPropsUndefinedToCustomDefinedValue(customProperties, customDefinedValue);
+        if (!isNullOrUndefined(customUndefinedValue)) {
+            EnvelopeCreator.convertPropsUndefinedToCustomDefinedValue(customProperties, customUndefinedValue);
         }
         const bd = telemetryItem[strBaseData] as IExceptionInternal;
         const exData = Exception.CreateFromInterface(logger, bd, customProperties, customMeasurements);
@@ -263,15 +263,15 @@ export class ExceptionEnvelopeCreator extends EnvelopeCreator {
 export class MetricEnvelopeCreator extends EnvelopeCreator {
     static MetricEnvelopeCreator = new MetricEnvelopeCreator();
 
-    Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customDefinedValue?: any): IEnvelope {
+    Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
         super.Init(logger, telemetryItem);
 
         const baseData = telemetryItem[strBaseData];
         const props = baseData[strProperties] || {};
         const measurements = baseData.measurements || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, props, measurements);
-        if (!isNullOrUndefined(customDefinedValue)) {
-            EnvelopeCreator.convertPropsUndefinedToCustomDefinedValue(props, customDefinedValue);
+        if (!isNullOrUndefined(customUndefinedValue)) {
+            EnvelopeCreator.convertPropsUndefinedToCustomDefinedValue(props, customUndefinedValue);
         }
         const baseMetricData = new Metric(logger, baseData.name, baseData.average, baseData.sampleCount, baseData.min, baseData.max, props, measurements);
         const data = new Data<Metric>(Metric.dataType, baseMetricData);
@@ -282,7 +282,7 @@ export class MetricEnvelopeCreator extends EnvelopeCreator {
 export class PageViewEnvelopeCreator extends EnvelopeCreator {
     static PageViewEnvelopeCreator = new PageViewEnvelopeCreator();
 
-    Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customDefinedValue?: any): IEnvelope {
+    Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
         super.Init(logger, telemetryItem);
 
         // Since duration is not part of the domain properties in Common Schema, extract it from part C
@@ -337,8 +337,8 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
         }
 
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, properties, measurements);
-        if (!isNullOrUndefined(customDefinedValue)) {
-            EnvelopeCreator.convertPropsUndefinedToCustomDefinedValue(properties, customDefinedValue);
+        if (!isNullOrUndefined(customUndefinedValue)) {
+            EnvelopeCreator.convertPropsUndefinedToCustomDefinedValue(properties, customUndefinedValue);
         }
         const pageViewData = new PageView(logger, name, url, duration, properties, measurements, id);
         const data = new Data<PageView>(PageView.dataType, pageViewData);
@@ -349,7 +349,7 @@ export class PageViewEnvelopeCreator extends EnvelopeCreator {
 export class PageViewPerformanceEnvelopeCreator extends EnvelopeCreator {
     static PageViewPerformanceEnvelopeCreator = new PageViewPerformanceEnvelopeCreator();
 
-    Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customDefinedValue?: any): IEnvelope {
+    Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
         super.Init(logger, telemetryItem);
 
         const bd = telemetryItem[strBaseData] as IPageViewPerformanceTelemetry;
@@ -358,8 +358,8 @@ export class PageViewPerformanceEnvelopeCreator extends EnvelopeCreator {
         const properties = bd[strProperties] || {};
         const measurements = bd.measurements || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, properties, measurements);
-        if (!isNullOrUndefined(customDefinedValue)) {
-            EnvelopeCreator.convertPropsUndefinedToCustomDefinedValue(properties, customDefinedValue);
+        if (!isNullOrUndefined(customUndefinedValue)) {
+            EnvelopeCreator.convertPropsUndefinedToCustomDefinedValue(properties, customUndefinedValue);
         }
         const baseData = new PageViewPerformance(logger, name, url, undefined, properties, measurements, bd);
         const data = new Data<PageViewPerformance>(PageViewPerformance.dataType, baseData);
@@ -370,7 +370,7 @@ export class PageViewPerformanceEnvelopeCreator extends EnvelopeCreator {
 export class TraceEnvelopeCreator extends EnvelopeCreator {
     static TraceEnvelopeCreator = new TraceEnvelopeCreator();
 
-    Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customDefinedValue?: any): IEnvelope {
+    Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
         super.Init(logger, telemetryItem);
 
         const message = telemetryItem[strBaseData].message;
@@ -378,8 +378,8 @@ export class TraceEnvelopeCreator extends EnvelopeCreator {
         const props = telemetryItem[strBaseData][strProperties] || {};
         const measurements = telemetryItem[strBaseData].measurements || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, props, measurements);
-        if (!isNullOrUndefined(customDefinedValue)) {
-            EnvelopeCreator.convertPropsUndefinedToCustomDefinedValue(props, customDefinedValue);
+        if (!isNullOrUndefined(customUndefinedValue)) {
+            EnvelopeCreator.convertPropsUndefinedToCustomDefinedValue(props, customUndefinedValue);
         }
         const baseData = new Trace(logger, message, severityLevel, props, measurements);
         const data = new Data<Trace>(Trace.dataType, baseData);

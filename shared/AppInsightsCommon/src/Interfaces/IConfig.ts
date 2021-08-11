@@ -432,7 +432,7 @@ export interface IConfig {
      * @description Provide user an option to convert undefined field to user defined value.
      * @type any
      */
-     convertCustomDimensionUndefinedField?: any
+     convertUndefined?: any
 }
 
 export class ConfigurationManager {

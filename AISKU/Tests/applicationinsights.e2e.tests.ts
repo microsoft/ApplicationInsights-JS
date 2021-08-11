@@ -72,7 +72,7 @@ export class ApplicationInsightsTests extends TestClass {
                 enableCorsCorrelation: true,
                 distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
                 samplingPercentage: 50,
-                convertCustomDimensionUndefinedField: "test-value"
+                convertUndefined: "test-value"
             };
 
             const init = new ApplicationInsights({
@@ -458,12 +458,12 @@ export class ApplicationInsightsTests extends TestClass {
         });
 
         this.testCaseAsync({
-            name: 'E2E.GenericTests: undefined properties are replaced by customer defined value with config convertCustomDimensionUndefinedField.',
+            name: 'E2E.GenericTests: undefined properties are replaced by customer defined value with config convertUndefined.',
             stepDelay: 1,
             steps: [() => {
                 this._ai.trackPageView({ name: 'pageview', properties: { 'prop1': 'val1' }});
                 this._ai.trackEvent({ name: 'event', properties: { 'prop2': undefined } });
-            }].concat(this.asserts(1)).concat(() => {
+            }].concat(this.asserts(3)).concat(() => {
                 const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
                 for (let i = 0; i < payloadStr.length; i++) {
                     const payload = JSON.parse(payloadStr[i]);const baseType = payload.data.baseType;
