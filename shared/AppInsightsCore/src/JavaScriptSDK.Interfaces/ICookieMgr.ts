@@ -51,7 +51,8 @@ export interface ICookieMgr {
  * Configuration definition for instance based cookie management configuration
  */
 export interface ICookieMgrConfig {
-    /** Defaults to true, A boolean that indicates whether the use of cookies by  the SDK is enabled by the current instance.
+    /**
+     * Defaults to true, A boolean that indicates whether the use of cookies by the SDK is enabled by the current instance.
      * If false, the instance of the SDK initialized by this configuration will not store or read any data from cookies
      */
     enabled?: boolean;

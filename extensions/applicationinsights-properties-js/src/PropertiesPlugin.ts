@@ -91,6 +91,10 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                             theContext.sessionManager.update();
                         }
                     }
+
+                    if (theContext.user) {
+                        theContext.user.update(theContext.user.id);
+                    }
     
                     _processTelemetryInternal(event, itemCtx);
     
