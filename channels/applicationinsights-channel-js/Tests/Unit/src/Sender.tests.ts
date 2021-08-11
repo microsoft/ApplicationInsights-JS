@@ -1261,5 +1261,29 @@ export class SenderTests extends AITestClass {
             
         });
 
+        this.testCase({
+            name: "Channel Config: convert custom dimension undefined values to customer defined value with config convertCustomDimensionUndefinedField",
+            test: () => {
+                const inputEnvelope: ITelemetryItem = {
+                    name: "test",
+                    iKey: "iKey",
+                    data: {
+                        "property1": undefined,
+                        "property2": "value2"
+                    },
+                    baseData: {
+                        "name": "Event Name"
+                    }
+                };
+                const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null, "test");
+
+                const baseData = appInsightsEnvelope.data.baseData;
+
+                // Assert custom properties
+                QUnit.assert.ok(baseData.properties);
+                QUnit.assert.equal("test", baseData.properties["property1"]);
+                QUnit.assert.equal("value2", baseData.properties["property2"]);
+            }
+        });
     }
 }

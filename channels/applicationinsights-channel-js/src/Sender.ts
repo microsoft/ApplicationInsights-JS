@@ -41,7 +41,7 @@ function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
 
 export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
-    public static constructEnvelope(orig: ITelemetryItem, iKey: string, logger: IDiagnosticLogger): IEnvelope {
+    public static constructEnvelope(orig: ITelemetryItem, iKey: string, logger: IDiagnosticLogger, convertCustomDimensionUndefinedField?: any): IEnvelope {
         let envelope: ITelemetryItem;
         if (iKey !== orig.iKey && !isNullOrUndefined(iKey)) {
             envelope = {
@@ -54,22 +54,22 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
         switch (envelope.baseType) {
             case Event.dataType:
-                return EventEnvelopeCreator.EventEnvelopeCreator.Create(logger, envelope);
+                return EventEnvelopeCreator.EventEnvelopeCreator.Create(logger, envelope, convertCustomDimensionUndefinedField);
             case Trace.dataType:
-                return TraceEnvelopeCreator.TraceEnvelopeCreator.Create(logger, envelope);
+                return TraceEnvelopeCreator.TraceEnvelopeCreator.Create(logger, envelope, convertCustomDimensionUndefinedField);
             case PageView.dataType:
-                return PageViewEnvelopeCreator.PageViewEnvelopeCreator.Create(logger, envelope);
+                return PageViewEnvelopeCreator.PageViewEnvelopeCreator.Create(logger, envelope, convertCustomDimensionUndefinedField);
             case PageViewPerformance.dataType:
-                return PageViewPerformanceEnvelopeCreator.PageViewPerformanceEnvelopeCreator.Create(logger, envelope);
+                return PageViewPerformanceEnvelopeCreator.PageViewPerformanceEnvelopeCreator.Create(logger, envelope, convertCustomDimensionUndefinedField);
             case Exception.dataType:
-                return ExceptionEnvelopeCreator.ExceptionEnvelopeCreator.Create(logger, envelope);
+                return ExceptionEnvelopeCreator.ExceptionEnvelopeCreator.Create(logger, envelope, convertCustomDimensionUndefinedField);
             case Metric.dataType:
-                return MetricEnvelopeCreator.MetricEnvelopeCreator.Create(logger, envelope);
+                return MetricEnvelopeCreator.MetricEnvelopeCreator.Create(logger, envelope, convertCustomDimensionUndefinedField);
             case RemoteDependencyData.dataType:
-                return DependencyEnvelopeCreator.DependencyEnvelopeCreator.Create(logger, envelope);
+                return DependencyEnvelopeCreator.DependencyEnvelopeCreator.Create(logger, envelope, convertCustomDimensionUndefinedField);
             default:
 
-                return EventEnvelopeCreator.EventEnvelopeCreator.Create(logger, envelope);
+                return EventEnvelopeCreator.EventEnvelopeCreator.Create(logger, envelope, convertCustomDimensionUndefinedField);
         }
     }
 
@@ -88,7 +88,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             instrumentationKey: () => undefined,  // Channel doesn't need iKey, it should be set already
             namePrefix: () => undefined,
             samplingPercentage: () => 100,
-            customHeaders: () => undefined
+            customHeaders: () => undefined,
+            convertCustomDimensionUndefinedField: () => undefined,
         }
     }
 
@@ -106,7 +107,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             instrumentationKey: undefined,
             namePrefix: undefined,
             samplingPercentage: undefined,
-            customHeaders: undefined
+            customHeaders: undefined,
+            convertCustomDimensionUndefinedField: undefined,
         };
     }
     
@@ -308,7 +310,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     }
         
                     // construct an envelope that Application Insights endpoint can understand
-                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, _self._senderConfig.instrumentationKey(), itemCtx.diagLog());
+                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, _self._senderConfig.instrumentationKey(), itemCtx.diagLog(), _self._senderConfig.convertCustomDimensionUndefinedField());
                     if (!aiEnvelope) {
                         itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
                         return;

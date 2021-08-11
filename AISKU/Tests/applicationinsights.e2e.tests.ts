@@ -71,7 +71,8 @@ export class ApplicationInsightsTests extends TestClass {
                 namePrefix: this.sessionPrefix,
                 enableCorsCorrelation: true,
                 distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
-                samplingPercentage: 50
+                samplingPercentage: 50,
+                convertCustomDimensionUndefinedField: "test-value"
             };
 
             const init = new ApplicationInsights({
@@ -454,6 +455,35 @@ export class ApplicationInsightsTests extends TestClass {
                         }
                     }
                 })
+        });
+
+        this.testCaseAsync({
+            name: 'E2E.GenericTests: undefined properties are replaced by customer defined value with config convertCustomDimensionUndefinedField.',
+            stepDelay: 1,
+            steps: [() => {
+                this._ai.trackPageView({ name: 'pageview', properties: { 'prop1': 'val1' }});
+                this._ai.trackEvent({ name: 'event', properties: { 'prop2': undefined } });
+            }].concat(this.asserts(1)).concat(() => {
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                for (let i = 0; i < payloadStr.length; i++) {
+                    const payload = JSON.parse(payloadStr[i]);const baseType = payload.data.baseType;
+                    // Make the appropriate assersion depending on the baseType
+                    switch (baseType) {
+                        case Event.dataType:
+                            const eventData = payload.data;
+                            Assert.ok(eventData && eventData.baseData && eventData.baseData.properties['prop2']);
+                            Assert.equal(eventData.baseData.properties['prop2'], 'test-value');
+                            break;
+                        case PageView.dataType:
+                            const pageViewData = payload.data;
+                            Assert.ok(pageViewData && pageViewData.baseData && pageViewData.baseData.properties['prop1']);
+                            Assert.equal(pageViewData.baseData.properties['prop1'], 'val1');
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            })
         });
     }
 
