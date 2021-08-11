@@ -3,6 +3,9 @@
 import { ITelemetryPlugin } from "./ITelemetryPlugin";
 import { IChannelControls } from "./IChannelControls";
 import { ICookieMgrConfig } from "./ICookieMgr";
+import { INotificationManager } from "./INotificationManager";
+import { IPerfManager } from "./IPerfManager";
+import { IAppInsightsCore } from "./IAppInsightsCore";
 
 "use strict";
 
@@ -97,6 +100,13 @@ export interface IConfiguration {
      * This also does not use the window.performance API, so it will work in environments where this API is not supported.
      */
     enablePerfMgr?: boolean;
+
+    /**
+     * [Optional] Callback function that will be called to create a the IPerfManager instance when required and ```enablePerfMgr``` 
+     * is enabled, this enables you to override the default creation of a PerfManager() without needing to ```setPerfMgr()``` 
+     * after initialization.
+     */
+    createPerfMgr?: (core: IAppInsightsCore, notificationManager: INotificationManager) => IPerfManager;
 
     /**
      * [Optional] Fire every single performance event not just the top level root performance event. Defaults to false.

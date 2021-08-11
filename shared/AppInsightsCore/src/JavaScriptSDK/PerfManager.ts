@@ -9,6 +9,8 @@ import { dateNow, isArray, isFunction, objDefineAccessors } from './HelperFuncs'
 
 const strExecutionContextKey = "ctx";
 
+let _defaultPerfManager: IPerfManager = null;
+
 export class PerfEvent implements IPerfEvent {
     public static ParentContextKey = "parent";
     public static ChildrenContextKey = "childEvts";
@@ -158,7 +160,7 @@ export class PerfManager implements IPerfManager  {
                 if (perfEvent) {
                     perfEvent.complete();
 
-                    if (manager) {
+                    if (manager && isFunction(manager.perfEvent)) {
                         manager.perfEvent(perfEvent);
                     }
                 }
@@ -273,4 +275,20 @@ export function doPerf<T>(mgrSource: IPerfManagerProvider | IPerfManager, getSou
     }
 
     return func();
+}
+
+/**
+ * Set the global performance manager to use when there is no core instance or it has not been initialized yet.
+ * @param perfManager - The IPerfManager instance to use when no performance manager is supplied.
+ */
+export function setGblPerfMgr(perfManager: IPerfManager) {
+    _defaultPerfManager = perfManager;
+}
+
+/**
+ * Get the current global performance manager that will be used with no performance manager is supplied.
+ * @returns - The current default manager
+ */
+export function getGblPerfMgr(): IPerfManager {
+    return _defaultPerfManager;
 }
