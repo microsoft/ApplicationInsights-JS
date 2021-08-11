@@ -175,7 +175,7 @@ export class User implements IUserContext {
                 let user_id = userId ? userId : _generateNewId();
                 let user_cookie = _generateNewCookie(user_id);
                 _setUserCookie(user_cookie.join(User.cookieSeparator));
-            }
+            };
         });
     }
 
