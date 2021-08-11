@@ -136,6 +136,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             _enabled = value !== false;
         },
         set: (name: string, value: string, maxAgeSec?: number, domain?: string, path?: string) => {
+            let result = false;
             if (_isMgrEnabled(cookieMgr)) {
                 let values: any = {};
                 let theValue = strTrim(value || strEmpty);
@@ -189,7 +190,10 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             
                 let setCookieFn = cookieMgrConfig.setCookie || _setCookieValue;
                 setCookieFn(name, _formatCookieValue(theValue, values));
+                result = true;
             }
+
+            return result;
         },
         get: (name: string): string => {
             let value = strEmpty
@@ -200,12 +204,16 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             return value;
         },
         del: (name: string, path?: string) => {
+            let result = false;
             if (_isMgrEnabled(cookieMgr)) {
                 // Only remove the cookie if the manager and cookie support has not been disabled
-                cookieMgr.purge(name, path);
+                result = cookieMgr.purge(name, path);
             }
+
+            return result;
         },
         purge: (name: string, path?: string) => {
+            let result = false;
             if (areCookiesSupported(logger)) {
                 // Setting the expiration date in the past immediately removes the cookie
                 let values = {
@@ -220,7 +228,10 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
 
                 let delCookie = cookieMgrConfig.delCookie || _setCookieValue;
                 delCookie(name, _formatCookieValue(strEmpty, values));
+                result = true;
             }
+
+            return result;
         }
     };
 
