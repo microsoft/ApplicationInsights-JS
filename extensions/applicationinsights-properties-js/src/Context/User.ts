@@ -78,20 +78,34 @@ export class User implements IUserContext {
                 }
             }
 
-            if (!_self.id) {
+            function _generateNewId() {
                 let theConfig = (config || {}) as ITelemetryConfig;
                 let getNewId = (theConfig.getNewId ? theConfig.getNewId() : null) || newId;
-                _self.id = getNewId(theConfig.idLength ? config.idLength() : 22);
+                let id = getNewId(theConfig.idLength ? config.idLength() : 22);
+                return id;
+            }
+
+            function _generateNewCookie(userId: string) {
+                const acqStr = toISOString(new Date());
+                _self.accountAcquisitionDate = acqStr;
+                _self.isNewUser = true;
+                const newCookie = [userId, acqStr];
+                return newCookie;
+            }
+
+            function _setUserCookie(cookie: string) {
                 // without expiration, cookies expire at the end of the session
                 // set it to 365 days from now
                 // 365 * 24 * 60 * 60 = 31536000 
                 const oneYear = 31536000;
-                const acqStr = toISOString(new Date());
-                _self.accountAcquisitionDate = acqStr;
-                _self.isNewUser = true;
-                const newCookie = [_self.id, acqStr];
+                _cookieManager.set(_storageNamePrefix(), cookie, oneYear);
+            }
 
-                _cookieManager.set(_storageNamePrefix(), newCookie.join(User.cookieSeparator), oneYear);
+            if (!_self.id) {
+                _self.id = _generateNewId();
+                const newCookie = _generateNewCookie(_self.id);
+
+                _setUserCookie(newCookie.join(User.cookieSeparator));
 
                 // If we have an config.namePrefix() + ai_session in local storage this means the user actively removed our cookies.
                 // We should respect their wishes and clear ourselves from local storage
@@ -156,6 +170,12 @@ export class User implements IUserContext {
                 _self.accountId = null;
                 _cookieManager.del(User.authUserCookieName);
             };
+
+            _self.update = (userId?: string) => {
+                let user_id = userId ? userId : _generateNewId();
+                let user_cookie = _generateNewCookie(user_id);
+                _setUserCookie(user_cookie.join(User.cookieSeparator));
+            };
         });
     }
 
@@ -174,6 +194,10 @@ export class User implements IUserContext {
      * @returns {} 
      */
     public clearAuthenticatedUserContext() {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    public update(userId?: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 }
