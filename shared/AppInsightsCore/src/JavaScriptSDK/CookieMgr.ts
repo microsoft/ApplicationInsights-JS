@@ -190,6 +190,7 @@ export function createCookieMgr(rootConfig?: IConfiguration, logger?: IDiagnosti
             
                 let setCookieFn = cookieMgrConfig.setCookie || _setCookieValue;
                 setCookieFn(name, _formatCookieValue(theValue, values));
+                result = true;
             }
 
             return result;
