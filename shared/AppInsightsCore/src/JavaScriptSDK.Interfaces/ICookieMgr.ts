@@ -20,8 +20,9 @@ export interface ICookieMgr {
      * @param maxAgeSec - [optional] The maximum number of SECONDS that this cookie should survive
      * @param domain - [optional] The domain to set for the cookie
      * @param path - [optional] Path to set for the cookie, if not supplied will default to "/"
+     * @returns - True if the cookie was set otherwise false (Because cookie usage is not enabled or available)
      */
-    set(name: string, value: string, maxAgeSec?: number, domain?: string, path?: string): void;
+    set(name: string, value: string, maxAgeSec?: number, domain?: string, path?: string): boolean;
 
     /**
      * Get the value of the named cookie
@@ -34,8 +35,9 @@ export interface ICookieMgr {
      * Note: Not using "delete" as the name because it's a reserved word which would cause issues on older browsers
      * @param name - The name of the cookie
      * @param path - [optional] Path to set for the cookie, if not supplied will default to "/"
+     * @returns - True if the cookie was marked for deletion otherwise false (Because cookie usage is not enabled or available)
      */
-    del(name: string, path?: string): void;
+    del(name: string, path?: string): boolean;
 
     /**
      * Purge the cookie from the system if cookie support is available, this function ignores the enabled setting of the manager
@@ -43,8 +45,9 @@ export interface ICookieMgr {
      * Note: Not using "delete" as the name because it's a reserved word which would cause issues on older browsers
      * @param name - The name of the cookie
      * @param path - [optional] Path to set for the cookie, if not supplied will default to "/"
+     * @returns - True if the cookie was marked for deletion otherwise false (Because cookie usage is not available)
      */
-    purge(name: string, path?: string): void;
+    purge(name: string, path?: string): boolean;
 }
 
 /**

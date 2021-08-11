@@ -36,6 +36,11 @@ export interface IUser {
      * A flag indicating whether this represents a new user
      */
     isNewUser?: boolean;
+
+    /**
+     * A flag indicating whether the user cookie has been set
+     */
+    isUserCookieSet?: boolean;
 }
 
 export interface IUserContext extends IUser {

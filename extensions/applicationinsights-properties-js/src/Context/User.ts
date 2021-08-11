@@ -56,7 +56,15 @@ export class User implements IUserContext {
      */
     public accountAcquisitionDate: string;
 
+    /**
+     * A flag indicating whether this represents a new user
+     */
     public isNewUser = false;
+
+    /**
+     * A flag indicating whether the user cookie has been set
+     */
+    public isUserCookieSet = false;
 
     constructor(config: ITelemetryConfig, core: IAppInsightsCore) {
         let _logger = safeGetLogger(core);
@@ -75,6 +83,8 @@ export class User implements IUserContext {
                 const params = cookie.split(User.cookieSeparator);
                 if (params.length > 0) {
                     _self.id = params[0];
+                    // we already have a cookie
+                    _self.isUserCookieSet = !!_self.id;
                 }
             }
 
@@ -98,7 +108,7 @@ export class User implements IUserContext {
                 // set it to 365 days from now
                 // 365 * 24 * 60 * 60 = 31536000 
                 const oneYear = 31536000;
-                _cookieManager.set(_storageNamePrefix(), cookie, oneYear);
+                _self.isUserCookieSet = _cookieManager.set(_storageNamePrefix(), cookie, oneYear);
             }
 
             if (!_self.id) {
@@ -172,9 +182,12 @@ export class User implements IUserContext {
             };
 
             _self.update = (userId?: string) => {
-                let user_id = userId ? userId : _generateNewId();
-                let user_cookie = _generateNewCookie(user_id);
-                _setUserCookie(user_cookie.join(User.cookieSeparator));
+                // Optimizations to avoid setting and processing the cookie when not needed
+                if (_self.id !== userId || !_self.isUserCookieSet) {
+                    let user_id = userId ? userId : _generateNewId();
+                    let user_cookie = _generateNewCookie(user_id);
+                    _setUserCookie(user_cookie.join(User.cookieSeparator));
+                }
             };
         });
     }
@@ -197,6 +210,11 @@ export class User implements IUserContext {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
+    /**
+     * Update or create the user cookie if cookies where previously disabled or the new userId does not match the existing value.
+     * If you pass nothing a new random user id will be created.
+     * @param userId - Specific either the current (via appInsights.context.user.id) or new id that you want to set
+     */
     public update(userId?: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
