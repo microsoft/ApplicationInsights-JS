@@ -427,6 +427,12 @@ export interface IConfig {
      * @type [{header: string, value: string}]
      */
     customHeaders?: [{header: string, value: string}];
+
+    /**
+     * @description Provide user an option to convert undefined field to user defined value.
+     * @type any
+     */
+     convertUndefined?: any
 }
 
 export class ConfigurationManager {

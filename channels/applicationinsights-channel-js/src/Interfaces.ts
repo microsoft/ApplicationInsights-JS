@@ -56,6 +56,11 @@ export interface ISenderConfig {
      * (Opetional) The ability for the user to provide extra headers
      */
     customHeaders: () => [{header: string, value: string}]
+
+    /**
+     * (Opetional) Provide user an option to convert undefined field to user defined value.
+     */
+     convertUndefined: () => any
 }
 
 export interface IBackendResponse {
