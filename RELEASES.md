@@ -38,6 +38,7 @@
 - #1597 [BUG] The Pointer Events for the DebugPlugin are getting blocked
 - #1599 Add visibilitychange event to the set of events tracked for triggering page unload
 - #1602 [BUG] DebugPlugin - helpers.js:334 Uncaught TypeError: Cannot convert a Symbol value to a string
+- #1472 [Enhancement] Add config to exclude a specific request auto tracking
 
 ### Update React plugin to v3.1.4
 
