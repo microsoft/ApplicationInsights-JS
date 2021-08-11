@@ -92,14 +92,15 @@ export default class PropertiesPlugin extends BaseTelemetryPlugin implements IPr
                         }
                     }
 
-                    if (theContext.user) {
-                        theContext.user.update(theContext.user.id);
+                    let userCtx = theContext.user;
+                    if (userCtx && !userCtx.isUserCookieSet) {
+                        userCtx.update(theContext.user.id);
                     }
     
                     _processTelemetryInternal(event, itemCtx);
     
-                    if (theContext.user && theContext.user.isNewUser) {
-                        theContext.user.isNewUser = false;
+                    if (userCtx && userCtx.isNewUser) {
+                        userCtx.isNewUser = false;
                         const message = new _InternalLogMessage(_InternalMessageId.SendBrowserInfoOnUserInit, ((getNavigator()||{} as any).userAgent||""));
                         itemCtx.diagLog().logInternalMessage(LoggingSeverity.CRITICAL, message);
                     }
