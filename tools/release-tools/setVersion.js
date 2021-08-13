@@ -8,8 +8,11 @@ let preRel = null;
 let isRelease = false;
 let testOnly = null;
 let isReact = false;
+let isReactNative = false;
 
 const theVersion = require(process.cwd() + "/version.json");
+const orgBaseVersion = theVersion.release || "";
+const orgPkgVersions = {};
 
 function showHelp() {
     var scriptParts;
@@ -119,6 +122,8 @@ function parseArgs() {
             newVer = theArg;
         } else if (!isReact && theArg === "-react") {
             isReact = true;
+        } else if (!isReactNative && theArg === "-reactNative") {
+            isReactNative = true;
         } else {
             console.error("!!! Invalid Argument [" + theArg + "] detected");
             return false;
@@ -144,6 +149,68 @@ function parseArgs() {
     }
 
     return true;
+}
+
+function updateVersions() {
+    const rootVersion = require(process.cwd() + "/package.json");
+    let newVersion = calculateVersion(rootVersion.version);
+    if (newVersion) {
+        console.log("New version [" + theVersion.release + "] => [" + newVersion + "]");
+        if (!isReact && !isReactNative) {
+            theVersion.release = newVersion;
+        }
+    }
+
+    let packages = theVersion.pkgs = theVersion.pkgs || {};
+    const keys = Object.keys(packages);
+    if (keys) {
+        for (let lp = 0; lp < keys.length; lp++) {
+            const value = keys[lp];
+
+            let packageDef = packages[value] = packages[value] || {};
+
+            if (fs.existsSync(process.cwd() + "//" + packageDef.package)) {
+                const thePackage = require(process.cwd() + "//" + packageDef.package);
+                const orgVersion = thePackage.version;
+                if (shouldUpdatePackage(value)) {
+                    orgPkgVersions[value] = orgVersion;
+                    packageDef.release = calculateVersion(orgVersion);
+                    console.log("  - " + value + ":[" + orgVersion + "] => [" + packages[value].release + "]");
+                } else {
+                    console.log("  - " + value + ":[" + orgVersion + "] => Skipping");
+                }
+            } else {
+                console.log("  - " + value + ":[-- Missing package.json --] => Will remove package definition");
+                delete packages[value];
+            }
+        }
+    }
+
+    return newVersion;
+}
+
+function getNewPackageVersion(package, packageFilename) {
+    const packageName = package.name;
+    let packages = theVersion.pkgs = theVersion.pkgs || {};
+    if (!packages[packageName]) {
+        let packageDef = packages[packageName] = packages[packageName] || {};
+        packageDef.package = packageFilename;
+
+        if (package.version) {
+            orgPkgVersions[packageName] = package.version;
+
+            // We are not currently tracking this package so calculate based on the current package.version value
+            if (shouldUpdatePackage(package.name)) {
+                packageDef.release = calculateVersion(package.version);
+            } else {
+                packageDef.release = package.version;
+            }
+        } else {
+            packageDef.release = theVersion.release;
+        }
+    }
+
+    return packages[packageName].release;
 }
 
 function calculateVersion(rootVersion) {
@@ -219,6 +286,18 @@ function getVersionDetails(theVersion) {
     return details;
 }
 
+function shouldUpdatePackage(name) {
+    if (name.indexOf("-react-js") !== -1) {
+        return isReact;
+    }
+
+    if (name.indexOf("-react-native") !== -1) {
+        return isReactNative;
+    }
+
+    return !isReact && !isReactNative;
+}
+
 function shouldProcess(name) {
     if (name.indexOf("node_modules/") !== -1) {
         return false;
@@ -232,36 +311,39 @@ function shouldProcess(name) {
         return false;
     }
 
-    if (name.indexOf("-react") !== -1) {
+    if (name.indexOf("-react-js") !== -1) {
         return isReact;
     }
 
+    if (name.indexOf("-react-native") !== -1) {
+        return isReactNative;
+    }
     if (name.indexOf("-angularplugin") !== -1) {
         return false;
     }
 
     if (name.indexOf("AISKU/") !== -1) {
-        return true;
+        return !isReact && !isReactNative;
     }
 
     if (name.indexOf("AISKULight/") !== -1) {
-        return true;
+        return !isReact && !isReactNative;
     }
 
     if (name.indexOf("channels/") !== -1) {
-        return true;
+        return !isReact && !isReactNative;
     }
 
     if (name.indexOf("extensions/") !== -1) {
-        return true;
+        return !isReact && !isReactNative;
     }
 
     if (name.indexOf("shared/") !== -1) {
-        return true;
+        return !isReact && !isReactNative;
     }
 
     if (name === "package.json") {
-        return true;
+        return !isReact && !isReactNative;
     }
 
     return false;
@@ -331,10 +413,10 @@ const setPackageJsonRelease = () => {
             let theFilename = packageFile;
             const package = require(process.cwd() + "\\" + theFilename);
             let currentVersion = package.version;
-            let newVersion = calculateVersion(currentVersion);
-            console.log("   Name - " + package.name + " Version: " + currentVersion + " => " + newVersion);
+            let newVersion = getNewPackageVersion(package, theFilename);
     
             if (newVersion && currentVersion != newVersion) {
+                console.log("   Name - " + package.name + " Version: " + currentVersion + " => " + newVersion);
                 //fs.renameSync(inputFile, inputFile + ".org");
                 package.version = newVersion;
                 updatePublishConfig(package, newVersion);
@@ -371,6 +453,8 @@ const setPackageJsonRelease = () => {
                         }
                     });
                 }
+            } else {
+                console.log("   Name - " + package.name + " Version: " + currentVersion + " => Skipped");
             }
         }
     });
@@ -379,25 +463,24 @@ const setPackageJsonRelease = () => {
 };
 
 if (parseArgs()) {
-    const rootVersion = require(process.cwd() + "/package.json");
-    const theVersion = require(process.cwd() + "/version.json");
-    let newVersion = calculateVersion(theVersion.release);
+    let changed = false;
+    let newVersion = updateVersions();
     if (newVersion) {
-        console.log("New version [" + rootVersion.version + "] => [" + newVersion + "]")
-        if (!testOnly && theVersion.release != newVersion) {
+        if (setPackageJsonRelease()) {
+            console.log("Version updated, now run 'npm run update'");
+            changed = true;
+        } else {
+            console.warn("Nothing Changed!!!");
+        }
+
+        if (!testOnly && changed) {
             console.log("Updating version file");
             // Rewrite the file
-            theVersion.release = newVersion;
             const newContent = JSON.stringify(theVersion, null, 4) + "\n";
             fs.writeFileSync(process.cwd() + "/version.json", newContent);
             changed = true;
         }
 
-        if (setPackageJsonRelease()) {
-            console.log("Version updated, now run 'npm run update'");
-        } else {
-            console.warn("Nothing Changed!!!");
-        }
     } else {
         console.error("Failed to identify the new version number");
     }
