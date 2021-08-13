@@ -39,6 +39,7 @@
 - #1599 Add visibilitychange event to the set of events tracked for triggering page unload
 - #1602 [BUG] DebugPlugin - helpers.js:334 Uncaught TypeError: Cannot convert a Symbol value to a string
 - #1472 [Enhancement] Add config to exclude a specific request auto tracking
+- #1446 [FEATURE REQUEST] Ability to stop requests being tracked for array of domains
 
 ### Update React plugin to v3.1.4
 
