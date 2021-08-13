@@ -45,7 +45,7 @@ export { NotificationManager } from "./JavaScriptSDK/NotificationManager";
 export { INotificationManager } from "./JavaScriptSDK.Interfaces/INotificationManager";
 export { IPerfEvent } from './JavaScriptSDK.Interfaces/IPerfEvent';
 export { IPerfManager, IPerfManagerProvider } from './JavaScriptSDK.Interfaces/IPerfManager';
-export { PerfEvent, PerfManager, doPerf } from './JavaScriptSDK/PerfManager';
+export { PerfEvent, PerfManager, doPerf, getGblPerfMgr, setGblPerfMgr } from './JavaScriptSDK/PerfManager';
 export { safeGetLogger, DiagnosticLogger, _InternalLogMessage } from './JavaScriptSDK/DiagnosticLogger';
 export { ProcessTelemetryContext } from './JavaScriptSDK/ProcessTelemetryContext';
 export { initializePlugins, sortPlugins } from "./JavaScriptSDK/TelemetryHelpers";

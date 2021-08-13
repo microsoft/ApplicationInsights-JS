@@ -83,6 +83,9 @@ module.exports = function (grunt) {
                 ],
                 out: 'AISKU/Tests/Selenium/appinsights-sdk.tests.js'
             },
+            perfmarkmeasure: {
+                tsconfig: './extensions/applicationinsights-perfmarkmeasure-js/tsconfig.json'
+            },
             properties: {
                 tsconfig: './extensions/applicationinsights-properties-js/tsconfig.json',
                 src: [
@@ -105,6 +108,11 @@ module.exports = function (grunt) {
                     './extensions/applicationinsights-clickanalytics-js/Tests/Unit/src/**/*.ts'
                 ],
                 out: 'extensions/applicationinsights-clickanalytics-js/Tests/Unit/dist/appinsights-clickanalytics.tests.js'
+            },
+            perfmarkmeasureunittests: {
+                tsconfig: './extensions/applicationinsights-perfmarkmeasure-js/Tests/tsconfig.json',
+                src: [ './extensions/applicationinsights-perfmarkmeasure-js/Tests/Unit/src/**/*.ts' ],
+                out: './extensions/applicationinsights-perfmarkmeasure-js/Tests/Unit/dist/appinsights-perfmarkmeasure.tests.js'
             },
             propertiesunittests: {
                 tsconfig: './extensions/applicationinsights-properties-js/Tests/tsconfig.json',
@@ -265,6 +273,17 @@ module.exports = function (grunt) {
                     '--web-security': 'false'
                 }
             },
+            perfmarkmeasure: {
+                options: {
+                    urls: [
+                        'http://localhost:9001/extensions/applicationinsights-perfmarkmeasure-js/Tests/UnitTests.html'
+                    ],
+                    timeout: 5 * 60 * 1000, // 5 min
+                    console: false,
+                    summaryOnly: true,
+                    '--web-security': 'false'
+                }
+            },
             properties: {
                 options: {
                     urls: [
@@ -378,6 +397,8 @@ module.exports = function (grunt) {
     grunt.registerTask("coreunittest", ["connect", "ts:coreunittest", "qunit:core"]);
     grunt.registerTask("coreperftest", ["connect", "ts:coreperftest", "qunit:coreperf"]);
     grunt.registerTask("commontest", ["connect", "ts:common", "ts:commonunittest", "qunit:common"]);
+    grunt.registerTask("perfmarkmeasure", ["ts:perfmarkmeasure"]);
+    grunt.registerTask("perfmarkmeasuretests", ["connect", "ts:perfmarkmeasureunittests", "qunit:perfmarkmeasure"]);
     grunt.registerTask("properties", ["ts:properties"]);
     grunt.registerTask("propertiestests", ["connect", "ts:propertiesunittests", "qunit:properties"]);
     grunt.registerTask("reactnative", ["ts:reactnative"]);

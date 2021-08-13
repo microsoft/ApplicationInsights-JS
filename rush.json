@@ -42,6 +42,11 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@microsoft/applicationinsights-perfmarkmeasure-js",
+      "projectFolder": "extensions/applicationinsights-perfmarkmeasure-js",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@microsoft/applicationinsights-properties-js",
       "projectFolder": "extensions/applicationinsights-properties-js",
       "shouldPublish": true

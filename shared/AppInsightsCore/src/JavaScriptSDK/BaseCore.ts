@@ -18,15 +18,24 @@ import { ProcessTelemetryContext } from './ProcessTelemetryContext';
 import { initializePlugins, sortPlugins } from './TelemetryHelpers';
 import { _InternalMessageId, LoggingSeverity } from "../JavaScriptSDK.Enums/LoggingEnums";
 import { IPerfManager } from "../JavaScriptSDK.Interfaces/IPerfManager";
-import { PerfManager } from "./PerfManager";
+import { getGblPerfMgr, PerfManager } from "./PerfManager";
 import { ICookieMgr } from "../JavaScriptSDK.Interfaces/ICookieMgr";
 import { createCookieMgr } from "./CookieMgr";
-import { arrForEach, isNullOrUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy } from "./HelperFuncs";
+import { arrForEach, isNullOrUndefined, toISOString, getSetValue, setValue, throwError, isNotTruthy, isFunction } from "./HelperFuncs";
 import { strExtensionConfig, strIKey } from "./Constants";
 
 const validationError = "Extensions must provide callback to initialize";
 
 const strNotificationManager = "_notificationManager";
+
+/**
+ * Helper to create the default performance manager
+ * @param core 
+ * @param notificationMgr 
+ */
+function _createPerfManager (core: IAppInsightsCore, notificationMgr: INotificationManager) {
+    return new PerfManager(notificationMgr);
+}
 
 export class BaseCore implements IAppInsightsCore {
     public static defaultConfig: IConfiguration;
@@ -71,6 +80,11 @@ export class BaseCore implements IAppInsightsCore {
                 // For backward compatibility only
                 _self[strNotificationManager] = notificationManager;
                 _self.config = config || {};
+
+                if (_self.config.enablePerfMgr) {
+                    // Set the performance manager creation function if not defined
+                    setValue(_self.config, "createPerfMgr", _createPerfManager);
+                }
 
                 config.extensions = isNullOrUndefined(config.extensions) ? [] : config.extensions;
         
@@ -215,12 +229,12 @@ export class BaseCore implements IAppInsightsCore {
 
             _self.getPerfMgr = (): IPerfManager => {
                 if (!_perfManager) {
-                    if (_self.config &&  _self.config.enablePerfMgr) {
-                        _perfManager = new PerfManager(_self.getNotifyMgr());
+                    if (_self.config && _self.config.enablePerfMgr && isFunction(_self.config.createPerfMgr)) {
+                        _perfManager = _self.config.createPerfMgr(_self, _self.getNotifyMgr());
                     }
                 }
 
-                return _perfManager;
+                return _perfManager || getGblPerfMgr();
             };
 
             _self.setPerfMgr = (perfMgr: IPerfManager) => {

@@ -57,6 +57,7 @@ export class AITestClass {
     private _xhrOrgSend: any;
     private _xhrRequests: FakeXMLHttpRequest[] = [];
     private _orgNavigator: any;
+    private _orgPerformance: any;
     private _beaconHooks: any[] = [];
     private _dynProtoOpts: any = null;
 
@@ -516,6 +517,73 @@ export class AITestClass {
             });
     }
     
+    protected mockPerformance(newPerformance: any) {
+        
+        try {
+            if (!this._orgPerformance) {
+                this._hookPerformance();
+            }
+
+            // Copy over the mocked values
+            for (let name in newPerformance) {
+                if (newPerformance.hasOwnProperty(name)) {
+                    window.performance[name] = newPerformance[name];
+                }
+            }
+        } catch (e) {
+            console.log("Set performance failed - " + e);
+            QUnit.assert.ok(true, "Set performance failed - " + e);
+            try {
+                sinon.stub(window, "performance").returns(newPerformance);
+            } catch (ex) {
+                console.log("Unable to fallback to stub performance failed - " + e);
+                QUnit.assert.ok(true, "Unable to fallback to stub performance failed - " + e);
+            }
+        }
+    }
+
+    private _hookPerformance() {
+        if (!this._orgPerformance) {
+            this._orgPerformance = {};
+
+            try {
+                // Just Blindly copy the properties over
+                // tslint:disable-next-line: forin
+                for (let name in window.performance) {
+                    if (window.performance.hasOwnProperty(name)) {
+                        this._orgPerformance[name] = window.performance[name];
+                    }
+                }
+            } catch (e) {
+                console.log("Saving performance values - " + e);
+                QUnit.assert.ok(false, "Saving performance values failed - " + e);
+                // throw e;
+            }
+        }
+    }
+
+    private _restorePerformance() {
+        if (this._orgPerformance) {
+
+            try {
+                // Just Blindly copy the properties over
+                // tslint:disable-next-line: forin
+                for (let name in this._orgPerformance) {
+                    if (!this._orgPerformance.hasOwnProperty(name)) {
+                        window.performance[name] = this._orgPerformance[name];
+                    }
+                }
+            } catch (e) {
+                console.log("Restoring performance values - " + e);
+                QUnit.assert.ok(false, "Restoring performance values failed - " + e);
+                // throw e;
+            }
+
+            this._orgNavigator = null;
+        }
+    }
+
+
     private _mockLocation() {
         if (!this._orgLocation) {
             this._orgLocation = window.location;
@@ -682,6 +750,8 @@ export class AITestClass {
             this.setNavigator(this._orgNavigator);
             this._orgNavigator = null;
         }
+
+        this._restorePerformance();
 
         this._beaconHooks = [];
         this._cleanupAllHooks();
