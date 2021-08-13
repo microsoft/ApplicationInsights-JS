@@ -8,7 +8,7 @@
  export interface IPerfMarkMeasureConfiguration {
 
     /**
-     * Should the Performance manager create and user window.performance.mark(), defaults to true
+     * Should the Performance manager create and use window.performance.mark(), defaults to true
      */
     useMarks?: boolean; 
 
@@ -41,7 +41,7 @@
     markEndPrefix?: string;
 
     /**
-     * Should the Performance manager create and user window.performance.measure(), defaults to true
+     * Should the Performance manager create and use window.performance.measure(), defaults to true
      */
     useMeasures?: boolean; 
 

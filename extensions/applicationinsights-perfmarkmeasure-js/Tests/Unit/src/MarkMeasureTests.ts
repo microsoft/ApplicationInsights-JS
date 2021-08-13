@@ -66,7 +66,7 @@ export class MarkMeasureTests extends AITestClass {
                 Assert.equal(true, this._measures.length > 0);
                 for (let lp = 0; lp < this._measures.length; lp++) {
                     let measure = this._measures[lp];
-                    // Making sure there are no "end" marks
+                    // Making sure the measure mark is correct
                     Assert.equal(0, measure.name.indexOf("ai.prfmsr."), "Checking measure - " + JSON.stringify(measure));
                     Assert.equal(0, measure.from.indexOf("ai.prfmrk."), "Checking from measure - " + JSON.stringify(measure));
                     Assert.equal(undefined, measure.to, "Checking to measure - " + JSON.stringify(measure));
@@ -185,7 +185,7 @@ export class MarkMeasureTests extends AITestClass {
                 Assert.equal(0, this._marks.length, "No Marks expected");
                 for (let lp = 0; lp < this._measures.length; lp++) {
                     let measure = this._measures[lp];
-                    // Making sure there are no "end" marks
+                    // Making sure the measure mark is correct
                     Assert.equal(0, measure.name.indexOf("ai.prfmsr."), "Checking measure - " + JSON.stringify(measure));
                     Assert.equal(undefined, measure.from, "Checking from measure - " + JSON.stringify(measure));
                     Assert.equal(undefined, measure.to, "Checking to measure - " + JSON.stringify(measure));
@@ -246,7 +246,7 @@ export class MarkMeasureTests extends AITestClass {
                 Assert.equal(true, this._measures.length > 0);
                 for (let lp = 0; lp < this._measures.length; lp++) {
                     let measure = this._measures[lp];
-                    // Making sure there are no "end" marks
+                    // Making sure the measure mark is correct
                     Assert.equal(0, measure.name.indexOf("ai.prfmsr."), "Checking measure - " + JSON.stringify(measure));
                     Assert.equal(0, measure.from.indexOf("ai.prfmrk." + measure.name.substring(10)), "Checking from measure - " + JSON.stringify(measure));
                     Assert.equal(0, measure.to.indexOf("ai.prfmrk-end." + measure.name.substring(10)), "Checking to measure - " + JSON.stringify(measure));
@@ -313,7 +313,7 @@ export class MarkMeasureTests extends AITestClass {
 
                 for (let lp = 0; lp < this._measures.length; lp++) {
                     let measure = this._measures[lp];
-                    // Making sure there are no "end" marks
+                    // Making sure the measure mark is correct
                     Assert.equal(0, measure.name.indexOf("ai.prfmsr."), "Checking measure - " + JSON.stringify(measure));
                     Assert.equal(0, measure.from.indexOf("ai.prfmrk." + measure.name.substring(10)), "Checking from measure - " + JSON.stringify(measure));
                     Assert.equal(0, measure.to.indexOf("ai.prfmrk-end." + measure.name.substring(10)), "Checking to measure - " + JSON.stringify(measure));
@@ -369,7 +369,7 @@ export class MarkMeasureTests extends AITestClass {
 
                 Assert.equal(0, this._marks.length);
                 doPerf(manager, () => "test", (perfEvent) => {
-                    Assert.equal(1, this._marks.length > 0);
+                    Assert.equal(1, this._marks.length);
                     Assert.equal("ai.prfmrk.0.test", this._marks[0]);
                 });
                 Assert.equal(1, this._marks.length);
@@ -423,7 +423,7 @@ export class MarkMeasureTests extends AITestClass {
 
                 Assert.equal(0, this._marks.length);
                 doPerf(manager, () => "test", (perfEvent) => {
-                    Assert.equal(1, this._marks.length > 0);
+                    Assert.equal(1, this._marks.length);
                     Assert.equal("ai.prfmrk.0.test", this._marks[0]);
                 });
                 Assert.equal(2, this._marks.length);
@@ -503,7 +503,7 @@ export class MarkMeasureTests extends AITestClass {
 
                 Assert.equal(0, this._marks.length);
                 doPerf(manager, () => "test3", (perfEvent) => {
-                    Assert.equal(1, this._marks.length > 0);
+                    Assert.equal(1, this._marks.length);
                     Assert.equal("ai.prfmrk.test3", this._marks[0]);
                 });
                 Assert.equal(1, this._marks.length);
@@ -550,7 +550,7 @@ export class MarkMeasureTests extends AITestClass {
 
                 Assert.equal(0, this._marks.length);
                 doPerf(manager, () => "test", (perfEvent) => {
-                    Assert.equal(1, this._marks.length > 0);
+                    Assert.equal(1, this._marks.length);
                     Assert.equal("ai.prfmrk.mapped1", this._marks[0]);
                 });
                 Assert.equal(2, this._marks.length);
@@ -595,7 +595,7 @@ export class MarkMeasureTests extends AITestClass {
 
                 Assert.equal(0, this._marks.length);
                 doPerf(manager, () => "test", (perfEvent) => {
-                    Assert.equal(1, this._marks.length > 0);
+                    Assert.equal(1, this._marks.length);
                     Assert.equal("ai.prfmrk.0.mapped1", this._marks[0]);
                 });
                 Assert.equal(2, this._marks.length);
@@ -643,7 +643,7 @@ export class MarkMeasureTests extends AITestClass {
 
                 Assert.equal(0, this._marks.length);
                 doPerf(manager, () => "test", (perfEvent) => {
-                    Assert.equal(1, this._marks.length > 0);
+                    Assert.equal(1, this._marks.length);
                     Assert.equal("ai.prfmrk.mapped1", this._marks[0]);
                 });
                 Assert.equal(2, this._marks.length);
@@ -695,7 +695,7 @@ export class MarkMeasureTests extends AITestClass {
 
                 Assert.equal(0, this._marks.length);
                 doPerf(manager, () => "test", (perfEvent) => {
-                    Assert.equal(1, this._marks.length > 0);
+                    Assert.equal(1, this._marks.length);
                     Assert.equal("ai.prfmrk.0.mapped1", this._marks[0]);
                 });
                 Assert.equal(2, this._marks.length);
@@ -749,7 +749,7 @@ export class MarkMeasureTests extends AITestClass {
 
                 Assert.equal(0, this._marks.length);
                 doPerf(manager, () => "test", (perfEvent) => {
-                    Assert.equal(1, this._marks.length > 0);
+                    Assert.equal(1, this._marks.length);
                     Assert.equal("tst.mark.mapped1", this._marks[0]);
                 });
                 Assert.equal(2, this._marks.length);
@@ -804,7 +804,7 @@ export class MarkMeasureTests extends AITestClass {
 
                 Assert.equal(0, this._marks.length);
                 doPerf(manager, () => "test", (perfEvent) => {
-                    Assert.equal(1, this._marks.length > 0);
+                    Assert.equal(1, this._marks.length);
                     Assert.equal("tst.mark.0.mapped1", this._marks[0]);
                 });
                 Assert.equal(2, this._marks.length);
@@ -867,7 +867,7 @@ export class MarkMeasureTests extends AITestClass {
                 Assert.equal(0, this._marks.length);
                 doPerf(manager, () => "test", (perfEvent) => {
                     Assert.equal(0, perfEvents.length);
-                    Assert.equal(1, this._marks.length > 0);
+                    Assert.equal(1, this._marks.length);
                     Assert.equal("tst.mark.0.mapped1", this._marks[0]);
                 });
                 Assert.equal(2, this._marks.length);
