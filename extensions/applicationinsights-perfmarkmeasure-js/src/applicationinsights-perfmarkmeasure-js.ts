@@ -4,4 +4,5 @@
 import { PerfMarkMeasureManager } from "./PerfMarkMeasureManager";
 import { IPerfMarkMeasureConfiguration } from "./interfaces/IPerfMarkMeasureConfiguration";
 
-export { PerfMarkMeasureManager, IPerfMarkMeasureConfiguration };
+export { IPerfManagerProvider, IPerfManager, IPerfEvent, doPerf } from "@microsoft/applicationinsights-core-js";
+export {PerfMarkMeasureManager, IPerfMarkMeasureConfiguration };

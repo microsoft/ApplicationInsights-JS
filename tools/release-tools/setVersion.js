@@ -11,7 +11,6 @@ let isReact = false;
 let isReactNative = false;
 
 const theVersion = require(process.cwd() + "/version.json");
-const orgBaseVersion = theVersion.release || "";
 const orgPkgVersions = {};
 
 function showHelp() {
@@ -478,7 +477,6 @@ if (parseArgs()) {
             // Rewrite the file
             const newContent = JSON.stringify(theVersion, null, 4) + "\n";
             fs.writeFileSync(process.cwd() + "/version.json", newContent);
-            changed = true;
         }
 
     } else {
