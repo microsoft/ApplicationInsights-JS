@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/applicationinsights-react-native",
-    "version": "2.3.5",
+    "version": "2.4.0-beta.1",
     "description": "Microsoft Application Insights React Native Plugin",
     "main": "dist-esm/index.js",
     "types": "types/index.d.ts",
@@ -54,8 +54,8 @@
         "uglify-js": "^3.11.0"
     },
     "dependencies": {
-        "@microsoft/applicationinsights-common": "2.6.5",
-        "@microsoft/applicationinsights-core-js": "2.6.5",
+        "@microsoft/applicationinsights-common": "2.7.0-beta.1",
+        "@microsoft/applicationinsights-core-js": "2.7.0-beta.1",
         "@microsoft/applicationinsights-shims": "2.0.0",
         "@microsoft/dynamicproto-js": "^1.1.4"
     },
@@ -64,5 +64,8 @@
         "react-native": "*",
         "react-native-device-info": "^5.2.1"
     },
-    "license": "MIT"
+    "license": "MIT",
+    "publishConfig": {
+        "tag": "beta"
+    }
 }
