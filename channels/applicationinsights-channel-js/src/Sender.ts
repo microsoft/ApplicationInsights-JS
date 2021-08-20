@@ -10,7 +10,7 @@ import {
     DisabledPropertyName, RequestHeaders, IEnvelope, PageView, Event,
     Trace, Exception, Metric, PageViewPerformance, RemoteDependencyData,
     IChannelControlsAI, IConfig, ProcessLegacy, BreezeChannelIdentifier,
-    SampleRate, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, isBeaconApiSupported
+    SampleRate, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, isBeaconApiSupported, Statsbeat
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, IProcessTelemetryContext, IConfiguration,
@@ -142,8 +142,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
     protected _sample: Sample;
 
-    constructor() {
+    private _statsbeat: Statsbeat;
+
+    constructor(statsbeat?: Statsbeat) {
         super();
+
+        this._statsbeat = statsbeat;
 
         /**
          * How many times in a row a retryable error condition has occurred.
@@ -373,9 +377,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             /**
              * xhr state changes
              */
-            _self._xhrReadyStateChange = (xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) => {
+            _self._xhrReadyStateChange = (xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number, startTime: number) => {
                 if (xhr.readyState === 4) {
-                    _checkResponsStatus(xhr.status, payload, xhr.responseURL, countOfItemsInPayload, _formatErrorMessageXhr(xhr), _getResponseText(xhr) || xhr.response);
+                    _checkResponsStatus(xhr.status, payload, xhr.responseURL, countOfItemsInPayload, _formatErrorMessageXhr(xhr), _getResponseText(xhr) || xhr.response, startTime);
                 }
             };
         
@@ -393,12 +397,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                             const payload = _self._buffer.getItems();
         
                             _notifySendRequest(sendReason||SendRequestReason.Undefined, async);
+
+                            let startTime = +new Date();
         
                             // invoke send
                             if (forcedSender) {
-                                forcedSender.call(this, payload, async);
+                                forcedSender.call(this, payload, async, startTime);
                             } else {
-                                _self._sender(payload, async);
+                                _self._sender(payload, async, startTime);
                             }
                         }
         
@@ -427,7 +433,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             /**
              * error handler
              */
-            _self._onError = (payload: string[], message: string, event?: ErrorEvent) => {
+            _self._onError = (payload: string[], message: string, event?: ErrorEvent, endpointUrl?: string) => {
                 _self.diagLog().throwInternal(
                     LoggingSeverity.WARNING,
                     _InternalMessageId.OnError,
@@ -435,12 +441,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     { message });
         
                 _self._buffer.clearSent(payload);
+                if (_self._statsbeat && endpointUrl) {
+                    _self._statsbeat.countException(endpointUrl);
+                }
             };
         
             /**
              * partial success handler
              */
-            _self._onPartialSuccess = (payload: string[], results: IBackendResponse) => {
+            _self._onPartialSuccess = (payload: string[], results: IBackendResponse, endpointUrl: string) => {
                 const failed = [];
                 const retry = [];
         
@@ -461,7 +470,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
         
                 if (failed.length > 0) {
-                    _self._onError(failed, _formatErrorMessageXhr(null, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' ')));
+                    _self._onError(failed, _formatErrorMessageXhr(null, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' ')), undefined, endpointUrl);
                 }
         
                 if (retry.length > 0) {
@@ -485,19 +494,23 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             /**
              * xdr state changes
              */
-            _self._xdrOnLoad = (xdr: IXDomainRequest, payload: string[]) => {
+            _self._xdrOnLoad = (xdr: IXDomainRequest, payload: string[], endpointUrl: string, startTime: number) => {
                 const responseText = _getResponseText(xdr);
                 if (xdr && (responseText + "" === "200" || responseText === "")) {
                     _consecutiveErrors = 0;
                     _self._onSuccess(payload, 0);
+                    if (_self._statsbeat) {
+                        let endTime = +new Date();
+                        _self._statsbeat.countRequest(endpointUrl, endTime - startTime, true);
+                    }
                 } else {
                     const results = _parseResponse(responseText);
         
                     if (results && results.itemsReceived && results.itemsReceived > results.itemsAccepted
                         && !_self._senderConfig.isRetryDisabled()) {
-                        _self._onPartialSuccess(payload, results);
+                        _self._onPartialSuccess(payload, results, endpointUrl);
                     } else {
-                        _self._onError(payload, _formatErrorMessageXdr(xdr));
+                        _self._onError(payload, _formatErrorMessageXdr(xdr), undefined, endpointUrl);
                     }
                 }
             };
@@ -506,7 +519,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 return _self._sample.isSampledIn(envelope);
             }
 
-            function _checkResponsStatus(status: number, payload: string[], responseUrl: string, countOfItemsInPayload: number, errorMessage: string, res: any) {
+            function _checkResponsStatus(status: number, payload: string[], responseUrl: string, countOfItemsInPayload: number, errorMessage: string, res: any, startTime: number) {
                 let response: IBackendResponse = null;
 
                 if (!_self._appId) {
@@ -522,7 +535,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     // Updates the end point url before retry
                     if(status === 301 || status === 307 || status === 308) {
                         if(!_checkAndUpdateEndPointUrl(responseUrl)) {
-                            _self._onError(payload, errorMessage);
+                            _self._onError(payload, errorMessage, undefined, responseUrl);
                             return;
                         }
                     }
@@ -534,7 +547,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                             _InternalMessageId.TransmissionFailed, ". " +
                             "Response code " + status + ". Will retry to send " + payload.length + " items.");
                     } else {
-                        _self._onError(payload, errorMessage);
+                        _self._onError(payload, errorMessage, undefined, responseUrl);
                     }
                 } else if (Offline.isOffline()) { // offline
                     // Note: Don't check for status == 0, since adblock gives this code
@@ -547,6 +560,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                             _InternalMessageId.TransmissionFailed, `. Offline - Response Code: ${status}. Offline status: ${Offline.isOffline()}. Will retry to send ${payload.length} items.`);
                     }
                 } else {
+                    let endTime = +new Date();
+                    if (_self._statsbeat) {
+                        _self._statsbeat.countRequest(responseUrl, endTime - startTime, status === 200);
+                    }
 
                     // check if the xhr's responseURL or fetch's response.url is same as endpoint url
                     // TODO after 10 redirects force send telemetry with 'redirect=false' as query parameter.
@@ -558,9 +575,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         }
     
                         if (response && !_self._senderConfig.isRetryDisabled()) {
-                            _self._onPartialSuccess(payload, response);
+                            _self._onPartialSuccess(payload, response, responseUrl);
                         } else {
-                            _self._onError(payload, errorMessage);
+                            _self._onError(payload, errorMessage, undefined, responseUrl);
                         }
                     } else {
                         _consecutiveErrors = 0;
@@ -593,7 +610,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              * Note: Beacon API does not support custom headers and we are not able to get
              * appId from the backend for the correct correlation.
              */
-            function _beaconSender(payload: string[], isAsync: boolean) {
+            function _beaconSender(payload: string[], isAsync: boolean, startTime: number) {
                 const url = _self._senderConfig.endpointUrl();
                 const batch = _self._buffer.batchPayloads(payload);
         
@@ -608,9 +625,16 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     _self._buffer.markAsSent(payload);
                     // no response from beaconSender, clear buffer
                     _self._onSuccess(payload, payload.length);
+                    if (_self._statsbeat) {
+                        let endTime = +new Date();
+                        _self._statsbeat.countRequest(url, endTime - startTime, true);
+                    }
                 } else {
-                    _xhrSender(payload, true);
+                    _xhrSender(payload, true, startTime);
                     _self.diagLog().throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
+                    if (_self._statsbeat) {
+                        _self._statsbeat.countException(url);
+                    }
                 }
             }
         
@@ -619,7 +643,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              * @param payload {string} - The data payload to be sent.
              * @param isAsync {boolean} - Indicates if the request should be sent asynchronously
              */
-            function _xhrSender(payload: string[], isAsync: boolean) {
+            function _xhrSender(payload: string[], isAsync: boolean, startTime: number) {
                 const xhr = new XMLHttpRequest();
                 const endPointUrl = _self._senderConfig.endpointUrl();
                 try {
@@ -639,9 +663,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 arrForEach(objKeys(_headers), (headerName) => {
                     xhr.setRequestHeader(headerName, _headers[headerName]);
                 });
-        
-                xhr.onreadystatechange = () => _self._xhrReadyStateChange(xhr, payload, payload.length);
-                xhr.onerror = (event: ErrorEvent|any) => _self._onError(payload, _formatErrorMessageXhr(xhr), event);
+
+                xhr.onreadystatechange = () => _self._xhrReadyStateChange(xhr, payload, payload.length, startTime);
+                xhr.onerror = (event: ErrorEvent|any) => _self._onError(payload, _formatErrorMessageXhr(xhr), event, endPointUrl);
         
                 // compose an array of payloads
                 const batch = _self._buffer.batchPayloads(payload);
@@ -655,7 +679,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              * @param payload {string} - The data payload to be sent.
              * @param isAsync {boolean} - not used
              */
-             function _fetchSender(payload: string[], isAsync: boolean) {
+             function _fetchSender(payload: string[], isAsync: boolean, startTime: number) {
                 const endPointUrl = _self._senderConfig.endpointUrl();
                 const batch = _self._buffer.batchPayloads(payload);
                 const plainTextBatch = new Blob([batch], { type: 'text/plain;charset=UTF-8' });
@@ -684,12 +708,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         throw Error(response.statusText);
                     } else {
                         response.text().then(text => {
-                            _checkResponsStatus(response.status, payload, response.url, payload.length, response.statusText, text);
+                            _checkResponsStatus(response.status, payload, response.url, payload.length, response.statusText, text, startTime);
                         });
                         _self._buffer.markAsSent(payload);
                     }
                 }).catch((error: Error) => {
-                    _self._onError(payload, error.message)
+                    _self._onError(payload, error.message, undefined, endPointUrl);
                 });
             }
         
@@ -809,11 +833,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              * Note: XDomainRequest does not support custom headers and we are not able to get
              * appId from the backend for the correct correlation.
              */
-            function _xdrSender(payload: string[], isAsync: boolean) {
+            function _xdrSender(payload: string[], isAsync: boolean, startTime: number) {
                 let _window = getWindow();
                 const xdr = new XDomainRequest();
-                xdr.onload = () => _self._xdrOnLoad(xdr, payload);
-                xdr.onerror = (event: ErrorEvent|any) => _self._onError(payload, _formatErrorMessageXdr(xdr), event);
+                const endpointUrl = _self._senderConfig.endpointUrl().replace(/^(https?:)/, "");
+                xdr.onload = () => _self._xdrOnLoad(xdr, payload, endpointUrl, startTime);
+                xdr.onerror = (event: ErrorEvent|any) => _self._onError(payload, _formatErrorMessageXdr(xdr), event, endpointUrl);
         
                 // XDomainRequest requires the same protocol as the hosting page.
                 // If the protocol doesn't match, we can't send the telemetry :(.
@@ -828,7 +853,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     return;
                 }
         
-                const endpointUrl = _self._senderConfig.endpointUrl().replace(/^(https?:)/, "");
                 xdr.open('POST', endpointUrl);
         
                 // compose an array of payloads
@@ -919,7 +943,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
     /**
      * xhr state changes
      */
-    public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number) {
+    public _xhrReadyStateChange(xhr: XMLHttpRequest, payload: string[], countOfItemsInPayload: number, startTime: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -935,14 +959,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
     /**
      * error handler
      */
-    public _onError(payload: string[], message: string, event?: ErrorEvent) {
+    public _onError(payload: string[], message: string, event?: ErrorEvent, endpointUrl?: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
     /**
      * partial success handler
      */
-    public _onPartialSuccess(payload: string[], results: IBackendResponse) {
+    public _onPartialSuccess(payload: string[], results: IBackendResponse, endpointUrl: string) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
@@ -956,7 +980,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
     /**
      * xdr state changes
      */
-    public _xdrOnLoad(xdr: IXDomainRequest, payload: string[]) {
+    public _xdrOnLoad(xdr: IXDomainRequest, payload: string[], endpointUrl: string, startTime: number) {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+    }
+
+    public _xdrOpen(xdr: IXDomainRequest, endPointUrl: string, startTime: number) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
