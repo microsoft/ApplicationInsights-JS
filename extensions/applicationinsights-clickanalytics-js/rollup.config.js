@@ -8,7 +8,7 @@ import { updateDistEsmFiles } from "../../tools/updateDistEsm/updateDistEsm";
 
 const version = require("./package.json").version;
 const outputName = "applicationinsights-clickanalytics-js";
-const verParts = version.split(".")
+const verParts = version.split("-")[0].split(".")
 if (verParts.length != 3) {
   throw "Invalid Version! [" + version + "]"
 }

@@ -377,10 +377,37 @@ Function ValidateAccess
     }
 }
 
+Function Get-VersionDetails (
+    [string] $ver
+) {
+    [hashtable] $version = @{}
+    $version.full = $ver
+
+    $parts = $ver -split "\+", 2
+    if ($parts.Length -eq 2) {
+        $version.bldNum = $parts[1]
+        $ver = $parts[0]
+    } else {
+        $version.bldNum = ""
+    }
+
+    $parts = $ver -split "-", 2
+    $version.ver = $parts[0]
+    if ($parts.Length -eq 2) {
+        $version.preRel = $parts[1]
+        $version.type = ((($parts[1] -split "\+")[0] -split "\.")[0] -split "-")[0]
+    } else {
+        $version.preRel = ""
+        $version.type = "release"
+    }
+
+    return $version;
+}
+
 Function GetVersion(
     [string] $name
 ) {
-    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[^\.]+)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js|integrity\.json)(?:\.map)?)$'
+    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[\w\d\-\+]+\.?[\d\-\+]*)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js|integrity\.json)(?:\.map)?)$'
     $match = ($name | select-string $regMatch -AllMatches).matches
     $contentType = $jsContentType
 
@@ -604,7 +631,8 @@ Function SetProperties(
 
 Function SetActiveVersion(
    [system.collections.generic.list[hashtable]] $fileList,
-   [string] $storePath
+   [string] $storePath,
+   [string] $container
 ) {
 
     $destContext = GetContainerContext $storePath
@@ -617,31 +645,42 @@ Function SetActiveVersion(
     foreach ($theBlob in $fileList) {
         $blob = $theBlob.blob
         $blobContext = $theBlob.context.azureContext
-        Log $("Copying: {0,-40} {1,6:N1} Kb  {2:yyyy-MM-dd HH:mm:ss}" -f $($blob.ICloudBlob.Container.Name + "/" + $blob.Name),($blob.Length/1kb),$blob.LastModified)
+        Log $("Copying: {0,-55} {1,6:N1} Kb  {2:yyyy-MM-dd HH:mm:ss}" -f $($blob.ICloudBlob.Container.Name + "/" + $blob.Name),($blob.Length/1kb),$blob.LastModified)
 
         $version = GetVersion $blob.Name
         if ($null -ne $version) {
-            $verParts = $version.ver.Split(".")
+            $verDetails = Get-VersionDetails $version.ver
+            $verParts = $verDetails.ver.Split(".")
             if ($verParts.Length -ne 3) {
-                Log-Failure "ScriptError: Invalid Version! [$activeVersion]"
+                Write-LogFailure "ScriptError: Invalid Version! [$activeVersion]"
+            }
+
+            $preRel = ""
+            if ($verDetails.type -ne "release") {
+                $preRel = "-" + $verDetails.type
+
+                if ($verDetails.type -eq $container) {
+                    # remove any "beta" tag when deploying to the beta container etc.
+                    $preRel = ""
+                }
             }
         
             # Don't try and publish anything if any errors have been logged
             if ($global:hasErrors -eq $true) {
                 exit 2
             }
-    
-            $stageName = "$($version.path)$($version.prefix)$($verParts[0]).$($verParts[1])$($version.ext).stage"
+
+            $stageName = "$($version.path)$($version.prefix)$($verParts[0]).$($verParts[1])$($preRel)$($version.ext).stage"
             CopyBlob $blobContext $blob $destContext $stageName
 
             $stagedBlob = Get-AzureStorageBlob -Context $destContext.azureContext -Container $destContext.storageContainer -Blob $stageName
             SetProperties $stagedBlob "[$($destContext.storageContainer)]/$($blob.Name)" $version.ver
 
-            $minorName = "$($version.path)$($version.prefix)$($verParts[0]).$($verParts[1])$($version.ext)"
+            $minorName = "$($version.path)$($version.prefix)$($verParts[0]).$($verParts[1])$($preRel)$($version.ext)"
             CopyBlob $blobContext $stagedBlob $destContext $minorName
 
             if ($minorOnly -eq $false) {
-                $majorName = "$($version.path)$($version.prefix)$($verParts[0])$($version.ext)"
+                $majorName = "$($version.path)$($version.prefix)$($verParts[0])$($preRel)$($version.ext)"
                 CopyBlob $blobContext $stagedBlob $destContext $majorName
             }
 
@@ -722,10 +761,10 @@ $files = New-Object 'system.collections.generic.dictionary[string, system.collec
 $storePath = $container
 if ($container -eq "beta" -or $container -eq "next") {
     $storePath = "$container/ext"
-    GetVersionFiles $files $storePath "ai.clck."
+    GetVersionFiles $files $storePath "ai.prfmm-mgr."
 } elseif ($container -eq "public") {
     $storePath = "scripts/b/ext"
-    GetVersionFiles $files $storePath "ai.clck."
+    GetVersionFiles $files $storePath "ai.prfmm-mgr."
 }
 
 if ($files.ContainsKey($activeVersion) -ne $true) {
@@ -740,6 +779,6 @@ if ($global:hasErrors -eq $true) {
     exit 2
 }
 
-SetActiveVersion $files[$activeVersion] $storePath
+SetActiveVersion $files[$activeVersion] $storePath $container
 
 Log "======================================================================"

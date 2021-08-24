@@ -378,7 +378,7 @@ Function ValidateAccess
 Function GetVersion(
     [string] $name
 ) {
-    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[^\.]+)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js|integrity\.json)(?:\.map)?)$'
+    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[\w\d\-\+]+\.?[\d\-\+]*)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js|integrity\.json)(?:\.map)?)$'
     $match = ($name | select-string $regMatch -AllMatches).matches
     $contentType = $jsContentType
 
@@ -573,7 +573,7 @@ Function ListVersions(
 
                 if ($paths.ContainsKey($thePath) -ne $true) {
                     $paths[$thePath]  = $true
-                    $value = "{0,-28}" -f $thePath
+                    $value = "{0,-35}" -f $thePath
                     $pathList = "$pathList$value  "
                 } else {
                     $paths[$thePath] = ($paths[$thePath] + 1)
@@ -581,12 +581,12 @@ Function ListVersions(
             }
 
             foreach ($thePath in $paths.Keys | Sort-Object) {
-                Log $("  - {1,-48} ({0})" -f $paths[$thePath],$thePath)
+                Log $("  - {1,-55} ({0})" -f $paths[$thePath],$thePath)
             }
 
-            Log $("v{0,-12} ({1,2})  -  {2}" -f $key,$($fileList.Count),$pathList.Trim())
+            Log $("v{0,-16} ({1,2})  -  {2}" -f $key,$($fileList.Count),$pathList.Trim())
         } else {
-            Log $("v{0,-12} ({1,2})" -f $key,$($fileList.Count))
+            Log $("v{0,-16} ({1,2})" -f $key,$($fileList.Count))
             foreach ($theBlob in $fileList) {
                 $blob = $theBlob.blob
                 $blob.ICloudBlob.FetchAttributes()
@@ -613,7 +613,7 @@ Function ListVersions(
                 $cacheControl = $cacheControl -replace "immutable","im"
                 $cacheControl = $cacheControl -replace ", "," "
     
-                Log $("  - {0,-48}{3,-13}{1,6:N1} Kb  {2:yyyy-MM-dd HH:mm:ss}  {4,10}  {5}" -f $($blob.ICloudBlob.Container.Name + "/" + $blob.Name),($blob.Length/1kb),$blob.LastModified,$sdkVersion,$cacheControl,$metaTags)
+                Log $("  - {0,-55}{3,-16}{1,6:N1} Kb  {2:yyyy-MM-dd HH:mm:ss}  {4,10}  {5}" -f $($blob.ICloudBlob.Container.Name + "/" + $blob.Name),($blob.Length/1kb),$blob.LastModified,$sdkVersion,$cacheControl,$metaTags)
             }
         }
     }

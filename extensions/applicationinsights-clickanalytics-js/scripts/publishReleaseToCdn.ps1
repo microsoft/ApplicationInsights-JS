@@ -284,7 +284,7 @@ Function GetReleaseFiles
     $files = New-Object 'system.collections.generic.dictionary[string,string]'
 
     Log "Adding files";
-    AddReleaseFile $files $jsSdkSrcDir "ai.clck.$version.integrity.json"
+    AddReleaseFile $files $jsSdkSrcDir "ai.clck.$version.integrity.json" $true
     AddReleaseFile $files $jsSdkSrcDir "ai.clck.$version.js"
     AddReleaseFile $files $jsSdkSrcDir "ai.clck.$version.js.map"
     AddReleaseFile $files $jsSdkSrcDir "ai.clck.$version.min.js"
@@ -304,7 +304,7 @@ Function GetReleaseFiles
 Function GetVersion(
     [string] $name
 ) {
-    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[^\.]+)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js|integrity\.json)(?:\.map)?)$'
+    $regMatch = '^(.*\/)*([^\/\d]*\.)(\d+(\.\d+)*(-[\w\d\-\+]+\.?[\d\-\+]*)?)(\.(?:gbl\.js|gbl\.min\.js|cjs\.js|cjs\.min\.js|js|min\.js|integrity\.json)(?:\.map)?)$'
     $match = ($name | select-string $regMatch -AllMatches).matches
     $contentType = $jsContentType
 
