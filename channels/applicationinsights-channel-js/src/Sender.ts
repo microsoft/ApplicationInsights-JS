@@ -10,7 +10,7 @@ import {
     DisabledPropertyName, RequestHeaders, IEnvelope, PageView, Event,
     Trace, Exception, Metric, PageViewPerformance, RemoteDependencyData,
     IChannelControlsAI, IConfig, ProcessLegacy, BreezeChannelIdentifier,
-    SampleRate, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, isBeaconApiSupported, Statsbeat
+    SampleRate, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, isBeaconApiSupported
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, IProcessTelemetryContext, IConfiguration,
@@ -21,13 +21,14 @@ import {
 import { Offline } from './Offline';
 import { Sample } from './TelemetryProcessors/Sample'
 import dynamicProto from '@microsoft/dynamicproto-js';
+import { Statsbeat } from './Statsbeat';
 
 declare var XDomainRequest: {
     prototype: IXDomainRequest;
     new(): IXDomainRequest;
 };
 
-export type SenderFunction = (payload: string[], isAsync: boolean) => void;
+export type SenderFunction = (payload: string[], isAsync: boolean, startTime: number) => void;
 
 function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
     try {
@@ -73,7 +74,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         }
     }
 
-    private static _getDefaultAppInsightsChannelConfig(): ISenderConfig {
+    private static _getDefaultAppInsightsChannelConfig(isStatsbeatSender?: boolean): ISenderConfig {
         // set default values
         return {
             endpointUrl: () => "https://dc.services.visualstudio.com/v2/track",
@@ -85,7 +86,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             isRetryDisabled: () => false,
             isBeaconApiDisabled: () => true,
             onunloadDisableBeacon: () => false,
-            instrumentationKey: () => undefined,  // Channel doesn't need iKey, it should be set already
+            instrumentationKey: () => isStatsbeatSender ? Statsbeat.INSTRUMENTATION_KEY : undefined,  // Channel doesn't need iKey, it should be set already
             namePrefix: () => undefined,
             samplingPercentage: () => 100,
             customHeaders: () => undefined,
@@ -143,11 +144,13 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
     protected _sample: Sample;
 
     private _statsbeat: Statsbeat;
+    private _isStatsbeatSender: boolean;
 
-    constructor(statsbeat?: Statsbeat) {
+    constructor(statsbeat?: Statsbeat, isStatsbeatSender?: boolean) {
         super();
 
         this._statsbeat = statsbeat;
+        this._isStatsbeatSender = isStatsbeatSender;
 
         /**
          * How many times in a row a retryable error condition has occurred.
@@ -217,6 +220,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             }
         
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain): void => {
+                if (this._statsbeat) {
+                    this._statsbeat.initialize(config);
+                }
                 _base.initialize(config, core, extensions, pluginChain);
                 let ctx = _self._getTelCtx();
                 let identifier = _self.identifier;
@@ -227,7 +233,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _self._sender = null;
                 _stamp_specific_redirects = 0;
 
-                const defaultConfig = Sender._getDefaultAppInsightsChannelConfig();
+                const defaultConfig = Sender._getDefaultAppInsightsChannelConfig(_self._isStatsbeatSender);
                 _self._senderConfig = Sender._getEmptyAppInsightsChannelConfig();
                 objForEachKey(defaultConfig, (field, value) => {
                     _self._senderConfig[field] = () => ctx.getConfig(identifier, field, value());
@@ -474,7 +480,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
         
                 if (retry.length > 0) {
-                    _resendPayload(retry);
+                    _resendPayload(retry, 1, endpointUrl);
         
                     _self.diagLog().throwInternal(
                         LoggingSeverity.WARNING,
@@ -541,7 +547,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     }
 
                     if (!_self._senderConfig.isRetryDisabled() && _isRetriable(status)) {
-                        _resendPayload(payload);
+                        _resendPayload(payload, 1, responseUrl, status);
                         _self.diagLog().throwInternal(
                             LoggingSeverity.WARNING,
                             _InternalMessageId.TransmissionFailed, ". " +
@@ -553,7 +559,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     // Note: Don't check for status == 0, since adblock gives this code
                     if (!_self._senderConfig.isRetryDisabled()) {
                         const offlineBackOffMultiplier = 10; // arbritrary number
-                        _resendPayload(payload, offlineBackOffMultiplier);
+                        _resendPayload(payload, offlineBackOffMultiplier, responseUrl, status);
     
                         _self.diagLog().throwInternal(
                             LoggingSeverity.WARNING,
@@ -748,11 +754,19 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
              * Resend payload. Adds payload back to the send buffer and setup a send timer (with exponential backoff).
              * @param payload
              */
-            function _resendPayload(payload: string[], linearFactor: number = 1) {
+            function _resendPayload(payload: string[], linearFactor: number = 1, endpointUrl: string, status?: number) {
                 if (!payload || payload.length === 0) {
                     return;
                 }
         
+                var endpointHost = new URL(endpointUrl).hostname;
+                if (_self._statsbeat) {
+                    _self._statsbeat.countRetry(endpointHost);
+                    if (status && status === 429) {
+                        _self._statsbeat.countThrottle(endpointHost);
+                    }
+                }
+
                 _self._buffer.clearSent(payload);
                 _consecutiveErrors++;
         

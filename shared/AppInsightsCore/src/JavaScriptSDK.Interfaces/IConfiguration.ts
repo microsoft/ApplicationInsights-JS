@@ -149,4 +149,6 @@ export interface IConfiguration {
      * cookieDomain and disableCookiesUsage values.
      */
     cookieCfg?: ICookieMgrConfig;
+
+    disableStatsbeat?: boolean;
 }

@@ -59,7 +59,6 @@ export { IUser, IUserContext } from './Interfaces/Context/IUser';
 export { ITelemetryTrace, ITraceState } from './Interfaces/Context/ITelemetryTrace';
 export { IRequestContext } from './Interfaces/IRequestContext';
 export { DistributedTracingModes } from './Enums';
-export { Statsbeat } from './Statsbeat';
 export { stringToBoolOrDefault, msToTimeSpan, isBeaconApiSupported, getExtensionByName, isCrossOriginError } from './HelperFuncs';
 export { createDomEvent } from './DomHelperFuncs';
 export { 

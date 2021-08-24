@@ -8,7 +8,7 @@ import {
 } from "@microsoft/applicationinsights-core-js";
 import { ApplicationInsights } from "@microsoft/applicationinsights-analytics-js";
 import { Sender } from "@microsoft/applicationinsights-channel-js";
-import { PropertiesPlugin } from "@microsoft/applicationinsights-properties-js";
+import { PropertiesPlugin, Statsbeat } from "@microsoft/applicationinsights-properties-js";
 import { AjaxPlugin as DependenciesPlugin, IDependenciesPlugin } from '@microsoft/applicationinsights-dependencies-js';
 import {
     IUtil, Util, ICorrelationIdHelper, CorrelationIdHelper, IUrlHelper, UrlHelper, IDateTimeUtils, DateTimeUtils, ConnectionStringParser, FieldType,
@@ -122,6 +122,7 @@ export class Initialization implements IApplicationInsights {
     private properties: PropertiesPlugin;
     private _sender: Sender;
     private _snippetVersion: string;
+    private _statsbeat: Statsbeat;
 
     constructor(snippet: Snippet) {
         let _self = this;
@@ -143,7 +144,8 @@ export class Initialization implements IApplicationInsights {
         _self.properties = new PropertiesPlugin();
         _self.dependencies = new DependenciesPlugin();
         _self.core = new AppInsightsCore();
-        _self._sender = new Sender();
+        _self._statsbeat = new Statsbeat();
+        _self._sender = new Sender(_self._statsbeat, true);
 
         _self.snippet = snippet;
         _self.config = config;
