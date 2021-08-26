@@ -12,6 +12,7 @@ export interface FakeXMLHttpRequest extends XMLHttpRequest {
     url?: string;
     method?: string;
     requestHeaders?: any;
+    requestBody?: string;
     respond: (status: number, headers: any, body: string) => void;
 }
 

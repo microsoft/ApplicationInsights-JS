@@ -271,7 +271,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
 
                 // initialize statsbeat instance last after sender config is fully populated
-                // lxiao -  && !config.disableStatsbeat -> still initialize statsbeat but disable it thus no data sending out; or check config for each data collect?
                 if (this._statsbeat) {
                     this._statsbeat.initialize(config, core, extensions, pluginChain, _self._senderConfig.endpointUrl());
                 }
@@ -951,7 +950,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public processTelemetry(telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
+    public processTelemetry(telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext, isStatsbeatSender?: boolean) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
