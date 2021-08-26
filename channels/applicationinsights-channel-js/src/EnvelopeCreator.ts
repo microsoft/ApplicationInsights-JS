@@ -266,7 +266,7 @@ export class MetricEnvelopeCreator extends EnvelopeCreator {
     Create(logger: IDiagnosticLogger, telemetryItem: ITelemetryItem, customUndefinedValue?: any): IEnvelope {
         super.Init(logger, telemetryItem);
 
-        const baseData = telemetryItem[strBaseData];
+        const baseData = telemetryItem[strBaseData] || {};
         const props = baseData[strProperties] || {};
         const measurements = baseData.measurements || {};
         EnvelopeCreator.extractPropsAndMeasurements(telemetryItem.data, props, measurements);

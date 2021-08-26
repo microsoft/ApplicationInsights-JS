@@ -42,9 +42,9 @@ function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
 
 export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
-    public static constructEnvelope(orig: ITelemetryItem, iKey: string, logger: IDiagnosticLogger, convertUndefined?: any): IEnvelope {
+    public static constructEnvelope(orig: ITelemetryItem, iKey: string, logger: IDiagnosticLogger, convertUndefined?: any, isStatsbeatSender?: boolean): IEnvelope {
         let envelope: ITelemetryItem;
-        if (iKey !== orig.iKey && !isNullOrUndefined(iKey)) {
+        if (iKey !== orig.iKey && !isNullOrUndefined(iKey) && !isStatsbeatSender) {
             envelope = {
                 ...orig,
                 iKey
@@ -74,7 +74,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         }
     }
 
-    private static _getDefaultAppInsightsChannelConfig(isStatsbeatSender?: boolean): ISenderConfig {
+    private static _getDefaultAppInsightsChannelConfig(): ISenderConfig {
         // set default values
         return {
             endpointUrl: () => "https://dc.services.visualstudio.com/v2/track",
@@ -86,7 +86,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             isRetryDisabled: () => false,
             isBeaconApiDisabled: () => true,
             onunloadDisableBeacon: () => false,
-            instrumentationKey: () => isStatsbeatSender ? Statsbeat.INSTRUMENTATION_KEY : undefined,  // Channel doesn't need iKey, it should be set already
+            instrumentationKey: () => undefined,  // Channel doesn't need iKey, it should be set already
             namePrefix: () => undefined,
             samplingPercentage: () => 100,
             customHeaders: () => undefined,
@@ -144,13 +144,11 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
     protected _sample: Sample;
 
     private _statsbeat: Statsbeat;
-    private _isStatsbeatSender: boolean;
 
-    constructor(statsbeat?: Statsbeat, isStatsbeatSender?: boolean) {
+    constructor(statsbeat?: Statsbeat) {
         super();
 
         this._statsbeat = statsbeat;
-        this._isStatsbeatSender = isStatsbeatSender;
 
         /**
          * How many times in a row a retryable error condition has occurred.
@@ -220,9 +218,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             }
         
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain): void => {
-                if (this._statsbeat) {
-                    this._statsbeat.initialize(config);
-                }
                 _base.initialize(config, core, extensions, pluginChain);
                 let ctx = _self._getTelCtx();
                 let identifier = _self.identifier;
@@ -233,7 +228,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 _self._sender = null;
                 _stamp_specific_redirects = 0;
 
-                const defaultConfig = Sender._getDefaultAppInsightsChannelConfig(_self._isStatsbeatSender);
+                const defaultConfig = Sender._getDefaultAppInsightsChannelConfig();
                 _self._senderConfig = Sender._getEmptyAppInsightsChannelConfig();
                 objForEachKey(defaultConfig, (field, value) => {
                     _self._senderConfig[field] = () => ctx.getConfig(identifier, field, value());
@@ -274,9 +269,15 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         }
                     }
                 }
+
+                // initialize statsbeat instance last after sender config is fully populated
+                // lxiao -  && !config.disableStatsbeat -> still initialize statsbeat but disable it thus no data sending out; or check config for each data collect?
+                if (this._statsbeat) {
+                    this._statsbeat.initialize(config, core, extensions, pluginChain, _self._senderConfig.endpointUrl());
+                }
             };
         
-            _self.processTelemetry = (telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
+            _self.processTelemetry = (telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext, isStatsbeatSender?: boolean) => {
                 itemCtx = _self._getTelCtx(itemCtx);
                 
                 try {
@@ -321,7 +322,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
                     const convertUndefined = _self._senderConfig.convertUndefined() || undefined;
                     // construct an envelope that Application Insights endpoint can understand
-                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, _self._senderConfig.instrumentationKey(), itemCtx.diagLog(), convertUndefined);
+                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, _self._senderConfig.instrumentationKey(), itemCtx.diagLog(), convertUndefined, isStatsbeatSender);
                     if (!aiEnvelope) {
                         itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
                         return;
@@ -946,7 +947,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain): void {
+    public initialize(config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain, endpoint?: string): void {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 

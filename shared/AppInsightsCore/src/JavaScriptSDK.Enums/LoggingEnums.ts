@@ -100,6 +100,5 @@ export const _InternalMessageId = {
     InvalidContentBlob: 102,
     TrackPageActionEventFailed: 103,
     FailedAddingCustomDefinedRequestContext: 104,
-    FailedToSendStatsbeatData: 105,
 };
 export type _InternalMessageId = number | typeof _InternalMessageId;
