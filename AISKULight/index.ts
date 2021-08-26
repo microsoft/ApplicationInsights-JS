@@ -53,7 +53,7 @@ export class ApplicationInsights {
         this.core = new AppInsightsCore();
         const extensions = [];
         const statsbeat = new Statsbeat();
-        const appInsightsChannel: Sender = new Sender(statsbeat, true);
+        const appInsightsChannel: Sender = new Sender(statsbeat);
 
         extensions.push(appInsightsChannel);
 
