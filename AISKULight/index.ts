@@ -13,7 +13,7 @@ import {
     throwError
 } from "@microsoft/applicationinsights-core-js";
 import { IConfig } from "@microsoft/applicationinsights-common";
-import { Sender } from "@microsoft/applicationinsights-channel-js";
+import { Sender, Statsbeat } from "@microsoft/applicationinsights-channel-js";
 
 "use strict";
 
@@ -52,7 +52,8 @@ export class ApplicationInsights {
     public initialize(): void {
         this.core = new AppInsightsCore();
         const extensions = [];
-        const appInsightsChannel: Sender = new Sender();
+        const statsbeat = new Statsbeat();
+        const appInsightsChannel: Sender = new Sender(statsbeat);
 
         extensions.push(appInsightsChannel);
 
