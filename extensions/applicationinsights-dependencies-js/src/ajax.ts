@@ -206,6 +206,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
         let _currentWindowHost:string = location && location.host && location.host.toLowerCase();
         let _config: ICorrelationConfig = AjaxMonitor.getEmptyConfig();
         let _enableRequestHeaderTracking = false;
+        let _enableAjaxErrorStatusText = false;
         let _trackAjaxAttempts: number = 0;
         let _context: ITelemetryContext;
         let _isUsingW3CHeaders: boolean;
@@ -231,6 +232,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                     let distributedTracingMode = _config.distributedTracingMode;
                     _enableRequestHeaderTracking = _config.enableRequestHeaderTracking;
+                    _enableAjaxErrorStatusText = _config.enableAjaxErrorStatusText;
                     _enableAjaxPerfTracking = _config.enableAjaxPerfTracking;
                     _maxAjaxCallsPerView = _config.maxAjaxCallsPerView;
                     _enableResponseHeaderTracking = _config.enableResponseHeaderTracking;
@@ -635,6 +637,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                 ajaxData.xhrMonitoringState.openDone = true;
                 ajaxData.requestHeaders = {};
                 ajaxData.async = async;
+                ajaxData.errorStatusText = _enableAjaxErrorStatusText;
                 xhr[strAjaxData] = ajaxData;
 
                 _attachToOnReadyStateChange(xhr);
@@ -671,7 +674,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         return xhr.responseText;
                     }
                 } catch (e) {
-                    // This shouldn't happend because of the above check -- but just in case, so just ignore
+                    // This shouldn't happen because of the above check -- but just in case, so just ignore
                 }
 
                 return null;
@@ -869,6 +872,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
 
                 const ajaxData = new ajaxRecord(traceID, spanID, _self[strDiagLog]());
                 ajaxData.requestSentTime = dateTimeUtilsNow();
+                ajaxData.errorStatusText = _enableAjaxErrorStatusText;
 
                 if (input instanceof Request) {
                     ajaxData.requestUrl = input ? input.url : "";
