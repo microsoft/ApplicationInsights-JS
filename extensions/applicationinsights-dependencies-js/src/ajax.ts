@@ -797,7 +797,7 @@ export class AjaxMonitor extends BaseTelemetryPlugin implements IDependenciesPlu
                         performance.mark(markId);
                         let entries = performance.getEntriesByName(markId);
                         if (entries && entries.length === 1) {
-                            ajaxData.perfMark = entries[0];
+                            ajaxData.perfMark = entries[0] as any;
                         }
                     }
                 }

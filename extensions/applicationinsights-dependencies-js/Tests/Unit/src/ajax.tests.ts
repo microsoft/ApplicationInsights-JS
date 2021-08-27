@@ -380,7 +380,7 @@ export class AjaxTests extends AITestClass {
         });
 
         this.testCase({
-            name: "Ajax: xhr respond error data is tracked as part C data when enableAjaxErrorStatusText flag is false",
+            name: "Ajax: xhr respond error data is not tracked as part C data when enableAjaxErrorStatusText flag is false",
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
@@ -422,7 +422,7 @@ export class AjaxTests extends AITestClass {
         });
 
         this.testCase({
-            name: "Ajax: xhr respond error data is tracked as part C data when enableAjaxErrorStatusText flag is default",
+            name: "Ajax: xhr respond error data is not tracked as part C data when enableAjaxErrorStatusText flag is default",
             test: () => {
                 this._ajax = new AjaxMonitor();
                 let appInsightsCore = new AppInsightsCore();
