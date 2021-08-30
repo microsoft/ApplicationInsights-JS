@@ -26,13 +26,15 @@ export class StatsbeatTests extends AITestClass {
         this.testCase({
             name: "Statsbeat by default is enabled and is initialized while sender is initialized.",
             test: () => {
+                const spy = this.sandbox.spy(this._statsbeat, "initialize");
                 this._sender.initialize(
                     {
                         instrumentationKey: 'abc',
                     }, new AppInsightsCore(), []
                 );
 
-                QUnit.assert.equal(this._statsbeat["_isEnabled"], true, "By default, statsbeat is enabled.");
+                QUnit.assert.equal(true, spy.calledOnce, "Statsbeat is enabled by default.");
+                QUnit.assert.equal(true, this._statsbeat.isInitialized());
             }
         });
 
@@ -46,7 +48,8 @@ export class StatsbeatTests extends AITestClass {
                     }, new AppInsightsCore(), []
                 );
 
-                QUnit.assert.equal(this._statsbeat["_isEnabled"], false, "Statsbeat is disabled with customer configuration.");
+                const spy = this.sandbox.spy(this._statsbeat, "initialize");
+                QUnit.assert.equal(false, spy.calledOnce, "Statsbeat is disabled with customer configuration. When disableStatsbeat sets to true, statsbeat is not initialized thus initialize method is not called.");
             }
         });
 
@@ -55,11 +58,9 @@ export class StatsbeatTests extends AITestClass {
             test: () => {
                 // the first xhr gets created when _sender calls initialize; the second xhr gest created when statsbeat's sender calls initialize
                 this._sender.initialize({ instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, new AppInsightsCore(), []);
-                const spy = this.sandbox.spy(this._statsbeat["_sender"], "triggerSend");
                 // the third xhr gets created when track is called and the current _sender creates a xhr to send data
                 this._statsbeat.trackShortIntervalStatsbeats();
 
-                QUnit.assert.equal(spy.callCount, 1, "should call sender");
                 QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
 
                 // we only care the last object that's about to send
@@ -80,12 +81,10 @@ export class StatsbeatTests extends AITestClass {
             name: "Track duration.",
             test: () => {
                 this._sender.initialize({ instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, new AppInsightsCore(), []);
-                const spy = this.sandbox.spy(this._statsbeat["_sender"], "triggerSend");
                 this._statsbeat.countRequest(endpoint, 1000, true);
                 this._statsbeat.countRequest(endpoint, 500, false);
                 this._statsbeat.trackShortIntervalStatsbeats();
 
-                QUnit.assert.equal(spy.callCount, 1, "should call sender");
                 QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
                 
                 // we only care the last object that's about to send
@@ -108,7 +107,6 @@ export class StatsbeatTests extends AITestClass {
             name: "Track counts.",
             test: () => {
                 this._sender.initialize({ instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, new AppInsightsCore(), []);
-                const spy = this.sandbox.spy(this._statsbeat["_sender"], "triggerSend");
                 this._statsbeat.countRequest(endpoint, 1, true);
                 this._statsbeat.countRequest(endpoint, 1, true);
                 this._statsbeat.countRequest(endpoint, 1, true);
@@ -122,7 +120,6 @@ export class StatsbeatTests extends AITestClass {
                 this._statsbeat.countException(endpoint);
                 this._statsbeat.trackShortIntervalStatsbeats();
 
-                QUnit.assert.equal(spy.callCount, 1, "should call sender");
                 QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
                 
                 // we only care the last object that's about to send

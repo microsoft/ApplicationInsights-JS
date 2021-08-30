@@ -1,3 +1,4 @@
+import { dateNow } from "@microsoft/applicationinsights-core-js";
 export class NetworkStatsbeat {
 
     public time: number;
@@ -16,7 +17,7 @@ export class NetworkStatsbeat {
 
     public retryCount: number;
 
-    public exceptionCount: number; // what exception count? - throwinternal? or exception for the sender -> sender fail to send
+    public exceptionCount: number;
 
     public throttleCount: number;
 
@@ -34,7 +35,7 @@ export class NetworkStatsbeat {
         this.throttleCount = 0;
         this.intervalRequestExecutionTime = 0;
         this.lastIntervalRequestExecutionTime = 0;
-        this.lastTime = +new Date;
+        this.lastTime = dateNow();
         this.lastRequestCount = 0;
     }
 }

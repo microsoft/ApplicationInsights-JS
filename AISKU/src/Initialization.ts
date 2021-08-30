@@ -122,7 +122,6 @@ export class Initialization implements IApplicationInsights {
     private properties: PropertiesPlugin;
     private _sender: Sender;
     private _snippetVersion: string;
-    private _statsbeat: Statsbeat;
 
     constructor(snippet: Snippet) {
         let _self = this;
@@ -144,8 +143,7 @@ export class Initialization implements IApplicationInsights {
         _self.properties = new PropertiesPlugin();
         _self.dependencies = new DependenciesPlugin();
         _self.core = new AppInsightsCore();
-        _self._statsbeat = new Statsbeat();
-        _self._sender = new Sender(_self._statsbeat);
+        _self._sender = new Sender(new Statsbeat());
 
         _self.snippet = snippet;
         _self.config = config;

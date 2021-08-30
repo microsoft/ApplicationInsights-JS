@@ -10,7 +10,7 @@ import {
     DisabledPropertyName, RequestHeaders, IEnvelope, PageView, Event,
     Trace, Exception, Metric, PageViewPerformance, RemoteDependencyData,
     IChannelControlsAI, IConfig, ProcessLegacy, BreezeChannelIdentifier,
-    SampleRate, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, isBeaconApiSupported
+    SampleRate, isInternalApplicationInsightsEndpoint, utlCanUseSessionStorage, isBeaconApiSupported, urlParseUrl
 } from '@microsoft/applicationinsights-common';
 import {
     ITelemetryItem, IProcessTelemetryContext, IConfiguration,
@@ -28,7 +28,7 @@ declare var XDomainRequest: {
     new(): IXDomainRequest;
 };
 
-export type SenderFunction = (payload: string[], isAsync: boolean, startTime: number) => void;
+export type SenderFunction = (payload: string[], isAsync: boolean, startTime?: number) => void;
 
 function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
     try {
@@ -42,9 +42,9 @@ function _getResponseText(xhr: XMLHttpRequest | IXDomainRequest) {
 
 export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
 
-    public static constructEnvelope(orig: ITelemetryItem, iKey: string, logger: IDiagnosticLogger, convertUndefined?: any, isStatsbeatSender?: boolean): IEnvelope {
+    public static constructEnvelope(orig: ITelemetryItem, iKey: string, logger: IDiagnosticLogger, convertUndefined?: any): IEnvelope {
         let envelope: ITelemetryItem;
-        if (iKey !== orig.iKey && !isNullOrUndefined(iKey) && !isStatsbeatSender) {
+        if (iKey !== orig.iKey && !isNullOrUndefined(iKey)) {
             envelope = {
                 ...orig,
                 iKey
@@ -144,11 +144,10 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
     protected _sample: Sample;
 
     private _statsbeat: Statsbeat;
+    private _isStatsbeatSender: boolean;
 
-    constructor(statsbeat?: Statsbeat) {
+    constructor(statsbeat?: Statsbeat, isStatsbeatSender?: boolean) {
         super();
-
-        this._statsbeat = statsbeat;
 
         /**
          * How many times in a row a retryable error condition has occurred.
@@ -180,6 +179,9 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             function _notImplemented() {
                 throwError("Method not implemented.");
             }
+
+            _self._statsbeat = statsbeat;
+            _self._isStatsbeatSender = isStatsbeatSender;
 
             _self.pause = _notImplemented;
         
@@ -271,12 +273,12 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
 
                 // initialize statsbeat instance last after sender config is fully populated
-                if (this._statsbeat) {
-                    this._statsbeat.initialize(config, core, extensions, pluginChain, _self._senderConfig.endpointUrl());
+                if (_self._statsbeat && config.disableStatsbeat !== true) {
+                    _self._statsbeat.initialize(config, core, extensions, pluginChain, _self._senderConfig.endpointUrl());
                 }
             };
         
-            _self.processTelemetry = (telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext, isStatsbeatSender?: boolean) => {
+            _self.processTelemetry = (telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext) => {
                 itemCtx = _self._getTelCtx(itemCtx);
                 
                 try {
@@ -321,7 +323,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
                     const convertUndefined = _self._senderConfig.convertUndefined() || undefined;
                     // construct an envelope that Application Insights endpoint can understand
-                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, _self._senderConfig.instrumentationKey(), itemCtx.diagLog(), convertUndefined, isStatsbeatSender);
+                    let ikey = !_self._isStatsbeatSender ? _self._senderConfig.instrumentationKey() : null;
+                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, ikey, itemCtx.diagLog(), convertUndefined);
                     if (!aiEnvelope) {
                         itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
                         return;
@@ -404,7 +407,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
                             _notifySendRequest(sendReason||SendRequestReason.Undefined, async);
 
-                            let startTime = +new Date();
+                            let startTime = dateNow();
         
                             // invoke send
                             if (forcedSender) {
@@ -447,7 +450,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     { message });
         
                 _self._buffer.clearSent(payload);
-                if (_self._statsbeat && endpointUrl) {
+                if (_self._statsbeat && _self._statsbeat.isInitialized() && endpointUrl) {
                     _self._statsbeat.countException(endpointUrl);
                 }
             };
@@ -476,7 +479,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 }
         
                 if (failed.length > 0) {
-                    _self._onError(failed, _formatErrorMessageXhr(null, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' ')), undefined, endpointUrl);
+                    _self._onError(failed, _formatErrorMessageXhr(null, ['partial success', results.itemsAccepted, 'of', results.itemsReceived].join(' ')), null, endpointUrl);
                 }
         
                 if (retry.length > 0) {
@@ -505,8 +508,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                 if (xdr && (responseText + "" === "200" || responseText === "")) {
                     _consecutiveErrors = 0;
                     _self._onSuccess(payload, 0);
-                    if (_self._statsbeat) {
-                        let endTime = +new Date();
+                    if (_self._statsbeat && _self._statsbeat.isInitialized()) {
+                        let endTime = dateNow();
                         _self._statsbeat.countRequest(endpointUrl, endTime - startTime, true);
                     }
                 } else {
@@ -516,7 +519,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         && !_self._senderConfig.isRetryDisabled()) {
                         _self._onPartialSuccess(payload, results, endpointUrl);
                     } else {
-                        _self._onError(payload, _formatErrorMessageXdr(xdr), undefined, endpointUrl);
+                        _self._onError(payload, _formatErrorMessageXdr(xdr), null, endpointUrl);
                     }
                 }
             };
@@ -541,7 +544,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     // Updates the end point url before retry
                     if(status === 301 || status === 307 || status === 308) {
                         if(!_checkAndUpdateEndPointUrl(responseUrl)) {
-                            _self._onError(payload, errorMessage, undefined, responseUrl);
+                            _self._onError(payload, errorMessage, null, responseUrl);
                             return;
                         }
                     }
@@ -553,7 +556,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                             _InternalMessageId.TransmissionFailed, ". " +
                             "Response code " + status + ". Will retry to send " + payload.length + " items.");
                     } else {
-                        _self._onError(payload, errorMessage, undefined, responseUrl);
+                        _self._onError(payload, errorMessage, null, responseUrl);
                     }
                 } else if (Offline.isOffline()) { // offline
                     // Note: Don't check for status == 0, since adblock gives this code
@@ -566,8 +569,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                             _InternalMessageId.TransmissionFailed, `. Offline - Response Code: ${status}. Offline status: ${Offline.isOffline()}. Will retry to send ${payload.length} items.`);
                     }
                 } else {
-                    let endTime = +new Date();
-                    if (_self._statsbeat) {
+                    let endTime = dateNow();
+                    if (_self._statsbeat && _self._statsbeat.isInitialized()) {
                         _self._statsbeat.countRequest(responseUrl, endTime - startTime, status === 200);
                     }
 
@@ -583,7 +586,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         if (response && !_self._senderConfig.isRetryDisabled()) {
                             _self._onPartialSuccess(payload, response, responseUrl);
                         } else {
-                            _self._onError(payload, errorMessage, undefined, responseUrl);
+                            _self._onError(payload, errorMessage, null, responseUrl);
                         }
                     } else {
                         _consecutiveErrors = 0;
@@ -631,14 +634,14 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     _self._buffer.markAsSent(payload);
                     // no response from beaconSender, clear buffer
                     _self._onSuccess(payload, payload.length);
-                    if (_self._statsbeat) {
-                        let endTime = +new Date();
+                    if (_self._statsbeat && _self._statsbeat.isInitialized()) {
+                        let endTime = dateNow();
                         _self._statsbeat.countRequest(url, endTime - startTime, true);
                     }
                 } else {
                     _xhrSender(payload, true, startTime);
                     _self.diagLog().throwInternal(LoggingSeverity.WARNING, _InternalMessageId.TransmissionFailed, ". " + "Failed to send telemetry with Beacon API, retried with xhrSender.");
-                    if (_self._statsbeat) {
+                    if (_self._statsbeat && _self._statsbeat.isInitialized()) {
                         _self._statsbeat.countException(url);
                     }
                 }
@@ -719,7 +722,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                         _self._buffer.markAsSent(payload);
                     }
                 }).catch((error: Error) => {
-                    _self._onError(payload, error.message, undefined, endPointUrl);
+                    _self._onError(payload, error.message, null, endPointUrl);
                 });
             }
         
@@ -759,8 +762,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     return;
                 }
         
-                var endpointHost = new URL(endpointUrl).hostname;
-                if (_self._statsbeat) {
+                var endpointHost = urlParseUrl(endpointUrl).hostname;
+                if (_self._statsbeat && _self._statsbeat.isInitialized()) {
                     _self._statsbeat.countRetry(endpointHost);
                     if (status && status === 429) {
                         _self._statsbeat.countThrottle(endpointHost);
@@ -950,7 +953,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public processTelemetry(telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext, isStatsbeatSender?: boolean) {
+    public processTelemetry(telemetryItem: ITelemetryItem, itemCtx?: IProcessTelemetryContext) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
