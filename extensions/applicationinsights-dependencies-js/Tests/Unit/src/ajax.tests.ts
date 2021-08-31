@@ -379,6 +379,90 @@ export class AjaxTests extends AITestClass {
             }
         });
 
+        this.testCase({
+            name: "Ajax: xhr respond error data is not tracked as part C data when enableAjaxErrorStatusText flag is false",
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "abc", disableAjaxTracking: false, enableAjaxErrorStatusText: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                var trackStub = this.sandbox.stub(appInsightsCore, "track");
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.send();
+
+                // Emulate response
+                (<any>xhr).respond(403, {}, "error data with status code 403");
+
+                // assert
+                Assert.ok(trackStub.calledOnce, "track is called");
+                let data = trackStub.args[0][0].baseData;
+                Assert.equal("Ajax", data.type, "request is Ajax type");
+                Assert.equal(undefined, data.properties.responseText, "xhr request's reponse error is not stored in part C");
+
+                // act
+                var xhr2 = new XMLHttpRequest();
+                xhr2.open("GET", "http://microsoft.com");
+                xhr2.responseType = "json";
+                xhr2.send();
+
+                // Emulate response
+                let responseJSON = '{ "error":"error data with status code 403" }';
+                (<any>xhr2).respond(403, {}, responseJSON);
+
+                // assert
+                Assert.ok(trackStub.calledTwice, "track is called");
+                data = trackStub.args[1][0].baseData;
+                Assert.equal("Ajax", data.type, "request is Ajax type");
+                Assert.equal(undefined, data.properties.responseText, "xhr request's reponse error is not stored in part C");
+            }
+        });
+
+        this.testCase({
+            name: "Ajax: xhr respond error data is not tracked as part C data when enableAjaxErrorStatusText flag is default",
+            test: () => {
+                this._ajax = new AjaxMonitor();
+                let appInsightsCore = new AppInsightsCore();
+                let coreConfig: IConfiguration & IConfig = { instrumentationKey: "abc", disableAjaxTracking: false };
+                appInsightsCore.initialize(coreConfig, [this._ajax, new TestChannelPlugin()]);
+
+                var trackStub = this.sandbox.stub(appInsightsCore, "track");
+
+                // act
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://microsoft.com");
+                xhr.send();
+
+                // Emulate response
+                (<any>xhr).respond(403, {}, "error data with status code 403");
+
+                // assert
+                Assert.ok(trackStub.calledOnce, "track is called");
+                let data = trackStub.args[0][0].baseData;
+                Assert.equal("Ajax", data.type, "request is Ajax type");
+                Assert.equal(undefined, data.properties.responseText, "xhr request's reponse error is not stored in part C");
+
+                // act
+                var xhr2 = new XMLHttpRequest();
+                xhr2.open("GET", "http://microsoft.com");
+                xhr2.responseType = "json";
+                xhr2.send();
+
+                // Emulate response
+                let responseJSON = '{ "error":"error data with status code 403" }';
+                (<any>xhr2).respond(403, {}, responseJSON);
+
+                // assert
+                Assert.ok(trackStub.calledTwice, "track is called");
+                data = trackStub.args[1][0].baseData;
+                Assert.equal("Ajax", data.type, "request is Ajax type");
+                Assert.equal(undefined, data.properties.responseText, "xhr request's reponse error is not stored in part C");
+            }
+        });
+
         this.testCaseAsync({
             name: "Fetch: fetch with disabled flag isn't tracked",
             stepDelay: 10,
