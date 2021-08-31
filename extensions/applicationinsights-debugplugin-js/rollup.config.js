@@ -20,7 +20,7 @@ const replaceValues = {
   "// Licensed under the MIT License.": ""
 };
 
-const verParts = version.split(".")
+const verParts = version.split("-")[0].split(".")
 if (verParts.length != 3) {
   throw "Invalid Version! [" + version + "]"
 }
