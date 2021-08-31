@@ -114,7 +114,7 @@ export class Statsbeat {
                         name: Statsbeat.NETWORK,
                         baseData: {
                             name: Statsbeat.NETWORK,
-                            average: 1,
+                            average: 0,
                             properties: {"host": _networkCounter.host, ..._statsbeatMetrics.properties, ...networkProperties},
                         },
                         baseType: Metric.dataType
