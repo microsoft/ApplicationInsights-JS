@@ -23,8 +23,10 @@ export class Statsbeat {
         dynamicProto(Statsbeat, this, (_self, _base) => {
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain, endpoint?: string) => {
                 _networkCounter = new NetworkStatsbeat(endpoint);
-                _sender = new Sender(undefined, true);
-                _sender.initialize(config, core, extensions, pluginChain, endpoint);
+                _sender = new Sender(undefined);
+                let senderConfig = {...config};
+                senderConfig.instrumentationKey = Statsbeat.INSTRUMENTATION_KEY;
+                _sender.initialize(senderConfig, core, extensions, pluginChain, endpoint);
                 _statsbeatMetrics = {};
                 _config = config;
                 _isEnabled = _config.disableStatsbeat !== true;
@@ -111,6 +113,8 @@ export class Statsbeat {
                         iKey: Statsbeat.INSTRUMENTATION_KEY,
                         name: Statsbeat.NETWORK,
                         baseData: {
+                            name: Statsbeat.NETWORK,
+                            average: 1,
                             properties: {"host": _networkCounter.host, ..._statsbeatMetrics.properties, ...networkProperties},
                         },
                         baseType: Metric.dataType

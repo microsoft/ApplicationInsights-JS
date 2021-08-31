@@ -144,9 +144,8 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
     protected _sample: Sample;
 
     private _statsbeat: Statsbeat;
-    private _isStatsbeatSender: boolean;
 
-    constructor(statsbeat?: Statsbeat, isStatsbeatSender?: boolean) {
+    constructor(statsbeat?: Statsbeat) {
         super();
 
         /**
@@ -181,7 +180,6 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
             }
 
             _self._statsbeat = statsbeat;
-            _self._isStatsbeatSender = isStatsbeatSender;
 
             _self.pause = _notImplemented;
         
@@ -323,8 +321,7 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
         
                     const convertUndefined = _self._senderConfig.convertUndefined() || undefined;
                     // construct an envelope that Application Insights endpoint can understand
-                    let ikey = !_self._isStatsbeatSender ? _self._senderConfig.instrumentationKey() : null;
-                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, ikey, itemCtx.diagLog(), convertUndefined);
+                    let aiEnvelope = Sender.constructEnvelope(telemetryItem, _self._senderConfig.instrumentationKey(), itemCtx.diagLog(), convertUndefined);
                     if (!aiEnvelope) {
                         itemCtx.diagLog().throwInternal(LoggingSeverity.CRITICAL, _InternalMessageId.CreateEnvelopeError, "Unable to create an AppInsights envelope");
                         return;
