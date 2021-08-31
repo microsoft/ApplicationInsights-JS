@@ -14,7 +14,7 @@ export class Statsbeat {
         let _networkCounter: NetworkStatsbeat;
         let _sender: Sender;
         let _handle: any;
-        let _statsbeatMetrics: { name?: string; value?: number, properties?: {} };
+        let _statsbeatMetrics: { properties?: {} };
         let _config: IConfiguration & IConfig;
         let _isEnabled: boolean;
 
