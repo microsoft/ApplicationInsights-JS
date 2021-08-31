@@ -10,6 +10,7 @@ import { _InternalLogMessage } from "./DiagnosticLogger";
 import { doPerf } from "./PerfManager";
 import { LoggingSeverity, _InternalMessageId } from '../JavaScriptSDK.Enums/LoggingEnums';
 import { isFunction } from './HelperFuncs';
+import { dumpObj } from './EnvUtils';
 
 export class TelemetryPluginChain implements ITelemetryPluginChain {
 
@@ -97,7 +98,7 @@ export class TelemetryPluginChain implements ITelemetryPluginChain {
                             itemCtx.diagLog().throwInternal(
                                 LoggingSeverity.CRITICAL,
                                 _InternalMessageId.PluginException,
-                                "Plugin [" + plugin.identifier + "] failed during processTelemetry - " + error);
+                                "Plugin [" + plugin.identifier + "] failed during processTelemetry - " + dumpObj(error));
                         }
     
                         if (_nextProxy && !hasRun) {
