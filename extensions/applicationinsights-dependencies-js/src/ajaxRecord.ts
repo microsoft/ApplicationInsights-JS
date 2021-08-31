@@ -209,6 +209,9 @@ export class ajaxRecord {
     public perfAttempts?:number;
     public async?:boolean;
 
+    /// <summary>Should the Error Status text be included in the response</summary>
+    public errorStatusText?:boolean;
+
     /// <summary>Returns the HTTP status code.</summary>
     public status:string|number;
 
@@ -328,7 +331,7 @@ export class ajaxRecord {
                             }
                         }
         
-                        if (self.status >= 400) {
+                        if (self.errorStatusText && self.status >= 400) {
                             const responseType = response.type;
                             dependency[strProperties] = dependency[strProperties] || {};
                             if (responseType === "" || responseType === "text") {
