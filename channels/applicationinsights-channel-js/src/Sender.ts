@@ -251,13 +251,21 @@ export class Sender extends BaseTelemetryPlugin implements IChannelControlsAI {
                     const xhr: any = getGlobalInst("XMLHttpRequest");
                     if(xhr) {
                         const testXhr = new xhr();
-                        if ("withCredentials" in testXhr) {
-                            _self._sender = _xhrSender;
-                            _self._XMLHttpRequestSupported = true;
-                        } else if (typeof XDomainRequest !== strUndefined) {
+                        try {
+                            if ("withCredentials" in testXhr) {
+                                _self._sender = _xhrSender;
+                                _self._XMLHttpRequestSupported = true;
+                            } 
+                        } catch(e) {
+                            // This can happen with some native browser objects, but should not happen for the type we are checking for
+                        }
+                        
+                        if (!_self._sender && typeof XDomainRequest !== strUndefined) {
                             _self._sender = _xdrSender; // IE 8 and 9
                         }
-                    } else {
+                    }
+
+                    if (!_self._sender) {
                         const fetch: any = getGlobalInst("fetch");
                         if (fetch) {
                             _self._sender = _fetchSender;

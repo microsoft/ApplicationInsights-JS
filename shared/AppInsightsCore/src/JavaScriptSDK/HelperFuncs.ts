@@ -302,12 +302,16 @@ export function toISOString(date: Date) {
  */
 export function arrForEach<T>(arr: T[], callbackfn: (value: T, index?: number, array?: T[]) => void|number, thisArg?: any): void {
     let len = arr.length;
-    for (let idx = 0; idx < len; idx++) {
-        if (idx in arr) {
-            if (callbackfn.call(thisArg || arr, arr[idx], idx, arr) === -1) {
-                break;
+    try {
+        for (let idx = 0; idx < len; idx++) {
+            if (idx in arr) {
+                if (callbackfn.call(thisArg || arr, arr[idx], idx, arr) === -1) {
+                    break;
+                }
             }
         }
+    } catch (e) {
+        // This can happen with some native browser objects, but should not happen for the type we are checking for
     }
 }
 
@@ -322,10 +326,14 @@ export function arrForEach<T>(arr: T[], callbackfn: (value: T, index?: number, a
 export function arrIndexOf<T>(arr: T[], searchElement: T, fromIndex?: number): number {
     let len = arr.length;
     let from = fromIndex || 0;
-    for (let lp = Math.max(from >= 0 ? from : len - Math.abs(from), 0); lp < len; lp++) {
-        if (lp in arr && arr[lp] === searchElement) {
-            return lp;
+    try {
+        for (let lp = Math.max(from >= 0 ? from : len - Math.abs(from), 0); lp < len; lp++) {
+            if (lp in arr && arr[lp] === searchElement) {
+                return lp;
+            }
         }
+    } catch (e) {
+        // This can happen with some native browser objects, but should not happen for the type we are checking for
     }
 
     return -1;
@@ -344,10 +352,14 @@ export function arrMap<T, R>(arr: T[], callbackfn: (value: T, index?: number, ar
     let _this = thisArg || arr;
     let results = new Array(len);
 
-    for (let lp = 0; lp < len; lp++) {
-        if (lp in arr) {
-            results[lp] = callbackfn.call(_this, arr[lp], arr);
+    try {
+        for (let lp = 0; lp < len; lp++) {
+            if (lp in arr) {
+                results[lp] = callbackfn.call(_this, arr[lp], arr);
+            }
         }
+    } catch (e) {
+        // This can happen with some native browser objects, but should not happen for the type we are checking for
     }
 
     return results;

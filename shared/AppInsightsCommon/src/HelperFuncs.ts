@@ -36,8 +36,17 @@ export function msToTimeSpan(totalms: number): string {
 }
 
 export function isBeaconApiSupported(): boolean {
-    let nav = getNavigator();
-    return ('sendBeacon' in nav && (nav as any).sendBeacon);
+    let result = false;
+    try {
+        let nav = getNavigator();
+        if (nav) {
+            result = ('sendBeacon' in nav && (nav as any).sendBeacon);
+        }
+    } catch (e) {
+        // This can happen with some native browser objects, but should not happen for the type we are checking for
+    }
+
+    return result;
 }
 
 export function getExtensionByName(extensions: IPlugin[], identifier: string): IPlugin | null {
