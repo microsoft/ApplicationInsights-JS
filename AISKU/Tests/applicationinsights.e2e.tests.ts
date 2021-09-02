@@ -43,7 +43,7 @@ export class ApplicationInsightsTests extends TestClass {
     private successSpy: SinonSpy;
     private loggingSpy: SinonSpy;
     private userSpy: SinonSpy;
-    private sessionPrefix: string = Util.newId();
+    private _sessionPrefix: string = Util.newId();
     private trackSpy: SinonSpy;
     private envelopeConstructorSpy: SinonSpy;
 
@@ -52,28 +52,32 @@ export class ApplicationInsightsTests extends TestClass {
     private _config;
     private _appId: string;
 
-    constructor() {
-        super("ApplicationInsightsTests");
+    constructor(testName?: string) {
+        super(testName || "ApplicationInsightsTests");
     }
     
+    protected _getTestConfig(sessionPrefix: string) {
+        return {
+            connectionString: ApplicationInsightsTests._connectionString,
+            disableAjaxTracking: false,
+            disableFetchTracking: false,
+            enableRequestHeaderTracking: true,
+            enableResponseHeaderTracking: true,
+            maxBatchInterval: 2500,
+            disableExceptionTracking: false,
+            namePrefix: sessionPrefix,
+            enableCorsCorrelation: true,
+            distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
+            samplingPercentage: 50,
+            convertUndefined: "test-value"
+        };
+    }
+
     public testInitialize() {
         try {
             this.isFetchPolyfill = fetch["polyfill"];
             this.useFakeServer = false;
-            this._config = {
-                connectionString: ApplicationInsightsTests._connectionString,
-                disableAjaxTracking: false,
-                disableFetchTracking: false,
-                enableRequestHeaderTracking: true,
-                enableResponseHeaderTracking: true,
-                maxBatchInterval: 2500,
-                disableExceptionTracking: false,
-                namePrefix: this.sessionPrefix,
-                enableCorsCorrelation: true,
-                distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
-                samplingPercentage: 50,
-                convertUndefined: "test-value"
-            };
+            this._config = this._getTestConfig(this._sessionPrefix);
 
             const init = new ApplicationInsights({
                 config: this._config

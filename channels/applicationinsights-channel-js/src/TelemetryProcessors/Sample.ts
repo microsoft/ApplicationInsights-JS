@@ -11,13 +11,12 @@ export class Sample implements ISample {
     // We're using 32 bit math, hence max value is (2^31 - 1)
     public INT_MAX_VALUE: number = 2147483647;
     private samplingScoreGenerator: SamplingScoreGenerator;
-    private _logger: IDiagnosticLogger;
 
     constructor(sampleRate: number, logger?: IDiagnosticLogger) {
-        this._logger = logger || safeGetLogger(null);
+        let _logger = logger || safeGetLogger(null);
         
         if (sampleRate > 100 || sampleRate < 0) {
-            this._logger.throwInternal(LoggingSeverity.WARNING,
+            _logger.throwInternal(LoggingSeverity.WARNING,
                 _InternalMessageId.SampleRateOutOfRange,
                 "Sampling rate is out of range (0..100). Sampling will be disabled, you may be sending too much data which may affect your AI service level.",
                 { samplingRate: sampleRate }, true);

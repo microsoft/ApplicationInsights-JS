@@ -31,7 +31,7 @@ export {
     getGlobalInst, hasWindow, getWindow, hasDocument, getDocument, getCrypto, getMsCrypto,
     hasNavigator, getNavigator, hasHistory, getHistory, getLocation, getPerformance, hasJSON, getJSON,
     isReactNative, getConsole, dumpObj, isIE, getIEVersion, isSafari,
-    setEnableEnvMocks
+    setEnableEnvMocks, isBeaconsSupported, isFetchSupported, useXDomainRequest, isXhrSupported
 } from "./JavaScriptSDK/EnvUtils";
 export {
     getGlobal,

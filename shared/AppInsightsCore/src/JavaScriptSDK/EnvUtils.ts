@@ -3,14 +3,17 @@
 "use strict";
 
 import { 
-    getGlobal, strShimUndefined, strShimObject, strShimPrototype, strShimFunction 
+    getGlobal, strShimUndefined, strShimObject, strShimPrototype
 } from "@microsoft/applicationinsights-shims";
-import { isString, strContains } from "./HelperFuncs";
+import { isString, isUndefined, strContains } from "./HelperFuncs";
+
+// TypeScript removed this interface so we need to declare the global so we can check for it's existence.
+declare var XDomainRequest: any;
 
 /**
  * This file exists to hold environment utilities that are required to check and
  * validate the current operating environment. Unless otherwise required, please
- * only defined methods (functions) in this class so that users of these 
+ * only use defined methods (functions) in this class so that users of these 
  * functions/properties only need to include those that are used within their own modules.
  */
 
@@ -31,6 +34,37 @@ const strTrident = "trident/";
 let _isTrident: boolean = null;
 let _navUserAgentCheck: string = null;
 let _enableMocks = false;
+let _useXDomainRequest: boolean | null = null;
+let _beaconsSupported: boolean | null = null;
+
+
+function _hasProperty(theClass: any, property: string) {
+    let supported = false;
+    if (theClass) {
+        try {
+            supported = property in theClass;
+            if (!supported) {
+                let proto = theClass[strShimPrototype];
+                if (proto) {
+                    supported = property in proto;
+                }
+            }
+        } catch (e) {
+            // Do Nothing
+        }
+
+        if (!supported) {
+            try {
+                let tmp = new theClass();
+                supported = !isUndefined(tmp[property]);
+            } catch (e) {
+                // Do Nothing
+            }
+        }
+    }
+
+    return supported;
+}
 
 /**
  * Enable the lookup of test mock objects if requested
@@ -312,4 +346,64 @@ export function isSafari(userAgentStr ?: string) {
 
     var ua = (userAgentStr || "").toLowerCase();
     return (ua.indexOf('safari') >= 0);
+}
+
+/**
+ * Checks if HTML5 Beacons are supported in the current environment.
+ * @returns True if supported, false otherwise.
+ */
+ export function isBeaconsSupported(): boolean {
+    if (_beaconsSupported === null) {
+        _beaconsSupported = hasNavigator() && Boolean(getNavigator().sendBeacon);
+    }
+
+    return _beaconsSupported;
+}
+
+/**
+ * Checks if the Fetch API is supported in the current environment.
+ * @param withKeepAlive - [Optional] If True, check if fetch is available and it supports the keepalive feature, otherwise only check if fetch is supported
+ * @returns True if supported, otherwise false
+ */
+export function isFetchSupported(withKeepAlive?: boolean): boolean {
+    let isSupported = false;
+    try {
+        const fetchApi = getGlobalInst("fetch");
+        isSupported = !!fetchApi;
+        const request = getGlobalInst("Request");
+        if (isSupported && withKeepAlive && request) {
+            isSupported = _hasProperty(request, "keepalive");
+        }
+    } catch (e) {
+        // Just Swallow any failure during availability checks
+    }
+
+    return isSupported;
+}
+
+export function useXDomainRequest(): boolean | undefined {
+    if (_useXDomainRequest === null) {
+        _useXDomainRequest = (typeof XDomainRequest !== undefined);
+        if (_useXDomainRequest && isXhrSupported()) {
+            _useXDomainRequest = _useXDomainRequest && !_hasProperty(getGlobalInst("XMLHttpRequest"), "withCredentials");
+        }
+    }
+
+    return _useXDomainRequest;
+}
+
+/**
+ * Checks if XMLHttpRequest is supported
+ * @returns True if supported, otherwise false
+ */
+export function isXhrSupported(): boolean {
+    let isSupported = false;
+    try {
+        const xmlHttpRequest = getGlobalInst("XMLHttpRequest");
+        isSupported = !!xmlHttpRequest;
+    } catch (e) {
+        // Just Swallow any failure during availability checks
+    }
+
+    return isSupported;
 }

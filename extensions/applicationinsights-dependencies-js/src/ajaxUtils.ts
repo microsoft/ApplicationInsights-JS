@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { isNullOrUndefined } from '@microsoft/applicationinsights-core-js';
-export { EventHelper }  from '@microsoft/applicationinsights-core-js';
 
 export class stringUtils {
     public static GetLength(strObject: any) {

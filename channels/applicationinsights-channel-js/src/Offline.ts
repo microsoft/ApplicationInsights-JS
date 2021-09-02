@@ -1,4 +1,4 @@
-import { EventHelper, getWindow, getDocument, getNavigator, isUndefined, isNullOrUndefined } from '@microsoft/applicationinsights-core-js';
+import { EventHelper, getWindow, getDocument, getNavigator, isUndefined, isNullOrUndefined, attachEvent } from '@microsoft/applicationinsights-core-js';
 import dynamicProto from '@microsoft/dynamicproto-js';
 
 /**
@@ -19,8 +19,8 @@ export class OfflineListener {
         dynamicProto(OfflineListener, this, (_self) => {
             try {
                 if (_window) {
-                    if (EventHelper.Attach(_window, 'online', _setOnline)) {
-                        EventHelper.Attach(_window, 'offline', _setOffline);
+                    if (attachEvent(_window, 'online', _setOnline)) {
+                        attachEvent(_window, 'offline', _setOffline);
                         isListening = true;
                     }
                 }

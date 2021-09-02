@@ -45,7 +45,7 @@ export class AISKUSizeCheck extends TestClass {
                         return;
                     } else {
                         return response.text().then(text => {
-                            let size = Math.ceil(pako.deflate(text).length/1024);
+                            let size = Math.ceil((pako.deflate(text).length/1024) * 100) / 100.0;
                             Assert.ok(size <= this.MAX_DEFLATE_SIZE ,`max ${this.MAX_DEFLATE_SIZE} KB, current deflate size is: ${size} KB`);
                         }).catch((error: Error) => {
                             Assert.ok(false, `AISKU${postfix} response error: ${error}`);

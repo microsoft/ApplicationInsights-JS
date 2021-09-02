@@ -15,6 +15,11 @@ export interface ISendBuffer {
     count: () => number;
 
     /**
+     * Returns the current size of the serialized buffer
+     */
+    size: () => number;
+
+    /**
      * Clears the buffer
      */
     clear: () => void;
@@ -41,31 +46,54 @@ export interface ISendBuffer {
     clearSent: (payload: string[]) => void;
 }
 
-/*
- * An array based send buffer.
- */
-export class ArraySendBuffer implements ISendBuffer {
+abstract class BaseSendBuffer {
+
+    protected _get: () => string[];
+    protected _set: (buffer: string[]) => string[];
 
     constructor(config: ISenderConfig) {
         let _buffer: string[] = [];
 
-        dynamicProto(ArraySendBuffer, this, (_self) => {
+        this._get = () => {
+            return _buffer;
+        };
+
+        this._set = (buffer: string[]) => {
+            _buffer = buffer;
+            return _buffer;
+        };
+
+        dynamicProto(BaseSendBuffer, this, (_self) => {
+
             _self.enqueue = (payload: string) => {
                 _buffer.push(payload);
             };
-        
+
             _self.count = (): number => {
                 return _buffer.length;
             };
-        
+
+            _self.size = (): number => {
+                let size = _buffer.length;
+                for (let lp = 0; lp < _buffer.length; lp++) {
+                    size += _buffer[lp].length;
+                }
+
+                if (!config.emitLineDelimitedJson()) {
+                    size += 2;
+                }
+
+                return size;
+            };
+
             _self.clear = () => {
-                _buffer.length = 0;
+                _buffer = [];
             };
-        
+
             _self.getItems = (): string[] => {
-                return _buffer.slice(0);
+                return _buffer.slice(0)
             };
-        
+
             _self.batchPayloads = (payload: string[]): string => {
                 if (payload && payload.length > 0) {
                     const batch = config.emitLineDelimitedJson() ?
@@ -77,14 +105,6 @@ export class ArraySendBuffer implements ISendBuffer {
         
                 return null;
             };
-        
-            _self.markAsSent = (payload: string[]) => {
-                _self.clear();
-            };
-        
-            _self.clearSent = (payload: string[]) => {
-                // not supported
-            };
         });
     }
 
@@ -93,6 +113,11 @@ export class ArraySendBuffer implements ISendBuffer {
     }
 
     public count(): number {
+        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
+        return 0;
+    }
+
+    public size(): number {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return 0;
     }
@@ -110,6 +135,27 @@ export class ArraySendBuffer implements ISendBuffer {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
         return null;
     }
+}
+
+/*
+ * An array based send buffer.
+ */
+export class ArraySendBuffer extends BaseSendBuffer implements ISendBuffer {
+
+    constructor(config: ISenderConfig) {
+        super(config);
+
+        dynamicProto(ArraySendBuffer, this, (_self, _base) => {
+        
+            _self.markAsSent = (payload: string[]) => {
+                _base.clear();
+            };
+        
+            _self.clearSent = (payload: string[]) => {
+                // not supported
+            };
+        });
+    }
 
     public markAsSent(payload: string[]) {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
@@ -123,7 +169,7 @@ export class ArraySendBuffer implements ISendBuffer {
 /*
  * Session storage buffer holds a copy of all unsent items in the browser session storage.
  */
-export class SessionStorageSendBuffer implements ISendBuffer {
+export class SessionStorageSendBuffer extends BaseSendBuffer implements ISendBuffer {
     static BUFFER_KEY = "AI_buffer";
     static SENT_BUFFER_KEY = "AI_sentBuffer";
 
@@ -131,34 +177,31 @@ export class SessionStorageSendBuffer implements ISendBuffer {
     static MAX_BUFFER_SIZE = 2000;
 
     constructor(logger: IDiagnosticLogger, config: ISenderConfig) {
+        super(config);
         let _bufferFullMessageSent = false;
 
-        // An in-memory copy of the buffer. A copy is saved to the session storage on enqueue() and clear().
-        // The buffer is restored in a constructor and contains unsent events from a previous page.
-        let _buffer: string[];
-
-        dynamicProto(SessionStorageSendBuffer, this, (_self) => {
+        dynamicProto(SessionStorageSendBuffer, this, (_self, _base) => {
             const bufferItems = _getBuffer(SessionStorageSendBuffer.BUFFER_KEY);
             const notDeliveredItems = _getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
     
-            _buffer = bufferItems.concat(notDeliveredItems);
+            const buffer = _self._set(bufferItems.concat(notDeliveredItems));
     
             // If the buffer has too many items, drop items from the end.
-            if (_buffer.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
-                _buffer.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
+            if (buffer.length > SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
+                buffer.length = SessionStorageSendBuffer.MAX_BUFFER_SIZE;
             }
     
             _setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
-            _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, _buffer);
+            _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, buffer);
     
             _self.enqueue = (payload: string) => {
-                if (_buffer.length >= SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
+                if (_self.count() >= SessionStorageSendBuffer.MAX_BUFFER_SIZE) {
                     // sent internal log only once per page view
                     if (!_bufferFullMessageSent) {
                         logger.throwInternal(
                             LoggingSeverity.WARNING,
                             _InternalMessageId.SessionStorageBufferFull,
-                            "Maximum buffer size reached: " + _buffer.length,
+                            "Maximum buffer size reached: " + _self.count(),
                             true);
                         _bufferFullMessageSent = true;
                     }
@@ -166,41 +209,21 @@ export class SessionStorageSendBuffer implements ISendBuffer {
                     return;
                 }
         
-                _buffer.push(payload);
-                _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, _buffer);
+                _base.enqueue(payload);
+                _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, _self._get());
             };
-        
-            _self.count = (): number => {
-                return _buffer.length;
-            };
-        
+       
             _self.clear = () => {
-                _buffer = [];
-                _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, []);
+                _base.clear();
+                _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, _self._get());
                 _setBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY, []);
         
                 _bufferFullMessageSent = false;
             };
         
-            _self.getItems = (): string[] => {
-                return _buffer.slice(0)
-            };
-        
-            _self.batchPayloads = (payload: string[]): string => {
-                if (payload && payload.length > 0) {
-                    const batch = config.emitLineDelimitedJson() ?
-                        payload.join("\n") :
-                        "[" + payload.join(",") + "]";
-        
-                    return batch;
-                }
-        
-                return null;
-            };
-        
             _self.markAsSent = (payload: string[]) => {
-                _buffer = _removePayloadsFromBuffer(payload, _buffer);
-                _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, _buffer);
+                _setBuffer(SessionStorageSendBuffer.BUFFER_KEY, 
+                    _self._set(_removePayloadsFromBuffer(payload, _self._get())));
         
                 let sentElements = _getBuffer(SessionStorageSendBuffer.SENT_BUFFER_KEY);
                 if (sentElements instanceof Array && payload instanceof Array) {
@@ -291,23 +314,8 @@ export class SessionStorageSendBuffer implements ISendBuffer {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
     }
 
-    public count(): number {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return 0;
-    }
-
     public clear() {
         // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-    }
-
-    public getItems(): string[] {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return null;
-    }
-
-    public batchPayloads(payload: string[]): string {
-        // @DynamicProtoStub -- DO NOT add any code as this will be removed during packaging
-        return null;
     }
 
     public markAsSent(payload: string[]) {

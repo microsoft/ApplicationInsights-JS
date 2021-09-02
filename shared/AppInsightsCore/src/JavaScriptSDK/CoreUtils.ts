@@ -10,7 +10,7 @@ import { getWindow, getDocument, getPerformance, isIE }  from "./EnvUtils";
 import { 
     arrForEach, arrIndexOf, arrMap, arrReduce, attachEvent, dateNow, detachEvent, hasOwnProperty, 
     isArray, isBoolean, isDate, isError, isFunction, isNullOrUndefined, isNumber, isObject, isString, isTypeof, 
-    isUndefined, objDefineAccessors, objFreeze, objKeys, strTrim, toISOString
+    isUndefined, objDefineAccessors, objKeys, strTrim, toISOString
 } from "./HelperFuncs";
 import { randomValue, random32, mwcRandomSeed, mwcRandom32 } from "./RandomHelper";
 
@@ -36,7 +36,7 @@ export function addEventHandler(eventName: string, callback: any): boolean {
 
     let doc = getDocument();
     if (doc) {
-        result = EventHelper.Attach(doc, eventName, callback) || result;
+        result = attachEvent(doc, eventName, callback) || result;
     }
 
     return result;
