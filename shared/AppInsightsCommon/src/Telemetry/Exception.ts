@@ -70,16 +70,24 @@ function _formatMessage(theEvent: any, errorType: string) {
 }
 
 function _isExceptionDetailsInternal(value:any): value is IExceptionDetailsInternal {
-    if (isObject(value)) {
-        return "hasFullStack" in value && "typeName" in value;
+    try {
+        if (isObject(value)) {
+            return "hasFullStack" in value && "typeName" in value;
+        }
+    } catch (e) {
+        // This can happen with some native browser objects, but should not happen for the type we are checking for
     }
 
     return false;
 }
 
 function _isExceptionInternal(value:any): value is IExceptionInternal {
-    if (isObject(value)) {
-        return ("ver" in value && "exceptions" in value && "properties" in value);
+    try {
+        if (isObject(value)) {
+            return ("ver" in value && "exceptions" in value && "properties" in value);
+        }
+    } catch (e) {
+        // This can happen with some native browser objects, but should not happen for the type we are checking for
     }
 
     return false;
