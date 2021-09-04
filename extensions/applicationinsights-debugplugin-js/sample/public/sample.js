@@ -85,7 +85,8 @@ function myFunc() {
   };
 
   configObj.extensionConfig[debugPlugin.identifier] = {
-    //trackers: toTrack
+    //trackers: toTrack,
+    //logProcessTelemetry: true,
     maxMessages: 50
   };
 
