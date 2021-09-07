@@ -31,4 +31,9 @@ export interface IDebugPluginConfig extends IConfiguration{
    * [Optional] Flag for whether to include functions in the DebugPlugin dashboard. Defaults to false
    */
   showFunctions?: boolean;
+
+  /**
+   * [Optional] If processTelemetry is not included in the trackers should the DebugPlugin log the arguments - defaults to false
+   */
+  logProcessTelemetry?: boolean;
 }
