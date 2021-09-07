@@ -28,17 +28,18 @@ function showHelp() {
     console.log(scriptName + " [<newVersion>|-patch|-minor|-major] [-dev|-alpha|-beta|-release] [-bld ######] [-test]");
     console.log("--------------------------");
     console.log(" <newVersion> - Identifies the version to set for all packages, must start with x.y.z");
-    console.log(" -patch      - Increment the current version to the next patch number (x.y.z => x.y.[z+1]");
-    console.log(" -minor      - Increment the current version to the next minor number (x.y.z => x.[y+1].0");
-    console.log(" -major      - Increment the current version to the next major number (x.y.z => [x+1].0.0");
-    console.log(" -dev        - Add the 'dev' pre-release to the number (x.y.z => x.y.z-dev)");
-    console.log(" -alpha      - Add the 'alpha' pre-release to the number (x.y.z => x.y.z-alpha)");
-    console.log(" -beta       - Add the 'beta' pre-release to the number (x.y.z => x.y.z-beta)");
-    console.log(" -release    - Remove any existing pre-release tags (x.y.z-prerel => x.y.z)");
-    console.log(" -bld ###### - Append the provided build number to the version (x.y.z => x.y.z-[prerel].######) [prerel] defaults to dev if not defined");
-    console.log(" -pre ###### - Set the pre-release to the provided value (x.y.z => x.y.z-[prerel])");
-    console.log(" -react      - Update only the react packages")
-    console.log(" -test       - Scan all of the package.json files and log the changes, but DON'T update the files");
+    console.log(" -patch       - Increment the current version to the next patch number (x.y.z => x.y.[z+1]");
+    console.log(" -minor       - Increment the current version to the next minor number (x.y.z => x.[y+1].0");
+    console.log(" -major       - Increment the current version to the next major number (x.y.z => [x+1].0.0");
+    console.log(" -dev         - Add the 'dev' pre-release to the number (x.y.z => x.y.z-dev)");
+    console.log(" -alpha       - Add the 'alpha' pre-release to the number (x.y.z => x.y.z-alpha)");
+    console.log(" -beta        - Add the 'beta' pre-release to the number (x.y.z => x.y.z-beta)");
+    console.log(" -release     - Remove any existing pre-release tags (x.y.z-prerel => x.y.z)");
+    console.log(" -bld ######  - Append the provided build number to the version (x.y.z => x.y.z-[prerel].######) [prerel] defaults to dev if not defined");
+    console.log(" -pre ######  - Set the pre-release to the provided value (x.y.z => x.y.z-[prerel])");
+    console.log(" -react       - Update only the react packages")
+    console.log(" -reactNative - Update only the react native packages")
+    console.log(" -test        - Scan all of the package.json files and log the changes, but DON'T update the files");
 }
 
 function setPreRelVer(name) {
