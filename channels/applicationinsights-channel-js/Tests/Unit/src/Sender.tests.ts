@@ -73,6 +73,39 @@ export class SenderTests extends AITestClass {
         })
 
         this.testCase({
+            name: "processTelemetry process ItelemetryItem with iKey",
+            useFakeTimers: true,
+            test: () => {
+                this._sender.initialize({
+                    instrumentationKey: 'abc'
+                }, new AppInsightsCore(), []);
+
+                const loggerSpy = this.sandbox.stub(this._sender, "triggerSend");
+                const expectedIkey = 'testIkey';
+                const telemetryItem: ITelemetryItem = {
+                    name: 'fake item',
+                    iKey: expectedIkey,
+                    baseType: 'some type',
+                    baseData: {}
+                };
+                try {
+                    this._sender.processTelemetry(telemetryItem, null);
+                    let buffer = this._sender._buffer.getItems();
+                    let payload = JSON.parse(buffer[buffer.length-1]);
+                    var actualIkey = payload.iKey;
+                } catch(e) {
+                    QUnit.assert.ok(false, "Exception - " + e);
+                }
+
+
+                QUnit.assert.equal(false, loggerSpy.calledOnce, "The send has not yet been triggered");
+                QUnit.assert.equal(expectedIkey, actualIkey, "processTelemetry replaced ItelemetryItem Ikey");
+                this.clock.tick(15000);
+                QUnit.assert.equal(true, loggerSpy.calledOnce, "The send has been triggered");
+            }
+        })
+
+        this.testCase({
             name: "telemetry is not send when legacy telemetry initializer returns false",
             test: () => {
                 const cr = new AppInsightsCore();
@@ -497,6 +530,36 @@ export class SenderTests extends AITestClass {
 
                 // Assert timestamp
                 QUnit.assert.ok(appInsightsEnvelope.time);
+            }
+        });
+
+        this.testCase({
+            name: "AppInsightsTests: AppInsights Envelope use default config iKey when iKey of ItelemetryItem is empty",
+            test: () => {
+                const inputEnvelope: ITelemetryItem = {
+                    name: "test",
+                    iKey: "",
+                    ext: {},
+                    data: { "property1": "val1"},
+                    baseData: {
+                        "name": "Event Name"
+                    }
+                };
+                const appInsightsEnvelope = Sender.constructEnvelope(inputEnvelope, this._instrumentationKey, null);
+
+                const baseData = appInsightsEnvelope.data.baseData;
+
+                // Assert Event name
+                QUnit.assert.ok(baseData.name);
+                QUnit.assert.equal("Event Name", baseData.name);
+
+                // Assert name
+                QUnit.assert.ok(appInsightsEnvelope.name);
+                QUnit.assert.equal("Microsoft.ApplicationInsights.iKey.Event", appInsightsEnvelope.name);
+
+                // Assert iKey
+                QUnit.assert.ok(appInsightsEnvelope.iKey);
+                QUnit.assert.equal( this._instrumentationKey, appInsightsEnvelope.iKey, "default config iKey is not set");
             }
         });
 

@@ -3,7 +3,7 @@
 
 import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
 import { ITelemetryItem, IDiagnosticLogger, objForEachKey, isNullOrUndefined, toISOString } from "@microsoft/applicationinsights-core-js";
-import { strNotSpecified, strIKey } from "./Constants";
+import { strNotSpecified, strIkey } from "./Constants";
 
 export class TelemetryItemCreator {
 
@@ -33,9 +33,9 @@ export class TelemetryItemCreator {
         }
         
         let iKey = "";
-        if (item[strIKey]) {
-            iKey = item[strIKey];
-            delete item[strIKey];
+        if (item[strIkey]) {
+            iKey = item[strIkey];
+            delete item[strIkey];
         }
 
         const telemetryItem: ITelemetryItem = {

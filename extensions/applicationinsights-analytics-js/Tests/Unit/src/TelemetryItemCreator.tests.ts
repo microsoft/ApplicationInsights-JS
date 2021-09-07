@@ -60,8 +60,9 @@ export class TelemetryItemCreatorTests extends AITestClass {
 
                 // assert
                 Assert.ok(telemetryItem);
-                Assert.equal("Microsoft.ApplicationInsights.{0}.PageviewPerformance", telemetryItem.name, "telemtryItem.name");;
-                Assert.equal("PageviewPerformanceData", telemetryItem.baseType, "telemetryItem.baseType");
+                Assert.equal("Microsoft.ApplicationInsights.{0}.PageviewPerformance", telemetryItem.name, "telemtryItem.name");
+                Assert.equal("Microsoft.ApplicationInsights.{0}.PageviewPerformance", telemetryItem.name, "telemtryItem.name");
+                Assert.equal("", telemetryItem.iKey, "telemetryItem.iKey");
                 Assert.deepEqual({"propKey1":"PropVal1","propKey2":"PropVal2"},telemetryItem.data, "telemetryItem.data");
             }
         });
@@ -93,6 +94,7 @@ export class TelemetryItemCreatorTests extends AITestClass {
                 Assert.ok(telemetryItem);
                 Assert.equal("Microsoft.ApplicationInsights.{0}.Pageview", telemetryItem.name, "telemtryItem.name");
                 Assert.equal("PageviewData", telemetryItem.baseType, "telemetryItem.baseType");
+                Assert.equal("",telemetryItem.iKey,"telemetryItem.iKey");
                 Assert.deepEqual({"propKey1":"PropVal1","propKey2":"PropVal2"},telemetryItem.data, "telemetryItem.data");
             }
         });
