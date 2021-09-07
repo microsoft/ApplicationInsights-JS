@@ -4,12 +4,15 @@ import { StatsbeatCounter } from "./Constants";
 import { IConfig, Metric } from "@microsoft/applicationinsights-common";
 import { IConfiguration, IAppInsightsCore, IPlugin, ITelemetryPluginChain, ITelemetryItem, objKeys, dateNow,  } from '@microsoft/applicationinsights-core-js';
 import dynamicProto from '@microsoft/dynamicproto-js';
+import { EnvelopeCreator } from "./EnvelopeCreator";
+
+const INSTRUMENTATION_KEY = "c4a29126-a7cb-47e5-b348-11414998b11e";
+const STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
+const NETWORK = "Network";
+const STATSBEAT_LANGUAGE = "JavaScript";
+const STATSBEAT_TYPE = "Browser";
 
 export class Statsbeat {
-    public static INSTRUMENTATION_KEY = "c4a29126-a7cb-47e5-b348-11414998b11e";
-    public static STATS_COLLECTION_SHORT_INTERVAL: number = 900000; // 15 minutes
-    public static NETWORK = "Network";
-
     constructor() {
         let _networkCounter: NetworkStatsbeat;
         let _sender: Sender;
@@ -20,22 +23,26 @@ export class Statsbeat {
 
         // Custom dimensions
         let _cikey: string;
+        let _language: string;
+        let _sdkVersion: string;
+        let _os: string;
+        let _runTimeVersion: string;
         dynamicProto(Statsbeat, this, (_self, _base) => {
             _self.initialize = (config: IConfiguration & IConfig, core: IAppInsightsCore, extensions: IPlugin[], pluginChain?:ITelemetryPluginChain, endpoint?: string) => {
                 _networkCounter = new NetworkStatsbeat(endpoint);
                 _sender = new Sender(undefined);
                 let senderConfig = {...config};
-                senderConfig.instrumentationKey = Statsbeat.INSTRUMENTATION_KEY;
-                _sender.initialize(senderConfig, core, extensions, pluginChain, endpoint);
+                senderConfig.instrumentationKey = INSTRUMENTATION_KEY;
+                _sender.initialize(senderConfig, core, extensions, pluginChain);
                 _statsbeatMetrics = {};
                 _config = config;
-                _isEnabled = _config.disableStatsbeat !== true;
+                _isEnabled = true;
                 if (_isEnabled) {
                     _getCustomProperties();
                     if (!_handle) {
                         _handle = setInterval(() => {
                             this.trackShortIntervalStatsbeats();
-                        }, Statsbeat.STATS_COLLECTION_SHORT_INTERVAL);
+                        }, STATS_COLLECTION_SHORT_INTERVAL);
                     }
                 }
             }
@@ -91,6 +98,10 @@ export class Statsbeat {
 
             function _getCustomProperties() {
                 _cikey = _config.instrumentationKey;
+                _language = STATSBEAT_LANGUAGE;
+                _os = STATSBEAT_TYPE;
+                _runTimeVersion = STATSBEAT_TYPE;
+                _sdkVersion = EnvelopeCreator.Version;
             }
 
             function _getNetworkStatsbeatCounter(host: string): NetworkStatsbeat {
@@ -107,13 +118,17 @@ export class Statsbeat {
                 // Add extra properties
                 let networkProperties = {
                     "cikey": _cikey,
+                    "runtimeVersion": _runTimeVersion,
+                    "language": _language,
+                    "version": _sdkVersion,
+                    "os": _os,
                 }
                 if (objKeys(_statsbeatMetrics)) {
                     let statsbeat: ITelemetryItem = {
-                        iKey: Statsbeat.INSTRUMENTATION_KEY,
-                        name: Statsbeat.NETWORK,
+                        iKey: INSTRUMENTATION_KEY,
+                        name: NETWORK,
                         baseData: {
-                            name: Statsbeat.NETWORK,
+                            name: NETWORK,
                             average: 0,
                             properties: {"host": _networkCounter.host, ..._statsbeatMetrics.properties, ...networkProperties},
                         },

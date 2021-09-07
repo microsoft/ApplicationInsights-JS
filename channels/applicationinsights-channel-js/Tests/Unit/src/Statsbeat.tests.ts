@@ -1,13 +1,14 @@
 import { AITestClass } from "@microsoft/ai-test-framework";
 import { Sender } from "../../../src/Sender";
-import { Metric, IMetricTelemetry } from "@microsoft/applicationinsights-common";
+import { Metric, IMetricTelemetry, urlParseUrl } from "@microsoft/applicationinsights-common";
 import { AppInsightsCore, _InternalMessageId } from "@microsoft/applicationinsights-core-js";
 import { Statsbeat } from "../../../src/Statsbeat";
 import { StatsbeatCounter } from "../../../src/Constants";
 
-Statsbeat.INSTRUMENTATION_KEY = "2aa22222-bbbb-1ccc-8ddd-eeeeffff3333";
+const INSTRUMENTATION_KEY = "c4a29126-a7cb-47e5-b348-11414998b11e";
 var strEmpty = "";
 const endpoint = "https://dc.services.visualstudio.com/v2/track";
+const endpointHost = urlParseUrl(endpoint).hostname;
 export class StatsbeatTests extends AITestClass {
     private _sender: Sender;
     private _statsbeat: Statsbeat;
@@ -67,13 +68,13 @@ export class StatsbeatTests extends AITestClass {
                 const arr = JSON.parse(this._getXhrRequests()[0].requestBody);
                 let fakeReq = arr[arr.length - 1];
                 console.log(fakeReq);
-                QUnit.assert.equal(fakeReq.name, "Microsoft.ApplicationInsights." + Statsbeat.INSTRUMENTATION_KEY.replace(/-/g, strEmpty) + ".Metric");
-                QUnit.assert.equal(fakeReq.iKey, Statsbeat.INSTRUMENTATION_KEY);
+                QUnit.assert.equal(fakeReq.name, "Microsoft.ApplicationInsights." + INSTRUMENTATION_KEY.replace(/-/g, strEmpty) + ".Metric");
+                QUnit.assert.equal(fakeReq.iKey, INSTRUMENTATION_KEY);
                 QUnit.assert.equal(fakeReq.data.baseType, Metric.dataType);
 
                 let baseData: IMetricTelemetry = fakeReq.data.baseData;
                 QUnit.assert.equal(baseData.properties["cikey"], "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333");
-                QUnit.assert.equal(baseData.properties["host"], "https://dc.services.visualstudio.com/v2/track");
+                QUnit.assert.equal(baseData.properties["host"], endpointHost);
             }
         });
 
@@ -81,8 +82,8 @@ export class StatsbeatTests extends AITestClass {
             name: "Track duration.",
             test: () => {
                 this._sender.initialize({ instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, new AppInsightsCore(), []);
-                this._statsbeat.countRequest(endpoint, 1000, true);
-                this._statsbeat.countRequest(endpoint, 500, false);
+                this._statsbeat.countRequest(endpointHost, 1000, true);
+                this._statsbeat.countRequest(endpointHost, 500, false);
                 this._statsbeat.trackShortIntervalStatsbeats();
 
                 QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
@@ -91,13 +92,13 @@ export class StatsbeatTests extends AITestClass {
                 const arr = JSON.parse(this._getXhrRequests()[0].requestBody);
                 let fakeReq = arr[arr.length - 1];
                 console.log(fakeReq);
-                QUnit.assert.equal(fakeReq.name, "Microsoft.ApplicationInsights." + Statsbeat.INSTRUMENTATION_KEY.replace(/-/g, strEmpty) + ".Metric");
-                QUnit.assert.equal(fakeReq.iKey, Statsbeat.INSTRUMENTATION_KEY);
+                QUnit.assert.equal(fakeReq.name, "Microsoft.ApplicationInsights." + INSTRUMENTATION_KEY.replace(/-/g, strEmpty) + ".Metric");
+                QUnit.assert.equal(fakeReq.iKey, INSTRUMENTATION_KEY);
                 QUnit.assert.equal(fakeReq.data.baseType, Metric.dataType);
 
                 let baseData: IMetricTelemetry = fakeReq.data.baseData;
                 QUnit.assert.equal(baseData.properties["cikey"], "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333");
-                QUnit.assert.equal(baseData.properties["host"], endpoint);
+                QUnit.assert.equal(baseData.properties["host"], endpointHost);
                 QUnit.assert.equal(baseData.properties[StatsbeatCounter.REQUEST_DURATION], "750");
                 QUnit.assert.equal(baseData.properties[StatsbeatCounter.REQUEST_SUCCESS], "1");
             }
@@ -107,17 +108,17 @@ export class StatsbeatTests extends AITestClass {
             name: "Track counts.",
             test: () => {
                 this._sender.initialize({ instrumentationKey: "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333" }, new AppInsightsCore(), []);
-                this._statsbeat.countRequest(endpoint, 1, true);
-                this._statsbeat.countRequest(endpoint, 1, true);
-                this._statsbeat.countRequest(endpoint, 1, true);
-                this._statsbeat.countRequest(endpoint, 1, true);
-                this._statsbeat.countRequest(endpoint, 1, false);
-                this._statsbeat.countRequest(endpoint, 1, false);
-                this._statsbeat.countRequest(endpoint, 1, false);
-                this._statsbeat.countRetry(endpoint);
-                this._statsbeat.countRetry(endpoint);
-                this._statsbeat.countThrottle(endpoint);
-                this._statsbeat.countException(endpoint);
+                this._statsbeat.countRequest(endpointHost, 1, true);
+                this._statsbeat.countRequest(endpointHost, 1, true);
+                this._statsbeat.countRequest(endpointHost, 1, true);
+                this._statsbeat.countRequest(endpointHost, 1, true);
+                this._statsbeat.countRequest(endpointHost, 1, false);
+                this._statsbeat.countRequest(endpointHost, 1, false);
+                this._statsbeat.countRequest(endpointHost, 1, false);
+                this._statsbeat.countRetry(endpointHost);
+                this._statsbeat.countRetry(endpointHost);
+                this._statsbeat.countThrottle(endpointHost);
+                this._statsbeat.countException(endpointHost);
                 this._statsbeat.trackShortIntervalStatsbeats();
 
                 QUnit.assert.equal(1, this._getXhrRequests().length, "xhr sender is called");
@@ -126,13 +127,14 @@ export class StatsbeatTests extends AITestClass {
                 const arr = JSON.parse(this._getXhrRequests()[0].requestBody);
                 let fakeReq = arr[arr.length - 1];
                 console.log(fakeReq);
-                QUnit.assert.equal(fakeReq.name, "Microsoft.ApplicationInsights." + Statsbeat.INSTRUMENTATION_KEY.replace(/-/g, strEmpty) + ".Metric");
-                QUnit.assert.equal(fakeReq.iKey, Statsbeat.INSTRUMENTATION_KEY);
+                QUnit.assert.equal(fakeReq.name, "Microsoft.ApplicationInsights." + INSTRUMENTATION_KEY.replace(/-/g, strEmpty) + ".Metric");
+                QUnit.assert.equal(fakeReq.iKey, INSTRUMENTATION_KEY);
                 QUnit.assert.equal(fakeReq.data.baseType, Metric.dataType);
 
                 let baseData: IMetricTelemetry = fakeReq.data.baseData;
+                
                 QUnit.assert.equal(baseData.properties["cikey"], "1aa11111-bbbb-1ccc-8ddd-eeeeffff3333");
-                QUnit.assert.equal(baseData.properties["host"], endpoint);
+                QUnit.assert.equal(baseData.properties["host"], endpointHost);
                 QUnit.assert.equal(baseData.properties[StatsbeatCounter.REQUEST_DURATION], "1");
                 QUnit.assert.equal(baseData.properties[StatsbeatCounter.REQUEST_SUCCESS], "4");
                 QUnit.assert.equal(baseData.properties[StatsbeatCounter.REQUEST_FAILURE], "3");
