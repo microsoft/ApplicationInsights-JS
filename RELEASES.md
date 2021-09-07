@@ -10,7 +10,7 @@ ___Major change___: Upgrades build environment to TypeScript 4.x
 
 - #617 Add performance.mark and performance.measure for performance browser tool integration
 
-### 2.7.0-beta.1 (August 17th, 2021)
+### 2.7.0-beta.1 (August 24th, 2021)
 
 - #1171 ___Update to TypeScript 4.x___
 - #1526 [TypeScript Compile Error] Property 'sessionManager' does not exist on type 'ITelemetryContext'
