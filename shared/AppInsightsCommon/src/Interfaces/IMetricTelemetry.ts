@@ -41,4 +41,11 @@ export interface IMetricTelemetry extends IPartC {
      * @default max=average
      */
     max?: number;
+
+     /**
+     * @description custom defined iKey
+     * @type {string}
+     * @memberof IMetricTelemetry
+     */
+    iKey?: string;
 }

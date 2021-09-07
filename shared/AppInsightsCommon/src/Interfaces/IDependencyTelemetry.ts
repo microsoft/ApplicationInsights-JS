@@ -18,4 +18,5 @@ export interface IDependencyTelemetry extends IPartC {
     type?: string;
     data?: string;
     target?: string;
+    iKey?: string;
 }
