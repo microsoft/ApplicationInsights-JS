@@ -224,6 +224,32 @@ export class ApplicationInsightsTests extends TestClass {
         });
 
         this.testCaseAsync({
+            name: 'E2E.GenericTests: trackException with auto telemetry sends to backend with custom properties',
+            stepDelay: 1,
+            steps: [() => {
+                let exception: Error = null;
+                try {
+                    window['a']['b']();
+                    Assert.ok(false, 'trackException test not run');
+                } catch (e) {
+                    // Simulating window.onerror option
+                    let autoTelemetry = {
+                        message: e.message,
+                        url: "https://dummy.auto.example.com",
+                        lineNumber: 42,
+                        columnNumber: 53,
+                        error: e,
+                        evt: null
+                    } as IAutoExceptionTelemetry;
+    
+                    exception = e;
+                    this._ai.trackException({ exception: autoTelemetry }, { custom: "custom value" });
+                }
+                Assert.ok(exception);
+            }].concat(this.asserts(1))
+        });
+
+        this.testCaseAsync({
             name: 'E2E.GenericTests: trackException with message only sends to backend',
             stepDelay: 1,
             steps: [() => {
@@ -282,6 +308,38 @@ export class ApplicationInsightsTests extends TestClass {
         });
 
         this.testCaseAsync({
+            name: 'E2E.GenericTests: trackException with message holding error sends to backend with custom properties',
+            stepDelay: 1,
+            steps: [() => {
+                let exception: Error = null;
+                try {
+                    window['a']['b']();
+                    Assert.ok(false, 'trackException test not run');
+                } catch (e) {
+                    // Simulating window.onerror option
+                    let autoTelemetry = {
+                        message: e,
+                        url: "https://dummy.error.example.com",
+                        lineNumber: 42,
+                        columnNumber: 53,
+                        error: undefined,
+                        evt: null
+                    } as IAutoExceptionTelemetry;
+    
+                    try {
+                        exception = e;
+                        this._ai.trackException({ exception: autoTelemetry }, { custom: "custom value" });
+                    } catch (e) {
+                        console.log(e);
+                        console.log(e.stack);
+                        Assert.ok(false, e.stack);
+                    }
+                }
+                Assert.ok(exception);
+            }].concat(this.asserts(1))
+        });
+
+        this.testCaseAsync({
             name: 'E2E.GenericTests: trackException with no Error sends to backend',
             stepDelay: 1,
             steps: [() => {
@@ -320,6 +378,37 @@ export class ApplicationInsightsTests extends TestClass {
                             Assert.ok(ex.stack.length > 0, "Has stack");
                             Assert.ok(ex.parsedStack, "Stack was parsed");
                             Assert.ok(ex.hasFullStack, "Stack has been decoded");
+                        }
+                    }
+                }
+            })
+        });
+
+        this.testCaseAsync({
+            name: 'E2E.GenericTests: trackException with CustomError sends to backend with custom properties',
+            stepDelay: 1,
+            steps: [() => {
+                this._ai.trackException({ exception: new CustomTestError("Test Custom Error!") }, { custom: "custom value" });
+            }].concat(this.asserts(1)).concat(() => {
+                const payloadStr: string[] = this.getPayloadMessages(this.successSpy);
+                if (payloadStr.length > 0) {
+                    const payload = JSON.parse(payloadStr[0]);
+                    const data = payload.data;
+                    Assert.ok(data, "Has Data");
+                    if (data) {
+                        Assert.ok(data.baseData, "Has BaseData");
+                        let baseData = data.baseData;
+                        if (baseData) {
+                            const ex = baseData.exceptions[0];
+                            Assert.ok(ex.message.indexOf("Test Custom Error!") !== -1, "Make sure the error message is present [" + ex.message + "]");
+                            Assert.ok(ex.message.indexOf("CustomTestError") !== -1, "Make sure the error type is present [" + ex.message + "]");
+                            Assert.equal("CustomTestError", ex.typeName, "Got the correct typename");
+                            Assert.ok(ex.stack.length > 0, "Has stack");
+                            Assert.ok(ex.parsedStack, "Stack was parsed");
+                            Assert.ok(ex.hasFullStack, "Stack has been decoded");
+
+                            Assert.ok(baseData.properties, "Has BaseData properties");
+                            Assert.equal(baseData.properties.custom, "custom value");
                         }
                     }
                 }
@@ -830,8 +919,8 @@ export class ApplicationInsightsTests extends TestClass {
         });
 
         this.testCase({
-            name: 'Sampling: sampleRate is generated as a field in the envelope when it is less than 100',
-            test: () => {
+            name: 'Sampling: sampleRate is generated as a field in the envelope when it is less than 100',
+            test: () => {
                 this._ai.trackEvent({ name: 'event' });
                 Assert.ok(this.envelopeConstructorSpy.called);
                 const envelope = this.envelopeConstructorSpy.returnValues[0];

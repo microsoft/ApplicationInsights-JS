@@ -192,13 +192,14 @@ export class Initialization implements IApplicationInsights {
     /**
      * Log an exception that you have caught.
      * @param {IExceptionTelemetry} exception
+     * @param {{[key: string]: any}} customProperties   Additional data used to filter pages and metrics in the portal. Defaults to empty.
      * @memberof Initialization
      */
-    public trackException(exception: IExceptionTelemetry): void {
+    public trackException(exception: IExceptionTelemetry, customProperties?: ICustomProperties): void {
         if (exception && !exception.exception && (exception as any).error) {
             exception.exception = (exception as any).error;
         }
-        this.appInsights.trackException(exception);
+        this.appInsights.trackException(exception, customProperties);
     }
 
     /**

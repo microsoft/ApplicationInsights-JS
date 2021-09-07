@@ -76,10 +76,14 @@ export function isValueAssigned(value: any) {
  * @returns true if the event is a right click 
  */
 export function isRightClick(evt: any): boolean {
-    if ('which' in evt) { // Chrome, FF, ...
-        return (evt.which === 3);
-    } else if ('button' in evt) { // IE, ...
-        return (evt.button === 2);
+    try {
+        if ('which' in evt) { // Chrome, FF, ...
+            return (evt.which === 3);
+        } else if ('button' in evt) { // IE, ...
+            return (evt.button === 2);
+        }
+    } catch (e) {
+        // This can happen with some native browser objects, but should not happen for the type we are checking for
     }
 }
 
@@ -89,10 +93,14 @@ export function isRightClick(evt: any): boolean {
  * @returns true if the event is a left click 
  */
 export function isLeftClick(evt: any): boolean {
-    if ('which' in evt) { // Chrome, FF, ...
-        return (evt.which === 1);
-    } else if ('button' in evt) { // IE, ...
-        return (evt.button === 1);
+    try {
+        if ('which' in evt) { // Chrome, FF, ...
+            return (evt.which === 1);
+        } else if ('button' in evt) { // IE, ...
+            return (evt.button === 1);
+        }
+    } catch (e) {
+        // This can happen with some native browser objects, but should not happen for the type we are checking for
     }
 }
 
@@ -102,10 +110,14 @@ export function isLeftClick(evt: any): boolean {
  * @returns true if the event is a middle click 
  */
 export function isMiddleClick(evt: any): boolean {
-    if ('which' in evt) { // Chrome, FF, ...
-        return (evt.which === 2);
-    } else if ('button' in evt) { // IE, ...
-        return (evt.button === 4);
+    try {
+        if ('which' in evt) { // Chrome, FF, ...
+            return (evt.which === 2);
+        } else if ('button' in evt) { // IE, ...
+            return (evt.button === 4);
+        }
+    } catch (e) {
+        // This can happen with some native browser objects, but should not happen for the type we are checking for
     }
 }
 
@@ -115,8 +127,12 @@ export function isMiddleClick(evt: any): boolean {
  * @returns true if the event is a keyboard enter
  */
 export function isKeyboardEnter(evt: KeyboardEvent): boolean {
-    if ('keyCode' in evt) { // Chrome, FF, ...
-        return (evt.keyCode === 13);
+    try {
+        if ('keyCode' in evt) { // Chrome, FF, ...
+            return (evt.keyCode === 13);
+        }
+    } catch (e) {
+        // This can happen with some native browser objects, but should not happen for the type we are checking for
     }
 }
 
@@ -126,8 +142,12 @@ export function isKeyboardEnter(evt: KeyboardEvent): boolean {
  * @returns true if the event is a space enter
  */
 export function isKeyboardSpace(evt: KeyboardEvent) {
-    if ('keyCode' in evt) { // Chrome, FF, ...
-        return (evt.keyCode === 32);
+    try {
+        if ('keyCode' in evt) { // Chrome, FF, ...
+            return (evt.keyCode === 32);
+        }
+    } catch (e) {
+        // This can happen with some native browser objects, but should not happen for the type we are checking for
     }
 }
 
