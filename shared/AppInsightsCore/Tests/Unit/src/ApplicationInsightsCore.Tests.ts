@@ -204,6 +204,27 @@ export class ApplicationInsightsCoreTests extends AITestClass {
         });
 
         this.testCase({
+            name: 'ApplicationInsightsCore: track does not replace non-empty iKey',
+            useFakeTimers: true,
+            test: () => {
+                const configIkey: string = "configIkey";
+                const eventIkey: string = "eventIkey";
+
+                const channelPlugin = new ChannelPlugin();
+                const appInsightsCore = new AppInsightsCore();
+                appInsightsCore.initialize({ instrumentationKey:configIkey}, [channelPlugin]);
+
+                // Act
+                const bareItem: ITelemetryItem = { name: 'test item', iKey: eventIkey };
+                appInsightsCore.track(bareItem);
+                this.clock.tick(1);
+
+                // Test
+                Assert.equal(eventIkey, bareItem.iKey, "Instrumentation key is replaced");
+            }
+        });
+
+        this.testCase({
             name: "DiagnosticLogger: Critical logging history is saved",
             test: () => {
                 // Setup

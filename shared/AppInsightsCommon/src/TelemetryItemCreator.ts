@@ -3,7 +3,7 @@
 
 import { dataSanitizeString } from "./Telemetry/Common/DataSanitizer";
 import { ITelemetryItem, IDiagnosticLogger, objForEachKey, isNullOrUndefined, toISOString } from "@microsoft/applicationinsights-core-js";
-import { strNotSpecified } from "./Constants";
+import { strNotSpecified, strIkey } from "./Constants";
 
 export class TelemetryItemCreator {
 
@@ -31,11 +31,17 @@ export class TelemetryItemCreator {
             isNullOrUndefined(envelopeName)) {
                 throw Error("Input doesn't contain all required fields");
         }
+        
+        let iKey = "";
+        if (item[strIkey]) {
+            iKey = item[strIkey];
+            delete item[strIkey];
+        }
 
         const telemetryItem: ITelemetryItem = {
             name: envelopeName,
             time: toISOString(new Date()),
-            iKey: "", // this will be set in TelemetryContext
+            iKey: iKey, // this will be set in TelemetryContext
             ext: systemProperties ? systemProperties : {}, // part A
             tags: [],
             data: {

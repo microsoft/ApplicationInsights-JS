@@ -14,3 +14,4 @@ export const ProcessLegacy = "ProcessLegacy";
 export const HttpMethod = "http.method";
 export const DEFAULT_BREEZE_ENDPOINT = "https://dc.services.visualstudio.com";
 export const strNotSpecified = "not_specified";
+export const strIkey = "iKey";
