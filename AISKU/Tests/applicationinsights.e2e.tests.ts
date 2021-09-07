@@ -932,10 +932,10 @@ export class ApplicationInsightsTests extends TestClass {
         this.testCase({
             name: 'iKey replacement: envelope will use the non-empty iKey defined in track method',
             test: () => {
-                this._ai.trackEvent({ name: 'event1', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 }, iKey:"1a6933ad-f260-447f-a2b0-e2233f6658eb" });
+                this._ai.trackEvent({ name: 'event1', properties: { "prop1": "value1" }, measurements: { "measurement1": 200 }, iKey:"1a6933ad-aaaa-aaaa-aaaa-000000000000" });
                 Assert.ok(this.envelopeConstructorSpy.called);
                 const envelope = this.envelopeConstructorSpy.returnValues[0];
-                Assert.equal(envelope.iKey, "1a6933ad-f260-447f-a2b0-e2233f6658eb", "trackEvent iKey is replaced");
+                Assert.equal(envelope.iKey, "1a6933ad-aaaa-aaaa-aaaa-000000000000", "trackEvent iKey is replaced");
             }
         });
 
