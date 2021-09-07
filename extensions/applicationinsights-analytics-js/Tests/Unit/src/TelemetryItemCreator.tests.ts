@@ -3,7 +3,15 @@ import {
     PageViewPerformance,
     PageView,
     TelemetryItemCreator,
-    IPageViewTelemetry
+    IPageViewTelemetry,
+    IEventTelemetry,
+    Event as EventTelemetry,
+    Trace,
+    ITraceTelemetry,
+    Metric,
+    IMetricTelemetry,
+    RemoteDependencyData,
+    IDependencyTelemetry,
 } from '@microsoft/applicationinsights-common';
 import { ApplicationInsights } from '../../../src/JavaScriptSDK/ApplicationInsights'
 import { 
@@ -11,6 +19,7 @@ import {
     ITelemetryItem,
     IConfiguration, IPlugin
 } from '@microsoft/applicationinsights-core-js';
+
 
 
 export class TelemetryItemCreatorTests extends AITestClass {
@@ -51,8 +60,9 @@ export class TelemetryItemCreatorTests extends AITestClass {
 
                 // assert
                 Assert.ok(telemetryItem);
-                Assert.equal("Microsoft.ApplicationInsights.{0}.PageviewPerformance", telemetryItem.name, "telemtryItem.name");;
-                Assert.equal("PageviewPerformanceData", telemetryItem.baseType, "telemetryItem.baseType");
+                Assert.equal("Microsoft.ApplicationInsights.{0}.PageviewPerformance", telemetryItem.name, "telemtryItem.name");
+                Assert.equal("Microsoft.ApplicationInsights.{0}.PageviewPerformance", telemetryItem.name, "telemtryItem.name");
+                Assert.equal("", telemetryItem.iKey, "telemetryItem.iKey");
                 Assert.deepEqual({"propKey1":"PropVal1","propKey2":"PropVal2"},telemetryItem.data, "telemetryItem.data");
             }
         });
@@ -82,9 +92,165 @@ export class TelemetryItemCreatorTests extends AITestClass {
 
                 // assert
                 Assert.ok(telemetryItem);
-                Assert.equal("Microsoft.ApplicationInsights.{0}.Pageview", telemetryItem.name, "telemtryItem.name");;
+                Assert.equal("Microsoft.ApplicationInsights.{0}.Pageview", telemetryItem.name, "telemtryItem.name");
                 Assert.equal("PageviewData", telemetryItem.baseType, "telemetryItem.baseType");
+                Assert.equal("",telemetryItem.iKey,"telemetryItem.iKey");
                 Assert.deepEqual({"propKey1":"PropVal1","propKey2":"PropVal2"},telemetryItem.data, "telemetryItem.data");
+            }
+        });
+
+        
+        this.testCase({
+            name: "TelemetryItemCreatorTests: create a valid TelemetryItem for trackEvent with iKey",
+            test: () => {
+                // setup
+                const event: IEventTelemetry = {
+                    name: "trackEventNewtTest",
+                    iKey: "newTestIkey",
+                    properties: { "prop1": "value1" },
+                    measurements: { "measurement1": 200 }
+                }
+                const customProperties = {"propKey1":"PropVal1"};
+                
+                // act
+                const telemetryItem = TelemetryItemCreator.create<ITelemetryItem>(
+                    event,
+                    EventTelemetry.dataType,
+                    EventTelemetry.envelopeType,
+                    this._appInsights.diagLog(),
+                    customProperties);
+
+                // assert
+                Assert.equal("Microsoft.ApplicationInsights.{0}.Event", telemetryItem.name, "telemtryItem.name");
+                Assert.equal("EventData", telemetryItem.baseType, "telemetryItem.baseType");
+                Assert.equal("newTestIkey", telemetryItem.iKey, "telemtryItem.iKey");
+                Assert.deepEqual({"propKey1":"PropVal1"},telemetryItem.data, "telemetryItem.data");
+                Assert.deepEqual( "trackEventNewtTest",telemetryItem.baseData.name, "telemetryItem.baseData.name");
+                Assert.deepEqual({ "prop1": "value1" },telemetryItem.baseData.properties, "telemetryItem.baseData.properties");
+                Assert.deepEqual({ "measurement1": 200 },telemetryItem.baseData.measurements, "telemetryItem.baseData.measurements");
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryItemCreatorTests: create a valid ITelemetryItem for a page view item with iKey",
+            test: () => {
+                // setup
+                const name = "testName";
+                const uri = "testUri";
+                const pageView: IPageViewTelemetry = {
+                    name: name,
+                    uri: uri,
+                    iKey: "newIkey"
+                };
+                const properties = {
+                    "propKey1": "PropVal1"
+                };
+
+                // act
+                const telemetryItem = TelemetryItemCreator.create<IPageViewTelemetry>(
+                    pageView,
+                    PageView.dataType,
+                    PageView.envelopeType,
+                    this._core.logger,
+                    properties);
+
+                // assert
+                Assert.ok(telemetryItem);
+                Assert.equal("Microsoft.ApplicationInsights.{0}.Pageview", telemetryItem.name, "telemtryItem.name");
+                Assert.equal("newIkey", telemetryItem.iKey, "telemtryItem.iKey");
+                Assert.equal("PageviewData", telemetryItem.baseType, "telemetryItem.baseType");
+                Assert.equal("testUri", telemetryItem.baseData.uri, "telemetryItem.baseData.uri");
+                Assert.equal("testName", telemetryItem.baseData.name, "telemetryItem.baseData.name");
+                Assert.deepEqual({"propKey1":"PropVal1"},telemetryItem.data, "telemetryItem.data");
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryItemCreatorTests: create a valid ITelemetryItem for a trace item with iKey",
+            test: () => {
+                // setup
+                const trace: ITraceTelemetry = {
+                    message:"traceMessage",
+                    iKey: "newIkey"
+                };
+                const  customProperties = {
+                    "propKey1": "PropVal1"
+                };
+
+                // act
+                const telemetryItem = TelemetryItemCreator.create<ITraceTelemetry>(
+                    trace,
+                    Trace.dataType,
+                    Trace.envelopeType,
+                    this._core.logger,
+                    customProperties);
+
+                // assert
+                Assert.ok(telemetryItem);
+                Assert.equal("Microsoft.ApplicationInsights.{0}.Message", telemetryItem.name, "telemtryItem.name");
+                Assert.equal("newIkey", telemetryItem.iKey, "telemtryItem.iKey");
+                Assert.equal("MessageData", telemetryItem.baseType, "telemetryItem.baseType");
+                Assert.equal("traceMessage", telemetryItem.baseData.message, "telemetryItem.baseData.message");
+                Assert.deepEqual({"propKey1":"PropVal1"},telemetryItem.data, "telemetryItem.data");
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryItemCreatorTests: create a valid ITelemetryItem for a metric item with iKey",
+            test: () => {
+                // setup
+                const metric: IMetricTelemetry = {
+                    name:"metricName",
+                    average: 5,
+                    iKey: "newIkey"
+                };
+
+                // act
+                const telemetryItem = TelemetryItemCreator.create<IMetricTelemetry>(
+                    metric,
+                    Metric.dataType,
+                    Metric.envelopeType,
+                    this._core.logger,
+                    );
+
+                // assert
+                Assert.ok(telemetryItem);
+                Assert.equal("Microsoft.ApplicationInsights.{0}.Metric", telemetryItem.name, "telemtryItem.name");
+                Assert.equal("newIkey", telemetryItem.iKey, "telemtryItem.iKey");
+                Assert.equal("MetricData", telemetryItem.baseType, "telemetryItem.baseType");
+                Assert.equal("metricName",telemetryItem.baseData.name, "telemetryItem.baseData.name");
+                Assert.equal(5,telemetryItem.baseData.average, "telemetryItem.baseData.average");
+            }
+        });
+
+        this.testCase({
+            name: "TelemetryItemCreatorTests: create a valid ITelemetryItem for a dependency item with iKey",
+            test: () => {
+                // setup
+                const dependency: IDependencyTelemetry = {
+                    name:"dependencyName",
+                    id:"id",
+                    responseCode: 200,
+                    iKey: "newIkey"
+                };
+
+                // act
+                const telemetryItem = TelemetryItemCreator.create<IDependencyTelemetry>(
+                    dependency,
+                    RemoteDependencyData.dataType,
+                    RemoteDependencyData.envelopeType,
+                    this._core.logger,
+                    );
+
+                // assert
+                Assert.ok(telemetryItem);
+                Assert.equal("Microsoft.ApplicationInsights.{0}.RemoteDependency", telemetryItem.name, "telemtryItem.name");
+                Assert.equal("newIkey", telemetryItem.iKey, "telemtryItem.iKey");
+                Assert.equal("RemoteDependencyData", telemetryItem.baseType, "telemetryItem.baseType");
+                Assert.equal("dependencyName",telemetryItem.baseData.name, "telemetryItem.baseData.name");
+                Assert.equal(200,telemetryItem.baseData.responseCode, "telemetryItem.baseData.responseCode");
+                Assert.equal("id",telemetryItem.baseData.id, "telemetryItem.baseData.id");
+                
             }
         });
     }

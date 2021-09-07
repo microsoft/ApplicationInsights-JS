@@ -18,4 +18,11 @@ export interface ITraceTelemetry extends IPartC {
      * @memberof ITraceTelemetry
      */
     severityLevel?: SeverityLevel;
+
+    /**
+     * @description custom defiend iKey
+     * @type {SeverityLevel}
+     * @memberof ITraceTelemetry
+     */
+    iKey?: string;
 }

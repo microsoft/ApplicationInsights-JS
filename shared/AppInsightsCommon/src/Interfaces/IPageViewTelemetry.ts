@@ -42,6 +42,11 @@ export interface IPageViewTelemetry extends IPartC {
         duration?: number;
         [key: string]: any;
     };
+
+     /**
+     * iKey String - custom defined iKey.
+     */
+      iKey?: string;
 }
 
 
