@@ -836,7 +836,7 @@ export class ApplicationInsightsTests extends TestClass {
                 Assert.ok(this.envelopeConstructorSpy.called);
                 const envelope = this.envelopeConstructorSpy.returnValues[0];
                 Assert.equal(envelope.sampleRate, 50, "sampleRate is generated");
-                Assert.equal(envelope.iKey, ApplicationInsightsTests._instrumentationKey, "default config iKay is used");
+                Assert.equal(envelope.iKey, ApplicationInsightsTests._instrumentationKey, "default config iKey is used");
             }
         });
 

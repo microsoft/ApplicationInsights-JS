@@ -97,7 +97,6 @@ export class SenderTests extends AITestClass {
                     QUnit.assert.ok(false, "Exception - " + e);
                 }
 
-
                 QUnit.assert.equal(false, loggerSpy.calledOnce, "The send has not yet been triggered");
                 QUnit.assert.equal(expectedIkey, actualIkey, "processTelemetry replaced ItelemetryItem Ikey");
                 this.clock.tick(15000);
